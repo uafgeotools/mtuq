@@ -6,7 +6,7 @@ import mtuq.misfit_functions
 import mtuq.synthetics1d
 
 from mtuq.process_data import bw_factory, sw_factory
-from mtuq.grid_search import Grid, UniformGrid, grid_search
+from mtuq.grid_search import GridRandomMT, grid_search_mt_mpi
 
 
 if __name__ == '__main__':
@@ -37,8 +37,6 @@ if __name__ == '__main__':
     green_functions = gf_generator(data, origin, stations)
     convolved_gf = convolve_source_wavelet(greens_functions, wavelet)
 
-    # resample Greens functions
-
     # process traces
     categories = process_data.keys()
     processed_data = {}
@@ -57,7 +55,7 @@ if __name__ == '__main__':
         'theta': [tmin, tmax, n],
         'kappa': [kmin, kmax, n],
         })
-    grid = MTGridUniform(mt_type, mt_bounds)
+    grid = GridUniformMT(mt_type, mt_bounds)
 
     # carry out grid search in parallel
     grid_search_mt_mpi(processed_data, processed_gf, misfit, grid)
