@@ -2,8 +2,8 @@
 
 import numpy as np
 
-class MTGridUniform(object):
-    def __init__(self, type, bounds):
+class MTGridRegular(object):
+    def __init__(self, bounds, type):
         if not hasattr(maps, type):
             raise ValueError
 
@@ -34,7 +34,7 @@ class MTGridUniform(object):
         # define coordinate vectors for each parameter
         self._coords = {}
         for key in keys:
-            self._vectors[key] = [np.linspace(*bounds[key])]
+            self._vectors[key] = [np.linspace(*bounds[key], nsamples+2)[1:-1]]
 
 
     def index2mt(self, index):
@@ -61,33 +61,27 @@ class MTGridRandom(MTGridUniform):
             self._vectors[key] = [np.random.randvec(*bounds[key])]
 
 
-def grid_search_mpi(data, green_functions, misfit, grid):
+def grid_search(data, greens, misfit, grid):
     """ Grid search over moment tensor parameters only
     """
     for _i in grid.size:
         categories = data.keys()
 
-        # get moment tensor 
+        # generate moment tensor 
         mt = grid.index2mt(_i)
+
+        # generate_synthetics
+        synthetics = {}
+        for key in categories:
+            synthetics[key] = greens[key].combine(mt)
 
         sum_misfit = 0.
         for key in categories:
-            dat = data[key]
-
-            # synthetic is a linear combination Greens functions
-            syn = Trace()
-            syn.data = np.zeros(nsamples)
-            for _j in range(N):
-                syn.data += mt[_j]*greens_functions[_j].data
+            sum_misfit += misfit(data[key], synthetics[key])
 
 
-def grid_seach_mt_mpi(data, greens_functions, misfit, grid):
+def grid_seach_mpi(data, greens, misfit, grid):
     raise NotImplementedError
     
         
-
-def grid_search(data, greens_functions, misfit, grid):
-    """ Grid search over moment tensor and origin parameters
-    """
-    raise NotImplementedError
 

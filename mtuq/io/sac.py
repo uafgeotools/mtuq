@@ -1,11 +1,3 @@
-"""
-given a list of sac filenames corresponding to an event, returns
-
-- an obspy stream containing all traces associated with the event
-- an obspy inventory containing all stations associated with the event
-- an obspy catalog containing the event itself
-
-"""
 
 import glob
 import os
@@ -105,23 +97,34 @@ def get_event(event_name, origin):
 
 
 def get_stations(data):
-    """ Creates station object based on sac metadata
+    """ Collect station metadata from obspy Stream object
     """
     stations = []
-    for tr in data:
-        station_name = 'dummy_name'
-        station_code = 'dummy_code'
+    for trace in data:
         try:
             latitude = tr.stats.sac.stla
             longitude = tr.stats.sac.stlo
-            elevation = 0.
         except:
-            warnings.warn("Could not determine station location from sac headers.")
-        stations += [Station(
-           station_code,
-           latitude,
-           longitude,
-           elevation)]
+            raise Exception(
+                "Could not determine station location from SAC headers.")
+
+        try:
+            elevation = tr.stats.sac.stel
+            depth = tr.stats.sac.stdp
+        except:
+            warnings.warn(
+                "Could not determine station elevation, depth from SAC headers.")
+            elevation = 0.
+            depth = 0.
+
+        trace.stats.update({
+           'latitude':latitude,
+           'longitude':longitude,
+           'elevation':elevation)
+           'depth':depth})
+
+        stations += [trace.stats]
+
     return stations
 
 

@@ -10,8 +10,18 @@ from .change_basis import change_basis
 from .util.math import PI, DEG, eig, fangle_signed, rotmat, rotmat_gen, wrap360
 
 
+bounds = ({
+    'v': [vmin, vmax],
+    'w': [wmin, wmax],
+    'h': [hmin, hmax],
+    'delta': [dmin, dmax],
+    'theta': [tmin, tmax],
+    'kappa': [kmin, kmax],
+    })
 
-def cmt2tt(M):
+
+
+def forward(M):
     """
     Converts up-south-east moment tensor to 2012 parameters
 
@@ -50,7 +60,7 @@ def cmt2tt(M):
         sigma)
 
 
-def cmt2tt15(M):
+def inverse(M):
     """
     Converts up-south-east moment tensor to 2015 parameters
 
