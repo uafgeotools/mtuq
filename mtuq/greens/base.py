@@ -1,9 +1,11 @@
 
+import obspy
+
 
 class GreensTensor(object):
     """
     Elastic Green's tensor object.  Similar to an obpy Trace, except rather than
-    a single time series, a holds six time series corresponding to the 
+    a single time series, a multiple time series corresponding to the 
     the indepdent elements of an elastic tensor
 
     param tensor:  Green's tensor
@@ -11,31 +13,29 @@ class GreensTensor(object):
     param stats: dictionary containing station and event information
     type stats: obspy Stats dictionary
     """
-    def __init__(self, tensor, stats=None):
-        self.tensor = tensor
-        self.stats = stats
+    def __init__(self, tensor, starttime, sampling_rate, station):
+        self.data = data
+        self.stats = Stats(
+            network=station.network,
+            station=station.station,
+            location=station.location,
+            latitude=station.latitude,
+            longitude=station.longitude,
+            azimuth=statin.azimuth,
+            back_azimuth=station.back_azimuth)
 
 
     def combine(self, mt):
         """
         Given a moment tensor, generates synthetics by combining elements of
-        the Green's tensor and rotating to given orientation code
+        the Green's tensor
         """
-        tensor = self.tensor
-        stats = self.stats
-
-        data = np.zeros(stats.nsamples)
-        for _i in range(3):
-            index = _index_map[(_i, component)]
-            data += mt[index] * tensor[index]
-
-        return obspy.core.stream.Stream(
-            obspy.core.trace.Trace(data, stats))
+        raise NotImplementedError("Must be implemented by subclass")
 
 
     def process(self, function, *args, **kwargs):
         """
-        Applies a signal processing function to all six Green's functions
+        Applies a signal processing function to all Green's tensor elements
         """
         tensor = deepcopy(self.tensor)
         stats = deepcopy(self.stats)
@@ -60,15 +60,17 @@ class GreensTensorList(object):
     traces, holds elastic Green's tensors
     """
     def __init__(self):
-        self.tensors = []
-        self._stations = []
-        self._channels = []
+        self._list = []
+
+
+    def __add__(self, new_list):
+        self._list +=  new_list
 
 
     def combine(self, mt):
         stream = obspy.core.stream.Stream()
-        for tensor in self.tensors:
-            stream += tensor.combine()
+        for item in self._list:
+            stream += item.combine(mt)
 
 
     def process(self, function, *args, **kwargs):
@@ -76,7 +78,7 @@ class GreensTensorList(object):
         Applies a signal processing function to all tensors in list
         """
         processed_tensors = GreensTensorList()
-        for tensor in self.tensors:
+        for tensor in self._list:
             processed_tensors += tensor.process(function, *args, **kwargs)
         return processed_tensors
 
@@ -108,4 +110,10 @@ class GreensTensorList(object):
        return self._stations
 
 
+
+class Stats(obspy.core.trace.Stats):
+    """
+    A container for information about a GreensTensor
+    """
+    pass
 
