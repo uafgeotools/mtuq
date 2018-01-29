@@ -2,7 +2,33 @@
 
 import numpy as np
 
-class MTGridRegular(object):
+
+def grid_search(data, greens, misfit, grid, origins):
+    """ Grid search over moment tensor parameters only
+    """
+    #FIXME: how to handle loop over origins?
+    for _j, origin in origins:
+        for _i in grid.size:
+            # generate moment tensor 
+            mt = grid.index2mt(_i)
+
+            # generate_synthetics
+            categories = data.keys()
+            synthetics = {}
+            for key in categories:
+                synthetics[key] = greens[key].combine(mt)
+
+            sum_misfit = 0.
+            for key in categories:
+                sum_misfit += misfit(data[key], synthetics[key])
+
+
+def grid_seach_mpi(data, greens, misfit, grid):
+    raise NotImplementedError
+
+
+
+class BaseGridRegular(object):
     def __init__(self, bounds, type):
         if not hasattr(maps, type):
             raise ValueError
@@ -54,34 +80,25 @@ class MTGridRegular(object):
        return t
 
 
-class MTGridRandom(MTGridUniform):
+class BaseGridRandom(BaseGridRegular):
     def define_coords(self):
         self._coords = {}
         for key in keys:
             self._vectors[key] = [np.random.randvec(*bounds[key])]
 
 
-def grid_search(data, greens, misfit, grid):
-    """ Grid search over moment tensor parameters only
-    """
-    for _i in grid.size:
-        categories = data.keys()
 
-        # generate moment tensor 
-        mt = grid.index2mt(_i)
-
-        # generate_synthetics
-        synthetics = {}
-        for key in categories:
-            synthetics[key] = greens[key].combine(mt)
-
-        sum_misfit = 0.
-        for key in categories:
-            sum_misfit += misfit(data[key], synthetics[key])
+class MTGridRandom(BaseGridRandom):
+    def __init__(self):
+        super(MTGridRandom, self).__init__()
 
 
-def grid_seach_mpi(data, greens, misfit, grid):
+
+class DTGridRandom:
     raise NotImplementedError
-    
-        
+
+
+class DTGridRegular:
+    raise NotImplementedError
+
 
