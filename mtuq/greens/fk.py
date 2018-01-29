@@ -9,7 +9,7 @@ from mtuq.util.geodetics import distance
 class Factory(object):
     """ 
     Reads precomputed Green's tensors from a SAC directory tree organized by 
-    model, event depth, and event distance.  Such directory layouts are commonly
+    model, event depth, and event distance.  Such directory layouts are
     associated with the software package "fk" by Lupei Zhu. The resulting 
     Green's tensors are stored in an mtuq GreensTensorList, similar to how 
     traces are stored in an obspy Stream.
@@ -20,7 +20,7 @@ class Factory(object):
 
     In the first step, one supplies the path to an fk directory and the name of 
     the corresponding Earth model. (By convention, the name of the model 
-    should match the final directory in the path, e.g. model = basename(path)).
+    should match the final directory in the path, i.e. model = basename(path)).
 
     In the second step, one supplies a list of stations and event origins.
     A GreensTensor object will be created for each station-event pair.
@@ -61,8 +61,8 @@ class Factory(object):
                         self.path, self.model, stats, origin)
                     station_ids += [station_id]
                 else:
-                    # if the station_id is the same, no need to reread;
-                    # this means there is a station with multiple components
+                    # if the station_id is the same, there are multiple
+                    # components for the same station, no need to reread
                     data = greens_tensor_list[-1].data
                     greens_tensor_list += GreensTensor(data, stats)
 
@@ -112,7 +112,7 @@ class GreensTensor(mtqu.greens.base.GreensTensor):
     def combine(self, mt):
         """
         Generates synthetic seismogram corresponding to a given moment tensor,
-        via a linear combination of Green's tensor elements
+        via linear combination of Green's tensor elements
 
         :input mt: moment tensor
         :type mt: array, length 6
@@ -155,13 +155,20 @@ def _read_greens_tensor(path, model, stats, origin):
 
     # organizes Green's tensor elements by component (z,r,t) and 
     # source type (DS,VSS,HZZ,EXP)
-    data = dict()
+    data = dict((('z',[]),('r',[]),('t',[])))
     for ext, component in keys:
         filename = '%s/%s_%s/%s.grn.%s' % (path, model, dep, dst, ext)
-        data[component] += [obspy.read(fullname, format='sac')[0].data]
+        data[component] += [_read_sac(filename)]
 
     return GreensTensor(data, stats)
 
+
+def _read_sac(filename):
+    try:
+        stream = obspy.read(filename, format='sac')
+        return stream[0].data
+    except:
+        raise Exception('Error reading SAC file: %s' % filename)
 
 
 # chinook debugging
