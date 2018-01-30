@@ -2,7 +2,7 @@
 import glob
 import os
 import warnings
-
+from copy import deepcopy
 from os.path import join
 
 import numpy as np
@@ -13,25 +13,36 @@ from obspy.core.inventory import Inventory, Station
 from obspy.core.util.attribdict import AttribDict
 
 
-def get_traces(files):
-    dat = obspy.core.Stream()
-    for _i, filename in enumerate(files):
-        dat += obspy.read(filename, format='sac')
+def read(path, wildcard='*', verbose=False):
+    """ Reads SAC files
+    """
+    event_name = os.path.dirname(path)
+    files = glob.glob(join(path, wildcard))
 
+    # read data, one file at a time
+    data = obspy.core.Stream()
+    for filename in files:
         try:
-            # append station location to stats
-            tr = dat[_i]
-            sac_headers = tr.stats.sac
-            tr.stats['latitude'] = sac_headers.stla
-            tr.stats['longitude'] = sac_headers.stlo
+            data += obspy.read(filename, format='sac')
         except:
-            warnings.warn("Could not determine station location from sac headers.")
+            if verbose:
+                print('Not a SAC file: %f' % filename)
 
-    return dat
+    # sort by station
+    data_dict = {}
+    for trace in data:
+        id = _id(trace.stats)
+        if id not in data_dict:
+            data_dict[id] = Stream(trace)
+        else:
+            data_dict[id] += trace
+
+    data_sorted = data_dict.values()
+    return data_sorted
 
 
 def get_origin(data, event_name=None):
-    sac_headers = data[0].stats.sac
+    sac_headers = data[0][0].stats.sac
 
     # location
     try:
@@ -42,7 +53,6 @@ def get_origin(data, event_name=None):
                       "Setting location to nan...")
         latitude = np.nan
         longitudue = np.nan
-
 
     # depth
     try:
@@ -65,14 +75,6 @@ def get_origin(data, event_name=None):
                       "Setting origin time to zero...")
         origin_time = obspy.UTCDateTime(0)
 
-#    return AttribDict({
-#        'resource_id'=event_name,
-#        'time':origin_time,
-#        'longitude':longitude,
-#        'latitude':latitude,
-#        'depth':depth,
-#        })
-
     return Origin(
         time=origin_time,
         longitude=sac_headers.evlo,
@@ -81,74 +83,71 @@ def get_origin(data, event_name=None):
     )
 
 
-def get_event(event_name, origin):
-    """ Creates event object based on sac metadata
-    """
-    ev = Event(resource_id=_get_resource_id(event_name, "event"),
-        event_type="earthquake")
-    #ev.event_descriptions.append(EventDescription(text=event_name,
-    #    type="earthquake name"))
-    #ev.comments.append(Comment(
-    #    text="Hypocenter catalog: %s" % hypocenter_catalog,
-    #    force_resource_id=False))
-    ev.origins.append(origin)
-
-    return ev
-
-
 def get_stations(data):
-    """ Collect station metadata from obspy Stream object
+    """ Collect station metadata from obspy Stream objects
     """
     stations = []
-    for trace in data:
+    for stream in data:
+        stats = deepcopy(stream[0].stats)
         try:
-            latitude = tr.stats.sac.stla
-            longitude = tr.stats.sac.stlo
+            station_latitude = stats.sac.stla
+            station_longitude = stats.sac.stlo
         except:
             raise Exception(
                 "Could not determine station location from SAC headers.")
 
         try:
-            elevation = tr.stats.sac.stel
-            depth = tr.stats.sac.stdp
+            station_elevation = stats.sac.stel
+            station_depth = stats.sac.stdp
         except:
             warnings.warn(
                 "Could not determine station elevation, depth from SAC headers.")
-            elevation = 0.
-            depth = 0.
+            station_elevation = 0.
+            station_depth = 0.
 
-        trace.stats.update({
-           'latitude':latitude,
-           'longitude':longitude,
-           'elevation':elevation)
-           'depth':depth})
+        try:
+            event_latitude = stats.sac.evla
+            event_longitude = stats.sac.evlo
+        except:
+            raise Exception(
+                "Could not determine event location from SAC headers.")
 
-        stations += [trace.stats]
+        stats.update({
+           'starttime': stats.starttime,
+           'delta': stats.delta,
+           'latitude':station_latitude,
+           'longitude':station_longitude,
+           'elevation':station_elevation,
+           'depth':station_depth,
+           #'distance': distance,
+           #'azimuth': azimuth,
+           #'back_azimuth': back_azimuth,
+           #'event_depth': event_depth,
+           })
+
+        stats.channels = []
+        for trace in stream:
+            stats.channels += [trace.stats.channel]
+        stations += [stats]
 
     return stations
 
 
-def _get_resource_id(res_name, res_type, tag=None):
-    """
-    Helper function to create consistent resource ids
-    """
-    res_id = "smi:local/%s/%s" % (res_name, res_type)
-    if tag is not None:
-        res_id += "#" + tag
-    return res_id
+def _id(stats):
+    return '.'.join((
+        stats.network,
+        stats.location,
+        stats.station))
 
-
-def read(path, wildcard='*.sac'):
-    """ Reads SAC files
-    """
-    event_name = os.path.dirname(path)
-    filenames = glob.glob(join(path, wildcard))
-    data = get_traces(filenames)
-    return data
+def _copy(stats):
+    stats = deepcopy(stats)
+    stats['channels'] = stats.pop('channel')
+    return stats
 
 
 
 # debugging
 if __name__=='__main__':
-    read('/u1/uaf/rmodrak/packages/capuaf/20090407201255351')
+    data = read('/u1/uaf/rmodrak/packages/capuaf/20090407201255351')
+    get_stations(data)
 
