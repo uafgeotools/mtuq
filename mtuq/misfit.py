@@ -11,7 +11,7 @@ def waveform_difference_cc(obs, syn):
         wrsd = syn[ioff:] - obs[:-ioff]
     else:
         wrsd = syn[:-ioff] - obs[ioff:]
-    return np.sqrt(np.sum(wrsd*wrsd*dt))
 
+    return np.sqrt(np.sum(wrsd*wrsd*dt))
 
 

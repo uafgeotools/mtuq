@@ -1,6 +1,7 @@
 
+# stubs
 
-class proces_data(object):
+class process_data(object):
     def __init__(self, parameters):
         self.parameters = parameters
 
@@ -8,10 +9,10 @@ class proces_data(object):
         return data
 
 
-def process_bw_factory(parameters):
+def process_bw_factory(**parameters):
     return process_data(parameters)
 
 
-def process_sw_factory(parameters):
+def process_sw_factory(**parameters):
     return process_data(parameters)
 

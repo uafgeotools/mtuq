@@ -3,32 +3,35 @@
 import numpy as np
 
 
-def grid_search(data, greens, misfit, grid, origins):
+def grid_search(data, greens, misfit, grid):
     """ Grid search over moment tensor parameters only
     """
-    #FIXME: how to handle loop over origins?
-    for _j, origin in origins:
-        for _i in grid.size:
-            # generate moment tensor 
-            mt = grid.index2mt(_i)
+    for _i in grid.size:
+        # generate moment tensor 
+        mt = grid.index2mt(_i)
 
-            # generate_synthetics
-            categories = data.keys()
-            synthetics = {}
-            for key in categories:
-                synthetics[key] = greens[key].combine(mt)
+        # generate_synthetics
+        categories = data.keys()
+        synthetics = {}
+        for key in categories:
+            synthetics[key] = greens[key].combine(mt)
 
-            sum_misfit = 0.
-            for key in categories:
-                sum_misfit += misfit(data[key], synthetics[key])
+        sum_misfit = 0.
+        for key in categories:
+            sum_misfit += misfit(data[key], synthetics[key])
 
 
-def grid_seach_mpi(data, greens, misfit, grid):
+def grid_search_mpi(data, greens, misfit, grid):
     raise NotImplementedError
 
 
 
+
+### grid iterators
+
 class BaseGridRegular(object):
+    """ Base class
+    """
     def __init__(self, bounds, type):
         if not hasattr(maps, type):
             raise ValueError
@@ -60,7 +63,7 @@ class BaseGridRegular(object):
         # define coordinate vectors for each parameter
         self._coords = {}
         for key in keys:
-            self._vectors[key] = [np.linspace(*bounds[key], nsamples+2)[1:-1]]
+            self._vectors[key] = [np.linspace(bounds[key][0], bounds[key][1], nsamples+2)[1:-1]]
 
 
     def index2mt(self, index):
@@ -81,6 +84,8 @@ class BaseGridRegular(object):
 
 
 class BaseGridRandom(BaseGridRegular):
+    """ Base class
+    """
     def define_coords(self):
         self._coords = {}
         for key in keys:
@@ -89,16 +94,30 @@ class BaseGridRandom(BaseGridRegular):
 
 
 class MTGridRandom(BaseGridRandom):
+    """ Full moment tensor grid
+    """
     def __init__(self):
         super(MTGridRandom, self).__init__()
 
 
+class MTGridRegular(BaseGridRegular):
+    """ Full moment tensor grid
+    """
+    def __init__(self):
+        super(MTGridRregular, self).__init__()
+
 
 class DTGridRandom:
-    raise NotImplementedError
+    """ Double-couple moment tensor grid
+    """
+    def __init__(self):
+        raise NotImplementedError
 
 
 class DTGridRegular:
-    raise NotImplementedError
+    """ Double-couple moment tensor grid
+    """
+    def __init__(self):
+        raise NotImplementedError
 
 
