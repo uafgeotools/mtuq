@@ -1,19 +1,22 @@
 
+from importlib import import_module
 
-def get_origin(data, format=None, **kwargs):
-   module =  __import__('mtuq.io.'+format)
+
+def read(format, *args, **kwargs):
+   module = import_module('mtuq.io.'+format)
+   plugin = getattr(module, 'read')
+   return plugin(*args, **kwargs)
+
+
+def get_origin(format, *args, **kwargs):
+   module =  import_module('mtuq.io.'+format)
    plugin = getattr(module, 'get_origin')
-   return plugin(data)
+   return plugin(*args, **kwargs)
 
 
-def get_stations(data, format=None, **kwargs):
-   module =  __import__('mtuq.io.'+format)
+def get_stations(format, *args, **kwargs):
+   module =  import_module('mtuq.io.'+format)
    plugin = getattr(module, 'get_stations')
-   return plugin(data)
+   return plugin(*args, **kwargs)
 
-
-def read(data, format=None, **kwargs):
-   module = __import__('mtuq.io.'+format)
-   plugin = getattr(module, 'get_origin')
-   return plugin(data)
 
