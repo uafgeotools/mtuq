@@ -1,6 +1,8 @@
 
 import obspy
 
+from copy import deepcopy
+
 
 class GreensTensor(object):
     """
@@ -13,22 +15,15 @@ class GreensTensor(object):
     param stats: dictionary containing station and event information
     type stats: obspy Stats dictionary
     """
-    def __init__(self, tensor, starttime, sampling_rate, station):
+    def __init__(self, data, station):
         self.data = data
-        self.stats = Stats(
-            network=station.network,
-            station=station.station,
-            location=station.location,
-            latitude=station.latitude,
-            longitude=station.longitude,
-            azimuth=statin.azimuth,
-            back_azimuth=station.back_azimuth)
+        self.station = station
 
 
     def combine(self, mt):
         """
-        Given a moment tensor, generates synthetics by combining elements of
-        the Green's tensor
+        Generates synthetic seismogram via linear combination of Green's tensor
+        elements
         """
         raise NotImplementedError("Must be implemented by subclass")
 
@@ -37,13 +32,12 @@ class GreensTensor(object):
         """
         Applies a signal processing function to all Green's tensor elements
         """
-        tensor = deepcopy(self.tensor)
-        stats = deepcopy(self.stats)
+        data = deepcopy(self.data)
 
-        for time_series in tensor:
-            time_sereis = function(time_series, *args, **kwargs)
+        for array in data:
+            array[:] = function(array, *args, **kwargs)[:]
         
-        return Tensor(data, headers=meta)
+        return GreensTensor(data, self.station)
 
 
     def convolve(self, wavelet):
@@ -63,57 +57,47 @@ class GreensTensorList(object):
         self._list = []
 
 
-    def __add__(self, new_list):
-        self._list +=  new_list
+    def __add__(self, greens_tensor):
+        self._list += [greens_tensor]
+        return self
+
+
+    def __iter__(self):
+        return self._list.__iter__()
+
+
+    @property
+    def stations(self):
+        _stations = []
+        for greens_tensor in self._list:
+            _stations += [greens_tensor.station]
+        return _stations
 
 
     def combine(self, mt):
-        stream = obspy.core.stream.Stream()
-        for item in self._list:
-            stream += item.combine(mt)
+        synthetics = []
+        for greens_tensor in self._list:
+            synthetics += [greens_tensor.combine(mt)]
+        return synthetics
 
 
     def process(self, function, *args, **kwargs):
         """
-        Applies a signal processing function to all tensors in list
+        Applies a signal processing function to all Green's tensors
         """
-        processed_tensors = GreensTensorList()
-        for tensor in self._list:
-            processed_tensors += tensor.process(function, *args, **kwargs)
-        return processed_tensors
+        processed = GreensTensorList()
+        for greens_tensor in self._list:
+            processed +=\
+                greens_tensor.process(function, *args, **kwargs)
+        return processed
 
 
     def convolve(self, wavelet):
         """ 
-        Convolves all tensors with given wavelet
+        Convolves all Green's tensors with given wavelet
         """
-        convolved_tensors = GreensTensorList()
-        for tensor in self.tensors:
-            convolved_tensors += tensor.convolve(wavelet)
-        return convolved_tensors
-
-
-    def __iter__(self):
-        return self.tensors.__iter__()
-
-
-    @property
-    def channels:
-       if len(self._channels) != len(self.tensor)
-           self._channels = [tensor.stats.id for tensor in self.tensors]
-       return self._channels
-
-    @property
-    def stations:
-       if len(self._stations) != len(self.tensor)
-           self._stations = [tensor.stats.station for tensor in self.tensors]
-       return self._stations
-
-
-
-class Stats(obspy.core.trace.Stats):
-    """
-    A container for information about a GreensTensor
-    """
-    pass
+        convolved = GreensTensorList()
+        for greens_tensor in self._list:
+            convolved += greens_tensor.convolve(wavelet)
+        return convolved
 

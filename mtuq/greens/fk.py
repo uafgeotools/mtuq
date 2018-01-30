@@ -2,11 +2,12 @@
 import obspy
 import mtuq.greens.base
 
-from os.path import exists, join
-from mtuq.util.geodetics import distance
+from os.path import basename, exists, join
+from mtuq.util.geodetics import distance_azimuth
+from mtuq.util.util import iterable
 
 
-class Factory(object):
+class GreensTensorFactory(object):
     """ 
     Reads precomputed Green's tensors from a SAC directory tree organized by 
     model, event depth, and event distance.  Such directory layouts are
@@ -25,7 +26,7 @@ class Factory(object):
     In the second step, one supplies a list of stations and event origins.
     A GreensTensor object will be created for each station-event pair.
     """
-    def __init__(self, path, model=None):
+    def __init__(self, path=None, model=None):
         """
         Creates a function that can subsequently be called to read 
         Green's tensors
@@ -33,6 +34,8 @@ class Factory(object):
         :str path: path to "fk" directory tree
         :str model: name of Earth model
         """
+        if not path:
+            raise Exception
 
         if not exists(path):
             raise Exception
@@ -49,27 +52,18 @@ class Factory(object):
         Reads Green's tensors corresponding to given stations and origins
         """
         greens_tensor_list = mtuq.greens.base.GreensTensorList()
-        station_ids = ['']
 
-        for origin in origins:
-            for stats in stations:
-                station_id = stats.network+'.'+stats.station
-                if station_id != stations_ids[-1]:
-                    stats.distance, stats.azimuth = distance_azimuth(
-                        stats, origin)
+        for origin in iterable(origins):
+            for station in stations:
+                    station.distance, station.azimuth = distance_azimuth(
+                        station, origin)
                     greens_tensor_list += _read_greens_tensor(
-                        self.path, self.model, stats, origin)
-                    station_ids += [station_id]
-                else:
-                    # if the station_id is the same, there are multiple
-                    # components for the same station, no need to reread
-                    data = greens_tensor_list[-1].data
-                    greens_tensor_list += GreensTensor(data, stats)
+                        self.path, self.model, station, origin)
 
         return greens_tensor_list
 
 
-class GreensTensor(mtqu.greens.base.GreensTensor):
+class GreensTensor(mtuq.greens.base.GreensTensor):
     """ Modifies GreensTensor base class, adding machinery for generating 
       synthetics
     """
