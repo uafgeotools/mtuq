@@ -6,8 +6,8 @@ VERBOSE = 0
 
 import numpy as np
 
-from .change_basis import change_basis
-from .util.math import PI, DEG, eig, fangle_signed, rotmat, rotmat_gen, wrap360
+from mtuq.mt.change_basis import change_basis
+from mtuq.util.math import PI, DEG, eig, fangle_signed, rotmat, rotmat_gen, wrap360
 
 
 bounds = ({
