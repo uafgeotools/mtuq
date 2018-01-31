@@ -7,7 +7,7 @@ import mtuq.greens.fk
 import mtuq.misfit
 
 from mtuq.process_data import process_bw_factory, process_sw_factory
-from mtuq.grid_search import MTGridRandom, grid_search_mpi
+from mtuq.grid_search import MTGridRandom, grid_search
 from mtuq.util.util import Struct
 #from mtuq.util.wavelets import trapezoid
 
@@ -31,8 +31,8 @@ paths = Struct({
 
 
 if __name__=='__main__':
-    """ Carries out grid search over double-couple parameters;
-       magnitude, event depth, and event location are fixed
+    """ Carries out grid search over full moment tensor parameters,
+       excluding magnitude; event depth and location are fixed
     """
     # define data misfit
     misfit = mtuq.misfit.waveform_difference_cc
@@ -43,30 +43,32 @@ if __name__=='__main__':
        'sw': process_sw_factory(**parameters_sw),
        }
 
+    # define grid
+    magnitude = 4.0
+    grid = MTGridRandom(N=10, M=magnitude)
+
     # read data
     data_format = 'sac'
     data = mtuq.io.read(data_format, paths.data)
     origin = mtuq.io.get_origin(data_format, data)
     stations = mtuq.io.get_stations(data_format, data)
 
+    processed_data = {}
+    for key in process_data:
+        processed_data[key] = process_data[key](data)
+
     # read Green's functions
     factory = mtuq.greens.fk.GreensTensorFactory(paths.greens)
     greens = factory(stations, origin)
+
     #wavelet = trapezoid(half_duration=1.)
     #greens.convolve(wavelet)
 
-    # data processing
-    categories = process_data.keys()
-    processed_data = {}
     processed_greens = {}
-    for key in categories:
-        processed_data[key] = process_data[key](data)
+    for key in process_data:
         processed_greens[key] = greens.process(process_data[key])
 
-    # define grid
-    grid = DCGridRandom(npts=30000, Mw=4.0)
-
-    # carry out grid search in parallel
-    grid_search_mpi(processed_data, processed_greens, misfit, grid, origin)
+    # carry out grid search
+    grid_search(processed_data, processed_greens, misfit, grid)
 
 

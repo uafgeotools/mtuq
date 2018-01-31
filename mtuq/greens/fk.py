@@ -47,18 +47,17 @@ class GreensTensorFactory(object):
         self.model = model
 
 
-    def __call__(self, stations, origins):
+    def __call__(self, stations, origin):
         """
-        Reads Green's tensors corresponding to given stations and origins
+        Reads Green's tensors corresponding to given stations and origin
         """
         greens_tensor_list = mtuq.greens.base.GreensTensorList()
 
-        for origin in iterable(origins):
-            for station in stations:
-                    station.distance, station.azimuth = distance_azimuth(
-                        station, origin)
-                    greens_tensor_list += _read_greens_tensor(
-                        self.path, self.model, station, origin)
+        for station in stations:
+                station.distance, station.azimuth = distance_azimuth(
+                    station, origin)
+                greens_tensor_list += _read_greens_tensor(
+                    self.path, self.model, station, origin)
 
         return greens_tensor_list
 
@@ -120,6 +119,28 @@ class GreensTensor(mtuq.greens.base.GreensTensor):
         for _i in range(4):
             syn += weights[_i]*greens_functions[_i]
         return syn
+
+
+    def process(self, function, *args, **kwargs):
+        """
+        Applies a signal processing function to all Green's tensor elements
+        """
+        # overwrites data
+        for _c in ['z','r','t']:
+            for _i in range(4):
+                self.data[_c][_i] =\
+                    function(self.data[_c][_i], *args, **kwargs)
+        return self
+
+
+    #def process(self, function, *args, **kwargs):
+    #    # creates a copy
+    #    data = deepcopy(self.data)
+    #    for _c in ['z','r','t']:
+    #        for _i in range(4):
+    #            data[_c][_i] =\
+    #                function(data[_c][_i], *args, **kwargs)
+    #    return GreensTensor(data, self.station)
 
 
 def _read_greens_tensor(path, model, stats, origin):

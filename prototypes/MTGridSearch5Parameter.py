@@ -1,17 +1,15 @@
 
-# NOT IMPLEMENTED
-#   get_stations
-#   wavelets.trapezoid
-
+import sys
 import numpy as np
 
 import mtuq.io
+import mtuq.greens.fk
 import mtuq.misfit
-import mtuq.wavelets
 
-from mtqu import greens
-from mtuq.process_data import process_bw_factory, process_sw_factory, convolve_greens
-from mtuq.grid_search import MTGridRandom, grid_search_mpi
+from mtuq.process_data import process_bw_factory, process_sw_factory
+from mtuq.grid_search import MTGridRandom, grid_search
+from mtuq.util.util import Struct
+#from mtuq.util.wavelets import trapezoid
 
 
 parameters_bw = {
@@ -28,47 +26,49 @@ parameters_sw = {
 
 paths = Struct({
     'data': '/u1/uaf/rmodrak/packages/capuaf/20090407201255351',
-    'greens_functions': '/center1/ERTHQUAK/rmodrak/data/wf/FK_SYNTHETICS/scak',
-    )}
-
+    'greens': '/center1/ERTHQUAK/rmodrak/data/wf/FK_SYNTHETICS/scak',
+    })
 
 
 if __name__=='__main__':
     """ Carries out grid search over full moment tensor parameters,
        excluding magnitude; event depth and location are fixed
     """
-
-    # define data misfit and processing functions
+    # define data misfit
     misfit = mtuq.misfit.waveform_difference_cc
 
+    # define data processing
     process_data = {
        'bw': process_bw_factory(**parameters_bw),
        'sw': process_sw_factory(**parameters_sw),
        }
 
-    # read data
-    data = mtuq.io.read(path, data_format)
-    origin = mtuq.io.get_origin(data, data_format)
-    stations = mtuq.io.get_stations(data, data_format)
+    # define grid
+    magnitude = 4.0
+    grid = MTGridRandom(N=10, M=magnitude)
 
-    # define double-couple moment tensor grid
-    grid = MTGridRandom(npts=30000, Mw=4.0)
+    # read data
+    data_format = 'sac'
+    data = mtuq.io.read(data_format, paths.data)
+    origin = mtuq.io.get_origin(data_format, data)
+    stations = mtuq.io.get_stations(data_format, data)
+
+    processed_data = {}
+    for key in process_data:
+        processed_data[key] = process_data[key](data)
 
     # read Green's functions
-    factory = greens.fk.factory(paths.greens_functions)
+    factory = mtuq.greens.fk.GreensTensorFactory(paths.greens)
     greens = factory(stations, origin)
-    wavelet = mtuq.wavelets.trapezoid(half_duration=1.)
-    greens.convolve(wavelet)
 
-    # data processing
-    categories = process_data.keys()
-    processed_data = {}
+    #wavelet = trapezoid(half_duration=1.)
+    #greens.convolve(wavelet)
+
     processed_greens = {}
-    for key in categories:
-        processed_data[key] = process_data[key](data)
+    for key in process_data:
         processed_greens[key] = greens.process(process_data[key])
 
-    # carry out grid search in parallel
-    grid_search_mpi(processed_data, processed_greens, misfit, grid, origin)
+    # carry out grid search
+    grid_search(processed_data, processed_greens, misfit, grid)
 
 

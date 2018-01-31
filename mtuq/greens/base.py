@@ -32,12 +32,7 @@ class GreensTensor(object):
         """
         Applies a signal processing function to all Green's tensor elements
         """
-        data = deepcopy(self.data)
-
-        for array in data:
-            array[:] = function(array, *args, **kwargs)[:]
-        
-        return GreensTensor(data, self.station)
+        raise NotImplementedError("Must be implemented by subclass")
 
 
     def convolve(self, wavelet):
