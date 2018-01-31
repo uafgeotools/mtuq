@@ -7,7 +7,7 @@ import mtuq.greens.fk
 import mtuq.misfit
 
 from mtuq.process_data import process_bw_factory, process_sw_factory
-from mtuq.grid_search import MTGridRandom, grid_search
+from mtuq.grid_search import MTGridRandom, DepthGrid, grid_search
 from mtuq.util.util import Struct
 from mtuq.util.wavelets import trapezoid
 
@@ -31,8 +31,8 @@ paths = Struct({
 
 
 if __name__=='__main__':
-    """ Carries out grid search over double-couple parameters;
-       magnitude, event depth, and event location are fixed
+    """ Carries out grid search over double-couple parameters, magnitude,
+       and event depth; location is fixed
     """
     # define data misfit
     misfit = mtuq.misfit.waveform_difference_cc
@@ -44,8 +44,10 @@ if __name__=='__main__':
        }
 
     # define grid
-    magnitude = 4.0
-    grid = DCGridRandom(N=10, M=magnitude)
+    magnitudes = np.linspace(4.,5.,5)
+    depths = np.linspace(2.5,25.,10)
+    origins = DepthGrid(origin, depths)
+    grid = DCGridRandom(N=10, M=magnitudes)
 
     # read data
     data_format = 'sac'
@@ -58,17 +60,18 @@ if __name__=='__main__':
         processed_data[key] = process_data[key](data)
 
     # read Green's functions
-    factory = mtuq.greens.fk.GreensTensorFactory(paths.greens)
-    greens = factory(stations, origin)
+    for origin in origins:
+        factory = mtuq.greens.fk.GreensTensorFactory(paths.greens)
+        greens = factory(stations, origin)
 
-    wavelet = trapezoid(half_duration=1.)
-    greens.convolve(wavelet)
+        wavelet = trapezoid(half_duration=1.)
+        greens.convolve(wavelet)
 
-    processed_greens = {}
-    for key in process_data:
-        processed_greens[key] = greens.process(process_data[key])
+        processed_greens = {}
+        for key in process_data:
+            processed_greens[key] = greens.process(process_data[key])
 
-    # carry out grid search
-    grid_search(processed_data, processed_greens, misfit, grid)
+        # carry out grid search
+        grid_search(processed_data, processed_greens, misfit, grid)
 
 
