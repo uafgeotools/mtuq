@@ -1,14 +1,17 @@
 
-
 import numpy as np
+
+from mtuq.mt.maps.tape2015 import tt152cmt
+from mtuq.util.math import PI
+
 
 
 def grid_search(data, greens, misfit, grid):
     """ Grid search over moment tensor parameters only
     """
-    for _i in grid.size:
-        # generate moment tensor 
-        mt = grid.index2mt(_i)
+    for _i in range(grid.size):
+        # gets the i-th moment tensor in grid
+        mt = grid.get(_i)
 
         # generate_synthetics
         categories = data.keys()
@@ -27,97 +30,151 @@ def grid_search_mpi(data, greens, misfit, grid):
 
 
 
-### grid iterators
+### moment tensor grids
 
-class BaseGridRegular(object):
-    """ Base class
+class Grid(object):
+    """ Multidimensional grid
+
+        Allows iterating over all values of a multidimensional grid while 
+        storing only values of the coordinate axes
+
+        Given a set of axes names and values, __init__ can be called directly
+        to return a Grid instance, or __init__ can be overloaded to create a
+        specialized Grid subclass
     """
-    def __init__(self, bounds, type):
-        if not hasattr(maps, type):
-            raise ValueError
+    def __init__(self, axes, map=None):
 
-        # parameter names
-        keys = sorted(bounds.keys())
-        ndim = len(keys)
+        # dictionary containing axis names and values
+        self.axes = axes
 
-        # grid shape
+        # optional map from one set of set of axes to another
+        self.map = map
+
+        # what is the length along each axis?
         shape = []
-        for key in range(ndim):
-            shape += bounds[_i,2]
+        for _, axis in axes.items():
+            shape += [len(axis)]
 
-        self.keys = keys
-        self.bounds = bounds
-
-        self.ndim = ndim
+        # what attributes would the grid have if stored as an numpy array?
         self.shape = shape
         self.size = np.product(shape)
+        self.ndim = len(shape)
+ 
 
-        # define coordinate vectors
-        self.define_coords()
+    def get(self, i):
+        """ Returns i-th point in grid
+        """
+        p = {}
+        for key, val in self.axes.items():
+            p[key] = val[i%len(val)]
+            i/=len(val)
 
-        # define parameter conversion 
-        self.map = getattr(maps, type)
-
-
-    def define_coords(self):
-        # define coordinate vectors for each parameter
-        self._coords = {}
-        for key in keys:
-            self._vectors[key] = [np.linspace(bounds[key][0], bounds[key][1], nsamples+2)[1:-1]]
-
-
-    def index2mt(self, index):
-        t = index2tuple(index)
-        m = {}
-        for key in self.keys():
-            m[key] = self._coords[key][t[key]]
-
-        # convert to mt vector (gcmt convention)
-        return self.map(m)
+        if self.map:
+            return self.map(p)
+        else:
+            return p
 
 
-    def index2tuple(self, index):
-       t = {}
-       for ikey, key in enumerate(self.keys):
-           t[key] = index % self.shape[ikey]
-       return t
-
-
-class BaseGridRandom(BaseGridRegular):
-    """ Base class
+class MTGridRandom(Grid):
+    """ Full moment tensor grid with randomly spaced values
     """
-    def define_coords(self):
-        self._coords = {}
-        for key in keys:
-            self._vectors[key] = [np.random.randvec(*bounds[key])]
+    def __init__(self, M=[], N=10):
+
+        # upper bound//lower bound//number of points
+        v = [-1./3., 1./3., N]
+        w = [-3./8.*PI, 3./8.*PI, N]
+        kappa = [0., 360, N]
+        sigma = [-90., 90., N]
+        h = [0., 1., N]
+
+        # magnitude is treated separately
+        rho = _array(M)/np.sqrt(2)
+
+        super(MTGridRandom, self).__init__({
+            'rho': rho,
+            'v': randvec(v),
+            'w': randvec(w),
+            'kappa': randvec(kappa),
+            'sigma': randvec(sigma),
+            'h': randvec(h)},
+            tt152cmt)
 
 
-
-class MTGridRandom(BaseGridRandom):
-    """ Full moment tensor grid
-    """
-    def __init__(self):
-        super(MTGridRandom, self).__init__()
-
-
-class MTGridRegular(BaseGridRegular):
-    """ Full moment tensor grid
+class MTGridRegular(Grid):
+    """ Full moment tensor grid with regularly spaced values
     """
     def __init__(self):
-        super(MTGridRregular, self).__init__()
+
+        # upper bound//lower bound//number of points
+        v = [-1./3., 1./3., N]
+        w = [-3./8.*PI, 3./8.*PI, N]
+        kappa = [0., 360, N]
+        sigma = [-90., 90., N]
+        h = [0., 1., N]
+
+        # magnitude is treated separately
+        rho = _array(M)/np.sqrt(2)
+
+        super(MTGridRandom, self).__init__({
+            'rho': rho,
+            'v': linspace(v),
+            'w': linspace(w),
+            'kappa': linspace(kappa),
+            'sigma': linspace(sigma),
+            'h': linspace(n)},
+            tape_2015)
 
 
-class DTGridRandom:
+
+class DCGridRandom(Grid):
     """ Double-couple moment tensor grid
     """
     def __init__(self):
         raise NotImplementedError
 
 
-class DTGridRegular:
+class DCGridRegular(Grid):
     """ Double-couple moment tensor grid
     """
     def __init__(self):
         raise NotImplementedError
+
+
+
+
+
+### depth/location grids
+
+def DepthGrid():
+    raise NotImplementedError
+
+
+def OriginGrid():
+    raise NotImplementedError
+
+
+
+### utilities
+
+def _array(x):
+    if type(x) in [np.ndarray]:
+        return x
+
+    elif type(x) in [list,tuple]:
+        return np.array(x)
+
+    elif type(x) in [float,int]:
+        return np.array([float(x)])
+
+    else:
+        raise ValueError
+
+
+def linspace(x1,x2,nx):
+    return np.linspace(x1,x2,n+2)[1:-1]
+
+
+def randvec(args):
+    return np.random.uniform(*args)
 
 
