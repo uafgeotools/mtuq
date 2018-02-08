@@ -2,26 +2,36 @@
 import numpy as np
 
 from mtuq.mt.maps.tape2015 import tt152cmt
-from mtuq.util.math import PI
+from mtuq.util.math import PI, INF
+from mtuq.util.util import Struct
 
+from copy import deepcopy
 
 
 def grid_search(data, greens, misfit, grid):
-    """ Grid search over moment tensor parameters only
+    """ Grid search over moment tensor parameters
     """
+    best_misfit = INF
+
     for _i in range(grid.size):
         # gets the i-th moment tensor in grid
+        print _i
         mt = grid.get(_i)
 
         # generate_synthetics
         categories = data.keys()
         synthetics = {}
         for key in categories:
-            synthetics[key] = greens[key].combine(mt)
+            synthetics[key] = greens[key].get_synthetics(mt)
 
         sum_misfit = 0.
         for key in categories:
-            sum_misfit += misfit(data[key], synthetics[key])
+            chi, dat, syn = misfit[key], data[key], synthetics[key]
+            sum_misfit += chi(dat, syn)
+
+        # keep track of best moment tensor
+        if sum_misfit < best_misfit:
+            best_mt = mt
 
 
 def grid_search_mpi(data, greens, misfit, grid):
@@ -36,7 +46,7 @@ class Grid(object):
     """ Multidimensional grid
 
         Allows iterating over all values of a multidimensional grid while 
-        storing only values of the coordinate axes
+        storing only values along the axes
 
         Given a set of axes names and values, __init__ can be called directly
         to return a Grid instance, or __init__ can be overloaded to create a
@@ -47,7 +57,7 @@ class Grid(object):
         # dictionary containing axis names and values
         self.axes = axes
 
-        # optional map from one set of set of axes to another
+        # optional map from one parameterization to another
         self.map = map
 
         # what is the length along each axis?
@@ -62,9 +72,9 @@ class Grid(object):
  
 
     def get(self, i):
-        """ Returns i-th point in grid
+        """ Returns i-th point of grid
         """
-        p = {}
+        p = Struct()
         for key, val in self.axes.items():
             p[key] = val[i%len(val)]
             i/=len(val)
@@ -76,11 +86,12 @@ class Grid(object):
 
 
 class MTGridRandom(Grid):
-    """ Full moment tensor grid with randomly spaced values
+    """ Full moment tensor grid with randomly-spaced values
     """
-    def __init__(self, M=[], N=10):
+    def __init__(self, Mw=[], points_per_axis=10):
+        N = points_per_axis
 
-        # upper bound//lower bound//number of points
+        # upper bound, lower bound, number of points
         v = [-1./3., 1./3., N]
         w = [-3./8.*PI, 3./8.*PI, N]
         kappa = [0., 360, N]
@@ -88,7 +99,7 @@ class MTGridRandom(Grid):
         h = [0., 1., N]
 
         # magnitude is treated separately
-        rho = _array(M)/np.sqrt(2)
+        rho = _array(Mw)/np.sqrt(2)
 
         super(MTGridRandom, self).__init__({
             'rho': rho,
@@ -97,15 +108,16 @@ class MTGridRandom(Grid):
             'kappa': randvec(kappa),
             'sigma': randvec(sigma),
             'h': randvec(h)},
-            tt152cmt)
+            tape2015)
 
 
 class MTGridRegular(Grid):
-    """ Full moment tensor grid with regularly spaced values
+    """ Full moment tensor grid with regularly-spaced values
     """
-    def __init__(self):
+    def __init__(self, Mw=[], points_per_axis=10):
+        N = points_per_axis
 
-        # upper bound//lower bound//number of points
+        # upper bound, lower bound, number of points
         v = [-1./3., 1./3., N]
         w = [-3./8.*PI, 3./8.*PI, N]
         kappa = [0., 360, N]
@@ -113,7 +125,7 @@ class MTGridRegular(Grid):
         h = [0., 1., N]
 
         # magnitude is treated separately
-        rho = _array(M)/np.sqrt(2)
+        rho = _array(Mw)/np.sqrt(2)
 
         super(MTGridRandom, self).__init__({
             'rho': rho,
@@ -122,23 +134,59 @@ class MTGridRegular(Grid):
             'kappa': linspace(kappa),
             'sigma': linspace(sigma),
             'h': linspace(n)},
-            tape_2015)
-
+            tape2015)
 
 
 class DCGridRandom(Grid):
-    """ Double-couple moment tensor grid
+    """ Double-couple moment tensor grid with randomly-spaced values
     """
-    def __init__(self):
-        raise NotImplementedError
+    def __init__(self, Mw=[], points_per_axis=10):
+        N = points_per_axis
+
+        # upper bound, lower bound, number of points
+        kappa = [0., 360, N]
+        sigma = [-90., 90., N]
+        h = [0., 1., N]
+
+        # magnitude is treated separately
+        rho = _array(Mw)/np.sqrt(2)
+
+        super(DCGridRandom, self).__init__({
+            'rho': rho,
+            'v': np.array([0.]),
+            'w': np.array([0.]),
+            'kappa': randvec(kappa),
+            'sigma': randvec(sigma),
+            'h': randvec(h)},
+            tape2015)
 
 
 class DCGridRegular(Grid):
-    """ Double-couple moment tensor grid
+    """ Double-couple moment tensor grid with regularly-spaced values
     """
-    def __init__(self):
-        raise NotImplementedError
+    def __init__(self, Mw=[], points_per_axis=10):
+        N = points_per_axis
 
+        # upper bound, lower bound, number of points
+        kappa = [0., 360, N]
+        sigma = [-90., 90., N]
+        h = [0., 1., N]
+
+        # magnitude is treated separately
+        rho = _array(Mw)/np.sqrt(2)
+
+        super(DCGridRegular, self).__init__({
+            'rho': rho,
+            'v': np.array([0.]),
+            'w': np.array([0.]),
+            'kappa': linspace(kappa),
+            'sigma': linspace(sigma),
+            'h': linspace(n)},
+            tape2015)
+
+
+def tape2015(p):
+    return tt152cmt(p.rho, p.v, p.w, p.kappa, p.sigma, p.h)
 
 
 
