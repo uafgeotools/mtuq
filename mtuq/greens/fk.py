@@ -72,8 +72,6 @@ class GreensTensorFactory(object):
         greens_tensor_list = GreensTensorList()
 
         for station in stations:
-                print station.station # DEBUG
-
                 # add distance and azimuth to station metadata
                 station.distance, station.azimuth = distance_azimuth(
                     station, origin)
@@ -161,7 +159,6 @@ class GreensTensor(GreensTensorBase):
 
        See also Lupei Zhu's mt_radiat utility
        """
-       return [0.,0.,0.,0.]
        if component not in COMPONENTS:
            raise Exception
 
