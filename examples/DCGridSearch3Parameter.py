@@ -7,9 +7,9 @@ import mtuq.greens.fk
 import mtuq.misfit
 
 from mtuq.process_data import process_bw_factory, process_sw_factory
-from mtuq.grid_search import MTGridRandom, grid_search
+from mtuq.grid_search import DCGridRandom, grid_search
 from mtuq.util.util import Struct
-#from mtuq.util.wavelets import trapezoid
+from mtuq.util.wavelets import trapezoid
 
 
 parameters_bw = {
@@ -31,25 +31,27 @@ paths = Struct({
 
 
 if __name__=='__main__':
-    """ Carries out grid search over full moment tensor parameters,
-       excluding magnitude; event depth and location are fixed
+    """ Carries out grid search over double-couple moment tensor parameters;
+       magnitude, event depth, and event location are fixed
     """
     # define data misfit
-    misfit = mtuq.misfit.waveform_difference_cc
+    misfit = {
+        'body_waves': mtuq.misfit.waveform_difference,
+        'surface_waves': mtuq.misfit.waveform_difference,
+        }
 
     # define data processing
     process_data = {
-       'bw': process_bw_factory(**parameters_bw),
-       'sw': process_sw_factory(**parameters_sw),
+       'body_waves': process_bw_factory(**parameters_bw),
+       'surface_waves': process_sw_factory(**parameters_sw),
        }
 
     # define grid
-    magnitude = 4.0
-    grid = MTGridRandom(N=10, M=magnitude)
+    grid = DCGridRandom(points_per_axis=10, Mw=4.0)
 
-    # read data
+    # read and process data
     data_format = 'sac'
-    data = mtuq.io.read(data_format, paths.data)
+    data = mtuq.io.read(data_format, paths.data, wildcard='*.[zrt]')
     origin = mtuq.io.get_origin(data_format, data)
     stations = mtuq.io.get_stations(data_format, data)
 
@@ -57,12 +59,11 @@ if __name__=='__main__':
     for key in process_data:
         processed_data[key] = process_data[key](data)
 
-    # read Green's functions
+    # read and process Green's functions
     factory = mtuq.greens.fk.GreensTensorFactory(paths.greens)
     greens = factory(stations, origin)
-
-    #wavelet = trapezoid(half_duration=1.)
-    #greens.convolve(wavelet)
+    wavelet = trapezoid(rise_time=1., delta=stations[0].delta)
+    greens.convolve(wavelet)
 
     processed_greens = {}
     for key in process_data:
@@ -70,5 +71,3 @@ if __name__=='__main__':
 
     # carry out grid search
     grid_search(processed_data, processed_greens, misfit, grid)
-
-
