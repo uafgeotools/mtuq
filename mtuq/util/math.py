@@ -4,6 +4,8 @@ import numpy as np
 PI = np.pi
 DEG = 180./PI
 
+INF = np.inf
+
 
 def eig(M, sort_type=1):
     """

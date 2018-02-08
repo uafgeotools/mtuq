@@ -13,8 +13,12 @@ from obspy.core.inventory import Inventory, Station
 from obspy.core.util.attribdict import AttribDict
 
 
-def read(path, wildcard='*', verbose=False):
-    """ Reads SAC files
+def read(path, wildcard='*.sac', verbose=False):
+    """ Reads SAC traces and sorts them by station
+
+     Additional processing would be required if the starttimes vary from one
+     one trace to another; we expect the time sampling to be the same for all
+     traces
     """
     event_name = os.path.dirname(path)
     files = glob.glob(join(path, wildcard))
@@ -88,7 +92,7 @@ def get_stations(data):
     """
     stations = []
     for stream in data:
-        stats = deepcopy(stream[0].stats)
+        stats = _copy(stream[0].stats)
         try:
             station_latitude = stats.sac.stla
             station_longitude = stats.sac.stlo
@@ -125,6 +129,8 @@ def get_stations(data):
            #'event_depth': event_depth,
            })
 
+        del stats.sac
+
         stats.channels = []
         for trace in stream:
             stats.channels += [trace.stats.channel]
@@ -141,7 +147,7 @@ def _id(stats):
 
 def _copy(stats):
     stats = deepcopy(stats)
-    stats['channels'] = stats.pop('channel')
+    stats.channel = None
     return stats
 
 

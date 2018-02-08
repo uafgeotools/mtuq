@@ -1,10 +1,11 @@
 
 import obspy
+import numpy as np
 
-from copy import deepcopy
+from mtuq.util.signal import convolve
 
 
-class GreensTensor(object):
+class GreensTensorBase(object):
     """
     Elastic Green's tensor object.  Similar to an obpy Trace, except rather than
     a single time series, a multiple time series corresponding to the 
@@ -39,7 +40,7 @@ class GreensTensor(object):
         """
         Convolves Green's functions with a source wavelet
         """
-        return self.process(np.convolve, wavelet)
+        return self.process(convolve, wavelet)
         
 
 
@@ -61,6 +62,14 @@ class GreensTensorList(object):
         return self._list.__iter__()
 
 
+    def __getitem__(self, index):
+        return self._list[index]
+
+
+    def __setitem__(self, index, value):
+        self._list[index] = value
+
+
     @property
     def stations(self):
         _stations = []
@@ -69,10 +78,11 @@ class GreensTensorList(object):
         return _stations
 
 
-    def combine(self, mt):
+    def get_synthetics(self, mt):
+        # returns a list of Streams
         synthetics = []
         for greens_tensor in self._list:
-            synthetics += [greens_tensor.combine(mt)]
+            synthetics += [greens_tensor.get_synthetics(mt)]
         return synthetics
 
 
