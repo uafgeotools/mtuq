@@ -39,7 +39,7 @@ class GreensTensor(object):
         """
         Convolves Green's functions with a source wavelet
         """
-        return self.process(np.convolve, wavelet)
+        return self.process(convolve, wavelet)
         
 
 
