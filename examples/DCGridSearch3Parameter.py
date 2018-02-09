@@ -6,8 +6,9 @@ import mtuq.io
 import mtuq.greens.fk
 import mtuq.misfit
 
-from mtuq.process_data import process_bw_factory, process_sw_factory
-from mtuq.grid_search import DCGridRandom, grid_search
+from mtuq.process_data import process_bw, process_sw
+from mtuq.grid_search import grid_search
+from mtuq.grids import DCGridRandom
 from mtuq.util.util import Struct
 from mtuq.util.wavelets import trapezoid
 
@@ -29,45 +30,46 @@ paths = Struct({
     'greens': '/center1/ERTHQUAK/rmodrak/data/wf/FK_SYNTHETICS/scak',
     })
 
+Mw = 4.0
+
 
 if __name__=='__main__':
     """ Carries out grid search over double-couple moment tensor parameters;
        magnitude, event depth, and event location are fixed
     """
-    # define data misfit
     misfit = {
         'body_waves': mtuq.misfit.waveform_difference,
         'surface_waves': mtuq.misfit.waveform_difference,
         }
 
-    # define data processing
     process_data = {
-       'body_waves': process_bw_factory(**parameters_bw),
-       'surface_waves': process_sw_factory(**parameters_sw),
+       'body_waves': process_bw(**parameters_bw),
+       'surface_waves': process_sw(**parameters_sw),
        }
 
-    # define grid
-    grid = DCGridRandom(points_per_axis=10, Mw=4.0)
+    grid = DCGridRandom(points_per_axis=10, Mw=Mw)
 
-    # read and process data
+    print 'Reading data...\n'
     data_format = 'sac'
     data = mtuq.io.read(data_format, paths.data, wildcard='*.[zrt]')
     origin = mtuq.io.get_origin(data_format, data)
     stations = mtuq.io.get_stations(data_format, data)
 
+    print 'Processing data...\n'
     processed_data = {}
     for key in process_data:
         processed_data[key] = process_data[key](data)
 
-    # read and process Green's functions
-    factory = mtuq.greens.fk.GreensTensorFactory(paths.greens)
-    greens = factory(stations, origin)
+    print 'Reading Greens functions...\n'
+    generator = mtuq.greens.fk.GreensTensorGenerator(paths.greens)
+    greens = generator(stations, origin)
     wavelet = trapezoid(rise_time=1., delta=stations[0].delta)
     greens.convolve(wavelet)
 
+    print 'Processing Greens functions...\n'
     processed_greens = {}
     for key in process_data:
         processed_greens[key] = greens.process(process_data[key])
 
-    # carry out grid search
+    print 'Carrying out grid search...\n'
     grid_search(processed_data, processed_greens, misfit, grid)

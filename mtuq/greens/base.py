@@ -2,23 +2,28 @@
 import obspy
 import numpy as np
 
+from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import convolve
 
 
 class GreensTensorBase(object):
     """
-    Elastic Green's tensor object.  Similar to an obpy Trace, except rather than
-    a single time series, a multiple time series corresponding to the 
-    the indepdent elements of an elastic tensor
-
-    param tensor:  Green's tensor
-    type tensor: list of numpy arrays
-    param stats: dictionary containing station and event information
-    type stats: obspy Stats dictionary
+    Elastic Green's tensor object.  Similar to an obpy Trace, except rather 
+    than a single time series, holds multiple time series corresponding to
+    the independent elements of an elastic Green's tensor.
     """
-    def __init__(self, data, station):
+    def __init__(self, data, station, origin):
+        """
+        Normally, all time series required to describe the response at a given
+        station to a source at a given origin should be contained in "data".
+        Further details regarding how this information is represented are 
+        deferred to the subclass; this is necessary because the number of 
+        independent Green's tensor elements varies depending on the type medium
+        under consideration, among other reasons
+        """
         self.data = data
         self.station = station
+        self.origin = origin
 
 
     def combine(self, mt):
@@ -72,14 +77,17 @@ class GreensTensorList(object):
 
     @property
     def stations(self):
-        _stations = []
+        stations = []
         for greens_tensor in self._list:
-            _stations += [greens_tensor.station]
-        return _stations
-
+            stations += [greens_tensor.station]
+        return stations
 
     def get_synthetics(self, mt):
-        # returns a list of Streams
+        """
+        Returns a list of streams; all streams correspond to the same moment
+        tensor "mt", and each each individaul stream corresponds to a single 
+        station
+        """
         synthetics = []
         for greens_tensor in self._list:
             synthetics += [greens_tensor.get_synthetics(mt)]
@@ -105,4 +113,51 @@ class GreensTensorList(object):
         for greens_tensor in self._list:
             convolved += greens_tensor.convolve(wavelet)
         return convolved
+
+
+
+class GreensTensorGeneratorBase(object):
+    """
+    Creates GreensTensorsLists via a two-step procedure:
+
+        1) greens_tensor_generator = GreensTensorGenerator(*args, **kwargs)
+        2) greens_tensor_list = greens_tensor_generator(stations, origin) 
+
+    The required arguments for the first step must be specified by the
+    subclass.
+
+    In the second step, the user supplies a list of stations and the origin
+    location and time information for an event. A GreensTensorList will be
+    created containing a GreensTensor for each station-event pair. The order
+    of the GreensTensors in the list should match the order of the stations 
+    in the input argument.
+
+    Details regarding how the GreenTensors are actually created--whether
+    they are computed on-the-fly or read from a pre-computed database--
+    are deferred to the subclass.
+    """
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("Must be implemented by subclass")
+
+
+    def __call__(self, stations, origin, verbose=False):
+        """
+        Reads Green's tensors corresponding to given stations and origin
+        """
+        greens_tensor_list = GreensTensorList()
+
+        for station in stations:
+            # add distance and azimuth to station metadata
+            station.distance, station.azimuth = distance_azimuth(
+                station, origin)
+
+            # add another GreensTensor to list
+            greens_tensor_list += self.get_greens_tensor(
+                station, origin)
+
+        return greens_tensor_list
+
+
+    def get_greens_tensor(self, station, origin):
+        raise NotImplementedError("Must be implemented by subclass")
 

@@ -9,10 +9,10 @@ class process_data(object):
         return data
 
 
-def process_bw_factory(**parameters):
+def process_bw(**parameters):
     return process_data(parameters)
 
 
-def process_sw_factory(**parameters):
+def process_sw(**parameters):
     return process_data(parameters)
 
