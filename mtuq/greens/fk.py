@@ -169,12 +169,7 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
         """
         dep = str(int(origin.depth/1000.))
         dst = str(int(station.distance))
-        t1 = float(station.starttime)
-        t2 = float(station.endtime)
-        dt = float(station.delta)
-
-        # in the list below, 0-2 correspond to a dip-slip mechanism (DS), 3-5 
-        # to a vertical strike-slip mechanism (VSS), 6-8 to horizontal 
+        # to a vertical strike-slip mechanism (VSS), 6-8 to a horizontal 
         # strike-slip mechanism (HSS), and a-c to an explosive source (EXP); 
         # see "fk" documentation for more details
         keys = [('0','z'),('1','r'),('2','t'),
@@ -182,17 +177,32 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
                 ('6','z'),('7','r'),('8','t'),
                 ('a','z'),('b','r'),('c','t')]
 
-        # Green's functions will be read into a dictionary indexed by component
-        data = dict((('z',[]),('r',[]),('t',[])))
+        # Green's functions will be read into a dictionary
+        impulse_response = dict((('z',[]),('r',[]),('t',[])))
 
         for ext, component in keys:
-            filename = '%s/%s_%s/%s.grn.%s' %\
-                (self.path, self.model, dep, dst, ext)
-            trace = obspy.read(filename, format='sac')[0]
-            data[component] += [resample(trace, 0, t2-t1, dt)]
+            # read Green's function
+            trace = obspy.read('%s/%s_%s/%s.grn.%s' %
+                (self.path, self.model, dep, dst, ext),
+                format='sac')[0]
 
-        return GreensTensor(data, station, origin)
+            # start and end times of Green's function
+            t1_old = float(origin.time)+float(trace.stats.starttime)
+            t2_old = float(origin.time)+float(trace.stats.endtime)
+            dt_old = float(trace.stats.delta)
 
+            # start and end times of data
+            t1_new = float(station.starttime)
+            t2_new = float(station.endtime)
+            dt_new = float(station.delta)
+
+            # resample Green's function
+            old = trace.data
+            new = resample(old, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new)
+
+            impulse_response[component] += [new]
+
+        return GreensTensor(impulse_response, station, origin)
 
 
 # chinook debugging
