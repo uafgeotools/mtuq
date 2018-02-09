@@ -1,38 +1,53 @@
 
 import numpy as np
 
-def resample(trace, starttime, endtime, dt):
-        t1 = trace.stats.starttime
-        t2 = trace.stats.endtime
+def resample(trace, t1, t2, dt):
+    """ 
+    t1: desired start time for resampled trace
+    t2: desired end time for resampled trace
+    dt: desired time increment for resampled trace    
+    """
+    if trace.stats.delta != dt:
+        raise NotImplementedError
 
-        if trace.stats.delta != dt:
-            raise NotImplementedError
+    # start and end times prior to resampling
+    tmp1 = float(trace.stats.starttime)
+    tmp2 = float(trace.stats.endtime)
 
-        # offsets
-        i1 = int((starttime-t1)/dt)
-        i2 = int((endtime-t2)/dt)
+    # handle roundoff
+    d1 = round(tmp1/dt)*dt-tmp1
+    d2 = round((tmp2-tmp1)/dt)*dt
+    tmp1 += d1
+    tmp2 = tmp1 + d2
 
-        # allocate array
-        nt = int((endtime-starttime)/dt)
-        resampled_data = np.zeros(nt+1)
+    # offset between new and old start times
+    i1 = int(round((tmp1-t1)/dt))
 
-        # cut both ends
-        if t1 <= starttime <= endtime <= t2:
-            resampled_data[0:nt] = trace.data[i1:i2]
+    # offset between new and old end times
+    i2 = int(round((tmp2-t2)/dt))
 
-        # cut beginning only
-        elif t1 <= starttime <= t2 <= endtime:
-            resampled_data[0:nt-i2] = trace.data[i1:]
+    # allocate array
+    nt = int(round((t2-t1)/dt))
+    resampled_data = np.zeros(nt+1)
 
-        # cut end only
-        elif starttime <= t1 <= endtime <= t2:
-            resampled_data[i1:nt] = trace.data[0:-i2]
+    #FIXME: NEED TO DOUBLE CHECK ALL CASES
+    # cut both ends
+    if tmp1 <= t1 <= t2 <= tmp2:
+        resampled_data[0:nt] = trace.data[i1:i2]
 
-        # cut neither end
-        elif starttime <= t1 <= t2 <= endtime:
-            resampled_data[i1:nt-i2] =  trace.data[0:]
+    # cut beginning only
+    elif tmp1 <= t1 <= tmp2 <= t2:
+        resampled_data[0:nt-i2] = trace.data[i1:]
 
-        return resampled_data
+    # cut end only
+    elif t1 <= tmp1 <= t2 <= tmp2:
+        resampled_data[i1:nt] = trace.data[0:i2]
+
+    # cut neither end
+    elif t1 <= tmp1 <= tmp2 <= t2:
+        resampled_data[i1:i2] =  trace.data[0:]
+
+    return resampled_data
 
 
 def convolve(u, v):
