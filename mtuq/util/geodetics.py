@@ -30,3 +30,6 @@ def distance_azimuth(station, origin):
     else:
         raise Exception
 
+
+def km2deg(distance_in_km):
+    return kilometers_to_degrees(distance_in_km, radius=6371.)
