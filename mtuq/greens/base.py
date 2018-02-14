@@ -17,7 +17,7 @@ class GreensTensorBase(object):
         Normally, all time series required to describe the response at a given
         station to a source at a given origin should be contained in "data".
         Further details regarding how this information is represented are 
-        deferred to the subclass; this is necessary because the number of 
+        deferred to the subclass, which is necessary because the number of 
         independent Green's tensor elements varies depending on the type medium
         under consideration, among other reasons
         """
@@ -26,7 +26,7 @@ class GreensTensorBase(object):
         self.origin = origin
 
 
-    def combine(self, mt):
+    def get_synthetics(self, mt):
         """
         Generates synthetic seismogram via linear combination of Green's tensor
         elements
@@ -85,8 +85,8 @@ class GreensTensorList(object):
     def get_synthetics(self, mt):
         """
         Returns a list of streams; all streams correspond to the same moment
-        tensor "mt", and each each individaul stream corresponds to a single 
-        station
+        tensor "mt", and each each individaul stream contains the various
+        components recorded a single station
         """
         synthetics = []
         for greens_tensor in self._list:
@@ -118,13 +118,10 @@ class GreensTensorList(object):
 
 class GreensTensorGeneratorBase(object):
     """
-    Creates GreensTensorsLists via a two-step procedure:
+    Creates GreensTensorLists via a two-step procedure:
 
         1) greens_tensor_generator = GreensTensorGenerator(*args, **kwargs)
         2) greens_tensor_list = greens_tensor_generator(stations, origin) 
-
-    The required arguments for the first step must be specified by the
-    subclass.
 
     In the second step, the user supplies a list of stations and the origin
     location and time information for an event. A GreensTensorList will be
