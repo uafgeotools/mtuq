@@ -29,8 +29,9 @@ def _waveform_difference(dat, syn):
 
 
 
-def waveform_difference(dat, syn):
-    # number of stations
+def misfit_bw(dat, syn):
+    """ Attempts to reproduce CAP body wave measurement
+    """
     ns = len(syn)
 
     sum_misfit = 0.
@@ -39,4 +40,18 @@ def waveform_difference(dat, syn):
             sum_misfit += _waveform_difference(syn[_i][_j], dat[_i][_j])
 
     return sum_misfit
+
+
+def misfit_sw(dat, syn):
+    """ Attempts to reproduce CAP surfac wave measurement
+    """
+    ns = len(syn)
+
+    sum_misfit = 0.
+    for _i in range(ns):
+        for _j, component in enumerate(syn[_i]):
+            sum_misfit += _waveform_difference(syn[_i][_j], dat[_i][_j])
+
+    return sum_misfit
+
 
