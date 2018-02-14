@@ -1,6 +1,7 @@
 
 import obspy
 import numpy as np
+from collections import defaultdict
 from os.path import basename, exists
 
 from obspy.core import Stream, Trace
@@ -79,7 +80,7 @@ class GreensTensor(GreensTensorBase):
             # overwrites previous synthetics
             s[:] = 0.
             for _j in range(N):
-                s += w[_j]*G[_j]
+                s += w[_j]*G[_j].data
 
         return self._synthetics[iproc]
 
@@ -88,12 +89,10 @@ class GreensTensor(GreensTensorBase):
         """
         Applies a signal processing function to all Green's functions
         """
-        # overwrites original data with processed data
-        for _c in ['z','r','t']:
-            for _i in range(4):
-                self.data[_c][_i] =\
-                    function(self.data[_c][_i], *args, **kwargs)
-        return self
+        processed = defaultdict(lambda : Stream())
+        for component in ['z','r','t']:
+            processed[component] = function(self.data[component], *args, **kwargs)
+        return GreensTensor(processed, self.station, self.origin)
 
 
     def _calculate_weights(self, mt, component):
@@ -167,18 +166,26 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
         Reads a Greens tensor from a directory tree organized by model, event
         depth, and event distance
         """
+        # Green's tensor elements are tracess; will be stored into a dictionary
+        # based on component
+        greens_tensor = defaultdict(lambda : Stream())
+
+        # event information
         dep = str(int(origin.depth/1000.))
         dst = str(int(station.distance))
-        # to a vertical strike-slip mechanism (VSS), 6-8 to a horizontal 
-        # strike-slip mechanism (HSS), and a-c to an explosive source (EXP); 
-        # see "fk" documentation for more details
+
+        # start and end times of data
+        t1_new = float(station.starttime)
+        t2_new = float(station.endtime)
+        dt_new = float(station.delta)
+
+        # 0-2 correspond to a vertical strike-slip mechanism (VSS), 6-8 to a
+        # horizontal strike-slip mechanism (HSS), and a-c to an explosive 
+        # source (EXP); see "fk" documentation for details
         keys = [('0','z'),('1','r'),('2','t'),
                 ('3','z'),('4','r'),('5','t'),
                 ('6','z'),('7','r'),('8','t'),
                 ('a','z'),('b','r'),('c','t')]
-
-        # Green's functions will be read into a dictionary
-        impulse_response = dict((('z',[]),('r',[]),('t',[])))
 
         for ext, component in keys:
             # read Green's function
@@ -191,18 +198,16 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
             t2_old = float(origin.time)+float(trace.stats.endtime)
             dt_old = float(trace.stats.delta)
 
-            # start and end times of data
-            t1_new = float(station.starttime)
-            t2_new = float(station.endtime)
-            dt_new = float(station.delta)
-
             # resample Green's function
             old = trace.data
             new = resample(old, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new)
+            trace.data = new
+            trace.stats.starttime = t1_new
+            trace.stats.delta = dt_new
 
-            impulse_response[component] += [new]
+            greens_tensor[component] += trace
 
-        return GreensTensor(impulse_response, station, origin)
+        return GreensTensor(greens_tensor, station, origin)
 
 
 # chinook debugging

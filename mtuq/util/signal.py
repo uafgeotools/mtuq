@@ -16,7 +16,6 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
         raise NotImplementedError
     dt = dt_new
 
-    # correct roundoff
     tmp1 = round(t1_old/dt)*dt
     tmp2 = round((t2_old-t1_old)/dt)*dt
     t1_old = tmp1
