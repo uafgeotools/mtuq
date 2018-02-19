@@ -1,9 +1,10 @@
 
 import numpy as np
 import warnings
-from obspy.geodetics import kilometers2degrees as km2deg
 
 from copy import deepcopy
+from obspy.geodetics import kilometers2degrees as km2deg
+from mtuq.util.signal import cut
 
 
 class process_data(object):
@@ -55,7 +56,7 @@ class process_data(object):
         # check window parameters
         #
         if window_type == 'cap_bw':
-            raise NotImplementedError
+            pass
 
         elif window_type == 'cap_sw':
             raise NotImplementedError
@@ -76,6 +77,7 @@ class process_data(object):
              raise ValueError('Bad parameter: filter_type')
 
         self.window_type = window_type
+        self.window_length = parameters['window_length']
 
 
         #
@@ -124,13 +126,10 @@ class process_data(object):
         # cut traces
         #
         if self.window_type == 'cap_bw':
-            raise NotImplementedError
-
             # reproduce CAPUAF body wave measurement
-            t1 = trace.stats.arrival_p - 0.4*self.window_length
-            t2 = trace.stats.arrival_p - 0.6*self.window_length
-
             for trace in data:
+                t1 = trace.stats.arrival_P_sac - 0.4*self.window_length
+                t2 = trace.stats.arrival_P_sac + 0.6*self.window_length
                 cut(trace, t1, t2)
 
 
@@ -138,14 +137,14 @@ class process_data(object):
             raise NotImplementedError
 
             # reproduce CAPUAF surface wave measurement
-            t1 = trace.stats.arrival_p - 0.3*self.window_length
-            t2 = trace.stats.arrival_p - 0.7*self.window_length
+            t1 = trace.stats.arrival_rayleigh - 0.3*self.window_length
+            t2 = trace.stats.arrival_rayleigh + 0.7*self.window_length
 
             for trace in data:
                 cut(trace, t1, t2)
 
-        elif self.window_type == 'taup_bw':
-            # body wave window from taup model
+        elif self.window_type == 'taup':
+            # body wave window from taup phase time
             raise NotImplementedError
 
         #
@@ -154,3 +153,5 @@ class process_data(object):
         pass
 
         return data
+
+
