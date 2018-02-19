@@ -3,7 +3,6 @@ import numpy as np
 
 PI = np.pi
 DEG = 180./PI
-
 INF = np.inf
 
 
@@ -114,4 +113,13 @@ def wrap360(omega):
     """ Wrap phase
     """
     return omega % 360.
+
+
+
+def isclose(X, Y):
+    EPSVAL = 1.e-6
+    X = np.array(X)
+    Y = np.array(Y)
+    return bool(
+        np.linalg.norm(X-Y) < EPSVAL)
 
