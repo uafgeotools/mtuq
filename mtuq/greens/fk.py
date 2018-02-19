@@ -46,16 +46,11 @@ class GreensTensor(GreensTensorBase):
 
         self.mpi = mpi
         if self.mpi:
-            nproc = self.mpi.COMM.size
+            self.nproc = self.mpi.COMM.size
         else:
-            nproc = 1
+            self.nproc = 1
 
-        # preallocate streams used by get_synthetics
         self._synthetics = []
-        for _ in range(nproc):
-            self._synthetics += [Stream()]
-            for channel in station.channels:
-                self._synthetics[-1] += Trace(np.zeros(station.npts), station)
 
 
     def get_synthetics(self, mt):
@@ -67,6 +62,9 @@ class GreensTensor(GreensTensorBase):
             iproc = self.mpi.COMM.rank
         else:
             iproc = 0
+
+        if not self._synthetics:
+            self._preallocate_synthetics()
 
         for _i, channel in enumerate(self.station.channels):
             component = channel[-1].lower()
@@ -126,6 +124,17 @@ class GreensTensor(GreensTensorBase):
            weights += [0.]
            return weights
 
+    def _preallocate_synthetics(self):
+        """ Creates Streams for use by get_synthetics
+        """
+        self._synthetics = []
+        for _ in range(self.nproc):
+            self._synthetics += [Stream()]
+            for channel in self.station.channels:
+                self._synthetics[-1] +=\
+                    Trace(np.zeros(npts), self.station)
+
+
 
 
 class GreensTensorGenerator(GreensTensorGeneratorBase):
@@ -168,7 +177,7 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
         """
         # Green's tensor elements are tracess; will be stored into a dictionary
         # based on component
-        greens_tensor = defaultdict(lambda : Stream())
+        greens_tensor = defaultdict(lambda: Stream())
 
         # event information
         dep = str(int(origin.depth/1000.))
@@ -202,8 +211,10 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
             old = trace.data
             new = resample(old, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new)
             trace.data = new
+            trace.stats.arrival_P_fk = t1_old
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
+            station.arrival_P_fk = t1_old
 
             greens_tensor[component] += trace
 
