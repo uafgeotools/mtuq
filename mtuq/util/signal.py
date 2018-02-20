@@ -2,19 +2,32 @@
 import numpy as np
 from mtuq.util.math import isclose
 
-def convolve(u, v):
-    return np.convolve(u, v, mode='same')
+def convolve(data, wavelet, overwrite=True):
+    """
+    data: obspy stream
+    wavelet: numpy array
+    """
+    if overwrite:
+        convolved_data = data
+    else:
+        convolved_data = deepcopy(data)
+
+    for _i in range(len(data)):
+        convolved_data[_i].data = np.convolve(data[_i].data, wavelet, mode='same')
+
+    return convolved_data
 
 
 def cut(trace, t1, t2):
     """ 
+    trace: obspy trace
     t1: desired start time
     t2: desired end time
     """
     if t1 < float(trace.stats.starttime):
         raise Exception('Resample instead')
 
-    if t2 > float(trace.stats.starttime):
+    if t2 > float(trace.stats.endtime):
         raise Exception('Resample instead')
 
     t0 = float(trace.stats.starttime)
@@ -27,6 +40,7 @@ def cut(trace, t1, t2):
 
 def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
     """ 
+    data: numpy array
     t1_new: desired start time for resampled data
     t2_new: desired end time for resampled data
     dt_new: desired time increment for resampled data
