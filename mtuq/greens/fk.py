@@ -1,26 +1,35 @@
 
 import obspy
 import numpy as np
+
 from collections import defaultdict
+from copy import deepcopy
 from os.path import basename, exists
 
 from obspy.core import Stream, Trace
 from mtuq.greens.base import GreensTensorBase, GreensTensorGeneratorBase,\
     GreensTensorList
 from mtuq.util.signal import resample
+from mtuq.util.util import is_mpi_env
 
 
-# fk Green's functions are already rotatated into vertical, radial, and
-# transverse components:
+# Green's functions are already rotatated into vertical, radial, and
+# transverse components
 COMPONENTS = ['z','r','t']
 
-# for each component, there are four associated time series
+# For each component, there are four associated time series
 N = 4
 
 # Thus there are N*len(COMPONENTS) = 4*3 = 12 independent Green's tensor 
-# elements altogether. This is fewer than the number required for a general
-# medium, since fk Green's functions represent the impulse response of a
-# layered medium
+# elements altogether.  Because fk Green's functions represent the impulse 
+# response of a layered medium, there are fewer indepedent elements than
+# in the general case
+
+# If a GreensTensor is created with the wrong input arguments, this error
+# message is displayed.  In practice this is rarely encountered, since
+# GreensTensorGenerator normally does all the work
+ErrorMessage =("Green's functions must be given as a dictionary indexed by"
+    "component (z,r,t)")
 
 
 class GreensTensor(GreensTensorBase):
@@ -35,27 +44,16 @@ class GreensTensor(GreensTensorBase):
     about these details because GreensTensorGenerator normally does all the 
     work of creating GreensTensors
     """
-    def __init__(self, data, station, origin, mpi=None):
+    def __init__(self, data, station, origin):
         for key in COMPONENTS:
-            assert key in data
-            assert len(data[key])==N
+            # check that input data matches expected format
+            assert key in data, ErrorMessage
+            assert len(data[key])==N, ErrorMessage
 
         self.data = data
         self.station = station
         self.origin = origin
-
-        self.mpi = mpi
-        if self.mpi:
-            nproc = self.mpi.COMM.size
-        else:
-            nproc = 1
-
-        # preallocate streams used by get_synthetics
         self._synthetics = []
-        for _ in range(nproc):
-            self._synthetics += [Stream()]
-            for channel in station.channels:
-                self._synthetics[-1] += Trace(np.zeros(station.npts), station)
 
 
     def get_synthetics(self, mt):
@@ -63,15 +61,18 @@ class GreensTensor(GreensTensorBase):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
-        if self.mpi:
-            iproc = self.mpi.COMM.rank
+        if is_mpi_env():
+            from mpi4py import MPI
+            iproc = MPI.comm.rank
         else:
             iproc = 0
+        if not self._synthetics:
+            self._preallocate_synthetics()
 
         for _i, channel in enumerate(self.station.channels):
             component = channel[-1].lower()
             if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in Z,R,T")
+                raise Exception("Channels are expected to end in Z, R, or T")
 
             w = self._calculate_weights(mt, component)
             G = self.data[component]
@@ -89,10 +90,14 @@ class GreensTensor(GreensTensorBase):
         """
         Applies a signal processing function to all Green's functions
         """
-        processed = defaultdict(lambda : Stream())
+        processed = defaultdict(Stream)
         for component in ['z','r','t']:
             processed[component] = function(self.data[component], *args, **kwargs)
-        return GreensTensor(processed, self.station, self.origin)
+
+        # updates metadata in case time sampling changed
+        station, origin = self._update_time_sampling(processed)
+
+        return GreensTensor(processed, station, origin)
 
 
     def _calculate_weights(self, mt, component):
@@ -125,6 +130,40 @@ class GreensTensor(GreensTensorBase):
            weights += [-saz*mt[4] + caz*mt[5]]
            weights += [0.]
            return weights
+
+
+    def _preallocate_synthetics(self):
+        """ 
+        Creates obspy streams for use by get_synthetics
+        """
+        if is_mpi_env():
+            # every MPI process needs its own stream
+            from mpi4py import MPI
+            nproc = MPI.comm.size
+        else:
+            nproc = 1
+
+        self._synthetics = []
+        for _ in range(nproc):
+            self._synthetics += [Stream()]
+            for channel in self.station.channels:
+                self._synthetics[-1] +=\
+                    Trace(np.zeros(self.station.npts), self.station)
+
+
+    def _update_time_sampling(self, processed_data):
+        """ 
+        Checks if time sampling has been affected by data processing and makes
+        any required metadata updates
+        """
+        station, origin = deepcopy(self.station), deepcopy(self.origin)
+        stats = processed_data['z'][0].stats
+
+        station.npts = stats.npts
+        station.starttime = stats.starttime
+        station.delta = stats.delta
+
+        return station, origin
 
 
 
@@ -168,7 +207,7 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
         """
         # Green's tensor elements are tracess; will be stored into a dictionary
         # based on component
-        greens_tensor = defaultdict(lambda : Stream())
+        greens_tensor = defaultdict(lambda: Stream())
 
         # event information
         dep = str(int(origin.depth/1000.))
@@ -181,7 +220,7 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
 
         # 0-2 correspond to a vertical strike-slip mechanism (VSS), 6-8 to a
         # horizontal strike-slip mechanism (HSS), and a-c to an explosive 
-        # source (EXP); see "fk" documentation for details
+        # source (EXP); see fk documentation for details
         keys = [('0','z'),('1','r'),('2','t'),
                 ('3','z'),('4','r'),('5','t'),
                 ('6','z'),('7','r'),('8','t'),
@@ -202,23 +241,12 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
             old = trace.data
             new = resample(old, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new)
             trace.data = new
+            trace.stats.arrival_P_fk = t1_old
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
+            station.arrival_P_fk = t1_old
 
             greens_tensor[component] += trace
 
         return GreensTensor(greens_tensor, station, origin)
-
-
-# chinook debugging
-if __name__=='__main__':
-    from mtuq.io.sac import read, get_origin, get_stations
-    data = read('/u1/uaf/rmodrak/packages/capuaf/20090407201255351')
-    origin = get_origin(data)
-    channels = get_stations(data)
-    path = '/center1/ERTHQUAK/rmodrak/data/wf/FK_SYNTHETICS/scak'
-    model = 'scak'
-    greens_tensor_factory = Factory(path, model)
-    greens_tensor_list = greens_tensor_factory(stations, origin)
-
 

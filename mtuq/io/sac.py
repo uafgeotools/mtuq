@@ -11,14 +11,15 @@ from obspy.core import Stream, Stats, Trace
 from obspy.core.event import Event, Origin
 from obspy.core.inventory import Inventory, Station
 from obspy.core.util.attribdict import AttribDict
+from obspy.geodetics import gps2dist_azimuth
+from mtuq.util.signal import check_time_sampling
 
 
 def read(path, wildcard='*.sac', verbose=False):
     """ Reads SAC traces and sorts them by station
 
-     Additional processing would be required if the starttimes vary from one
-     one trace to another; we expect the time sampling to be the same for all
-     traces
+     Additional processing would be required if for a given station, time
+     sampling varies from one channel to another
     """
     event_name = os.path.dirname(path)
     files = glob.glob(join(path, wildcard))
@@ -92,52 +93,79 @@ def get_stations(data):
     """
     stations = []
     for stream in data:
-        stats = _copy(stream[0].stats)
+        station_metadata = _copy(stream[0].stats)
+      
+        if not check_time_sampling(stream):
+            # ordinarily we except all traces from a given station to have the 
+            # same time sampling
+            raise NotImplementedError(
+                "Time sampling differs from trace to trace.")
+
         try:
-            station_latitude = stats.sac.stla
-            station_longitude = stats.sac.stlo
+            station_metadata.channels = []
+            for trace in stream:
+                station_metadata.channels += [trace.stats.channel]
+        except:
+            raise Exception(
+                "Could not determine channel names from obspy stream.")
+
+        try:
+            station_latitude = station_metadata.sac.stla
+            station_longitude = station_metadata.sac.stlo
+            station_metadata.update({
+                'latitude': station_latitude,
+                'longitude': station_longitude})
         except:
             raise Exception(
                 "Could not determine station location from SAC headers.")
 
         try:
-            station_elevation = stats.sac.stel
-            station_depth = stats.sac.stdp
+            station_metadata.update({
+                'station_elevation': station_metadata.sac.stel,
+                'station_depth': station_metadata.sac.stdp})
         except:
             warnings.warn(
                 "Could not determine station elevation, depth from SAC headers.")
-            station_elevation = 0.
-            station_depth = 0.
 
         try:
+            # if hypocenter is included as an inversion parameter, then we 
+            # cannot rely on these sac metadata fields, which are likely based
+            # on catalog locations or other preliminary information
             event_latitude = stats.sac.evla
             event_longitude = stats.sac.evlo
+            distance, azimuth, backazimuth = obspy.geodetics.gps2dist_azimuth(
+                station.latitude,
+                station.longitude,
+                origin.latitude,
+                origin.longitude)
+
+            station_metadata.update({
+                'catalog_latitude': event_latitude,
+                'catalog_longitude': event_longitude,
+                'catalog_distance': distance,
+                'catalog_azimuth': azimuth,
+                'catalog_backazimuth': back_azimuth})
+
         except:
-            raise Exception(
+            warnings.warn(
                 "Could not determine event location from SAC headers.")
 
-        stats.update({
-           'starttime': stats.starttime,
-           'delta': stats.delta,
-           'latitude':station_latitude,
-           'longitude':station_longitude,
-           'elevation':station_elevation,
-           'depth':station_depth,
-           #'distance': distance,
-           #'azimuth': azimuth,
-           #'back_azimuth': back_azimuth,
-           #'event_depth': event_depth,
-           })
+        try:
+            print stats.sac.t5
+            # ordinarily we calculate phase arrival times ourselves using 
+            # obspy.taupy; the only reason for checking P arrival times in SAC
+            # metadata is to test our code against the legacy CAP package
+            station_metadata.update({'arrival_P_sac': stats.sac.t5})
+        except:
+            # do nothing
+            pass
 
-        del stats.sac
-
-        stats.channels = []
-        for trace in stream:
-            stats.channels += [trace.stats.channel]
-        stations += [stats]
-
+        del station_metadata.sac
+        stations += [station_metadata]
     return stations
 
+
+### utility functions
 
 def _id(stats):
     return '.'.join((

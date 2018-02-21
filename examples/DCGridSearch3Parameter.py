@@ -24,6 +24,7 @@ process_bw = process_data(
     freq_min= 0.25,
     freq_max= 0.667,
     window_length=15.,
+    window_type='cap_bw',
     )
 
 process_sw = process_data(
@@ -32,10 +33,6 @@ process_sw = process_data(
     freq_max=0.0625,
     window_length=150.,
     )
-
-grid = DCGridRandom(
-    points_per_axis=10,
-    Mw=4.5)
 
 misfit = {
     'body_waves': misfit_bw,
@@ -52,12 +49,17 @@ process_data = {
    'surface_waves': process_sw,
    }
 
+grid = DCGridRandom(
+    points_per_axis=10,
+    Mw=4.5)
+
 
 
 if __name__=='__main__':
     """ Carries out grid search over double-couple moment tensor parameters;
        magnitude, event depth, and event location are fixed
     """
+
     print 'Reading data...\n'
     data_format = 'sac'
     data = mtuq.io.read(data_format, paths.data, wildcard='*.[zrt]')
@@ -67,7 +69,7 @@ if __name__=='__main__':
     print 'Processing data...\n'
     processed_data = {}
     for key in process_data:
-        processed_data[key] = process_data[key](data)
+        processed_data[key] = map(process_data[key], data)
 
     print 'Reading Greens functions...\n'
     generator = mtuq.greens.fk.GreensTensorGenerator(paths.greens)
