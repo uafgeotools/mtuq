@@ -34,18 +34,20 @@ class GreensTensorBase(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def process(self, function, *args, **kwargs):
+    def apply(self, function, *args, **kwargs):
         """
-        Applies a signal processing function to all Green's tensor elements
+        Applies a function to all time series associated with the given 
+        Green's tensor
         """
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def convolve(self, wavelet):
         """
-        Convolves Green's functions with a source wavelet
+        Convolves source wavelet with all time series associated with the
+        given Green's tensor
         """
-        return self.process(convolve, wavelet)
+        return self.apply(convolve, wavelet)
         
 
 
@@ -55,54 +57,19 @@ class GreensTensorList(object):
     traces, holds elastic Green's tensors
     """
     def __init__(self):
-        self._list = []
+        self.__list__ = []
 
-
-    def __add__(self, greens_tensor):
-        self._list += [greens_tensor]
-        return self
-
-
-    def __iter__(self):
-        return self._list.__iter__()
-
-
-    def __getitem__(self, index):
-        return self._list[index]
-
-
-    def __setitem__(self, index, value):
-        self._list[index] = value
-
-
-    @property
-    def stations(self):
-        stations = []
-        for greens_tensor in self._list:
-            stations += [greens_tensor.station]
-        return stations
 
     def get_synthetics(self, mt):
         """
-        Returns a list of streams; all streams correspond to the same moment
-        tensor "mt", and each each individaul stream contains the various
-        components recorded a single station
+        Returns a list of streams; all streams correspond to the moment
+        tensor "mt", and each each individaul stream corresponds to an
+        individual station
         """
         synthetics = []
-        for greens_tensor in self._list:
+        for greens_tensor in self.__list__:
             synthetics += [greens_tensor.get_synthetics(mt)]
         return synthetics
-
-
-    def process(self, function, *args, **kwargs):
-        """
-        Applies a signal processing function to all Green's tensors
-        """
-        processed = GreensTensorList()
-        for greens_tensor in self._list:
-            processed +=\
-                greens_tensor.process(function, *args, **kwargs)
-        return processed
 
 
     def convolve(self, wavelet):
@@ -110,10 +77,62 @@ class GreensTensorList(object):
         Convolves all Green's tensors with given wavelet
         """
         convolved = GreensTensorList()
-        for greens_tensor in self._list:
+        for greens_tensor in self.__list__:
             convolved += greens_tensor.convolve(wavelet)
         return convolved
 
+
+    def apply(self, function, *args, **kwargs):
+        """
+        Returns the result of applying a function to each GreensTensor in the 
+        list. Similar to the behavior of the python built-in function apply.
+        """
+        processed = GreensTensorList()
+        for greens_tensor in self.__list__:
+            processed +=\
+                greens_tensor.apply(function, *args, **kwargs)
+        return processed
+
+
+    def map(self, function, *sequences):
+        """
+        Returns the result of applying a function to each GreensTensor in the
+        list. If one or more optional sequence arguments are given, the function
+        is called with an argument list consisting of the corresponding
+        item of each sequence. Similar to the behavior of the python built-in 
+        function map.
+        """
+        processed = GreensTensorList()
+        for _i, greens_tensor in enumerate(self.__list__):
+            args = [sequence[_i] for sequence in sequences]
+            processed +=\
+                greens_tensor.apply(function, *args)
+        return processed
+
+
+    def __add__(self, greens_tensor):
+        self.__list__ += [greens_tensor]
+        return self
+
+
+    def __iter__(self):
+        return self.__list__.__iter__()
+
+
+    def __getitem__(self, index):
+        return self.__list__[index]
+
+
+    def __setitem__(self, index, value):
+        self.__list__[index] = value
+
+
+    @property
+    def stations(self):
+        stations = []
+        for greens_tensor in self.__list__:
+            stations += [greens_tensor.station]
+        return stations
 
 
 class GreensTensorGeneratorBase(object):
@@ -121,7 +140,7 @@ class GreensTensorGeneratorBase(object):
     Creates GreensTensorLists via a two-step procedure:
 
         1) greens_tensor_generator = GreensTensorGenerator(*args, **kwargs)
-        2) greens_tensor_list = greens_tensor_generator(stations, origin) 
+        2) greens_tensors = greens_tensor_generator(stations, origin) 
 
     In the second step, the user supplies a list of stations and the origin
     location and time information for an event. A GreensTensorList will be
@@ -141,7 +160,7 @@ class GreensTensorGeneratorBase(object):
         """
         Reads Green's tensors corresponding to given stations and origin
         """
-        greens_tensor_list = GreensTensorList()
+        greens_tensors = GreensTensorList()
 
         for station in stations:
             # add distance and azimuth to station metadata
@@ -149,10 +168,10 @@ class GreensTensorGeneratorBase(object):
                 station, origin)
 
             # add another GreensTensor to list
-            greens_tensor_list += self.get_greens_tensor(
+            greens_tensors += self.get_greens_tensor(
                 station, origin)
 
-        return greens_tensor_list
+        return greens_tensors
 
 
     def get_greens_tensor(self, station, origin):
