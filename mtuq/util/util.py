@@ -25,7 +25,9 @@ def is_mpi_env():
     try:
         import mpi4py.MPI
     except ImportError:
+        return False
 
+    return True
 
 
 def iterable(arg):
