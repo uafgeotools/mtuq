@@ -15,6 +15,19 @@ class Struct(dict):
         super(Struct, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
+
+def is_mpi_env():
+    try:
+        import mpi4py
+    except ImportError:
+        return False
+
+    try:
+        import mpi4py.MPI
+    except ImportError:
+
+
+
 def iterable(arg):
     if not isinstance(arg, (list, tuple)):
         return [arg]
