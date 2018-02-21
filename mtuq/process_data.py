@@ -21,9 +21,8 @@ class process_data(object):
         single-station obspy stream as input and receives a processed stream
         as output.
 
-        The reason for doing it this way was to provide a clear separation
-        between parameter checking and function execution, resulting in more
-        readable code and clearer error messages for the user.
+        The reason for a two-step procedure is to provide a clear separation
+        between parameter checking and function execution.
     """
 
     def __init__(self,
@@ -122,7 +121,8 @@ class process_data(object):
         if weight_type==None:
             pass
 
-        elif weight_type in ['cap_bw', 'cap_sw']:
+        elif weight_type == 'cap_bw' or\
+             weight_type == 'cap_sw':
             assert 'weights_file' in parameters
             assert exists(parameters['weight_file'])
 
@@ -131,19 +131,31 @@ class process_data(object):
 
 
 
-    def __call__(self, data, overwrite=False):
-        """ Carries out data processing operations on seismic traces
+    def __call__(self, traces, stats=None, overwrite=False):
+        """ 
+        Carries out data processing operations on seismic traces
+
+        input traces: all availables traces for a given station
+        type traces: obspy Stream
+        input stats: corresponding metadata
+        type stats: obspy Stats
         """
         if overwrite:
-            data = data
+            traces = traces
         else:
-            data = deepcopy(data)
+            traces = deepcopy(traces)
+
+        if stats==None:
+            # We previously sorted traces into streams based on station, so 
+            # traces[0] should have the same station id as all other traces
+            stats = traces[0].stats
+        station_id = stats.network+'.'+stats.station
 
         #
         # filter traces
         #
         if self.filter_type == 'Bandpass':
-            for trace in data:
+            for trace in traces:
                 trace.detrend('demean')
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
@@ -152,7 +164,7 @@ class process_data(object):
                           freqmax=self.freq_max)
 
         elif self.filter_type == 'Lowpass':
-            for trace in data:
+            for trace in traces:
                 trace.detrend('demean')
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
@@ -160,7 +172,7 @@ class process_data(object):
                           freq=self.freq)
 
         elif self.filter_type == 'Highpass':
-            for trace in data:
+            for trace in traces:
                 trace.detrend('demean')
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
@@ -171,35 +183,29 @@ class process_data(object):
         # determine window start and end times
         #
 
-        # We previously sorted data into streams based on station, so all
-        # traces in a given stream will have the same id
-        stats = data[0].stats
-        station_id = join(stats.network, stats.station)
-
-        # Window start and end times will be stored in a dictionary indexed by 
-        # station_id. Typically, start and end times are determined when 
-        # process_data is called on data, and then these times are reused when
-        # process_data is called on synthetics
-        if not hasattr(self._windows, station_id):
+        # Start and end times will be stored in a dictionary indexed by 
+        # station_id. This allows times determined when process_data is called
+        # on data to be reused later when process_data is called on synthetics
+        if station_id in self._windows:
 
             if self.window_type == 'cap_bw':
                 # reproduces CAPUAF body wave window
-                trace = data[0]
+                trace = traces[0]
                 sac_headers = trace.stats.sac
                 origin_time = float(trace.stats.starttime)
 
                 # CAPUAF expects the P arrival time to be in t5 header
                 assert 't5' in sac_headers
 
-                t1 += trace.stats.sac.t5 - 0.4*self.window_length
-                t2 += trace.stats.sac.t5 + 0.6*self.window_length
+                t1 = trace.stats.sac.t5 - 0.4*self.window_length
+                t2 = trace.stats.sac.t5 + 0.6*self.window_length
                 t1 += origin_time
                 t2 += origin_time
-                self.windows[station_id] = [t1, t2]
+                self._windows[station_id] = [t1, t2]
 
             elif self.window_type == 'cap_sw':
                 # reproduces CAPUAF surface wave window
-                trace = data[0]
+                trace = traces[0]
                 sac_headers = trace.stats.sac
                 origin_time = float(trace.stats.starttime)
 
@@ -210,7 +216,7 @@ class process_data(object):
                 t2 = trace.stats.sac.t6 + 0.7*self.window_length
                 t1 += origin_time
                 t2 += origin_time
-                self.windows[station_id] = [t1, t2]
+                self._windows[station_id] = [t1, t2]
 
             elif self.window_type == 'taup_bw':
                 # determine body wave window from taup calculation
@@ -220,9 +226,9 @@ class process_data(object):
         #
         # cut traces
         #
-        if hasattr(self._windows, station_id):
+        if station_id in self._windows:
             window = self._windows[station_id]
-            for trace in data:
+            for trace in traces:
                 cut(trace, window[0], window[1])
 
 
@@ -236,6 +242,6 @@ class process_data(object):
         #
         pass
 
-        return data
+        return traces
 
 
