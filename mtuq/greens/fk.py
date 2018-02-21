@@ -86,7 +86,7 @@ class GreensTensor(GreensTensorBase):
         return self._synthetics[iproc]
 
 
-    def process(self, function, *args, **kwargs):
+    def apply(self, function, *args, **kwargs):
         """
         Applies a signal processing function to all Green's functions
         """
@@ -176,7 +176,7 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
 
     Generating Green's tensors is a two-step procedure:
     1) greens_tensor_generator = mtuq.greens.fk.GreensTensorGenerator(path, model)
-    2) greens_tensor_list = greens_tensor_generator(stations, origin)
+    2) greens_tensors = greens_tensor_generator(stations, origin)
 
     In the first step, the user supplies the path to an fk directory tree and 
     the name of the  layered Earth model that was used to generate Green's

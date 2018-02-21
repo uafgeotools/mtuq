@@ -124,8 +124,7 @@ def get_stations(data):
                 'station_elevation': station_metadata.sac.stel,
                 'station_depth': station_metadata.sac.stdp})
         except:
-            warnings.warn(
-                "Could not determine station elevation, depth from SAC headers.")
+            pass
 
         try:
             # if hypocenter is included as an inversion parameter, then we 
@@ -150,18 +149,8 @@ def get_stations(data):
             warnings.warn(
                 "Could not determine event location from SAC headers.")
 
-        try:
-            print stats.sac.t5
-            # ordinarily we calculate phase arrival times ourselves using 
-            # obspy.taupy; the only reason for checking P arrival times in SAC
-            # metadata is to test our code against the legacy CAP package
-            station_metadata.update({'arrival_P_sac': stats.sac.t5})
-        except:
-            # do nothing
-            pass
-
-        del station_metadata.sac
         stations += [station_metadata]
+
     return stations
 
 

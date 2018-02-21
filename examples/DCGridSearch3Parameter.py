@@ -15,7 +15,7 @@ from mtuq.util.wavelets import trapezoid
 
 
 paths = Struct({
-    'data': os.getenv('HOME')+'/'+'packages/capuaf/20090407201255351',
+    'data': os.getenv('HOME')+'/'+'projects/mtuq/20090407201255351',
     'greens': os.getenv('CENTER1')+'/'+'data/wf/FK_SYNTHETICS/scak',
     })
 
@@ -32,17 +32,13 @@ process_sw = process_data(
     freq_min=0.025,
     freq_max=0.0625,
     window_length=150.,
+    #window_type='cap_sw',
     )
 
 misfit = {
     'body_waves': misfit_bw,
     'surface_waves': misfit_sw,
     }
-
-misfit_weights = {
-   'body_waves': 0.5,
-   'surface_waves': 0.5,
-   }
 
 process_data = {
    'body_waves': process_bw,
@@ -75,12 +71,12 @@ if __name__=='__main__':
     generator = mtuq.greens.fk.GreensTensorGenerator(paths.greens)
     greens = generator(stations, origin)
     wavelet = trapezoid(rise_time=1., delta=stations[0].delta)
-    #greens.convolve(wavelet)
+    greens.convolve(wavelet)
 
     print 'Processing Greens functions...\n'
     processed_greens = {}
     for key in process_data:
-        processed_greens[key] = greens.process(process_data[key])
+        processed_greens[key] = greens.map(process_data[key], stations)
 
     print 'Carrying out grid search...\n'
     grid_search(processed_data, processed_greens, misfit, grid)
