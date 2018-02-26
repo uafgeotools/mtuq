@@ -61,11 +61,6 @@ class GreensTensor(GreensTensorBase):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
-        if is_mpi_env():
-            from mpi4py import MPI
-            iproc = MPI.comm.rank
-        else:
-            iproc = 0
         if not self._synthetics:
             self._preallocate_synthetics()
 
@@ -76,7 +71,10 @@ class GreensTensor(GreensTensorBase):
 
             w = self._calculate_weights(mt, component)
             G = self.data[component]
-            s = self._synthetics[iproc][_i].data
+            #s = self._synthetics[iproc][_i].data
+            s = Stream()
+            for channel in self.station.channels:
+                s += Trace(np.zeros(self.station.npts), self.station)
 
             # overwrites previous synthetics
             s[:] = 0.
@@ -136,18 +134,10 @@ class GreensTensor(GreensTensorBase):
         """ 
         Creates obspy streams for use by get_synthetics
         """
-        if is_mpi_env():
-            # every MPI process needs its own stream
-            from mpi4py import MPI
-            nproc = MPI.comm.size
-        else:
-            nproc = 1
-
         self._synthetics = []
-        for _ in range(nproc):
-            self._synthetics += [Stream()]
+            self._synthetics = Stream()
             for channel in self.station.channels:
-                self._synthetics[-1] +=\
+                self._synthetics +=\
                     Trace(np.zeros(self.station.npts), self.station)
 
 
@@ -205,9 +195,7 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
         Reads a Greens tensor from a directory tree organized by model, event
         depth, and event distance
         """
-        # Green's tensor elements are tracess; will be stored into a dictionary
-        # based on component
-        greens_tensor = defaultdict(lambda: Stream())
+        greens_tensor = defaultdict(Stream)
 
         # event information
         dep = str(int(origin.depth/1000.))

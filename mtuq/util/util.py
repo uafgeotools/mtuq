@@ -27,7 +27,10 @@ def is_mpi_env():
     except ImportError:
         return False
 
-    return True
+    if mpi4py.MPI.COMM_WORLD.Get_size()>1:
+        return True
+    else:
+        return False
 
 
 def iterable(arg):
