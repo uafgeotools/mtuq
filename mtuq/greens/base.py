@@ -17,9 +17,7 @@ class GreensTensorBase(object):
         Normally, all time series required to describe the response at a given
         station to a source at a given origin should be contained in "data".
         Further details regarding how this information is represented are 
-        deferred to the subclass, which is necessary because the number of 
-        independent Green's tensor elements varies depending on the type medium
-        under consideration, among other reasons
+        deferred to the subclass
         """
         self.data = data
         self.station = station
@@ -60,15 +58,15 @@ class GreensTensorList(object):
         self.__list__ = []
 
 
-    def get_synthetics(self, mt):
+    def get_synthetics(self, mt, iproc):
         """
         Returns a list of streams; all streams correspond to the moment
-        tensor "mt", and each each individaul stream corresponds to an
+        tensor mt, and each each individaul stream corresponds to an
         individual station
         """
         synthetics = []
         for greens_tensor in self.__list__:
-            synthetics += [greens_tensor.get_synthetics(mt)]
+            synthetics += [greens_tensor.get_synthetics(mt, iproc)]
         return synthetics
 
 
@@ -85,7 +83,7 @@ class GreensTensorList(object):
     def apply(self, function, *args, **kwargs):
         """
         Returns the result of applying a function to each GreensTensor in the 
-        list. Similar to the behavior of the python built-in function apply.
+        list. Similar to the behavior of the python built-in "apply".
         """
         processed = GreensTensorList()
         for greens_tensor in self.__list__:
@@ -97,10 +95,9 @@ class GreensTensorList(object):
     def map(self, function, *sequences):
         """
         Returns the result of applying a function to each GreensTensor in the
-        list. If one or more optional sequence arguments are given, the function
-        is called with an argument list consisting of the corresponding
-        item of each sequence. Similar to the behavior of the python built-in 
-        function map.
+        list. If one or more optional sequences are given, the function is 
+        called with an argument list consisting of the corresponding item of
+        each sequence. Similar to the behavior of the python built-in "map".
         """
         processed = GreensTensorList()
         for _i, greens_tensor in enumerate(self.__list__):

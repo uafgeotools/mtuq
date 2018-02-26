@@ -14,7 +14,8 @@ class process_data(object):
             1) function_handle = process_data(filter_type=..., **filter_parameters, 
                                               window_type=..., **window_parameters,
                                               weight_type=..., **weight_parameters)
-            2) processed_stream = function_handle(stream)
+
+            2) processed_stream = function_handle(data, station_metadata)
 
         In the first step, the user supplies a set of filtering, windowing,
         and weighting parameters.  In the second step, the user supplies a
@@ -40,8 +41,8 @@ class process_data(object):
             warnings.warn('No filter_type selected.')
 
         elif filter_type == 'Bandpass':
-            # allow corners to be specified in terms of either period [s] or
-            # frequency [Hz]
+            # allow filter corners to be specified in terms of either period [s]
+            # or frequency [Hz]
             if 'period_min' in parameters and 'period_max' in parameters:
                 assert 'freq_min' not in parameters
                 assert 'freq_max' not in parameters
@@ -57,8 +58,8 @@ class process_data(object):
             self.freq_max = parameters['freq_max']
 
         elif filter_type == 'Lowpass':
-            # allow corner to be specified in terms of either period [s] or
-            # frequency [Hz]
+            # allow filter corner to be specified in terms of either period [s]
+            # or frequency [Hz]
             if 'period' in parameters:
                 assert 'freq' not in parameters
                 parameters['freq'] = parameters['period']**-1
@@ -70,8 +71,8 @@ class process_data(object):
 
 
         elif filter_type == 'Highpass':
-            # allow corners to be specified in terms of either period [s] or
-            # frequency [Hz]
+            # allow filter corner to be specified in terms of either period [s]
+            # or frequency [Hz]
             if 'period' in parameters:
                 assert 'freq' not in parameters
                 parameters['freq'] = parameters['period']**-1
@@ -131,13 +132,13 @@ class process_data(object):
 
 
 
-    def __call__(self, traces, stats=None, overwrite=False):
+    def __call__(self, traces, stats, overwrite=False):
         """ 
         Carries out data processing operations on seismic traces
 
         input traces: all availables traces for a given station
         type traces: obspy Stream
-        input stats: corresponding metadata
+        input stats: station metadata
         type stats: obspy Stats
         """
         if overwrite:
@@ -145,10 +146,6 @@ class process_data(object):
         else:
             traces = deepcopy(traces)
 
-        if stats==None:
-            # We previously sorted traces into streams based on station, so 
-            # traces[0] should have the same station id as all other traces
-            stats = traces[0].stats
         station_id = stats.network+'.'+stats.station
 
         #

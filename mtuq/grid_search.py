@@ -2,38 +2,102 @@
 import numpy as np
 
 from mtuq.mt.maps.tape2015 import tt152cmt
-from mtuq.util.math import PI, INF
-from mtuq.util.util import Struct
+from mtuq.util.util import is_mpi_env, Struct
 
 
-def grid_search(data, greens, misfit, grid):
+
+def grid_search_serial(data, greens, misfit, grid):
     """ Grid search over moment tensor parameters
     """
-    best_misfit = INF
+    categories = data.keys()
+    misfit_values = np.zeros(grid.size)
 
     for _i in range(grid.size):
-        # gets the i-th moment tensor in grid
         print _i
+
+        # gets the i-th moment tensor in grid
         mt = grid.get(_i)
 
         # generate_synthetics
-        categories = data.keys()
         synthetics = {}
         for key in categories:
             synthetics[key] = greens[key].get_synthetics(mt)
 
-        sum_misfit = 0.
+       # evaluate misfit function
         for key in categories:
             chi, dat, syn = misfit[key], data[key], synthetics[key]
-            sum_misfit += chi(dat, syn)
+            misfit_values[_i] += chi(dat, syn)
 
-        # keep track of best moment tensor
-        if sum_misfit < best_misfit:
-            best_mt = mt
+    print '\nmin:', min(misfit_values)
+
 
 
 def grid_search_mpi(data, greens, misfit, grid):
-    raise NotImplementedError
+    from schwimmbad import MPIPool, SerialPool
 
+    # set up parallel queue
+    if is_mpi_env():
+        pool = MPIPool()
+    else:
+        pool = SerialPool()
+
+    # constuct arguments list
+    tasks = []
+    for _i in range(grid.size):
+        tasks += [(data, greens, misfit, grid, _i)]
+
+    # evaluate misfit function over all grid points
+    misfit_values = pool.map(
+        _evalutate_misfit,
+        tasks)
+
+    pool.close()
+
+
+def grid_search_pool(data, greens, misfit, grid, nproc):
+    from multiprocessing import Pool
+    pool = Pool(nproc)
+
+    # constuct arguments list
+    tasks = []
+    for indices in _partition(grid, nproc):
+        tasks += [(data, greens, misfit, grid, indices)]
+
+    # evaluate misfit function over all grid points
+    misfit_values = pool.map(
+        _evalutate_misfit,
+        tasks)
+
+    pool.close()
+
+
+def _evalutate_misfit(*args):
+    data, greens, misfit, grid, indices = args
+    categories = data.keys()
+
+    _misfit_values = []
+    for _i in indices:
+        print _i
+        # gets the i-th moment tensor in grid
+        mt = grid.get(_i)
+
+        # generate syntethics
+        synthetics = {}
+        for key in categories:
+            synthetics[key] = greens[key].get_synthetics(mt)
+
+        _misfit_value = 0.
+        for key in categories:
+            chi, dat, syn = misfit[key], data[key], synthetics[key]
+            _misfit_value += chi(dat, syn)
+        _misfit_values += [_misfit_value]
+
+
+def _partition(grid, nproc):
+    npts = grid.size/nproc
+    indices = []
+    for iproc in range(nproc):
+        indicies += [np.linspace(0,npts-1)+iproc*npts]
+    return indices
 
 
