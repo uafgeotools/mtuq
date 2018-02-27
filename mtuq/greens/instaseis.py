@@ -4,8 +4,7 @@ import numpy as np
 from os.path import basename, exists
 
 from obspy.core import Stream, Trace
-from mtuq.greens.base import GreensTensorBase, GreensTensorGeneratorBase,\
-    GreensTensorList
+from mtuq.greens.base import GreensTensorBase, GeneratorBase, GreensTensorList
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import resample
 
@@ -77,37 +76,12 @@ class GreensTensor(GreensTensorBase):
     def _calculate_weights(self, mt, component):
        """
        Calculates weights used in linear combination over Green's functions
-
-       See also Lupei Zhu's mt_radiat utility
        """
-       if component not in COMPONENTS:
-           raise Exception
-
-       if not hasattr(self.station, 'azimuth'):
-           raise Exception
-
-       saz = np.sin(self.station.azimuth)
-       caz = np.cos(self.station.azimuth)
-       saz2 = 2.*saz*caz
-       caz2 = caz**2.-saz**2.
-
-       weights = []
-       if component in ['r','z']:
-           weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
-           weights += [-caz*mt[3] - saz*mt[4]]
-           weights += [-0.5*caz2*(mt[0] - mt[1]) - saz2*mt[3]]
-           weights += [(mt[0] - mt[1] + mt[2])/3.]
-           return weights
-       elif component in ['t']:
-           weights += [0.]
-           weights += [-0.5*saz2*(mt[0] - mt[1]) + caz2*mt[3]]
-           weights += [-saz*mt[4] + caz*mt[5]]
-           weights += [0.]
-           return weights
+       raise NotImplementedError
 
 
 
-class GreensTensorGenerator(GreensTensorGeneratorBase):
+class Generator(GeneratorBase):
     """ 
     Creates a GreensTensorList by reading precomputed Green's tensors from an
     fk directory tree.  Such trees contain SAC files organized by model, event

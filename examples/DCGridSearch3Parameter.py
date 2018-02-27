@@ -6,8 +6,8 @@ import mtuq.io
 import mtuq.greens.fk
 import mtuq.misfit
 
-from mtuq.grid_search import grid_search
 from mtuq.grids import DCGridRandom
+from mtuq.grid_search import grid_search_serial
 from mtuq.misfit import misfit_bw, misfit_sw
 from mtuq.process_data import process_data
 from mtuq.util.util import Struct
@@ -46,7 +46,7 @@ process_data = {
    }
 
 grid = DCGridRandom(
-    points_per_axis=10,
+    npts=20,
     Mw=4.5)
 
 
@@ -65,12 +65,12 @@ if __name__=='__main__':
     print 'Processing data...\n'
     processed_data = {}
     for key in process_data:
-        processed_data[key] = map(process_data[key], data)
+        processed_data[key] = map(process_data[key], data, stations)
 
     print 'Reading Greens functions...\n'
-    generator = mtuq.greens.fk.GreensTensorGenerator(paths.greens)
+    generator = mtuq.greens.fk.Generator(paths.greens)
     greens = generator(stations, origin)
-    wavelet = trapezoid(rise_time=1., delta=stations[0].delta)
+    wavelet = trapezoid(rise_time=1., delta=0.2)
     greens.convolve(wavelet)
 
     print 'Processing Greens functions...\n'
@@ -79,5 +79,6 @@ if __name__=='__main__':
         processed_greens[key] = greens.map(process_data[key], stations)
 
     print 'Carrying out grid search...\n'
-    grid_search(processed_data, processed_greens, misfit, grid)
+    grid_search_serial(processed_data, processed_greens, misfit, grid)
+
 
