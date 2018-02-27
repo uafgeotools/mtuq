@@ -68,7 +68,7 @@ if __name__=='__main__':
         processed_data[key] = map(process_data[key], data, stations)
 
     print 'Reading Greens functions...\n'
-    generator = mtuq.greens.fk.GreensTensorGenerator(paths.greens)
+    generator = mtuq.greens.fk.Generator(paths.greens)
     greens = generator(stations, origin)
     wavelet = trapezoid(rise_time=1., delta=0.2)
     greens.convolve(wavelet)

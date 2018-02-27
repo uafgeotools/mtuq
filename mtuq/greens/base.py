@@ -132,7 +132,7 @@ class GreensTensorList(object):
         return stations
 
 
-class GreensTensorGeneratorBase(object):
+class GeneratorBase(object):
     """
     Creates GreensTensorLists via a two-step procedure:
 

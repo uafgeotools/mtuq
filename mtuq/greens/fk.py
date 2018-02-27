@@ -7,8 +7,7 @@ from copy import deepcopy
 from os.path import basename, exists
 
 from obspy.core import Stream, Trace
-from mtuq.greens.base import GreensTensorBase, GreensTensorGeneratorBase,\
-    GreensTensorList
+from mtuq.greens.base import GreensTensorBase, GeneratorBase, GreensTensorList
 from mtuq.util.signal import resample
 from mtuq.util.util import is_mpi_env
 
@@ -27,7 +26,7 @@ N = 4
 
 # If a GreensTensor is created with the wrong input arguments, this error
 # message is displayed.  In practice this is rarely encountered, since
-# GreensTensorGenerator normally does all the work
+# Generator normally does all the work
 ErrorMessage =("Green's functions must be given as a dictionary indexed by"
     "component (z,r,t)")
 
@@ -41,7 +40,7 @@ class GreensTensor(GreensTensorBase):
     To create a GreensTensor, a dictionary "data" must be supplied. This
     dictionary must be indexed by component (z,r,t), which is a natural way of
     organizing fk Green's functions. In practice, users rarely have to worry 
-    about these details because GreensTensorGenerator normally does all the 
+    about these details because Generator normally does all the 
     work of creating GreensTensors
     """
     def __init__(self, data, station, origin):
@@ -153,7 +152,7 @@ class GreensTensor(GreensTensorBase):
 
 
 
-class GreensTensorGenerator(GreensTensorGeneratorBase):
+class Generator(GeneratorBase):
     """ 
     Creates a GreensTensorList by reading precomputed Green's tensors from an
     fk directory tree.  Such trees contain SAC files organized by model, event
@@ -161,8 +160,8 @@ class GreensTensorGenerator(GreensTensorGeneratorBase):
     by Lupei Zhu.
 
     Generating Green's tensors is a two-step procedure:
-    1) greens_tensor_generator = mtuq.greens.fk.GreensTensorGenerator(path, model)
-    2) greens_tensors = greens_tensor_generator(stations, origin)
+        1) greens_tensor_generator = mtuq.greens.fk.Generator(path, model)
+        2) greens_tensors = greens_tensor_generator(stations, origin)
 
     In the first step, the user supplies the path to an fk directory tree and 
     the name of the  layered Earth model that was used to generate Green's
