@@ -58,7 +58,7 @@ class GreensTensorList(object):
         self.__list__ = []
 
 
-    def get_synthetics(self, mt, iproc):
+    def get_synthetics(self, mt):
         """
         Returns a list of streams; all streams correspond to the moment
         tensor mt, and each each individaul stream corresponds to an
@@ -66,7 +66,7 @@ class GreensTensorList(object):
         """
         synthetics = []
         for greens_tensor in self.__list__:
-            synthetics += [greens_tensor.get_synthetics(mt, iproc)]
+            synthetics += [greens_tensor.get_synthetics(mt)]
         return synthetics
 
 

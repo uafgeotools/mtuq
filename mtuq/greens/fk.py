@@ -71,17 +71,14 @@ class GreensTensor(GreensTensorBase):
 
             w = self._calculate_weights(mt, component)
             G = self.data[component]
-            #s = self._synthetics[iproc][_i].data
-            s = Stream()
-            for channel in self.station.channels:
-                s += Trace(np.zeros(self.station.npts), self.station)
+            s = self._synthetics[_i].data
 
             # overwrites previous synthetics
             s[:] = 0.
             for _j in range(N):
                 s += w[_j]*G[_j].data
 
-        return self._synthetics[iproc]
+        return self._synthetics
 
 
     def apply(self, function, *args, **kwargs):
@@ -134,11 +131,10 @@ class GreensTensor(GreensTensorBase):
         """ 
         Creates obspy streams for use by get_synthetics
         """
-        self._synthetics = []
-            self._synthetics = Stream()
-            for channel in self.station.channels:
-                self._synthetics +=\
-                    Trace(np.zeros(self.station.npts), self.station)
+        self._synthetics = Stream()
+        for channel in self.station.channels:
+            self._synthetics +=\
+                Trace(np.zeros(self.station.npts), self.station)
 
 
     def _update_time_sampling(self, processed_data):
