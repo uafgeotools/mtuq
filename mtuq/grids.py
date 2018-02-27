@@ -7,39 +7,45 @@ from mtuq.util.util import Struct
 
 
 class Grid(object):
-    """ Multidimensional grid
+    """ Structured grid
 
         Allows iterating over all values of a multidimensional grid while 
         storing only values along the axes
-
-        Given a set of axes names and values, __init__ can be called directly
-        to return a Grid instance, or __init__ can be overloaded to create a
-        specialized Grid subclass
     """
-    def __init__(self, axes, map=None):
+    def __init__(self, dict, start=0, stop=None, map=None):
 
-        # dictionary containing axis names and values
-        self.axes = axes
+        # list of parameter names
+        self.keys = dict.keys()
+        
+        # corresponding list of parameter arrays
+        self.vals = dict.values()
+
+        # what is the length along each axis?
+        shape = []
+        for axis in self.vals:
+            shape += [len(axis)]
+        self.ndim = len(shape)
+
+        # are we considering only a subset of the grid?
+        if stop:
+            self.size = stop
+        else:
+            self.size = np.product(shape)
+        if start:
+            self.size -= start
+
+        self.start = start
 
         # optional map from one parameterization to another
         self.map = map
 
-        # what is the length along each axis?
-        shape = []
-        for _, axis in axes.items():
-            shape += [len(axis)]
-
-        # what attributes would the grid have if stored as an numpy array?
-        self.shape = shape
-        self.size = np.product(shape)
-        self.ndim = len(shape)
  
-
     def get(self, i):
         """ Returns i-th point of grid
         """
+        i += self.start
         p = Struct()
-        for key, val in self.axes.items():
+        for key, val in zip(self.keys, self.vals):
             p[key] = val[i%len(val)]
             i/=len(val)
 
@@ -49,11 +55,103 @@ class Grid(object):
             return p
 
 
-class MTGridRandom(Grid):
+    def decompose(self, nproc):
+        """ Decomposes grid for parallel processing
+        """
+        if self.start!=0:
+            raise Exception
+
+        subsets = []
+        for iproc in range(nproc):
+            start=iproc*self.size/nproc
+            stop=(iproc+1)*self.size/nproc
+            subsets += [Grid(self.dict(), start, stop, map=self.map)]
+        return subsets
+
+
+    def save(self, filename, array):
+        """ Saves a set of values defined on grid
+        """
+        raise NotImplementedError
+
+
+    def dict(self):
+        return dict(zip(self.keys, self.vals))
+
+
+
+class UnstructuredGrid(object):
+    """ Unstructured grid
+    """
+    def __init__(self, dict, start=0, stop=None, map=None):
+
+        # list of parameter names
+        self.keys = dict.keys()
+
+        # corresponding list of parameter arrays
+        self.vals = dict.values()
+
+        # check consistency
+        npts = []
+        for array in self.vals:
+            npts += [len(array)]
+        self.ndim = len(npts)
+
+        # are we considering only a subset of the grid?
+        if stop:
+            size = stop
+        else:
+            size = npts[0]
+        if start:
+            size -= start
+
+        self.size = size
+        self.start = start
+
+        # optional map from one parameterization to another
+        self.map = map
+
+
+    def get(self, i):
+        """ Returns i-th point of grid
+        """
+        p = Struct()
+        for key, val in zip(self.keys, self.vals):
+            p[key] = val[i]
+
+        if self.map:
+            return self.map(p)
+        else:
+            return p
+
+
+    def decompose(self, nproc):
+        """ Decomposes grid for parallel processing
+        """
+        subsets = []
+        for iproc in range(nproc):
+            start=iproc*self.size/nproc
+            stop=(iproc+1)*self.size/nproc
+            dict = {}
+            for key, val in zip(self.keys, self.vals):
+                dict[key] = val[start:stop]
+            subsets += [UnstructuredGrid(dict, start, stop, map=self.map)]
+        return subsets
+
+
+    def save(self, filename, array):
+        """ Saves a set of values defined on grid
+        """
+        raise NotImplementedError
+
+
+
+
+class MTGridRandom(UnstructuredGrid):
     """ Full moment tensor grid with randomly-spaced values
     """
-    def __init__(self, Mw=[], points_per_axis=10):
-        N = points_per_axis
+    def __init__(self, Mw=[], npts=500000):
+        N = npts
 
         # upper bound, lower bound, number of points
         v = [-1./3., 1./3., N]
@@ -63,23 +161,23 @@ class MTGridRandom(Grid):
         h = [0., 1., N]
 
         # magnitude is treated separately
-        rho = _array(Mw)/np.sqrt(2)
+        rho = float(Mw)/np.sqrt(2)
 
         super(MTGridRandom, self).__init__({
-            'rho': rho,
+            'rho': rho*np.ones(N),
             'v': randvec(v),
             'w': randvec(w),
             'kappa': randvec(kappa),
             'sigma': randvec(sigma),
             'h': randvec(h)},
-            tape2015)
+            map=tape2015)
 
 
 class MTGridRegular(Grid):
     """ Full moment tensor grid with regularly-spaced values
     """
-    def __init__(self, Mw=[], points_per_axis=10):
-        N = points_per_axis
+    def __init__(self, Mw=[], npts_per_axis=10):
+        N = npts_per_axis
 
         # upper bound, lower bound, number of points
         v = [-1./3., 1./3., N]
@@ -98,14 +196,14 @@ class MTGridRegular(Grid):
             'kappa': linspace(kappa),
             'sigma': linspace(sigma),
             'h': linspace(n)},
-            tape2015)
+            map=tape2015)
 
 
-class DCGridRandom(Grid):
+class DCGridRandom(UnstructuredGrid):
     """ Double-couple moment tensor grid with randomly-spaced values
     """
-    def __init__(self, Mw=[], points_per_axis=10):
-        N = points_per_axis
+    def __init__(self, Mw=[], npts=50000):
+        N = npts
 
         # upper bound, lower bound, number of points
         kappa = [0., 360, N]
@@ -113,23 +211,23 @@ class DCGridRandom(Grid):
         h = [0., 1., N]
 
         # magnitude is treated separately
-        rho = _array(Mw)/np.sqrt(2)
+        rho = float(Mw)/np.sqrt(2)
 
         super(DCGridRandom, self).__init__({
-            'rho': rho,
-            'v': np.array([0.]),
-            'w': np.array([0.]),
+            'rho': rho*np.ones(N),
+            'v': np.zeros(N),
+            'w': np.zeros(N),
             'kappa': randvec(kappa),
             'sigma': randvec(sigma),
             'h': randvec(h)},
-            tape2015)
+            map=tape2015)
 
 
 class DCGridRegular(Grid):
     """ Double-couple moment tensor grid with regularly-spaced values
     """
-    def __init__(self, Mw=[], points_per_axis=10):
-        N = points_per_axis
+    def __init__(self, Mw=[], npts_per_axis=20):
+        N = npts_per_axis
 
         # upper bound, lower bound, number of points
         kappa = [0., 360, N]
@@ -146,7 +244,8 @@ class DCGridRegular(Grid):
             'kappa': linspace(kappa),
             'sigma': linspace(sigma),
             'h': linspace(n)},
-            tape2015)
+            map=tape2015)
+
 
 def DepthGrid():
     raise NotImplementedError
@@ -182,5 +281,4 @@ def randvec(args):
 
 def tape2015(p):
     return tt152cmt(p.rho, p.v, p.w, p.kappa, p.sigma, p.h)
-
 
