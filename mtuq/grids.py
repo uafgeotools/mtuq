@@ -9,48 +9,54 @@ from mtuq.util.util import Struct
 class Grid(object):
     """ Structured grid
 
-        Allows iterating over all values of a multidimensional grid while 
-        storing only values along the axes
+    Allows iterating over all values of a multidimensional grid while 
+    storing only values along the axes
+
+    param dict: dictionary containing names of parameters and values along
+        corresponding axes
+    param callback: function applied to 
     """
-    def __init__(self, dict, start=0, stop=None, map=None):
+    def __init__(self, dict, start=0, stop=None, callback=None):
 
         # list of parameter names
         self.keys = dict.keys()
         
-        # corresponding list of parameter arrays
+        # corresponding list of axis arrays
         self.vals = dict.values()
 
         # what is the length along each axis?
         shape = []
         for axis in self.vals:
             shape += [len(axis)]
+
+        # what attributes would the grid have if stored as a numpy array?
         self.ndim = len(shape)
+        self.size = np.product(shape)
+        self.shape = shape
 
-        # are we considering only a subset of the grid?
-        if stop:
-            self.size = stop
-        else:
-            self.size = np.product(shape)
-        if start:
-            self.size -= start
-
+        # what part of the grid do we want to iterate over?
         self.start = start
+        if stop:
+            self.stop = stop
+        else:
+            self.stop = self.size
+
+        self.index = start
 
         # optional map from one parameterization to another
-        self.map = map
+        self.callback = callback
 
  
     def get(self, i):
         """ Returns i-th point of grid
         """
-        i += self.start
         p = Struct()
         for key, val in zip(self.keys, self.vals):
             p[key] = val[i%len(val)]
             i/=len(val)
 
-        if self.map:
-            return self.map(p)
+        if self.callback:
+            return self.callback(p)
         else:
             return p
 
@@ -65,62 +71,80 @@ class Grid(object):
         for iproc in range(nproc):
             start=iproc*self.size/nproc
             stop=(iproc+1)*self.size/nproc
-            subsets += [Grid(self.dict(), start, stop, map=self.map)]
+            items = zip(self.keys, self.values)
+            subsets += [Grid(dict(items), start, stop, callback=self.callback)]
         return subsets
 
 
-    def save(self, filename, array):
+    def save(self, filename, dict):
         """ Saves a set of values defined on grid
         """
         raise NotImplementedError
 
 
-    def dict(self):
-        return dict(zip(self.keys, self.vals))
+    # the next two methods make it possible to iterate over the grid
+    def next(self): 
+        if self.index < self.stop:
+           # get the i-th point in grid
+           p = self.get(self.index)
+        else:
+            raise StopIteration
+        self.index += 1
+        return p
+
+
+    def __iter__(self):
+        return self
+
 
 
 
 class UnstructuredGrid(object):
     """ Unstructured grid
+
+    param dict: dictionary containing the complete set of coordinate values for
+       each parameter
     """
-    def __init__(self, dict, start=0, stop=None, map=None):
+    def __init__(self, dict, start=0, stop=None, callback=None):
 
         # list of parameter names
         self.keys = dict.keys()
 
-        # corresponding list of parameter arrays
+        # corresponding list of coordinate arrays
         self.vals = dict.values()
 
+        # there is no shape attribute because it is an unstructured grid,
+        # however, ndim and size are still well defined
+        self.ndim = len(self.vals)
+        self.size = len(self.vals[0])
+
         # check consistency
-        npts = []
         for array in self.vals:
-            npts += [len(array)]
-        self.ndim = len(npts)
+            assert len(array) == self.size
 
-        # are we considering only a subset of the grid?
-        if stop:
-            size = stop
-        else:
-            size = npts[0]
-        if start:
-            size -= start
-
-        self.size = size
+        # what part of the grid do we want to iterate over?
         self.start = start
+        if stop:
+            self.stop = stop
+        else:
+            self.stop = self.size
+
+        self.index = start
 
         # optional map from one parameterization to another
-        self.map = map
+        self.callback = callback
 
 
     def get(self, i):
         """ Returns i-th point of grid
         """
+        i -= self.start
         p = Struct()
         for key, val in zip(self.keys, self.vals):
             p[key] = val[i]
 
-        if self.map:
-            return self.map(p)
+        if self.callback:
+            return self.callback(p)
         else:
             return p
 
@@ -135,116 +159,126 @@ class UnstructuredGrid(object):
             dict = {}
             for key, val in zip(self.keys, self.vals):
                 dict[key] = val[start:stop]
-            subsets += [UnstructuredGrid(dict, start, stop, map=self.map)]
+            subsets += [UnstructuredGrid(dict, start, stop, callback=self.callback)]
         return subsets
 
 
-    def save(self, filename, array):
+    def save(self, filename, dict):
         """ Saves a set of values defined on grid
         """
         raise NotImplementedError
 
 
+    # the next two methods make it possible to iterate over the grid
+    def next(self): 
+        if self.index < self.stop:
+           # get the i-th point in grid
+           p = self.get(self.index)
+        else:
+            raise StopIteration
+        self.index += 1
+        return p
 
 
-class MTGridRandom(UnstructuredGrid):
+    def __iter__(self):
+        return self
+
+
+
+def MTGridRandom(Mw=[], npts=500000):
     """ Full moment tensor grid with randomly-spaced values
     """
-    def __init__(self, Mw=[], npts=500000):
-        N = npts
+    N = npts
 
-        # upper bound, lower bound, number of points
-        v = [-1./3., 1./3., N]
-        w = [-3./8.*PI, 3./8.*PI, N]
-        kappa = [0., 360, N]
-        sigma = [-90., 90., N]
-        h = [0., 1., N]
+    # upper bound, lower bound, number of points
+    v = [-1./3., 1./3., N]
+    w = [-3./8.*PI, 3./8.*PI, N]
+    kappa = [0., 360, N]
+    sigma = [-90., 90., N]
+    h = [0., 1., N]
 
-        # magnitude is treated separately
-        rho = float(Mw)/np.sqrt(2)
+    # magnitude is treated separately
+    rho = float(Mw)/np.sqrt(2)
 
-        super(MTGridRandom, self).__init__({
-            'rho': rho*np.ones(N),
-            'v': randvec(v),
-            'w': randvec(w),
-            'kappa': randvec(kappa),
-            'sigma': randvec(sigma),
-            'h': randvec(h)},
-            map=tape2015)
+    return UnstructuredGrid({
+        'rho': rho*np.ones(N),
+        'v': randvec(v),
+        'w': randvec(w),
+        'kappa': randvec(kappa),
+        'sigma': randvec(sigma),
+        'h': randvec(h)},
+        callback=tape2015)
 
 
-class MTGridRegular(Grid):
+def MTGridRegular(Mw=[], npts_per_axis=25):
     """ Full moment tensor grid with regularly-spaced values
     """
-    def __init__(self, Mw=[], npts_per_axis=10):
-        N = npts_per_axis
+    N = npts_per_axis
 
-        # upper bound, lower bound, number of points
-        v = [-1./3., 1./3., N]
-        w = [-3./8.*PI, 3./8.*PI, N]
-        kappa = [0., 360, N]
-        sigma = [-90., 90., N]
-        h = [0., 1., N]
+    # upper bound, lower bound, number of points
+    v = [-1./3., 1./3., N]
+    w = [-3./8.*PI, 3./8.*PI, N]
+    kappa = [0., 360, N]
+    sigma = [-90., 90., N]
+    h = [0., 1., N]
 
-        # magnitude is treated separately
-        rho = _array(Mw)/np.sqrt(2)
+    # magnitude is treated separately
+    rho = _array(Mw)/np.sqrt(2)
 
-        super(MTGridRandom, self).__init__({
-            'rho': rho,
-            'v': linspace(v),
-            'w': linspace(w),
-            'kappa': linspace(kappa),
-            'sigma': linspace(sigma),
-            'h': linspace(n)},
-            map=tape2015)
+    return Grid({
+        'rho': rho,
+        'v': linspace(v),
+        'w': linspace(w),
+        'kappa': linspace(kappa),
+        'sigma': linspace(sigma),
+        'h': linspace(n)},
+        callback=tape2015)
 
 
-class DCGridRandom(UnstructuredGrid):
+def DCGridRandom(Mw, npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
     """
-    def __init__(self, Mw=[], npts=50000):
-        N = npts
+    N = npts
 
-        # upper bound, lower bound, number of points
-        kappa = [0., 360, N]
-        sigma = [-90., 90., N]
-        h = [0., 1., N]
+    # upper bound, lower bound, number of points
+    kappa = [0., 360, N]
+    sigma = [-90., 90., N]
+    h = [0., 1., N]
 
-        # magnitude is treated separately
-        rho = float(Mw)/np.sqrt(2)
+    # magnitude is treated separately
+    rho = float(Mw)/np.sqrt(2)
 
-        super(DCGridRandom, self).__init__({
-            'rho': rho*np.ones(N),
-            'v': np.zeros(N),
-            'w': np.zeros(N),
-            'kappa': randvec(kappa),
-            'sigma': randvec(sigma),
-            'h': randvec(h)},
-            map=tape2015)
+    return UnstructuredGrid({
+        'rho': rho*np.ones(N),
+        'v': np.zeros(N),
+        'w': np.zeros(N),
+        'kappa': randvec(kappa),
+        'sigma': randvec(sigma),
+        'h': randvec(h)},
+        callback=tape2015)
 
 
-class DCGridRegular(Grid):
+def DCGridRegular(Mw=[], npts_per_axis=25):
     """ Double-couple moment tensor grid with regularly-spaced values
-    """
-    def __init__(self, Mw=[], npts_per_axis=20):
-        N = npts_per_axis
+    """ 
+    N = npts_per_axis
 
-        # upper bound, lower bound, number of points
-        kappa = [0., 360, N]
-        sigma = [-90., 90., N]
-        h = [0., 1., N]
+    # upper bound, lower bound, number of points
+    kappa = [0., 360, N]
+    sigma = [-90., 90., N]
+    h = [0., 1., N]
 
-        # magnitude is treated separately
-        rho = _array(Mw)/np.sqrt(2)
+    # magnitude is treated separately
+    rho = _array(Mw)/np.sqrt(2)
 
-        super(DCGridRegular, self).__init__({
-            'rho': rho,
-            'v': np.array([0.]),
-            'w': np.array([0.]),
-            'kappa': linspace(kappa),
-            'sigma': linspace(sigma),
-            'h': linspace(n)},
-            map=tape2015)
+    return Grid({
+        'rho': rho,
+        'v': np.array([0.]),
+        'w': np.array([0.]),
+        'kappa': linspace(kappa),
+        'sigma': linspace(sigma),
+        'h': linspace(n)},
+        callback=tape2015)
 
 
 def DepthGrid():
