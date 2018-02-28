@@ -50,13 +50,11 @@ grid = DCGridRandom(
     Mw=4.5)
 
 
-processed_data = None
-processed_greens = None
-
-
 if __name__=='__main__':
-    """ Carries out grid search over double-couple moment tensor parameters;
-       magnitude, event depth, and event location are fixed
+    """ Carries out grid search over double-couple moment tensor parameters,
+       keeping magnitude, depth, and location fixed
+
+       Must be invoked with mpi
     """
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
@@ -83,6 +81,11 @@ if __name__=='__main__':
         processed_greens = {}
         for key in process_data:
             processed_greens[key] = greens.map(process_data[key], stations)
+
+    else:
+        processed_data = None
+        processed_greens = None
+
 
     if comm.rank==0:
         print 'Broadcasting data...\n'
