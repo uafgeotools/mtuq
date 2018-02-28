@@ -14,7 +14,6 @@ class Grid(object):
 
     param dict: dictionary containing names of parameters and values along
         corresponding axes
-    param callback: function applied to 
     """
     def __init__(self, dict, start=0, stop=None, callback=None):
 
@@ -296,10 +295,10 @@ def _array(x):
     if type(x) in [np.ndarray]:
         return x
 
-    elif type(x) in [list,tuple]:
+    elif type(x) in [list, tuple]:
         return np.array(x)
 
-    elif type(x) in [float,int]:
+    elif type(x) in [float, int]:
         return np.array([float(x)])
 
     else:

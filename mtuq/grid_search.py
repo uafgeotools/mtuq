@@ -9,6 +9,7 @@ from mtuq.util.util import is_mpi_env, Struct
 PRINT_ELAPSED_TIME=True
 
 
+
 def grid_search_serial(data, greens, misfit, grid):
     """ Grid search over moment tensor parameters
     """
