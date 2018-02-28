@@ -8,17 +8,13 @@ import mtuq.misfit
 
 from mtuq.grid_search import grid_search_mpi
 from mtuq.grids import DCGridRandom
-from mtuq.misfit import misfit_bw, misfit_sw
+from mtuq.misfit import cap_bw, cap_sw
 from mtuq.process_data import process_data
 from mtuq.util.util import Struct
 from mtuq.util.wavelets import trapezoid
 
 
-paths = Struct({
-    'data': os.getenv('HOME')+'/'+'projects/mtuq/20090407201255351',
-    'greens': os.getenv('CENTER1')+'/'+'data/wf/FK_SYNTHETICS/scak',
-    })
-
+# body and surface waves are processed separately
 process_bw = process_data(
     filter_type='Bandpass',
     freq_min= 0.25,
@@ -35,19 +31,40 @@ process_sw = process_data(
     #window_type='cap_sw',
     )
 
-misfit = {
-    'body_waves': misfit_bw,
-    'surface_waves': misfit_sw,
-    }
-
 process_data = {
    'body_waves': process_bw,
    'surface_waves': process_sw,
    }
 
+
+# total misfit is a sum of body- and surface-wave contributions
+misfit_bw = cap_sw(
+    max_shift=0.,
+    )
+
+misfit_sw = cap_sw(
+    max_shift=0.,
+    )
+
+misfit = {
+    'body_waves': misfit_bw,
+    'surface_waves': misfit_sw,
+    }
+
+# search over 50,000 randomly-chosen double-couple moment tensors
 grid = DCGridRandom(
-    npts=5000,
-    Mw=4.5)
+    npts=500000,
+    Mw=4.5,
+    )
+
+
+# eventually we need to include sample data in the mtuq repository;
+# file size prevents us from doing so right away
+paths = Struct({
+    'data': os.getenv('HOME')+'/'+'projects/mtuq/20090407201255351',
+    'greens': os.getenv('CENTER1')+'/'+'data/wf/FK_SYNTHETICS/scak',
+    })
+
 
 
 if __name__=='__main__':
@@ -55,6 +72,8 @@ if __name__=='__main__':
        keeping magnitude, depth, and location fixed
 
        Must be invoked with mpi
+
+           mpirun -np <N>P DCGridSearch3ParameterMPI.py
     """
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
@@ -91,6 +110,7 @@ if __name__=='__main__':
         print 'Broadcasting data...\n'
     processed_data = comm.bcast(processed_data, root=0)
     processed_greens = comm.bcast(processed_greens, root=0)
+
 
     if comm.rank==0:
         print 'Carrying out grid search...\n'
