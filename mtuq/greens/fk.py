@@ -88,7 +88,7 @@ class GreensTensor(GreensTensorBase):
         for component in ['z','r','t']:
             processed[component] = function(self.data[component], *args, **kwargs)
 
-        # updates metadata in case time sampling changed
+        # updates metadata if time sampling changed
         station, origin = self._update_time_sampling(processed)
 
         return GreensTensor(processed, station, origin)
