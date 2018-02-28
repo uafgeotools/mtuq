@@ -6,7 +6,7 @@ import mtuq.io
 import mtuq.greens.fk
 import mtuq.misfit
 
-from mtuq.grid_search import grid_search_mpi
+from mtuq.grid_search import grid_search_serial
 from mtuq.grids import DCGridRandom
 from mtuq.misfit import cap_bw, cap_sw
 from mtuq.process_data import process_data
@@ -64,6 +64,9 @@ paths = Struct({
     'data': os.getenv('HOME')+'/'+'projects/mtuq/20090407201255351',
     'greens': os.getenv('CENTER1')+'/'+'data/wf/FK_SYNTHETICS/scak',
     })
+
+data_format = 'sac'
+
 
 
 
