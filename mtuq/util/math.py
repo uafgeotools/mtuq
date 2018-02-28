@@ -123,3 +123,13 @@ def isclose(X, Y):
     return bool(
         np.linalg.norm(X-Y) < EPSVAL)
 
+
+
+def open_interval(x1,x2,nx):
+    return np.linspace(x1,x2,n+2)[1:-1]
+
+
+
+def closed_interval(x1,x2,nx):
+    return np.linspace(x1,x2,n)
+

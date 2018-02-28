@@ -5,6 +5,10 @@ from mtuq.mt.maps.tape2015 import tt152cmt
 from mtuq.util.math import PI, INF
 from mtuq.util.util import Struct
 
+from numpy.random import uniform as random
+from mtuq.util.math import open_interval as regular
+
+
 
 class Grid(object):
     """ Structured grid
@@ -201,11 +205,11 @@ def MTGridRandom(Mw=[], npts=500000):
 
     return UnstructuredGrid({
         'rho': rho*np.ones(N),
-        'v': randvec(v),
-        'w': randvec(w),
-        'kappa': randvec(kappa),
-        'sigma': randvec(sigma),
-        'h': randvec(h)},
+        'v': random(*v),
+        'w': random(*w),
+        'kappa': random(*kappa),
+        'sigma': random(*sigma),
+        'h': random(*h)},
         callback=tape2015)
 
 
@@ -222,15 +226,15 @@ def MTGridRegular(Mw=[], npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = _array(Mw)/np.sqrt(2)
+    rho = cast(Mw)/np.sqrt(2)
 
     return Grid({
         'rho': rho,
-        'v': linspace(v),
-        'w': linspace(w),
-        'kappa': linspace(kappa),
-        'sigma': linspace(sigma),
-        'h': linspace(n)},
+        'v': regular(*v),
+        'w': regular(*w),
+        'kappa': regular(*kappa),
+        'sigma': regular(*sigma),
+        'h': regular(*n)},
         callback=tape2015)
 
 
@@ -251,9 +255,9 @@ def DCGridRandom(Mw, npts=50000):
         'rho': rho*np.ones(N),
         'v': np.zeros(N),
         'w': np.zeros(N),
-        'kappa': randvec(kappa),
-        'sigma': randvec(sigma),
-        'h': randvec(h)},
+        'kappa': random(*kappa),
+        'sigma': random(*sigma),
+        'h': random(*h)},
         callback=tape2015)
 
 
@@ -268,15 +272,15 @@ def DCGridRegular(Mw=[], npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = _array(Mw)/np.sqrt(2)
+    rho = cast(Mw)/np.sqrt(2)
 
     return Grid({
         'rho': rho,
         'v': np.array([0.]),
         'w': np.array([0.]),
-        'kappa': linspace(kappa),
-        'sigma': linspace(sigma),
-        'h': linspace(n)},
+        'kappa': regular(*kappa),
+        'sigma': regular(*sigma),
+        'h': regular(*n)},
         callback=tape2015)
 
 
@@ -291,26 +295,16 @@ def OriginGrid():
 
 ### utilities
 
-def _array(x):
+def cast(x):
     if type(x) in [np.ndarray]:
         return x
-
     elif type(x) in [list, tuple]:
         return np.array(x)
-
     elif type(x) in [float, int]:
         return np.array([float(x)])
-
     else:
         raise ValueError
 
-
-def linspace(x1,x2,nx):
-    return np.linspace(x1,x2,n+2)[1:-1]
-
-
-def randvec(args):
-    return np.random.uniform(*args)
 
 def tape2015(p):
     return tt152cmt(p.rho, p.v, p.w, p.kappa, p.sigma, p.h)
