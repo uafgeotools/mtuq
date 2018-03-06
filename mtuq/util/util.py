@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+
+import time
+
 
 class AttribDict(dict):
     """ Dictionary with both keyword and attribute access
@@ -40,4 +42,35 @@ def iterable(arg):
         return arg
 
 
+def elapsed_time(func):
+    """ Decorator for measuring execution time
+    """
+    def timed_func(*args, **kwargs):
+        start_time = time.time()
+
+        func(*args, **kwargs)
+
+        _elapsed_time = time.time() - start_time
+        print 'Elapsed time:', _elapsed_time
+
+    return timed_func
+
+
+def elapsed_time_mpi(func):
+    """ Decorator for measuring execution time in mpi environment
+    """
+    def timed_func(*args, **kwargs):
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+
+        if comm.rank==0:
+            start_time = time.time()
+
+        func(*args, **kwargs)
+
+        if comm.rank==0:
+            _elapsed_time = time.time() - start_time
+            print 'Elapsed time:', _elapsed_time
+
+    return timed_func
 

@@ -53,7 +53,7 @@ misfit = {
 
 # search over 50,000 randomly-chosen double-couple moment tensors
 grid = DCGridRandom(
-    npts=500000,
+    npts=50000,
     Mw=4.5,
     )
 
