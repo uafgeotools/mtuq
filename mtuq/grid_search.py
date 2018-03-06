@@ -1,15 +1,11 @@
 
-import time
 import numpy as np
 
-from mtuq.mt.maps.tape2015 import tt152cmt
-from mtuq.util.util import is_mpi_env, Struct
-
-# adds debugging output to grid_search_mpi
-PRINT_ELAPSED_TIME=True
+from util.util import elapsed_time, elapsed_time_mpi
 
 
 
+@elapsed_time
 def grid_search_serial(data, greens, misfit, grid):
     """ Grid search over moment tensor parameters
     """
@@ -17,7 +13,7 @@ def grid_search_serial(data, greens, misfit, grid):
     count = 0
 
     for mt in grid:
-        print grid.index
+        #print grid.index
 
         # generate_synthetics
         synthetics = {}
@@ -32,9 +28,9 @@ def grid_search_serial(data, greens, misfit, grid):
         count += 1
 
 
-def grid_search_mpi(data, greens, misfit, grid):
+@elapsed_time_mpi
+def grid_search_mpipool(data, greens, misfit, grid):
     from mpi4py import MPI
-    from schwimmbad import MPIPool
     comm = MPI.COMM_WORLD
     iproc, nproc = comm.rank, comm.size
 
@@ -46,11 +42,29 @@ def grid_search_mpi(data, greens, misfit, grid):
 
         # evaluate misfit
         results = pool.map(
-            _evalutate_misfit,
+            _evaluate_misfit,
             tasks)
 
 
-def _evalutate_misfit(args):
+@elapsed_time_mpi
+def grid_search_mpi(data, greens, misfit, grid):
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    iproc, nproc = comm.rank, comm.size
+
+    # scatter grid across processes
+    if iproc == 0:
+        subset = grid.decompose(nproc)
+    else: 
+        subset = None
+    subset = comm.scatter(subset, root=0)
+
+    # gather results on rank 0 
+    results = _evaluate_misfit([data, greens, misfit, subset])
+    results = MPI.COMM_WORLD.gather(results, root=0)
+
+
+def _evaluate_misfit(args):
     data, greens, misfit, grid = args
 
     # array to hold misfit values
@@ -58,7 +72,7 @@ def _evalutate_misfit(args):
     count = 0
 
     for mt in grid:
-        print grid.index
+        #print grid.index
 
         # generate synthetics
         synthetics = {}
@@ -75,20 +89,4 @@ def _evalutate_misfit(args):
     return results
 
 
-if PRINT_ELAPSED_TIME:
-    # adds debugging output to grid_search_mpi
-    _old = grid_search_mpi
-
-    def grid_search_mpi(data, greens, misfit, grid):
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
-
-        if comm.rank==0:
-            start_time = time.time()
-
-        _old(data, greens, misfit, grid)
-
-        if comm.rank==0:
-            elapsed_time = time.time() - start_time
-            print 'Elapsed time:', elapsed_time
 
