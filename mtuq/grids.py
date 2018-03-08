@@ -34,15 +34,16 @@ class Grid(object):
 
         # what attributes would the grid have if stored as a numpy array?
         self.ndim = len(shape)
-        self.size = np.product(shape)
         self.shape = shape
 
         # what part of the grid do we want to iterate over?
         self.start = start
         if stop:
             self.stop = stop
+            self.size = stop-start
         else:
-            self.stop = self.size
+            self.stop = np.product(shape)
+            self.size = np.product(shape)-start
 
         self.index = start
 
@@ -119,18 +120,20 @@ class UnstructuredGrid(object):
         # there is no shape attribute because it is an unstructured grid,
         # however, ndim and size are still well defined
         self.ndim = len(self.vals)
-        self.size = len(self.vals[0])
+        size = len(self.vals[0])
 
         # check consistency
         for array in self.vals:
-            assert len(array) == self.size
+            assert len(array) == size
 
         # what part of the grid do we want to iterate over?
         self.start = start
         if stop:
             self.stop = stop
+            self.size = stop-start
         else:
-            self.stop = self.size
+            self.stop = size
+            self.size = size-start
 
         self.index = start
 

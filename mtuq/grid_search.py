@@ -15,11 +15,6 @@ def grid_search_serial(data, greens, misfit, grid):
     for mt in grid:
         print grid.index
 
-        from util.plot import cap_plot
-        cap_plot(data, greens, mt)
-        import sys
-        sys.exit()
-
         # generate_synthetics
         synthetics = {}
         for key in data:
@@ -77,7 +72,7 @@ def _evaluate_misfit(args):
     data, greens, misfit, grid = args
 
     # array to hold misfit values
-    results = np.zeros(grid.stop-grid.start)
+    results = np.zeros(grid.size)
     count = 0
 
     for mt in grid:
