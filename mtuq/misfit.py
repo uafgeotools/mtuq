@@ -15,12 +15,13 @@ class cap_bw(object):
 
     def __call__(self, data, synthetics):
         ns = len(synthetics)
+        tmax = self.max_shift
 
         sum_misfit = 0.
         for _i in range(ns):
             syn, dat = data[_i], synthetics[_i]
             for _j, component in enumerate(syn):
-                sum_misfit += _waveform_difference_cc(syn[_j], dat[_j], ts)
+                sum_misfit += _waveform_difference_cc(syn[_j], dat[_j], tmax)
         return sum_misfit
 
 
