@@ -1,11 +1,11 @@
 
 import numpy as np
 
-from util.util import elapsed_time, elapsed_time_mpi
+from util.util import timer, timer_mpi
 
 
 
-@elapsed_time
+@timer
 def grid_search_serial(data, greens, misfit, grid):
     """ Grid search over moment tensor parameters
     """
@@ -13,7 +13,12 @@ def grid_search_serial(data, greens, misfit, grid):
     count = 0
 
     for mt in grid:
-        #print grid.index
+        print grid.index
+
+        from util.plot import cap_plot
+        cap_plot(data, greens, mt)
+        import sys
+        sys.exit()
 
         # generate_synthetics
         synthetics = {}
@@ -28,8 +33,10 @@ def grid_search_serial(data, greens, misfit, grid):
         count += 1
 
 
-@elapsed_time_mpi
+@timer_mpi
 def grid_search_mpipool(data, greens, misfit, grid):
+    """ Same as grid search serial, except parallelized with MPIPool
+    """
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
     iproc, nproc = comm.rank, comm.size
@@ -46,7 +53,7 @@ def grid_search_mpipool(data, greens, misfit, grid):
             tasks)
 
 
-@elapsed_time_mpi
+@timer_mpi
 def grid_search_mpi(data, greens, misfit, grid):
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
@@ -59,9 +66,11 @@ def grid_search_mpi(data, greens, misfit, grid):
         subset = None
     subset = comm.scatter(subset, root=0)
 
-    # gather results on rank 0 
+    # evaluate misfit
     results = _evaluate_misfit([data, greens, misfit, subset])
-    results = MPI.COMM_WORLD.gather(results, root=0)
+
+    # gather results from all processes
+    results = comm.gather(results, root=0)
 
 
 def _evaluate_misfit(args):
