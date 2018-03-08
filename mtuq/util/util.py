@@ -42,7 +42,7 @@ def iterable(arg):
         return arg
 
 
-def elapsed_time(func):
+def timer(func):
     """ Decorator for measuring execution time
     """
     def timed_func(*args, **kwargs):
@@ -56,7 +56,7 @@ def elapsed_time(func):
     return timed_func
 
 
-def elapsed_time_mpi(func):
+def timer_mpi(func):
     """ Decorator for measuring execution time in mpi environment
     """
     def timed_func(*args, **kwargs):

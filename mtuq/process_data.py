@@ -183,7 +183,7 @@ class process_data(object):
         # Start and end times will be stored in a dictionary indexed by 
         # station_id. This allows times determined when process_data is called
         # on data to be reused later when process_data is called on synthetics
-        if station_id in self._windows:
+        if station_id not in self._windows:
 
             if self.window_type == 'cap_bw':
                 # reproduces CAPUAF body wave window
@@ -235,9 +235,8 @@ class process_data(object):
 
 
         #
-        # apply distance weights
+        # apply weights
         #
-        pass
 
         return traces
 
