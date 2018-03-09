@@ -94,7 +94,7 @@ if __name__=='__main__':
         print 'Processing data...\n'
         processed_data = {}
         for key in process_data:
-            processed_data[key] = map(process_data[key], data, stations)
+            processed_data[key] = data.map(process_data[key], stations)
 
         print 'Reading Greens functions...\n'
         generator = mtuq.greens.fk.Generator(paths.greens)
