@@ -89,8 +89,7 @@ if __name__=='__main__':
     print 'Reading Greens functions...\n'
     generator = mtuq.greens.fk.Generator(paths.greens)
     greens = generator(stations, origin)
-    wavelet = trapezoid(rise_time=1., delta=0.2)
-    #greens.convolve(wavelet)
+    #greens.convolve(trapezoid(rise_time=1., delta=0.2))
 
     print 'Processing Greens functions...\n'
     processed_greens = {}
