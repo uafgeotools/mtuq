@@ -3,7 +3,7 @@ import csv
 
 def weight_parser(filename):
     weights = {}
-    with open('weight.dat') as f:
+    with open(filename) as f:
         reader = csv.reader(f, delimiter=' ', skipinitialspace=True)
         for row in reader:
             fields = row[0].split('.')

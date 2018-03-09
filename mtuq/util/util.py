@@ -1,4 +1,5 @@
 
+from os.path import abspath, join
 import time
 
 
@@ -73,4 +74,9 @@ def timer_mpi(func):
             print 'Elapsed time:', _elapsed_time
 
     return timed_func
+
+
+def root():
+    import mtuq
+    return abspath(join(mtuq.__path__[0], '..'))
 
