@@ -1,4 +1,5 @@
 
+from collections import defaultdict
 from scipy import signal
 import numpy as np
 
@@ -9,27 +10,11 @@ class cap_bw(object):
     """ Reproduces CAP body-wave measurement
         (not finished implementing)
     """
-    def __init__(self, max_shift=0.):
+    def __init__(self, max_shift=0., weights=None):
         self.max_shift = max_shift
 
-
-    def __call__(self, data, synthetics):
-        ns = len(synthetics)
-
-        sum_misfit = 0.
-        for _i in range(ns):
-            syn, dat = data[_i], synthetics[_i]
-            for _j, component in enumerate(syn):
-                sum_misfit += _waveform_difference_cc(syn[_j], dat[_j], ts)
-        return sum_misfit
-
-
-class cap_sw(object):
-    """ Reproduces CAP surface-wave measurement
-        (not finished implementing)
-    """
-    def __init__(self, max_shift=0.):
-        self.max_shift = max_shift
+        if not weights:
+            weights = defaultdict(lambda : 1.)
 
 
     def __call__(self, data, synthetics):
@@ -40,6 +25,42 @@ class cap_sw(object):
         for _i in range(ns):
             syn, dat = data[_i], synthetics[_i]
             for _j, component in enumerate(syn):
+                if component=='R':
+                    w = weights[station][2]
+                if component=='Z':
+                    w = weights[station][3]
+
+                sum_misfit += _waveform_difference_cc(syn[_j], dat[_j], tmax)
+        return sum_misfit
+
+
+class cap_sw(object):
+    """ Reproduces CAP surface-wave measurement
+        (not finished implementing)
+    """
+    def __init__(self, max_shift=0., weights=None):
+        self.max_shift = max_shift
+        self.weights = weights
+
+        if not weights:
+            weights = defaultdict(lambda : 1.)
+
+
+    def __call__(self, data, synthetics):
+        ns = len(synthetics)
+        tmax = self.max_shift
+
+        sum_misfit = 0.
+        for _i in range(ns):
+            syn, dat = data[_i], synthetics[_i]
+            for _j, component in enumerate(syn):
+                if component=='Z':
+                    w = weights[station][4]
+                if component=='R':
+                    w = weights[station][5]
+                if component=='R':
+                    w = weights[station][6]
+
                 sum_misfit += _waveform_difference_cc(syn[_j], dat[_j], tmax)
         return sum_misfit
 

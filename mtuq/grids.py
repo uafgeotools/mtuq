@@ -216,7 +216,7 @@ def MTGridRandom(Mw=[], npts=500000):
         callback=tape2015)
 
 
-def MTGridRegular(Mw=[], npts_per_axis=25):
+def MTGridRegular(Mw, npts_per_axis=25):
     """ Full moment tensor grid with regularly-spaced values
     """
     N = npts_per_axis
@@ -237,7 +237,7 @@ def MTGridRegular(Mw=[], npts_per_axis=25):
         'w': regular(*w),
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
-        'h': regular(*n)},
+        'h': regular(*h)},
         callback=tape2015)
 
 
@@ -264,7 +264,7 @@ def DCGridRandom(Mw, npts=50000):
         callback=tape2015)
 
 
-def DCGridRegular(Mw=[], npts_per_axis=25):
+def DCGridRegular(Mw, npts_per_axis=25):
     """ Double-couple moment tensor grid with regularly-spaced values
     """ 
     N = npts_per_axis
@@ -283,7 +283,7 @@ def DCGridRegular(Mw=[], npts_per_axis=25):
         'w': np.array([0.]),
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
-        'h': regular(*n)},
+        'h': regular(*h)},
         callback=tape2015)
 
 
