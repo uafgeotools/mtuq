@@ -1,12 +1,22 @@
 
 import csv
 
-def weight_parser(filename):
+
+def identifier(stats):
+    return '.'.join((
+        stats.network,
+        stats.station,
+        stats.location))
+
+
+def parser(filename):
+    """ Parses CAP-style weight file
+    """
     weights = {}
     with open(filename) as f:
         reader = csv.reader(f, delimiter=' ', skipinitialspace=True)
         for row in reader:
-            fields = row[0].split('.')
-            station_id = '.'.join(fields[1:3])
-            weights[station_id] = row
+            id = '.'.join(row[0].split('.')[1:4])
+            weights[id] = [float(w) for w in row[1:]]
 
+    return weights
