@@ -6,11 +6,13 @@ import mtuq.io
 import mtuq.greens.fk
 import mtuq.misfit
 
+from os.path import join
 from mtuq.grid_search import grid_search_mpi
 from mtuq.grids import DCGridRandom
 from mtuq.misfit import cap_bw, cap_sw
 from mtuq.process_data import process_data
-from mtuq.util.util import Struct
+from mtuq.util.cap import parser
+from mtuq.util.util import Struct, root
 from mtuq.util.wavelets import trapezoid
 
 
@@ -50,12 +52,12 @@ process_data = {
 
 # total misfit is a sum of body- and surface-wave contributions
 misfit_bw = cap_sw(
-    max_shift=0.,
+    max_shift=2.,
     weights=parser(paths.weights),
     )
 
 misfit_sw = cap_sw(
-    max_shift=0.,
+    max_shift=10.,
     weights=parser(paths.weights),
     )
 
@@ -63,7 +65,6 @@ misfit = {
     'body_waves': misfit_bw,
     'surface_waves': misfit_sw,
     }
-
 
 # search over 50,000 randomly-chosen double-couple moment tensors
 grid = DCGridRandom(
@@ -76,9 +77,9 @@ if __name__=='__main__':
     """ Carries out grid search over double-couple moment tensor parameters,
        keeping magnitude, depth, and location fixed
 
-       Must be invoked with mpi
+       Must be invoked with mpirun, e.g.
 
-           mpirun -np <N>P DCGridSearch3ParameterMPI.py
+           mpirun -np <NP> DCGridSearch3ParameterMPI.py
     """
     from mpi4py import MPI
     comm = MPI.COMM_WORLD

@@ -2,6 +2,7 @@
 import obspy
 import numpy as np
 
+from mtuq.util.cap import identifier
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import convolve
 
@@ -22,6 +23,9 @@ class GreensTensorBase(object):
         self.data = data
         self.station = station
         self.origin = origin
+
+        # assign id based on netowrk and station names
+        self.id = identifier(station)
 
 
     def get_synthetics(self, mt):
@@ -122,14 +126,6 @@ class GreensTensorList(object):
 
     def __setitem__(self, index, value):
         self.__list__[index] = value
-
-
-    @property
-    def stations(self):
-        stations = []
-        for greens_tensor in self.__list__:
-            stations += [greens_tensor.station]
-        return stations
 
 
 class GeneratorBase(object):

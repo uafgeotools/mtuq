@@ -12,6 +12,8 @@ from obspy.core.event import Event, Origin
 from obspy.core.inventory import Inventory, Station
 from obspy.core.util.attribdict import AttribDict
 from obspy.geodetics import gps2dist_azimuth
+from mtuq.dataset import Dataset
+from mtuq.util.cap import identifier
 from mtuq.util.signal import check_time_sampling
 
 
@@ -34,16 +36,20 @@ def read(path, wildcard='*.sac', verbose=False):
                 print('Not a SAC file: %f' % filename)
 
     # sort by station
-    data_dict = {}
+    data_sorted = {}
     for trace in data:
-        id = _id(trace.stats)
-        if id not in data_dict:
-            data_dict[id] = Stream(trace)
+        id = identifier(trace.stats)
+        if id not in data_sorted:
+            data_sorted[id] = Stream(trace)
         else:
-            data_dict[id] += trace
+            data_sorted[id] += trace
 
-    data_sorted = data_dict.values()
-    return data_sorted
+    dataset = Dataset()
+    for id, stream in data_sorted.items():
+        stream.id = id
+        dataset += stream
+
+    return dataset
 
 
 def get_origin(data, event_name=None):
@@ -88,14 +94,14 @@ def get_origin(data, event_name=None):
     )
 
 
-def get_stations(data):
+def get_stations(dataset):
     """ Collect station metadata from obspy Stream objects
     """
     stations = []
-    for stream in data:
-        station_metadata = _copy(stream[0].stats)
+    for data in dataset:
+        station_metadata = _copy(data[0].stats)
       
-        if not check_time_sampling(stream):
+        if not check_time_sampling(data):
             # ordinarily we except all traces from a given station to have the 
             # same time sampling
             raise NotImplementedError(
@@ -103,7 +109,7 @@ def get_stations(data):
 
         try:
             station_metadata.channels = []
-            for trace in stream:
+            for trace in data:
                 station_metadata.channels += [trace.stats.channel]
         except:
             raise Exception(
@@ -149,18 +155,14 @@ def get_stations(data):
             warnings.warn(
                 "Could not determine event location from SAC headers.")
 
+        station_metadata.id = identifier(station_metadata)
+
         stations += [station_metadata]
 
     return stations
 
 
 ### utility functions
-
-def _id(stats):
-    return '.'.join((
-        stats.network,
-        stats.location,
-        stats.station))
 
 def _copy(stats):
     stats = deepcopy(stats)
