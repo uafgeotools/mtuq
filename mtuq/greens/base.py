@@ -128,6 +128,11 @@ class GreensTensorList(object):
         self.__list__[index] = value
 
 
+    def __len__(self):
+        return len(self.__list__)
+
+
+
 class GeneratorBase(object):
     """
     Creates GreensTensorLists via a two-step procedure:

@@ -18,8 +18,8 @@ class Dataset(object):
         list. Similar to the behavior of the python built-in "apply".
         """
         processed = Dataset()
-        for key, val in self.items():
-            processed[key] = function(val, *args, **kwargs)
+        for stream in self.__list__:
+            processed += function(stream, *args, **kwargs)
         return processed
 
 
@@ -31,9 +31,9 @@ class Dataset(object):
         each sequence. Similar to the behavior of the python built-in "map".
         """
         processed = Dataset()
-        for _i, item in enumerate(self.items()):
+        for _i, stream in enumerate(self.__list__):
             args = [sequence[_i] for sequence in sequences]
-            processed[item[0]] = function(item[1], *args)
+            processed += function(stream, *args)
         return processed
 
 
@@ -54,5 +54,9 @@ class Dataset(object):
 
     def __setitem__(self, index, value):
         self.__list__[index] = value
+
+
+    def __len__(self):
+        return len(self.__list__)
 
 
