@@ -8,61 +8,94 @@ import numpy as np
 
 class cap_bw(object):
     """ Reproduces CAP body-wave measurement
-        (not finished implementing)
     """
-    def __init__(self, max_shift=0., weights=None):
+    def __init__(self, 
+                 max_shift=0.,
+                 weights=None):
+
         self.max_shift = max_shift
 
-        if not weights:
-            weights = defaultdict(lambda : 1.)
+        if weights:
+            self.weights = weights
+        else:
+            # weight all components equally if no weights given
+            self.weights = defaultdict(lambda : 1.)
 
 
-    def __call__(self, data, synthetics):
-        ns = len(synthetics)
-        tmax = self.max_shift
+    def __call__(self, dat, syn):
+        misfit = 0.
+        max_shift = self.max_shift
 
-        sum_misfit = 0.
-        for _i in range(ns):
-            syn, dat = data[_i], synthetics[_i]
-            for _j, component in enumerate(syn):
-                if component=='R':
-                    w = weights[station][2]
+        ni = len(dat)
+        for i in range(ni):
+            id = dat[i].id
+
+            nj = len(dat[i])
+            for j in range(nj):
+                component = dat[i][j].stats.channel[-1]
+
                 if component=='Z':
-                    w = weights[station][3]
+                    weight = self.weights[id][2]
+                    if weight > 0:
+                        misfit += weight *_waveform_difference_cc(
+                            syn[i][j], dat[i][j], max_shift)
 
-                sum_misfit += _waveform_difference_cc(syn[_j], dat[_j], tmax)
-        return sum_misfit
+                if component=='R':
+                    weight = self.weights[id][3]
+                    if weight > 0:
+                        misfit += weight *_waveform_difference_cc(
+                            syn[i][j], dat[i][j], max_shift)
+
+        return misfit
 
 
 class cap_sw(object):
     """ Reproduces CAP surface-wave measurement
-        (not finished implementing)
     """
-    def __init__(self, max_shift=0., weights=None):
+    def __init__(self, 
+                 max_shift=0., 
+                 weights=None):
+
         self.max_shift = max_shift
-        self.weights = weights
 
-        if not weights:
-            weights = defaultdict(lambda : 1.)
+        if weights:
+            self.weights = weights
+        else:
+            # weight all components equally if no weights given
+            self.weights = defaultdict(lambda : 1.)
 
 
-    def __call__(self, data, synthetics):
-        ns = len(synthetics)
-        tmax = self.max_shift
+    def __call__(self, dat, syn):
+        misfit = 0.
+        max_shift = self.max_shift
 
-        sum_misfit = 0.
-        for _i in range(ns):
-            syn, dat = data[_i], synthetics[_i]
-            for _j, component in enumerate(syn):
+        ni = len(dat)
+        for i in range(ni):
+            id = dat[i].id
+
+            nj = len(dat[i])
+            for j in range(nj):
+                component = dat[i][j].stats.channel[-1]
+
                 if component=='Z':
-                    w = weights[station][4]
-                if component=='R':
-                    w = weights[station][5]
-                if component=='R':
-                    w = weights[station][6]
+                    weight = self.weights[id][4]
+                    if weight > 0:
+                        misfit += weight *_waveform_difference_cc(
+                            syn[i][j], dat[i][j], max_shift)
 
-                sum_misfit += _waveform_difference_cc(syn[_j], dat[_j], tmax)
-        return sum_misfit
+                if component=='R':
+                    weight = self.weights[id][5]
+                    if weight > 0:
+                        misfit += weight *_waveform_difference_cc(
+                            syn[i][j], dat[i][j], max_shift)
+
+                if component=='T':
+                    weight = self.weights[id][6]
+                    if weight > 0:
+                        misfit += weight *_waveform_difference_cc(
+                            syn[i][j], dat[i][j], max_shift)
+
+        return misfit
 
 
 
@@ -88,9 +121,11 @@ def _waveform_difference_cc(syn, dat, max_shift, mode=1):
         cc = np.correlate(dat[:nc], syn[:nc], 'same')
         ic = (np.argmax(cc)-nt+1)
 
-    if ic <= 0:
+    if ic == 0:
+        rsd = syn - dat
+    elif ic < 0:
         rsd = syn[ic:] - dat[:-ic]
-    else:
+    elif ic > 0:
         rsd = syn[:-ic] - dat[ic:]
 
     return np.sqrt(np.sum(rsd*rsd*dt))
