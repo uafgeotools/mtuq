@@ -283,7 +283,7 @@ def DCGridRegular(Mw=[], npts_per_axis=25):
         'w': np.array([0.]),
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
-        'h': regular(*n)},
+        'h': regular(*h)},
         callback=tape2015)
 
 
