@@ -22,10 +22,14 @@ def grid_search_serial(data, greens, misfit, grid):
 
        # evaluate misfit
         for key in data:
-            chi, dat, syn = misfit[key], data[key], synthetics[key]
-            results[count] += chi(dat, syn)
+            func, dat, syn = misfit[key], data[key], synthetics[key]
+            results[count] += func(dat, syn)
 
         count += 1
+
+    # save results
+    grid.save(_event_name(data), {'misfit': results})
+
 
 
 @timer_mpi
@@ -47,6 +51,9 @@ def grid_search_mpi(data, greens, misfit, grid):
     # gather results from all processes
     results = comm.gather(results, root=0)
 
+    # save results
+    grid.save(_event_name(data), {'misfit': results})
+
 
 
 
@@ -67,12 +74,22 @@ def _evaluate_misfit(args):
 
         # sum over data categories
         for key in data:
-            chi, dat, syn = misfit[key], data[key], synthetics[key]
-            results[count] += chi(dat, syn)
+            func, dat, syn = misfit[key], data[key], synthetics[key]
+            results[count] += func(dat, syn)
 
         count += 1
 
     return results
+
+
+def _event_name(data):
+    data = data[data.keys()[0]]
+
+    if hasattr(data, 'id'):
+        return data.id+'.h5'
+    else:
+        return 'output.h5'
+
 
 
 
