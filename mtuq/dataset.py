@@ -3,7 +3,9 @@ import obspy
 
 class Dataset(object):
 
-    def __init__(self, data=None):
+    def __init__(self, data=None, id=None):
+        self.id = id
+
         if not data:
             self.__list__ = []
             return
@@ -17,7 +19,7 @@ class Dataset(object):
         Returns the result of applying a function to each Stream in the 
         list. Similar to the behavior of the python built-in "apply".
         """
-        processed = Dataset()
+        processed = Dataset(id=self.id)
         for stream in self.__list__:
             processed += function(stream, *args, **kwargs)
         return processed
@@ -30,7 +32,7 @@ class Dataset(object):
         called with an argument list consisting of the corresponding item of
         each sequence. Similar to the behavior of the python built-in "map".
         """
-        processed = Dataset()
+        processed = Dataset(id=self.id)
         for _i, stream in enumerate(self.__list__):
             args = [sequence[_i] for sequence in sequences]
             processed += function(stream, *args)

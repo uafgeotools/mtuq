@@ -23,7 +23,7 @@ def read(path, wildcard='*.sac', verbose=False):
      Additional processing would be required if for a given station, time
      sampling varies from one channel to another
     """
-    event_name = os.path.dirname(path)
+    event = os.path.basename(path)
     files = glob.glob(join(path, wildcard))
 
     # read data, one file at a time
@@ -44,7 +44,7 @@ def read(path, wildcard='*.sac', verbose=False):
         else:
             data_sorted[id] += trace
 
-    dataset = Dataset()
+    dataset = Dataset(id=event)
     for id, stream in data_sorted.items():
         stream.id = id
         dataset += stream
