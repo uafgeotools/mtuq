@@ -1,4 +1,5 @@
 
+import warnings
 import numpy as np
 
 from mtuq.mt.maps.tape2015 import tt152cmt
@@ -7,6 +8,11 @@ from mtuq.util.util import Struct
 
 from numpy.random import uniform as random
 from mtuq.util.math import open_interval as regular
+
+try:
+    import h5py
+except:
+    warnings.warn('Could not import h5py.')
 
 
 
@@ -83,7 +89,13 @@ class Grid(object):
     def save(self, filename, dict):
         """ Saves a set of values defined on grid
         """
-        raise NotImplementedError
+        import h5py
+        with h5py.File(filename, 'w') as hf:
+            for key, val in zip(self.keys, self.vals):
+                hf.create_dataset(key, data=val)
+
+            for key, val in dict.iteritems():
+                hf.create_dataset(key, data=val)
 
 
     # the next two methods make it possible to iterate over the grid
@@ -172,7 +184,13 @@ class UnstructuredGrid(object):
     def save(self, filename, dict):
         """ Saves a set of values defined on grid
         """
-        raise NotImplementedError
+        import h5py
+        with h5py.File(filename, 'w') as hf:
+            for key, val in zip(self.keys, self.vals):
+                hf.create_dataset(key, data=val)
+
+            for key, val in dict.iteritems():
+                hf.create_dataset(key, data=val)
 
 
     # the next two methods make it possible to iterate over the grid
