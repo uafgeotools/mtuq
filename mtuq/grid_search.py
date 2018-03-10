@@ -29,26 +29,6 @@ def grid_search_serial(data, greens, misfit, grid):
 
 
 @timer_mpi
-def grid_search_mpipool(data, greens, misfit, grid):
-    """ Same as grid search serial, except parallelized with MPIPool
-    """
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    iproc, nproc = comm.rank, comm.size
-
-    with MPIPool() as pool:
-        # constuct arguments list
-        tasks = []
-        for subset in grid.decompose(nproc-1):
-            tasks += [[data, greens, misfit, subset]]
-
-        # evaluate misfit
-        results = pool.map(
-            _evaluate_misfit,
-            tasks)
-
-
-@timer_mpi
 def grid_search_mpi(data, greens, misfit, grid):
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
@@ -66,6 +46,8 @@ def grid_search_mpi(data, greens, misfit, grid):
 
     # gather results from all processes
     results = comm.gather(results, root=0)
+
+
 
 
 def _evaluate_misfit(args):
