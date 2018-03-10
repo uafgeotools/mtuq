@@ -1,15 +1,13 @@
 
 import numpy as np
-from matplotlib import pyplot
+import matplotlib.pyplot as pyplot
 
 
 def cap_plot(data, greens, mt):
     """ Creates cap-style plot
     """
-    nc = len(data)
-    nr = len(data.values()[0])
-
-    pyplot.figure(figsize=(8,2*nr))
+    nc, nr = shape(data)
+    pyplot.figure(figsize=(8,1.4*nr))
 
     for ir in range(nr):
         pyplot.subplot(nr, nc, nc*ir+1)
@@ -23,13 +21,29 @@ def cap_plot(data, greens, mt):
         plot_dat_syn(dat[0], syn[0])
 
     pyplot.savefig('tmp.png')
-    import sys; sys.exit()
 
 
 def plot_dat_syn(dat, syn):
     t1,t2,nt,dt = time_stats(dat)
-    t = np.linspace(t1,t2,nt,dt)
-    pyplot.plot(t,dat.data, 'k', t,syn.data,'r')
+    t = np.linspace(0,t2-t1,nt,dt)
+
+    metadata = dat.stats
+    dat = dat.data
+    syn = syn.data
+
+    dat /= max(abs(dat))
+    syn /= max(abs(syn))
+
+    pyplot.plot(t,dat, 'k', t,syn,'r')
+    pyplot.text(0.,0.6,metadata.station, fontsize=10)
+
+    ax = pyplot.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
 
 
 def time_stats(trace):
@@ -39,3 +53,16 @@ def time_stats(trace):
         trace.stats.npts,
         trace.stats.delta,
         )
+
+
+def shape(dataset):
+    nc = 0
+    for i in dataset:
+        nc += 1
+
+    nr = 0
+    for j in dataset[i]:
+        nr += 1
+
+    return nc, nr
+
