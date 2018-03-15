@@ -3,24 +3,31 @@ import numpy as np
 import matplotlib.pyplot as pyplot
 
 
-def cap_plot(data, greens, mt):
+def cap_plot(filename, data, greens, mt, weights):
     """ Creates cap-style plot
     """
     nc, nr = shape(data)
-    pyplot.figure(figsize=(8,1.4*nr))
+    ir = 0
 
-    for ir in range(nr):
+    figsize = (8,1.4*nr)
+    pyplot.figure(figsize=figsize)
+
+    for d1,g1,d2,g2 in zip(
+        data['body_waves'], greens['body_waves'],
+        data['surface_waves'], greens['surface_waves']):
+
+        s1 = g1.get_synthetics(mt)
+        s2 = g2.get_synthetics(mt)
+
         pyplot.subplot(nr, nc, nc*ir+1)
-        dat = data['body_waves'][ir]
-        syn = greens['body_waves'][ir].get_synthetics(mt)
-        plot_dat_syn(dat[0], syn[0])
+        plot_dat_syn(d1[0], s1[0])
 
         pyplot.subplot(nr, nc, nc*ir+2)
-        dat = data['surface_waves'][ir]
-        syn = greens['surface_waves'][ir].get_synthetics(mt)
-        plot_dat_syn(dat[0], syn[0])
+        plot_dat_syn(d2[0], s2[0])
 
-    pyplot.savefig('tmp.png')
+        ir += 1
+
+    pyplot.savefig(filename)
 
 
 def plot_dat_syn(dat, syn):
