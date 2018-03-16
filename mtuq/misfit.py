@@ -9,17 +9,8 @@ import numpy as np
 class cap_bw(object):
     """ Reproduces CAP body-wave measurement
     """
-    def __init__(self, 
-                 max_shift=0.,
-                 weights=None):
-
+    def __init__(self, max_shift=0.):
         self.max_shift = max_shift
-
-        if weights:
-            self.weights = weights
-        else:
-            # weight all components equally if no weights given
-            self.weights = defaultdict(lambda : 1.)
 
 
     def __call__(self, dat, syn):
@@ -32,19 +23,11 @@ class cap_bw(object):
 
             nj = len(dat[i])
             for j in range(nj):
-                component = dat[i][j].stats.channel[-1]
+                weight = dat[i][j].weight
+                if weight > 0:
+                    misfit += weight *_waveform_difference_cc(
+                        syn[i][j], dat[i][j], max_shift)
 
-                if component=='Z':
-                    weight = self.weights[id][2]
-                    if weight > 0:
-                        misfit += weight *_waveform_difference_cc(
-                            syn[i][j], dat[i][j], max_shift)
-
-                if component=='R':
-                    weight = self.weights[id][3]
-                    if weight > 0:
-                        misfit += weight *_waveform_difference_cc(
-                            syn[i][j], dat[i][j], max_shift)
 
         return misfit
 
@@ -52,18 +35,8 @@ class cap_bw(object):
 class cap_sw(object):
     """ Reproduces CAP surface-wave measurement
     """
-    def __init__(self, 
-                 max_shift=0., 
-                 weights=None):
-
+    def __init__(self, max_shift=0.):
         self.max_shift = max_shift
-
-        if weights:
-            self.weights = weights
-        else:
-            # weight all components equally if no weights given
-            self.weights = defaultdict(lambda : 1.)
-
 
     def __call__(self, dat, syn):
         misfit = 0.
@@ -75,25 +48,10 @@ class cap_sw(object):
 
             nj = len(dat[i])
             for j in range(nj):
-                component = dat[i][j].stats.channel[-1]
-
-                if component=='Z':
-                    weight = self.weights[id][4]
-                    if weight > 0:
-                        misfit += weight *_waveform_difference_cc(
-                            syn[i][j], dat[i][j], max_shift)
-
-                if component=='R':
-                    weight = self.weights[id][5]
-                    if weight > 0:
-                        misfit += weight *_waveform_difference_cc(
-                            syn[i][j], dat[i][j], max_shift)
-
-                if component=='T':
-                    weight = self.weights[id][6]
-                    if weight > 0:
-                        misfit += weight *_waveform_difference_cc(
-                            syn[i][j], dat[i][j], max_shift)
+                weight = dat[i][j].weight
+                if weight > 0:
+                    misfit += weight *_waveform_difference_cc(
+                        syn[i][j], dat[i][j], max_shift)
 
         return misfit
 
