@@ -233,5 +233,8 @@ class Generator(GeneratorBase):
 
             greens_tensor[component] += trace
 
+        for component in greens_tensor:
+            greens_tensor[component].tag = 'greens_tensor'
+
         return GreensTensor(greens_tensor, station, origin)
 
