@@ -4,6 +4,7 @@ import obspy
 class Dataset(object):
 
     def __init__(self, data=None, id=None):
+        # event name or other unique identifier
         self.id = id
 
         if not data:
@@ -42,8 +43,19 @@ class Dataset(object):
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
-        self.__list__ += [stream]
+        self.__list__.append(stream)
         return self
+
+
+    def remove(self, id):
+        index = self._get_index[id]
+        self.__list__.pop(index)
+
+
+    def _get_index(self, id):
+        for index, stream in enumerate(self.__list__):
+            if id==stream.id:
+                return index
 
 
     def __iter__(self):

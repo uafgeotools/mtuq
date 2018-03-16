@@ -132,6 +132,18 @@ class GreensTensorList(object):
         return len(self.__list__)
 
 
+    def remove(self, id):
+        index = self._get_index[id]
+        self.__list__.pop(index)
+
+
+    def _get_index(self, id):
+        for index, greens_tensor in enumerate(self.__list__):
+            if id==greens_tensor.id:
+                return index
+
+
+
 
 class GeneratorBase(object):
     """
