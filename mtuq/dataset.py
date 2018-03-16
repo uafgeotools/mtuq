@@ -43,6 +43,7 @@ class Dataset(object):
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
+        stream.tag = 'data'
         self.__list__.append(stream)
         return self
 

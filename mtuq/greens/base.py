@@ -112,7 +112,8 @@ class GreensTensorList(object):
 
 
     def __add__(self, greens_tensor):
-        assert hasattr(greens_tensor, 'id')
+        #assert hasattr(greens_tensor, 'id')
+        greens_tensor.tag = 'greens_tensor'
         self.__list__ += [greens_tensor]
         return self
 
