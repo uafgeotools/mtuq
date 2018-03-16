@@ -74,3 +74,10 @@ class Dataset(object):
         return len(self.__list__)
 
 
+
+def identifier(stats):
+    return '.'.join((
+        stats.network,
+        stats.station,
+        stats.location))
+

@@ -9,7 +9,7 @@ def identifier(stats):
         stats.location))
 
 
-def parser(filename):
+def parse_weight_file(filename):
     """ Parses CAP-style weight file
     """
     weights = {}
@@ -20,3 +20,4 @@ def parser(filename):
             weights[id] = [float(w) for w in row[1:]]
 
     return weights
+

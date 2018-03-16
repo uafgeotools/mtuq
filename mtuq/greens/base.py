@@ -2,7 +2,7 @@
 import obspy
 import numpy as np
 
-from mtuq.util.cap import identifier
+from mtuq.util.dataset import identifier
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import convolve
 
