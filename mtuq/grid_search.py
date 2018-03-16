@@ -50,9 +50,10 @@ def grid_search_mpi(data, greens, misfit, grid, write_netcdf=True):
     results = _evaluate_misfit([data, greens, misfit, subset])
 
     # gather results from all processes
-    results = _gather(results, comm)
+    results = comm.gather(results, root=0)
 
     if iproc==0:
+        results = np.concatenate(results)
         if write_netcdf:
             grid.save(_event_name(data), {'misfit': results})
 
@@ -68,7 +69,7 @@ def _evaluate_misfit(args):
     count = 0
 
     for mt in grid:
-        #print grid.index
+        print grid.index
 
         # generate synthetics
         synthetics = {}
@@ -93,9 +94,4 @@ def _event_name(data):
     else:
         return 'output.h5'
 
-
-def _gather(results, comm):
-    results = comm.gather(results, root=0)
-    return np.asarray(results).flatten()
-
-
+#
