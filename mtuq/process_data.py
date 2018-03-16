@@ -247,10 +247,9 @@ class process_data(object):
                     component = trace.stats.channel[-1].upper()
 
                     if id not in self.weights: 
-                       traces.remove(trace)
-                       continue
+                        trace.weight = 0.
 
-                    if component=='Z':
+                    elif component=='Z':
                         trace.weight = self.weights[id][2]
 
                     elif component=='R':
@@ -258,9 +257,6 @@ class process_data(object):
 
                     else:
                         trace.weight = 0.
-
-                    if trace.weight == 0:
-                        traces.remove(trace)
 
 
         if self.weight_type == 'cap_sw':
@@ -272,22 +268,18 @@ class process_data(object):
                     component = trace.stats.channel[-1].upper()
 
                     if id not in self.weights: 
-                       traces.remove(trace)
-                       continue
+                        trace.weight = 0.
 
-                    if component=='Z':
+                    elif component=='Z':
                         trace.weight = self.weights[id][4]
 
                     elif component=='R':
                         trace.weight = self.weights[id][5]
 
-                    elif component=='R':
+                    elif component=='T':
                         trace.weight = self.weights[id][6]
 
                     else:
                         trace.weight = 0.
-
-                    if trace.weight == 0:
-                        traces.remove(trace)
 
         return traces
