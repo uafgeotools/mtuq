@@ -73,7 +73,7 @@ def timer_mpi(func):
 
         if comm.rank==0:
             _elapsed_time = time.time() - start_time
-        print 'Elapsed time: %f\n' % _elapsed_time
+            print 'Elapsed time: %f\n' % _elapsed_time
 
         return output
 
