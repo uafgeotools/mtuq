@@ -2,28 +2,77 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 
+from collections import defaultdict
+from mtuq.util.cap import parse_weight_file
 
-def cap_plot(data, greens, mt):
+
+def cap_plot(filename, data, greens, mt, weight_file=None):
     """ Creates cap-style plot
     """
-    nc, nr = shape(data)
-    pyplot.figure(figsize=(8,1.4*nr))
+    # how many rows, columns?
+    nc = 5
+    _, nr = shape(data)
 
-    for ir in range(nr):
-        pyplot.subplot(nr, nc, nc*ir+1)
-        dat = data['body_waves'][ir]
-        syn = greens['body_waves'][ir].get_synthetics(mt)
-        plot_dat_syn(dat[0], syn[0])
+    figsize = (16,1.4*nr)
+    pyplot.figure(figsize=figsize)
 
-        pyplot.subplot(nr, nc, nc*ir+2)
-        dat = data['surface_waves'][ir]
-        syn = greens['surface_waves'][ir].get_synthetics(mt)
-        plot_dat_syn(dat[0], syn[0])
+    # load cap-style weights
+    if weight_file:
+        weights = parse_weight_file(weight_file)
+    else:
+        weights = None
 
-    pyplot.savefig('tmp.png')
+    ir = 0
+    for d1,g1,d2,g2 in zip(
+        data['body_waves'], greens['body_waves'],
+        data['surface_waves'], greens['surface_waves']):
+
+        s1 = g1.get_synthetics(mt)
+        s2 = g2.get_synthetics(mt)
+        id = d1.id
+
+        # plot body waves
+        for dat, syn in zip(d1, s1):
+            component = dat.stats.channel[-1].upper()
+            weight = dat.weight
+
+            if not weight:
+                continue
+
+            if component=='Z':
+                pyplot.subplot(nr, nc, nc*ir+1)
+                cap_subplot(dat, syn, label=True)
+
+            if component=='R':
+                pyplot.subplot(nr, nc, nc*ir+2)
+                cap_subplot(dat, syn)
+
+        # plot surface waves
+        for dat, syn in zip(d2, s2):
+            component = dat.stats.channel[-1].upper()
+            weight = dat.weight
+
+            if not weight:
+                continue
+
+            if component=='Z':
+                pyplot.subplot(nr, nc, nc*ir+3)
+                cap_subplot(dat, syn)
+
+            if component=='R':
+                pyplot.subplot(nr, nc, nc*ir+4)
+                cap_subplot(dat, syn)
+
+            if component=='T':
+                pyplot.subplot(nr, nc, nc*ir+5)
+                cap_subplot(dat, syn)
+
+        ir += 1
+
+    pyplot.savefig(filename)
 
 
-def plot_dat_syn(dat, syn):
+def cap_subplot(dat, syn, label=False):
     t1,t2,nt,dt = time_stats(dat)
     t = np.linspace(0,t2-t1,nt,dt)
 
@@ -35,8 +84,6 @@ def plot_dat_syn(dat, syn):
     syn /= max(abs(syn))
 
     pyplot.plot(t,dat, 'k', t,syn,'r')
-    pyplot.text(0.,0.6,metadata.station, fontsize=10)
-
     ax = pyplot.gca()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -44,6 +91,10 @@ def plot_dat_syn(dat, syn):
     ax.spines['left'].set_visible(False)
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
+
+    if label:
+        pyplot.text(0.,0.6,metadata.station, fontsize=10)
+
 
 
 def time_stats(trace):
@@ -65,4 +116,6 @@ def shape(dataset):
         nr += 1
 
     return nc, nr
+
+
 

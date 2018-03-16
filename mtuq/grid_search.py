@@ -6,7 +6,7 @@ from util.util import timer, timer_mpi
 
 
 @timer
-def grid_search_serial(data, greens, misfit, grid):
+def grid_search_serial(data, greens, misfit, grid, write_netcdf=True):
     """ Grid search over moment tensor parameters
     """
     results = np.zeros(grid.size)
@@ -27,13 +27,14 @@ def grid_search_serial(data, greens, misfit, grid):
 
         count += 1
 
-    # save results
-    grid.save(_event_name(data), {'misfit': results})
+    if write_netcdf:
+        grid.save(_event_name(data), {'misfit': results})
 
+    return grid.get(results.argmin())
 
 
 @timer_mpi
-def grid_search_mpi(data, greens, misfit, grid):
+def grid_search_mpi(data, greens, misfit, grid, write_netcdf=True):
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
     iproc, nproc = comm.rank, comm.size
@@ -49,11 +50,13 @@ def grid_search_mpi(data, greens, misfit, grid):
     results = _evaluate_misfit([data, greens, misfit, subset])
 
     # gather results from all processes
-    results = comm.gather(results, root=0)
+    results = _gather(results, comm)
 
-    # save results
-    grid.save(_event_name(data), {'misfit': results})
+    if iproc==0:
+        if write_netcdf:
+            grid.save(_event_name(data), {'misfit': results})
 
+        return grid.get(results.argmin())
 
 
 
@@ -91,5 +94,8 @@ def _event_name(data):
         return 'output.h5'
 
 
+def _gather(results, comm):
+    results = comm.gather(results, root=0)
+    return np.asarray(results).flatten()
 
 

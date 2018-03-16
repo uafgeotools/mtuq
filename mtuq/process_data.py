@@ -3,9 +3,10 @@ import numpy as np
 import warnings
 
 from copy import deepcopy
-from os.path import join
+from os.path import exists, join
 from obspy.geodetics import kilometers2degrees as km2deg
 from mtuq.util.signal import cut
+from mtuq.util.cap import parse_weight_file
 
 
 class process_data(object):
@@ -124,11 +125,15 @@ class process_data(object):
 
         elif weight_type == 'cap_bw' or\
              weight_type == 'cap_sw':
-            assert 'weights_file' in parameters
+            assert 'weight_file' in parameters
             assert exists(parameters['weight_file'])
+            self.weights = parse_weight_file(parameters['weight_file'])
 
         else:
              raise ValueError('Bad parameter: weight_type')
+
+
+        self.weight_type = weight_type
 
 
 
@@ -233,11 +238,48 @@ class process_data(object):
         # determine weights
         #
 
+        if self.weight_type == 'cap_bw':
 
-        #
-        # apply weights
-        #
+            if traces.tag == 'data':
+                id = traces.id
+
+                for trace in traces:
+                    component = trace.stats.channel[-1].upper()
+
+                    if id not in self.weights: 
+                        trace.weight = 0.
+
+                    elif component=='Z':
+                        trace.weight = self.weights[id][2]
+
+                    elif component=='R':
+                        trace.weight = self.weights[id][3]
+
+                    else:
+                        trace.weight = 0.
+
+
+        if self.weight_type == 'cap_sw':
+
+            if traces.tag == 'data':
+                id = traces.id
+
+                for trace in traces:
+                    component = trace.stats.channel[-1].upper()
+
+                    if id not in self.weights: 
+                        trace.weight = 0.
+
+                    elif component=='Z':
+                        trace.weight = self.weights[id][4]
+
+                    elif component=='R':
+                        trace.weight = self.weights[id][5]
+
+                    elif component=='T':
+                        trace.weight = self.weights[id][6]
+
+                    else:
+                        trace.weight = 0.
 
         return traces
-
-

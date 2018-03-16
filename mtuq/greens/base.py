@@ -2,7 +2,7 @@
 import obspy
 import numpy as np
 
-from mtuq.util.cap import identifier
+from mtuq.dataset import identifier
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import convolve
 
@@ -24,8 +24,12 @@ class GreensTensorBase(object):
         self.station = station
         self.origin = origin
 
+        self.assign_id()
+
+
+    def assign_id(self):
         # assign id based on netowrk and station names
-        self.id = identifier(station)
+        self.id = identifier(self.station)
 
 
     def get_synthetics(self, mt):
@@ -112,8 +116,21 @@ class GreensTensorList(object):
 
 
     def __add__(self, greens_tensor):
+        #assert hasattr(greens_tensor, 'id')
+        greens_tensor.tag = 'greens_tensor'
         self.__list__ += [greens_tensor]
         return self
+
+
+    def remove(self, id):
+        index = self._get_index[id]
+        self.__list__.pop(index)
+
+
+    def _get_index(self, id):
+        for index, greens_tensor in enumerate(self.__list__):
+            if id==greens_tensor.id:
+                return index
 
 
     def __iter__(self):

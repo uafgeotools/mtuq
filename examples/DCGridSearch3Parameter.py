@@ -6,12 +6,12 @@ import mtuq.io
 import mtuq.greens.fk
 import mtuq.misfit
 
-from os.path import join
+from os.path import basename, join
 from mtuq.grid_search import grid_search_serial
 from mtuq.grids import DCGridRandom
 from mtuq.misfit import cap_bw, cap_sw
 from mtuq.process_data import process_data
-from mtuq.util.cap import parser
+from mtuq.util.plot import cap_plot
 from mtuq.util.util import Struct, root
 from mtuq.util.wavelets import trapezoid
 
@@ -20,11 +20,13 @@ from mtuq.util.wavelets import trapezoid
 # file size prevents us from doing so right away
 paths = Struct({
     'data': join(root(), 'tests/data/20090407201255351'),
-    'weights': join(root(), 'tests/data/20090407201255351/weight.dat'),
+   #'weights': join(root(), 'tests/data/20090407201255351/weight.dat'),
+    'weights': join(root(), 'tests/data/20090407201255351/weight_test.dat'),
     'greens': os.getenv('CENTER1')+'/'+'data/wf/FK_SYNTHETICS/scak',
     })
 
 data_format = 'sac'
+event_name = basename(paths.data)
 
 
 # body and surface waves are processed separately
@@ -34,6 +36,8 @@ process_bw = process_data(
     freq_max= 0.667,
     window_length=15.,
     #window_type='cap_bw',
+    weight_type='cap_bw',
+    weight_file=paths.weights,
     )
 
 process_sw = process_data(
@@ -42,6 +46,8 @@ process_sw = process_data(
     freq_max=0.0625,
     window_length=150.,
     #window_type='cap_sw',
+    weight_type='cap_sw',
+    weight_file=paths.weights,
     )
 
 process_data = {
@@ -53,12 +59,10 @@ process_data = {
 # total misfit is a sum of body- and surface-wave contributions
 misfit_bw = cap_bw(
     max_shift=2.,
-    weights=parser(paths.weights)
     )
 
 misfit_sw = cap_sw(
     max_shift=10.,
-    weights=parser(paths.weights)
     )
 
 misfit = {
@@ -85,18 +89,22 @@ if __name__=='__main__':
     processed_data = {}
     for key in process_data:
         processed_data[key] = data.map(process_data[key], stations)
+    data = processed_data
 
     print 'Reading Greens functions...\n'
     generator = mtuq.greens.fk.Generator(paths.greens)
     greens = generator(stations, origin)
-    #greens.convolve(trapezoid(rise_time=1., delta=0.2))
+    #greens.convolve(trapezoid(rise_time=1.))
 
     print 'Processing Greens functions...\n'
     processed_greens = {}
     for key in process_data:
         processed_greens[key] = greens.map(process_data[key], stations)
+    greens = processed_greens
 
     print 'Carrying out grid search...\n'
-    grid_search_serial(processed_data, processed_greens, misfit, grid)
+    mt = grid_search_serial(data, greens, misfit, grid)
 
+    print 'Plotting results...'
+    cap_plot(event_name+'.png', data, greens, mt, paths.weights)
 

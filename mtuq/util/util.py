@@ -49,10 +49,12 @@ def timer(func):
     def timed_func(*args, **kwargs):
         start_time = time.time()
 
-        func(*args, **kwargs)
+        output = func(*args, **kwargs)
 
         _elapsed_time = time.time() - start_time
-        print 'Elapsed time:', _elapsed_time
+        print 'Elapsed time: %f\n' % _elapsed_time
+
+        return output
 
     return timed_func
 
@@ -67,11 +69,13 @@ def timer_mpi(func):
         if comm.rank==0:
             start_time = time.time()
 
-        func(*args, **kwargs)
+        output = func(*args, **kwargs)
 
         if comm.rank==0:
             _elapsed_time = time.time() - start_time
-            print 'Elapsed time:', _elapsed_time
+            print 'Elapsed time: %f\n' % _elapsed_time
+
+        return output
 
     return timed_func
 

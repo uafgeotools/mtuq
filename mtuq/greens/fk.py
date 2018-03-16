@@ -54,6 +54,8 @@ class GreensTensor(GreensTensorBase):
         self.origin = origin
         self._synthetics = []
 
+        self.assign_id()
+
 
     def get_synthetics(self, mt):
         """
@@ -230,6 +232,9 @@ class Generator(GeneratorBase):
             station.arrival_P_fk = t1_old
 
             greens_tensor[component] += trace
+
+        for component in greens_tensor:
+            greens_tensor[component].tag = 'greens_tensor'
 
         return GreensTensor(greens_tensor, station, origin)
 
