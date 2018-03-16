@@ -54,6 +54,8 @@ class GreensTensor(GreensTensorBase):
         self.origin = origin
         self._synthetics = []
 
+        self.assign_id()
+
 
     def get_synthetics(self, mt):
         """

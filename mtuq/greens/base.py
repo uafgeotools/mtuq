@@ -24,8 +24,12 @@ class GreensTensorBase(object):
         self.station = station
         self.origin = origin
 
+        self.assign_id()
+
+
+    def assign_id(self):
         # assign id based on netowrk and station names
-        self.id = identifier(station)
+        self.id = identifier(self.station)
 
 
     def get_synthetics(self, mt):
