@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as pyplot
 
 from collections import defaultdict
-from mtuq.util.cap import get_weight, parse_weight_file
+from mtuq.util.cap import parse_weight_file
 
 
 def cap_plot(filename, data, greens, mt, weight_file=None):
@@ -34,7 +34,7 @@ def cap_plot(filename, data, greens, mt, weight_file=None):
         # plot body waves
         for dat, syn in zip(d1, s1):
             component = dat.stats.channel[-1].upper()
-            weight = get_weight(weights, id, component, 'body_waves')
+            weight = dat.weight
 
             if not weight:
                 continue
@@ -50,7 +50,7 @@ def cap_plot(filename, data, greens, mt, weight_file=None):
         # plot surface waves
         for dat, syn in zip(d2, s2):
             component = dat.stats.channel[-1].upper()
-            weight = get_weight(weights, id, component, 'surface_waves')
+            weight = dat.weight
 
             if not weight:
                 continue
