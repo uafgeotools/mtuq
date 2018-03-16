@@ -52,10 +52,11 @@ def grid_search_mpi(data, greens, misfit, grid, write_netcdf=True):
     # gather results from all processes
     results = _gather(results, comm)
 
-    if write_netcdf:
-        grid.save(_event_name(data), {'misfit': results})
+    if iproc==0:
+        if write_netcdf:
+            grid.save(_event_name(data), {'misfit': results})
 
-    return grid.get(results.argmin())
+        return grid.get(results.argmin())
 
 
 

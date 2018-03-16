@@ -69,7 +69,7 @@ def timer_mpi(func):
         if comm.rank==0:
             start_time = time.time()
 
-        outpu = func(*args, **kwargs)
+        output = func(*args, **kwargs)
 
         if comm.rank==0:
             _elapsed_time = time.time() - start_time
