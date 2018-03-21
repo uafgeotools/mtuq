@@ -7,9 +7,8 @@ from copy import deepcopy
 from os.path import basename, exists
 
 from obspy.core import Stream, Trace
-from mtuq.greens.base import GreensTensorBase, GeneratorBase, GreensTensorList
+from mtuq.greens_tensor.base import GreensTensorBase, GeneratorBase, GreensTensorList
 from mtuq.util.signal import resample
-from mtuq.util.util import is_mpi_env
 
 
 # Green's functions are already rotatated into vertical, radial, and
