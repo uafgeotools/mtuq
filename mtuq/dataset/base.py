@@ -2,6 +2,13 @@
 import obspy
 
 class DatasetBase(object):
+    """ Seismic data container
+
+        Basically, a list of obspy streams. Each stream corresponds to a
+        single seismic station and holds all the components recorded at that
+        station.  Contains methods to help with data processing and metadata
+        extraction.
+    """
 
     def __init__(self, data=None, id=None):
         # event name or other unique identifier
@@ -13,20 +20,6 @@ class DatasetBase(object):
 
         for stream in data:
             self.__add__(stream)
-
-
-    def get_origin(self):
-        """
-        Extracts origin information from metadata
-        """
-        raise NotImplementedError
-
-
-    def get_stations(self):
-        """
-        Extracts station information from metadata
-        """
-        raise NotImplementedError
 
 
     def apply(self, function, *args, **kwargs):
@@ -52,6 +45,24 @@ class DatasetBase(object):
             args = [sequence[_i] for sequence in sequences]
             processed += function(stream, *args)
         return processed
+
+
+   # metadata extraction methods are deferred to the subclass, since the way
+   # since the way metadata are organized in obspy streams depends on the file
+   # format from which the stream was read.
+
+    def get_origin(self):
+        """
+        Extracts origin information from metadata.
+        """
+        raise NotImplementedError
+
+
+    def get_stations(self):
+        """
+        Extracts station information from metadata
+        """
+        raise NotImplementedError
 
 
     def __add__(self, stream):
@@ -87,12 +98,4 @@ class DatasetBase(object):
 
     def __len__(self):
         return len(self.__list__)
-
-
-
-def identifier(stats):
-    return '.'.join((
-        stats.network,
-        stats.station,
-        stats.location))
 
