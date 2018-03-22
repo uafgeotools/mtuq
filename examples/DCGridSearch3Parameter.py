@@ -4,12 +4,11 @@ import sys
 import numpy as np
 import mtuq.dataset.sac
 import mtuq.greens_tensor.fk
-import mtuq.misfit
 
 from os.path import basename, join
 from mtuq.grid_search import DCGridRandom, grid_search_serial
-from mtuq.misfit import cap_bw, cap_sw
-from mtuq.process_data import process_data
+from mtuq.misfit.legacy import cap_bw, cap_sw
+from mtuq.process_data.cap import process_data
 from mtuq.util.plot import cap_plot
 from mtuq.util.util import Struct, root
 from mtuq.util.wavelets import trapezoid

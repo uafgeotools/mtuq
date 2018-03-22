@@ -7,8 +7,8 @@ import mtuq.greens_tensor.fk
 
 from os.path import basename, join
 from mtuq.grid_search import DCGridRandom, grid_search_mpi
-from mtuq.misfit import cap_bw, cap_sw
-from mtuq.process_data import process_data
+from mtuq.misfit.cap import cap_bw, cap_sw
+from mtuq.process_data.cap import process_data
 from mtuq.util.plot import cap_plot
 from mtuq.util.util import Struct, root
 from mtuq.util.wavelets import trapezoid
