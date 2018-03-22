@@ -10,21 +10,20 @@ from mtuq.util.cap import parse_weight_file
 
 
 class process_data(object):
-    """ Processing data is a two-step procedure
+    """
+    CAP-style data processing function
 
-            1) function_handle = process_data(filter_type=..., **filter_parameters, 
-                                              window_type=..., **window_parameters,
-                                              weight_type=..., **weight_parameters)
+    Processing data is a two-step procedure
+        1) function_handle = process_data(filter_type=..., **filter_parameters, 
+                                          window_type=..., **window_parameters,
+                                          weight_type=..., **weight_parameters)
 
-            2) processed_stream = function_handle(data, station_metadata)
+        2) processed_stream = function_handle(data, station_metadata)
 
-        In the first step, the user supplies a set of filtering, windowing,
-        and weighting parameters.  In the second step, the user supplies a
-        single-station obspy stream as input and receives a processed stream
-        as output.
-
-        The reason for a two-step procedure is to provide a clear separation
-        between parameter checking and function execution.
+    In the first step, the user supplies a set of filtering, windowing,
+    and weighting parameters.  In the second step, the user supplies a
+    single-station obspy stream as input and receives a processed stream
+    as output.
     """
 
     def __init__(self,

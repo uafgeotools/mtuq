@@ -5,17 +5,18 @@ import numpy as np
 
 
 class cap_misfit(object):
-    """ CAP-style data misfit function
+    """ 
+    CAP-style data misfit function
 
-        Evaluating misfit is a two-step procedure:
-            1) function_handle = cap_misfit(**parameters)
-            2) misfit = function_handle(data, synthetics)
+    Evaluating misfit is a two-step procedure:
+        1) function_handle = cap_misfit(**parameters)
+        2) misfit = function_handle(data, synthetics)
 
-        In the first step, the user supplies a list of parameters, including
-        the order of the norm applied to residuals, whether or not to
-        use polarity information, and various tuning and output parameters
-        (see below for a detailed descriptions.) In the second step, the user
-        the user supplies data and synthetics and gets back the misfit value.
+    In the first step, the user supplies a list of parameters, including
+    the order of the norm applied to residuals, whether or not to
+    use polarity information, and various tuning and output parameters
+    (see below for a detailed descriptions.) In the second step, the user
+    the user supplies data and synthetics and gets back the misfit value.
     """
 
     def __init__(self,
@@ -28,8 +29,8 @@ class cap_misfit(object):
         )
         """ Checks misfit parameters
         """
-        # what order norm should we apply to residuals?
-        self.norm_order = order
+        # what norm should we apply to residuals?
+        self.order = norm_order
 
         # what portion of data and synthetics should we consider?
         self.time_shift_window_length = time_shift_window_length
