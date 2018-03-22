@@ -59,8 +59,6 @@ class process_data(object):
             self.freq_max = parameters['freq_max']
 
         elif filter_type == 'Lowpass':
-            # allow filter corner to be specified in terms of either period [s]
-            # or frequency [Hz]
             if 'period' in parameters:
                 assert 'freq' not in parameters
                 parameters['freq'] = parameters['period']**-1
@@ -72,8 +70,6 @@ class process_data(object):
 
 
         elif filter_type == 'Highpass':
-            # allow filter corner to be specified in terms of either period [s]
-            # or frequency [Hz]
             if 'period' in parameters:
                 assert 'freq' not in parameters
                 parameters['freq'] = parameters['period']**-1
@@ -118,7 +114,7 @@ class process_data(object):
 
 
         #
-        # weighting parameters
+        # check weight parameters
         #
         if weight_type==None:
             pass
@@ -248,13 +244,10 @@ class process_data(object):
 
                     if id not in self.weights: 
                         trace.weight = 0.
-
                     elif component=='Z':
                         trace.weight = self.weights[id][2]
-
                     elif component=='R':
                         trace.weight = self.weights[id][3]
-
                     else:
                         trace.weight = 0.
 
@@ -269,16 +262,12 @@ class process_data(object):
 
                     if id not in self.weights: 
                         trace.weight = 0.
-
                     elif component=='Z':
                         trace.weight = self.weights[id][4]
-
                     elif component=='R':
                         trace.weight = self.weights[id][5]
-
                     elif component=='T':
                         trace.weight = self.weights[id][6]
-
                     else:
                         trace.weight = 0.
 
