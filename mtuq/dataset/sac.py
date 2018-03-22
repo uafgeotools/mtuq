@@ -18,7 +18,14 @@ from mtuq.util.signal import check_time_sampling
 
 
 class Dataset(DatasetBase):
+   """ Seismic data container
+
+       Adds SAC-specific metadata extraction methods
+   """
+
     def get_origin(self, event_name=None):
+        """ Extract event information from SAC metadata
+        """
         sac_headers = self[0][0].stats.sac
 
         # location
@@ -61,7 +68,7 @@ class Dataset(DatasetBase):
 
 
     def get_stations(self):
-        """ Collect station metadata from obspy Stream objects
+        """ Extract station information from SAC metadata
         """
         stations = []
         for data in self:

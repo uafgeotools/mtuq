@@ -27,7 +27,7 @@ class GreensTensorBase(object):
 
 
     def assign_id(self):
-        # assign id based on netowrk and station names
+        # assign id based on network and station names
         self.id = '.'.join((
             self.station.network,
             self.station.station,

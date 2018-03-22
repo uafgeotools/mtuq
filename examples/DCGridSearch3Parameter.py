@@ -4,13 +4,11 @@ import sys
 import numpy as np
 import mtuq.dataset.sac
 import mtuq.greens_tensor.fk
-import mtuq.misfit
 
 from os.path import basename, join
-from mtuq.grid_search import grid_search_serial
-from mtuq.grids import DCGridRandom
-from mtuq.misfit import cap_bw, cap_sw
-from mtuq.process_data import process_data
+from mtuq.grid_search import DCGridRandom, grid_search_serial
+from mtuq.misfit.legacy import cap_bw, cap_sw
+from mtuq.process_data.cap import process_data
 from mtuq.util.plot import cap_plot
 from mtuq.util.util import Struct, root
 from mtuq.util.wavelets import trapezoid
@@ -82,15 +80,18 @@ if __name__=='__main__':
     stations = data.get_stations()
     event_name = data.id
 
+
     print 'Processing data...\n'
     processed_data = {}
     for key in process_data:
         processed_data[key] = data.map(process_data[key], stations)
     data = processed_data
 
+
     print 'Reading Greens functions...\n'
     generator = mtuq.greens_tensor.fk.Generator(paths.greens)
     greens = generator(stations, origin)
+
 
     print 'Processing Greens functions...\n'
     #greens.convolve(trapezoid(rise_time=1.))
@@ -99,13 +100,16 @@ if __name__=='__main__':
         processed_greens[key] = greens.map(process_data[key], stations)
     greens = processed_greens
 
+
     print 'Carrying out grid search...\n'
     results = grid_search_serial(data, greens, misfit, grid)
 
+
     print 'Saving results...\n'
-    grid.save(data.id+'.h5', {'misfit': results})
+    grid.save(event_name+'.h5', {'misfit': results})
+
 
     print 'Plotting waveforms...\n'
     mt = grid.get(results.argmin())
-    cap_plot(data.id+'.png', data, greens, mt, paths.weights)
+    cap_plot(event_name+'.png', data, greens, mt, paths.weights)
 
