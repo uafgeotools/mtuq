@@ -5,17 +5,18 @@ import numpy as np
 
 
 class cap_misfit(object):
-    """ CAP-style data misfit function
+    """ 
+    CAP-style data misfit function
 
-        Evaluating misfit is a two-step procedure:
-            1) function_handle = cap_misfit(**parameters)
-            2) misfit = function_handle(data, synthetics)
+    Evaluating misfit is a two-step procedure:
+        1) function_handle = cap_misfit(**parameters)
+        2) misfit = function_handle(data, synthetics)
 
-        In the first step, the user supplies a list of parameters, including
-        the order of the norm applied to residuals, whether or not to
-        use polarity information, and various tuning and output parameters
-        (see below for a detailed descriptions.) In the second step, the user
-        the user supplies data and synthetics and gets back the misfit value.
+    In the first step, the user supplies a list of parameters, including
+    the order of the norm applied to residuals, whether or not to use
+    polarity information, and various tuning parameters (see below for detailed
+    descriptions.) In the second step, the user supplies data and synthetics 
+    and gets back the corresponding misfit value.
     """
 
     def __init__(self,
@@ -23,13 +24,11 @@ class cap_misfit(object):
         polarity_weight=0.,
         time_shift_window_length=None,
         time_shift_max=None,
-        write_time_shifts=False,
-        write_residuals=False,
         )
         """ Checks misfit parameters
         """
-        # what order norm should we apply to residuals?
-        self.norm_order = order
+        # what norm should we apply to residuals?
+        self.order = norm_order
 
         # what portion of data and synthetics should we consider?
         self.time_shift_window_length = time_shift_window_length
@@ -38,13 +37,13 @@ class cap_misfit(object):
         self.time_shift_max = time_shift_max
 
         # should we include polarities in misfit?
-        self.check_polarity = check_polarity
+        self.polarity_weight = polarity_weight
 
 
     def __call__(self, data, synthetics, mode=1):
         """ CAP-style misfit calculation
         """ 
-        p = self.norm_order
+        p = self.order
 
         sum_misfit = 0.
         for d, s in zip(data, synthetics):
@@ -57,19 +56,19 @@ class cap_misfit(object):
             #
              
             # Finds the time-shift between data and synthetics that yields the
-            # maximum cross-correlation across all components, subject to 
-            # window_length and time_shift_max constraints.  The result is a single 
+            # maximum cross-correlation value across all components, subject to 
+            # window length and time_shift_max constraints.  The result is a single 
             # time-shift which is the same for all components at a given station.
 
 
             # what portion of data and synthetics are we considering?
-            if self.window_length:
-               if not hasattr(d, 'arrival'):
+            if self.time_shift_window_length:
+               if not hasattr(d[_i], 'arrival'):
                    raise Exception
-               r = self.window_length
-               window = [-r+t0, t0+r]
-               it1 = int(round(window[0]/dt))
-               it2 = int(round(window[1]/dt))
+               t0 = d[_i].arrival
+               r = self.time_shift_window_length
+               it1 = int(round((t0-r)/dt))
+               it2 = int(round((t0+r)/dt))
             else:
                it1 = 0
                it2 = nt
@@ -112,6 +111,7 @@ class cap_misfit(object):
 
             # Sum waveform difference residuals for all components, using the 
             # time shift correction determined in previous step
+
             for _i in range(len(dat)):
                 if isclose(d[_i].weight, 0.):
                     # ignore components with zero weight
@@ -121,14 +121,15 @@ class cap_misfit(object):
                 # directions
                 it = int(round(d.time_shift/(2.*dt)))
 
-                # substract shifted data from shifted synthetics, and sum
-                # resulting residuals
+                # substract shifted data from shifted synthetics
                 if it == 0:
                     rsd = syn - dat
                 elif it < 0:
                     rsd = syn[it:] - dat[:-it]
                 elif it > 0:
                     rsd = syn[:-it] - dat[it:]
+
+                # sum the resulting residuals
                 sum_misfit += d[_i].weight * np.sum(rsd**p)*dt
 
 
