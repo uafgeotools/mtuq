@@ -8,6 +8,9 @@ class DatasetBase(object):
         single seismic station and holds all the components recorded at that
         station.  Provides methods to help with data processing and metadata
         extraction.
+
+        The work of generating a Dataset is carried out by a "reader"
+        utility; see the mtuq.dataset.sac.reader for an example
     """
 
     def __init__(self, data=None, id=None):
@@ -99,3 +102,10 @@ class DatasetBase(object):
     def __len__(self):
         return len(self.__list__)
 
+
+
+def reader(*args, **kwargs):
+    # Each supported file format will have a corresponding reader utitlity 
+    # that creates an MTUQ Dataset from data stored in that format.  For an
+    # example, see mtuq.dataset.sac.reader
+    raise NotImplementedError
