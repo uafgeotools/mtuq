@@ -50,17 +50,20 @@ class DatasetBase(object):
 
     def get_origin(self):
         """
-        Extracts origin information from metadata.
+        Extracts origin information from metadata
         """
-        raise NotImplementedError
+        raise NotImplementedError("Must be implemented by subclass")
 
 
     def get_stations(self):
         """
         Extracts station information from metadata
         """
-        raise NotImplementedError
+        raise NotImplementedError("Must be implemented by subclass")
 
+
+    # the remaining methods deal with indexing and iteration over the list of
+    # streams that comprises the dataset
 
     def __add__(self, stream):
         assert hasattr(stream, 'id')
