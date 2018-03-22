@@ -1,13 +1,12 @@
 
 import numpy as np
-
 from util.util import timer, timer_mpi
 
 
 
-@timer
-def grid_search_serial(data, greens, misfit, grid, write_netcdf=True):
-    """ Grid search over moment tensor parameters
+def grid_search_serial(data, greens, misfit, grid):
+    """ 
+    Grid search over moment tensors
     """
     results = np.zeros(grid.size)
     count = 0
@@ -20,78 +19,31 @@ def grid_search_serial(data, greens, misfit, grid, write_netcdf=True):
         for key in data:
             synthetics[key] = greens[key].get_synthetics(mt)
 
-       # evaluate misfit
+        # evaluate misfit
         for key in data:
             func, dat, syn = misfit[key], data[key], synthetics[key]
             results[count] += func(dat, syn)
-
         count += 1
 
-    if write_netcdf:
-        grid.save(_event_name(data), {'misfit': results})
-
-    return grid.get(results.argmin())
+    return results
 
 
 @timer_mpi
-def grid_search_mpi(data, greens, misfit, grid, write_netcdf=True):
+def grid_search_mpi(data, greens, misfit, grid):
+    """
+    To carry out a grid search in parallel, we decompose the grid into subsets 
+    and scatter using MPI. Each MPI process then runs grid_search_serial on its
+    assigned subset
+    """
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
     iproc, nproc = comm.rank, comm.size
 
-    # scatter grid across processes
     if iproc == 0:
         subset = grid.decompose(nproc)
     else: 
         subset = None
     subset = comm.scatter(subset, root=0)
 
-    # evaluate misfit
-    results = _evaluate_misfit([data, greens, misfit, subset])
+    return grid_search_serial(data, greens, misfit, subset)
 
-    # gather results from all processes
-    results = comm.gather(results, root=0)
-
-    if iproc==0:
-        results = np.concatenate(results)
-        if write_netcdf:
-            grid.save(_event_name(data), {'misfit': results})
-
-        return grid.get(results.argmin())
-
-
-
-def _evaluate_misfit(args):
-    data, greens, misfit, grid = args
-
-    # array to hold misfit values
-    results = np.zeros(grid.size)
-    count = 0
-
-    for mt in grid:
-        print grid.index
-
-        # generate synthetics
-        synthetics = {}
-        for key in data:
-            synthetics[key] = greens[key].get_synthetics(mt)
-
-        # sum over data categories
-        for key in data:
-            func, dat, syn = misfit[key], data[key], synthetics[key]
-            results[count] += func(dat, syn)
-
-        count += 1
-
-    return results
-
-
-def _event_name(data):
-    data = data[data.keys()[0]]
-
-    if hasattr(data, 'id'):
-        return data.id+'.h5'
-    else:
-        return 'output.h5'
-
-#

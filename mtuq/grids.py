@@ -209,7 +209,7 @@ class UnstructuredGrid(object):
 
 
 
-def MTGridRandom(Mw=[], npts=500000):
+def MTGridRandom(Mw=[], npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
     N = npts
