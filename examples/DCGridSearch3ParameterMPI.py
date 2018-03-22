@@ -6,8 +6,7 @@ import mtuq.dataset.sac
 import mtuq.greens_tensor.fk
 
 from os.path import basename, join
-from mtuq.grid_search import grid_search_mpi
-from mtuq.grids import DCGridRandom
+from mtuq.grid_search import DCGridRandom, grid_search_mpi
 from mtuq.misfit import cap_bw, cap_sw
 from mtuq.process_data import process_data
 from mtuq.util.plot import cap_plot
@@ -119,7 +118,7 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Saving results...\n'
         results = np.concatenate(results)
-        grid.save(data.id+'.h5', {'misfit': results})
+        grid.save(event_name+'.h5', {'misfit': results})
 
 
     if comm.rank==0:

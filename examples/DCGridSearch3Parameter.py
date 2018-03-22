@@ -7,8 +7,7 @@ import mtuq.greens_tensor.fk
 import mtuq.misfit
 
 from os.path import basename, join
-from mtuq.grid_search import grid_search_serial
-from mtuq.grids import DCGridRandom
+from mtuq.grid_search import DCGridRandom, grid_search_serial
 from mtuq.misfit import cap_bw, cap_sw
 from mtuq.process_data import process_data
 from mtuq.util.plot import cap_plot
@@ -103,9 +102,9 @@ if __name__=='__main__':
     results = grid_search_serial(data, greens, misfit, grid)
 
     print 'Saving results...\n'
-    grid.save(data.id+'.h5', {'misfit': results})
+    grid.save(event_name+'.h5', {'misfit': results})
 
     print 'Plotting waveforms...\n'
     mt = grid.get(results.argmin())
-    cap_plot(data.id+'.png', data, greens, mt, paths.weights)
+    cap_plot(event_name+'.png', data, greens, mt, paths.weights)
 
