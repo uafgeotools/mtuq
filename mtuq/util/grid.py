@@ -2,12 +2,7 @@
 import warnings
 import numpy as np
 
-from mtuq.moment_tensor.convert.tape2015 import tt152cmt
-from mtuq.util.math import PI, INF
 from mtuq.util.util import Struct
-
-from numpy.random import uniform as random
-from mtuq.util.math import open_interval as regular
 
 try:
     import h5py
