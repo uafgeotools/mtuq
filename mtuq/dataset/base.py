@@ -6,17 +6,14 @@ class DatasetBase(object):
 
         Basically, a list of obspy streams. Each stream corresponds to a
         single seismic station and holds all the components recorded at that
-        station.  Contains methods to help with data processing and metadata
+        station.  Provides methods to help with data processing and metadata
         extraction.
     """
 
     def __init__(self, data=None, id=None):
         # event name or other unique identifier
         self.id = id
-
-        if not data:
-            self.__list__ = []
-            return
+        self.__list__ = []
 
         for stream in data:
             self.__add__(stream)
