@@ -1,11 +1,10 @@
 
 import numpy as np
-
-from mtuq.moment_tensor.convert.tape2015 import tt152cmt
 from mtuq.util.grid import Grid, UnstructuredGrid
 from mtuq.util.math import PI
 from mtuq.util.util import Struct, timer, timer_mpi
 
+from mtuq.util.moment_tensor import tape2015
 from numpy.random import uniform as random
 from mtuq.util.math import open_interval as regular
 
@@ -78,7 +77,7 @@ def MTGridRandom(Mw=[], npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=tt152cmt)
+        callback=tape2015.tt152cmt)
 
 
 def MTGridRegular(Mw, npts_per_axis=25):
@@ -103,7 +102,7 @@ def MTGridRegular(Mw, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=tt152cmt)
+        callback=tape2015.tt152cmt)
 
 
 def DCGridRandom(Mw, npts=50000):
@@ -126,7 +125,7 @@ def DCGridRandom(Mw, npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=tt152cmt)
+        callback=tape2015.tt152cmt)
 
 
 def DCGridRegular(Mw, npts_per_axis=25):
@@ -149,7 +148,7 @@ def DCGridRegular(Mw, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=tt152cmt)
+        callback=tape2015.tt152cmt)
 
 
 def DepthGrid():
