@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 EPSVAL = 1e-6
 VERBOSE = 0
@@ -10,18 +9,8 @@ from mtuq.mt.change_basis import change_basis
 from mtuq.util.math import PI, DEG, eig, fangle_signed, rotmat, rotmat_gen, wrap360
 
 
-bounds = ({
-    'v': [vmin, vmax],
-    'w': [wmin, wmax],
-    'h': [hmin, hmax],
-    'delta': [dmin, dmax],
-    'theta': [tmin, tmax],
-    'kappa': [kmin, kmax],
-    })
 
-
-
-def forward(M):
+def cmt2tt(M):
     """
     Converts up-south-east moment tensor to 2012 parameters
 
@@ -60,7 +49,7 @@ def forward(M):
         sigma)
 
 
-def inverse(M):
+def cmt2tt15(M):
     """
     Converts up-south-east moment tensor to 2015 parameters
 
@@ -450,5 +439,6 @@ def _vec(M):
                      M[0,1],
                      M[0,2],
                      M[1,2]])
+
 
 
