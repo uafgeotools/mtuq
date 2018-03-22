@@ -2,7 +2,6 @@
 import obspy
 import numpy as np
 
-from mtuq.dataset import identifier
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import convolve
 
@@ -29,7 +28,11 @@ class GreensTensorBase(object):
 
     def assign_id(self):
         # assign id based on netowrk and station names
-        self.id = identifier(self.station)
+        self.id = '.'.join((
+            self.station.network,
+            self.station.station,
+            self.station.location))
+
 
 
     def get_synthetics(self, mt):

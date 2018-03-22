@@ -2,7 +2,7 @@
 import warnings
 import numpy as np
 
-from mtuq.mt.maps.tape2015 import tt152cmt
+from mtuq.moment_tensor.convert.tape2015 import tt152cmt
 from mtuq.util.math import PI, INF
 from mtuq.util.util import Struct
 
@@ -209,7 +209,7 @@ class UnstructuredGrid(object):
 
 
 
-def MTGridRandom(Mw=[], npts=500000):
+def MTGridRandom(Mw=[], npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
     N = npts
@@ -231,7 +231,7 @@ def MTGridRandom(Mw=[], npts=500000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=tape2015)
+        callback=tt152cmt)
 
 
 def MTGridRegular(Mw, npts_per_axis=25):
@@ -247,7 +247,7 @@ def MTGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = cast(Mw)/np.sqrt(2)
+    rho = np.asarray(Mw)/np.sqrt(2)
 
     return Grid({
         'rho': rho,
@@ -256,7 +256,7 @@ def MTGridRegular(Mw, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=tape2015)
+        callback=tt152cmt)
 
 
 def DCGridRandom(Mw, npts=50000):
@@ -279,7 +279,7 @@ def DCGridRandom(Mw, npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=tape2015)
+        callback=tt152cmt)
 
 
 def DCGridRegular(Mw, npts_per_axis=25):
@@ -293,7 +293,7 @@ def DCGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = cast(Mw)/np.sqrt(2)
+    rho = np.asarray(Mw)/np.sqrt(2)
 
     return Grid({
         'rho': rho,
@@ -302,7 +302,7 @@ def DCGridRegular(Mw, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=tape2015)
+        callback=tt152cmt)
 
 
 def DepthGrid():
@@ -312,21 +312,4 @@ def DepthGrid():
 def OriginGrid():
     raise NotImplementedError
 
-
-
-### utilities
-
-def cast(x):
-    if type(x) in [np.ndarray]:
-        return x
-    elif type(x) in [list, tuple]:
-        return np.array(x)
-    elif type(x) in [float, int]:
-        return np.array([float(x)])
-    else:
-        raise ValueError
-
-
-def tape2015(p):
-    return tt152cmt(p.rho, p.v, p.w, p.kappa, p.sigma, p.h)
 
