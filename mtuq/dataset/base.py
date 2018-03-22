@@ -47,9 +47,9 @@ class DatasetBase(object):
         return processed
 
 
-   # metadata extraction methods are deferred to the subclass, since the way
-   # since the way metadata are organized in obspy streams depends on the file
-   # format from which the stream was read.
+   # the next two methods are deferred to the subclass, because the way 
+   # metadata are organized in obspy streams depends on the file format from 
+   # which the stream was read
 
     def get_origin(self):
         """
