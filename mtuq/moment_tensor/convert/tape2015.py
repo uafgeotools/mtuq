@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 EPSVAL = 1e-6
 VERBOSE = 0
@@ -5,7 +6,7 @@ VERBOSE = 0
 
 import numpy as np
 
-from mtuq.mt.change_basis import change_basis
+from mtuq.moment_tensor.change_basis import change_basis
 from mtuq.util.math import PI, DEG, eig, fangle_signed, rotmat, rotmat_gen, wrap360
 
 
@@ -72,7 +73,7 @@ def cmt2tt15(M):
         h)
 
 
-def tt2cmt(gamma, delta, M0, kappa, theta, sigma):
+def tt2cmt(*args):
     """
     Converts 2012 parameters to up-south-east moment tensor
 
@@ -81,6 +82,13 @@ def tt2cmt(gamma, delta, M0, kappa, theta, sigma):
     output: M: moment tensor with shape [6]
                in up-south-east (GCMT) convention
     """
+    try:
+        gamma, delta, M0, kappa, theta, sigma = args
+    except:
+        gamma, delta, M0, kappa, theta, sigma =\
+             args[0].gamma, args[0].delta, args[0].M0,\
+             args[0].kappa, args[0].theta, args[0].sigma
+
     lam = lune2lam(gamma, delta, M0)
 
     # TT2012, p.485
@@ -110,7 +118,7 @@ def tt2cmt(gamma, delta, M0, kappa, theta, sigma):
     return M
 
 
-def tt152cmt(rho, v, w, kappa, sigma, h):
+def tt152cmt(*args):
     """
     Converts 2015 parameters to up-south-east moment tensor
 
@@ -119,6 +127,13 @@ def tt152cmt(rho, v, w, kappa, sigma, h):
     output: M: moment tensor with shape [6]
                in up-south-east (GCMT) convention
     """
+    try:
+        rho, v, w, kappa, sigma, h = args
+    except:
+        rho, v, w, kappa, sigma, h =\
+            args[0].rho, args[0].v, args[0].w,\
+            args[0].kappa, args[0].sigma, args[0].h
+
     theta = np.arccos(h)*DEG
     M0 = rho/np.sqrt(2)
     gamma, delta = rect2lune(v, w)
@@ -439,6 +454,5 @@ def _vec(M):
                      M[0,1],
                      M[0,2],
                      M[1,2]])
-
 
 
