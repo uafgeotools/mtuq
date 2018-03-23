@@ -47,10 +47,8 @@ class DatasetBase(object):
         return processed
 
 
-   # the next two methods are deferred to the subclass, because the way 
-   # metadata are organized in obspy streams depends on the file format from 
-   # which the stream was read
-
+   # because the way metadata are organized in obspy streams depends on file
+   # format, the next two methods are deferred to the subclass
     def get_origin(self):
         """
         Extracts origin information from metadata
@@ -65,9 +63,8 @@ class DatasetBase(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    # the remaining methods deal with indexing and iteration over the list of
-    # streams that comprises the dataset
-
+    # the remaining methods deal with indexing and iteration over the obspy
+    # streams that together comprise the dataset
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
@@ -105,7 +102,9 @@ class DatasetBase(object):
 
 
 def reader(*args, **kwargs):
-    # Each supported file format will have a corresponding reader utitlity 
-    # that creates an MTUQ Dataset from data stored in that format.  For an
-    # example, see mtuq.dataset.sac.reader
+    """
+    Each supported file format will have a corresponding reader utitlity 
+    that creates an MTUQ Dataset from files stored in that format.  For an
+    example, see mtuq.dataset.sac.reader
+    """
     raise NotImplementedError

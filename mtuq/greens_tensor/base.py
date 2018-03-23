@@ -7,11 +7,13 @@ from mtuq.util.signal import convolve
 
 
 class GreensTensorBase(object):
+    """ Elastic Green's tensor object.  
+
+        Similar to an obpy Trace, except rather than a single time series, holds
+        multiple time series corresponding to the independent elements of an 
+        elastic Green's tensor.
     """
-    Elastic Green's tensor object.  Similar to an obpy Trace, except rather 
-    than a single time series, holds multiple time series corresponding to
-    the independent elements of an elastic Green's tensor.
-    """
+
     def __init__(self, data, station, origin):
         """
         Normally, all time series required to describe the response at a given
@@ -27,12 +29,14 @@ class GreensTensorBase(object):
 
 
     def assign_id(self):
-        # assign id based on network and station names
+        """
+        Assigns a unique identifier, in this case based on network and station
+        names, but can be modified by subclass
+        """
         self.id = '.'.join((
             self.station.network,
             self.station.station,
             self.station.location))
-
 
 
     def get_synthetics(self, mt):
@@ -61,9 +65,10 @@ class GreensTensorBase(object):
 
 
 class GreensTensorList(object):
-    """ 
-    A list of GreensTensors.  Similar to an obspy Stream, except rather than 
-    traces, holds elastic Green's tensors
+    """ A list of GreensTensors
+
+        Very similar to an MTUQ Dataset, except rather observed data, holds
+        synthetic Green's tensors
     """
     def __init__(self):
         self.__list__ = []
@@ -71,7 +76,7 @@ class GreensTensorList(object):
 
     def get_synthetics(self, mt):
         """
-        Returns a list of streams; all streams correspond to the moment
+        Returns an MTUQ Dataset in which all streams correspond to the moment
         tensor mt, and each each individaul stream corresponds to an
         individual station
         """
@@ -118,6 +123,8 @@ class GreensTensorList(object):
         return processed
 
 
+    # the remaining methods deal with indexing and iteration over the 
+    # the list of GreensTensors
     def __add__(self, greens_tensor):
         #assert hasattr(greens_tensor, 'id')
         greens_tensor.tag = 'greens_tensor'
@@ -169,6 +176,9 @@ class GeneratorBase(object):
     Details regarding how the GreenTensors are actually created--whether
     they are computed on-the-fly or read from a pre-computed database--
     are deferred to the subclass.
+
+    Very similar to an mtuq.dataset.reader, excecpt rather than a Dataset,
+    returns a GreensTensorsList
     """
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Must be implemented by subclass")
