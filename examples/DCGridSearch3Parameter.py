@@ -23,7 +23,7 @@ if __name__=='__main__':
     moment tensors; magnitude, depth, and location kept fixed
 
     A typical runtime is about 60 minutes. For faster results, try
-    mtuq/examples/DCGridSearchMPI.py
+    mtuq/examples/DCGridSearch3ParameterMPI.py
     """
 
     #

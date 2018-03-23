@@ -7,7 +7,7 @@ import mtuq.greens_tensor.fk
 
 from os.path import basename, join
 from mtuq.grid_search import DCGridRandom, grid_search_mpi
-from mtuq.misfit.cap import cap_bw, cap_sw
+from mtuq.misfit.legacy import cap_bw, cap_sw
 from mtuq.process_data.cap import process_data
 from mtuq.util.geodetics import cap_rise_time
 from mtuq.util.plot import cap_plot
