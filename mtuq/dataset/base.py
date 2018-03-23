@@ -18,6 +18,9 @@ class DatasetBase(object):
         self.id = id
         self.__list__ = []
 
+        if not data:
+            return
+
         for stream in data:
             self.__add__(stream)
 
@@ -47,7 +50,7 @@ class DatasetBase(object):
         return processed
 
 
-   # because the way metadata are organized in obspy streams depends on file
+   # because how metadata are organized in obspy streams depends on file
    # format, the next two methods are deferred to the subclass
     def get_origin(self):
         """
@@ -64,7 +67,7 @@ class DatasetBase(object):
 
 
     # the remaining methods deal with indexing and iteration over the obspy
-    # streams that together comprise the dataset
+    # streams that comprise the dataset
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
@@ -107,4 +110,6 @@ def reader(*args, **kwargs):
     that creates an MTUQ Dataset from files stored in that format.  For an
     example, see mtuq.dataset.sac.reader
     """
-    raise NotImplementedError
+    pass
+
+

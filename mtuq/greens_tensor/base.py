@@ -60,7 +60,7 @@ class GreensTensorBase(object):
         Convolves source wavelet with all time series associated with the
         given Green's tensor
         """
-        return self.apply(convolve, wavelet)
+        return self.apply(wavelet.convolve_stream)
         
 
 
