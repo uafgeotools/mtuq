@@ -13,7 +13,6 @@ from obspy.core.inventory import Inventory, Station
 from obspy.core.util.attribdict import AttribDict
 from obspy.geodetics import gps2dist_azimuth
 from mtuq.dataset.base import DatasetBase
-from mtuq.util.cap import identifier
 from mtuq.util.signal import check_time_sampling
 
 
@@ -72,7 +71,7 @@ class Dataset(DatasetBase):
         """
         stations = []
         for data in self:
-            station_metadata = self._copy(data[0].stats)
+            station = self._copy(data[0].stats)
           
             if not check_time_sampling(data):
                 # ordinarily we except all traces from a given station to have the 
@@ -81,17 +80,17 @@ class Dataset(DatasetBase):
                     "Time sampling differs from trace to trace.")
 
             try:
-                station_metadata.channels = []
+                station.channels = []
                 for trace in data:
-                    station_metadata.channels += [trace.stats.channel]
+                    station.channels += [trace.stats.channel]
             except:
                 raise Exception(
                     "Could not determine channel names from obspy stream.")
 
             try:
-                station_latitude = station_metadata.sac.stla
-                station_longitude = station_metadata.sac.stlo
-                station_metadata.update({
+                station_latitude = station.sac.stla
+                station_longitude = station.sac.stlo
+                station.update({
                     'latitude': station_latitude,
                     'longitude': station_longitude})
             except:
@@ -99,9 +98,9 @@ class Dataset(DatasetBase):
                     "Could not determine station location from SAC headers.")
 
             try:
-                station_metadata.update({
-                    'station_elevation': station_metadata.sac.stel,
-                    'station_depth': station_metadata.sac.stdp})
+                station.update({
+                    'station_elevation': station.sac.stel,
+                    'station_depth': station.sac.stdp})
             except:
                 pass
 
@@ -117,7 +116,7 @@ class Dataset(DatasetBase):
                     origin.latitude,
                     origin.longitude)
 
-                station_metadata.update({
+                station.update({
                     'catalog_latitude': event_latitude,
                     'catalog_longitude': event_longitude,
                     'catalog_distance': distance,
@@ -128,9 +127,12 @@ class Dataset(DatasetBase):
                 warnings.warn(
                     "Could not determine event location from SAC headers.")
 
-            station_metadata.id = identifier(station_metadata)
+            station.id = '.'.join((
+                station.network,
+                station.station,
+                station.location))
 
-            stations += [station_metadata]
+            stations += [station]
 
         return stations
 
@@ -165,7 +167,11 @@ def reader(path, wildcard='*.sac', event_name=None, verbose=False):
     # sort by station
     data_sorted = {}
     for trace in data:
-        id = identifier(trace.stats)
+        id = '.'.join((
+            trace.stats.network,
+            trace.stats.station,
+            trace.stats.location))
+
         if id not in data_sorted:
             data_sorted[id] = Stream(trace)
         else:

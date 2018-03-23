@@ -44,10 +44,10 @@ if __name__=='__main__':
     #
     # Here we specify all the data processing and misfit settings used in the
     # for the inversion.  For this example, body- and surface-waves are 
-    # processed separately, and misfit is defined as a sum of indepdendent 
-    # body- and surface-wave contributions. (For a more flexible way of
-    # of specifying parameters based on command-line argument passing, see
-    # mtuq/scripts/cap_inversion.py)
+    # processed separately, and misfit is a sum of indepdendent body- and
+    # surface-wave contributions. (For a more flexible way of specifying 
+    # parameters based on command-line argument passing rather than scripting,
+    # see mtuq/scripts/cap_inversion.py)
     #
 
     process_bw = process_data(
