@@ -6,7 +6,7 @@ VERBOSE = 0
 
 import numpy as np
 
-from mtuq.moment_tensor.change_basis import change_basis
+from mtuq.util.moment_tensor.change_basis import change_basis
 from mtuq.util.math import PI, DEG, eig, fangle_signed, rotmat, rotmat_gen, wrap360
 
 

@@ -6,7 +6,7 @@ from copy import deepcopy
 from os.path import exists, join
 from obspy.geodetics import kilometers2degrees as km2deg
 from mtuq.util.signal import cut
-from mtuq.util.cap import parse_weight_file
+from mtuq.util.util import parse_cap_weight_file
 
 
 class process_data(object):
@@ -122,7 +122,7 @@ class process_data(object):
              weight_type == 'cap_sw':
             assert 'weight_file' in parameters
             assert exists(parameters['weight_file'])
-            self.weights = parse_weight_file(parameters['weight_file'])
+            self.weights = parse_cap_weight_file(parameters['weight_file'])
 
         else:
              raise ValueError('Bad parameter: weight_type')
@@ -271,3 +271,5 @@ class process_data(object):
                         trace.weight = 0.
 
         return traces
+
+

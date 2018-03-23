@@ -3,6 +3,11 @@
 from obspy.geodetics import gps2dist_azimuth
 
 
+def cap_rise_time(*args, **kwargs):
+    #raise NotImplementedError
+    return 1.
+
+
 def distance(station, origin):
     if hasattr(station, 'latitude') and\
         hasattr(station, 'longitude'):
