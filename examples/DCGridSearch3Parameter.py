@@ -9,17 +9,18 @@ from os.path import basename, join
 from mtuq.grid_search import DCGridRandom, grid_search_serial
 from mtuq.misfit.legacy import cap_bw, cap_sw
 from mtuq.process_data.cap import process_data
+from mtuq.util.geodetics import cap_rise_time
 from mtuq.util.plot import cap_plot
 from mtuq.util.util import AttribDict, root
-from mtuq.util.wavelets import trapezoid
+from mtuq.util.wavelets import Trapezoid
 
 
 if __name__=='__main__':
     """
-     Double-couple inversion example
+    Double-couple inversion example
 
-    Carries out a grid search over double-couple moment tensor parameters,
-    with magnitude, depth, and location fixed
+    Carries out a grid search over 50,000 randomly chosen double-couple 
+    moment tensors; magnitude, depth, and location kept fixed
 
     A typical runtime is about 60 minutes. For faster results, try
     mtuq/examples/DCGridSearchMPI.py
@@ -27,8 +28,8 @@ if __name__=='__main__':
 
     #
     # Here we specify the data used for the inversion. The event is an 
-    # Mw~4 Alaska earthquake. For now, these paths exist only in my personal 
-    # environment.  Eventually we need to include sample data in the 
+    # Mw~4.5 Alaska earthquake. For now, these paths exist only in my personal 
+    # environment--eventually we need to include sample data in the 
     # repository or make it available for download
     #
     paths = AttribDict({
@@ -37,13 +38,15 @@ if __name__=='__main__':
         'greens':  os.getenv('CENTER1')+'/'+'data/wf/FK_SYNTHETICS/scak',
         })
 
+    event_name = '20090407201255351'
+
 
     #
     # Here we specify all the data processing and misfit settings used in the
-    # for the inversion.  In this example, body- and surface-waves are 
+    # for the inversion.  For this example, body- and surface-waves are 
     # processed separately, and misfit is defined as a sum of indepdendent 
     # body- and surface-wave contributions. (For a more flexible way of
-    # of specifying parameters based on command line argument passing, see
+    # of specifying parameters based on command-line argument passing, see
     # mtuq/scripts/cap_inversion.py)
     #
 
@@ -86,10 +89,18 @@ if __name__=='__main__':
         'surface_waves': misfit_sw,
         }
 
+
+    #
+    # Here we specify the moment tensor grid and source wavelet
+    #
+
     grid = DCGridRandom(
         npts=50000,
         Mw=4.5,
         )
+
+    rise_time = cap_rise_time(Mw=4.5)
+    wavelet = Trapezoid(rise_time)
 
 
     #
@@ -100,7 +111,6 @@ if __name__=='__main__':
     data = mtuq.dataset.sac.reader(paths.data, wildcard='*.[zrt]')
     origin = data.get_origin()
     stations = data.get_stations()
-    event_name = data.id
 
 
     print 'Processing data...\n'
@@ -116,7 +126,7 @@ if __name__=='__main__':
 
 
     print 'Processing Greens functions...\n'
-    greens.convolve(trapezoid(rise_time=1.))
+    greens.convolve(wavelet)
     processed_greens = {}
     for key in process_data:
         processed_greens[key] = greens.map(process_data[key], stations)
@@ -134,4 +144,5 @@ if __name__=='__main__':
     print 'Plotting waveforms...\n'
     mt = grid.get(results.argmin())
     cap_plot(event_name+'.png', data, greens, mt, paths.weights)
+
 

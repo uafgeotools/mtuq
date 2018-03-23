@@ -9,17 +9,18 @@ from os.path import basename, join
 from mtuq.grid_search import DCGridRandom, grid_search_mpi
 from mtuq.misfit.cap import cap_bw, cap_sw
 from mtuq.process_data.cap import process_data
+from mtuq.util.geodetics import cap_rise_time
 from mtuq.util.plot import cap_plot
 from mtuq.util.util import AttribDict, root
-from mtuq.util.wavelets import trapezoid
+from mtuq.util.wavelets import Trapezoid
 
 
 if __name__=='__main__':
     """
     Double-couple inversion example
 
-    Carries out a grid search over double-couple moment tensor parameters,
-    with magnitude, depth, and location fixed
+    Carries out a grid search over 50,000 randomly chosen double-couple 
+    moment tensors; magnitude, depth, and location kept fixed
 
     USAGE
        mpirun -n <NPROC> python DCGridSearchMPI.py
@@ -44,10 +45,10 @@ if __name__=='__main__':
 
     #
     # Here we specify all the data processing and misfit settings used in the
-    # for the inversion.  In this example, body- and surface-waves are 
+    # for the inversion.  For this example, body- and surface-waves are 
     # processed separately, and misfit is defined as a sum of indepdendent 
     # body- and surface-wave contributions. (For a more flexible way of
-    # of specifying parameters based on command line argument passing, see
+    # of specifying parameters based on command-line argument passing, see
     # mtuq/scripts/cap_inversion.py)
     #
 
@@ -89,10 +90,18 @@ if __name__=='__main__':
         'surface_waves': misfit_sw,
         }
 
+
+    #
+    # Here we specify the moment tensor grid and source wavelet
+    #
+
     grid = DCGridRandom(
         npts=50000,
         Mw=4.5,
         )
+
+    rise_time = cap_rise_time(Mw=4.5)
+    wavelet = Trapezoid(rise_time)
 
 
     #
@@ -117,7 +126,7 @@ if __name__=='__main__':
         greens = generator(stations, origin)
 
         print 'Processing Greens functions...\n'
-        greens.convolve(trapezoid(rise_time=1.))
+        greens.convolve(wavelet)
         processed_greens = {}
         for key in process_data:
             processed_greens[key] = greens.map(process_data[key], stations)
