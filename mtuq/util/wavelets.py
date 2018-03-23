@@ -1,24 +1,24 @@
 
-
+import warnings
 import numpy as np
 
 
 
 class Wavelet(object):
-    def evaluate(self, t)
+    def evaluate(self, t):
         """ Evaluates wavelet at chosen points
         """
         raise NotImplementedError
 
 
     def arange(self, tmin, tmax, dt):
-        """ Evaluates wavelet on the interval [-tmax, +tmax]
+        """ Evaluates wavelet on the interval [tmin, tmax]
         """
         return self.trim(self.evaluate(np.arange(tmin, tmax, dt)))
 
 
     def linspace(self, tmin, tmax, nt):
-        """ Evaluates wavelet on the interval [-tmax, +tmax]
+        """ Evaluates wavelet on the interval [tmin, tmax]
         """
         return self.trim(self.evaluate(np.linspace(tmin, tmax, nt)))
 
@@ -26,16 +26,20 @@ class Wavelet(object):
     def trim(self, y):
         """ Trims zeros from beginning and end
         """
-        raise NotImplementedError
+        # raise NotImplementedError
+        return y
 
 
     def convolve(self, y, dt, mode=1):
-         """ Convolves vector with given wavelet
-         """
-         nt = len(y)
-         tmin = -(nt-1)*dt/2.
-         tmax = +(nt-1)*dt/2.
-         w = wavelet.arange(tmin, tmax, dt)
+        """ Convolves vector with given wavelet
+        """
+        warnings.warn('wavelet.convolve not yet implemented')
+        return y
+
+        nt = len(y)
+        tmin = -(nt-1)*dt/2.
+        tmax = +(nt-1)*dt/2.
+        w = wavelet.arange(tmin, tmax, dt)
 
         if mode==1:
             # frequency-domain implementation
@@ -54,8 +58,16 @@ class Wavelet(object):
              dt = trace.stats.delta
          except:
              raise Exception
+         trace.data = self.convolve(y, dt)
+         return trace
 
-         return self.convolve(y, t)
+
+    def convolve_stream(self, stream):
+         """ Convolves obspy stream with given wavelet
+         """
+         for trace in stream:
+             self.convolve_trace(trace)
+         return stream
 
 
 
@@ -64,7 +76,9 @@ class Trapezoid(Wavelet):
         Reproduces capuaf:trap.c
     """
 
-    def __init__(rise_time=None):
+    def __init__(self, rise_time=None):
+        warnings.warn('wavelets.Trapezoid not yet tested')
+
         if rise_time:
             self.rise_time = rise_time
         else:
@@ -72,10 +86,8 @@ class Trapezoid(Wavelet):
 
 
     def evaluate(self, t):
-        """ Evaluates wavelet at the chosen points
+        """ Evaluates wavelet at chosen points
         """
-        dt = 1000.
-
         # rather than an anlytical formula, the following numerical procedure
         # defines the trapezoid
         if t1>t2: t1,t2 = t2,t1
@@ -95,17 +107,17 @@ class Trapezoid(Wavelet):
 
 
 class Ricker(Wavelet):
-    rasie NotImplementedError
+    pass
 
 
 
 class Gabor(Wavelet):
-    rasie NotImplementedError
+    pass
 
 
 
 class DiracDelta(Wavelet):
-    rasie NotImplementedError
+    pass
 
 
 
