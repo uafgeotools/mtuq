@@ -18,10 +18,10 @@ from mtuq.util.signal import check_time_sampling
 
 
 class Dataset(DatasetBase):
-   """ Seismic data container
-
-       Adds SAC-specific metadata extraction methods
-   """
+    """ Seismic data container
+ 
+        Adds SAC-specific metadata extraction methods
+    """
 
     def get_origin(self, event_name=None):
         """ Extract event information from SAC metadata
@@ -141,13 +141,16 @@ class Dataset(DatasetBase):
         return stats
 
 
-def reader(path, wildcard='*.sac', verbose=False):
-    """ Reads SAC traces and sorts them by station
+def reader(path, wildcard='*.sac', event_name=None, verbose=False):
+    """ Reads SAC traces, sorts by station, and returns MTUQ Dataset
 
-     Additional processing would be required if for a given station, time
-     sampling varies from one channel to another
+     Additional processing would be required if the time sampling varies from
+     one channel to another for a given station; for now, inconsistent time
+     sampling results in an exception
     """
-    event = os.path.basename(path)
+    if not event_name:
+        event_name = os.path.basename(path)
+
     files = glob.glob(join(path, wildcard))
 
     # read data, one file at a time
@@ -168,7 +171,7 @@ def reader(path, wildcard='*.sac', verbose=False):
         else:
             data_sorted[id] += trace
 
-    dataset = Dataset(id=event)
+    dataset = Dataset(id=event_name)
     for id, stream in data_sorted.items():
         stream.id = id
         dataset += stream

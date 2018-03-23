@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as pyplot
 
 from collections import defaultdict
-from mtuq.util.cap import parse_weight_file
+from mtuq.util.util import parse_cap_weight_file
 
 
 def cap_plot(filename, data, greens, mt, weight_file=None):

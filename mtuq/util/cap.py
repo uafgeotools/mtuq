@@ -9,7 +9,7 @@ def identifier(stats):
         stats.location))
 
 
-def parse_weight_file(filename):
+def parse_cap_weight_file(filename):
     """ Parses CAP-style weight file
     """
     weights = {}
