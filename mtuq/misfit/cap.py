@@ -1,10 +1,12 @@
 
 from collections import defaultdict
+from math import ceil, floor
 from scipy.signal import fftconvolve
+from mtuq.util.math import isclose
 import numpy as np
 
 
-class cap_misfit(object):
+class misfit(object):
     """ 
     CAP-style data misfit function
 
@@ -24,7 +26,7 @@ class cap_misfit(object):
         polarity_weight=0.,
         time_shift_window_length=None,
         time_shift_max=None,
-        )
+        ):
         """ Checks misfit parameters
         """
         # what norm should we apply to residuals?
@@ -51,6 +53,7 @@ class cap_misfit(object):
             nt = d[0].stats.npts
             dt = d[0].stats.delta
 
+
             #
             # PART 1: Calculate CAP-style time shifts
             #
@@ -60,48 +63,57 @@ class cap_misfit(object):
             # window length and time_shift_max constraints.  The result is a single 
             # time-shift which is the same for all components at a given station.
 
+            if self.time_shift_window_length:
+                n1 = min(round(self.time_shift_window_length/dt), nt)
+            else:
+                n1 = nt
+
+            if self.time_shift_max:
+                n2 = min(round(self.time_shift_max/dt), n1/2)
+            else:
+                n2 = n1/2
 
             # what portion of data and synthetics are we considering?
-            if self.time_shift_window_length:
+            if n1 < nt:
                if not hasattr(d[_i], 'arrival'):
                    raise Exception
-               t0 = d[_i].arrival
-               r = self.time_shift_window_length
-               it1 = int(round((t0-r)/dt))
-               it2 = int(round((t0+r)/dt))
+               t0 = d[_i].arrival-d[_i].stats.starttime
+               it1 = min(int(round((t0/dt-n1/2))), 0)
+               it2 = it1 + n1/2
             else:
                it1 = 0
                it2 = nt
-            lr = np.arange(it1, it2)
-            rl = np.fliplr(rl)
 
             # perform cross correlations
-            result = np.zeros(it2-it1)
-            for _i in range(len(dat)):
-                if hasattr(d[_i], 'weight') and\
-                   isclose(d[_i].weight, 0.):
+            result = np.zeros(n1)
+            for _i in range(len(d)):
+                if d[_i].weight == 0.:
                     # ignore components with zero weight
                     continue
 
                 elif mode==1:
                     # scipy frequency-domain implementation (usually much faster)
-                    result += fftconvolve(d[_i].data[lr], s[_].data[rl], 'same')
+                    result += fftconvolve(
+                        d[_i].data[it1:it2], s[_i].data[it1:it2][::-1], 'same')
 
                 elif mode==2:
                     # numpy time-domain implemenation
-                    result += np.correlate(d[_i].data[lr], s[_i].data[lr], 'same')
+                    result += np.correlate(
+                        d[_i].data[it1:it2], s[_i].data[it1:it2], 'same')
 
                 elif mode==3:
                     # mtuq time-domain implementation
                     raise NotImplementedError
 
+
             # what time-shift yields the maximum cross-correlation value?
-            if self.time_shift_max:
-                it1 = int(floor((len(result))/2.) + round(self.time_shift_max/dt))
-                it2 = int(ceil((len(result))/2.) + round(self.time_shift_max/dt))
+            if n2 < n1/2:
+                it1 = int(n1/2 - n2)
+                it2 = int(n1/2 + n2)
             else:
                 it1 = 0
-                it2 = len(result)
+                it2 = n1
+
             d.time_shift = (result[it1:it2].argmax()+it2-it1+1)*dt
 
 
@@ -112,7 +124,7 @@ class cap_misfit(object):
             # Sum waveform difference residuals for all components, using the 
             # time shift correction determined in previous step
 
-            for _i in range(len(dat)):
+            for _i in range(len(d)):
                 if isclose(d[_i].weight, 0.):
                     # ignore components with zero weight
                     continue
@@ -123,14 +135,14 @@ class cap_misfit(object):
 
                 # substract shifted data from shifted synthetics
                 if it == 0:
-                    rsd = syn - dat
+                    r = s[_i] - d[_i]
                 elif it < 0:
-                    rsd = syn[it:] - dat[:-it]
+                    r = s[_i][it:] - d[_i][:-it]
                 elif it > 0:
-                    rsd = syn[:-it] - dat[it:]
+                    r = s[_i][:-it] - d[_i][it:]
 
                 # sum the resulting residuals
-                sum_misfit += d[_i].weight * np.sum(rsd**p)*dt
+                sum_misfit += d[_i].weight * np.sum(r**p)*dt
 
 
             #

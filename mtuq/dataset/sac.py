@@ -73,12 +73,6 @@ class Dataset(DatasetBase):
         for data in self:
             station = self._copy(data[0].stats)
           
-            if not check_time_sampling(data):
-                # ordinarily we except all traces from a given station to have the 
-                # same time sampling
-                raise NotImplementedError(
-                    "Time sampling differs from trace to trace.")
-
             try:
                 station.channels = []
                 for trace in data:
@@ -153,11 +147,9 @@ def reader(path, wildcard='*.sac', event_name=None, verbose=False):
     if not event_name:
         event_name = os.path.basename(path)
 
-    files = glob.glob(join(path, wildcard))
-
-    # read data, one file at a time
+    # read traces one at a time
     data = obspy.core.Stream()
-    for filename in files:
+    for filename in glob.glob(join(path, wildcard)):
         try:
             data += obspy.read(filename, format='sac')
         except:
@@ -177,11 +169,13 @@ def reader(path, wildcard='*.sac', event_name=None, verbose=False):
         else:
             data_sorted[id] += trace
 
+    # create MTUQ Dataset
     dataset = Dataset(id=event_name)
     for id, stream in data_sorted.items():
+        assert check_time_sampling(stream), NotImplementedError(
+            "Time sampling differs from trace to trace.")
         stream.id = id
         dataset += stream
 
     return dataset
-
 

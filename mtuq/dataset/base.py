@@ -6,17 +6,18 @@ class DatasetBase(object):
 
         Basically, a list of obspy streams. Each stream corresponds to a
         single seismic station and holds all the components recorded at that
-        station.  Provides methods to help with data processing and metadata
+        station.  Provides methods that help with data processing and metadata
         extraction.
 
-        The work of generating a Dataset is carried out by a "reader"
-        utility; see the mtuq.dataset.sac.reader for an example
+        The work of generating a Dataset is carried out by a "reader";
+        for example, see mtuq.dataset.sac.reader
     """
 
     def __init__(self, data=None, id=None):
+        self.__list__ = []
+
         # event name or other unique identifier
         self.id = id
-        self.__list__ = []
 
         if not data:
             return
@@ -50,8 +51,8 @@ class DatasetBase(object):
         return processed
 
 
-   # because how metadata are organized in obspy streams depends on file
-   # format, the next two methods are deferred to the subclass
+    # because the way metadata are organized in obspy streams depends on file
+    # format, the next two methods are deferred to the subclass
     def get_origin(self):
         """
         Extracts origin information from metadata
@@ -106,7 +107,7 @@ class DatasetBase(object):
 
 def reader(*args, **kwargs):
     """
-    Each supported file format will have a corresponding reader utitlity 
+    Each supported file format will have a corresponding reader utility
     that creates an MTUQ Dataset from files stored in that format.  For an
     example, see mtuq.dataset.sac.reader
     """
