@@ -7,7 +7,7 @@ import mtuq.greens_tensor.fk
 
 from os.path import basename, join
 from mtuq.grid_search import DCGridRandom, grid_search_mpi
-from mtuq.misfit.legacy import cap_bw, cap_sw
+from mtuq.misfit.cap import misfit
 from mtuq.process_data.cap import process_data
 from mtuq.util.geodetics import cap_rise_time
 from mtuq.util.plot import cap_plot
@@ -39,7 +39,7 @@ if __name__=='__main__':
     paths = AttribDict({
         'data':    join(root(), 'tests/data/20090407201255351'),
         'weights': join(root(), 'tests/data/20090407201255351/weight_test.dat'),
-        'greens':  os.getenv('CENTER1')+'/'+'data/wf/FK_SYNTHETICS/scak',
+        'greens':  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak'),
         })
 
 
@@ -53,7 +53,7 @@ if __name__=='__main__':
     #
 
     process_bw = process_data(
-        filter_type='Bandpass',
+        filter_type='Bandpass', 
         freq_min= 0.25,
         freq_max= 0.667,
         window_type='cap_bw',
@@ -77,12 +77,13 @@ if __name__=='__main__':
        'surface_waves': process_sw,
        }
 
-    misfit_bw = cap_bw(
-        max_shift=2.,
+
+    misfit_bw = misfit(
+        time_shift_max=2.,
         )
 
-    misfit_sw = cap_sw(
-        max_shift=10.,
+    misfit_sw = misfit(
+        time_shift_max=10.,
         )
 
     misfit = {
