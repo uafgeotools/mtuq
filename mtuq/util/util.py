@@ -60,13 +60,16 @@ def parse_cap_weight_file(filename):
 def timer(func):
     """ Decorator for measuring execution time
     """
+    if is_mpi_env():
+        return func
+
     def timed_func(*args, **kwargs):
         start_time = time.time()
 
         output = func(*args, **kwargs)
 
         _elapsed_time = time.time() - start_time
-        print 'Elapsed time: %f\n' % _elapsed_time
+        print '  Elapsed time: %f\n' % _elapsed_time
 
         return output
 
@@ -87,7 +90,7 @@ def timer_mpi(func):
 
         if comm.rank==0:
             _elapsed_time = time.time() - start_time
-            print 'Elapsed time: %f\n' % _elapsed_time
+            print '  Elapsed time: %f\n' % _elapsed_time
 
         return output
 

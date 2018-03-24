@@ -10,6 +10,7 @@ from mtuq.util.math import open_interval as regular
 
 
 
+@timer
 def grid_search_serial(data, greens, misfit, grid):
     """ 
     Grid search over moment tensors
