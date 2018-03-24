@@ -6,7 +6,7 @@ from collections import defaultdict
 from mtuq.util.util import parse_cap_weight_file
 
 
-def cap_plot(filename, data, greens, mt, weight_file=None):
+def cap_plot(filename, data, synthetics, mt, weight_file=None):
     """ Creates cap-style plot
     """
     # how many rows, columns?
@@ -18,17 +18,15 @@ def cap_plot(filename, data, greens, mt, weight_file=None):
 
     # load cap-style weights
     if weight_file:
-        weights = parse_weight_file(weight_file)
+        weights = parse_cap_weight_file(weight_file)
     else:
         weights = None
 
     ir = 0
-    for d1,g1,d2,g2 in zip(
-        data['body_waves'], greens['body_waves'],
-        data['surface_waves'], greens['surface_waves']):
+    for d1,s1,d2,s2 in zip(
+        data['body_waves'], synthetics['body_waves'],
+        data['surface_waves'], synthetics['surface_waves']):
 
-        s1 = g1.get_synthetics(mt)
-        s2 = g2.get_synthetics(mt)
         id = d1.id
 
         # plot body waves

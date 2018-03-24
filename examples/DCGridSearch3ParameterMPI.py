@@ -118,7 +118,7 @@ if __name__=='__main__':
 
         print 'Processing data...\n'
         processed_data = {}
-        for key in process_data:
+        for key in ['body_waves', 'surface_waves']:
             processed_data[key] = data.map(process_data[key], stations)
         data = processed_data
 
@@ -129,7 +129,7 @@ if __name__=='__main__':
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)
         processed_greens = {}
-        for key in process_data:
+        for key in ['body_waves', 'surface_waves']:
             processed_greens[key] = greens.map(process_data[key], stations)
         greens = processed_greens
 
@@ -151,11 +151,14 @@ if __name__=='__main__':
         print 'Saving results...\n'
         results = np.concatenate(results)
         grid.save(event_name+'.h5', {'misfit': results})
+        mt = grid.get(results.argmin())
 
 
     if comm.rank==0:
         print 'Plotting waveforms...\n'
-        mt = grid.get(results.argmin())
-        cap_plot(event_name+'.png', data, greens, mt, paths.weights)
+        synthetics = {}
+        for key in ['body_waves', 'surface_waves']:
+            synthetics[key] = greens[key].get_synthetics(mt)
+        cap_plot(event_name+'.png', data, synthetics, paths.weights)
 
 
