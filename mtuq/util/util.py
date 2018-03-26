@@ -2,6 +2,7 @@
 from os.path import abspath, join
 import csv
 import time
+import numpy as np
 
 
 class AttribDict(dict):
@@ -18,6 +19,12 @@ class Struct(dict):
     def __init__(self, *args, **kwargs):
         super(Struct, self).__init__(*args, **kwargs)
         self.__dict__ = self
+
+
+def asarray(x):
+    """ Numpy array typecast
+    """
+    return np.array(x, dtype=np.float64, ndmin=1, copy=False)
 
 
 def is_mpi_env():
@@ -98,6 +105,8 @@ def timer_mpi(func):
 
 
 def root():
+    """ Returns MTUQ root directory
+    """
     import mtuq
     return abspath(join(mtuq.__path__[0], '..'))
 

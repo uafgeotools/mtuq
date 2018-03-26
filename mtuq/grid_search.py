@@ -2,7 +2,7 @@
 import numpy as np
 from mtuq.util.grid import Grid, UnstructuredGrid
 from mtuq.util.math import PI
-from mtuq.util.util import Struct, timer, timer_mpi
+from mtuq.util.util import Struct, asarray, timer, timer_mpi
 
 from mtuq.util.moment_tensor import tape2015
 from numpy.random import uniform as random
@@ -19,7 +19,7 @@ def grid_search_serial(data, greens, misfit, grid):
     count = 0
 
     for mt in grid:
-        print grid.index
+        #print grid.index
 
         # generate_synthetics
         synthetics = {}
@@ -94,7 +94,7 @@ def MTGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = np.asarray(Mw)/np.sqrt(2)
+    rho = asarray(Mw)/np.sqrt(2)
 
     return Grid({
         'rho': rho,
@@ -140,7 +140,7 @@ def DCGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = np.asarray(Mw)/np.sqrt(2)
+    rho = asarray(Mw)/np.sqrt(2)
 
     return Grid({
         'rho': rho,
