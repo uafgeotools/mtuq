@@ -121,8 +121,7 @@ class misfit(object):
             # PART 2: waveform difference calculation
             #
 
-            # Sum waveform difference residuals for all components, using the 
-            # time shift correction determined in previous step
+            # Sums waveform difference residuals for all component
 
             for _i in range(len(d)):
                 if isclose(d[_i].weight, 0.):

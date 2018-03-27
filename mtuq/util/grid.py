@@ -2,12 +2,12 @@
 import warnings
 import numpy as np
 
-from mtuq.util.util import Struct
+from mtuq.util.util import Struct, warn
 
 try:
     import h5py
 except:
-    warnings.warn('Could not import h5py.')
+    warn('Could not import h5py.')
 
 
 

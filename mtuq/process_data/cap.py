@@ -1,12 +1,11 @@
 
 import numpy as np
-import warnings
 
 from copy import deepcopy
 from os.path import exists, join
 from obspy.geodetics import kilometers2degrees as km2deg
 from mtuq.util.signal import cut
-from mtuq.util.util import parse_cap_weight_file
+from mtuq.util.util import parse_cap_weight_file, warn
 
 
 class process_data(object):
@@ -38,7 +37,7 @@ class process_data(object):
         # check filter parameters
         #
         if filter_type==None:
-            warnings.warn('No filter_type selected.')
+            warn('No filter_type selected.')
 
         elif filter_type == 'Bandpass':
             # allow filter corners to be specified in terms of either period [s]
@@ -87,7 +86,7 @@ class process_data(object):
         # check window parameters
         #
         if window_type==None:
-            warnings.warn('No window_type selected.')
+            warn('No window_type selected.')
 
         elif window_type == 'cap_bw':
             assert 'window_length' in parameters
@@ -149,7 +148,7 @@ class process_data(object):
         station_id = stats.network+'.'+stats.station
 
         #
-        # filter traces
+        # part 1: filter traces
         #
         if self.filter_type == 'Bandpass':
             for trace in traces:
@@ -177,7 +176,7 @@ class process_data(object):
                           freq=self.freq)
 
         #
-        # determine window start and end times
+        # part 2: determine window start and end times
         #
 
         # Start and end times will be stored in a dictionary indexed by 
@@ -195,7 +194,8 @@ class process_data(object):
                 assert 't5' in sac_headers
 
                 t1 = trace.stats.sac.t5 - 0.4*self.window_length
-                t2 = trace.stats.sac.t5 + 0.6*self.window_length
+                if t1 < 0.: t1 = 0.
+                t2 = t1 + self.window_length
                 t1 += origin_time
                 t2 += origin_time
                 self._windows[station_id] = [t1, t2]
@@ -210,7 +210,8 @@ class process_data(object):
                 assert 't6' in sac_headers
 
                 t1 = trace.stats.sac.t6 - 0.3*self.window_length
-                t2 = trace.stats.sac.t6 + 0.7*self.window_length
+                if t1 < 0.: t1 = 0.
+                t2 = t1 + self.window_length
                 t1 += origin_time
                 t2 += origin_time
                 self._windows[station_id] = [t1, t2]
@@ -220,9 +221,7 @@ class process_data(object):
                 raise NotImplementedError
 
 
-        #
         # cut traces
-        #
         if station_id in self._windows:
             window = self._windows[station_id]
             for trace in traces:
@@ -230,7 +229,7 @@ class process_data(object):
 
 
         #
-        # determine weights
+        # part 3: determine weights
         #
 
         if self.weight_type == 'cap_bw':

@@ -3,6 +3,7 @@ from os.path import abspath, join
 import csv
 import time
 import numpy as np
+import warnings
 
 
 class AttribDict(dict):
@@ -45,6 +46,8 @@ def is_mpi_env():
 
 
 def iterable(arg):
+    """ Simple list typecast
+    """
     if not isinstance(arg, (list, tuple)):
         return [arg]
     else:
@@ -109,4 +112,14 @@ def root():
     """
     import mtuq
     return abspath(join(mtuq.__path__[0], '..'))
+
+
+def warn(*args, **kwargs):
+    try:
+        from mpi4py import MPI
+        comm = MPI_WORLD.COMM
+        if comm.rank==0:
+           warnings.warn(*args, **kwargs)
+    except:
+       warnings.warn(*args, **kwargs)
 

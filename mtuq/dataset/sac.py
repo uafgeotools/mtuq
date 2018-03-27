@@ -4,16 +4,16 @@ import os
 import warnings
 from copy import deepcopy
 from os.path import join
-
 import numpy as np
 import obspy
-from obspy.core import Stream, Stats, Trace
-from obspy.core.event import Event, Origin
-from obspy.core.inventory import Inventory, Station
+
+from obspy.core import Stream
+from obspy.core.event import Origin
 from obspy.core.util.attribdict import AttribDict
 from obspy.geodetics import gps2dist_azimuth
 from mtuq.dataset.base import DatasetBase
 from mtuq.util.signal import check_time_sampling
+from mtuq.util.util import warn
 
 
 class Dataset(DatasetBase):
@@ -32,8 +32,8 @@ class Dataset(DatasetBase):
             latitude = sac_headers.evla
             longitude = sac_headers.evlo
         except (TypeError, ValueError):
-            warnings.warn("Could not determine event location from sac headers. "
-                          "Setting location to nan...")
+            warn("Could not determine event location from sac headers. "
+                  "Setting location to nan...")
             latitude = np.nan
             longitudue = np.nan
 
@@ -41,8 +41,8 @@ class Dataset(DatasetBase):
         try:
             depth = sac_headers.evdp
         except (TypeError, ValueError):
-            warnings.warn("Could not determine event depth from sac headers. "
-                          "Setting depth to nan...")
+            warn("Could not determine event depth from sac headers. "
+                 "Setting depth to nan...")
             depth = 0.
 
         # origin time
@@ -54,8 +54,8 @@ class Dataset(DatasetBase):
                 minute=sac_headers.nzmin,
                 second=sac_headers.nzsec) 
         except (TypeError, ValueError):
-            warnings.warn("Could not determine origin time from sac headers. "
-                          "Setting origin time to zero...")
+            warn("Could not determine origin time from sac headers. "
+                  "Setting origin time to zero...")
             origin_time = obspy.UTCDateTime(0)
 
         return Origin(
@@ -118,8 +118,7 @@ class Dataset(DatasetBase):
                     'catalog_backazimuth': back_azimuth})
 
             except:
-                warnings.warn(
-                    "Could not determine event location from SAC headers.")
+                warn("Could not determine event location from SAC headers.")
 
             station.id = '.'.join((
                 station.network,
@@ -148,7 +147,7 @@ def reader(path, wildcard='*.sac', event_name=None, verbose=False):
         event_name = os.path.basename(path)
 
     # read traces one at a time
-    data = obspy.core.Stream()
+    data = Stream()
     for filename in glob.glob(join(path, wildcard)):
         try:
             data += obspy.read(filename, format='sac')
