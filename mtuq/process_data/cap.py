@@ -1,8 +1,10 @@
 
+import obspy
 import numpy as np
 
+from collections import defaultdict
 from copy import deepcopy
-from os.path import exists, join
+from os.path import basename, exists, join
 from obspy.geodetics import kilometers2degrees as km2deg
 from mtuq.util.signal import cut
 from mtuq.util.util import AttribDict, parse_cap_weight_file, warn
@@ -14,7 +16,7 @@ class process_data(object):
 
     Processing data is a two-step procedure
         1) function_handle = process_data(filter_type=..., **filter_parameters, 
-                                          pick_type=...,   **pick_parameters,
+                                          pick_type=...,   **picks.Parameters,
                                           window_type=..., **window_parameters,
                                           weight_type=..., **weight_parameters)
 
@@ -28,9 +30,9 @@ class process_data(object):
 
     def __init__(self,
                  filter_type=None,
+                 pick_type=None,
                  window_type=None,
                  weight_type=None,
-                 phase_type=None,
                  **parameters):
 
         """ Checks data processing parameters
@@ -96,6 +98,7 @@ class process_data(object):
         elif pick_type=='from_fk_database':
             assert 'fk_database' in parameters
             self._fk_database = parameters['fk_database']
+            self._fk_model = basename(self._fk_database)
 
         elif pick_type=='from_weight_file':
             assert 'weight_file' in parameters
@@ -103,7 +106,7 @@ class process_data(object):
             self.weights = parse_cap_weight_file(parameters['weight_file'])
 
         self.pick_type = pick_type
-        self._picks = AttribDict()
+        self._picks = defaultdict(AttribDict)
 
 
         #
@@ -112,10 +115,10 @@ class process_data(object):
         if window_type==None:
             warn('No window_type selected.')
 
-        elif window_type == 'body_waves':
+        elif window_type == 'cap_bw':
             assert 'window_length' in parameters
 
-        elif window_type == 'surface_waves':
+        elif window_type == 'cap_sw':
             assert 'window_length' in parameters
 
         else:
@@ -146,21 +149,21 @@ class process_data(object):
 
 
 
-    def __call__(self, traces, stats, overwrite=False):
+    def __call__(self, traces, meta, overwrite=False):
         """ 
         Carries out data processing operations on seismic traces
 
         input traces: all availables traces for a given station
         type traces: obspy Stream
-        input stats: station metadata
-        type stats: obspy Stats
+        input meta: station metadata
+        type meta: obspy meta
         """
         if overwrite:
             traces = traces
         else:
             traces = deepcopy(traces)
 
-        station_id = stats.network+'.'+stats.station
+        station_id = meta.network+'.'+meta.station
 
         #
         # part 1: filter traces
@@ -194,18 +197,26 @@ class process_data(object):
         # part 2: determine phase picks
         #
         if station_id not in self._picks:
-            meta = traces[0].meta
-            origin_time = float(meta.starttime)
+            picks = self._picks[station_id]
 
-            if pick_type=='from_sac_headers':
+            if self.pick_type=='from_sac_headers':
                 sac_headers = meta.sac
-                self._picks.P = sac_headers.t5
-                self._picks.S = sac_heasers.t6
+                picks.P = sac_headers.t5
+                picks.S = sac_headers.t6
 
-            elif pick_type=='from_fk_database':
-                self._fk_database
 
-            elif pick_type=='from_weight_file':
+            elif self.pick_type=='from_fk_database':
+                sac_headers = obspy.read('%s/%s_%s/%s.grn.0' %
+                    (self._fk_database,
+                     self._fk_model,
+                     str(int(meta.catalog_depth/1000.)),
+                     str(int(meta.catalog_distance))),
+                    format='sac')[0].meta.sac
+                picks.P = sac_headers.t1
+                picks.S = sac_headers.t2
+
+
+            elif self.pick_type=='from_weight_file':
                 raise NotImplementedError
 
 
@@ -217,17 +228,12 @@ class process_data(object):
         # station_id. This allows times determined when process_data is called
         # on data to be reused later when process_data is called on synthetics
         if station_id not in self._windows:
+            origin_time = float(traces[0].meta.starttime)
+            picks = self._picks[station_id]
 
             if self.window_type == 'cap_bw':
                 # reproduces CAPUAF body wave window
-                trace = traces[0]
-                sac_headers = trace.stats.sac
-                origin_time = float(trace.stats.starttime)
-
-                # CAPUAF expects the P arrival time to be in t5 header
-                assert 't5' in sac_headers
-
-                t1 = trace.stats.sac.t5 - 0.4*self.window_length
+                t1 = picks.P - 0.4*self.window_length
                 if t1 < 0.: t1 = 0.
                 t2 = t1 + self.window_length
                 t1 += origin_time
@@ -236,14 +242,7 @@ class process_data(object):
 
             elif self.window_type == 'cap_sw':
                 # reproduces CAPUAF surface wave window
-                trace = traces[0]
-                sac_headers = trace.stats.sac
-                origin_time = float(trace.stats.starttime)
-
-                # CAPUAF expects the S arrival time to be in t6 header
-                assert 't6' in sac_headers
-
-                t1 = trace.stats.sac.t6 - 0.3*self.window_length
+                t1 = picks.S - 0.3*self.window_length
                 if t1 < 0.: t1 = 0.
                 t2 = t1 + self.window_length
                 t1 += origin_time
@@ -272,7 +271,7 @@ class process_data(object):
                 id = traces.id
 
                 for trace in traces:
-                    component = trace.stats.channel[-1].upper()
+                    component = trace.meta.channel[-1].upper()
 
                     if id not in self.weights: 
                         trace.weight = 0.
@@ -290,7 +289,7 @@ class process_data(object):
                 id = traces.id
 
                 for trace in traces:
-                    component = trace.stats.channel[-1].upper()
+                    component = trace.meta.channel[-1].upper()
 
                     if id not in self.weights: 
                         trace.weight = 0.
