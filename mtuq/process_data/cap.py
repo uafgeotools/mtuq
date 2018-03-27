@@ -5,7 +5,7 @@ from copy import deepcopy
 from os.path import exists, join
 from obspy.geodetics import kilometers2degrees as km2deg
 from mtuq.util.signal import cut
-from mtuq.util.util import parse_cap_weight_file, warn
+from mtuq.util.util import AttribDict, parse_cap_weight_file, warn
 
 
 class process_data(object):
@@ -14,6 +14,7 @@ class process_data(object):
 
     Processing data is a two-step procedure
         1) function_handle = process_data(filter_type=..., **filter_parameters, 
+                                          pick_type=...,   **pick_parameters,
                                           window_type=..., **window_parameters,
                                           weight_type=..., **weight_parameters)
 
@@ -29,6 +30,7 @@ class process_data(object):
                  filter_type=None,
                  window_type=None,
                  weight_type=None,
+                 phase_type=None,
                  **parameters):
 
         """ Checks data processing parameters
@@ -83,32 +85,45 @@ class process_data(object):
 
 
         #
+        # check pick parameters
+        #
+        if pick_type==None:
+            raise Exception
+
+        elif pick_type=='from_sac_headers':
+            pass
+
+        elif pick_type=='from_fk_database':
+            assert 'fk_database' in parameters
+            self._fk_database = parameters['fk_database']
+
+        elif pick_type=='from_weight_file':
+            assert 'weight_file' in parameters
+            assert exists(parameters['weight_file'])
+            self.weights = parse_cap_weight_file(parameters['weight_file'])
+
+        self.pick_type = pick_type
+        self._picks = AttribDict()
+
+
+        #
         # check window parameters
         #
         if window_type==None:
             warn('No window_type selected.')
 
-        elif window_type == 'cap_bw':
+        elif window_type == 'body_waves':
             assert 'window_length' in parameters
 
-        elif window_type == 'cap_sw':
+        elif window_type == 'surface_waves':
             assert 'window_length' in parameters
-
-        elif window_type == 'taup_bw':
-            assert 'window_length' in parameters
-
-            assert 'taup_model' in parameters
-            self.taup_model = parameters['taup_model']
-
-            assert 'taup_phase' in parameters
-            self.taup_phase = taup_phase['taup_phase']
 
         else:
              raise ValueError('Bad parameter: window_type')
 
         self.window_type = window_type
         self.window_length = parameters['window_length']
-        self._windows = {}
+        self._windows = AttribDict()
 
 
         #
@@ -176,7 +191,26 @@ class process_data(object):
                           freq=self.freq)
 
         #
-        # part 2: determine window start and end times
+        # part 2: determine phase picks
+        #
+        if station_id not in self._picks:
+            meta = traces[0].meta
+            origin_time = float(meta.starttime)
+
+            if pick_type=='from_sac_headers':
+                sac_headers = meta.sac
+                self._picks.P = sac_headers.t5
+                self._picks.S = sac_heasers.t6
+
+            elif pick_type=='from_fk_database':
+                self._fk_database
+
+            elif pick_type=='from_weight_file':
+                raise NotImplementedError
+
+
+        #
+        # part 3: determine window start and end times
         #
 
         # Start and end times will be stored in a dictionary indexed by 
@@ -229,7 +263,7 @@ class process_data(object):
 
 
         #
-        # part 3: determine weights
+        # part 4: determine weights
         #
 
         if self.weight_type == 'cap_bw':
