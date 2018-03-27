@@ -78,7 +78,7 @@ class DatasetBase(object):
 
 
     def remove(self, id):
-        index = self._get_index[id]
+        index = self._get_index(id)
         self.__list__.pop(index)
 
 
