@@ -25,7 +25,7 @@ class Dataset(DatasetBase):
     def get_origin(self, event_name=None):
         """ Extract event information from SAC metadata
         """
-        sac_headers = self[0][0].stats.sac
+        sac_headers = self[0][0].meta.sac
 
         # location
         try:
@@ -102,23 +102,34 @@ class Dataset(DatasetBase):
                 # if hypocenter is included as an inversion parameter, then we 
                 # cannot rely on these sac metadata fields, which are likely based
                 # on catalog locations or other preliminary information
-                event_latitude = stats.sac.evla
-                event_longitude = stats.sac.evlo
-                distance, azimuth, backazimuth = obspy.geodetics.gps2dist_azimuth(
+                event_latitude = station.sac.evla
+                event_longitude = station.sac.evlo
+                event_depth = station.sac.evdp
+
+                station.update({
+                    'catalog_latitude': event_latitude,
+                    'catalog_longitude': event_longitude,
+                    'catalog_depth': event_depth * 1000.0})
+
+            except:
+                print("Could not determine event location from SAC headers.")
+
+
+            try:
+                origin = self.get_origin()
+                distance, azimuth, back_azimuth = obspy.geodetics.gps2dist_azimuth(
                     station.latitude,
                     station.longitude,
                     origin.latitude,
                     origin.longitude)
 
                 station.update({
-                    'catalog_latitude': event_latitude,
-                    'catalog_longitude': event_longitude,
-                    'catalog_distance': distance,
+                    'catalog_distance': distance/1000.,
                     'catalog_azimuth': azimuth,
                     'catalog_backazimuth': back_azimuth})
 
             except:
-                warn("Could not determine event location from SAC headers.")
+                print("Could not determine event depth from SAC headers.")
 
             station.id = '.'.join((
                 station.network,
