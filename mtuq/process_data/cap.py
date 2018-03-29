@@ -232,7 +232,7 @@ class process_data(object):
         # station_id. This allows times determined when process_data is called
         # on data to be reused later when process_data is called on synthetics
         if station_id not in self._windows:
-            origin_time = float(traces[0].meta.starttime)
+            origin_time = float(meta.catalog_origin_time)
             picks = self._picks[station_id]
 
             if self.window_type == 'cap_bw':
@@ -280,9 +280,9 @@ class process_data(object):
                     if id not in self.weights: 
                         trace.weight = 0.
                     elif component=='Z':
-                        trace.weight = self.weights[id][2]
+                        trace.weight = self.weights[id][1]
                     elif component=='R':
-                        trace.weight = self.weights[id][3]
+                        trace.weight = self.weights[id][2]
                     else:
                         trace.weight = 0.
 
@@ -298,11 +298,11 @@ class process_data(object):
                     if id not in self.weights: 
                         trace.weight = 0.
                     elif component=='Z':
-                        trace.weight = self.weights[id][4]
+                        trace.weight = self.weights[id][3]
                     elif component=='R':
-                        trace.weight = self.weights[id][5]
+                        trace.weight = self.weights[id][4]
                     elif component=='T':
-                        trace.weight = self.weights[id][6]
+                        trace.weight = self.weights[id][5]
                     else:
                         trace.weight = 0.
 
