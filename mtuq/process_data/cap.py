@@ -194,8 +194,12 @@ class process_data(object):
                           freq=self.freq)
 
         #
-        # part 2: determine phase picks
+        # part 2: determine phase arrival times
         #
+
+        # Phase arrival times will be stored in a dictionary indexed by 
+        # station_id. This allows times determined when process_data is called
+        # on data to be reused later when process_data is called on synthetics
         if station_id not in self._picks:
             picks = self._picks[station_id]
 
