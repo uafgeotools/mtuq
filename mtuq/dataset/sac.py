@@ -69,6 +69,11 @@ class Dataset(DatasetBase):
     def get_stations(self):
         """ Extract station information from SAC metadata
         """
+        try:
+            origin = self.get_origin()
+        except:
+            origin = None
+
         stations = []
         for data in self:
             station = self._copy(data[0].stats)
@@ -116,7 +121,6 @@ class Dataset(DatasetBase):
 
 
             try:
-                origin = self.get_origin()
                 distance, azimuth, back_azimuth = obspy.geodetics.gps2dist_azimuth(
                     station.latitude,
                     station.longitude,
@@ -129,7 +133,16 @@ class Dataset(DatasetBase):
                     'catalog_backazimuth': back_azimuth})
 
             except:
-                print("Could not determine event depth from SAC headers.")
+                print("Could not determine event distance.")
+
+
+            try:
+                station.update({
+                    'catalog_origin_time': origin.time})
+
+            except:
+                print("Could not determine origin time.")
+
 
             station.id = '.'.join((
                 station.network,
