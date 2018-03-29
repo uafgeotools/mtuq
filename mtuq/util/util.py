@@ -2,6 +2,8 @@
 from os.path import abspath, join
 import csv
 import time
+import numpy as np
+import warnings
 
 
 class AttribDict(dict):
@@ -18,6 +20,12 @@ class Struct(dict):
     def __init__(self, *args, **kwargs):
         super(Struct, self).__init__(*args, **kwargs)
         self.__dict__ = self
+
+
+def asarray(x):
+    """ Numpy array typecast
+    """
+    return np.array(x, dtype=np.float64, ndmin=1, copy=False)
 
 
 def is_mpi_env():
@@ -38,6 +46,8 @@ def is_mpi_env():
 
 
 def iterable(arg):
+    """ Simple list typecast
+    """
     if not isinstance(arg, (list, tuple)):
         return [arg]
     else:
@@ -98,6 +108,18 @@ def timer_mpi(func):
 
 
 def root():
+    """ Returns MTUQ root directory
+    """
     import mtuq
     return abspath(join(mtuq.__path__[0], '..'))
+
+
+def warn(*args, **kwargs):
+    try:
+        from mpi4py import MPI
+        comm = MPI_WORLD.COMM
+        if comm.rank==0:
+           warnings.warn(*args, **kwargs)
+    except:
+       warnings.warn(*args, **kwargs)
 

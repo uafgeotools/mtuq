@@ -30,8 +30,8 @@ class Wavelet(object):
         return y
 
 
-    def convolve(self, y, dt, mode=1):
-        """ Convolves vector with given wavelet
+    def convolve_array(self, y, dt, mode=1):
+        """ Convolves numpy array with given wavelet
         """
         warnings.warn('wavelet.convolve not yet implemented')
         return y
@@ -58,7 +58,7 @@ class Wavelet(object):
              dt = trace.stats.delta
          except:
              raise Exception
-         trace.data = self.convolve(y, dt)
+         trace.data = self.convolve_array(y, dt)
          return trace
 
 

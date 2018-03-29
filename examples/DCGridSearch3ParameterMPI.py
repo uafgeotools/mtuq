@@ -151,14 +151,14 @@ if __name__=='__main__':
         print 'Saving results...\n'
         results = np.concatenate(results)
         grid.save(event_name+'.h5', {'misfit': results})
-        mt = grid.get(results.argmin())
+        best_mt = grid.get(results.argmin())
 
 
     if comm.rank==0:
         print 'Plotting waveforms...\n'
         synthetics = {}
         for key in ['body_waves', 'surface_waves']:
-            synthetics[key] = greens[key].get_synthetics(mt)
+            synthetics[key] = greens[key].get_synthetics(best_mt)
         cap_plot(event_name+'.png', data, synthetics, paths.weights)
 
 

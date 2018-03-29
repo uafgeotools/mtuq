@@ -136,6 +136,9 @@ class GreensTensor(GreensTensorBase):
             self._synthetics +=\
                 Trace(np.zeros(self.station.npts), self.station)
 
+        self._synthetics.id = self.station.id
+
+
 
     def _update_time_sampling(self, processed_data):
         """ 

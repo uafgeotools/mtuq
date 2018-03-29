@@ -29,7 +29,7 @@ class DatasetBase(object):
     def apply(self, function, *args, **kwargs):
         """
         Returns the result of applying a function to each Stream in the 
-        list. Similar to the behavior of the python built-in "apply".
+        dataset. Similar to the behavior of the python built-in "apply".
         """
         processed = self.__class__(id=self.id)
         for stream in self.__list__:
@@ -40,7 +40,7 @@ class DatasetBase(object):
     def map(self, function, *sequences):
         """
         Returns the result of applying a function to each Stream in the
-        list. If one or more optional sequences are given, the function is 
+        dataset. If one or more optional sequences are given, the function is 
         called with an argument list consisting of the corresponding item of
         each sequence. Similar to the behavior of the python built-in "map".
         """
@@ -49,6 +49,18 @@ class DatasetBase(object):
             args = [sequence[_i] for sequence in sequences]
             processed += function(stream, *args)
         return processed
+
+
+    def sort(self, *args, **kwargs):
+        self.__list__.sort(*args, **kwargs)
+
+
+    def sort_by_distance(self, stations, reverse=False):
+        raise NotImplementedError
+
+
+    def sort_by_azimuth(self, stations, reverse=False):
+        raise NotImplementedError
 
 
     # because the way metadata are organized in obspy streams depends on file
@@ -78,7 +90,7 @@ class DatasetBase(object):
 
 
     def remove(self, id):
-        index = self._get_index[id]
+        index = self._get_index(id)
         self.__list__.pop(index)
 
 

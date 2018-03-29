@@ -2,6 +2,7 @@
 import obspy
 import numpy as np
 
+from mtuq.dataset.base import DatasetBase
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import convolve
 
@@ -61,7 +62,18 @@ class GreensTensorBase(object):
         given Green's tensor
         """
         return self.apply(wavelet.convolve_stream)
-        
+
+
+    def sort(self, *args, **kwargs):
+        self.__list__.sort(*args, **kwargs)
+
+
+    def sort_by_distance(self, stations, reverse=False):
+        raise NotImplementedError
+
+
+    def sort_by_azimuth(self, stations, reverse=False):
+        raise NotImplementedError
 
 
 class GreensTensorList(object):
@@ -80,9 +92,9 @@ class GreensTensorList(object):
         tensor mt, and each each individaul stream corresponds to an
         individual station
         """
-        synthetics = []
+        synthetics = DatasetBase()
         for greens_tensor in self.__list__:
-            synthetics += [greens_tensor.get_synthetics(mt)]
+            synthetics += greens_tensor.get_synthetics(mt)
         return synthetics
 
 
@@ -133,7 +145,7 @@ class GreensTensorList(object):
 
 
     def remove(self, id):
-        index = self._get_index[id]
+        index = self._get_index(id)
         self.__list__.pop(index)
 
 

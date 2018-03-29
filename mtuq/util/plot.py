@@ -6,21 +6,36 @@ from collections import defaultdict
 from mtuq.util.util import parse_cap_weight_file
 
 
-def cap_plot(filename, data, synthetics, mt, weight_file=None):
+def cap_plot(filename, data, synthetics, weight_file=None, discard_unused=True):
     """ Creates cap-style plot
     """
-    # how many rows, columns?
-    nc = 5
-    _, nr = shape(data)
-
-    figsize = (16,1.4*nr)
-    pyplot.figure(figsize=figsize)
-
     # load cap-style weights
     if weight_file:
         weights = parse_cap_weight_file(weight_file)
     else:
         weights = None
+
+
+    # discard unused waveforms
+    if discard_unused:
+        for key in ['body_waves', 'surface_waves']:
+            stations = data[key].get_stations()
+            for station in stations:
+                id = station.id
+                if id not in weights:
+                    data[key].remove(id)
+                    synthetics[key].remove(id)
+
+
+    # how many rows, columns?
+    nc = 5
+    _, nr = shape(data)
+
+
+
+    # create figure
+    figsize = (16,1.4*nr)
+    pyplot.figure(figsize=figsize)
 
     ir = 0
     for d1,s1,d2,s2 in zip(
