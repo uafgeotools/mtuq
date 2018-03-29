@@ -62,7 +62,18 @@ class GreensTensorBase(object):
         given Green's tensor
         """
         return self.apply(wavelet.convolve_stream)
-        
+
+
+    def sort(self, *args, **kwargs):
+        self.__list__.sort(*args, **kwargs)
+
+
+    def sort_by_distance(self, stations, reverse=False):
+        raise NotImplementedError
+
+
+    def sort_by_azimuth(self, stations, reverse=False):
+        raise NotImplementedError
 
 
 class GreensTensorList(object):

@@ -51,6 +51,18 @@ class DatasetBase(object):
         return processed
 
 
+    def sort(self, *args, **kwargs):
+        self.__list__.sort(*args, **kwargs)
+
+
+    def sort_by_distance(self, stations, reverse=False):
+        raise NotImplementedError
+
+
+    def sort_by_azimuth(self, stations, reverse=False):
+        raise NotImplementedError
+
+
     # because the way metadata are organized in obspy streams depends on file
     # format, the next two methods are deferred to the subclass
     def get_origin(self):
