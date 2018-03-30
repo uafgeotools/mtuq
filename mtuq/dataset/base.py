@@ -13,14 +13,16 @@ class DatasetBase(object):
         for example, see mtuq.dataset.sac.reader
     """
 
-    def __init__(self, data=None, id=None):
-        self.__list__ = []
+    def __init__(self, streams=None, id=None):
+        # typically the id is the event name, event origin time, or some other
+        # attribute shared by all streams in the dataset
         self.id = id
 
-        if not data:
+        if not streams:
+            # return an empty container; streams can be added later on
             return
 
-        for stream in data:
+        for stream in streams:
             self.__add__(stream)
 
 

@@ -180,7 +180,10 @@ class Generator(GeneratorBase):
         if not model:
             model = basename(path)
 
+        # path to fk directory tree
         self.path = path
+
+        # model from which fk Green's functions were computed
         self.model = model
 
 
@@ -191,20 +194,18 @@ class Generator(GeneratorBase):
         """
         stream = Stream()
 
-        # event information
-        dep = str(int(origin.depth/1000.))
-        dst = str(int(station.distance))
-
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
         t2_new = float(station.endtime)
         dt_new = float(station.delta)
 
+        dep = str(int(origin.depth/1000.))
+        dst = str(int(station.distance))
+
         # see fk documentation for indexing scheme details 
         for ext in ['0','3','6','a',  # z
                     '1','4','7','b',  # r
                     '2','5','8','c']: # t
-            # read Green's function
             trace = obspy.read('%s/%s_%s/%s.grn.%s' %
                 (self.path, self.model, dep, dst, ext),
                 format='sac')[0]
