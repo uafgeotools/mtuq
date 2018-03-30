@@ -8,7 +8,7 @@ from os.path import basename, exists
 
 from obspy.core import Stream, Trace
 from mtuq.greens_tensor.base import GreensTensorBase, GeneratorBase, GreensTensorList
-from mtuq.util.signal import check_time_sampling, resample
+from mtuq.util.signal import resample
 
 
 # Green's functions are already rotatated into vertical, radial, and
@@ -36,23 +36,9 @@ class GreensTensor(GreensTensorBase):
     Elastic Green's tensor object
     """
     def __init__(self, stream, station, origin):
-        assert isinstance(stream, obspy.Stream), ErrorMessage
-        assert len(stream)==N*len(COMPONENTS), ErrorMessage
-        assert hasattr(station, 'id')
-
-        self.greens_tensor = stream
-        self.greens_tensor.station = self.station = station
-        self.greens_tensor.origin = self.origin = origin
-        self.greens_tensor.id = self.id = station.id
-
-        assert check_time_sampling(stream), NotImplementedError(
-            "Time sampling differs from trace to trace.")
-        self.greens_tensor.npts = stream[0].stats.npts
-        self.greens_tensor.delta = stream[0].stats.delta
-        self.greens_tensor.starttime = stream[0].stats.starttime
-        self.greens_tensor.endttime = stream[0].stats.endtime
-
-        self._synthetics = []
+        assert isinstance(stream, obspy.Stream), ValueError(ErrorMessage)
+        assert len(stream)==N*len(COMPONENTS), ValueError(ErrorMessage)
+        super(GreensTensor, self).__init__(stream, station, origin)
 
 
     def get_synthetics(self, mt):
@@ -60,7 +46,7 @@ class GreensTensor(GreensTensorBase):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
-        if not self._synthetics:
+        if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
         for _i, channel in enumerate(self.station.channels):
@@ -79,23 +65,6 @@ class GreensTensor(GreensTensorBase):
                 s += weight*G[_j].data
 
         return self._synthetics
-
-
-    def apply(self, function, *args, **kwargs):
-        """
-        Applies a signal processing function to all Green's functions
-        """
-        processed = function(self.greens_tensor, *args, **kwargs)
-
-        # did the time sampling change? 
-        # if so, update metadata
-        if self.greens_tensor.npts!=processed[0].stats.npts:
-            processed.npts = processed[0].stats.npts
-            processed.delta = processed[0].stats.delta
-            processed.starttime = processed[0].stats.starttime
-            processed.endtime = processed[0].stats.endtime
-
-        return GreensTensor(processed, self.station, self.origin)
 
 
     def _calculate_weights(self, mt, component):
@@ -146,7 +115,7 @@ class GreensTensor(GreensTensorBase):
         self._synthetics = Stream()
         for channel in self.station.channels:
             self._synthetics +=\
-                Trace(np.zeros(self.greens_tensor.npts), self.station)
+                Trace(np.zeros(self.greens_tensor[0].stats.npts), self.station)
         self._synthetics.id = self.greens_tensor.id
 
 

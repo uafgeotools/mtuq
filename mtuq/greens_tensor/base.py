@@ -4,7 +4,7 @@ import numpy as np
 
 from mtuq.dataset.base import DatasetBase
 from mtuq.util.geodetics import distance_azimuth
-from mtuq.util.signal import convolve
+from mtuq.util.signal import check_time_sampling, convolve
 
 
 class GreensTensorBase(object):
@@ -18,11 +18,24 @@ class GreensTensorBase(object):
     def __init__(self, stream, station, origin):
         """
         Normally, all time series required to describe the response at a given
-        station to a source at a given origin should be contained in "stream".
-        Further details regarding how this information is represented are 
-        deferred to the subclass
+        station to a source at a given origin should be contained in single 
+        obspy stream. Certain Green's functions libraries may have
+        
         """
-        raise NotImplementedError("Must be implemented by subclass")
+        assert isinstance(stream, obspy.Stream), ValueError(
+            "An obspy stream must be provided containg multiple traces, "
+            "each representing an independing Green's tensor element")
+
+        assert hasattr(station, 'id'), ValueError(
+            "Station must have a unique identifier")
+
+        assert check_time_sampling(stream), NotImplementedError(
+            "Time sampling differs from trace to trace.")
+
+        self.greens_tensor = stream
+        self.greens_tensor.station = self.station = station
+        self.greens_tensor.origin = self.origin = origin
+        self.greens_tensor.id = self.id = station.id
 
 
     def get_synthetics(self, mt):
@@ -38,7 +51,8 @@ class GreensTensorBase(object):
         Applies a function to all time series associated with the given 
         Green's tensor
         """
-        raise NotImplementedError("Must be implemented by subclass")
+        return self.__class__(function(self.greens_tensor, *args, **kwargs),
+            self.station, self.origin)
 
 
     def convolve(self, wavelet):
