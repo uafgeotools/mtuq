@@ -26,7 +26,9 @@ N = 4
 # If a GreensTensor is created with the wrong input arguments, this error
 # message is displayed.  In practice this is rarely encountered, since
 # Generator normally does all the work
-ErrorMessage =("Traces must be given as an obspy stream")
+ErrorMessage =("An obspy stream must be provided containting 12 traces, each"
+    "representing an indepedent Green's tensor element. The order of traces "
+    "must match the scheme used by fk. See fk documentation for details.")
 
 
 class GreensTensor(GreensTensorBase):
@@ -64,7 +66,7 @@ class GreensTensor(GreensTensorBase):
         for _i, channel in enumerate(self.station.channels):
             component = channel[-1].lower()
             if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in Z, R, or T")
+                raise Exception("Channels are expected to end in Z/R/T")
 
             G = self.greens_tensor
             s = self._synthetics[_i].data
@@ -85,7 +87,7 @@ class GreensTensor(GreensTensorBase):
         """
         processed = function(self.greens_tensor, *args, **kwargs)
 
-        # did time sampling change? 
+        # did the time sampling change? 
         # if so, update metadata
         if self.greens_tensor.npts!=processed[0].stats.npts:
             processed.npts = processed[0].stats.npts
@@ -113,13 +115,7 @@ class GreensTensor(GreensTensorBase):
        saz2 = 2.*saz*caz
        caz2 = caz**2.-saz**2.
 
-       if component in ['z']:
-           indices = [0,3,6,9]
-       elif component in ['r']:
-           indices = [1,4,7,10]
-       elif component in ['t']:
-           indices = [2,5,8,11]
-
+       # what weights are used in the linear combination?
        weights = []
        if component in ['r','z']:
            weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
@@ -131,6 +127,14 @@ class GreensTensor(GreensTensorBase):
            weights += [-0.5*saz2*(mt[0] - mt[1]) + caz2*mt[3]]
            weights += [-saz*mt[4] + caz*mt[5]]
            weights += [0.]
+
+       # what Green's tensor elements do the weights correspond to?
+       if component in ['z']:
+           indices = [0, 1, 2, 3]
+       elif component in ['r']:
+           indices = [4, 5, 6, 7]
+       elif component in ['t']:
+           indices = [8, 9, 10, 11]
 
        return zip(indices, weights)
 

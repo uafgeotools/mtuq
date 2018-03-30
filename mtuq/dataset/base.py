@@ -92,9 +92,7 @@ class DatasetBase(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-
-    # the next two methods, dealing with adding and removing streams from a
-    # dataset, are closely assoicated with the class creation
+    # the next method is called repeatedly during class creation
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)

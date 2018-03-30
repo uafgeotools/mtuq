@@ -15,10 +15,10 @@ class GreensTensorBase(object):
         elastic Green's tensor.
     """
 
-    def __init__(self, data):
+    def __init__(self, stream):
         """
         Normally, all time series required to describe the response at a given
-        station to a source at a given origin should be contained in "data".
+        station to a source at a given origin should be contained in "stream".
         Further details regarding how this information is represented are 
         deferred to the subclass
         """
