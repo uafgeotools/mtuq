@@ -24,9 +24,9 @@ class process_data(object):
         2) processed_data = function_handle(data)
 
     In the first step, the user supplies a set of filtering, windowing,
-    and weighting parameters.  In the second step, the user supplies a
-    single-station obspy stream as input and receives a processed stream
-    as output.
+    phase-picking, and weighting parameters.  In the second step, a
+    single-station obspy stream is given as input and a processed stream
+    returned as output.
     """
 
     def __init__(self,
@@ -158,8 +158,6 @@ class process_data(object):
         input traces: all availables traces for a given station
         type traces: obspy Stream or MTUQ GreensTensor
         """
-        # a unique identifer is required for each station, obspy streams or
-        # or MTUQ Datasets will automatically have this attribute
         if not hasattr(traces, 'id'):
             raise Exception("Missing station identifier")
         id = traces.id
@@ -171,7 +169,7 @@ class process_data(object):
             raise Exception("Missing station metadata")
         meta = traces.station
 
-        # carry out data processing operations in-place?
+        # overwrite existing data?
         if overwrite:
             traces = traces
         else:
