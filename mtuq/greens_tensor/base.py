@@ -19,7 +19,7 @@ class GreensTensorBase(object):
         """
         Normally, all time series required to describe the response at a given
         station to a source at a given origin should be contained in single 
-        obspy stream. Certain Green's functions libraries may have
+        obspy stream. Certain subclasses may override this behavior
         
         """
         assert isinstance(stream, obspy.Stream), ValueError(
@@ -94,14 +94,25 @@ class GreensTensorList(object):
         Very similar to an MTUQ Dataset, except rather observed data, holds
         synthetic Green's tensors
     """
-    def __init__(self):
+    def __init__(self, greens_tensors=None, id=None):
+        # typically the id is the event name, event origin time, or some other
+        # attribute shared by all GreensTensors
+        self.id = id
+
         self.__list__ = []
+
+        if not greens_tensors:
+            # return an empty container, GreensTensors can be added later
+            return
+
+        for greens_tensor in greens_tensors:
+            self.__add__(greens_tensors)
 
 
     def get_synthetics(self, mt):
         """
         Returns an MTUQ Dataset in which all streams correspond to the moment
-        tensor mt, and each each individaul stream corresponds to an
+        tensor mt, and each each individual stream corresponds to an
         individual station
         """
         synthetics = DatasetBase()

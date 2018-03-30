@@ -22,7 +22,7 @@ class DatasetBase(object):
         self.__list__ = []
 
         if not streams:
-            # return an empty container; streams can be added later on
+            # return an empty container, streams can be added later
             return
 
         for stream in streams:
