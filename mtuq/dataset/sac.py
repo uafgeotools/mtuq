@@ -9,11 +9,10 @@ import obspy
 
 from obspy.core import Stream
 from obspy.core.event import Origin
-from obspy.core.util.attribdict import AttribDict
 from obspy.geodetics import gps2dist_azimuth
 from mtuq.dataset.base import DatasetBase
 from mtuq.util.signal import check_time_sampling
-from mtuq.util.util import warn
+from mtuq.util.util import AttribDict, warn
 
 
 class Dataset(DatasetBase):
@@ -22,12 +21,12 @@ class Dataset(DatasetBase):
         Adds SAC-specific metadata extraction methods
     """
 
-    def get_origin(self, event_name=None):
-        """ Extract event information from SAC metadata
+    def get_origin(self, index=-1, event_name=None):
+        """ Extracts event metadata from SAC headers
         """
-        sac_headers = self[0][0].meta.sac
+        data = self.__list__[index]
+        sac_headers = data[0].meta.sac
 
-        # location
         try:
             latitude = sac_headers.evla
             longitude = sac_headers.evlo
@@ -37,7 +36,6 @@ class Dataset(DatasetBase):
             latitude = np.nan
             longitudue = np.nan
 
-        # depth
         try:
             depth = sac_headers.evdp
         except (TypeError, ValueError):
@@ -45,7 +43,6 @@ class Dataset(DatasetBase):
                  "Setting depth to nan...")
             depth = 0.
 
-        # origin time
         try:
             origin_time = obspy.UTCDateTime(
                 year=sac_headers.nzyear,
@@ -66,98 +63,98 @@ class Dataset(DatasetBase):
         )
 
 
-    def get_stations(self):
-        """ Extract station information from SAC metadata
+    def get_station(self, index=-1):
+        """ Extracts station metadata from SAC headers
         """
+        data = self.__list__[index]
+        sac_headers = data[0].meta.sac
+
+        meta = AttribDict({
+            'network': data[0].meta.network,
+            'station': data[0].meta.station,
+            'location': data[0].meta.location,
+            'starttime': data[0].meta.starttime,
+            'endtime': data[0].meta.endtime,
+            'npts': data[0].meta.npts,
+            'delta': data[0].meta.delta,
+            'id': '.'.join([
+                data[0].meta.network,
+                data[0].meta.station,
+                data[0].meta.location])})
+
         try:
-            origin = self.get_origin()
+            origin = self.get_origin(index)
         except:
             origin = None
 
-        stations = []
-        for data in self:
-            station = self._copy(data[0].stats)
-          
-            try:
-                station.channels = []
-                for trace in data:
-                    station.channels += [trace.stats.channel]
-            except:
-                raise Exception(
-                    "Could not determine channel names from obspy stream.")
+        try:
+            meta.channels = []
+            for trace in data:
+                meta.channels += [trace.stats.channel]
+        except:
+            raise Exception(
+                "Could not determine channel names from obspy stream.")
 
-            try:
-                station_latitude = station.sac.stla
-                station_longitude = station.sac.stlo
-                station.update({
-                    'latitude': station_latitude,
-                    'longitude': station_longitude})
-            except:
-                raise Exception(
-                    "Could not determine station location from SAC headers.")
+        try:
+            station_latitude = sac_headers.stla
+            station_longitude = sac_headers.stlo
+            meta.update({
+                'latitude': station_latitude,
+                'longitude': station_longitude})
+        except:
+            raise Exception(
+                "Could not determine station location from SAC headers.")
 
-            try:
-                station.update({
-                    'station_elevation': station.sac.stel,
-                    'station_depth': station.sac.stdp})
-            except:
-                pass
+        try:
+            meta.update({
+                'station_elevation': sac_headers.stel,
+                'station_depth': sac_headers.stdp})
+        except:
+            pass
 
-            try:
-                # if hypocenter is included as an inversion parameter, then we 
-                # cannot rely on these sac metadata fields, which are likely based
-                # on catalog locations or other preliminary information
-                event_latitude = station.sac.evla
-                event_longitude = station.sac.evlo
-                event_depth = station.sac.evdp
+        try:
+            # if hypocenter is included as an inversion parameter, then we 
+            # cannot rely on these sac metadata fields, which are likely based
+            # on catalog locations or other preliminary information
+            event_latitude = sac_headers.evla
+            event_longitude = sac_headers.evlo
+            event_depth = sac_headers.evdp
 
-                station.update({
-                    'catalog_latitude': event_latitude,
-                    'catalog_longitude': event_longitude,
-                    'catalog_depth': event_depth * 1000.0})
+            meta.update({
+                'catalog_latitude': event_latitude,
+                'catalog_longitude': event_longitude,
+                'catalog_depth': event_depth * 1000.0})
 
-            except:
-                print("Could not determine event location from SAC headers.")
+        except:
+            print("Could not determine event location from SAC headers.")
 
 
-            try:
-                distance, azimuth, back_azimuth = obspy.geodetics.gps2dist_azimuth(
-                    station.latitude,
-                    station.longitude,
-                    origin.latitude,
-                    origin.longitude)
+        try:
+            distance, azimuth, back_azimuth = obspy.geodetics.gps2dist_azimuth(
+                station_latitude,
+                station_longitude,
+                event_latitude,
+                event_longitude)
 
-                station.update({
-                    'catalog_distance': distance/1000.,
-                    'catalog_azimuth': azimuth,
-                    'catalog_backazimuth': back_azimuth})
+            meta.update({
+                'catalog_distance': distance/1000.,
+                'catalog_azimuth': azimuth,
+                'catalog_backazimuth': back_azimuth})
 
-            except:
-                print("Could not determine event distance.")
-
-
-            try:
-                station.update({
-                    'catalog_origin_time': origin.time})
-
-            except:
-                print("Could not determine origin time.")
+        except:
+            print("Could not determine event distance.")
 
 
-            station.id = '.'.join((
-                station.network,
-                station.station,
-                station.location))
+        try:
+            meta.update({
+                'catalog_origin_time': origin.time})
 
-            stations += [station]
-
-        return stations
+        except:
+            print("Could not determine origin time.")
 
 
-    def _copy(self, stats):
-        stats = deepcopy(stats)
-        stats.channel = None
-        return stats
+        return meta
+
 
 
 def reader(path, wildcard='*.sac', event_name=None, verbose=False):

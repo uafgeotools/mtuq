@@ -15,8 +15,6 @@ class DatasetBase(object):
 
     def __init__(self, data=None, id=None):
         self.__list__ = []
-
-        # event name or other unique identifier
         self.id = id
 
         if not data:
@@ -26,6 +24,8 @@ class DatasetBase(object):
             self.__add__(stream)
 
 
+    # the next two methods can be used to apply signal processing operations or
+    # other functions to the dataset
     def apply(self, function, *args, **kwargs):
         """
         Returns the result of applying a function to each Stream in the 
@@ -51,16 +51,29 @@ class DatasetBase(object):
         return processed
 
 
-    def sort(self, *args, **kwargs):
-        self.__list__.sort(*args, **kwargs)
+    # the next three methods can be used to the sort the dataset by distance,
+    # azmimuth, or any other user-supplied function
+    def sort_by_distance(self, reverse=False):
+        """ 
+        Sorts the dataset in-place by hypocentral distance
+        """
+        self.sort_by_function(lambda stream: stream.station.catalog_distance,
+            reverse=reverse)
 
 
-    def sort_by_distance(self, stations, reverse=False):
-        raise NotImplementedError
+    def sort_by_azimuth(self, reverse=False):
+        """
+        Sorts the dataset in-place by hypocentral azimuth
+        """
+        self.sort_by_function(lambda stream: stream.station.catalog_azimuth,
+            reverse=reverse)
 
 
-    def sort_by_azimuth(self, stations, reverse=False):
-        raise NotImplementedError
+    def sort_by_function(self, function, reverse=False):
+        """ 
+        Sorts the dataset in-place using the python built-in "sort"
+        """
+        self.__list__.sort(key=function, reverse=reverse)
 
 
     # because the way metadata are organized in obspy streams depends on file
@@ -79,13 +92,17 @@ class DatasetBase(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    # the remaining methods deal with indexing and iteration over the obspy
-    # streams that comprise the dataset
+
+    # the next two methods, dealing with adding and removing streams from a
+    # dataset, are closely assoicated with the class creation
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
-        stream.tag = 'data'
+
         self.__list__.append(stream)
+        stream.station = self.get_station()
+        stream.catalog_origin = self.get_origin()
+        stream.tag = 'data'
         return self
 
 
@@ -94,11 +111,11 @@ class DatasetBase(object):
         self.__list__.pop(index)
 
 
+    # the remaining methods deal with indexing and iteration over the dataset
     def _get_index(self, id):
         for index, stream in enumerate(self.__list__):
             if id==stream.id:
                 return index
-
 
     def __iter__(self):
         return self.__list__.__iter__()
