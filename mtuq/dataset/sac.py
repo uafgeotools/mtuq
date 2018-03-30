@@ -21,9 +21,14 @@ class Dataset(DatasetBase):
         Adds SAC-specific metadata extraction methods
     """
 
-    def get_origin(self, index=-1, event_name=None):
+    def get_origin(self, id=None, event_name=None):
         """ Extracts event metadata from SAC headers
         """
+        if id:
+            index = self._get_index(id)
+        else:
+            index = -1
+
         data = self.__list__[index]
         sac_headers = data[0].meta.sac
 
@@ -63,9 +68,14 @@ class Dataset(DatasetBase):
         )
 
 
-    def get_station(self, index=-1):
+    def get_station(self, id=None):
         """ Extracts station metadata from SAC headers
         """
+        if id:
+            index = self._get_index(id)
+        else:
+            index = -1
+
         data = self.__list__[index]
         sac_headers = data[0].meta.sac
 
@@ -73,19 +83,17 @@ class Dataset(DatasetBase):
             'network': data[0].meta.network,
             'station': data[0].meta.station,
             'location': data[0].meta.location,
-            'starttime': data[0].meta.starttime,
-            'endtime': data[0].meta.endtime,
-            'npts': data[0].meta.npts,
-            'delta': data[0].meta.delta,
+            'sac': sac_headers,
             'id': '.'.join([
                 data[0].meta.network,
                 data[0].meta.station,
                 data[0].meta.location])})
 
-        try:
-            origin = self.get_origin(index)
-        except:
-            origin = None
+        meta.update({
+            'starttime': data[0].meta.starttime,
+            'endtime': data[0].meta.endtime,
+            'npts': data[0].meta.npts,
+            'delta': data[0].meta.delta})
 
         try:
             meta.channels = []
@@ -93,7 +101,7 @@ class Dataset(DatasetBase):
                 meta.channels += [trace.stats.channel]
         except:
             raise Exception(
-                "Could not determine channel names from obspy stream.")
+                "Could not determine channel names.")
 
         try:
             station_latitude = sac_headers.stla
@@ -112,18 +120,21 @@ class Dataset(DatasetBase):
         except:
             pass
 
-        try:
-            # if hypocenter is included as an inversion parameter, then we 
-            # cannot rely on these sac metadata fields, which are likely based
-            # on catalog locations or other preliminary information
-            event_latitude = sac_headers.evla
-            event_longitude = sac_headers.evlo
-            event_depth = sac_headers.evdp
 
+        # if hypocenter is included as an inversion parameter, then we 
+        # cannot rely on any of the following metadata, which are likely based
+        # on catalog locations or other preliminary information
+        try:
+            origin = self.get_origin(id)
+        except:
+            origin = None
+
+
+        try:
             meta.update({
-                'catalog_latitude': event_latitude,
-                'catalog_longitude': event_longitude,
-                'catalog_depth': event_depth * 1000.0})
+                'catalog_latitude': origin.latitude,
+                'catalog_longitude': origin.longitude,
+                'catalog_depth': origin.depth})
 
         except:
             print("Could not determine event location from SAC headers.")
@@ -133,8 +144,8 @@ class Dataset(DatasetBase):
             distance, azimuth, back_azimuth = obspy.geodetics.gps2dist_azimuth(
                 station_latitude,
                 station_longitude,
-                event_latitude,
-                event_longitude)
+                origin.latitude,
+                origin.longitude)
 
             meta.update({
                 'catalog_distance': distance/1000.,
@@ -194,6 +205,11 @@ def reader(path, wildcard='*.sac', event_name=None, verbose=False):
     for id, stream in data_sorted.items():
         assert check_time_sampling(stream), NotImplementedError(
             "Time sampling differs from trace to trace.")
+        stream.npts = data[0].meta.npts
+        stream.delta = data[0].meta.delta
+        stream.starttime = data[0].meta.starttime
+        stream.endtime = data[0].meta.endtime
+
         stream.id = id
         dataset += stream
 

@@ -52,12 +52,12 @@ class DatasetBase(object):
 
 
     # the next three methods can be used to the sort the dataset by distance,
-    # azmimuth, or any other user-supplied function
+    # azmimuth, or user-supplied indexing function
     def sort_by_distance(self, reverse=False):
         """ 
         Sorts the dataset in-place by hypocentral distance
         """
-        self.sort_by_function(lambda stream: stream.station.catalog_distance,
+        self.sort_by_function(lambda data: data.station.catalog_distance,
             reverse=reverse)
 
 
@@ -65,7 +65,7 @@ class DatasetBase(object):
         """
         Sorts the dataset in-place by hypocentral azimuth
         """
-        self.sort_by_function(lambda stream: stream.station.catalog_azimuth,
+        self.sort_by_function(lambda data: data.station.catalog_azimuth,
             reverse=reverse)
 
 
@@ -85,7 +85,7 @@ class DatasetBase(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def get_stations(self):
+    def get_station(self):
         """
         Extracts station information from metadata
         """
