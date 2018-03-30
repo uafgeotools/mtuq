@@ -106,7 +106,7 @@ class GreensTensorList(object):
             return
 
         for greens_tensor in greens_tensors:
-            self.__add__(greens_tensors)
+            self.__add__(greens_tensor)
 
 
     def get_synthetics(self, mt):
