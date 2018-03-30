@@ -2,7 +2,7 @@
 import obspy
 import numpy as np
 
-from mtuq.dataset.base import DatasetBase
+from mtuq.dataset.sac import Dataset
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import convolve
 
@@ -15,29 +15,14 @@ class GreensTensorBase(object):
         elastic Green's tensor.
     """
 
-    def __init__(self, data, station, origin):
+    def __init__(self, data):
         """
         Normally, all time series required to describe the response at a given
         station to a source at a given origin should be contained in "data".
         Further details regarding how this information is represented are 
         deferred to the subclass
         """
-        self.data = data
-        self.station = station
-        self.origin = origin
-
-        self.assign_id()
-
-
-    def assign_id(self):
-        """
-        Assigns a unique identifier, in this case based on network and station
-        names, but can be modified by subclass
-        """
-        self.id = '.'.join((
-            self.station.network,
-            self.station.station,
-            self.station.location))
+        raise NotImplementedError("Must be implemented by subclass")
 
 
     def get_synthetics(self, mt):
@@ -92,7 +77,7 @@ class GreensTensorList(object):
         tensor mt, and each each individaul stream corresponds to an
         individual station
         """
-        synthetics = DatasetBase()
+        synthetics = Dataset()
         for greens_tensor in self.__list__:
             synthetics += greens_tensor.get_synthetics(mt)
         return synthetics
@@ -135,8 +120,7 @@ class GreensTensorList(object):
         return processed
 
 
-    # the remaining methods deal with indexing and iteration over the 
-    # the list of GreensTensors
+    # the remaining methods deal with indexing and iteration
     def __add__(self, greens_tensor):
         #assert hasattr(greens_tensor, 'id')
         greens_tensor.tag = 'greens_tensor'
