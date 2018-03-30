@@ -9,10 +9,9 @@ from os.path import basename, join
 from mtuq.grid_search import DCGridRandom, grid_search_mpi
 from mtuq.misfit.cap import misfit
 from mtuq.process_data.cap import process_data
-from mtuq.util.geodetics import cap_rise_time
+from mtuq.util.cap_util import remove_unused_stations, trapezoid_rise_time, Trapezoid
 from mtuq.util.plot import cap_plot
 from mtuq.util.util import AttribDict, root
-from mtuq.util.wavelets import Trapezoid
 
 
 if __name__=='__main__':
@@ -101,7 +100,7 @@ if __name__=='__main__':
         Mw=4.5,
         )
 
-    rise_time = cap_rise_time(Mw=4.5)
+    rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
 
 
@@ -112,14 +111,18 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Reading data...\n'
         data = mtuq.dataset.sac.reader(paths.data, wildcard='*.[zrt]')
+        remove_unused_stations(data, paths.weights)
+        data.sort_by_distance()
+
+        stations  = []
+        for stream in data:
+            stations += [stream.station]
         origin = data.get_origin()
-        stations = data.get_stations()
-        event_name = data.id
 
         print 'Processing data...\n'
         processed_data = {}
         for key in ['body_waves', 'surface_waves']:
-            processed_data[key] = data.map(process_data[key], stations)
+            processed_data[key] = data.map(process_data[key])
         data = processed_data
 
         print 'Reading Greens functions...\n'
@@ -130,7 +133,7 @@ if __name__=='__main__':
         greens.convolve(wavelet)
         processed_greens = {}
         for key in ['body_waves', 'surface_waves']:
-            processed_greens[key] = greens.map(process_data[key], stations)
+            processed_greens[key] = greens.map(process_data[key])
         greens = processed_greens
 
     else:
@@ -159,6 +162,6 @@ if __name__=='__main__':
         synthetics = {}
         for key in ['body_waves', 'surface_waves']:
             synthetics[key] = greens[key].get_synthetics(best_mt)
-        cap_plot(event_name+'.png', data, synthetics, paths.weights)
+        cap_plot(event_name+'.png', data, synthetics)
 
 

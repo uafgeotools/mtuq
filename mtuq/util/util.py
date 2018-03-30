@@ -1,25 +1,15 @@
 
 from os.path import abspath, join
+import copy
 import csv
 import time
 import numpy as np
+import obspy
 import warnings
 
 
-class AttribDict(dict):
-    """ Dictionary with both keyword and attribute access
-    """
-    def __init__(self, *args, **kwargs):
-        super(AttribDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-
-
-class Struct(dict):
-    """ Dictionary with both keyword and attribute access
-    """
-    def __init__(self, *args, **kwargs):
-        super(Struct, self).__init__(*args, **kwargs)
-        self.__dict__ = self
+class AttribDict(obspy.core.util.attribdict.AttribDict):
+    pass
 
 
 def asarray(x):
@@ -52,19 +42,6 @@ def iterable(arg):
         return [arg]
     else:
         return arg
-
-
-def parse_cap_weight_file(filename):
-    """ Parses CAP-style weight file
-    """
-    weights = {}
-    with open(filename) as f:
-        reader = csv.reader(f, delimiter=' ', skipinitialspace=True)
-        for row in reader:
-            id = '.'.join(row[0].split('.')[1:4])
-            weights[id] = [float(w) for w in row[1:]]
-
-    return weights
 
 
 def timer(func):

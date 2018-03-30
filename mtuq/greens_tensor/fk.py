@@ -8,7 +8,7 @@ from os.path import basename, exists
 
 from obspy.core import Stream, Trace
 from mtuq.greens_tensor.base import GreensTensorBase, GeneratorBase, GreensTensorList
-from mtuq.util.signal import resample
+from mtuq.util.signal import check_time_sampling, resample
 
 
 # Green's functions are already rotatated into vertical, radial, and
@@ -26,34 +26,33 @@ N = 4
 # If a GreensTensor is created with the wrong input arguments, this error
 # message is displayed.  In practice this is rarely encountered, since
 # Generator normally does all the work
-ErrorMessage =("Green's functions must be given as a dictionary indexed by"
-    "component (z,r,t)")
+ErrorMessage =("An obspy stream must be provided containting 12 traces, each"
+    "representing an indepedent Green's tensor element. The order of traces "
+    "must match the scheme used by fk. See fk documentation for details.")
 
 
 class GreensTensor(GreensTensorBase):
     """
-    Elastic Green's tensor object.  Similar to an obpy Trace, except rather 
-    than a single time series, holds multiple time series corresponding to
-    the independent elements of an elastic Green's tensor
-
-    To create a GreensTensor, a dictionary "data" must be supplied. This
-    dictionary must be indexed by component (z,r,t), which is a natural way of
-    organizing fk Green's functions. In practice, users rarely have to worry 
-    about these details because Generator normally does all the 
-    work of creating GreensTensors
+    Elastic Green's tensor object
     """
-    def __init__(self, data, station, origin):
-        for key in COMPONENTS:
-            # check that input data matches expected format
-            assert key in data, ErrorMessage
-            assert len(data[key])==N, ErrorMessage
+    def __init__(self, stream, station, origin):
+        assert isinstance(stream, obspy.Stream), ErrorMessage
+        assert len(stream)==N*len(COMPONENTS), ErrorMessage
+        assert hasattr(station, 'id')
 
-        self.data = data
-        self.station = station
-        self.origin = origin
+        self.greens_tensor = stream
+        self.greens_tensor.station = self.station = station
+        self.greens_tensor.origin = self.origin = origin
+        self.greens_tensor.id = self.id = station.id
+
+        assert check_time_sampling(stream), NotImplementedError(
+            "Time sampling differs from trace to trace.")
+        self.greens_tensor.npts = stream[0].stats.npts
+        self.greens_tensor.delta = stream[0].stats.delta
+        self.greens_tensor.starttime = stream[0].stats.starttime
+        self.greens_tensor.endttime = stream[0].stats.endtime
+
         self._synthetics = []
-
-        self.assign_id()
 
 
     def get_synthetics(self, mt):
@@ -67,16 +66,17 @@ class GreensTensor(GreensTensorBase):
         for _i, channel in enumerate(self.station.channels):
             component = channel[-1].lower()
             if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in Z, R, or T")
+                raise Exception("Channels are expected to end in Z/R/T")
 
-            w = self._calculate_weights(mt, component)
-            G = self.data[component]
+            G = self.greens_tensor
             s = self._synthetics[_i].data
 
-            # overwrites previous synthetics
+            # overwrite previous synthetics
             s[:] = 0.
-            for _j in range(N):
-                s += w[_j]*G[_j].data
+
+            # linear combination of Green's functions
+            for _j, weight in self._calculate_weights(mt, component):
+                s += weight*G[_j].data
 
         return self._synthetics
 
@@ -85,14 +85,17 @@ class GreensTensor(GreensTensorBase):
         """
         Applies a signal processing function to all Green's functions
         """
-        processed = defaultdict(Stream)
-        for component in ['z','r','t']:
-            processed[component] = function(self.data[component], *args, **kwargs)
+        processed = function(self.greens_tensor, *args, **kwargs)
 
-        # updates metadata if time sampling changed
-        station, origin = self._update_time_sampling(processed)
+        # did the time sampling change? 
+        # if so, update metadata
+        if self.greens_tensor.npts!=processed[0].stats.npts:
+            processed.npts = processed[0].stats.npts
+            processed.delta = processed[0].stats.delta
+            processed.starttime = processed[0].stats.starttime
+            processed.endtime = processed[0].stats.endtime
 
-        return GreensTensor(processed, station, origin)
+        return GreensTensor(processed, self.station, self.origin)
 
 
     def _calculate_weights(self, mt, component):
@@ -112,19 +115,28 @@ class GreensTensor(GreensTensorBase):
        saz2 = 2.*saz*caz
        caz2 = caz**2.-saz**2.
 
+       # what weights are used in the linear combination?
        weights = []
        if component in ['r','z']:
            weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
            weights += [-caz*mt[3] - saz*mt[4]]
            weights += [-0.5*caz2*(mt[0] - mt[1]) - saz2*mt[3]]
            weights += [(mt[0] - mt[1] + mt[2])/3.]
-           return weights
        elif component in ['t']:
            weights += [0.]
            weights += [-0.5*saz2*(mt[0] - mt[1]) + caz2*mt[3]]
            weights += [-saz*mt[4] + caz*mt[5]]
            weights += [0.]
-           return weights
+
+       # what Green's tensor elements do the weights correspond to?
+       if component in ['z']:
+           indices = [0, 1, 2, 3]
+       elif component in ['r']:
+           indices = [4, 5, 6, 7]
+       elif component in ['t']:
+           indices = [8, 9, 10, 11]
+
+       return zip(indices, weights)
 
 
     def _preallocate_synthetics(self):
@@ -134,25 +146,8 @@ class GreensTensor(GreensTensorBase):
         self._synthetics = Stream()
         for channel in self.station.channels:
             self._synthetics +=\
-                Trace(np.zeros(self.station.npts), self.station)
-
-        self._synthetics.id = self.station.id
-
-
-
-    def _update_time_sampling(self, processed_data):
-        """ 
-        Checks if time sampling has been affected by data processing and makes
-        any required metadata updates
-        """
-        station, origin = deepcopy(self.station), deepcopy(self.origin)
-        stats = processed_data['z'][0].stats
-
-        station.npts = stats.npts
-        station.starttime = stats.starttime
-        station.delta = stats.delta
-
-        return station, origin
+                Trace(np.zeros(self.greens_tensor.npts), self.station)
+        self._synthetics.id = self.greens_tensor.id
 
 
 
@@ -194,49 +189,43 @@ class Generator(GeneratorBase):
         Reads a Greens tensor from a directory tree organized by model, event
         depth, and event distance
         """
-        greens_tensor = defaultdict(Stream)
+        stream = Stream()
 
         # event information
         dep = str(int(origin.depth/1000.))
         dst = str(int(station.distance))
 
-        # start and end times of data
+        # what are the start and end times of the data?
         t1_new = float(station.starttime)
         t2_new = float(station.endtime)
         dt_new = float(station.delta)
 
-        # 0-2 correspond to a vertical strike-slip mechanism (VSS), 6-8 to a
-        # horizontal strike-slip mechanism (HSS), and a-c to an explosive 
-        # source (EXP); see fk documentation for details
-        keys = [('0','z'),('1','r'),('2','t'),
-                ('3','z'),('4','r'),('5','t'),
-                ('6','z'),('7','r'),('8','t'),
-                ('a','z'),('b','r'),('c','t')]
-
-        for ext, component in keys:
+        # see fk documentation for indexing scheme details 
+        for ext in ['0','3','6','a',  # z
+                    '1','4','7','b',  # r
+                    '2','5','8','c']: # t
             # read Green's function
             trace = obspy.read('%s/%s_%s/%s.grn.%s' %
                 (self.path, self.model, dep, dst, ext),
                 format='sac')[0]
 
-            # start and end times of Green's function
+            # what are the start and end times of the Green's function?
             t1_old = float(origin.time)+float(trace.stats.starttime)
             t2_old = float(origin.time)+float(trace.stats.endtime)
             dt_old = float(trace.stats.delta)
 
             # resample Green's function
-            old = trace.data
-            new = resample(old, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new)
-            trace.data = new
-            trace.stats.arrival_P_fk = t1_old
+            data_old = trace.data
+            data_new = resample(data_old, t1_old, t2_old, dt_old, 
+                                t1_new, t2_new, dt_new)
+            trace.data = data_new
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
-            station.arrival_P_fk = t1_old
 
-            greens_tensor[component] += trace
+            stream += trace
 
-        for component in greens_tensor:
-            greens_tensor[component].tag = 'greens_tensor'
+        stream.id = station.id
+        stream.tag = 'greens_tensor'
 
-        return GreensTensor(greens_tensor, station, origin)
+        return GreensTensor(stream, station, origin)
 

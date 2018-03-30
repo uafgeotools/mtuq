@@ -3,34 +3,14 @@ import numpy as np
 import matplotlib.pyplot as pyplot
 
 from collections import defaultdict
-from mtuq.util.util import parse_cap_weight_file
 
 
-def cap_plot(filename, data, synthetics, weight_file=None, discard_unused=True):
+def cap_plot(filename, data, synthetics):
     """ Creates cap-style plot
     """
-    # load cap-style weights
-    if weight_file:
-        weights = parse_cap_weight_file(weight_file)
-    else:
-        weights = None
-
-
-    # discard unused waveforms
-    if discard_unused:
-        for key in ['body_waves', 'surface_waves']:
-            stations = data[key].get_stations()
-            for station in stations:
-                id = station.id
-                if id not in weights:
-                    data[key].remove(id)
-                    synthetics[key].remove(id)
-
-
     # how many rows, columns?
-    nc = 5
+    nc = 6
     _, nr = shape(data)
-
 
 
     # create figure
@@ -43,6 +23,11 @@ def cap_plot(filename, data, synthetics, weight_file=None, discard_unused=True):
         data['surface_waves'], synthetics['surface_waves']):
 
         id = d1.id
+        meta = d1.station
+
+        # display station name
+        pyplot.subplot(nr, nc, nc*ir+1)
+        cap_station_labels(meta)
 
         # plot body waves
         for dat, syn in zip(d1, s1):
@@ -53,11 +38,11 @@ def cap_plot(filename, data, synthetics, weight_file=None, discard_unused=True):
                 continue
 
             if component=='Z':
-                pyplot.subplot(nr, nc, nc*ir+1)
-                cap_subplot(dat, syn, label=True)
+                pyplot.subplot(nr, nc, nc*ir+2)
+                cap_subplot(dat, syn)
 
             if component=='R':
-                pyplot.subplot(nr, nc, nc*ir+2)
+                pyplot.subplot(nr, nc, nc*ir+3)
                 cap_subplot(dat, syn)
 
         # plot surface waves
@@ -69,15 +54,15 @@ def cap_plot(filename, data, synthetics, weight_file=None, discard_unused=True):
                 continue
 
             if component=='Z':
-                pyplot.subplot(nr, nc, nc*ir+3)
-                cap_subplot(dat, syn)
-
-            if component=='R':
                 pyplot.subplot(nr, nc, nc*ir+4)
                 cap_subplot(dat, syn)
 
-            if component=='T':
+            if component=='R':
                 pyplot.subplot(nr, nc, nc*ir+5)
+                cap_subplot(dat, syn)
+
+            if component=='T':
+                pyplot.subplot(nr, nc, nc*ir+6)
                 cap_subplot(dat, syn)
 
         ir += 1
@@ -89,7 +74,7 @@ def cap_subplot(dat, syn, label=False):
     t1,t2,nt,dt = time_stats(dat)
     t = np.linspace(0,t2-t1,nt,dt)
 
-    metadata = dat.stats
+    meta = dat.stats
     dat = dat.data
     syn = syn.data
 
@@ -106,7 +91,37 @@ def cap_subplot(dat, syn, label=False):
     ax.get_yaxis().set_ticks([])
 
     if label:
-        pyplot.text(0.,0.6,metadata.station, fontsize=10)
+        pyplot.text(0.,0.6,meta.station, fontsize=10)
+
+
+
+def cap_station_labels(meta):
+    ax = pyplot.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
+
+    # display station name
+    label = '.'.join([meta.network, meta.station, meta.channels[0][:-1]])
+    pyplot.text(0.6,0.8, label, fontsize=12)
+
+    try:
+        # display distance and azimuth
+        distance = '%d km' % round(meta.catalog_distance)
+        azimuth =  '%d%s' % (round(meta.catalog_azimuth), u'\N{DEGREE SIGN}')
+        pyplot.text(0.6,0.6,distance, fontsize=12)
+        pyplot.text(0.6,0.4,azimuth, fontsize=12)
+    except:
+        pass
+
+
+
+def cap_channel_labels(meta):
+    raise NotImplementedError
+
 
 
 

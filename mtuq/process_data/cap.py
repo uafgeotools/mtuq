@@ -6,9 +6,10 @@ from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists, join
 from obspy.geodetics import kilometers2degrees as km2deg
+from mtuq.util.cap_util import parse_weight_file
 from mtuq.util.signal import cut
-from mtuq.util.util import AttribDict, parse_cap_weight_file, warn
-
+from mtuq.util.util import AttribDict, warn
+ 
 
 class process_data(object):
     """
@@ -16,11 +17,11 @@ class process_data(object):
 
     Processing data is a two-step procedure
         1) function_handle = process_data(filter_type=..., **filter_parameters, 
-                                          pick_type=...,   **picks.Parameters,
+                                          pick_type=...,   **picks_parameters,
                                           window_type=..., **window_parameters,
                                           weight_type=..., **weight_parameters)
 
-        2) processed_stream = function_handle(data, station_metadata)
+        2) processed_data = function_handle(data)
 
     In the first step, the user supplies a set of filtering, windowing,
     and weighting parameters.  In the second step, the user supplies a
@@ -103,7 +104,7 @@ class process_data(object):
         elif pick_type=='from_weight_file':
             assert 'weight_file' in parameters
             assert exists(parameters['weight_file'])
-            self.weights = parse_cap_weight_file(parameters['weight_file'])
+            self.weights = parse_weight_file(parameters['weight_file'])
 
         self.pick_type = pick_type
         self._picks = defaultdict(AttribDict)
@@ -139,7 +140,7 @@ class process_data(object):
              weight_type == 'cap_sw':
             assert 'weight_file' in parameters
             assert exists(parameters['weight_file'])
-            self.weights = parse_cap_weight_file(parameters['weight_file'])
+            self.weights = parse_weight_file(parameters['weight_file'])
 
         else:
              raise ValueError('Bad parameter: weight_type')
@@ -149,7 +150,7 @@ class process_data(object):
 
 
 
-    def __call__(self, traces, meta, overwrite=False):
+    def __call__(self, traces, meta=None, overwrite=False):
         """ 
         Carries out data processing operations on seismic traces
 
@@ -163,6 +164,8 @@ class process_data(object):
         else:
             traces = deepcopy(traces)
 
+        if not meta:
+            meta = traces.station
         station_id = meta.network+'.'+meta.station
 
         #
@@ -238,7 +241,6 @@ class process_data(object):
             if self.window_type == 'cap_bw':
                 # reproduces CAPUAF body wave window
                 t1 = picks.P - 0.4*self.window_length
-                if t1 < 0.: t1 = 0.
                 t2 = t1 + self.window_length
                 t1 += origin_time
                 t2 += origin_time
@@ -247,7 +249,6 @@ class process_data(object):
             elif self.window_type == 'cap_sw':
                 # reproduces CAPUAF surface wave window
                 t1 = picks.S - 0.3*self.window_length
-                if t1 < 0.: t1 = 0.
                 t2 = t1 + self.window_length
                 t1 += origin_time
                 t2 += origin_time
