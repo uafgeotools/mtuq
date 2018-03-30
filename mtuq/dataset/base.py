@@ -6,8 +6,8 @@ class DatasetBase(object):
 
         Basically, a list of obspy streams. Each stream corresponds to a
         single seismic station and holds all the components recorded at that
-        station.  Provides methods that help with data processing and metadata
-        extraction.
+        station.  Methods that help with data processing and metadata
+        extraction are also provided.
 
         Each supported file format will have a corresponding reader utility
         that creates an MTUQ Dataset from files stored in that format.  For an
@@ -59,7 +59,7 @@ class DatasetBase(object):
     # various sorting methods
     def sort_by_distance(self, reverse=False):
         """ 
-        Sorts the dataset in-place by hypocentral distance
+        Sorts in-place by hypocentral distance
         """
         self.sort_by_function(lambda data: data.station.catalog_distance,
             reverse=reverse)
@@ -67,7 +67,7 @@ class DatasetBase(object):
 
     def sort_by_azimuth(self, reverse=False):
         """
-        Sorts the dataset in-place by hypocentral azimuth
+        Sorts in-place by hypocentral azimuth
         """
         self.sort_by_function(lambda data: data.station.catalog_azimuth,
             reverse=reverse)
@@ -75,7 +75,7 @@ class DatasetBase(object):
 
     def sort_by_function(self, function, reverse=False):
         """ 
-        Sorts the dataset in-place using the python built-in "sort"
+        Sorts in-place using the python built-in "sort"
         """
         self.__list__.sort(key=function, reverse=reverse)
 

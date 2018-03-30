@@ -49,16 +49,29 @@ class GreensTensorBase(object):
         return self.apply(wavelet.convolve_stream)
 
 
-    def sort(self, *args, **kwargs):
-        self.__list__.sort(*args, **kwargs)
+    def sort_by_distance(self, reverse=False):
+        """ 
+        Sorts in-place by hypocentral distance
+        """
+        self.sort_by_function(lambda stream: stream.station.catalog_distance,
+            reverse=reverse)
 
 
-    def sort_by_distance(self, stations, reverse=False):
-        raise NotImplementedError
+    def sort_by_azimuth(self, reverse=False):
+        """
+        Sorts in-place by hypocentral azimuth
+        """
+        self.sort_by_function(lambda stream: stream.station.catalog_azimuth,
+            reverse=reverse)
 
 
-    def sort_by_azimuth(self, stations, reverse=False):
-        raise NotImplementedError
+    def sort_by_function(self, function, reverse=False):
+        """ 
+        Sorts in-place using the python built-in "sort"
+        """
+        self.__list__.sort(key=function, reverse=reverse)
+
+
 
 
 class GreensTensorList(object):
