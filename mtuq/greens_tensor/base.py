@@ -2,7 +2,7 @@
 import obspy
 import numpy as np
 
-from mtuq.dataset.sac import Dataset
+from mtuq.dataset.base import DatasetBase
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import convolve
 
@@ -77,7 +77,7 @@ class GreensTensorList(object):
         tensor mt, and each each individaul stream corresponds to an
         individual station
         """
-        synthetics = Dataset()
+        synthetics = DatasetBase()
         for greens_tensor in self.__list__:
             synthetics += greens_tensor.get_synthetics(mt)
         return synthetics
@@ -122,7 +122,7 @@ class GreensTensorList(object):
 
     # the remaining methods deal with indexing and iteration
     def __add__(self, greens_tensor):
-        #assert hasattr(greens_tensor, 'id')
+        assert hasattr(greens_tensor, 'id')
         greens_tensor.tag = 'greens_tensor'
         self.__list__ += [greens_tensor]
         return self
@@ -187,11 +187,12 @@ class GeneratorBase(object):
         greens_tensors = GreensTensorList()
 
         for station in stations:
-            # add distance and azimuth to station metadata
+            # if hypocenter is an inversion parameter, then the values 
+            # calculated here will generally differ from catalog_distance and
+            # catalog_azimuth
             station.distance, station.azimuth = distance_azimuth(
                 station, origin)
 
-            # add another GreensTensor to list
             greens_tensors += self.get_greens_tensor(
                 station, origin)
 

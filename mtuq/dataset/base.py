@@ -96,11 +96,13 @@ class DatasetBase(object):
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
-
         self.__list__.append(stream)
-        stream.station = self.get_station()
-        stream.catalog_origin = self.get_origin()
-        stream.tag = 'data'
+        try:
+            stream.station = self.get_station()
+            stream.catalog_origin = self.get_origin()
+            stream.tag = 'data'
+        except:
+            pass
         return self
 
 
