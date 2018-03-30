@@ -17,7 +17,7 @@ class process_data(object):
 
     Processing data is a two-step procedure
         1) function_handle = process_data(filter_type=..., **filter_parameters, 
-                                          pick_type=...,   **picks_parameters,
+                                          pick_type=...,   **pick_parameters,
                                           window_type=..., **window_parameters,
                                           weight_type=..., **weight_parameters)
 
@@ -150,23 +150,33 @@ class process_data(object):
 
 
 
-    def __call__(self, traces, meta=None, overwrite=False):
+    def __call__(self, traces, overwrite=False):
         """ 
-        Carries out data processing operations on seismic traces
+        Carries out data processing operations on obspy streams
+        MTUQ GreensTensors
 
         input traces: all availables traces for a given station
-        type traces: obspy Stream
-        input meta: station metadata
-        type meta: obspy meta
+        type traces: obspy Stream or MTUQ GreensTensor
         """
+        # a unique identifer is required for each station, obspy streams or
+        # or MTUQ Datasets will automatically have this attribute
+        if not hasattr(traces, 'id'):
+            raise Exception("Missing station identifier")
+        id = traces.id
+
+        # station metadata are required for data processing, e.g.
+        # without station location distance-depedent weighting cannont
+        # be applied
+        if not hasattr(traces, 'station'):
+            raise Exception("Missing station metadata")
+        meta = traces.station
+
+        # carry out data processing operations in-place?
         if overwrite:
             traces = traces
         else:
             traces = deepcopy(traces)
 
-        if not meta:
-            meta = traces.station
-        station_id = meta.network+'.'+meta.station
 
         #
         # part 1: filter traces
@@ -201,10 +211,10 @@ class process_data(object):
         #
 
         # Phase arrival times will be stored in a dictionary indexed by 
-        # station_id. This allows times determined when process_data is called
-        # on data to be reused later when process_data is called on synthetics
-        if station_id not in self._picks:
-            picks = self._picks[station_id]
+        # id. This allows times to be reused later when process_data is
+        # called on synthetics
+        if id not in self._picks:
+            picks = self._picks[id]
 
             if self.pick_type=='from_sac_headers':
                 sac_headers = meta.sac
@@ -232,11 +242,11 @@ class process_data(object):
         #
 
         # Start and end times will be stored in a dictionary indexed by 
-        # station_id. This allows times determined when process_data is called
-        # on data to be reused later when process_data is called on synthetics
-        if station_id not in self._windows:
+        # id. This allows times to be resued later when process_data is
+        # called on synthetics
+        if id not in self._windows:
             origin_time = float(meta.catalog_origin_time)
-            picks = self._picks[station_id]
+            picks = self._picks[id]
 
             if self.window_type == 'cap_bw':
                 # reproduces CAPUAF body wave window
@@ -244,7 +254,7 @@ class process_data(object):
                 t2 = t1 + self.window_length
                 t1 += origin_time
                 t2 += origin_time
-                self._windows[station_id] = [t1, t2]
+                self._windows[id] = [t1, t2]
 
             elif self.window_type == 'cap_sw':
                 # reproduces CAPUAF surface wave window
@@ -252,7 +262,7 @@ class process_data(object):
                 t2 = t1 + self.window_length
                 t1 += origin_time
                 t2 += origin_time
-                self._windows[station_id] = [t1, t2]
+                self._windows[id] = [t1, t2]
 
             elif self.window_type == 'taup_bw':
                 # determine body wave window from taup calculation
@@ -260,8 +270,8 @@ class process_data(object):
 
 
         # cut traces
-        if station_id in self._windows:
-            window = self._windows[station_id]
+        if id in self._windows:
+            window = self._windows[id]
             for trace in traces:
                 cut(trace, window[0], window[1])
 
@@ -271,12 +281,9 @@ class process_data(object):
         #
 
         if self.weight_type == 'cap_bw':
-
-            if traces.tag == 'data':
-                id = traces.id
-
-                for trace in traces:
-                    component = trace.meta.channel[-1].upper()
+            for trace in traces:
+                if trace.stats.channel:
+                    component = trace.stats.channel[-1].upper()
 
                     if id not in self.weights: 
                         trace.weight = 0.
@@ -290,11 +297,9 @@ class process_data(object):
 
         if self.weight_type == 'cap_sw':
 
-            if traces.tag == 'data':
-                id = traces.id
-
-                for trace in traces:
-                    component = trace.meta.channel[-1].upper()
+            for trace in traces:
+                if trace.stats.channel:
+                    component = trace.stats.channel[-1].upper()
 
                     if id not in self.weights: 
                         trace.weight = 0.

@@ -15,7 +15,7 @@ class GreensTensorBase(object):
         elastic Green's tensor.
     """
 
-    def __init__(self, stream):
+    def __init__(self, stream, station, origin):
         """
         Normally, all time series required to describe the response at a given
         station to a source at a given origin should be contained in "stream".
@@ -83,16 +83,8 @@ class GreensTensorList(object):
         return synthetics
 
 
-    def convolve(self, wavelet):
-        """ 
-        Convolves all Green's tensors with given wavelet
-        """
-        convolved = GreensTensorList()
-        for greens_tensor in self.__list__:
-            convolved += greens_tensor.convolve(wavelet)
-        return convolved
-
-
+    # the next three methods can be used to apply signal processing or other
+    # operations to all time series in all GreensTensors
     def apply(self, function, *args, **kwargs):
         """
         Returns the result of applying a function to each GreensTensor in the 
@@ -120,10 +112,18 @@ class GreensTensorList(object):
         return processed
 
 
-    # the remaining methods deal with indexing and iteration
+    def convolve(self, wavelet):
+        """ 
+        Convolves all Green's tensors with given wavelet
+        """
+        convolved = GreensTensorList()
+        for greens_tensor in self.__list__:
+            convolved += greens_tensor.convolve(wavelet)
+        return convolved
+
+
     def __add__(self, greens_tensor):
         assert hasattr(greens_tensor, 'id')
-        greens_tensor.tag = 'greens_tensor'
         self.__list__ += [greens_tensor]
         return self
 
@@ -133,6 +133,7 @@ class GreensTensorList(object):
         self.__list__.pop(index)
 
 
+    # the remaining methods deal with indexing and iteration
     def _get_index(self, id):
         for index, greens_tensor in enumerate(self.__list__):
             if id==greens_tensor.id:
@@ -188,8 +189,8 @@ class GeneratorBase(object):
 
         for station in stations:
             # if hypocenter is an inversion parameter, then the values 
-            # calculated here will generally differ from catalog_distance and
-            # catalog_azimuth
+            # calculated below will generally differ from catalog_distance and
+            # catalog_azimuth attributes
             station.distance, station.azimuth = distance_azimuth(
                 station, origin)
 
