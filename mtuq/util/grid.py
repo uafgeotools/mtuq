@@ -2,7 +2,7 @@
 import warnings
 import numpy as np
 
-from mtuq.util.util import Struct, warn
+from mtuq.util.util import AttribDict, warn
 
 try:
     import h5py
@@ -55,7 +55,7 @@ class Grid(object):
     def get(self, i):
         """ Returns i-th point of grid
         """
-        p = Struct()
+        p = AttribDict()
         for key, val in zip(self.keys, self.vals):
             p[key] = val[i%len(val)]
             i/=len(val)
@@ -152,7 +152,7 @@ class UnstructuredGrid(object):
         """ Returns i-th point of grid
         """
         i -= self.start
-        p = Struct()
+        p = AttribDict()
         for key, val in zip(self.keys, self.vals):
             p[key] = val[i]
 

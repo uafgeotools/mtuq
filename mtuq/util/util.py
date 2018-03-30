@@ -1,25 +1,15 @@
 
 from os.path import abspath, join
+import copy
 import csv
 import time
 import numpy as np
+import obspy
 import warnings
 
 
-class AttribDict(dict):
-    """ Dictionary with both keyword and attribute access
-    """
-    def __init__(self, *args, **kwargs):
-        super(AttribDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-
-
-class Struct(dict):
-    """ Dictionary with both keyword and attribute access
-    """
-    def __init__(self, *args, **kwargs):
-        super(Struct, self).__init__(*args, **kwargs)
-        self.__dict__ = self
+class AttribDict(obspy.core.util.attribdict.AttribDict):
+    pass
 
 
 def asarray(x):

@@ -2,7 +2,7 @@
 import numpy as np
 from mtuq.util.grid import Grid, UnstructuredGrid
 from mtuq.util.math import PI
-from mtuq.util.util import Struct, asarray, timer, timer_mpi
+from mtuq.util.util import asarray, timer, timer_mpi
 
 from mtuq.util.moment_tensor import tape2015
 from numpy.random import uniform as random
