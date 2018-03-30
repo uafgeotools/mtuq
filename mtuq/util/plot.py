@@ -23,7 +23,7 @@ def cap_plot(filename, data, synthetics):
         data['surface_waves'], synthetics['surface_waves']):
 
         id = d1.id
-        meta = data['body_waves'].get_station(id)
+        meta = d1.station
 
         # display station name
         pyplot.subplot(nr, nc, nc*ir+1)
@@ -105,14 +105,15 @@ def cap_station_labels(meta):
     ax.get_yaxis().set_ticks([])
 
     # display station name
-    pyplot.text(0.75,0.8,meta.station, fontsize=12)
+    label = '.'.join([meta.network, meta.station, meta.channels[0][:-1]])
+    pyplot.text(0.6,0.8, label, fontsize=12)
 
     try:
         # display distance and azimuth
         distance = '%d km' % round(meta.catalog_distance)
-        azimuth =  '%d deg' % round(meta.catalog_azimuth)
-        pyplot.text(0.75,0.6,distance, fontsize=12)
-        pyplot.text(0.75,0.4,azimuth, fontsize=12)
+        azimuth =  '%d%s' % (round(meta.catalog_azimuth), u'\N{DEGREE SIGN}')
+        pyplot.text(0.6,0.6,distance, fontsize=12)
+        pyplot.text(0.6,0.4,azimuth, fontsize=12)
     except:
         pass
 
