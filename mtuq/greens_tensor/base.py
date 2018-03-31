@@ -23,8 +23,8 @@ class GreensTensorBase(object):
         
         """
         assert isinstance(stream, obspy.Stream), ValueError(
-            "An obspy stream must be provided containg multiple traces, "
-            "each representing an independing Green's tensor element")
+            "An obspy stream must be provided containing multiple traces, "
+            "each representing an independent Green's tensor element")
 
         assert hasattr(station, 'id'), ValueError(
             "Station must have a unique identifier")
@@ -228,8 +228,8 @@ class GeneratorBase(object):
 
         for station in stations:
             # if hypocenter is an inversion parameter, then the values 
-            # calculated below will generally differ from catalog_distance and
-            # catalog_azimuth attributes
+            # calculated below will in general differ from catalog_distance and
+            # catalog_azimuth
             station.distance, station.azimuth = distance_azimuth(
                 station, origin)
 
