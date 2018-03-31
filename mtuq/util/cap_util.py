@@ -1,12 +1,14 @@
 
 
 import csv
+import numpy as np
 import warnings
 from mtuq.util.wavelets import Wavelet
 
 
 def remove_unused_stations(dataset, filename):
-    """ Removes stations marked for exclusion in CAP weight file
+    """ Removes any stations not listed in CAP weight file or any stations
+        with all zero weights
     """
     weights = parse_weight_file(filename)
 
@@ -78,4 +80,19 @@ def trapezoid_rise_time(*args, **kwargs):
     #raise NotImplementedError
     return 1.
 
+
+
+def taper(array, taper_fraction=0.3, inplace=True):
+    if inplace:
+        array = array
+    else:
+        array = np.copy(array)
+    f = taper_fraction
+    M = int(round(f*len(array)))
+    I = np.linspace(0.,1.,M)
+    taper = 0.5*(1-np.cos(np.pi*I))
+    array[:M] *= taper
+    array[-1:-M-1:-1] *= taper
+    if not inplace:
+        return array
 

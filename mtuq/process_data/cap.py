@@ -6,7 +6,7 @@ from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists, join
 from obspy.geodetics import kilometers2degrees as km2deg
-from mtuq.util.cap_util import parse_weight_file
+from mtuq.util.cap_util import taper, parse_weight_file
 from mtuq.util.signal import cut
 from mtuq.util.util import AttribDict, warn
  
@@ -23,8 +23,8 @@ class process_data(object):
 
         2) processed_data = function_handle(data)
 
-    In the first step, the user supplies a set of filtering, windowing,
-    phase-picking, and weighting parameters.  In the second step, a
+    In the first step, the user supplies a set of filtering, phase-picking,
+    windowing, and weighting parameters.  In the second step, a
     single-station obspy stream is given as input and a processed stream
     returned as output.
     """
@@ -272,6 +272,7 @@ class process_data(object):
             window = self._windows[id]
             for trace in traces:
                 cut(trace, window[0], window[1])
+                taper(trace.data)
 
 
         #
