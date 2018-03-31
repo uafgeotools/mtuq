@@ -63,30 +63,6 @@ class GreensTensorBase(object):
         return self.apply(wavelet.convolve_stream)
 
 
-    def sort_by_distance(self, reverse=False):
-        """ 
-        Sorts in-place by hypocentral distance
-        """
-        self.sort_by_function(lambda stream: stream.station.catalog_distance,
-            reverse=reverse)
-
-
-    def sort_by_azimuth(self, reverse=False):
-        """
-        Sorts in-place by hypocentral azimuth
-        """
-        self.sort_by_function(lambda stream: stream.station.catalog_azimuth,
-            reverse=reverse)
-
-
-    def sort_by_function(self, function, reverse=False):
-        """ 
-        Sorts in-place using the python built-in "sort"
-        """
-        self.__list__.sort(key=function, reverse=reverse)
-
-
-
 
 class GreensTensorList(object):
     """ A list of GreensTensors
@@ -160,6 +136,7 @@ class GreensTensorList(object):
         return convolved
 
 
+    # the next method is called repeatedly during class creation
     def __add__(self, greens_tensor):
         assert hasattr(greens_tensor, 'id')
         self.__list__ += [greens_tensor]
@@ -169,6 +146,30 @@ class GreensTensorList(object):
     def remove(self, id):
         index = self._get_index(id)
         self.__list__.pop(index)
+
+
+    # various sorting methods
+    def sort_by_distance(self, reverse=False):
+        """ 
+        Sorts in-place by hypocentral distance
+        """
+        self.sort_by_function(lambda stream: stream.station.distance,
+            reverse=reverse)
+
+
+    def sort_by_azimuth(self, reverse=False):
+        """
+        Sorts in-place by hypocentral azimuth
+        """
+        self.sort_by_function(lambda stream: stream.station.azimuth,
+            reverse=reverse)
+
+
+    def sort_by_function(self, function, reverse=False):
+        """ 
+        Sorts in-place using the python built-in "sort"
+        """
+        self.__list__.sort(key=function, reverse=reverse)
 
 
     # the remaining methods deal with indexing and iteration
