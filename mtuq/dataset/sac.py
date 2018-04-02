@@ -32,6 +32,10 @@ class Dataset(DatasetBase):
         data = self.__list__[index]
         sac_headers = data[0].meta.sac
 
+
+        # if hypocenter is included as an inversion parameter, then we 
+        # cannot rely on any of the following metadata, which are likely based
+        # on catalog locations or other preliminary information
         try:
             latitude = sac_headers.evla
             longitude = sac_headers.evlo
@@ -121,9 +125,6 @@ class Dataset(DatasetBase):
             pass
 
 
-        # if hypocenter is included as an inversion parameter, then we 
-        # cannot rely on any of the following metadata, which are likely based
-        # on catalog locations or other preliminary information
         try:
             origin = self.get_origin(id)
         except:

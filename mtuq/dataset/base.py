@@ -6,21 +6,26 @@ class DatasetBase(object):
 
         Basically, a list of obspy streams. Each stream corresponds to a
         single seismic station and holds all the components recorded at that
-        station.  Provides methods that help with data processing and metadata
-        extraction.
+        station.  Methods that help with data processing and metadata
+        extraction are also provided.
 
-        The work of generating a Dataset is carried out by a "reader";
-        for example, see mtuq.dataset.sac.reader
+        Each supported file format will have a corresponding reader utility
+        that creates an MTUQ Dataset from files stored in that format.  For an
+        example, see mtuq.dataset.sac.reader
     """
 
-    def __init__(self, data=None, id=None):
-        self.__list__ = []
+    def __init__(self, streams=None, id=None):
+        # typically the id is the event name, event origin time, or some other
+        # attribute shared by all streams
         self.id = id
 
-        if not data:
+        self.__list__ = []
+
+        if not streams:
+            # return an empty container, streams can be added later
             return
 
-        for stream in data:
+        for stream in streams:
             self.__add__(stream)
 
 
@@ -51,11 +56,10 @@ class DatasetBase(object):
         return processed
 
 
-    # the next three methods can be used to the sort the dataset by distance,
-    # azmimuth, or user-supplied indexing function
+    # various sorting methods
     def sort_by_distance(self, reverse=False):
         """ 
-        Sorts the dataset in-place by hypocentral distance
+        Sorts in-place by hypocentral distance
         """
         self.sort_by_function(lambda data: data.station.catalog_distance,
             reverse=reverse)
@@ -63,7 +67,7 @@ class DatasetBase(object):
 
     def sort_by_azimuth(self, reverse=False):
         """
-        Sorts the dataset in-place by hypocentral azimuth
+        Sorts in-place by hypocentral azimuth
         """
         self.sort_by_function(lambda data: data.station.catalog_azimuth,
             reverse=reverse)
@@ -71,7 +75,7 @@ class DatasetBase(object):
 
     def sort_by_function(self, function, reverse=False):
         """ 
-        Sorts the dataset in-place using the python built-in "sort"
+        Sorts in-place using the python built-in "sort"
         """
         self.__list__.sort(key=function, reverse=reverse)
 
@@ -96,11 +100,12 @@ class DatasetBase(object):
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
-
         self.__list__.append(stream)
-        stream.station = self.get_station()
-        stream.catalog_origin = self.get_origin()
-        stream.tag = 'data'
+        try:
+            stream.station = self.get_station()
+            stream.catalog_origin = self.get_origin()
+        except:
+            pass
         return self
 
 
@@ -129,15 +134,5 @@ class DatasetBase(object):
 
     def __len__(self):
         return len(self.__list__)
-
-
-
-def reader(*args, **kwargs):
-    """
-    Each supported file format will have a corresponding reader utility
-    that creates an MTUQ Dataset from files stored in that format.  For an
-    example, see mtuq.dataset.sac.reader
-    """
-    pass
 
 

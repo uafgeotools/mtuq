@@ -25,10 +25,14 @@ def cut(trace, t1, t2):
     t2: desired end time
     """
     if t1 < float(trace.stats.starttime):
-        raise Exception('Resample instead')
+        raise Exception('The chosen window begins before the trace.  Consider '
+           'using a later window, or to automatically pad the beginning of the '
+           'trace with zeros, use mtuq.util.signal.resample instead')
 
     if t2 > float(trace.stats.endtime):
-        raise Exception('Resample instead')
+        raise Exception('The chosen window ends after the trace.  Consider '
+           'using an earlier window, or to automatically pad the end of the '
+           'trace with zeros, use mtuq.util.signal.resample instead')
 
     t0 = float(trace.stats.starttime)
     dt = float(trace.stats.delta)

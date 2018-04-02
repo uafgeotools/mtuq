@@ -2,9 +2,9 @@
 import obspy
 import numpy as np
 
-from mtuq.dataset.sac import Dataset
+from mtuq.dataset.base import DatasetBase
 from mtuq.util.geodetics import distance_azimuth
-from mtuq.util.signal import convolve
+from mtuq.util.signal import check_time_sampling, convolve
 
 
 class GreensTensorBase(object):
@@ -15,14 +15,27 @@ class GreensTensorBase(object):
         elastic Green's tensor.
     """
 
-    def __init__(self, stream):
+    def __init__(self, stream, station, origin):
         """
         Normally, all time series required to describe the response at a given
-        station to a source at a given origin should be contained in "stream".
-        Further details regarding how this information is represented are 
-        deferred to the subclass
+        station to a source at a given origin should be contained in single 
+        obspy stream. Certain subclasses may override this behavior
+        
         """
-        raise NotImplementedError("Must be implemented by subclass")
+        assert isinstance(stream, obspy.Stream), ValueError(
+            "An obspy stream must be provided containing multiple traces, "
+            "each representing an independent Green's tensor element")
+
+        assert hasattr(station, 'id'), ValueError(
+            "Station must have a unique identifier")
+
+        assert check_time_sampling(stream), NotImplementedError(
+            "Time sampling differs from trace to trace.")
+
+        self.greens_tensor = stream
+        self.greens_tensor.station = self.station = station
+        self.greens_tensor.origin = self.origin = origin
+        self.greens_tensor.id = self.id = station.id
 
 
     def get_synthetics(self, mt):
@@ -38,7 +51,8 @@ class GreensTensorBase(object):
         Applies a function to all time series associated with the given 
         Green's tensor
         """
-        raise NotImplementedError("Must be implemented by subclass")
+        return self.__class__(function(self.greens_tensor, *args, **kwargs),
+            self.station, self.origin)
 
 
     def convolve(self, wavelet):
@@ -49,17 +63,6 @@ class GreensTensorBase(object):
         return self.apply(wavelet.convolve_stream)
 
 
-    def sort(self, *args, **kwargs):
-        self.__list__.sort(*args, **kwargs)
-
-
-    def sort_by_distance(self, stations, reverse=False):
-        raise NotImplementedError
-
-
-    def sort_by_azimuth(self, stations, reverse=False):
-        raise NotImplementedError
-
 
 class GreensTensorList(object):
     """ A list of GreensTensors
@@ -67,32 +70,35 @@ class GreensTensorList(object):
         Very similar to an MTUQ Dataset, except rather observed data, holds
         synthetic Green's tensors
     """
-    def __init__(self):
+    def __init__(self, greens_tensors=None, id=None):
+        # typically the id is the event name, event origin time, or some other
+        # attribute shared by all GreensTensors
+        self.id = id
+
         self.__list__ = []
+
+        if not greens_tensors:
+            # return an empty container, GreensTensors can be added later
+            return
+
+        for greens_tensor in greens_tensors:
+            self.__add__(greens_tensor)
 
 
     def get_synthetics(self, mt):
         """
         Returns an MTUQ Dataset in which all streams correspond to the moment
-        tensor mt, and each each individaul stream corresponds to an
+        tensor mt, and each each individual stream corresponds to an
         individual station
         """
-        synthetics = Dataset()
+        synthetics = DatasetBase()
         for greens_tensor in self.__list__:
             synthetics += greens_tensor.get_synthetics(mt)
         return synthetics
 
 
-    def convolve(self, wavelet):
-        """ 
-        Convolves all Green's tensors with given wavelet
-        """
-        convolved = GreensTensorList()
-        for greens_tensor in self.__list__:
-            convolved += greens_tensor.convolve(wavelet)
-        return convolved
-
-
+    # the next three methods can be used to apply signal processing or other
+    # operations to all time series in all GreensTensors
     def apply(self, function, *args, **kwargs):
         """
         Returns the result of applying a function to each GreensTensor in the 
@@ -120,10 +126,19 @@ class GreensTensorList(object):
         return processed
 
 
-    # the remaining methods deal with indexing and iteration
+    def convolve(self, wavelet):
+        """ 
+        Convolves all Green's tensors with given wavelet
+        """
+        convolved = GreensTensorList()
+        for greens_tensor in self.__list__:
+            convolved += greens_tensor.convolve(wavelet)
+        return convolved
+
+
+    # the next method is called repeatedly during class creation
     def __add__(self, greens_tensor):
-        #assert hasattr(greens_tensor, 'id')
-        greens_tensor.tag = 'greens_tensor'
+        assert hasattr(greens_tensor, 'id')
         self.__list__ += [greens_tensor]
         return self
 
@@ -133,6 +148,31 @@ class GreensTensorList(object):
         self.__list__.pop(index)
 
 
+    # various sorting methods
+    def sort_by_distance(self, reverse=False):
+        """ 
+        Sorts in-place by hypocentral distance
+        """
+        self.sort_by_function(lambda stream: stream.station.distance,
+            reverse=reverse)
+
+
+    def sort_by_azimuth(self, reverse=False):
+        """
+        Sorts in-place by hypocentral azimuth
+        """
+        self.sort_by_function(lambda stream: stream.station.azimuth,
+            reverse=reverse)
+
+
+    def sort_by_function(self, function, reverse=False):
+        """ 
+        Sorts in-place using the python built-in "sort"
+        """
+        self.__list__.sort(key=function, reverse=reverse)
+
+
+    # the remaining methods deal with indexing and iteration
     def _get_index(self, id):
         for index, greens_tensor in enumerate(self.__list__):
             if id==greens_tensor.id:
@@ -187,11 +227,12 @@ class GeneratorBase(object):
         greens_tensors = GreensTensorList()
 
         for station in stations:
-            # add distance and azimuth to station metadata
+            # if hypocenter is an inversion parameter, then the values 
+            # calculated below will in general differ from catalog_distance and
+            # catalog_azimuth
             station.distance, station.azimuth = distance_azimuth(
                 station, origin)
 
-            # add another GreensTensor to list
             greens_tensors += self.get_greens_tensor(
                 station, origin)
 
