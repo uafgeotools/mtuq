@@ -70,19 +70,38 @@ class Wavelet(object):
          return stream
 
 
+class Gaussian(Wavelet):
+    def __init__(self, sigma=1., mu=0.):
+        self.sigma = sigma
+        self.mu = mu
+
+    def evaluate(self, t):
+        return np.exp(-(0.5*(t-self.mu)/self.sigma)**2.)
+
+
 
 class Ricker(Wavelet):
-    pass
+    def __init__(self, freq):
+        # dominant frequency
+        self.freq = freq
 
+    def evaluate(self, t):
+        a = 2.*np.pi*self.freq
+        return (1-0.5*(a*t)**2.)*np.exp(-0.25*(a*t)**2.)
 
 
 class Gabor(Wavelet):
-    pass
+    def __init__(self, freq):
+        # dominant frequency
+        self.freq = freq
+
+    def evaluate(self, t):
+        a = np.pi*self.freq
+        b = 2*np.pi*self.freq
+        return np.exp(-(a*t)**2.)*np.cos(b*t)
 
 
 
-class DiracDelta(Wavelet):
-    pass
 
 
 
