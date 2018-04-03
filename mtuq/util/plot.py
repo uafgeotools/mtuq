@@ -2,8 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 
-from collections import defaultdict
-
 
 def cap_plot(filename, data, synthetics):
     """ Creates cap-style plot
@@ -70,7 +68,7 @@ def cap_plot(filename, data, synthetics):
     pyplot.savefig(filename)
 
 
-def cap_subplot(dat, syn, label=False):
+def cap_subplot(dat, syn, label=None):
     t1,t2,nt,dt = time_stats(dat)
     t = np.linspace(0,t2-t1,nt,dt)
 
