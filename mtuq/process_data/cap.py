@@ -165,6 +165,10 @@ class process_data(object):
             raise Exception("Missing station identifier")
         id = traces.id
 
+        if not hasattr(traces, 'tag'):
+            raise Exception("Missing station identifier")
+        tag = traces.tag
+
         # station metadata are required for data processing, e.g.
         # without station location distance-depedent weighting cannont
         # be applied
@@ -277,13 +281,10 @@ class process_data(object):
         # using a longer window for greens functions than for data allows
         # time-shift corrections to be efficiently computed
         # in mtuq.misfit.cap
-        if not hasattr(traces, 'tag'):
-            raise KeyError
-
-        elif traces.tag == 'greens_tensor':
+        if tag == 'greens_tensor':
             pad_length = self.time_shift_max
 
-        elif traces.tag == 'data':
+        elif tag == 'data':
             pad_length = 0.
 
         else:

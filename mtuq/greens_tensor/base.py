@@ -32,6 +32,8 @@ class GreensTensorBase(object):
         assert check_time_sampling(stream), NotImplementedError(
             "Time sampling differs from trace to trace.")
 
+        stream.tag = 'greens_tensor'
+
         self.greens_tensor = stream
         self.greens_tensor.station = self.station = station
         self.greens_tensor.origin = self.origin = origin
@@ -136,7 +138,7 @@ class GreensTensorList(object):
         return convolved
 
 
-    # the next method is called repeatedly during class creation
+    # the next method is called repeatedly during GreensTensorList creation
     def __add__(self, greens_tensor):
         assert hasattr(greens_tensor, 'id')
         self.__list__ += [greens_tensor]
