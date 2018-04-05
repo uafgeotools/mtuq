@@ -129,6 +129,9 @@ class process_data(object):
         self.window_length = parameters['window_length']
         self._windows = AttribDict()
 
+        if 'time_shift_max' in parameters:
+            self.time_shift_max = parameters['time_shift_max']
+
 
         #
         # check weight parameters
@@ -236,7 +239,7 @@ class process_data(object):
 
 
         #
-        # part 3: determine window start and end times
+        # part 3a: determine window start and end times
         #
 
         # Start and end times will be stored in a dictionary indexed by 
@@ -267,12 +270,34 @@ class process_data(object):
                 raise NotImplementedError
 
 
-        # cut traces
-        if id in self._windows:
-            window = self._windows[id]
-            for trace in traces:
-                cut(trace, window[0], window[1])
-                taper(trace.data)
+        #
+        # part 3b: pad greens functions relative to data
+        #
+
+        # using a longer window for greens functions than for data allows
+        # time-shift corrections to be efficiently computed
+        # in mtuq.misfit.cap
+        if not hasattr(traces, 'tag'):
+            raise KeyError
+
+        elif traces.tag == 'greens_tensor':
+            pad_length = self.time_shift_max
+
+        elif traces.tag == 'data':
+            pad_length = 0.
+
+        else:
+            raise ValueError
+
+
+        #
+        # part 3c: cut traces along windows
+        #
+
+        window = self._windows[id]
+        for trace in traces:
+            cut(trace, -pad_length+window[0], window[1]+pad_length)
+            taper(trace.data)
 
 
         #
