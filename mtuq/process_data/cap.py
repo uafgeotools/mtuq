@@ -165,6 +165,11 @@ class process_data(object):
             raise Exception("Missing station identifier")
         id = traces.id
 
+        # The "tag" attribute is used to distinguish streams containing 
+        # Green's functions from streams containing data. The filtering 
+        # applied to Green's functions and data will be the exactly
+        # same. To accomodate CAP-style time shifts, the windowing 
+        # will be slightly different.
         if not hasattr(traces, 'tag'):
             raise Exception("Missing station identifier")
         tag = traces.tag
