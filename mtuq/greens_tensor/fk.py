@@ -195,7 +195,6 @@ class Generator(GeneratorBase):
             stream += trace
 
         stream.id = station.id
-        stream.tag = 'greens_tensor'
 
         return GreensTensor(stream, station, origin)
 

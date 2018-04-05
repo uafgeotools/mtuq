@@ -129,6 +129,9 @@ class process_data(object):
         self.window_length = parameters['window_length']
         self._windows = AttribDict()
 
+        if 'time_shift_max' in parameters:
+            self.time_shift_max = parameters['time_shift_max']
+
 
         #
         # check weight parameters
@@ -161,6 +164,15 @@ class process_data(object):
         if not hasattr(traces, 'id'):
             raise Exception("Missing station identifier")
         id = traces.id
+
+        # The "tag" attribute is used to distinguish streams containing 
+        # Green's functions from streams containing data. The filtering 
+        # applied to Green's functions and data will be the exactly
+        # same. To accomodate CAP-style time shifts, the windowing 
+        # will be slightly different.
+        if not hasattr(traces, 'tag'):
+            raise Exception("Missing station identifier")
+        tag = traces.tag
 
         # station metadata are required for data processing, e.g.
         # without station location distance-depedent weighting cannont
@@ -236,7 +248,7 @@ class process_data(object):
 
 
         #
-        # part 3: determine window start and end times
+        # part 3a: determine window start and end times
         #
 
         # Start and end times will be stored in a dictionary indexed by 
@@ -267,12 +279,31 @@ class process_data(object):
                 raise NotImplementedError
 
 
-        # cut traces
-        if id in self._windows:
-            window = self._windows[id]
-            for trace in traces:
-                cut(trace, window[0], window[1])
-                taper(trace.data)
+        #
+        # part 3b: pad greens functions relative to data
+        #
+
+        # using a longer window for greens functions than for data allows
+        # time-shift corrections to be efficiently computed
+        # in mtuq.misfit.cap
+        if tag == 'greens_tensor':
+            pad_length = self.time_shift_max
+
+        elif tag == 'data':
+            pad_length = 0.
+
+        else:
+            raise ValueError
+
+
+        #
+        # part 3c: cut traces along windows
+        #
+
+        window = self._windows[id]
+        for trace in traces:
+            cut(trace, -pad_length+window[0], window[1]+pad_length)
+            taper(trace.data)
 
 
         #

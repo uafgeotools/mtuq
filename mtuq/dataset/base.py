@@ -1,6 +1,7 @@
 
 import obspy
 
+
 class DatasetBase(object):
     """ Seismic data container
 
@@ -96,10 +97,11 @@ class DatasetBase(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    # the next method is called repeatedly during class creation
+    # the next method is called repeatedly during Dataset creation
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
+        stream.tag = 'data'
         self.__list__.append(stream)
         try:
             stream.station = self.get_station()

@@ -2,12 +2,16 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 
-from collections import defaultdict
 
-
-def cap_plot(filename, data, synthetics):
+def cap_plot(filename, data, synthetics, misfit):
     """ Creates cap-style plot
     """
+    # reevaluate misfit to get time shifts
+    for key in ['body_waves', 'surface_waves']:
+        dat, syn, chi = data[key], synthetics[key], misfit[key]
+        _ = chi(dat, syn)
+
+
     # how many rows, columns?
     nc = 6
     _, nr = shape(data)
@@ -16,6 +20,7 @@ def cap_plot(filename, data, synthetics):
     # create figure
     figsize = (16,1.4*nr)
     pyplot.figure(figsize=figsize)
+
 
     ir = 0
     for d1,s1,d2,s2 in zip(
@@ -70,18 +75,25 @@ def cap_plot(filename, data, synthetics):
     pyplot.savefig(filename)
 
 
-def cap_subplot(dat, syn, label=False):
+def cap_subplot(dat, syn, label=None, scale_type='normalize'):
     t1,t2,nt,dt = time_stats(dat)
-    t = np.linspace(0,t2-t1,nt,dt)
+    it1 = syn.offset
+    it2 = syn.offset+nt
 
     meta = dat.stats
-    dat = dat.data
-    syn = syn.data
+    d = dat.data
+    s = syn.data
 
-    dat /= max(abs(dat))
-    syn /= max(abs(syn))
+    if scale_type=='default':
+        s *= 100.
+    elif scale_type=='normalize':
+        d /= max(abs(d))
+        s /= max(abs(s))
 
-    pyplot.plot(t,dat, 'k', t,syn,'r')
+
+    t = np.linspace(0,t2-t1,nt,dt)
+    pyplot.plot(t, d, t, s[it1:it2])
+
     ax = pyplot.gca()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -126,6 +138,9 @@ def cap_channel_labels(meta):
 
 
 def time_stats(trace):
+    if hasattr(trace, 'time_shift'):
+        time_shift_npts = trace.time_shift
+
     return (
         float(trace.stats.starttime),
         float(trace.stats.endtime),

@@ -15,7 +15,7 @@ class misfit(object):
         2) misfit = function_handle(data, synthetics)
 
     In the first step, the user supplies a list of parameters, including
-    the order of the norm applied to residuals, whether or not to use
+    the order of the norm applied to the residuals, whether or not to use
     polarity information, and various tuning parameters (see below for detailed
     descriptions.) In the second step, the user supplies data and synthetics 
     and gets back the corresponding misfit value.
@@ -24,19 +24,22 @@ class misfit(object):
     def __init__(self,
         norm_order=2,
         polarity_weight=0.,
-        time_shift_window_length=None,
+        time_shift_groups=['ZRT'],
         time_shift_max=None,
         ):
         """ Checks misfit parameters
+
+        time_shift_groups
+            ['ZRT'] locks time-shift across all three components
+            ['ZR','T'] locks vertical and radial components only
+            ['Z','R','T'] allows time shifts to vary freely between components
+
         """
-        # what norm should we apply to residuals?
+        # what norm should we apply to the residuals?
         self.order = norm_order
 
-        # what portion of data and synthetics should we consider?
-        self.time_shift_window_length = time_shift_window_length
-
-        # what maximum offset should we stop at when cross correlating?
-        self.time_shift_max = time_shift_max
+        # should we allow time shifts to vary from component to component?
+        self.time_shift_groups = time_shift_groups
 
         # should we include polarities in misfit?
         self.polarity_weight = polarity_weight
@@ -50,102 +53,63 @@ class misfit(object):
         sum_misfit = 0.
         for d, s in zip(data, synthetics):
             # time sampling scheme
-            nt = d[0].stats.npts
+            nt = d[0].data.size
             dt = d[0].stats.delta
 
+            # by how many samples are synthetics padded relative to data?
+            npad = (s[0].data.size-nt)/2
 
             #
-            # PART 1: Calculate CAP-style time shifts
+            # PART 1: CAP-style waveform difference misfit
             #
              
-            # Finds the time-shift between data and synthetics that yields the
-            # maximum cross-correlation value across all components, subject to 
-            # window length and time_shift_max constraints.  The result is a single 
-            # time-shift which is the same for all components at a given station.
+            for group in self.time_shift_groups:
+                _indices = []
 
-            if self.time_shift_window_length:
-                n1 = min(round(self.time_shift_window_length/dt), nt)
-            else:
-                n1 = nt
+                # array to hold cross-correlation result
+                result = np.zeros(2*npad+1)
 
-            if self.time_shift_max:
-                n2 = min(round(self.time_shift_max/dt), n1/2)
-            else:
-                n2 = n1/2
+                # Finds the time-shift between data and synthetics that yields
+                # the maximum cross-correlation value across all components in 
+                # in a given group, subject to the time_shift_max constraint
+                for _i in range(len(d)):
+                    if d[_i].weight == 0.:
+                        # ignore components with zero weight
+                        continue
 
-            # what portion of data and synthetics are we considering?
-            if n1 < nt:
-               if not hasattr(d[_i], 'arrival'):
-                   raise Exception
-               t0 = d[_i].arrival-d[_i].stats.starttime
-               it1 = min(int(round((t0/dt-n1/2))), 0)
-               it2 = it1 + n1/2
-            else:
-               it1 = 0
-               it2 = nt
+                    component = d[_i].stats.channel[-1].upper()
+                    if component not in group:
+                        continue
+                    _indices += [_i]
 
-            # perform cross correlations
-            result = np.zeros(n1)
-            for _i in range(len(d)):
-                if d[_i].weight == 0.:
-                    # ignore components with zero weight
-                    continue
+                    if mode==1:
+                        # scipy frequency-domain implementation
+                        result += fftconvolve(
+                            d[_i].data, s[_i].data[::-1], 'valid')
 
-                elif mode==1:
-                    # scipy frequency-domain implementation (usually much faster)
-                    result += fftconvolve(
-                        d[_i].data[it1:it2], s[_i].data[it1:it2][::-1], 'same')
+                    elif mode==2:
+                        # numpy time-domain implemenation
+                        result += np.correlate(
+                            d[_i].data, s[_i].data, 'valid')
 
-                elif mode==2:
-                    # numpy time-domain implemenation
-                    result += np.correlate(
-                        d[_i].data[it1:it2], s[_i].data[it1:it2], 'same')
+                # what time-shift yields the maximum cross-correlation value?
+                offset = result.argmax()
+                time_shift = (offset-npad)*dt
 
-                elif mode==3:
-                    # mtuq time-domain implementation
-                    raise NotImplementedError
+                # sums waveform difference residuals
+                for _i in _indices:
+                    s[_i].offset = offset
+                    s[_i].time_shift = time_shift
+                    
+                    # substract data from shifted synthetics
+                    r = s[_i].data[offset:offset+nt] - d[_i].data
 
-
-            # what time-shift yields the maximum cross-correlation value?
-            if n2 < n1/2:
-                it1 = int(n1/2 - n2)
-                it2 = int(n1/2 + n2)
-            else:
-                it1 = 0
-                it2 = n1
-
-            d.time_shift = (result[it1:it2].argmax()+it2-it1+1)*dt
+                    # sum the resulting residuals
+                    sum_misfit += d[_i].weight * np.sum(r**p)*dt
 
 
             #
-            # PART 2: waveform difference calculation
-            #
-
-            # Sums waveform difference residuals for all component
-
-            for _i in range(len(d)):
-                if isclose(d[_i].weight, 0.):
-                    # ignore components with zero weight
-                    continue
-
-                # shift data and synthetics by same amount but in opposite
-                # directions
-                it = int(round(d.time_shift/(2.*dt)))
-
-                # substract shifted data from shifted synthetics
-                if it == 0:
-                    r = s[_i] - d[_i]
-                elif it < 0:
-                    r = s[_i][it:] - d[_i][:-it]
-                elif it > 0:
-                    r = s[_i][:-it] - d[_i][it:]
-
-                # sum the resulting residuals
-                sum_misfit += d[_i].weight * np.sum(r**p)*dt
-
-
-            #
-            # PART 3: optionally, include polarity information
+            # PART 3: CAP-style polarity misfit
             #
 
             if self.polarity_weight > 0.:
