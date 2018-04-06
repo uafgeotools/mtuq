@@ -83,10 +83,12 @@ if __name__=='__main__':
 
     misfit_bw = misfit(
         time_shift_max=2.,
+        time_shift_groups=['ZR'],
         )
 
     misfit_sw = misfit(
         time_shift_max=10.,
+        time_shift_groups=['ZR','T'],
         )
 
     misfit = {
