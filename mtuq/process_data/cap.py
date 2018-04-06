@@ -12,7 +12,7 @@ from mtuq.util.util import AttribDict, warn
  
 
 class process_data(object):
-    """
+    '''
     CAP-style data processing function
 
     Processing data is a two-step procedure
@@ -27,7 +27,7 @@ class process_data(object):
     windowing, and weighting parameters.  In the second step, a
     single-station obspy stream is given as input and a processed stream
     returned as output.
-    """
+    '''
 
     def __init__(self,
                  filter_type=None,
@@ -36,8 +36,8 @@ class process_data(object):
                  weight_type=None,
                  **parameters):
 
-        """ Checks data processing parameters
-        """
+        ''' Checks data processing parameters
+        '''
         #
         # check filter parameters
         #
@@ -129,8 +129,14 @@ class process_data(object):
         self.window_length = parameters['window_length']
         self._windows = AttribDict()
 
-        if 'time_shift_max' in parameters:
-            self.time_shift_max = parameters['time_shift_max']
+        if 'padding_length' not in parameters:
+            raise Exception('Missing parameter: padding_length '
+                'Please suppy padding_length parameter.  If you are using a '
+                'CAP-style misfit function, then padding_length should be the '
+                'same as the maximum allowable time shift.  Otherwise, '
+                'padding_length should be zero.')
+
+        self.padding_length = parameters['padding_length']
 
 
         #
@@ -154,31 +160,31 @@ class process_data(object):
 
 
     def __call__(self, traces, overwrite=False):
-        """ 
+        ''' 
         Carries out data processing operations on obspy streams
         MTUQ GreensTensors
 
         input traces: all availables traces for a given station
         type traces: obspy Stream or MTUQ GreensTensor
-        """
+        '''
         if not hasattr(traces, 'id'):
-            raise Exception("Missing station identifier")
+            raise Exception('Missing station identifier')
         id = traces.id
 
-        # The "tag" attribute is used to distinguish streams containing 
+        # The 'tag' attribute is used to distinguish streams containing 
         # Green's functions from streams containing data. The filtering 
         # applied to Green's functions and data will be the exactly
         # same. To accomodate CAP-style time shifts, the windowing 
         # will be slightly different.
         if not hasattr(traces, 'tag'):
-            raise Exception("Missing station identifier")
+            raise Exception('Missing station identifier')
         tag = traces.tag
 
         # station metadata are required for data processing, e.g.
         # without station location distance-depedent weighting cannont
         # be applied
         if not hasattr(traces, 'station'):
-            raise Exception("Missing station metadata")
+            raise Exception('Missing station metadata')
         meta = traces.station
 
         # overwrite existing data?
@@ -217,7 +223,7 @@ class process_data(object):
                           freq=self.freq)
 
         #
-        # part 2: determine phase arrival times
+        # part 2: determine phase picks
         #
 
         # Phase arrival times will be stored in a dictionary indexed by 
@@ -245,6 +251,10 @@ class process_data(object):
 
             elif self.pick_type=='from_weight_file':
                 raise NotImplementedError
+
+            elif self.pick_type=='from_taup_model':
+                raise NotImplementedError
+
 
 
         #
@@ -280,29 +290,33 @@ class process_data(object):
 
 
         #
-        # part 3b: pad greens functions relative to data
+        # part 3b: pad Green's functions relative to data
         #
 
-        # using a longer window for greens functions than for data allows
+        window = self._windows[id]
+
+        # using a longer window for Green's functions than for data allows
         # time-shift corrections to be efficiently computed
         # in mtuq.misfit.cap
         if tag == 'greens_tensor':
-            pad_length = self.time_shift_max
+            starttime = window[0] - self.padding_length
+            endtime = window[1] + self.padding_length
 
         elif tag == 'data':
-            pad_length = 0.
+            starttime = window[0]
+            endtime = window[1]
 
         else:
             raise ValueError
 
 
         #
-        # part 3c: cut traces along windows
+        # part 3c: cut and taper traces
         #
 
         window = self._windows[id]
         for trace in traces:
-            cut(trace, -pad_length+window[0], window[1]+pad_length)
+            cut(trace, starttime, endtime)
             taper(trace.data)
 
 
