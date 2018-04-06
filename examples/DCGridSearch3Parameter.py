@@ -57,6 +57,7 @@ if __name__=='__main__':
         fk_database=paths.greens,
         window_type='cap_bw',
         window_length=15.,
+        padding_length=2.,
         weight_type='cap_bw',
         weight_file=paths.weights,
         )
@@ -69,6 +70,7 @@ if __name__=='__main__':
         fk_database=paths.greens,
         window_type='cap_sw',
         window_length=150.,
+        padding_length=10.,
         weight_type='cap_sw',
         weight_file=paths.weights,
         )
@@ -154,6 +156,6 @@ if __name__=='__main__':
     synthetics = {}
     for key in ['body_waves', 'surface_waves']:
         synthetics[key] = greens[key].get_synthetics(best_mt)
-    cap_plot(event_name+'.png', data, synthetics)
+    cap_plot(event_name+'.png', data, synthetics, misfit)
 
 
