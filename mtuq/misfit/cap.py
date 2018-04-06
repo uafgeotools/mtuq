@@ -58,36 +58,46 @@ class misfit(object):
             # time sampling scheme
             npts = d[0].data.size
             dt = d[0].stats.delta
+
+
+            #
+            # PART 1: Prepare for time-shift correction
+            #
+
+            npts_dat = npts
+            npts_syn = s[0].data.size
             npts_padding = int(round(self.time_shift_max/dt))
 
+            if npts_dat == npts_syn:
+               warnings.warn("For greatest efficiency, pad synthetics in "
+                   "advance by setting process_data.padding_length "
+                   "equal to misfit.time_shift_max")
+               for trace in s:
+                   trace.data = np.pad(trace.data, npts_padding, 'constant')
 
-            #
-            # PART 1: What method to compute time-shift corrections?
-            #
+            assert npts_syn - npts_dat == 2*npts_padding,\
+               Exception("To compute time-shift corrections, synthetics must "
+                   "be padded on each side by a number of samples equal to "
+                   "time_shift_max/dt")
 
             if not hasattr(d, 'time_shift_mode'):
-                npts_dat = npts
-                npts_syn = s[0].data.size
-
-                if (npts_syn-npts_dat)/2 != npts_padding:
-                   raise Exception("Mismatch between npts_syn and npts_dat: "
-                       "please double check that process_data.padding_length "
-                       "matches misfit.time_shift_max")
-
                 # Chooses whether to work in the time or frequency domain based 
                 # on length of traces and maximum allowable lag
                 if npts_padding==0:
                     d.time_shift_mode = 0
-                elif npts > 500 or npts_padding > 50:
-                    # for all but the shortest traces, frequency domain
+                elif npts > 2000 or npts_padding > 200:
+                    # for long traces or long lag times, frequency-domain
                     # implementation is usually faster
                     d.time_shift_mode = 1
                 else:
+                    # for short traces or short lag times, time-domain
+                    # implementation is usually faster
                     d.time_shift_mode = 2
 
 
             #
-            # PART 2: CAP-style waveform-difference misfit calculation
+            # PART 2: CAP-style time-shift corrections and waveform-difference
+            #     misfit calculation
             #
              
             for group in self.time_shift_groups:
