@@ -77,7 +77,8 @@ def cap_plot(filename, data, synthetics, misfit):
 
 def cap_subplot(dat, syn, label=None, scale_type='normalize'):
     t1,t2,nt,dt = time_stats(dat)
-    argmax = syn.argmax
+    start = syn.start
+    stop = syn.stop
 
     meta = dat.stats
     d = dat.data
@@ -89,9 +90,8 @@ def cap_subplot(dat, syn, label=None, scale_type='normalize'):
         d /= max(abs(d))
         s /= max(abs(s))
 
-
     t = np.linspace(0,t2-t1,nt,dt)
-    pyplot.plot(t, d, t, s[argmax:argmax+nt])
+    pyplot.plot(t, d, t, s[start:stop])
 
     ax = pyplot.gca()
     ax.spines['top'].set_visible(False)

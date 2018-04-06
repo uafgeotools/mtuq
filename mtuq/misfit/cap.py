@@ -4,6 +4,7 @@ from math import ceil, floor
 from scipy.signal import fftconvolve
 from mtuq.util.math import isclose
 import numpy as np
+import warnings
 
 
 class misfit(object):
@@ -68,7 +69,10 @@ class misfit(object):
             npts_syn = s[0].data.size
             npts_padding = int(round(self.time_shift_max/dt))
 
-            if npts_dat == npts_syn:
+            if npts_padding==0:
+                pass
+
+            elif npts_dat == npts_syn:
                warnings.warn("For greater speed, pad synthetics in advance by "
                    "by setting process_data.padding_length equal to "
                    "misfit.time_shift_max")
@@ -96,8 +100,8 @@ class misfit(object):
 
 
             #
-            # PART 2: CAP-style time-shift corrections and waveform-difference
-            #     misfit calculation
+            # PART 2: CAP-style waveform-difference misfit calculation, with
+            #     time-shift corrections
             #
              
             for group in self.time_shift_groups:
@@ -136,10 +140,13 @@ class misfit(object):
                 # what time-shift yields the maximum cross-correlation value?
                 argmax = result.argmax()
                 time_shift = (argmax-npts_padding)*dt
+                start = 2*npts_padding-argmax
+                stop = start+npts
 
                 # sums waveform difference residuals
                 for _i in _indices:
-                    s[_i].argmax = argmax
+                    s[_i].start = start
+                    s[_i].stop = stop
                     s[_i].time_shift = time_shift
                     
                     # substract data from shifted synthetics
