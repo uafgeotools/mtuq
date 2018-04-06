@@ -69,9 +69,9 @@ class misfit(object):
             npts_padding = int(round(self.time_shift_max/dt))
 
             if npts_dat == npts_syn:
-               warnings.warn("For greatest efficiency, pad synthetics in "
-                   "advance by setting process_data.padding_length "
-                   "equal to misfit.time_shift_max")
+               warnings.warn("For greater speed, pad synthetics in advance by "
+                   "by setting process_data.padding_length equal to "
+                   "misfit.time_shift_max")
                for trace in s:
                    trace.data = np.pad(trace.data, npts_padding, 'constant')
 
