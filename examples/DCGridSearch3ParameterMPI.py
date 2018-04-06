@@ -41,6 +41,9 @@ if __name__=='__main__':
         'greens':  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak'),
         })
 
+    event_name = '20090407201255351'
+
+
 
     #
     # Here we specify all the data processing and misfit settings used in the
@@ -55,8 +58,11 @@ if __name__=='__main__':
         filter_type='Bandpass', 
         freq_min= 0.25,
         freq_max= 0.667,
+        pick_type='from_fk_database',
+        fk_database=paths.greens,
         window_type='cap_bw',
         window_length=15.,
+        padding_length=2.,
         weight_type='cap_bw',
         weight_file=paths.weights,
         )
@@ -65,8 +71,11 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        #window_type='cap_sw',
+        pick_type='from_fk_database',
+        fk_database=paths.greens,
+        window_type='cap_sw',
         window_length=150.,
+        padding_length=10.,
         weight_type='cap_sw',
         weight_file=paths.weights,
         )
@@ -162,6 +171,6 @@ if __name__=='__main__':
         synthetics = {}
         for key in ['body_waves', 'surface_waves']:
             synthetics[key] = greens[key].get_synthetics(best_mt)
-        cap_plot(event_name+'.png', data, synthetics)
+        cap_plot(event_name+'.png', data, synthetics, misfit)
 
 

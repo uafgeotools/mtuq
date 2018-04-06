@@ -4,6 +4,7 @@ from math import ceil, floor
 from scipy.signal import fftconvolve
 from mtuq.util.math import isclose
 import numpy as np
+import warnings
 
 
 class misfit(object):
@@ -25,7 +26,7 @@ class misfit(object):
         norm_order=2,
         polarity_weight=0.,
         time_shift_groups=['ZRT'],
-        time_shift_max=None,
+        time_shift_max=0.,
         ):
         """ Checks misfit parameters
 
@@ -39,13 +40,16 @@ class misfit(object):
         self.order = norm_order
 
         # should we allow time shifts to vary from component to component?
+        self.time_shift_max = time_shift_max
+
+        # should we allow time shifts to vary from component to component?
         self.time_shift_groups = time_shift_groups
 
         # should we include polarities in misfit?
         self.polarity_weight = polarity_weight
 
 
-    def __call__(self, data, synthetics, mode=1):
+    def __call__(self, data, synthetics):
         """ CAP-style misfit calculation
         """ 
         p = self.order
@@ -53,25 +57,62 @@ class misfit(object):
         sum_misfit = 0.
         for d, s in zip(data, synthetics):
             # time sampling scheme
-            nt = d[0].data.size
+            npts = d[0].data.size
             dt = d[0].stats.delta
 
-            # by how many samples are synthetics padded relative to data?
-            npad = (s[0].data.size-nt)/2
 
             #
-            # PART 1: CAP-style waveform difference misfit
+            # PART 1: Prepare for time-shift correction
+            #
+
+            npts_dat = npts
+            npts_syn = s[0].data.size
+            npts_padding = int(round(self.time_shift_max/dt))
+
+            if npts_padding==0:
+                pass
+
+            elif npts_dat == npts_syn:
+               warnings.warn("For greater speed, pad synthetics in advance by "
+                   "by setting process_data.padding_length equal to "
+                   "misfit.time_shift_max")
+               for trace in s:
+                   trace.data = np.pad(trace.data, npts_padding, 'constant')
+
+            assert npts_syn - npts_dat == 2*npts_padding,\
+               Exception("To compute time-shift corrections, synthetics must "
+                   "be padded on each side by a number of samples equal to "
+                   "time_shift_max/dt")
+
+            if not hasattr(d, 'time_shift_mode'):
+                # Chooses whether to work in the time or frequency domain based 
+                # on length of traces and maximum allowable lag
+                if npts_padding==0:
+                    d.time_shift_mode = 0
+                elif npts > 2000 or npts_padding > 200:
+                    # for long traces or long lag times, frequency-domain
+                    # implementation is usually faster
+                    d.time_shift_mode = 1
+                else:
+                    # for short traces or short lag times, time-domain
+                    # implementation is usually faster
+                    d.time_shift_mode = 2
+
+
+            #
+            # PART 2: CAP-style waveform-difference misfit calculation, with
+            #     time-shift corrections
             #
              
             for group in self.time_shift_groups:
                 _indices = []
 
                 # array to hold cross-correlation result
-                result = np.zeros(2*npad+1)
+                result = np.zeros(2*npts_padding+1)
 
                 # Finds the time-shift between data and synthetics that yields
                 # the maximum cross-correlation value across all components in 
-                # in a given group, subject to the time_shift_max constraint
+                # in a given group, subject to time_shift_max constraint
                 for _i in range(len(d)):
                     if d[_i].weight == 0.:
                         # ignore components with zero weight
@@ -82,34 +123,42 @@ class misfit(object):
                         continue
                     _indices += [_i]
 
-                    if mode==1:
+                    if d.time_shift_mode==0:
+                        pass
+
+                    elif d.time_shift_mode==1:
                         # scipy frequency-domain implementation
                         result += fftconvolve(
                             d[_i].data, s[_i].data[::-1], 'valid')
 
-                    elif mode==2:
+                    elif d.time_shift_mode==2:
                         # numpy time-domain implemenation
                         result += np.correlate(
                             d[_i].data, s[_i].data, 'valid')
 
+
                 # what time-shift yields the maximum cross-correlation value?
-                offset = result.argmax()
-                time_shift = (offset-npad)*dt
+                argmax = result.argmax()
+                time_shift = (argmax-npts_padding)*dt
+                start = 2*npts_padding-argmax
+                stop = start+npts
 
                 # sums waveform difference residuals
                 for _i in _indices:
-                    s[_i].offset = offset
+                    s[_i].start = start
+                    s[_i].stop = stop
                     s[_i].time_shift = time_shift
                     
                     # substract data from shifted synthetics
-                    r = s[_i].data[offset:offset+nt] - d[_i].data
+                    r = s[_i].data[argmax:argmax+npts] - d[_i].data
 
                     # sum the resulting residuals
                     sum_misfit += d[_i].weight * np.sum(r**p)*dt
 
 
+
             #
-            # PART 3: CAP-style polarity misfit
+            # PART 3: CAP-style polarity misfit calculation
             #
 
             if self.polarity_weight > 0.:

@@ -212,7 +212,7 @@ class GeneratorBase(object):
     in the input argument.
 
     Details regarding how the GreenTensors are actually created--whether
-    they are computed on-the-fly or read from a pre-computed database--
+    they are generated on-the-fly or read from a pre-computed database--
     are deferred to the subclass.
 
     Very similar to an mtuq.dataset.reader, excecpt rather than a Dataset,
