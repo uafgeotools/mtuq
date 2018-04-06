@@ -36,6 +36,10 @@ class misfit(object):
             ['Z','R','T'] allows time shifts to vary freely between components
 
         """
+        for group in time_shift_groups:
+            for component in group:
+                assert component in ['Z','R','T']
+
         # what norm should we apply to the residuals?
         self.order = norm_order
 
@@ -150,7 +154,7 @@ class misfit(object):
                     s[_i].time_shift = time_shift
                     
                     # substract data from shifted synthetics
-                    r = s[_i].data[argmax:argmax+npts] - d[_i].data
+                    r = s[_i].data[start:stop] - d[_i].data
 
                     # sum the resulting residuals
                     sum_misfit += d[_i].weight * np.sum(r**p)*dt
