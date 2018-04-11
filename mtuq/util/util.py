@@ -45,7 +45,8 @@ def iterable(arg):
 
 
 def timer(func):
-    """ Decorator for measuring execution time
+    """ Decorator for measuring execution time; prints elapsed time to
+        standard output
     """
     if is_mpi_env():
         return func
@@ -56,11 +57,23 @@ def timer(func):
         output = func(*args, **kwargs)
 
         _elapsed_time = time.time() - start_time
-        print '  Elapsed time: %f\n' % _elapsed_time
+        print '  Elapsed time (s): %f\n' % _elapsed_time
 
         return output
 
     return timed_func
+
+
+def timer2(func):
+    """ Decorator for measuring execution time; discards the output of the
+        original function, instead returns elapsed time (s)
+    """
+    def timed_func(*args, **kwargs):
+        start_time = time.time()
+        _ = func(*args, **kwargs)
+        return time.time() - start_time
+    return timed_func
+
 
 
 def timer_mpi(func):
