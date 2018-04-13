@@ -36,6 +36,10 @@ class misfit(object):
             ['Z','R','T'] allows time shifts to vary freely between components
 
         """
+        for group in time_shift_groups:
+            for component in group:
+                assert component in ['Z','R','T']
+
         # what norm should we apply to the residuals?
         self.order = norm_order
 
@@ -69,7 +73,8 @@ class misfit(object):
             npts_syn = s[0].data.size
             npts_padding = int(round(self.time_shift_max/dt))
 
-            if npts_padding==0:
+            if npts_syn - npts_dat == 2*npts_padding:
+                # synthetics have already been padded, nothing to do just yet
                 pass
 
             elif npts_dat == npts_syn:
@@ -79,10 +84,10 @@ class misfit(object):
                for trace in s:
                    trace.data = np.pad(trace.data, npts_padding, 'constant')
 
-            assert npts_syn - npts_dat == 2*npts_padding,\
-               Exception("To compute time-shift corrections, synthetics must "
-                   "be padded on each side by a number of samples equal to "
-                   "time_shift_max/dt")
+            else:
+               raise Exception("Data and synthetics must either be the same "
+                   "length, or synthetics padded by a number of samples "
+                   "equal to 2*time_shift_max/dt")
 
             if not hasattr(d, 'time_shift_mode'):
                 # Chooses whether to work in the time or frequency domain based 
@@ -105,34 +110,30 @@ class misfit(object):
             #
              
             for group in self.time_shift_groups:
-                _indices = []
-
-                # array to hold cross-correlation result
-                result = np.zeros(2*npts_padding+1)
-
                 # Finds the time-shift between data and synthetics that yields
                 # the maximum cross-correlation value across all components in 
                 # in a given group, subject to time_shift_max constraint
+
+                result = np.zeros(2*npts_padding+1)
+                _indices = []
                 for _i in range(len(d)):
+                    # ignore traces with zero misfit weight
                     if d[_i].weight == 0.:
-                        # ignore components with zero weight
                         continue
 
+                    # keep track of which traces correspond to which components
                     component = d[_i].stats.channel[-1].upper()
-                    if component not in group:
+                    if component in group:
+                        _indices += [_i]
+                    else:
                         continue
-                    _indices += [_i]
 
                     if d.time_shift_mode==0:
                         pass
-
                     elif d.time_shift_mode==1:
-                        # scipy frequency-domain implementation
                         result += fftconvolve(
                             d[_i].data, s[_i].data[::-1], 'valid')
-
                     elif d.time_shift_mode==2:
-                        # numpy time-domain implemenation
                         result += np.correlate(
                             d[_i].data, s[_i].data, 'valid')
 
@@ -140,17 +141,20 @@ class misfit(object):
                 # what time-shift yields the maximum cross-correlation value?
                 argmax = result.argmax()
                 time_shift = (argmax-npts_padding)*dt
-                start = 2*npts_padding-argmax
-                stop = start+npts
 
-                # sums waveform difference residuals
+                # what start and stop indices will correctly shift synthetics 
+                # relative to data?
+                start = 2*npts_padding-argmax
+                stop = 2*npts_padding-argmax+npts
+
                 for _i in _indices:
+                    s[_i].time_shift = time_shift
+                    s[_i].time_shift_group = group
                     s[_i].start = start
                     s[_i].stop = stop
-                    s[_i].time_shift = time_shift
                     
                     # substract data from shifted synthetics
-                    r = s[_i].data[argmax:argmax+npts] - d[_i].data
+                    r = s[_i].data[start:stop] - d[_i].data
 
                     # sum the resulting residuals
                     sum_misfit += d[_i].weight * np.sum(r**p)*dt
