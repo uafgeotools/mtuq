@@ -43,7 +43,7 @@ class misfit(object):
         # what norm should we apply to the residuals?
         self.order = norm_order
 
-        # should we allow time shifts to vary from component to component?
+        # maximum cross-correlation lag (seconds)
         self.time_shift_max = time_shift_max
 
         # should we allow time shifts to vary from component to component?
@@ -85,7 +85,7 @@ class misfit(object):
                    trace.data = np.pad(trace.data, npts_padding, 'constant')
 
             else:
-               raise Exception("Data and synthetics must either be the same "
+               raise Exception("Data and synthetics must be the same "
                    "length, or synthetics padded by a number of samples "
                    "equal to 2*time_shift_max/dt")
 
@@ -118,10 +118,10 @@ class misfit(object):
                 _indices = []
                 for _i in range(len(d)):
                     # ignore traces with zero misfit weight
-                    if d[_i].weight == 0.:
+                    if hasattr(d[_i], 'weight') and d[_i].weight == 0.:
                         continue
 
-                    # keep track of which traces correspond to which components
+                    # keep track of which indices correspond to which components
                     component = d[_i].stats.channel[-1].upper()
                     if component in group:
                         _indices += [_i]
@@ -136,7 +136,6 @@ class misfit(object):
                     elif d.time_shift_mode==2:
                         result += np.correlate(
                             d[_i].data, s[_i].data, 'valid')
-
 
                 # what time-shift yields the maximum cross-correlation value?
                 argmax = result.argmax()
