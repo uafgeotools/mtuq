@@ -11,24 +11,6 @@ from mtuq.util.wavelets import Gaussian
 
  
 
-def Stream(*args, **kwargs):
-    """ Overloads obspy Stream by seeting the "id" attribute, which 
-        mtuq expects (normally this is done by dataset.reader)
-    """
-    stream = obspy.core.Stream(*args, **kwargs)
-    stream.id = 0
-    return stream    
-
-
-def Trace(*args, **kwargs):
-    """ Overloads obspy Trace by seeting the "weight" attribute, which 
-        cap.misfit expects (normally this is done by cap.process_data)
-    """
-    trace = obspy.core.Trace(*args, **kwargs)
-    trace.weight = 1.
-    return trace
-
-
 class TestMisfit(unittest.TestCase):
     def test_cap_time_shift1(self):
         """ Checks that time-shift corrections are working properly
@@ -84,7 +66,7 @@ class TestMisfit(unittest.TestCase):
         
     def test_cap_time_shift2(self):
         """ Tests the time_shift_group feature, which allows time shifts to be
-            fixed from component to component or to vary
+            fixed from component to component
         """
         npts = 1001
         starttime = -10.
@@ -138,6 +120,27 @@ class TestMisfit(unittest.TestCase):
             time_shift_groups=['ZRT'])
 
         assert misfit1(dat, syn) <= misfit2(dat, syn)
+
+
+### utility functions
+
+def Stream(*args, **kwargs):
+    """ Overloads obspy Stream by seeting the "id" attribute, which 
+        mtuq expects (normally this is done by dataset.reader)
+    """
+    stream = obspy.core.Stream(*args, **kwargs)
+    stream.id = 0
+    return stream
+
+
+def Trace(*args, **kwargs):
+    """ Overloads obspy Trace by seeting the "weight" attribute, which 
+        cap.misfit expects (normally this is done by cap.process_data)
+    """
+    trace = obspy.core.Trace(*args, **kwargs)
+    trace.weight = 1.
+    return trace
+
 
 
 
