@@ -12,7 +12,7 @@ from mtuq.util.util import AttribDict, warn
  
 
 class process_data(object):
-    '''
+    """
     CAP-style data processing function
 
     Processing data is a two-step procedure
@@ -27,7 +27,7 @@ class process_data(object):
     windowing, and weighting parameters.  In the second step, a
     single-station obspy stream is given as input and a processed stream
     returned as output.
-    '''
+    """
 
     def __init__(self,
                  filter_type=None,
@@ -129,14 +129,10 @@ class process_data(object):
         self.window_length = parameters['window_length']
         self._windows = AttribDict()
 
-        if 'padding_length' not in parameters:
-            raise Exception('Missing parameter: padding_length '
-                'Please suppy padding_length parameter.  If you are using a '
-                'CAP-style misfit function, then padding_length should be the '
-                'same as the maximum allowable time shift.  Otherwise, '
-                'padding_length should be zero.')
-
-        self.padding_length = parameters['padding_length']
+        if 'padding_length' in parameters:
+            self.padding_length = parameters['padding_length']
+        else:
+            self.padding_length = 0.
 
 
         #
@@ -290,8 +286,8 @@ class process_data(object):
 
 
         #
-        # part 3b: pad Green's functions relative to data
-        #
+        # part 3b: pad Green's functions
+        # 
 
         window = self._windows[id]
 
@@ -324,7 +320,14 @@ class process_data(object):
         # part 4: determine weights
         #
 
-        if self.weight_type == 'cap_bw':
+        if not self.weight_type:
+            # give all traces equal weight if weight_type is false
+            # (currently, only cap.misfit uses this attribute)
+            for trace in traces:
+                trace.weight = 1.
+
+
+        elif self.weight_type == 'cap_bw':
             for trace in traces:
                 if trace.stats.channel:
                     component = trace.stats.channel[-1].upper()
@@ -339,7 +342,7 @@ class process_data(object):
                         trace.weight = 0.
 
 
-        if self.weight_type == 'cap_sw':
+        elif self.weight_type == 'cap_sw':
 
             for trace in traces:
                 if trace.stats.channel:
@@ -355,6 +358,7 @@ class process_data(object):
                         trace.weight = self.weights[id][5]
                     else:
                         trace.weight = 0.
+
 
         return traces
 
