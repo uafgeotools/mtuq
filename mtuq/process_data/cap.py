@@ -238,8 +238,8 @@ class process_data(object):
                 sac_headers = obspy.read('%s/%s_%s/%s.grn.0' %
                     (self._fk_database,
                      self._fk_model,
-                     str(int(meta.catalog_depth/1000.)),
-                     str(int(meta.catalog_distance))),
+                     str(int(round(meta.catalog_depth/1000.))),
+                     str(int(round(meta.catalog_distance)))),
                     format='sac')[0].meta.sac
                 picks.P = sac_headers.t1
                 picks.S = sac_headers.t2

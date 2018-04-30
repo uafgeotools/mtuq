@@ -168,8 +168,8 @@ class Generator(GeneratorBase):
         t2_new = float(station.endtime)
         dt_new = float(station.delta)
 
-        dep = str(int(origin.depth/1000.))
-        dst = str(int(station.distance))
+        dep = str(int(round(origin.depth/1000.)))
+        dst = str(int(round(station.distance)))
 
         # see fk documentation for indexing scheme details 
         for ext in ['0','3','6','a',  # z
