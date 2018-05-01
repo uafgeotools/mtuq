@@ -274,11 +274,12 @@ class process_data(object):
 
             elif self.window_type == 'cap_sw':
                 # reproduces CAPUAF surface wave window
-                t1 = picks.S - 0.3*self.window_length
-                t2 = t1 + self.window_length
-                t1 += origin_time
-                t2 += origin_time
-                self._windows[id] = [t1, t2]
+                t3 = picks.S - 0.3*self.window_length
+                t4 = t3 + self.window_length
+                t3 += origin_time
+                t4 += origin_time
+                self._windows[id] = [t3, t4]
+
 
             elif self.window_type == 'taup_bw':
                 # determine body wave window from taup calculation
