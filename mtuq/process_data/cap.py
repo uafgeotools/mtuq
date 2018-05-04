@@ -198,7 +198,7 @@ class process_data(object):
                 trace.detrend('demean')
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
-                trace.filter('bandpass', zerophase=True,
+                trace.filter('bandpass', zerophase=False,
                           freqmin=self.freq_min,
                           freqmax=self.freq_max)
 
@@ -207,7 +207,7 @@ class process_data(object):
                 trace.detrend('demean')
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
-                trace.filter('lowpass', zerophase=True,
+                trace.filter('lowpass', zerophase=False,
                           freq=self.freq)
 
         elif self.filter_type == 'Highpass':
@@ -215,7 +215,7 @@ class process_data(object):
                 trace.detrend('demean')
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
-                trace.filter('highpass', zerophase=True,
+                trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
         #
