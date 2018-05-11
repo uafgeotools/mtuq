@@ -6,6 +6,7 @@ import time
 import numpy as np
 import obspy
 import warnings
+import zipfile
 
 
 class AttribDict(obspy.core.util.attribdict.AttribDict):
@@ -103,6 +104,21 @@ def root():
     """
     import mtuq
     return abspath(join(mtuq.__path__[0], '..'))
+
+
+def unzip(filename):
+    parts = filename.split('.')
+    if parts[-1]=='zip':
+        dirname = '.'.join(parts[:-1])
+    else:
+        dirname = filename
+        filename += '.zip'
+
+    zip_ref = zipfile.ZipFile(filename, 'r')
+    zip_ref.extractall(dirname)
+    zip_ref.close()
+
+    return dirname
 
 
 def warn(*args, **kwargs):
