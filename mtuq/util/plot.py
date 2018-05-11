@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as pyplot
 
 
-def cap_plot(filename, data, synthetics, misfit):
+def plot_waveforms(filename, data, synthetics, misfit):
     """ Creates cap-style plot
     """
     # reevaluate misfit to get time shifts
@@ -18,7 +18,7 @@ def cap_plot(filename, data, synthetics, misfit):
 
 
     # create figure
-    figsize = (16,1.4*nr)
+    figsize = (16, 1.4*nr)
     pyplot.figure(figsize=figsize)
 
 
@@ -32,7 +32,7 @@ def cap_plot(filename, data, synthetics, misfit):
 
         # display station name
         pyplot.subplot(nr, nc, nc*ir+1)
-        cap_station_labels(meta)
+        station_labels(meta)
 
         # plot body waves
         for dat, syn in zip(d1, s1):
@@ -44,11 +44,11 @@ def cap_plot(filename, data, synthetics, misfit):
 
             if component=='Z':
                 pyplot.subplot(nr, nc, nc*ir+2)
-                cap_subplot(dat, syn)
+                subplot(dat, syn)
 
             if component=='R':
                 pyplot.subplot(nr, nc, nc*ir+3)
-                cap_subplot(dat, syn)
+                subplot(dat, syn)
 
         # plot surface waves
         for dat, syn in zip(d2, s2):
@@ -60,22 +60,22 @@ def cap_plot(filename, data, synthetics, misfit):
 
             if component=='Z':
                 pyplot.subplot(nr, nc, nc*ir+4)
-                cap_subplot(dat, syn)
+                subplot(dat, syn)
 
             if component=='R':
                 pyplot.subplot(nr, nc, nc*ir+5)
-                cap_subplot(dat, syn)
+                subplot(dat, syn)
 
             if component=='T':
                 pyplot.subplot(nr, nc, nc*ir+6)
-                cap_subplot(dat, syn)
+                subplot(dat, syn)
 
         ir += 1
 
     pyplot.savefig(filename)
 
 
-def cap_subplot(dat, syn, label=None, scale_type='normalize'):
+def subplot(dat, syn, label=None, scale_type='normalize'):
     t1,t2,nt,dt = time_stats(dat)
     start = syn.start
     stop = syn.stop
@@ -106,7 +106,7 @@ def cap_subplot(dat, syn, label=None, scale_type='normalize'):
 
 
 
-def cap_station_labels(meta):
+def station_labels(meta):
     ax = pyplot.gca()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -130,7 +130,7 @@ def cap_station_labels(meta):
 
 
 
-def cap_channel_labels(meta):
+def channel_labels(meta):
     raise NotImplementedError
 
 

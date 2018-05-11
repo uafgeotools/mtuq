@@ -185,8 +185,7 @@ def reader(path, wildcard='*.sac', event_name=None, verbose=False):
         try:
             data += obspy.read(filename, format='sac')
         except:
-            if verbose:
-                print('Not a SAC file: %f' % filename)
+            print('Not a SAC file: %f' % filename)
 
     # sort by station
     data_sorted = {}
