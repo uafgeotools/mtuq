@@ -2,12 +2,13 @@
 import obspy
 import numpy as np
 
+import mtuq.greens_tensor.base
+
 from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists
 
 from obspy.core import Stream, Trace
-from mtuq.greens_tensor.base import GreensTensorBase, GeneratorBase, GreensTensorList
 from mtuq.util.signal import resample
 
 
@@ -31,7 +32,7 @@ ErrorMessage =("An obspy stream must be provided containting 12 traces, each"
     "must match the scheme used by fk. See fk documentation for details.")
 
 
-class GreensTensor(GreensTensorBase):
+class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     """
     Elastic Green's tensor object
     """
@@ -120,7 +121,7 @@ class GreensTensor(GreensTensorBase):
 
 
 
-class Generator(GeneratorBase):
+class Generator(mtuq.greens_tensor.base.Generator):
     """ 
     Creates a GreensTensorList by reading precomputed Green's tensors from an
     fk directory tree.  Such trees contain SAC files organized by model, event
@@ -182,6 +183,7 @@ class Generator(GeneratorBase):
             # what are the start and end times of the Green's function?
             t1_old = float(origin.time)+float(trace.stats.starttime)
             t2_old = float(origin.time)+float(trace.stats.endtime)
+
             dt_old = float(trace.stats.delta)
 
             # resample Green's function
