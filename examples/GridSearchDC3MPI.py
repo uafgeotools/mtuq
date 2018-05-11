@@ -10,23 +10,19 @@ from mtuq.grid_search import DCGridRandom, grid_search_mpi
 from mtuq.misfit.cap import misfit
 from mtuq.process_data.cap import process_data
 from mtuq.util.cap_util import remove_unused_stations, trapezoid_rise_time, Trapezoid
-from mtuq.util.plot import cap_plot
+from mtuq.util.plot import plot_waveforms
 from mtuq.util.util import AttribDict, root
 
 
 if __name__=='__main__':
-    """
-    Double-couple inversion example
-
-    Carries out a grid search over 50,000 randomly chosen double-couple 
-    moment tensors; magnitude, depth, and location kept fixed
-
-    USAGE
-       mpirun -n <NPROC> python DCGridSearchMPI.py
-    """
-
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
+    #""
+    # Double-couple inversion example
+    # 
+    # Carries out a grid search over 50,000 randomly chosen double-couple 
+    # moment tensors; magnitude, depth, hypocenter location kept fixed
+    #
+    # USAGE
+    #   mpirun -n <NPROC> python DCGridSearchMPI.py
 
 
     #
@@ -173,6 +169,6 @@ if __name__=='__main__':
         synthetics = {}
         for key in ['body_waves', 'surface_waves']:
             synthetics[key] = greens[key].get_synthetics(best_mt)
-        cap_plot(event_name+'.png', data, synthetics, misfit)
+        plot_waveforms(event_name+'.png', data, synthetics, misfit)
 
 

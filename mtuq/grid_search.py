@@ -19,7 +19,7 @@ def grid_search_serial(data, greens, misfit, grid):
     count = 0
 
     for mt in grid:
-        #print grid.index
+        print grid.index
 
         # generate_synthetics
         synthetics = {}
@@ -150,10 +150,6 @@ def DCGridRegular(Mw, npts_per_axis=25):
         'sigma': regular(*sigma),
         'h': regular(*h)},
         callback=tape2015.tt152cmt)
-
-
-def DepthGrid():
-    raise NotImplementedError
 
 
 def OriginGrid():

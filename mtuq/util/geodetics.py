@@ -1,6 +1,7 @@
 
 
-from obspy.geodetics import gps2dist_azimuth
+from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
+
 
 
 def distance(station, origin):
@@ -32,4 +33,4 @@ def distance_azimuth(station, origin):
 
 
 def km2deg(distance_in_km):
-    return kilometers_to_degrees(distance_in_km, radius=6371.)
+    return kilometers2degrees(distance_in_km, radius=6371.)
