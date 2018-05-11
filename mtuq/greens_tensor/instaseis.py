@@ -1,37 +1,32 @@
 
+import instaseis
 import obspy
 import numpy as np
+
+import mtuq.greens_tensor.base
+
+from collections import defaultdict
+from copy import deepcopy
 from os.path import basename, exists
 
 from obspy.core import Stream, Trace
-from mtuq.greens.base import GreensTensorBase, GeneratorBase, GreensTensorList
-from mtuq.util.geodetics import distance_azimuth
+from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
 
 
-class GreensTensor(GreensTensorBase):
-    """
-    Elastic Green's tensor object.  Similar to an obpy Trace, except rather 
-    than a single time series, holds multiple time series corresponding to
-    the independent elements of an elastic Green's tensor
-    """
-    def __init__(self, data, station, origin, mpi=None):
-        self.data = data
-        self.station = station
-        self.origin = origin
+# If a GreensTensor is created with the wrong input arguments, this error
+# message is displayed.  In practice this is rarely encountered, since
+# Generator normally does all the work
+ErrorMessage=''
 
-        self.mpi = mpi
-        if self.mpi:
-            nproc = self.mpi.COMM.size
-        else:
-            nproc = 1
 
-        # preallocate streams used by get_synthetics
-        self._synthetics = []
-        for _ in range(nproc):
-            self._synthetics += [Stream()]
-            for channel in station.channels:
-                self._synthetics[-1] += Trace(np.zeros(station.npts), station)
+class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
+    """
+    Elastic Green's tensor object
+    """
+    def __init__(self, stream, station, origin):
+        assert isinstance(stream, obspy.Stream), ValueError(ErrorMessage)
+        super(GreensTensor, self).__init__(stream, station, origin)
 
 
     def get_synthetics(self, mt):
@@ -39,87 +34,116 @@ class GreensTensor(GreensTensorBase):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
-        if self.mpi:
-            iproc = self.mpi.COMM.rank
-        else:
-            iproc = 0
+        if not hasattr(self, '_synthetics'):
+            self._preallocate_synthetics()
 
-        for _i, channel in enumerate(self.station.channels):
-            component = channel[-1].lower()
-            if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in Z,R,T")
+        if not hasattr(self, '_rotated_greens_tensor'):
+            self._calculate_weights()
 
-            w = self._calculate_weights(mt, component)
-            G = self.data[component]
-            s = self._synthetics[iproc][_i].data
-
-            # overwrites previous synthetics
-            s[:] = 0.
-            for _j in range(N):
-                s += w[_j]*G[_j]
-
-        return self._synthetics[iproc]
+        self.__array[:] = 0.
+        self.__array += self._rotated_greens_tensor[:,0]*mt[0]
+        self.__array += self._rotated_greens_tensor[:,1]*mt[1]
+        self.__array += self._rotated_greens_tensor[:,2]*mt[3]
+        self.__array += self._rotated_greens_tensor[:,3]*mt[4]
+        self.__array += self._rotated_greens_tensor[:,4]*mt[5]
+        return self._synthetics
 
 
-    def process(self, function, *args, **kwargs):
+    def _calculate_weights(self):
+        tss = self.greens_tensor.traces[0].data
+        zss = self.greens_tensor.traces[1].data
+        rss = self.greens_tensor.traces[2].data
+        tds = self.greens_tensor.traces[3].data
+        zds = self.greens_tensor.traces[4].data
+        rds = self.greens_tensor.traces[5].data
+        zdd = self.greens_tensor.traces[6].data
+        rdd = self.greens_tensor.traces[7].data
+        zep = self.greens_tensor.traces[8].data
+        rep = self.greens_tensor.traces[9].data
+
+        G_z = self.greens_tensor.traces[0].meta['npts']
+        G_r = self.greens_tensor.traces[0].meta['npts'] * 2
+        G_t = self.greens_tensor.traces[0].meta['npts'] * 3
+        G = np.ones((G_t, 5))
+
+        azimuth = np.deg2rad(self.station.azimuth)
+
+        G[0:G_z, 0] = zss * (0.5) * np.cos(2 * azimuth) - zdd * 0.5
+        G[0:G_z, 1] = - zdd * 0.5 - zss * (0.5) * np.cos(2 * azimuth)
+        # G[0:G_z, 1] =  zdd * (1/3) + zep * (1/3)
+        G[0:G_z, 2] = zss * np.sin(2 * azimuth)
+        G[0:G_z, 3] = -zds * np.cos(azimuth)
+        G[0:G_z, 4] = -zds * np.sin(azimuth)
+
+        G[G_z:G_r, 0] = rss * (0.5) * np.cos(2 * azimuth) - rdd * 0.5
+        G[G_z:G_r, 1] = -0.5 * rdd - rss * (0.5) * np.cos(2 * azimuth)
+        # G[G_z:G_r, 1] =  rdd * (1/3) + rep * (1/3)
+        G[G_z:G_r, 2] = rss * np.sin(2 * azimuth)
+        G[G_z:G_r, 3] = -rds * np.cos(azimuth)
+        G[G_z:G_r, 4] = -rds * np.sin(azimuth)
+
+        G[G_r:G_t, 0] = -tss * (0.5) * np.sin(2 * azimuth)
+        G[G_r:G_t, 1] = tss * (0.5) * np.sin(2 * azimuth)
+        # G[G_r:G_t, 1] =   0
+        G[G_r:G_t, 2] = tss * np.cos(2 * azimuth)
+        G[G_r:G_t, 3] = tds * np.sin(2 * azimuth)
+        G[G_r:G_t, 4] = -tds * np.cos(2 * azimuth)
+
+        self._rotated_greens_tensor = G
+
+
+    def _preallocate_synthetics(self):
+        """ 
+        Creates obspy streams for use by get_synthetics
         """
-        Applies a signal processing function to all Green's functions
-        """
-        # overwrites original data with processed data
-        for _c in ['z','r','t']:
-            for _i in range(4):
-                self.data[_c][_i] =\
-                    function(self.data[_c][_i], *args, **kwargs)
-        return self
+        npts = self.greens_tensor[0].stats.npts
+        self.__array = np.zeros(3*npts)
+        self._synthetics = Stream()
+        for _i in range(3):
+            self._synthetics +=\
+                Trace(self.__array[_i*npts:(_i+1)*npts], self.station)
+        self._synthetics.id = self.greens_tensor.id
 
 
-    def _calculate_weights(self, mt, component):
-       """
-       Calculates weights used in linear combination over Green's functions
-       """
-       raise NotImplementedError
-
-
-
-class Generator(GeneratorBase):
-    """ 
-    Creates a GreensTensorList by reading precomputed Green's tensors from an
-    fk directory tree.  Such trees contain SAC files organized by model, event
-    depth, and event distance and are associated with the solver package "fk"
-    by Lupei Zhu.
-
-    Generating Green's tensors is a two-step procedure:
-    1) greens_tensor_generator = mtuq.greens.fk.GreensTensorGenerator(path, model)
-    2) greens_tensor_list = greens_tensor_generator(stations, origin)
-
-    In the first step, the user supplies the path to an fk directory tree and 
-    the name of the  layered Earth model that was used to generate Green's
-    tensors contained in the tree.
-
-    In the second step, the user supplies a list of stations and the origin
-    location and time of an event. GreensTensors are then created for all the
-    corresponding station-event pairs.
-    """
-    def __init__(self, path, buffer_size_in_mb=100.):
-        if not exists(path):
-            raise Exception
-
-        self.db = ForwardInstaseisDB(
-            path, buffer_size_in_mb)
-
+class Generator(mtuq.greens_tensor.base.Generator):
+    def __init__(self, path, kernelwidth=12):
+        try:
+            db = instaseis.open_db(path)
+        except:
+            Exception
+        self.db = db
+        self.kernelwidth=12
 
 
     def get_greens_tensor(self, station, origin):
-        """ 
-        Reads a Greens tensor from a directory tree organized by model,
-        event depth, and event distance
-        """
-        for i in range(N):
-            data += [self.db.get_seismogram(
-                _receiver(self.stats),
-                _source(mt, self.origin),
-                _component(self.stats))]
+        stream = self.db.get_greens_function(
+            epicentral_distance_in_degree=km2deg(station.distance),
+            source_depth_in_m=station.depth, 
+            origin_time=origin.time,
+            kind='displacement',
+            kernelwidth=self.kernelwidth,
+            definition=u'seiscomp')
 
-        return GreensTensor(data, station, origin)
+        stream.id = station.id
 
+        # what are the start and end times of the data?
+        t1_new = float(station.starttime)
+        t2_new = float(station.endtime)
+        dt_new = float(station.delta)
+
+        # what are the start and end times of the Green's function?
+        t1_old = float(origin.time)+float(trace.stats.starttime)
+        t2_old = float(origin.time)+float(trace.stats.endtime)
+        dt_old = float(trace.stats.delta)
+
+        for trace in stream:
+            # resample Green's functions
+            data_old = trace.data
+            data_new = resample(data_old, t1_old, t2_old, dt_old, 
+                                          t1_new, t2_new, dt_new)
+            trace.data = data_new
+            trace.stats.starttime = t1_new
+            trace.stats.delta = dt_new
+
+        return GreensTensor(stream, station, origin)
 

@@ -7,8 +7,8 @@ from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
 
 
-class GreensTensorBase(object):
-    """ Elastic Green's tensor object.  
+class GreensTensor(object):
+    """ Elastic Green's tensor object
 
         Similar to an obpy Trace, except rather than a single time series, holds
         multiple time series corresponding to the independent elements of an 
@@ -24,7 +24,7 @@ class GreensTensorBase(object):
         """
         assert isinstance(stream, obspy.Stream), ValueError(
             "An obspy stream must be provided containing multiple traces, "
-            "each representing an independent Green's tensor element")
+            "each representing a Green's function")
 
         assert hasattr(station, 'id'), ValueError(
             "Station must have a unique identifier")
@@ -198,7 +198,7 @@ class GreensTensorList(object):
 
 
 
-class GeneratorBase(object):
+class Generator(object):
     """
     Creates GreensTensorLists via a two-step procedure:
 
