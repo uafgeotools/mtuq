@@ -2,22 +2,21 @@
 import instaseis
 import obspy
 import numpy as np
+import re
 import urllib
-
 import mtuq.greens_tensor.base
 import mtuq.greens_tensor.instaseis
 
 from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists
-
 from obspy.core import Stream, Trace
 from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
 from mtuq.util.util import unzip
 
 
-SYNGINE_FILENAMES = [
+GREENS_TENSOR_FILENAMES = [
     'greensfunction_XX.GF001..RDD.sac',
     'greensfunction_XX.GF001..RDS.sac',
     'greensfunction_XX.GF001..REP.sac',
@@ -30,10 +29,11 @@ SYNGINE_FILENAMES = [
     'greensfunction_XX.GF001..ZSS.sac',
     ]
 
-# If a GreensTensor is created with the wrong input arguments, this error
-# message is displayed.  In practice this is rarely encountered, since
-# GreensTensorFactory normally does all the work
-ErrorMessage=''
+SYNTHETICS_FILENAMES = [
+    'XX.S0001.SE.BXE.sac',
+    'XX.S0001.SE.BXN.sac',
+    'XX.S0001.SE.BXZ.sac',
+]
 
 
 class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
@@ -55,7 +55,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         depth = origin.depth
 
         # download and unizp data
-        dirname = unzip(download_greens_functions(model, delta, distance, depth))
+        dirname = unzip(download_greens_tensor(model, delta, distance, depth))
 
         # read data
         stream = Stream()
@@ -73,9 +73,6 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         t2_old = float(origin.time)+float(stream[0].stats.endtime)
         dt_old = float(stream[0].stats.delta)
 
-        print(t1_old, t2_old, dt_old, t1_new, t2_new, dt_new)
-            
-
         for trace in stream:
             # resample Green's functions
             data_old = trace.data
@@ -88,7 +85,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         return GreensTensor(stream, station, origin)
 
 
-def download_greens_functions(model, delta, distance_in_deg, depth_in_m):
+def download_greens_tensor(model, delta, distance_in_deg, depth_in_m):
     """ Downloads Green's functions through syngine URL interface
     """
     url = ('http://service.iris.edu/irisws/syngine/1/query'
@@ -109,27 +106,29 @@ def download_greens_functions(model, delta, distance_in_deg, depth_in_m):
     return filename
 
 
-def download_synthetics(mt, model, delta, station, origin):
+def download_synthetics(model, delta, station, origin, mt):
     """ Downloads synthetics through syngine URL interface
     """
     url = ('http://service.iris.edu/irisws/syngine/1/query'
          +'?model='+model
          +'&dt='+str(delta)
-         +'&receiverlatitude'+str(station.latitude)
-         +'&receiverlongitude'+str(station.longitude)
-         +'&sourclatitude'+str(origin.latitude)
-         +'&sourcelongitude'+str(origin.longitude)
+         +'&components=ZRT'
+         +'&receiverlatitude='+str(station.latitude)
+         +'&receiverlongitude='+str(station.longitude)
+         +'&sourcelatitude='+str(origin.latitude)
+         +'&sourcelongitude='+str(origin.longitude)
          +'&sourcedepthinmeters='+str(int(round(origin.depth)))
-         +'&sourcemomenttensor='+",".join(map(str, mt)))
+         +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt))))
     filename = ('tmp-'
          +'model='+model
          +'dt='+str(delta)
-         +'&receiverlatitude'+str(station.latitude)
-         +'&receiverlongitude'+str(station.longitude)
-         +'&sourclatitude'+str(origin.latitude)
-         +'&sourcelongitude'+str(origin.longitude)
+         +'&components=ZRT'
+         +'&receiverlatitude='+str(station.latitude)
+         +'&receiverlongitude='+str(station.longitude)
+         +'&sourcelatitude='+str(origin.latitude)
+         +'&sourcelongitude='+str(origin.longitude)
          +'&sourcedepthinmeters='+str(int(round(origin.depth)))
-         +'&sourcemomenttensor='+",".join(map(str, mt))
+         +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt)))
          +'.zip')
     download = urllib.URLopener()
     download.retrieve(url, filename)
