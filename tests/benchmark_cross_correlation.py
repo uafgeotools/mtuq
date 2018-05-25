@@ -20,9 +20,9 @@ def correlate_td(w1,w2):
 if __name__=='__main__':
     """
     Compares computational cost of two different implementations of 
-    cross-correlation: measures how execution time varies as a function of
-    vector length and maximum lag time for time-domain and frequency-domain
-    implementations
+    cross-correlation. More precisely, measures how execution time varies as a
+    function of vector length and maximum lag time for time-domain and 
+    frequency-domain implementations of cross-correlation
     """
     # what vector lengths will we consider? 
     # i.e. what values of len(w11)
