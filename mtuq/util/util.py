@@ -5,6 +5,7 @@ import csv
 import time
 import numpy as np
 import obspy
+import re
 import warnings
 import zipfile
 
@@ -17,6 +18,10 @@ def asarray(x):
     """ Numpy array typecast
     """
     return np.array(x, dtype=np.float64, ndmin=1, copy=False)
+
+
+def cross(*args):
+    raise NotImplementedError
 
 
 def is_mpi_env():

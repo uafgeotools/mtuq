@@ -10,9 +10,8 @@ from mtuq.util.util import AttribDict
 from mtuq.util.wavelets import Gaussian
 
  
-
-class TestMisfit(unittest.TestCase):
-    def test_cap_time_shift1(self):
+class test_misfit_cap(unittest.TestCase):
+    def test_time_shift1(self):
         """ Checks that time-shift corrections are working properly
         """
         npts = 1001
@@ -44,7 +43,6 @@ class TestMisfit(unittest.TestCase):
         stream += Trace(data=gaussian, header=header)
         syn += stream
 
-
         #
         # Checks that the correction matches the original shift
         #
@@ -56,15 +54,13 @@ class TestMisfit(unittest.TestCase):
         assert hasattr(syn[0][0], 'time_shift')
         assert syn[0][0].time_shift == -time_shift
 
-
         #
         # Checks that the time-shift-corrected misfit is zero
         #
         assert np.isclose(result, 0.)
        
 
-        
-    def test_cap_time_shift2(self):
+    def test_time_shift2(self):
         """ Tests the time_shift_group feature, which allows time shifts to be
             fixed from component to component
         """
@@ -106,7 +102,6 @@ class TestMisfit(unittest.TestCase):
                 stream += Trace(data=gaussian, header=header)
             syn += stream
 
-
         #
         # Checks that, when time shifts are allowed to vary from component to
         # component, the misfit is less than when time-shifts are fixed
@@ -140,8 +135,6 @@ def Trace(*args, **kwargs):
     trace = obspy.core.Trace(*args, **kwargs)
     trace.weight = 1.
     return trace
-
-
 
 
 if __name__=='__main__':

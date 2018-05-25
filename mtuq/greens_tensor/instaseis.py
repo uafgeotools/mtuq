@@ -16,7 +16,7 @@ from mtuq.util.signal import resample
 
 # If a GreensTensor is created with the wrong input arguments, this error
 # message is displayed.  In practice this is rarely encountered, since
-# Generator normally does all the work
+# GreensTensorFactory normally does all the work
 ErrorMessage=''
 
 
@@ -105,7 +105,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         self._synthetics.id = self.greens_tensor.id
 
 
-class Generator(mtuq.greens_tensor.base.Generator):
+class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
     def __init__(self, path, kernelwidth=12):
         try:
             db = instaseis.open_db(path)

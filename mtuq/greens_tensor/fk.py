@@ -26,7 +26,7 @@ N = 4
 
 # If a GreensTensor is created with the wrong input arguments, this error
 # message is displayed.  In practice this is rarely encountered, since
-# Generator normally does all the work
+# GreensTensorFactory normally does all the work
 ErrorMessage =("An obspy stream must be provided containting 12 traces, each"
     "representing an indepedent Green's tensor element. The order of traces "
     "must match the scheme used by fk. See fk documentation for details.")
@@ -121,7 +121,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
 
 
-class Generator(mtuq.greens_tensor.base.Generator):
+class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
     """ 
     Creates a GreensTensorList by reading precomputed Green's tensors from an
     fk directory tree.  Such trees contain SAC files organized by model, event
@@ -129,7 +129,7 @@ class Generator(mtuq.greens_tensor.base.Generator):
     by Lupei Zhu.
 
     Generating Green's tensors is a two-step procedure:
-        1) greens_tensor_generator = mtuq.greens.fk.Generator(path, model)
+        1) greens_tensor_generator = mtuq.greens.fk.GreensTensorFactory(path, model)
         2) greens_tensors = greens_tensor_generator(stations, origin)
 
     In the first step, the user supplies the path to an fk directory tree and 
