@@ -1,5 +1,6 @@
 
-GridSearchImports="""
+
+Imports="""
 import os
 import sys
 import numpy as np
@@ -7,13 +8,13 @@ import mtuq.dataset.sac
 import mtuq.greens_tensor.fk
 
 from os.path import basename, join
-from mtuq.grid_search import DCGridRandom, DCGridRegular
-from mtuq.grid_search import grid_search_mpi, grid_search_serial
+from mtuq.grid_search import DCGridRandom
+from mtuq.grid_search import grid_search_mpi
 from mtuq.misfit.cap import misfit
 from mtuq.process_data.cap import process_data
 from mtuq.util.cap_util import trapezoid_rise_time, Trapezoid
-from mtuq.util.plot import cap_plot
-from mtuq.util.util import AttribDict, root
+from mtuq.util.plot import plot_waveforms
+from mtuq.util.util import cross, root
 
 
 """
@@ -25,16 +26,15 @@ if __name__=='__main__':
     # Double-couple inversion example
     # 
     # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors, keeping magnitude and depth fixed
+    # moment tensors
     #
     # USAGE
     #   python GridSearchDC3Serial.py
     #
     # A typical runtime is about 60 minutes. For faster results, try 
-    # GridSearchDC3Serial.py, which runs the same inversion except in
-    # parallel
+    # GridSearchDC3.py, which runs the same inversion in parallel rather than
+    # serial
     #
-
 
 """
 
@@ -45,11 +45,10 @@ if __name__=='__main__':
     # Double-couple inversion example
     # 
     # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors, keeping magnitude and depth fixed
+    # moment tensors
     #
     # USAGE
     #   mpirun -n <NPROC> python GridSearchDC3.py
-
 
 """
 
@@ -59,43 +58,29 @@ if __name__=='__main__':
     #
     # Double-couple inversion example
     # 
-    # Carries out grid search over 1.25 million randomly chosen double-couple 
-    # moment tensors, varying magnitude and depth
+    # Carries out grid search over source orientation, magnitude and depth
     #
     # USAGE
     #   mpirun -n <NPROC> python GridSearchDC5.py
 
-
 """
 
 
-
-DocstringMT5="""
+DocstringFMT5="""
 if __name__=='__main__':
     #
     # Full moment tensor inversion example
     # 
-    # Carries out a grid search over 5 million randomly chosen moment tensors, 
-    # keeping magnitude and depth fixed
+    # Carries out grid search over all moment tensor parameters except
+    # magnitude 
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearchDC5.py
-
-
-"""
-
-
-CAPBenchmark1="""
-if __name__=='__main__':
-    # to benchmark against CAPUAF:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I1 -R0/0/0/0/180/180/0.5/0.5/0/0 20090407201255351
-
+    #   mpirun -n <NPROC> python GridSearchFullMT.py
 
 """
 
 
-
-CAPBenchmark64000="""
+BenchmarkCAPFK="""
 if __name__=='__main__':
     # to benchmark against CAPUAF:
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I1 -R0/0/0/0/180/180/0.5/0.5/0/0 20090407201255351
@@ -107,18 +92,16 @@ if __name__=='__main__':
 DefinitionsPaths="""
     #
     # Here we specify the data used for the inversion. The event is an 
-    # Mw~4 Alaska earthquake. For now, these paths exist only in my personal 
-    # environment.  Eventually we need to include sample data in the 
-    # repository or make it available for download
+    # Mw~4 Alaska earthquake
     #
-    paths = AttribDict({
-        'data':    join(root(), 'tests/data/20090407201255351'),
-        'weights': join(root(), 'tests/data/20090407201255351/weight_test.dat'),
-        'greens':  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak'),
-        })
+    path_data=    join(root(), 'tests/data/20090407201255351')
+    path_weights= join(root(), 'tests/data/20090407201255351/weights.dat')
+
+    # Fow now this path exists only in my personal environment.  Eventually, 
+    # we need to include it in the repository or make it available for download
+    path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
 
     event_name = '20090407201255351'
-
 
 
 """
@@ -139,12 +122,12 @@ DefinitionsDataProcessing="""
         freq_min= 0.25,
         freq_max= 0.667,
         pick_type='from_fk_database',
-        fk_database=paths.greens,
+        fk_database=path_greens,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
         weight_type='cap_bw',
-        weight_file=paths.weights,
+        weight_file=path_weights,
         )
 
     process_sw = process_data(
@@ -152,19 +135,18 @@ DefinitionsDataProcessing="""
         freq_min=0.025,
         freq_max=0.0625,
         pick_type='from_fk_database',
-        fk_database=paths.greens,
+        fk_database=path_greens,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
         weight_type='cap_sw',
-        weight_file=paths.weights,
+        weight_file=path_weights,
         )
 
     process_data = {
        'body_waves': process_bw,
        'surface_waves': process_sw,
        }
-
 
 """
 
@@ -185,18 +167,82 @@ DefinitionsMisfit="""
         'surface_waves': misfit_sw,
         }
 
+"""
+
+
+GridDC3="""
+    #
+    # Here we specify the moment tensor grid
+    #
+
+    grid = DCGridRandom(
+        npts=50000,
+        Mw=4.5)
+
+    rise_time = trapezoid_rise_time(Mw=4.5)
+    wavelet = Trapezoid(rise_time)
+
+
+"""
+
+
+GridDC5="""
+    #
+    # Here we specify the moment tensor grid
+    #
+
+    grid = DCGridRandom(
+        npts=50000,
+        Mw=4.5)
+
+    origins = OriginGrid(depth=np.arange(2500.,20000.,2500.),
+        latitude=origin.latitude,
+        longitude=origin.longitude)
+
+    rise_time = trapezoid_rise_time(Mw=4.5)
+    wavelet = Trapezoid(rise_time)
+
+"""
+
+
+GridFMT5="""
+    #
+    # Here we specify the moment tensor grid
+    #
+
+    grid = MTGridRandom(
+        npts=1000000,
+        Mw=4.5)
+
+    rise_time = trapezoid_rise_time(Mw=4.5)
+    wavelet = Trapezoid(rise_time)
+
+"""
+
+
+GridCAPFK="""
+    #
+    # Here we specify the moment tensor grid
+    #
+
+    grid = DCGridRegular(
+        npts_per_axis=1,
+        Mw=4.5,
+        )
+
+    rise_time = trapezoid_rise_time(Mw=4.5)
+    wavelet = Trapezoid(rise_time)
 
 """
 
 
 GridSearchSerial="""
     #
-    # The main work of the grid search starts now
+    # The main I/O work starts now
     #
 
-    print 'Reading data...\n'
-    data = mtuq.dataset.sac.reader(paths.data, wildcard='*.[zrt]')
-    remove_unused_stations(data, paths.weights)
+    print 'Reading data...\\n'
+    data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
     data.sort_by_distance()
 
     stations  = []
@@ -205,19 +251,19 @@ GridSearchSerial="""
     origin = data.get_origin()
 
 
-    print 'Processing data...\n'
+    print 'Processing data...\\n'
     processed_data = {}
     for key in ['body_waves', 'surface_waves']:
         processed_data[key] = data.map(process_data[key])
     data = processed_data
 
 
-    print 'Reading Greens functions...\n'
-    generator = mtuq.greens_tensor.fk.Generator(paths.greens)
-    greens = generator(stations, origin)
+    print 'Reading Greens functions...\\n'
+    factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+    greens = factory(stations, origin)
 
 
-    print 'Processing Greens functions...\n'
+    print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
     processed_greens = {}
     for key in ['body_waves', 'surface_waves']:
@@ -225,37 +271,41 @@ GridSearchSerial="""
     greens = processed_greens
 
 
-    print 'Carrying out grid search...\n'
+    #
+    # The main computational work starts nows
+    #
+
+    print 'Carrying out grid search...\\n'
     results = grid_search_serial(data, greens, misfit, grid)
 
 
-    print 'Saving results...\n'
+    print 'Saving results...\\n'
     grid.save(event_name+'.h5', {'misfit': results})
     best_mt = grid.get(results.argmin())
 
 
-    print 'Plotting waveforms...\n'
+    print 'Plotting waveforms...\\n'
     synthetics = {}
     for key in ['body_waves', 'surface_waves']:
         synthetics[key] = greens[key].get_synthetics(best_mt)
-    cap_plot(event_name+'.png', data, synthetics, misfit)
+    plot_waveforms(event_name+'.png', data, synthetics, misfit)
 
 
 """
 
 
 GridSearchMPI="""
-    #
-    # The main work of the grid search starts now
-    #
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
 
 
+    #
+    # The main I/O work starts now
+    #
+
     if comm.rank==0:
-        print 'Reading data...\n'
-        data = mtuq.dataset.sac.reader(paths.data, wildcard='*.[zrt]')
-        remove_unused_stations(data, paths.weights)
+        print 'Reading data...\\n'
+        data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
         data.sort_by_distance()
 
         stations  = []
@@ -263,17 +313,17 @@ GridSearchMPI="""
             stations += [stream.station]
         origin = data.get_origin()
 
-        print 'Processing data...\n'
+        print 'Processing data...\\n'
         processed_data = {}
         for key in ['body_waves', 'surface_waves']:
             processed_data[key] = data.map(process_data[key])
         data = processed_data
 
-        print 'Reading Greens functions...\n'
-        generator = mtuq.greens_tensor.fk.Generator(paths.greens)
-        greens = generator(stations, origin)
+        print 'Reading Greens functions...\\n'
+        GreensTensorFactory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+        greens = GreensTensorFactory(stations, origin)
 
-        print 'Processing Greens functions...\n'
+        print 'Processing Greens functions...\\n'
         greens.convolve(wavelet)
         processed_greens = {}
         for key in ['body_waves', 'surface_waves']:
@@ -288,32 +338,36 @@ GridSearchMPI="""
     greens = comm.bcast(greens, root=0)
 
 
+    #
+    # The main computational work starts now
+    #
+
     if comm.rank==0:
-        print 'Carrying out grid search...\n'
+        print 'Carrying out grid search...\\n'
     results = grid_search_mpi(data, greens, misfit, grid)
     results = comm.gather(results, root=0)
 
 
     if comm.rank==0:
-        print 'Saving results...\n'
+        print 'Saving results...\\n'
         results = np.concatenate(results)
         grid.save(event_name+'.h5', {'misfit': results})
         best_mt = grid.get(results.argmin())
 
 
     if comm.rank==0:
-        print 'Plotting waveforms...\n'
+        print 'Plotting waveforms...\\n'
         synthetics = {}
         for key in ['body_waves', 'surface_waves']:
             synthetics[key] = greens[key].get_synthetics(best_mt)
-        cap_plot(event_name+'.png', data, synthetics, misfit)
+        plot_waveforms(event_name+'.png', data, synthetics, misfit)
 
 
 """
 
 
 
-GridSearchMPIOrigin="""
+GridSearchMPIAlternate="""
     #
     # The main work of the grid search starts now
     #
@@ -322,9 +376,8 @@ GridSearchMPIOrigin="""
 
 
     if comm.rank==0:
-        print 'Reading data...\n'
-        data = mtuq.dataset.sac.reader(paths.data, wildcard='*.[zrt]')
-        remove_unused_stations(data, paths.weights)
+        print 'Reading data...\\n'
+        data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
         data.sort_by_distance()
 
         stations  = []
@@ -332,7 +385,7 @@ GridSearchMPIOrigin="""
             stations += [stream.station]
         origin = data.get_origin()
 
-        print 'Processing data...\n'
+        print 'Processing data...\\n'
         processed_data = {}
         for key in ['body_waves', 'surface_waves']:
             processed_data[key] = data.map(process_data[key])
@@ -343,14 +396,17 @@ GridSearchMPIOrigin="""
     data = comm.bcast(data, root=0)
 
 
-   for origin in origins:
+   for origin, magnitude in cross(origins, magnitudes):
         if comm.rank==0:
-            print 'Reading Greens functions...\n'
-            generator = mtuq.greens_tensor.fk.Generator(paths.greens)
-            greens = generator(stations, origin)
+            print 'Reading Greens functions...\\n'
+            factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+            greens = factory(stations, origin)
 
-            print 'Processing Greens functions...\n'
+            print 'Processing Greens functions...\\n'
+            rise_time = trapezoid_rise_time(magnitude)
+            wavelet = Trapezoid(rise_time)
             greens.convolve(wavelet)
+
             processed_greens = {}
             for key in ['body_waves', 'surface_waves']:
                 processed_greens[key] = greens.map(process_data[key])
@@ -363,91 +419,112 @@ GridSearchMPIOrigin="""
 
 
         if comm.rank==0:
-            print 'Carrying out grid search...\n'
+            print 'Carrying out grid search...\\n'
         results = grid_search_mpi(data, greens, misfit, grid)
         results = comm.gather(results, root=0)
 
 
         if comm.rank==0:
-            print 'Saving results...\n'
+            print 'Saving results...\\n'
             results = np.concatenate(results)
             grid.save(event_name+'.h5', {'misfit': results})
 
 
         if comm.rank==0:
-            print 'Plotting waveforms...\n'
+            print 'Plotting waveforms...\\n'
             synthetics = {}
             for key in ['body_waves', 'surface_waves']:
                 synthetics[key] = greens[key].get_synthetics(best_mt)
-            cap_plot(event_name+'.png', data, synthetics, misfit)
+            plot_waveforms(event_name+'.png', data, synthetics, misfit)
 
 
 """
 
 
-
-
 if __name__=='__main__':
+    import os
+    import re
+
     from mtuq.util.util import root
     os.chdir(root())
 
-    with open('examples/GridSearchDC3Serial.py') as fid:
-        write(fid, GridSearchImports)
-        write(fid, DocstringDC3Serial)
-        write(fid, DefinitionsPaths)
-        write(fid, DefinitionsDataProcessing)
-        write(fid, DefinitionsMisfit)
-        write(fid, GridDC3)
-        write(fid, GridSearchSerial)
+
+    with open('examples/GridSearch.DoubleCouple3.py', 'w') as file:
+        file.write(Imports)
+        file.write(DocstringDC3)
+        file.write(DefinitionsPaths)
+        file.write(DefinitionsDataProcessing)
+        file.write(DefinitionsMisfit)
+        file.write(GridDC3)
+        file.write(GridSearchMPI)
 
 
-    with open('examples/GridSearchDC3.py') as fid:
-        write(fid, GridSearchImports)
-        write(fid, DocstringDC3)
-        write(fid, DefinitionsPaths)
-        write(fid, DefinitionsDataProcessing)
-        write(fid, DefinitionsMisfit)
-        write(fid, DefinitionsGridDC3)
-        write(fid, GridSearchMPI)
+    with open('examples/GridSearch.DoubleCouple5.py', 'w') as file:
+        file.write(Imports)
+        file.write(DocstringDC5)
+        file.write(DefinitionsPaths)
+        file.write(DefinitionsDataProcessing)
+        file.write(DefinitionsMisfit)
+        file.write(GridDC5)
+        file.write(GridSearchMPIAlternate)
 
 
-    with open('examples/GridSearchDC5.py') as fid:
-        write(fid, GridSearchImports)
-        write(fid, DocstringDC5)
-        write(fid, DefinitionsPaths)
-        write(fid, DefinitionsDataProcessing)
-        write(fid, DefinitionsMisfit)
-        write(fid, GridDC5)
-        write(fid, GridSearchMPIOrigin)
+    with open('examples/GridSearch.FullMomentTensor5.py', 'w') as file:
+        file.write(Imports)
+        file.write(DocstringFMT5)
+        file.write(DefinitionsPaths)
+        file.write(DefinitionsDataProcessing)
+        file.write(DefinitionsMisfit)
+        file.write(GridFMT5)
+        file.write(GridSearchMPI)
 
 
-    with open('examples/GridSearchMT5.py') as fid:
-        write(fid, GridSearchImports)
-        write(fid, DocstringDC5)
-        write(fid, DefinitionsPaths)
-        write(fid, DefinitionsDataProcessing)
-        write(fid, DefinitionsMisfit)
-        write(fid, GridMT5)
-        write(fid, GridSearchMPIOrigin)
+    with open('examples/GridSearch.DoubleCouple3.Serial.py', 'w') as file:
+        file.write(re.sub(
+            'grid_search_mpi',
+            'grid_search_serial',
+            Imports))
+        file.write(DocstringDC3Serial)
+        file.write(DefinitionsPaths)
+        file.write(DefinitionsDataProcessing)
+        file.write(DefinitionsMisfit)
+        file.write(GridDC3)
+        file.write(GridSearchSerial)
 
 
-    with open('tests/benchmarks/capuaf_npts_1.py') as fid:
-        write(fid, GridSearchImports)
-        write(fid, DefinitionsPaths)
-        write(fid, DefinitionsDataProcessing)
-        write(fid, DefinitionsMisfit)
-        write(fid, GridCAP1)
-        write(fid, GridSearchMPI)
-        write(fid, PostprocessCAP)
+    with open('tests/integration_grid_search.py', 'w') as file:
+        file.write(re.sub(
+            'grid_search_mpi',
+            'grid_search_serial',
+            Imports))
+        file.write(DocstringDC3Serial)
+        file.write(DefinitionsPaths)
+        file.write(DefinitionsDataProcessing)
+        file.write(DefinitionsMisfit)
+        file.write(GridDC3)
+        file.write(re.sub(
+            'wildcard=',
+            'wildcard=\'*BIGB\'+',
+            GridSearchSerial))
 
 
-    with open('tests/benchmarks/capuaf_npts_64000.py') as fid:
-        write(fid, GridSearchImports)
-        write(fid, DefinitionsPaths)
-        write(fid, DefinitionsDataProcessing)
-        write(fid, DefinitionsMisfit)
-        write(fid, GridCAP64000)
-        write(fid, GridSearchMPI)
-        write(fid, PostprocessCAP)
+    with open('tests/benchmark_cap_fk.py', 'w') as file:
+        file.write(
+            re.sub(
+            'DCGridRandom',
+            'DCGridRegular',
+            re.sub(
+            'grid_search_mpi',
+            'grid_search_serial',
+            Imports)))
+        file.write(BenchmarkCAPFK)
+        file.write(DefinitionsPaths)
+        file.write(DefinitionsDataProcessing)
+        file.write(DefinitionsMisfit)
+        file.write(GridCAPFK)
+        file.write(GridSearchSerial)
+
+
+
 
 
