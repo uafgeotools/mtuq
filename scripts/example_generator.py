@@ -80,7 +80,7 @@ if __name__=='__main__':
 """
 
 
-DocstringCAPUAF="""
+BenchmarkCAPFK="""
 if __name__=='__main__':
     # to benchmark against CAPUAF:
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I1 -R0/0/0/0/180/180/0.5/0.5/0/0 20090407201255351
@@ -213,6 +213,22 @@ GridFMT5="""
     grid = MTGridRandom(
         npts=1000000,
         Mw=4.5)
+
+    rise_time = trapezoid_rise_time(Mw=4.5)
+    wavelet = Trapezoid(rise_time)
+
+"""
+
+
+GridCAPFK="""
+    #
+    # Here we specify the moment tensor grid
+    #
+
+    grid = DCGridRegular(
+        npts_per_axis=1,
+        Mw=4.5,
+        )
 
     rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
@@ -490,5 +506,25 @@ if __name__=='__main__':
             'wildcard=',
             'wildcard=\'*BIGB\'+',
             GridSearchSerial))
+
+
+    with open('tests/benchmark_cap_fk.py', 'w') as file:
+        file.write(
+            re.sub(
+            'DCGridRandom',
+            'DCGridRegular',
+            re.sub(
+            'grid_search_mpi',
+            'grid_search_serial',
+            Imports)))
+        file.write(BenchmarkCAPFK)
+        file.write(DefinitionsPaths)
+        file.write(DefinitionsDataProcessing)
+        file.write(DefinitionsMisfit)
+        file.write(GridCAPFK)
+        file.write(GridSearchSerial)
+
+
+
 
 
