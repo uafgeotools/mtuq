@@ -14,7 +14,7 @@ from mtuq.misfit.cap import misfit
 from mtuq.process_data.cap import process_data
 from mtuq.util.cap_util import trapezoid_rise_time, Trapezoid
 from mtuq.util.plot import plot_waveforms
-from mtuq.util.util import AttribDict, cross, root
+from mtuq.util.util import cross, root
 
 
 """
@@ -36,7 +36,6 @@ if __name__=='__main__':
     # serial
     #
 
-
 """
 
 
@@ -51,7 +50,6 @@ if __name__=='__main__':
     # USAGE
     #   mpirun -n <NPROC> python GridSearchDC3.py
 
-
 """
 
 
@@ -64,7 +62,6 @@ if __name__=='__main__':
     #
     # USAGE
     #   mpirun -n <NPROC> python GridSearchDC5.py
-
 
 """
 
@@ -80,7 +77,6 @@ if __name__=='__main__':
     # USAGE
     #   mpirun -n <NPROC> python GridSearchFullMT.py
 
-
 """
 
 
@@ -89,7 +85,6 @@ if __name__=='__main__':
     # to benchmark against CAPUAF:
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I1 -R0/0/0/0/180/180/0.5/0.5/0/0 20090407201255351
 
-
 """
 
 
@@ -97,18 +92,16 @@ if __name__=='__main__':
 DefinitionsPaths="""
     #
     # Here we specify the data used for the inversion. The event is an 
-    # Mw~4 Alaska earthquake. For now, these paths exist only in my personal 
-    # environment.  Eventually we need to include sample data in the 
-    # repository or make it available for download
+    # Mw~4 Alaska earthquake
     #
-    paths = AttribDict({
-        'data':    join(root(), 'tests/data/20090407201255351'),
-        'weights': join(root(), 'tests/data/20090407201255351/weights.dat'),
-        'greens':  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak'),
-        })
+    path_data=    join(root(), 'tests/data/20090407201255351')
+    path_weights= join(root(), 'tests/data/20090407201255351/weights.dat')
+
+    # Fow now this path exists only in my personal environment.  Eventually, 
+    # we need to include it in the repository or make it available for download
+    path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
 
     event_name = '20090407201255351'
-
 
 
 """
@@ -129,12 +122,12 @@ DefinitionsDataProcessing="""
         freq_min= 0.25,
         freq_max= 0.667,
         pick_type='from_fk_database',
-        fk_database=paths.greens,
+        fk_database=path_greens,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
         weight_type='cap_bw',
-        weight_file=paths.weights,
+        weight_file=path_weights,
         )
 
     process_sw = process_data(
@@ -142,19 +135,18 @@ DefinitionsDataProcessing="""
         freq_min=0.025,
         freq_max=0.0625,
         pick_type='from_fk_database',
-        fk_database=paths.greens,
+        fk_database=path_greens,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
         weight_type='cap_sw',
-        weight_file=paths.weights,
+        weight_file=path_weights,
         )
 
     process_data = {
        'body_waves': process_bw,
        'surface_waves': process_sw,
        }
-
 
 """
 
@@ -175,11 +167,14 @@ DefinitionsMisfit="""
         'surface_waves': misfit_sw,
         }
 
-
 """
 
 
 GridDC3="""
+    #
+    # Here we specify the moment tensor grid
+    #
+
     grid = DCGridRandom(
         npts=50000,
         Mw=4.5)
@@ -192,6 +187,10 @@ GridDC3="""
 
 
 GridDC5="""
+    #
+    # Here we specify the moment tensor grid
+    #
+
     grid = DCGridRandom(
         npts=50000,
         Mw=4.5)
@@ -207,6 +206,10 @@ GridDC5="""
 
 
 GridFMT5="""
+    #
+    # Here we specify the moment tensor grid
+    #
+
     grid = MTGridRandom(
         npts=1000000,
         Mw=4.5)
@@ -219,11 +222,11 @@ GridFMT5="""
 
 GridSearchSerial="""
     #
-    # The main work of the grid search starts now
+    # The main I/O work starts now
     #
 
     print 'Reading data...\\n'
-    data = mtuq.dataset.sac.reader(paths.data, wildcard='*.[zrt]')
+    data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
     data.sort_by_distance()
 
     stations  = []
@@ -240,7 +243,7 @@ GridSearchSerial="""
 
 
     print 'Reading Greens functions...\\n'
-    factory = mtuq.greens_tensor.fk.GreensTensorFactory(paths.greens)
+    factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
     greens = factory(stations, origin)
 
 
@@ -251,6 +254,10 @@ GridSearchSerial="""
         processed_greens[key] = greens.map(process_data[key])
     greens = processed_greens
 
+
+    #
+    # The main computational work starts nows
+    #
 
     print 'Carrying out grid search...\\n'
     results = grid_search_serial(data, greens, misfit, grid)
@@ -272,16 +279,17 @@ GridSearchSerial="""
 
 
 GridSearchMPI="""
-    #
-    # The main work of the grid search starts now
-    #
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
 
 
+    #
+    # The main I/O work starts now
+    #
+
     if comm.rank==0:
         print 'Reading data...\\n'
-        data = mtuq.dataset.sac.reader(paths.data, wildcard='*.[zrt]')
+        data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
         data.sort_by_distance()
 
         stations  = []
@@ -296,7 +304,7 @@ GridSearchMPI="""
         data = processed_data
 
         print 'Reading Greens functions...\\n'
-        GreensTensorFactory = mtuq.greens_tensor.fk.GreensTensorFactory(paths.greens)
+        GreensTensorFactory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
         greens = GreensTensorFactory(stations, origin)
 
         print 'Processing Greens functions...\\n'
@@ -313,6 +321,10 @@ GridSearchMPI="""
     data = comm.bcast(data, root=0)
     greens = comm.bcast(greens, root=0)
 
+
+    #
+    # The main computational work starts now
+    #
 
     if comm.rank==0:
         print 'Carrying out grid search...\\n'
@@ -349,7 +361,7 @@ GridSearchMPIAlternate="""
 
     if comm.rank==0:
         print 'Reading data...\\n'
-        data = mtuq.dataset.sac.reader(paths.data, wildcard='*.[zrt]')
+        data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
         data.sort_by_distance()
 
         stations  = []
@@ -371,7 +383,7 @@ GridSearchMPIAlternate="""
    for origin, magnitude in cross(origins, magnitudes):
         if comm.rank==0:
             print 'Reading Greens functions...\\n'
-            factory = mtuq.greens_tensor.fk.GreensTensorFactory(paths.greens)
+            factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
             greens = factory(stations, origin)
 
             print 'Processing Greens functions...\\n'
@@ -476,7 +488,7 @@ if __name__=='__main__':
         file.write(GridDC3)
         file.write(re.sub(
             'wildcard=',
-            'wildcard=''*BIGB''+',
+            'wildcard=\'*BIGB\'+',
             GridSearchSerial))
 
 
