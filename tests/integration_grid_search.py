@@ -18,43 +18,22 @@ from mtuq.util.util import cross, root
 
 if __name__=='__main__':
     #
-    # Double-couple inversion example
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors
     #
-    # USAGE
-    #   python GridSearchDC3Serial.py
+    # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
+    # except here we use a coarser grid, and at the end we assert the test
+    # that the test result equals the expected result
     #
-    # A typical runtime is about 60 minutes. For faster results, try 
-    # GridSearchDC3.py, which runs the same inversion in parallel rather than
-    # serial
-    #
+    # The compare against CAP/FK run the following command:
+    # cap.pl ???
 
 
-    #
-    # Here we specify the data used for the inversion. The event is an 
-    # Mw~4 Alaska earthquake
-    #
     path_data=    join(root(), 'tests/data/20090407201255351')
     path_weights= join(root(), 'tests/data/20090407201255351/weights.dat')
-
     # Fow now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
-
     event_name = '20090407201255351'
 
-
-
-    #
-    # Here we specify all the data processing and misfit settings used in the
-    # inversion.  For this example, body- and surface-waves are processed
-    # separately, and misfit is a sum of indepdendent body- and surface-wave
-    # contributions. (For a more flexible way of specifying parameters based on
-    # command-line argument passing rather than scripting, see
-    # mtuq/scripts/cap_inversion.py)
-    #
 
     process_bw = process_data(
         filter_type='Bandpass',
@@ -105,7 +84,7 @@ if __name__=='__main__':
 
 
     #
-    # Here we specify the moment tensor grid
+    # Here we specify the source parameter grid
     #
 
     grid = DCGridRandom(

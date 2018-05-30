@@ -36,24 +36,18 @@ if __name__=='__main__':
     # Here we specify the data used for the inversion. The event is an 
     # Mw~4 Alaska earthquake
     #
+
     path_data=    join(root(), 'tests/data/20090407201255351')
     path_weights= join(root(), 'tests/data/20090407201255351/weights.dat')
-
     # Fow now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
-
     event_name = '20090407201255351'
 
 
-
     #
-    # Here we specify all the data processing and misfit settings used in the
-    # inversion.  For this example, body- and surface-waves are processed
-    # separately, and misfit is a sum of indepdendent body- and surface-wave
-    # contributions. (For a more flexible way of specifying parameters based on
-    # command-line argument passing rather than scripting, see
-    # mtuq/scripts/cap_inversion.py)
+    # Body- and surface-wave data are processed separately and held separately 
+    # in memory
     #
 
     process_bw = process_data(
@@ -88,6 +82,11 @@ if __name__=='__main__':
        }
 
 
+    #
+    # We define misfit as a sum of indepedent body- and surface-wave 
+    # contributions
+    #
+
     misfit_bw = misfit(
         time_shift_max=2.,
         time_shift_groups=['ZR'],
@@ -105,7 +104,7 @@ if __name__=='__main__':
 
 
     #
-    # Here we specify the moment tensor grid
+    # Here we specify the source parameter grid
     #
 
     grid = DCGridRandom(
