@@ -14,7 +14,7 @@ from mtuq.util.signal import resample
 
 # Green's functions are already rotatated into vertical, radial, and
 # transverse components
-COMPONENTS = ['z','r','t']
+COMPONENTS = ['Z','R','T']
 
 # For each component, there are four associated time series
 N = 4
@@ -51,14 +51,16 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             self._preallocate_synthetics()
 
         for _i, channel in enumerate(self.station.channels):
-            component = channel[-1].lower()
+            component = channel[-1].upper()
             if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in Z/R/T")
+                raise Exception("Channels are expected to end in one of the "
+                   "following characters: ZRT")
+            self._synthetics[_i].meta.channel = component
 
             G = self.greens_tensor
             s = self._synthetics[_i].data
 
-            # overwrite previous synthetics
+            # overwrites previous synthetics
             s[:] = 0.
 
             # linear combination of Green's functions
@@ -87,23 +89,23 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
        # what weights are used in the linear combination?
        weights = []
-       if component in ['r','z']:
+       if component in ['R','Z']:
            weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
            weights += [-caz*mt[3] - saz*mt[4]]
            weights += [-0.5*caz2*(mt[0] - mt[1]) - saz2*mt[3]]
            weights += [(mt[0] - mt[1] + mt[2])/3.]
-       elif component in ['t']:
+       elif component in ['T']:
            weights += [0.]
            weights += [-0.5*saz2*(mt[0] - mt[1]) + caz2*mt[3]]
            weights += [-saz*mt[4] + caz*mt[5]]
            weights += [0.]
 
        # what Green's tensor elements do the weights correspond to?
-       if component in ['z']:
+       if component in ['Z']:
            indices = [0, 1, 2, 3]
-       elif component in ['r']:
+       elif component in ['R']:
            indices = [4, 5, 6, 7]
-       elif component in ['t']:
+       elif component in ['T']:
            indices = [8, 9, 10, 11]
 
        return zip(indices, weights)
