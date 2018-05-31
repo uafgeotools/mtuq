@@ -321,7 +321,7 @@ GridSearchSerial="""
 
 
     print 'Saving results...\\n'
-    grid.save(event_name+'.h5', {'misfit': results})
+    #grid.save(event_name+'.h5', {'misfit': results})
     best_mt = grid.get(results.argmin())
 
 
@@ -407,7 +407,6 @@ GridSearchMPI="""
 """
 
 
-
 GridSearchMPIAlternate="""
     #
     # The main work of the grid search starts now
@@ -478,6 +477,56 @@ GridSearchMPIAlternate="""
                 synthetics[key] = greens[key].get_synthetics(best_mt)
             plot_waveforms(event_name+'.png', data, synthetics, misfit)
 
+
+"""
+
+
+UtilityGetSyntheticsCAP="""
+    def get_synthetics_cap(data):
+        # Reads precomputed CAP synthetics
+
+        from copy import deepcopy
+        from obspy import read
+
+        bw = deepcopy(data['body_waves'])
+        sw = deepcopy(data['surface_waves'])
+
+        for stream in bw:
+            print stream.id
+            for trace in stream:
+                print trace.meta
+                trace.time_shift = 0.
+                component = trace.meta.channel[-1].upper()
+
+                if component == 'Z':
+                    filename = '%s.%s.BH.%d' % (event_name, stream.id, 7)
+                    trace.data = read(filename, format='sac')[0].data
+
+                if component == 'R':
+                    filename = '%s.%s.BH.%d' % (event_name, stream.id, 9)
+                    trace.data = read(filename, format='sac')[0].data
+
+        for stream in sw:
+            for trace in stream:
+                trace.time_shift = 0.
+                component = trace.meta.channel[-1].upper()
+
+                if component == 'Z':
+                    filename = '%s.%s.BH.%d' % (event_name, stream.id, 3)
+                    trace.data = read(filename, format='sac')[0].data
+
+                if component == 'R':
+                    filename = '%s.%s.BH.%d' % (event_name, stream.id, 5)
+                    trace.data = read(filename, format='sac')[0].data
+
+                if component == 'T':
+                    filename = '%s.%s.BH.%d' % (event_name, stream.id, 1)
+                    trace.data = read(filename, format='sac')[0].data
+
+        return {
+            'body_waves': bw,
+            'surface_waves': sw,
+            }
 
 """
 
@@ -553,10 +602,7 @@ if __name__=='__main__':
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
         file.write(GridDC3)
-        file.write(re.sub(
-            'wildcard=',
-            'wildcard=\'*BIGB\'+',
-            GridSearchSerial))
+        file.write(GridSearchSerial)
 
 
     with open('tests/benchmark_cap_fk.py', 'w') as file:
@@ -573,7 +619,16 @@ if __name__=='__main__':
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
         file.write(GridBenchmarkCAPFK)
-        file.write(GridSearchSerial)
+        file.write(UtilityGetSyntheticsCAP)
+        file.write(re.sub(
+            'plot_waveforms.*',
+            'synthetics_cap = get_synthetics_cap(synthetics)\n    '
+            +'plot_waveforms('
+            +'\'bechmark_cap_fk.png\', synthetics_cap, synthetics, misfit)',
+            GridSearchSerial))
+
+
+
 
 
 
