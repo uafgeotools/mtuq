@@ -7,12 +7,12 @@ from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 def distance(station, origin):
     if hasattr(station, 'latitude') and\
         hasattr(station, 'longitude'):
-        dist, _, _, = gps2dist_azimuth(
+        distance_in_m, _, _, = gps2dist_azimuth(
             station.latitude,
             station.longitude,
             origin.latitude,
             origin.longitude)
-        return dist/1000.
+        return distance_in_m/1000.
 
     else:
         raise Exception
@@ -21,12 +21,12 @@ def distance(station, origin):
 def distance_azimuth(station, origin):
     if hasattr(station, 'latitude') and\
         hasattr(station, 'longitude'):
-        dist, azim, _, = gps2dist_azimuth(
-            station.latitude,
-            station.longitude,
+        distance_in_m, azimuth, _, = gps2dist_azimuth(
             origin.latitude,
-            origin.longitude)
-        return dist/1000., azim
+            origin.longitude,
+            station.latitude,
+            station.longitude)
+        return distance_in_m/1000., azimuth
 
     else:
         raise Exception
