@@ -4,7 +4,7 @@ from mtuq.util.grid import Grid, UnstructuredGrid
 from mtuq.util.math import PI
 from mtuq.util.util import asarray, timer, timer_mpi
 
-from mtuq.util.moment_tensor import tape2015
+from mtuq.util.moment_tensor import tape2015, change_basis
 from numpy.random import uniform as random
 from mtuq.util.math import open_interval as regular
 
@@ -56,7 +56,7 @@ def grid_search_mpi(data, greens, misfit, grid):
 
 
 
-def MTGridRandom(Mw=[], npts=50000):
+def MTGridRandom(Mw, npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
     N = npts
@@ -69,7 +69,8 @@ def MTGridRandom(Mw=[], npts=50000):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = float(Mw)/np.sqrt(2)
+    M0 = 10.**(1.5*float(Mw) + 16.1)
+    rho = M0/np.sqrt(2.)
 
     return UnstructuredGrid({
         'rho': rho*np.ones(N),
@@ -78,7 +79,7 @@ def MTGridRandom(Mw=[], npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=tape2015.tt152cmt)
+        callback=callback)
 
 
 def MTGridRegular(Mw, npts_per_axis=25):
@@ -94,16 +95,17 @@ def MTGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
+    M0 = 10.**(1.5*float(Mw) + 16.1)
     rho = asarray(Mw)/np.sqrt(2)
 
     return Grid({
-        'rho': rho,
+        'rho': asarray(rho),
         'v': regular(*v),
         'w': regular(*w),
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=tape2015.tt152cmt)
+        callback=callback)
 
 
 def DCGridRandom(Mw, npts=50000):
@@ -117,7 +119,8 @@ def DCGridRandom(Mw, npts=50000):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = float(Mw)/np.sqrt(2)
+    M0 = 10.**(1.5*float(Mw) + 16.1)
+    rho = M0/np.sqrt(2.)
 
     return UnstructuredGrid({
         'rho': rho*np.ones(N),
@@ -126,7 +129,7 @@ def DCGridRandom(Mw, npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=tape2015.tt152cmt)
+        callback=callback)
 
 
 def DCGridRegular(Mw, npts_per_axis=25):
@@ -140,18 +143,33 @@ def DCGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    rho = asarray(Mw)/np.sqrt(2)
+    M0 = 10.**(1.5*float(Mw) + 16.1)
+    rho = M0/np.sqrt(2.)
 
     return Grid({
-        'rho': rho,
-        'v': np.array([0.]),
-        'w': np.array([0.]),
+        'rho': asarray(rho),
+        'v': asarray(0.),
+        'w': asarray(0.),
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=tape2015.tt152cmt)
+        callback=callback)
 
 
 def OriginGrid():
     raise NotImplementedError
 
+
+
+def callback(*args, **kwargs):
+    """ Callback applied to each grid point; converts from Tape2015
+        parameterization used for defining the grid to Mij parameterization 
+        used elsewhere in the code
+    """
+    from mtuq.util.moment_tensor.tape2015 import tt152cmt
+    from mtuq.util.moment_tensor.change_basis import change_basis
+    return tt152cmt(*args, **kwargs)
+
+    # ultimately we want to use the same basis convention as instaseis, but 
+    # for now change_basis is commented out
+    #return change_basis(tt152cmt(*args, **kwargs), 1, ?)
