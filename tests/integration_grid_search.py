@@ -21,7 +21,7 @@ if __name__=='__main__':
     #
     # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
     # except here we use a coarser grid, and at the end we assert the test
-    # that the test result equals the expected result
+    # result equals the expected result
     #
     # The compare against CAP/FK run the following command:
     # cap.pl ???
@@ -101,7 +101,7 @@ if __name__=='__main__':
     #
 
     print 'Reading data...\n'
-    data = mtuq.dataset.sac.reader(path_data, wildcard='*BIGB'+'*.[zrt]')
+    data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
     data.sort_by_distance()
 
     stations  = []
@@ -139,7 +139,7 @@ if __name__=='__main__':
 
 
     print 'Saving results...\n'
-    grid.save(event_name+'.h5', {'misfit': results})
+    #grid.save(event_name+'.h5', {'misfit': results})
     best_mt = grid.get(results.argmin())
 
 

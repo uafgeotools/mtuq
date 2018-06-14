@@ -122,8 +122,8 @@ if __name__=='__main__':
     #
     #
     # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
-    # except here we use a coarser grid, and at the end we assert the test
-    # that the test result equals the expected result
+    # except here we use a coarser grid, and at the end we assert that the test
+    # result equals the expected result
     #
     # The compare against CAP/FK run the following command:
     # cap.pl ???
