@@ -142,8 +142,8 @@ if __name__=='__main__':
         data = processed_data
 
         print 'Reading Greens functions...\n'
-        GreensTensorFactory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
-        greens = GreensTensorFactory(stations, origin)
+        factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+        greens = factory(stations, origin)
 
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)

@@ -159,7 +159,7 @@ if __name__=='__main__':
 
 
     print 'Saving results...\n'
-    grid.save(event_name+'.h5', {'misfit': results})
+    #grid.save(event_name+'.h5', {'misfit': results})
     best_mt = grid.get(results.argmin())
 
 
