@@ -6,30 +6,36 @@ import mtuq.greens_tensor.base
 
 from collections import defaultdict
 from copy import deepcopy
+from math import ceil
 from os.path import basename, exists
 
 from obspy.core import Stream, Trace
 from mtuq.util.signal import resample
+from mtuq.util.moment_tensor.change_basis import change_basis
 
 
-# Green's functions are already rotatated into vertical, radial, and
-# transverse components
-COMPONENTS = ['z','r','t']
+# Precomputed fk Green's functions represent vertical, radial, and transverse
+# velocity time series
+COMPONENTS = ['Z','R','T']
 
-# For each component, there are four associated time series
-N = 4
 
-# Thus there are N*len(COMPONENTS) = 4*3 = 12 independent Green's tensor 
-# elements altogether.  Because fk Green's functions represent the impulse 
-# response of a layered medium, there are fewer indepedent elements than
-# in the general case
+# For the vertical and raidal components, there are four associated time series.
+# For the travserce component, there are two associated time series. Thus there
+# ten independent Green's tensor elements altogether, which is fewer than in 
+# the case of a general inhomogeneous medium because fk greens functions 
+# represent the impulse response of a layered medium.
+
 
 # If a GreensTensor is created with the wrong input arguments, this error
 # message is displayed.  In practice this is rarely encountered, since
 # GreensTensorFactory normally does all the work
-ErrorMessage =("An obspy stream must be provided containting 12 traces, each"
+ErrorMessage =("An obspy stream must be provided containting 10 traces, each"
     "representing an indepedent Green's tensor element. The order of traces "
     "must match the scheme used by fk. See fk documentation for details.")
+
+
+DEG2RAD = np.pi/180.
+
 
 
 class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
@@ -38,7 +44,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     """
     def __init__(self, stream, station, origin):
         assert isinstance(stream, obspy.Stream), ValueError(ErrorMessage)
-        assert len(stream)==N*len(COMPONENTS), ValueError(ErrorMessage)
+        assert len(stream)==10, ValueError(ErrorMessage)
         super(GreensTensor, self).__init__(stream, station, origin)
 
 
@@ -51,14 +57,16 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             self._preallocate_synthetics()
 
         for _i, channel in enumerate(self.station.channels):
-            component = channel[-1].lower()
+            component = channel[-1].upper()
             if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in Z/R/T")
+                raise Exception("Channels are expected to end in one of the "
+                   "following characters: ZRT")
+            self._synthetics[_i].meta.channel = component
 
             G = self.greens_tensor
             s = self._synthetics[_i].data
 
-            # overwrite previous synthetics
+            # overwrites previous synthetics
             s[:] = 0.
 
             # linear combination of Green's functions
@@ -72,6 +80,9 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
        """
        Calculates weights used in linear combination over Green's functions
 
+       See cap/fk documentation for indexing scheme details; here we try to
+       follow as closely as possible the cap way of doing things
+
        See also Lupei Zhu's mt_radiat utility
        """
        if component not in COMPONENTS:
@@ -80,31 +91,34 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
        if not hasattr(self.station, 'azimuth'):
            raise Exception
 
-       saz = np.sin(self.station.azimuth)
-       caz = np.cos(self.station.azimuth)
+       saz = np.sin(DEG2RAD * self.station.azimuth)
+       caz = np.cos(DEG2RAD * self.station.azimuth)
        saz2 = 2.*saz*caz
        caz2 = caz**2.-saz**2.
 
+       # convert from basis to another (instaseis/MTUQ use convention 1,
+       # CAP/FK uses convention 2)
+       mt = change_basis(mt, 1, 2)
+
        # what weights are used in the linear combination?
        weights = []
-       if component in ['r','z']:
-           weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
-           weights += [-caz*mt[3] - saz*mt[4]]
+       if component in ['R','Z']:
+           weights += [(mt[0] + mt[1] + mt[2])/3.]
            weights += [-0.5*caz2*(mt[0] - mt[1]) - saz2*mt[3]]
-           weights += [(mt[0] - mt[1] + mt[2])/3.]
-       elif component in ['t']:
-           weights += [0.]
+           weights += [-caz*mt[4] - saz*mt[5]]
+           weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
+
+       elif component in ['T']:
            weights += [-0.5*saz2*(mt[0] - mt[1]) + caz2*mt[3]]
            weights += [-saz*mt[4] + caz*mt[5]]
-           weights += [0.]
 
        # what Green's tensor elements do the weights correspond to?
-       if component in ['z']:
-           indices = [0, 1, 2, 3]
-       elif component in ['r']:
-           indices = [4, 5, 6, 7]
-       elif component in ['t']:
-           indices = [8, 9, 10, 11]
+       if component in ['T']:
+           indices = [0, 1]
+       elif component in ['Z']:
+           indices = [2, 3, 4, 5]
+       elif component in ['R']:
+           indices = [6, 7, 8, 9]
 
        return zip(indices, weights)
 
@@ -170,12 +184,15 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         dt_new = float(station.delta)
 
         dep = str(int(round(origin.depth/1000.)))
-        dst = str(int(round(station.distance)))
+        #dst = str(int(round(station.distance)))
+        dst = str(int(ceil(station.distance)))
 
-        # see fk documentation for indexing scheme details 
-        for ext in ['0','3','6','a',  # z
-                    '1','4','7','b',  # r
-                    '2','5','8','c']: # t
+        # See cap/fk documentation for indexing scheme details;
+        # here we try to follow as closely as possible the cap way of
+        # doing things
+        for ext in ['8','5',          # t
+                    'b','7','4','1',  # r
+                    'a','6','3','0']: # z
             trace = obspy.read('%s/%s_%s/%s.grn.%s' %
                 (self.path, self.model, dep, dst, ext),
                 format='sac')[0]

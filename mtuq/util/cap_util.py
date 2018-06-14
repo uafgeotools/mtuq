@@ -96,3 +96,63 @@ def taper(array, taper_fraction=0.3, inplace=True):
     if not inplace:
         return array
 
+
+def get_synthetics_cap(data, path):
+    event_name = 'scak_34_20090407201255351'
+
+    from copy import deepcopy
+    from obspy import read
+
+    bw = data['body_waves']
+    sw = data['surface_waves']
+
+    for stream in bw:
+        for trace in stream:
+            trace.weight = 1.
+            component = trace.meta.channel[-1].upper()
+
+            if component == 'Z':
+                filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 7)
+                trace_cap = read(filename, format='sac')[0]
+
+            elif component == 'R':
+                filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 9)
+                trace_cap = read(filename, format='sac')[0]
+
+            else:
+                continue
+
+            if trace.meta.npts == trace_cap.meta.npts:
+                trace.data = trace_cap.data
+            else:
+                stream.remove(trace)
+            
+    for stream in sw:
+        for trace in stream:
+            trace.weight = 1.
+            component = trace.meta.channel[-1].upper()
+
+            if component == 'Z':
+                filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 3)
+                trace.data = read(filename, format='sac')[0].data
+
+            if component == 'R':
+                filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 5)
+                trace.data = read(filename, format='sac')[0].data
+
+            if component == 'T':
+                filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 1)
+                trace.data = read(filename, format='sac')[0].data
+
+    return {
+        'body_waves': bw,
+        'surface_waves': sw,
+        }
+
+
+def get_synthetics_mtuq(greens, mt):
+    synthetics_mtuq = {}
+    for key in ['body_waves', 'surface_waves']:
+        synthetics_mtuq[key] = greens[key].get_synthetics(mt)
+    return synthetics_mtuq
+

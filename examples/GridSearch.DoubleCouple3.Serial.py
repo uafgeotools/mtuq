@@ -18,14 +18,24 @@ from mtuq.util.util import cross, root
 
 if __name__=='__main__':
     #
+    # Double-couple inversion example
+    # 
+    # Carries out grid search over 50,000 randomly chosen double-couple 
+    # moment tensors
     #
-    # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
-    # except here we use a coarser grid, and at the end we assert the test
-    # that the test result equals the expected result
+    # USAGE
+    #   python GridSearchDC3Serial.py
     #
-    # The compare against CAP/FK run the following command:
-    # cap.pl ???
+    # A typical runtime is about 60 minutes. For faster results, try 
+    # GridSearchDC3.py, which runs the same inversion in parallel rather than
+    # serial
+    #
 
+
+    #
+    # Here we specify the data used for the inversion. The event is an 
+    # Mw~4 Alaska earthquake
+    #
 
     path_data=    join(root(), 'tests/data/20090407201255351')
     path_weights= join(root(), 'tests/data/20090407201255351/weights.dat')
@@ -34,6 +44,11 @@ if __name__=='__main__':
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
     event_name = '20090407201255351'
 
+
+    #
+    # Body- and surface-wave data are processed separately and held separately 
+    # in memory
+    #
 
     process_bw = process_data(
         filter_type='Bandpass',
@@ -66,6 +81,11 @@ if __name__=='__main__':
        'surface_waves': process_sw,
        }
 
+
+    #
+    # We define misfit as a sum of indepedent body- and surface-wave 
+    # contributions
+    #
 
     misfit_bw = misfit(
         time_shift_max=2.,
@@ -101,7 +121,7 @@ if __name__=='__main__':
     #
 
     print 'Reading data...\n'
-    data = mtuq.dataset.sac.reader(path_data, wildcard='*BIGB'+'*.[zrt]')
+    data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
     data.sort_by_distance()
 
     stations  = []
@@ -139,7 +159,7 @@ if __name__=='__main__':
 
 
     print 'Saving results...\n'
-    grid.save(event_name+'.h5', {'misfit': results})
+    #grid.save(event_name+'.h5', {'misfit': results})
     best_mt = grid.get(results.argmin())
 
 

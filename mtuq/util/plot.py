@@ -75,7 +75,7 @@ def plot_waveforms(filename, data, synthetics, misfit):
     pyplot.savefig(filename)
 
 
-def subplot(dat, syn, label=None, scale_type='normalize'):
+def subplot(dat, syn, label=None, normalize=False):
     t1,t2,nt,dt = time_stats(dat)
     start = syn.start
     stop = syn.stop
@@ -84,9 +84,7 @@ def subplot(dat, syn, label=None, scale_type='normalize'):
     d = dat.data
     s = syn.data
 
-    if scale_type=='default':
-        s *= 100.
-    elif scale_type=='normalize':
+    if normalize:
         d /= max(abs(d))
         s /= max(abs(s))
 

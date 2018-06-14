@@ -143,10 +143,10 @@ class Dataset(DatasetBase):
 
         try:
             distance, azimuth, back_azimuth = obspy.geodetics.gps2dist_azimuth(
-                station_latitude,
-                station_longitude,
                 origin.latitude,
-                origin.longitude)
+                origin.longitude,
+                station_latitude,
+                station_longitude)
 
             meta.update({
                 'catalog_distance': distance/1000.,
