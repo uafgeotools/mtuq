@@ -1,5 +1,6 @@
 
 import obspy
+import numpy as np
 
 
 class DatasetBase(object):
@@ -23,7 +24,8 @@ class DatasetBase(object):
         self.__list__ = []
 
         if not streams:
-            # return an empty container, streams can be added later
+            # if nothing given return an empty container, streams can be added
+            # later on
             return
 
         for stream in streams:
@@ -55,6 +57,25 @@ class DatasetBase(object):
             args = [sequence[_i] for sequence in sequences]
             processed += function(stream, *args)
         return processed
+
+
+    def min(self):
+        min_all = np.inf
+        for stream in self:
+            for trace in stream:
+                if trace.data.min() < min_all:
+                    min_all = trace.data.min()
+        return min_all
+
+
+    def max(self):
+        max_all = -np.inf
+        for stream in self:
+            for trace in stream:
+                if trace.data.max() > max_all:
+                    max_all = trace.data.max()
+        return max_all
+
 
 
     # various sorting methods
