@@ -21,7 +21,10 @@ def plot_waveforms(filename, data, synthetics, misfit):
     figsize = (16, 1.4*nr)
     pyplot.figure(figsize=figsize)
 
-
+    # axis limits
+    min_bw, max_bw = data['body_waves'].min(), data['body_waves'].max()
+    min_sw, max_sw = data['surface_waves'].min(), data['surface_waves'].max()
+    
     ir = 0
     for d1,s1,d2,s2 in zip(
         data['body_waves'], synthetics['body_waves'],
@@ -50,6 +53,8 @@ def plot_waveforms(filename, data, synthetics, misfit):
                 pyplot.subplot(nr, nc, nc*ir+3)
                 subplot(dat, syn)
 
+            pyplot.ylim(min_bw, max_bw)
+
         # plot surface waves
         for dat, syn in zip(d2, s2):
             component = dat.stats.channel[-1].upper()
@@ -69,6 +74,8 @@ def plot_waveforms(filename, data, synthetics, misfit):
             if component=='T':
                 pyplot.subplot(nr, nc, nc*ir+6)
                 subplot(dat, syn)
+
+            pyplot.ylim(min_sw, max_sw)
 
         ir += 1
 
