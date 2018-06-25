@@ -1,6 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
+import obspy.imaging.beachball
 
 
 def plot_waveforms(filename, data, synthetics, misfit):
@@ -201,4 +202,10 @@ def mesh2grid(v, x, z):
 
 def _stack(*args):
     return np.column_stack(args)
+
+
+
+def beachball(filename, mt):
+    obspy.imaging.beachball.beachball(mt, size=200, linewidth=2, facecolor='b')
+    pyplot.savefig(filename)
 
