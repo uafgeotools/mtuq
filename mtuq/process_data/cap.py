@@ -146,8 +146,6 @@ class process_data(object):
             assert exists(parameters['weight_file'])
             self.weights = parse_weight_file(parameters['weight_file'])
 
-            # by default, CAP applies distance**(?) scaling to body-wave
-            # amplitudes
             if 'scaling power' in parameters:
                 self.scaling_power = parameters['scaling_power']
             else:
@@ -157,8 +155,6 @@ class process_data(object):
                 self.scaling_distance = parameters['scaling_distance']
             else:
                 self.scaling_distance = 100.
-                # ad hoc factor determined by benchmark_cap_fk.py
-                self.scaling_distance *= 80.
 
 
         elif weight_type == 'cap_sw':
@@ -166,8 +162,6 @@ class process_data(object):
             assert exists(parameters['weight_file'])
             self.weights = parse_weight_file(parameters['weight_file'])
 
-            # by default, CAP applies distance**(?) scaling to surface-wave
-            # amplitudes
             if 'scaling power' in parameters:
                 self.scaling_power = parameters['scaling_power']
             else:
@@ -177,8 +171,6 @@ class process_data(object):
                 self.scaling_distance = parameters['scaling_distance']
             else:
                 self.scaling_distance = 100.
-                # ad hoc factor determined by benchmark_cap_fk.py
-                self.scaling_distance *= 2500.
 
 
 
@@ -252,6 +244,9 @@ class process_data(object):
                 trace.taper(0.05, type='hann')
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
+
+        for trace in traces:
+            trace.data = np.cumsum(trace.data)
 
         #
         # part 2: determine phase picks
@@ -384,6 +379,12 @@ class process_data(object):
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
 
+                # ad hoc unit conversion
+                trace.data *= 0.01
+
+                # ad hoc factor determined by benchmark_cap_fk.py
+                trace.data *= 2.
+
 
         elif self.weight_type == 'cap_sw':
             for trace in traces:
@@ -407,6 +408,13 @@ class process_data(object):
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
+
+                # ad hoc unit conversion
+                trace.data *= 0.01
+
+                # ad hoc factor determined by benchmark_cap_fk.py
+                trace.data *= 2.
+
 
 
         return traces
