@@ -11,7 +11,7 @@ from mtuq.grid_search import grid_search_serial
 from mtuq.misfit.cap import misfit
 from mtuq.process_data.cap import process_data
 from mtuq.util.cap_util import trapezoid_rise_time, Trapezoid
-from mtuq.util.plot import plot_waveforms
+from mtuq.util.plot import plot_beachball, plot_waveforms
 from mtuq.util.util import cross, root
 
 
@@ -168,5 +168,6 @@ if __name__=='__main__':
     for key in ['body_waves', 'surface_waves']:
         synthetics[key] = greens[key].get_synthetics(best_mt)
     plot_waveforms(event_name+'.png', data, synthetics, misfit)
+    plot_beachball(event_name+'_beachball.png', best_mt)
 
 
