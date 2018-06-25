@@ -1,7 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
-import obspy.imaging.beachball
+from obspy.imaging.beachball import beachball
 
 
 def plot_waveforms(filename, data, synthetics, misfit, normalize=True):
@@ -225,7 +225,8 @@ def _stack(*args):
 
 
 
-def beachball(filename, mt):
-    obspy.imaging.beachball.beachball(mt, size=200, linewidth=2, facecolor='b')
+def plot_beachball(filename, mt):
+    beachball(mt, size=200, linewidth=2, facecolor='b')
     pyplot.savefig(filename)
+
 
