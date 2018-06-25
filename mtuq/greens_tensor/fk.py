@@ -115,9 +115,9 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
        # what Green's tensor elements do the weights correspond to?
        if component in ['T']:
            indices = [0, 1]
-       elif component in ['Z']:
-           indices = [2, 3, 4, 5]
        elif component in ['R']:
+           indices = [2, 3, 4, 5]
+       elif component in ['Z']:
            indices = [6, 7, 8, 9]
 
        return zip(indices, weights)

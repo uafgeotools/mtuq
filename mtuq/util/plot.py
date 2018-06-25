@@ -1,9 +1,10 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
+from obspy.imaging.beachball import beachball
 
 
-def plot_waveforms(filename, data, synthetics, misfit):
+def plot_waveforms(filename, data, synthetics, misfit, normalize=True):
     """ Creates cap-style plot
     """
     # reevaluate misfit to get time shifts
@@ -21,6 +22,9 @@ def plot_waveforms(filename, data, synthetics, misfit):
     figsize = (16, 1.4*nr)
     pyplot.figure(figsize=figsize)
 
+    # axis limits
+    min_bw, max_bw = data['body_waves'].min(), data['body_waves'].max()
+    min_sw, max_sw = data['surface_waves'].min(), data['surface_waves'].max()
 
     ir = 0
     for d1,s1,d2,s2 in zip(
@@ -34,6 +38,7 @@ def plot_waveforms(filename, data, synthetics, misfit):
         pyplot.subplot(nr, nc, nc*ir+1)
         station_labels(meta)
 
+
         # plot body waves
         for dat, syn in zip(d1, s1):
             component = dat.stats.channel[-1].upper()
@@ -46,9 +51,19 @@ def plot_waveforms(filename, data, synthetics, misfit):
                 pyplot.subplot(nr, nc, nc*ir+2)
                 subplot(dat, syn)
 
-            if component=='R':
+            elif component=='R':
                 pyplot.subplot(nr, nc, nc*ir+3)
                 subplot(dat, syn)
+
+            else:
+                continue
+
+            if normalize:
+                ylim = [min_bw, max_bw]
+                pyplot.ylim(*ylim)
+            else:
+                ylim = [dat.data.min(), dat.data.max()]
+
 
         # plot surface waves
         for dat, syn in zip(d2, s2):
@@ -62,13 +77,29 @@ def plot_waveforms(filename, data, synthetics, misfit):
                 pyplot.subplot(nr, nc, nc*ir+4)
                 subplot(dat, syn)
 
-            if component=='R':
+            elif component=='R':
                 pyplot.subplot(nr, nc, nc*ir+5)
                 subplot(dat, syn)
 
-            if component=='T':
+            elif component=='T':
                 pyplot.subplot(nr, nc, nc*ir+6)
                 subplot(dat, syn)
+
+            else:
+                continue
+
+            if normalize:
+                ylim = [min_sw, max_sw]
+                pyplot.ylim(*ylim)
+            else:
+                ylim = [dat.data.min(), dat.data.max()]
+
+            if True:
+                # CAP-style annotations
+                pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
+                pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %dat.sum_residuals, fontsize=6)
+                #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
+                #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
 
         ir += 1
 
@@ -98,9 +129,6 @@ def subplot(dat, syn, label=None, normalize=False):
     ax.spines['left'].set_visible(False)
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
-
-    if label:
-        pyplot.text(0.,0.6,meta.station, fontsize=10)
 
 
 
@@ -194,4 +222,11 @@ def mesh2grid(v, x, z):
 
 def _stack(*args):
     return np.column_stack(args)
+
+
+
+def plot_beachball(filename, mt):
+    beachball(mt, size=200, linewidth=2, facecolor='b')
+    pyplot.savefig(filename)
+
 

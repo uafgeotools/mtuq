@@ -23,7 +23,7 @@ class misfit(object):
     """
 
     def __init__(self,
-        norm_order=2,
+        norm_order=1,
         polarity_weight=0.,
         time_shift_groups=['ZRT'],
         time_shift_max=0.,
@@ -156,7 +156,8 @@ class misfit(object):
                     r = s[_i].data[start:stop] - d[_i].data
 
                     # sum the resulting residuals
-                    sum_misfit += d[_i].weight * np.sum(r**p)*dt
+                    d[_i].sum_residuals = np.sum(np.abs(r)**p)*dt
+                    sum_misfit += d[_i].weight * d[_i].sum_residuals
 
 
 

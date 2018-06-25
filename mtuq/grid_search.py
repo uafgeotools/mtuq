@@ -69,8 +69,8 @@ def MTGridRandom(Mw, npts=50000):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 16.1)
-    rho = M0/np.sqrt(2.)
+    M0 = 10.**(1.5*float(Mw) + 16.1 - 20.)
+    rho = M0*np.sqrt(2.)
 
     return UnstructuredGrid({
         'rho': rho*np.ones(N),
@@ -95,7 +95,7 @@ def MTGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 16.1)
+    M0 = 10.**(1.5*float(Mw) + 16.1 - 20.)
     rho = asarray(Mw)/np.sqrt(2)
 
     return Grid({
@@ -119,8 +119,8 @@ def DCGridRandom(Mw, npts=50000):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 16.1)
-    rho = M0/np.sqrt(2.)
+    M0 = 10.**(1.5*float(Mw) + 16.1 - 20.)
+    rho = M0*np.sqrt(2.)
 
     return UnstructuredGrid({
         'rho': rho*np.ones(N),
@@ -143,8 +143,8 @@ def DCGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 16.1)
-    rho = M0/np.sqrt(2.)
+    M0 = 10.**(1.5*float(Mw) + 16.1 - 20.)
+    rho = M0*np.sqrt(2.)
 
     return Grid({
         'rho': asarray(rho),
@@ -164,12 +164,8 @@ def OriginGrid():
 def callback(*args, **kwargs):
     """ Callback applied to each grid point; converts from Tape2015
         parameterization used for defining the grid to Mij parameterization 
-        used elsewhere in the code
+        used elsewhere in the code (up-south-east convention)
     """
     from mtuq.util.moment_tensor.tape2015 import tt152cmt
-    from mtuq.util.moment_tensor.change_basis import change_basis
+    #from mtuq.util.moment_tensor.change_basis import change_basis
     return tt152cmt(*args, **kwargs)
-
-    # ultimately we want to use the same basis convention as instaseis, but 
-    # for now change_basis is commented out
-    #return change_basis(tt152cmt(*args, **kwargs), 1, ?)
