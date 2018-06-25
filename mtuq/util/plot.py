@@ -4,7 +4,7 @@ import matplotlib.pyplot as pyplot
 import obspy.imaging.beachball
 
 
-def plot_waveforms(filename, data, synthetics, misfit):
+def plot_waveforms(filename, data, synthetics, misfit, normalize=True):
     """ Creates cap-style plot
     """
     # reevaluate misfit to get time shifts
@@ -38,6 +38,7 @@ def plot_waveforms(filename, data, synthetics, misfit):
         pyplot.subplot(nr, nc, nc*ir+1)
         station_labels(meta)
 
+
         # plot body waves
         for dat, syn in zip(d1, s1):
             component = dat.stats.channel[-1].upper()
@@ -50,11 +51,19 @@ def plot_waveforms(filename, data, synthetics, misfit):
                 pyplot.subplot(nr, nc, nc*ir+2)
                 subplot(dat, syn)
 
-            if component=='R':
+            elif component=='R':
                 pyplot.subplot(nr, nc, nc*ir+3)
                 subplot(dat, syn)
 
-            pyplot.ylim(min_bw, max_bw)
+            else:
+                continue
+
+            if normalize:
+                ylim = [min_bw, max_bw]
+                pyplot.ylim(*ylim)
+            else:
+                ylim = [dat.data.min(), dat.data.max()]
+
 
         # plot surface waves
         for dat, syn in zip(d2, s2):
@@ -68,23 +77,29 @@ def plot_waveforms(filename, data, synthetics, misfit):
                 pyplot.subplot(nr, nc, nc*ir+4)
                 subplot(dat, syn)
 
-            if component=='R':
+            elif component=='R':
                 pyplot.subplot(nr, nc, nc*ir+5)
                 subplot(dat, syn)
 
-            if component=='T':
+            elif component=='T':
                 pyplot.subplot(nr, nc, nc*ir+6)
                 subplot(dat, syn)
 
-            if 1:
+            else:
+                continue
+
+            if normalize:
+                ylim = [min_sw, max_sw]
+                pyplot.ylim(*ylim)
+            else:
+                ylim = [dat.data.min(), dat.data.max()]
+
+            if True:
                 # CAP-style annotations
-                pyplot.text(0.,(1/4.)*min_sw, '%.2f' % syn.time_shift, fontsize=6)
-                pyplot.text(0.,(2/4.)*min_sw, '%.1e' % dat.misfit, fontsize=6)
-                #pyplot.text(0.,(3/4.)*min_sw, '%.2f' % syn.time_shift, fontsize=6)
-                #pyplot.text(0.,(4/4.)*min_sw, '%.2f' % syn.time_shift, fontsize=6)
-
-
-            pyplot.ylim(min_sw, max_sw)
+                pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
+                pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %dat.sum_residuals, fontsize=6)
+                #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
+                #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
 
         ir += 1
 
