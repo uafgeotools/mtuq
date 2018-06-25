@@ -141,11 +141,46 @@ class process_data(object):
         if weight_type==None:
             pass
 
-        elif weight_type == 'cap_bw' or\
-             weight_type == 'cap_sw':
+        elif weight_type == 'cap_bw':
             assert 'weight_file' in parameters
             assert exists(parameters['weight_file'])
             self.weights = parse_weight_file(parameters['weight_file'])
+
+            # by default, CAP applies distance**(?) scaling to body-wave
+            # amplitudes
+            if 'scaling power' in parameters:
+                self.scaling_power = parameters['scaling_power']
+            else:
+                self.scaling_power = 1.
+
+            if 'scaling_distance' in parameters:
+                self.scaling_distance = parameters['scaling_distance']
+            else:
+                self.scaling_distance = 100.
+                # ad hoc factor determined by benchmark_cap_fk.py
+                self.scaling_distance *= 80.
+
+
+        elif weight_type == 'cap_sw':
+            assert 'weight_file' in parameters
+            assert exists(parameters['weight_file'])
+            self.weights = parse_weight_file(parameters['weight_file'])
+
+            # by default, CAP applies distance**(?) scaling to surface-wave
+            # amplitudes
+            if 'scaling power' in parameters:
+                self.scaling_power = parameters['scaling_power']
+            else:
+                self.scaling_power = 0.5
+
+            if 'scaling_distance' in parameters:
+                self.scaling_distance = parameters['scaling_distance']
+            else:
+                self.scaling_distance = 100.
+                # ad hoc factor determined by benchmark_cap_fk.py
+                self.scaling_distance *= 2500.
+
+
 
         else:
              raise ValueError('Bad parameter: weight_type')
@@ -342,9 +377,15 @@ class process_data(object):
                     else:
                         trace.weight = 0.
 
+            # apply CAP-style distance scaling
+            distance = traces.station.catalog_distance
+
+            for trace in traces:
+                trace.data *=\
+                     (distance/self.scaling_distance)**self.scaling_power
+
 
         elif self.weight_type == 'cap_sw':
-
             for trace in traces:
                 if trace.stats.channel:
                     component = trace.stats.channel[-1].upper()
@@ -359,6 +400,13 @@ class process_data(object):
                         trace.weight = self.weights[id][5]
                     else:
                         trace.weight = 0.
+
+            # apply CAP-style distance scaling
+            distance = traces.station.catalog_distance
+
+            for trace in traces:
+                trace.data *=\
+                     (distance/self.scaling_distance)**self.scaling_power
 
 
         return traces
