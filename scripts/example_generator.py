@@ -109,10 +109,14 @@ if __name__=='__main__':
     # following commands
     #
     # explosion source:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I1 -R0/0/1.1780972450961724/1.1780972450961724/90/90/0/0/90/90 20090407201255351
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/1.1780972450961724/1.1780972450961724/90/90/0/0/90/90 20090407201255351
     #
-    # double-couple source:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I1 -R0/0/0/0/180/180/0.5/0.5/0/0 20090407201255351
+    # double-couple source #1:
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/0/0/180/180/0.5/0.5/0/0 20090407201255351
+
+    # double-couple source #2:
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/0/0/0/0/0/0/0/0 20090407201255351
+
     #
 """
 
@@ -276,11 +280,9 @@ GridBenchmarkCAPFK="""
     #
     from mtuq.grid_search import callback
     from mtuq.util.grid import UnstructuredGrid
-    from mtuq.util.moment_tensor import tape2015
 
-    Mw = 4.3
-    #M0 = 10.**(1.5*4.3 + 16.1)
-    M0 = 1.
+    Mw = 4.5
+    M0 = 10.**(1.5*Mw + 16.1 - 20.)
 
     # explosion source
     rho0 = np.sqrt(2.)*M0
@@ -302,20 +304,20 @@ GridBenchmarkCAPFK="""
     rho2 = np.sqrt(2.)*M0
     v2 = 0.
     w2 = 0.
-    kappa2 = 180.
+    kappa2 = 0.
     sigma2 = 0.
-    h2 = 0.5
+    h2 = 0.
 
     grid =  UnstructuredGrid({
-        'rho': np.array([rho0, rho1, rho2]),
-        'v': np.array([v0, v1, v2]),
-        'w': np.array([w0, w1, w2]),
+        'rho':   np.array([rho0, rho1, rho2]),
+        'v':     np.array([v0, v1, v2]),
+        'w':     np.array([w0, w1, w2]),
         'kappa': np.array([kappa0, kappa1, kappa2]),
         'sigma': np.array([sigma0, sigma1, sigma2]),
-        'h': np.array([h0, h1, h2])},
+        'h':     np.array([h0, h1, h2])},
         callback=callback)
 
-    rise_time = trapezoid_rise_time(Mw=4.3)
+    rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
 
 """
@@ -439,7 +441,7 @@ GridSearchMPI="""
     if comm.rank==0:
         print 'Saving results...\\n'
         results = np.concatenate(results)
-        grid.save(event_name+'.h5', {'misfit': results})
+        #grid.save(event_name+'.h5', {'misfit': results})
         best_mt = grid.get(results.argmin())
 
 
@@ -565,21 +567,29 @@ RunBenchmarkCAPFK="""
         processed_greens[key] = greens.map(process_data[key])
     greens = processed_greens
 
-    print 'Plotting waveforms...\\n'
+    print 'Plotting waveforms...'
     from copy import deepcopy
     from mtuq.util.cap_util import get_synthetics_cap, get_synthetics_mtuq
+    from mtuq.util.cap_util import get_data_cap
 
     paths = [
-        '/home/rmodrak/packages/capuaf/OUTPUT_DIR0',
-        '/home/rmodrak/packages/capuaf/OUTPUT_DIR1',
-        '/home/rmodrak/packages/capuaf/OUTPUT_DIR2',
+        '/home/rmodrak/projects/mtuq/OUTPUT_DIR0',
+        '/home/rmodrak/projects/mtuq/OUTPUT_DIR1',
+        '/home/rmodrak/projects/mtuq/OUTPUT_DIR2',
         ]
 
     for _i, mt in enumerate(grid):
-        synthetics_mtuq = get_synthetics_mtuq(greens, mt)
+        print ' %d of %d' % (_i+1, grid.size+1)
         synthetics_cap = get_synthetics_cap(deepcopy(data), paths[_i])
+        synthetics_mtuq = get_synthetics_mtuq(greens, mt)
         filename = 'cap_fk_'+str(_i)+'.png'
         plot_waveforms(filename, synthetics_cap, synthetics_mtuq, misfit)
+
+    print ' %d of %d' % (_i+2, grid.size+1)
+    data_cap = get_data_cap(deepcopy(data), paths[0])
+    filename = 'cap_fk_data.png'
+    plot_waveforms(filename, data_cap, data, misfit, normalize=False)
+
 
 """
 
