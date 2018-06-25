@@ -25,7 +25,7 @@ def plot_waveforms(filename, data, synthetics, misfit):
     # axis limits
     min_bw, max_bw = data['body_waves'].min(), data['body_waves'].max()
     min_sw, max_sw = data['surface_waves'].min(), data['surface_waves'].max()
-    
+
     ir = 0
     for d1,s1,d2,s2 in zip(
         data['body_waves'], synthetics['body_waves'],
@@ -76,6 +76,14 @@ def plot_waveforms(filename, data, synthetics, misfit):
                 pyplot.subplot(nr, nc, nc*ir+6)
                 subplot(dat, syn)
 
+            if 1:
+                # CAP-style annotations
+                pyplot.text(0.,(1/4.)*min_sw, '%.2f' % syn.time_shift, fontsize=6)
+                pyplot.text(0.,(2/4.)*min_sw, '%.1e' % dat.misfit, fontsize=6)
+                #pyplot.text(0.,(3/4.)*min_sw, '%.2f' % syn.time_shift, fontsize=6)
+                #pyplot.text(0.,(4/4.)*min_sw, '%.2f' % syn.time_shift, fontsize=6)
+
+
             pyplot.ylim(min_sw, max_sw)
 
         ir += 1
@@ -106,9 +114,6 @@ def subplot(dat, syn, label=None, normalize=False):
     ax.spines['left'].set_visible(False)
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
-
-    if label:
-        pyplot.text(0.,0.6,meta.station, fontsize=10)
 
 
 
