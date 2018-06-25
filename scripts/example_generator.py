@@ -129,8 +129,8 @@ if __name__=='__main__':
     # except here we use a coarser grid, and at the end we assert that the test
     # result equals the expected result
     #
-    # The compare against CAP/FK run the following command:
-    # cap.pl ???
+    # The compare against CAP/FK:
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.25/0.6667/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I20 -R0/0/0/0/0/360/0/1/-90/90 20090407201255351
 
 """
 
@@ -321,6 +321,14 @@ GridBenchmarkCAPFK="""
     wavelet = Trapezoid(rise_time)
 
 """
+
+
+GridIntegrationTest="""
+    grid = DCGridRegular(Mw=4.5, npts_per_axis=10)
+    rise_time = trapezoid_rise_time(Mw=4.5)
+    wavelet = Trapezoid(rise_time)
+"""
+
 
 
 
@@ -657,17 +665,20 @@ if __name__=='__main__':
         file.write(GridSearchSerial)
 
 
-    with open('tests/integration_grid_search.py', 'w') as file:
+    with open('tests/test_grid_search.py', 'w') as file:
         file.write(
             re.sub(
             'grid_search_mpi',
             'grid_search_serial',
-            Imports))
+            re.sub(
+            'DCGridRandom',
+            'DCGridRegular',
+            Imports)))
         file.write(DocstringIntegrationTest)
         file.write(PathsDefinitions)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
-        file.write(GridDC3)
+        file.write(GridIntegrationTest)
         file.write(GridSearchSerial)
 
 
