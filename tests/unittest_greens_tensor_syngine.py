@@ -44,7 +44,7 @@ class greens_tensor_syngine(unittest.TestCase):
         model = 'ak135f_2s'
         factory = GreensTensorFactory(model)
         greens = factory(station, origin)
-        synthetics = green.get_synthetics(mt)
+        synthetics = greens.get_synthetics(mt)
 
 
 

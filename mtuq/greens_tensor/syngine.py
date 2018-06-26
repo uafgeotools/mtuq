@@ -60,7 +60,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         # read data
         stream = Stream()
         stream.id = station.id
-        for filename in SYNGINE_FILENAMES:
+        for filename in GREENS_TENSOR_FILENAMES:
             stream += obspy.read(dirname+'/'+filename, format='sac')
 
         # what are the start and end times of the data?

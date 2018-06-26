@@ -5,6 +5,7 @@ import numpy as np
 from mtuq.dataset.base import DatasetBase
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
+from mtuq.util.util import iterable
 
 
 class GreensTensor(object):
@@ -228,7 +229,7 @@ class GreensTensorFactory(object):
         """
         greens_tensors = GreensTensorList()
 
-        for station in stations:
+        for station in iterable(stations):
             # if hypocenter is an inversion parameter, then the values 
             # calculated below will in general differ from catalog_distance and
             # catalog_azimuth
