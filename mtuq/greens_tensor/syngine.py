@@ -10,6 +10,7 @@ import mtuq.greens_tensor.instaseis
 from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists
+from uuid import uuid4
 from obspy.core import Stream, Trace
 from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
@@ -17,22 +18,22 @@ from mtuq.util.util import unzip
 
 
 GREENS_TENSOR_FILENAMES = [
-    'greensfunction_XX.GF001..RDD.sac',
-    'greensfunction_XX.GF001..RDS.sac',
-    'greensfunction_XX.GF001..REP.sac',
-    'greensfunction_XX.GF001..RSS.sac',
-    'greensfunction_XX.GF001..TDS.sac',
-    'greensfunction_XX.GF001..TSS.sac',
-    'greensfunction_XX.GF001..ZDD.sac',
-    'greensfunction_XX.GF001..ZDS.sac',
-    'greensfunction_XX.GF001..ZEP.sac',
     'greensfunction_XX.GF001..ZSS.sac',
+    'greensfunction_XX.GF001..ZDS.sac',
+    'greensfunction_XX.GF001..ZDD.sac',
+    'greensfunction_XX.GF001..ZEP.sac',
+    'greensfunction_XX.GF001..RSS.sac',
+    'greensfunction_XX.GF001..RDS.sac',
+    'greensfunction_XX.GF001..RDD.sac',
+    'greensfunction_XX.GF001..REP.sac',
+    'greensfunction_XX.GF001..TSS.sac',
+    'greensfunction_XX.GF001..TDS.sac',
     ]
 
 SYNTHETICS_FILENAMES = [
-    'XX.S0001.SE.BXE.sac',
-    'XX.S0001.SE.BXN.sac',
     'XX.S0001.SE.BXZ.sac',
+    'XX.S0001.SE.BXR.sac',
+    'XX.S0001.SE.BXT.sac',
 ]
 
 
@@ -69,13 +70,13 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         dt_new = float(station.delta)
 
         # what are the start and end times of the Green's function?
-        t1_old = float(origin.time)+float(stream[0].stats.starttime)
-        t2_old = float(origin.time)+float(stream[0].stats.endtime)
+        t1_old = float(origin.time)
+        t2_old = float(origin.time)+float(stream[0].stats.endtime)-float(stream[0].stats.starttime)
         dt_old = float(stream[0].stats.delta)
 
         for trace in stream:
             # resample Green's functions
-            data_old = trace.data
+            data_old = trace.data*1.e20
             data_new = resample(data_old, t1_old, t2_old, dt_old, 
                                           t1_new, t2_new, dt_new)
             trace.data = data_new
@@ -95,11 +96,7 @@ def download_greens_tensor(model, delta, distance_in_deg, depth_in_m):
          +'&sourcedistanceindegrees='+str(distance_in_deg)
          +'&sourcedepthinmeters='+str(int(round(depth_in_m))))
     filename = ('tmp-'
-         +'model='+model
-         +'dt='+str(delta)
-         +'&greensfunction=1'
-         +'&sourcedistanceindegrees='+str(distance_in_deg)
-         +'&sourcedepthinmeters='+str(int(round(depth_in_m)))
+         +str(uuid4())
          +'.zip')
     download = urllib.URLopener()
     download.retrieve(url, filename)
@@ -118,17 +115,11 @@ def download_synthetics(model, delta, station, origin, mt):
          +'&sourcelatitude='+str(origin.latitude)
          +'&sourcelongitude='+str(origin.longitude)
          +'&sourcedepthinmeters='+str(int(round(origin.depth)))
+         +'&origintime='+str(origin.time)[:-1]
+         +'&starttime='+str(origin.time)[:-1]
          +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt))))
     filename = ('tmp-'
-         +'model='+model
-         +'dt='+str(delta)
-         +'&components=ZRT'
-         +'&receiverlatitude='+str(station.latitude)
-         +'&receiverlongitude='+str(station.longitude)
-         +'&sourcelatitude='+str(origin.latitude)
-         +'&sourcelongitude='+str(origin.longitude)
-         +'&sourcedepthinmeters='+str(int(round(origin.depth)))
-         +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt)))
+         +str(uuid4())
          +'.zip')
     download = urllib.URLopener()
     download.retrieve(url, filename)
