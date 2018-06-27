@@ -96,8 +96,8 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
        saz2 = 2.*saz*caz
        caz2 = caz**2.-saz**2.
 
-       # convert from basis to another (instaseis/MTUQ use convention 1,
-       # CAP/FK uses convention 2)
+       # instaseis/MTUQ use convention 1 (GCMT)
+       # CAP/FK uses convention 2 (Aki&Richards)
        mt = change_basis(mt, 1, 2)
 
        # what weights are used in the linear combination?

@@ -103,12 +103,12 @@ def download_greens_tensor(model, delta, distance_in_deg, depth_in_m):
     return filename
 
 
-def download_synthetics(model, delta, station, origin, mt):
+def download_synthetics(model, station, origin, mt):
     """ Downloads synthetics through syngine URL interface
     """
     url = ('http://service.iris.edu/irisws/syngine/1/query'
          +'?model='+model
-         +'&dt='+str(delta)
+         +'&dt='+str(station.delta)
          +'&components=ZRT'
          +'&receiverlatitude='+str(station.latitude)
          +'&receiverlongitude='+str(station.longitude)

@@ -108,7 +108,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
                 G = self._GT
 
             s += mt[2]*G[:,0]
-            s += mt[3]*G[:,1]
+            s += mt[0]*G[:,1]
             s += mt[1]*G[:,2]
             s += mt[5]*G[:,3]
             s += mt[3]*G[:,4]
