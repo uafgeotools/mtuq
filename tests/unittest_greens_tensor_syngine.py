@@ -3,8 +3,8 @@
 
 import numpy as np
 import unittest
-from os.path import join
 
+from os.path import join
 from mtuq.dataset.sac import\
     reader
 from mtuq.greens_tensor.syngine import\
@@ -32,7 +32,7 @@ class greens_tensor_syngine(unittest.TestCase):
         origin = self.get_origin()
         mt = self.get_moment_tensor()
 
-        filename = download_synthetics(model, delta, station, origin, mt)
+        filename = download_synthetics(model, station, origin, mt)
         dirname = unzip(filename)
 
 
@@ -41,10 +41,26 @@ class greens_tensor_syngine(unittest.TestCase):
         origin = self.get_origin()
         mt = self.get_moment_tensor()
 
+        # generate synthetics
         model = 'ak135f_2s'
         factory = GreensTensorFactory(model)
         greens = factory(station, origin)
-        synthetics = greens.get_synthetics(mt)
+        syn = greens.get_synthetics(mt)[0]
+
+        # download reference
+        filename = download_synthetics(model, station, origin, mt)
+        dirname = unzip(filename)
+        ref = reader(dirname)[0]
+
+        for component in ['Z', 'R', 'T']:
+             s = syn.select(component=component)[0]
+             r = ref.select(component=component)[0]
+
+             np.testing.assert_allclose(
+                 s.data,
+                 r.data,
+                 rtol=1E-3, atol=1E-10)
+
 
 
 
