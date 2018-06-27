@@ -203,7 +203,7 @@ class GreensTensorFactory(object):
     """
     Creates GreensTensorLists via a two-step procedure:
 
-        1) greens_tensor_generator = GreensTensorGreensTensorFactory(*args, **kwargs)
+        1) greens_tensor_generator = GreensTensorFactory(*args, **kwargs)
         2) greens_tensors = greens_tensor_generator(stations, origin) 
 
     In the second step, the user supplies a list of stations and the origin
