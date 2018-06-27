@@ -55,7 +55,6 @@ def grid_search_mpi(data, greens, misfit, grid):
     return grid_search_serial(data, greens, misfit, subset)
 
 
-
 def MTGridRandom(Mw, npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
@@ -169,3 +168,4 @@ def callback(*args, **kwargs):
     from mtuq.util.moment_tensor.tape2015 import tt152cmt
     #from mtuq.util.moment_tensor.change_basis import change_basis
     return tt152cmt(*args, **kwargs)
+

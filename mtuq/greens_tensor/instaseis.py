@@ -97,7 +97,6 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             self._synthetics[_i].meta.channel = component
 
             s = self._synthetics[_i].data
-
             # overwrite previous synthetics
             s[:] = 0.
 
@@ -108,14 +107,12 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             if component=='T':
                 G = self._GT
 
-            # linear combination of Green's functions
             s += mt[2]*G[:,0]
             s += mt[3]*G[:,1]
             s += mt[1]*G[:,2]
             s += mt[5]*G[:,3]
             s += mt[3]*G[:,4]
             s += mt[4]*G[:,5]
-
 
         return self._synthetics
 
