@@ -15,7 +15,7 @@ from mtuq.util.signal import resample
 
 
 # If a GreensTensor is created with the wrong input arguments, this error
-# message is displayed.  In practice this is rarely encountered, since
+# message is displayed.  In practice this is rarely encounteRED, since
 # GreensTensorFactory normally does all the work
 ErrorMessage=''
 
@@ -29,6 +29,55 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         super(GreensTensor, self).__init__(stream, station, origin)
 
 
+    def _calculate_weights(self):
+        """ See also: 
+            test_instaseis.test_get_greens_vs_get_seismogram
+        """
+        traces = self.greens_tensor
+        npts = traces[0].meta['npts']
+        az = np.deg2rad(self.station.azimuth)
+
+        TSS = traces.select(channel="TSS")[0].data
+        ZSS = traces.select(channel="ZSS")[0].data
+        RSS = traces.select(channel="RSS")[0].data
+        TDS = traces.select(channel="TDS")[0].data
+        ZDS = traces.select(channel="ZDS")[0].data
+        RDS = traces.select(channel="RDS")[0].data
+        ZDD = traces.select(channel="ZDD")[0].data
+        RDD = traces.select(channel="RDD")[0].data
+        ZEP = traces.select(channel="ZEP")[0].data
+        REP = traces.select(channel="REP")[0].data
+
+        GZ = np.ones((npts, 6))
+        GR = np.ones((npts, 6))
+        GT = np.ones((npts, 6))
+
+        GZ[:, 0] = ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+        GZ[:, 1] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+        GZ[:, 2] = ZDD/3. + ZEP/3.
+        GZ[:, 3] = ZSS * np.sin(2*az)
+        GZ[:, 4] = ZDS * np.cos(az)
+        GZ[:, 5] = ZDS * np.sin(az)
+
+        GR[:, 0] = RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+        GR[:, 1] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+        GR[:, 2] = RDD/3. + REP/3.
+        GR[:, 3] = RSS * np.sin(2*az)
+        GR[:, 4] = RDS * np.cos(az)
+        GR[:, 5] = RDS * np.sin(az)
+
+        GT[:, 0] = TSS/2. * np.sin(2*az)
+        GT[:, 1] = -TSS/2. * np.sin(2*az)
+        GT[:, 2] = 0.
+        GT[:, 3] = -TSS * np.cos(2*az)
+        GT[:, 4] = TDS * np.sin(az)
+        GT[:, 5] = -TDS * np.cos(az)
+
+        self._GZ = GZ
+        self._GR = GR
+        self._GT = GT
+
+
     def get_synthetics(self, mt):
         """
         Generates synthetic seismograms for a given moment tensor, via a linear
@@ -40,69 +89,45 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_rotated_greens_tensor'):
             self._calculate_weights()
 
-        self.__array[:] = 0.
-        self.__array += self._rotated_greens_tensor[:,0]*mt[0]
-        self.__array += self._rotated_greens_tensor[:,1]*mt[1]
-        self.__array += self._rotated_greens_tensor[:,2]*mt[3]
-        self.__array += self._rotated_greens_tensor[:,3]*mt[4]
-        self.__array += self._rotated_greens_tensor[:,4]*mt[5]
+        for _i, channel in enumerate(self.station.channels):
+            component = channel[-1].upper()
+            if component not in ['Z','R','T']:
+                raise Exception("Channels are expected to end in one of the "
+                   "following characters: ZRT")
+            self._synthetics[_i].meta.channel = component
+
+            s = self._synthetics[_i].data
+
+            # overwrite previous synthetics
+            s[:] = 0.
+
+            if component=='Z':
+                G = self._GZ
+            if component=='R':
+                G = self._GR
+            if component=='T':
+                G = self._GT
+
+            # linear combination of Green's functions
+            s += mt[2]*G[:,0]
+            s += mt[3]*G[:,1]
+            s += mt[1]*G[:,2]
+            s += mt[5]*G[:,3]
+            s += mt[3]*G[:,4]
+            s += mt[4]*G[:,5]
+
+
         return self._synthetics
 
 
-    def _calculate_weights(self):
-        tss = self.greens_tensor.traces[0].data
-        zss = self.greens_tensor.traces[1].data
-        rss = self.greens_tensor.traces[2].data
-        tds = self.greens_tensor.traces[3].data
-        zds = self.greens_tensor.traces[4].data
-        rds = self.greens_tensor.traces[5].data
-        zdd = self.greens_tensor.traces[6].data
-        rdd = self.greens_tensor.traces[7].data
-        zep = self.greens_tensor.traces[8].data
-        rep = self.greens_tensor.traces[9].data
-
-        G_z = self.greens_tensor.traces[0].meta['npts']
-        G_r = self.greens_tensor.traces[0].meta['npts'] * 2
-        G_t = self.greens_tensor.traces[0].meta['npts'] * 3
-        G = np.ones((G_t, 5))
-
-        azimuth = np.deg2rad(self.station.azimuth)
-
-        G[0:G_z, 0] = zss * (0.5) * np.cos(2 * azimuth) - zdd * 0.5
-        G[0:G_z, 1] = - zdd * 0.5 - zss * (0.5) * np.cos(2 * azimuth)
-        # G[0:G_z, 1] =  zdd * (1/3) + zep * (1/3)
-        G[0:G_z, 2] = zss * np.sin(2 * azimuth)
-        G[0:G_z, 3] = -zds * np.cos(azimuth)
-        G[0:G_z, 4] = -zds * np.sin(azimuth)
-
-        G[G_z:G_r, 0] = rss * (0.5) * np.cos(2 * azimuth) - rdd * 0.5
-        G[G_z:G_r, 1] = -0.5 * rdd - rss * (0.5) * np.cos(2 * azimuth)
-        # G[G_z:G_r, 1] =  rdd * (1/3) + rep * (1/3)
-        G[G_z:G_r, 2] = rss * np.sin(2 * azimuth)
-        G[G_z:G_r, 3] = -rds * np.cos(azimuth)
-        G[G_z:G_r, 4] = -rds * np.sin(azimuth)
-
-        G[G_r:G_t, 0] = -tss * (0.5) * np.sin(2 * azimuth)
-        G[G_r:G_t, 1] = tss * (0.5) * np.sin(2 * azimuth)
-        # G[G_r:G_t, 1] =   0
-        G[G_r:G_t, 2] = tss * np.cos(2 * azimuth)
-        G[G_r:G_t, 3] = tds * np.sin(2 * azimuth)
-        G[G_r:G_t, 4] = -tds * np.cos(2 * azimuth)
-
-        self._rotated_greens_tensor = G
-
-
     def _preallocate_synthetics(self):
-        """ 
-        Creates obspy streams for use by get_synthetics
-        """
-        npts = self.greens_tensor[0].stats.npts
-        self.__array = np.zeros(3*npts)
         self._synthetics = Stream()
-        for _i in range(3):
+        for channel in self.station.channels:
             self._synthetics +=\
-                Trace(self.__array[_i*npts:(_i+1)*npts], self.station)
+                Trace(np.zeros(self.greens_tensor[0].stats.npts), self.station)
         self._synthetics.id = self.greens_tensor.id
+
+
 
 
 class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
