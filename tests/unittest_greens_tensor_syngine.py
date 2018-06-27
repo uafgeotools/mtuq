@@ -17,11 +17,10 @@ from mtuq.util.util import AttribDict, root, unzip
 class greens_tensor_syngine(unittest.TestCase):
     def test_download_greens_tensor(self):
         model = 'ak135f_2s'
-        delta = 0.02
-        distance = 30.
-        depth = 1000
+        station = self.get_station()
+        origin = self.get_origin()
 
-        filename = download_greens_tensor(model, delta, distance, depth)
+        filename = download_greens_tensor(model, station, origin)
         dirname = unzip(filename)
 
 

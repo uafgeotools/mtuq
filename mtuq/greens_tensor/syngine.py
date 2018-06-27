@@ -49,14 +49,8 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
 
 
     def get_greens_tensor(self, station, origin):
-        # arguments list
-        model = self.model
-        delta = station.delta
-        distance = km2deg(station.distance)
-        depth = origin.depth
-
         # download and unizp data
-        dirname = unzip(download_greens_tensor(model, delta, distance, depth))
+        dirname = unzip(download_greens_tensor(self.model, station, origin))
 
         # read data
         stream = Stream()
@@ -86,15 +80,23 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         return GreensTensor(stream, station, origin)
 
 
-def download_greens_tensor(model, delta, distance_in_deg, depth_in_m):
+def download_greens_tensor(model, station, origin):
     """ Downloads Green's functions through syngine URL interface
     """
+    try:
+        distance_in_deg = km2deg(station.distance)
+    except:
+        distance_in_deg = km2deg(station.catalog_distance)
+    depth_in_m = origin.depth
+
     url = ('http://service.iris.edu/irisws/syngine/1/query'
          +'?model='+model
-         +'&dt='+str(delta)
+         +'&dt='+str(station.delta)
          +'&greensfunction=1'
          +'&sourcedistanceindegrees='+str(distance_in_deg)
-         +'&sourcedepthinmeters='+str(int(round(depth_in_m))))
+         +'&sourcedepthinmeters='+str(int(round(depth_in_m)))
+         +'&origintime='+str(origin.time)[:-1]
+         +'&starttime='+str(origin.time)[:-1])
     filename = ('tmp-'
          +str(uuid4())
          +'.zip')
