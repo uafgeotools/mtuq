@@ -162,7 +162,7 @@ class GreensTensorList(object):
 
     def sort_by_azimuth(self, reverse=False):
         """
-        Sorts in-place by hypocentral azimuth
+        Sorts in-place by source-receiver azimuth
         """
         self.sort_by_function(lambda stream: stream.station.azimuth,
             reverse=reverse)
