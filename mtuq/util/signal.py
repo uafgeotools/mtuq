@@ -83,7 +83,7 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
 
     # cut end only
     elif t1_new <= t1_old <= t2_new <= t2_old:
-        resampled_data[i1:nt] = data[0:i2]
+        resampled_data[i1:nt] = data[0:-i2-1]
 
     # cut neither end
     elif t1_new <= t1_old <= t2_old <= t2_new:
