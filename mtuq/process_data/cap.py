@@ -36,8 +36,6 @@ class process_data(object):
                  weight_type=None,
                  **parameters):
 
-        ''' Checks data processing parameters
-        '''
         #
         # check filter parameters
         #
@@ -245,8 +243,8 @@ class process_data(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
-        for trace in traces:
-            trace.data = np.cumsum(trace.data)
+        #for trace in traces:
+        #    trace.data = np.cumsum(trace.data)
 
         #
         # part 2: determine phase picks
@@ -255,7 +253,10 @@ class process_data(object):
         # Phase arrival times will be stored in a dictionary indexed by 
         # id. This allows times to be reused later when process_data is
         # called on synthetics
-        if id not in self._picks:
+        if not self.pick_type:
+            pass
+
+        elif id not in self._picks:
             picks = self._picks[id]
 
             if self.pick_type=='from_sac_headers':
@@ -290,12 +291,15 @@ class process_data(object):
         # Start and end times will be stored in a dictionary indexed by 
         # id. This allows times to be resued later when process_data is
         # called on synthetics
-        if id not in self._windows:
+        if not self.window_type:
+            pass
+
+        elif id not in self._windows:
             origin_time = float(meta.catalog_origin_time)
             picks = self._picks[id]
 
             if self.window_type == 'cap_bw':
-                # reproduces CAPUAF body wave window
+                # reproduces CAP body wave window
                 t1 = picks.P - 0.4*self.window_length
                 t2 = t1 + self.window_length
                 t1 += origin_time
@@ -303,7 +307,7 @@ class process_data(object):
                 self._windows[id] = [t1, t2]
 
             elif self.window_type == 'cap_sw':
-                # reproduces CAPUAF surface wave window
+                # reproduces CAP surface wave window
                 t3 = picks.S - 0.3*self.window_length
                 t4 = t3 + self.window_length
                 t3 += origin_time
@@ -319,32 +323,40 @@ class process_data(object):
         #
         # part 3b: pad Green's functions
         # 
-
-        window = self._windows[id]
-
-        # using a longer window for Green's functions than for data allows
-        # time-shift corrections to be efficiently computed
-        # in mtuq.misfit.cap
-        if tag == 'greens_tensor':
-            starttime = window[0] - self.padding_length
-            endtime = window[1] + self.padding_length
-
-        elif tag == 'data':
-            starttime = window[0]
-            endtime = window[1]
+        if not self.window_type:
+            pass
 
         else:
-            raise ValueError
+            window = self._windows[id]
+
+            # using a longer window for Green's functions than for data allows
+            # time-shift corrections to be efficiently computed
+            # in mtuq.misfit.cap
+            if tag == 'greens_tensor':
+                starttime = window[0] - self.padding_length
+                endtime = window[1] + self.padding_length
+
+            elif tag == 'data':
+                starttime = window[0]
+                endtime = window[1]
+
+            else:
+                raise ValueError
 
 
         #
         # part 3c: cut and taper traces
         #
+        if not self.window_type:
+            pass
 
-        window = self._windows[id]
+        else:
+            window = self._windows[id]
+            for trace in traces:
+                cut(trace, starttime, endtime)
+
         for trace in traces:
-            cut(trace, starttime, endtime)
-            taper(trace.data)
+                taper(trace.data)
 
 
         #
@@ -353,12 +365,12 @@ class process_data(object):
 
         if not self.weight_type:
             # give all traces equal weight if weight_type is false
-            # (currently, only cap.misfit uses this attribute)
             for trace in traces:
                 trace.weight = 1.
 
 
         elif self.weight_type == 'cap_bw':
+            # reproduces CAP body wave weighting
             for trace in traces:
                 if trace.stats.channel:
                     component = trace.stats.channel[-1].upper()
@@ -372,7 +384,7 @@ class process_data(object):
                     else:
                         trace.weight = 0.
 
-            # apply CAP-style distance scaling
+            # apply distance scaling
             distance = traces.station.catalog_distance
 
             for trace in traces:
@@ -387,6 +399,7 @@ class process_data(object):
 
 
         elif self.weight_type == 'cap_sw':
+            # reproduces CAP surface wave weighting
             for trace in traces:
                 if trace.stats.channel:
                     component = trace.stats.channel[-1].upper()
@@ -402,7 +415,7 @@ class process_data(object):
                     else:
                         trace.weight = 0.
 
-            # apply CAP-style distance scaling
+            # apply distance scaling
             distance = traces.station.catalog_distance
 
             for trace in traces:
