@@ -63,6 +63,9 @@ class DatasetBase(object):
         min_all = np.inf
         for stream in self:
             for trace in stream:
+                if hasattr(trace, 'weight') and\
+                   trace.weight==0.:
+                    continue
                 if trace.data.min() < min_all:
                     min_all = trace.data.min()
         return min_all
@@ -72,6 +75,9 @@ class DatasetBase(object):
         max_all = -np.inf
         for stream in self:
             for trace in stream:
+                if hasattr(trace, 'weight') and\
+                   trace.weight==0.:
+                    continue
                 if trace.data.max() > max_all:
                     max_all = trace.data.max()
         return max_all
