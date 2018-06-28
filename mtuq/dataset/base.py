@@ -59,6 +59,7 @@ class DatasetBase(object):
         return processed
 
 
+    # min/max amplitude
     def min(self):
         min_all = np.inf
         for stream in self:
@@ -119,7 +120,7 @@ class DatasetBase(object):
 
     def get_station(self):
         """
-        Extracts station information from metadata
+        Extracts station metadata
         """
         raise NotImplementedError("Must be implemented by subclass")
 

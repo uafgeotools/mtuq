@@ -162,7 +162,7 @@ def OriginGrid():
 
 def callback(*args, **kwargs):
     """ Callback applied to each grid point; converts from Tape2015
-        parameterization used for defining the grid to Mij parameterization 
+        parameterization in which the grid is defined to Mij parameterization 
         used elsewhere in the code (up-south-east convention)
     """
     from mtuq.util.moment_tensor.tape2015 import tt152cmt
