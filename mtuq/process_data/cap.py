@@ -69,7 +69,6 @@ class process_data(object):
             assert parameters['freq'] < np.inf
             self.freq = parameters['freq']
 
-
         elif filter_type == 'Highpass':
             if 'period' in parameters:
                 assert 'freq' not in parameters
@@ -171,7 +170,6 @@ class process_data(object):
                 self.scaling_distance = 100.
 
 
-
         else:
              raise ValueError('Bad parameter: weight_type')
 
@@ -243,8 +241,8 @@ class process_data(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
-        #for trace in traces:
-        #    trace.data = np.cumsum(trace.data)
+        for trace in traces:
+            trace.data = np.cumsum(trace.data)
 
         #
         # part 2: determine phase picks
@@ -354,9 +352,10 @@ class process_data(object):
             window = self._windows[id]
             for trace in traces:
                 cut(trace, starttime, endtime)
+            meta.npts = int(round((endtime-starttime)/meta.delta))
 
         for trace in traces:
-                taper(trace.data)
+            taper(trace.data)
 
 
         #
@@ -370,7 +369,7 @@ class process_data(object):
 
 
         elif self.weight_type == 'cap_bw':
-            # reproduces CAP body wave weighting
+            # applies CAP body wave weighting
             for trace in traces:
                 if trace.stats.channel:
                     component = trace.stats.channel[-1].upper()
@@ -384,9 +383,7 @@ class process_data(object):
                     else:
                         trace.weight = 0.
 
-            # apply distance scaling
             distance = traces.station.catalog_distance
-
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
@@ -399,7 +396,7 @@ class process_data(object):
 
 
         elif self.weight_type == 'cap_sw':
-            # reproduces CAP surface wave weighting
+            # applies CAP surface wave weighting
             for trace in traces:
                 if trace.stats.channel:
                     component = trace.stats.channel[-1].upper()
@@ -415,9 +412,7 @@ class process_data(object):
                     else:
                         trace.weight = 0.
 
-            # apply distance scaling
             distance = traces.station.catalog_distance
-
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
