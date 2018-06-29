@@ -1,58 +1,64 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
+import warnings
 from obspy.imaging.beachball import beachball
 
 
-def plot_waveforms(filename, data, synthetics, misfit, normalize=True):
-    """ Creates cap-style plot
+def plot_waveforms(filename, data, synthetics, misfit=None, 
+                   annotate=False, normalize=True):
+    """ Creates cap-style data/synthetics comparison
     """
-    # reevaluate misfit to get time shifts
-    for key in ['body_waves', 'surface_waves']:
-        dat, syn, chi = data[key], synthetics[key], misfit[key]
-        _ = chi(dat, syn)
 
-
-    # how many rows, columns?
-    nc = 6
-    _, nr = shape(data)
-
-
-    # create figure
-    figsize = (16, 1.4*nr)
+    # create figure object
+    ncol = 6
+    _, nrow = shape(data)
+    figsize = (16, 1.4*nrow)
     pyplot.figure(figsize=figsize)
 
-    # axis limits
+
+    # determine axis limits
     min_bw, max_bw = data['body_waves'].min(), data['body_waves'].max()
     min_sw, max_sw = data['surface_waves'].min(), data['surface_waves'].max()
 
-    ir = 0
-    for d1,s1,d2,s2 in zip(
+
+    if misfit:
+        # reevaluate misfit to get time shifts
+        for key in ['body_waves', 'surface_waves']:
+            dat, syn, func = data[key], synthetics[key], misfit[key]
+            _ = func(dat, syn)
+
+    irow = 0
+    for data_bw,synthetics_bw,data_sw,synthetics_sw in zip(
         data['body_waves'], synthetics['body_waves'],
         data['surface_waves'], synthetics['surface_waves']):
 
-        id = d1.id
-        meta = d1.station
+        id = data_bw.id
+        meta = data_bw.station
 
-        # display station name
-        pyplot.subplot(nr, nc, nc*ir+1)
+        # add station labels
+        pyplot.subplot(nrow, ncol, ncol*irow+1)
         station_labels(meta)
 
 
-        # plot body waves
-        for dat, syn in zip(d1, s1):
+        # plot body wave comparisons
+        for dat, syn in zip(data_bw, synthetics_bw):
             component = dat.stats.channel[-1].upper()
-            weight = dat.weight
+            weight = getattr(dat, 'weight', 1.)
 
-            if not weight:
+            if component != syn.stats.channel[-1].upper():
+                warnings.warn('Skipping component')
+                continue
+
+            if weight==0.:
                 continue
 
             if component=='Z':
-                pyplot.subplot(nr, nc, nc*ir+2)
+                pyplot.subplot(nrow, ncol, ncol*irow+2)
                 subplot(dat, syn)
 
             elif component=='R':
-                pyplot.subplot(nr, nc, nc*ir+3)
+                pyplot.subplot(nrow, ncol, ncol*irow+3)
                 subplot(dat, syn)
 
             else:
@@ -64,25 +70,43 @@ def plot_waveforms(filename, data, synthetics, misfit, normalize=True):
             else:
                 ylim = [dat.data.min(), dat.data.max()]
 
+            if annotate:
+                # CAP-style annotations
+                time_shift = getattr(syn, 'time_shift', 'None')
+                pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
 
-        # plot surface waves
-        for dat, syn in zip(d2, s2):
+                sum_residuals = getattr(syn, 'sum_residuals', 'None')
+                pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
+
+                #label3 = getattr(syn, 'label3', 'None')
+                #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %label3, fontsize=6)
+
+                #label4 = getattr(syn, 'label4', 'None')
+                #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %label4, fontsize=6)
+
+
+        # plot surface wave comparisons
+        for dat, syn in zip(data_sw, synthetics_sw):
             component = dat.stats.channel[-1].upper()
-            weight = dat.weight
+            weight = getattr(dat, 'weight', 1.)
 
-            if not weight:
+            if component != syn.stats.channel[-1].upper():
+                warnings.warn('Skipping component')
+                continue
+
+            if weight==0.:
                 continue
 
             if component=='Z':
-                pyplot.subplot(nr, nc, nc*ir+4)
+                pyplot.subplot(nrow, ncol, ncol*irow+4)
                 subplot(dat, syn)
 
             elif component=='R':
-                pyplot.subplot(nr, nc, nc*ir+5)
+                pyplot.subplot(nrow, ncol, ncol*irow+5)
                 subplot(dat, syn)
 
             elif component=='T':
-                pyplot.subplot(nr, nc, nc*ir+6)
+                pyplot.subplot(nrow, ncol, ncol*irow+6)
                 subplot(dat, syn)
 
             else:
@@ -94,30 +118,41 @@ def plot_waveforms(filename, data, synthetics, misfit, normalize=True):
             else:
                 ylim = [dat.data.min(), dat.data.max()]
 
-            if True:
+            if annotate:
                 # CAP-style annotations
-                pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
-                pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %dat.sum_residuals, fontsize=6)
-                #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
-                #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %syn.time_shift, fontsize=6)
+                time_shift = getattr(syn, 'time_shift', 'None')
+                pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
 
-        ir += 1
+                sum_residuals = getattr(syn, 'sum_residuals', 'None')
+                pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
+
+                #label3 = getattr(syn, 'label3', 'None')
+                #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %label3, fontsize=6)
+
+                #label4 = getattr(syn, 'label4', 'None')
+                #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %label4, fontsize=6)
+
+        irow += 1
 
     pyplot.savefig(filename)
+    #pyplot.show()
 
 
 def subplot(dat, syn, label=None, normalize=False):
     t1,t2,nt,dt = time_stats(dat)
-    start = syn.start
-    stop = syn.stop
+
+    start = getattr(syn, 'start', 0)
+    stop = getattr(syn, 'stop', len(syn.data))
 
     meta = dat.stats
     d = dat.data
     s = syn.data
 
     if normalize:
-        d /= max(abs(d))
-        s /= max(abs(s))
+        d0 = max(abs(d))
+        s0 = max(abs(s))
+        if d0 > 0.: d /= d0
+        if s0 > 0.: s /= s0
 
     t = np.linspace(0,t2-t1,nt,dt)
     pyplot.plot(t, d, t, s[start:stop])
