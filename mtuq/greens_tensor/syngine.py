@@ -128,3 +128,43 @@ def download_synthetics(model, station, origin, mt):
     download.retrieve(url, filename)
     return filename
 
+
+
+def get_synthetics_syngine(model, station, origin, mt):
+    from mtuq.data.sac import reader
+
+    dirname = unzip(download_synthetics(model, station, origin, mt))
+    stream = reader(dirname)[0]
+
+    # what are the start and end times of the data?
+    t1_new = float(station.starttime)
+    t2_new = float(station.endtime)
+    dt_new = float(station.delta)
+
+    # what are the start and end times of the Green's function?
+    t1_old = float(stream[0].stats.starttime)
+    t2_old = float(stream[0].stats.endtime)
+    dt_old = float(stream[0].stats.delta)
+
+    for trace in stream:
+        # resample Green's functions
+        data_old = trace.data*1.e20
+        data_new = resample(data_old, t1_old, t2_old, dt_old,
+                                      t1_new, t2_new, dt_new)
+        trace.data = data_new
+        trace.stats.starttime = t1_new
+        trace.stats.delta = dt_new
+        trace.stats.npts = len(data_new)
+
+        setattr(trace, 'network', station.network)
+        setattr(trace, 'station', station.station)
+        setattr(trace, 'location', station.location)
+
+    synthetics = Stream()
+    for channel in station.channels:
+        component = channel[-1].upper()
+        trace = stream.select(component=component)[0]
+        synthetics += trace
+
+    return synthetics
+
