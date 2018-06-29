@@ -29,10 +29,11 @@ if __name__=='__main__':
     # moment tensors
     #
     # USAGE
-    #   python GridSearchDC3Serial.py
+    #   python GridSearch.DoubleCouple.3Parameter.Serial.py
     #
-    # A typical runtime is about 60 minutes. For faster results, try 
-    # GridSearchDC3.py, which runs the same inversion in parallel rather than
+    # A typical runtime is about 60 minutes. For faster results try 
+    # GridSearch.DoubleCouple.3Parameter.py,
+    # which runs the same inversion in parallel rather than
     # serial
     #
 
@@ -48,9 +49,10 @@ if __name__=='__main__':
     # moment tensors
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearchDC3.py
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.3Parameter.py
     #
-    # For a slightly simpler example, see GridSearch.DoubleCouple3.Serial.py, 
+    # For a slightly simpler example, see 
+    # GridSearch.DoubleCouple.3Parameter.Serial.py, 
     # which runs the exactly the same inversion in serial rather than parallel
     #
 
@@ -61,15 +63,12 @@ DocstringDC5="""
 if __name__=='__main__':
     #
     # Double-couple inversion example
-    # 
+    #   
     # Carries out grid search over source orientation, magnitude and depth
-    #
+    #   
     # USAGE
-    #   mpirun -n <NPROC> python GridSearchDC5.py
-    #
-    # If you are browsing the examples and would prefer a simpler
-    # starting point, see  examples/GridSearch.DoubleCouple3.Serial.py
-    #
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.5Parameter.py
+    #   
 
 """
 
@@ -78,16 +77,13 @@ DocstringFMT5="""
 if __name__=='__main__':
     #
     # Full moment tensor inversion example
-    # 
+    #   
     # Carries out grid search over all moment tensor parameters except
     # magnitude 
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearchFullMT.py
-    #
-    # If you are browsing the examples and would prefer a simpler
-    # starting point, see  examples/GridSearch.DoubleCouple3.Serial.py
-
+    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.5Parameter.py
+    #   
 
 """
 
@@ -610,7 +606,7 @@ if __name__=='__main__':
     os.chdir(root())
 
 
-    with open('examples/GridSearch.DoubleCouple3.py', 'w') as file:
+    with open('examples/GridSearch.DoubleCouple.3Parameter.py', 'w') as file:
         file.write(Imports)
         file.write(DocstringDC3)
         file.write(PathsComments)
@@ -623,7 +619,7 @@ if __name__=='__main__':
         file.write(GridSearchMPI)
 
 
-    with open('examples/GridSearch.DoubleCouple5.py', 'w') as file:
+    with open('examples/GridSearch.DoubleCouple.5Parameter.py', 'w') as file:
         file.write(Imports)
         file.write(DocstringDC5)
         file.write(PathsComments)
@@ -635,7 +631,7 @@ if __name__=='__main__':
         file.write(GridSearchMPI2)
 
 
-    with open('examples/GridSearch.FullMomentTensor5.py', 'w') as file:
+    with open('examples/GridSearch.FullMomentTensor.5Parameter.py', 'w') as file:
         file.write(Imports)
         file.write(DocstringFMT5)
         file.write(PathsDefinitions)
@@ -647,7 +643,7 @@ if __name__=='__main__':
         file.write(GridSearchMPI)
 
 
-    with open('examples/GridSearch.DoubleCouple3.Serial.py', 'w') as file:
+    with open('examples/GridSearch.DoubleCouple.3Parameter.Serial.py', 'w') as file:
         file.write(
             re.sub(
             'grid_search_mpi',
