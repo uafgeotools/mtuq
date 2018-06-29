@@ -59,10 +59,14 @@ class DatasetBase(object):
         return processed
 
 
+    # min/max amplitude
     def min(self):
         min_all = np.inf
         for stream in self:
             for trace in stream:
+                if hasattr(trace, 'weight') and\
+                   trace.weight==0.:
+                    continue
                 if trace.data.min() < min_all:
                     min_all = trace.data.min()
         return min_all
@@ -72,6 +76,9 @@ class DatasetBase(object):
         max_all = -np.inf
         for stream in self:
             for trace in stream:
+                if hasattr(trace, 'weight') and\
+                   trace.weight==0.:
+                    continue
                 if trace.data.max() > max_all:
                     max_all = trace.data.max()
         return max_all
@@ -89,7 +96,7 @@ class DatasetBase(object):
 
     def sort_by_azimuth(self, reverse=False):
         """
-        Sorts in-place by hypocentral azimuth
+        Sorts in-place by source-receiver azimuth
         """
         self.sort_by_function(lambda data: data.station.catalog_azimuth,
             reverse=reverse)
@@ -113,7 +120,7 @@ class DatasetBase(object):
 
     def get_station(self):
         """
-        Extracts station information from metadata
+        Extracts station metadata
         """
         raise NotImplementedError("Must be implemented by subclass")
 

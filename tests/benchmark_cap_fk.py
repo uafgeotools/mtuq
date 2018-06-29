@@ -190,11 +190,12 @@ if __name__=='__main__':
         synthetics_cap = get_synthetics_cap(deepcopy(data), paths[_i])
         synthetics_mtuq = get_synthetics_mtuq(greens, mt)
         filename = 'cap_fk_'+str(_i)+'.png'
-        plot_waveforms(filename, synthetics_cap, synthetics_mtuq, misfit)
+        plot_waveforms(filename, synthetics_cap, synthetics_mtuq)
 
     print ' %d of %d' % (_i+2, grid.size+1)
+    data_mtuq = data
     data_cap = get_data_cap(deepcopy(data), paths[0])
     filename = 'cap_fk_data.png'
-    plot_waveforms(filename, data_cap, data, misfit, normalize=False)
+    plot_waveforms(filename, data_cap, data_mtuq, normalize=False)
 
 

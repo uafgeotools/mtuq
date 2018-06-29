@@ -40,6 +40,7 @@ def cut(trace, t1, t2):
     it2 = int((t2-t0)/dt)
     trace.data = trace.data[it1:it2]
     trace.stats.starttime = t1
+    trace.stats.npts = it2-it1
 
 
 def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
@@ -83,7 +84,7 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
 
     # cut end only
     elif t1_new <= t1_old <= t2_new <= t2_old:
-        resampled_data[i1:nt] = data[0:i2]
+        resampled_data[i1:nt] = data[0:-i2-1]
 
     # cut neither end
     elif t1_new <= t1_old <= t2_old <= t2_new:

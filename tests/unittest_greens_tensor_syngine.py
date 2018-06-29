@@ -3,25 +3,24 @@
 
 import numpy as np
 import unittest
-from os.path import join
 
+from os.path import join
 from mtuq.dataset.sac import\
     reader
 from mtuq.greens_tensor.syngine import\
     download_greens_tensor, download_synthetics,\
     GreensTensor, GreensTensorFactory
-from mtuq.grid_search import DCGridRegular
+from mtuq.grid_search import MTGridRandom, MTGridRegular
 from mtuq.util.util import AttribDict, root, unzip
 
  
 class greens_tensor_syngine(unittest.TestCase):
     def test_download_greens_tensor(self):
         model = 'ak135f_2s'
-        delta = 0.02
-        distance = 30.
-        depth = 1000
+        station = self.get_station()
+        origin = self.get_origin()
 
-        filename = download_greens_tensor(model, delta, distance, depth)
+        filename = download_greens_tensor(model, station, origin)
         dirname = unzip(filename)
 
 
@@ -32,7 +31,7 @@ class greens_tensor_syngine(unittest.TestCase):
         origin = self.get_origin()
         mt = self.get_moment_tensor()
 
-        filename = download_synthetics(model, delta, station, origin, mt)
+        filename = download_synthetics(model, station, origin, mt)
         dirname = unzip(filename)
 
 
@@ -41,16 +40,37 @@ class greens_tensor_syngine(unittest.TestCase):
         origin = self.get_origin()
         mt = self.get_moment_tensor()
 
+        # generate synthetics
         model = 'ak135f_2s'
         factory = GreensTensorFactory(model)
         greens = factory(station, origin)
-        synthetics = green.get_synthetics(mt)
+        syn = greens.get_synthetics(mt)
+
+        # download reference synthetics
+        filename = download_synthetics(model, station, origin, mt)
+        dirname = unzip(filename)
+        ref = reader(dirname)
+
+        for component in ['Z', 'R', 'T']:
+             s = syn[0].select(component=component)[0]
+             r = ref[0].select(component=component)[0]
+
+             np.testing.assert_allclose(
+                 s.data,
+                 r.data,
+                 rtol=1E-3, atol=1E-10)
+
 
 
 
     def get_moment_tensor(self):
         return [1.04e22,-0.039e22,-1e22,0.304e22,-1.52e22,-0.119e22]
-        #return DCGridRegular(npts_per_axis=1, Mw=4.5).get(0)
+        #return MTGridRegular(npts_per_axis=1, Mw=1.).get(0)
+
+
+
+    def get_moment_tensor_randome(self):
+        return MTGridRandom(npts=1, Mw=1.).get(0)
 
 
     def get_station(self):

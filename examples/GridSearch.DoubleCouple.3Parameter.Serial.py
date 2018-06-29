@@ -7,7 +7,7 @@ import mtuq.greens_tensor.fk
 
 from os.path import basename, join
 from mtuq.grid_search import DCGridRandom
-from mtuq.grid_search import grid_search_mpi
+from mtuq.grid_search import grid_search_serial
 from mtuq.misfit.cap import misfit
 from mtuq.process_data.cap import process_data
 from mtuq.util.cap_util import trapezoid_rise_time, Trapezoid
@@ -24,12 +24,12 @@ if __name__=='__main__':
     # moment tensors
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearchDC3.py
+    #   python GridSearch.DoubleCouple.3Parameter.Serial.py
     #
-    # If you are browsing the examples and would prefer a slightly simpler
-    # starting point, see  examples/GridSearch.DoubleCouple3.Serial.py, 
-    # which runs the exactly the same inversion, except in serial rather than 
-    # in parallel
+    # A typical runtime is about 60 minutes. For faster results try 
+    # GridSearch.DoubleCouple.3Parameter.py,
+    # which runs the same inversion in parallel rather than
+    # serial
     #
 
 
@@ -117,72 +117,58 @@ if __name__=='__main__':
 
 
 
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-
-
     #
     # The main I/O work starts now
     #
 
-    if comm.rank==0:
-        print 'Reading data...\n'
-        data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
-        data.sort_by_distance()
+    print 'Reading data...\n'
+    data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
+    data.sort_by_distance()
 
-        stations  = []
-        for stream in data:
-            stations += [stream.station]
-        origin = data.get_origin()
+    stations  = []
+    for stream in data:
+        stations += [stream.station]
+    origin = data.get_origin()
 
-        print 'Processing data...\n'
-        processed_data = {}
-        for key in ['body_waves', 'surface_waves']:
-            processed_data[key] = data.map(process_data[key])
-        data = processed_data
 
-        print 'Reading Greens functions...\n'
-        factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
-        greens = factory(stations, origin)
+    print 'Processing data...\n'
+    processed_data = {}
+    for key in ['body_waves', 'surface_waves']:
+        processed_data[key] = data.map(process_data[key])
+    data = processed_data
 
-        print 'Processing Greens functions...\n'
-        greens.convolve(wavelet)
-        processed_greens = {}
-        for key in ['body_waves', 'surface_waves']:
-            processed_greens[key] = greens.map(process_data[key])
-        greens = processed_greens
 
-    else:
-        data = None
-        greens = None
+    print 'Reading Greens functions...\n'
+    factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+    greens = factory(stations, origin)
 
-    data = comm.bcast(data, root=0)
-    greens = comm.bcast(greens, root=0)
+
+    print 'Processing Greens functions...\n'
+    greens.convolve(wavelet)
+    processed_greens = {}
+    for key in ['body_waves', 'surface_waves']:
+        processed_greens[key] = greens.map(process_data[key])
+    greens = processed_greens
 
 
     #
-    # The main computational work starts now
+    # The main computational work starts nows
     #
 
-    if comm.rank==0:
-        print 'Carrying out grid search...\n'
-    results = grid_search_mpi(data, greens, misfit, grid)
-    results = comm.gather(results, root=0)
+    print 'Carrying out grid search...\n'
+    results = grid_search_serial(data, greens, misfit, grid)
 
 
-    if comm.rank==0:
-        print 'Saving results...\n'
-        results = np.concatenate(results)
-        #grid.save(event_name+'.h5', {'misfit': results})
-        best_mt = grid.get(results.argmin())
+    print 'Saving results...\n'
+    #grid.save(event_name+'.h5', {'misfit': results})
+    best_mt = grid.get(results.argmin())
 
 
-    if comm.rank==0:
-        print 'Plotting waveforms...\n'
-        synthetics = {}
-        for key in ['body_waves', 'surface_waves']:
-            synthetics[key] = greens[key].get_synthetics(best_mt)
-        plot_waveforms(event_name+'.png', data, synthetics, misfit)
-        plot_beachball(event_name+'_beachball.png', best_mt)
+    print 'Plotting waveforms...\n'
+    synthetics = {}
+    for key in ['body_waves', 'surface_waves']:
+        synthetics[key] = greens[key].get_synthetics(best_mt)
+    plot_waveforms(event_name+'.png', data, synthetics, misfit)
+    plot_beachball(event_name+'_beachball.png', best_mt)
 
 

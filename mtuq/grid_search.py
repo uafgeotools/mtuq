@@ -55,7 +55,6 @@ def grid_search_mpi(data, greens, misfit, grid):
     return grid_search_serial(data, greens, misfit, subset)
 
 
-
 def MTGridRandom(Mw, npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
@@ -163,9 +162,10 @@ def OriginGrid():
 
 def callback(*args, **kwargs):
     """ Callback applied to each grid point; converts from Tape2015
-        parameterization used for defining the grid to Mij parameterization 
+        parameterization in which the grid is defined to Mij parameterization 
         used elsewhere in the code (up-south-east convention)
     """
     from mtuq.util.moment_tensor.tape2015 import tt152cmt
     #from mtuq.util.moment_tensor.change_basis import change_basis
     return tt152cmt(*args, **kwargs)
+

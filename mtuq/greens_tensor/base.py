@@ -5,6 +5,7 @@ import numpy as np
 from mtuq.dataset.base import DatasetBase
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
+from mtuq.util.util import iterable
 
 
 class GreensTensor(object):
@@ -161,7 +162,7 @@ class GreensTensorList(object):
 
     def sort_by_azimuth(self, reverse=False):
         """
-        Sorts in-place by hypocentral azimuth
+        Sorts in-place by source-receiver azimuth
         """
         self.sort_by_function(lambda stream: stream.station.azimuth,
             reverse=reverse)
@@ -202,21 +203,20 @@ class GreensTensorFactory(object):
     """
     Creates GreensTensorLists via a two-step procedure:
 
-        1) greens_tensor_generator = GreensTensorGreensTensorFactory(*args, **kwargs)
-        2) greens_tensors = greens_tensor_generator(stations, origin) 
+        1) factory = GreensTensorFactory(*args, **kwargs)
+        2) greens_tensors = factory(stations, origin) 
 
-    In the second step, the user supplies a list of stations and the origin
-    location and time information for an event. A GreensTensorList will be
-    created containing a GreensTensor for each station-event pair. The order
-    of the GreensTensors in the list should match the order of the stations 
-    in the input argument.
+    In the second step, the user supplies a list of station objects and
+    an origin object. The result is a GreensTensorList containing a
+    GreensTensor for each station-event pair, with the order of GreensTensors 
+    matching the order of the stations in the input argument.
 
     Details regarding how the GreenTensors are actually created--whether
     they are generated on-the-fly or read from a pre-computed database--
     are deferred to the subclass.
 
-    Very similar to an mtuq.dataset.reader, excecpt rather than a Dataset,
-    returns a GreensTensorsList
+    This class's __call__ method is very similar to an mtuq.dataset.reader, 
+    excecpt it returns a GreensTensorsList rather than a Dataset
     """
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Must be implemented by subclass")
@@ -228,7 +228,7 @@ class GreensTensorFactory(object):
         """
         greens_tensors = GreensTensorList()
 
-        for station in stations:
+        for station in iterable(stations):
             # if hypocenter is an inversion parameter, then the values 
             # calculated below will in general differ from catalog_distance and
             # catalog_azimuth

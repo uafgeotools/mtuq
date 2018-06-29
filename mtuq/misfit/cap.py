@@ -162,7 +162,7 @@ class misfit(object):
 
 
             #
-            # PART 3: CAP-style polarity misfit calculation
+            # PART 3: CAP-style polarity calculation
             #
 
             if self.polarity_weight > 0.:
