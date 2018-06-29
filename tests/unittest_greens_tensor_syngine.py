@@ -10,7 +10,7 @@ from mtuq.dataset.sac import\
 from mtuq.greens_tensor.syngine import\
     download_greens_tensor, download_synthetics,\
     GreensTensor, GreensTensorFactory
-from mtuq.grid_search import DCGridRegular
+from mtuq.grid_search import MTGridRandom, MTGridRegular
 from mtuq.util.util import AttribDict, root, unzip
 
  
@@ -44,16 +44,16 @@ class greens_tensor_syngine(unittest.TestCase):
         model = 'ak135f_2s'
         factory = GreensTensorFactory(model)
         greens = factory(station, origin)
-        syn = greens.get_synthetics(mt)[0]
+        syn = greens.get_synthetics(mt)
 
-        # download reference
+        # download reference synthetics
         filename = download_synthetics(model, station, origin, mt)
         dirname = unzip(filename)
-        ref = reader(dirname)[0]
+        ref = reader(dirname)
 
         for component in ['Z', 'R', 'T']:
-             s = syn.select(component=component)[0]
-             r = ref.select(component=component)[0]
+             s = syn[0].select(component=component)[0]
+             r = ref[0].select(component=component)[0]
 
              np.testing.assert_allclose(
                  s.data,
@@ -65,7 +65,12 @@ class greens_tensor_syngine(unittest.TestCase):
 
     def get_moment_tensor(self):
         return [1.04e22,-0.039e22,-1e22,0.304e22,-1.52e22,-0.119e22]
-        #return DCGridRegular(npts_per_axis=1, Mw=4.5).get(0)
+        #return MTGridRegular(npts_per_axis=1, Mw=1.).get(0)
+
+
+
+    def get_moment_tensor_randome(self):
+        return MTGridRandom(npts=1, Mw=1.).get(0)
 
 
     def get_station(self):
