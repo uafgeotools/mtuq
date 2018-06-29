@@ -26,10 +26,8 @@ if __name__=='__main__':
     # USAGE
     #   mpirun -n <NPROC> python GridSearchDC3.py
     #
-    # If you are browsing the examples and would prefer a slightly simpler
-    # starting point, see  examples/GridSearch.DoubleCouple3.Serial.py, 
-    # which runs the exactly the same inversion, except in serial rather than 
-    # in parallel
+    # For a slightly simpler example, see GridSearch.DoubleCouple3.Serial.py, 
+    # which runs the exactly the same inversion in serial rather than parallel
     #
 
 
