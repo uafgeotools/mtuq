@@ -30,8 +30,18 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
 
     def _calculate_weights(self):
-        """ See also: 
-            test_instaseis.test_get_greens_vs_get_seismogram
+        """ See also
+
+            van Driel et al. (2015)
+            Instaseis: instant global seismograms
+            Solid Earth, 6, 701-717
+
+            Minson, Sarah E. and Douglas S. Dreger (2008)
+            Stable Inversions for Complete Moment Tensors
+            Geophysical Journal International 174 (2): 585-592
+
+            github.com/krischer/instaseis/instaseis/tests/
+            test_instaseis.py::test_get_greens_vs_get_seismogram
         """
         traces = self.greens_tensor
         npts = traces[0].meta['npts']
@@ -52,19 +62,19 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         GR = np.ones((npts, 6))
         GT = np.ones((npts, 6))
 
-        GZ[:, 0] = ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+        GZ[:, 0] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
         GZ[:, 1] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-        GZ[:, 2] = ZDD/3. + ZEP/3.
-        GZ[:, 3] = ZSS * np.sin(2*az)
-        GZ[:, 4] = ZDS * np.cos(az)
-        GZ[:, 5] = ZDS * np.sin(az)
+        GZ[:, 2] =  ZDD/3. + ZEP/3.
+        GZ[:, 3] =  ZSS * np.sin(2*az)
+        GZ[:, 4] =  ZDS * np.cos(az)
+        GZ[:, 5] =  ZDS * np.sin(az)
 
-        GR[:, 0] = RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+        GR[:, 0] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
         GR[:, 1] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-        GR[:, 2] = RDD/3. + REP/3.
-        GR[:, 3] = RSS * np.sin(2*az)
-        GR[:, 4] = RDS * np.cos(az)
-        GR[:, 5] = RDS * np.sin(az)
+        GR[:, 2] =  RDD/3. + REP/3.
+        GR[:, 3] =  RSS * np.sin(2*az)
+        GR[:, 4] =  RDS * np.cos(az)
+        GR[:, 5] =  RDS * np.sin(az)
 
         GT[:, 0] = TSS/2. * np.sin(2*az)
         GT[:, 1] = -TSS/2. * np.sin(2*az)
@@ -82,6 +92,13 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         """
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
+
+        Relations given in test_instaseis.py:
+            m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
+
+        Order of terms expected by syngine URL interface:
+            Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
+
         """
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
@@ -105,19 +122,27 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             if component=='R':
                 G = self._GR
             if component=='T':
-                G = self._GT
+                G = -self._GT
 
-            s += mt[2]*G[:,0]
-            s += mt[0]*G[:,1]
-            s += mt[1]*G[:,2]
-            s += mt[5]*G[:,3]
-            s += mt[3]*G[:,4]
-            s += mt[4]*G[:,5]
+            Mxx =  mt[1]
+            Myy =  mt[2]
+            Mzz =  mt[0]
+            Mxy = -mt[5]
+            Mxz = -mt[3]
+            Myz =  mt[4]
+
+            s += Mxx*G[:,0]
+            s += Myy*G[:,1]
+            s += Mzz*G[:,2]
+            s += Mxy*G[:,3]
+            s += Mxz*G[:,4]
+            s += Myz*G[:,5]
 
         return self._synthetics
 
 
     def _preallocate_synthetics(self):
+        self.station.npts = self.greens_tensor[0].stats.npts
         self._synthetics = Stream()
         for channel in self.station.channels:
             self._synthetics +=\

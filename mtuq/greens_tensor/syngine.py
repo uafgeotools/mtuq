@@ -64,8 +64,8 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         dt_new = float(station.delta)
 
         # what are the start and end times of the Green's function?
-        t1_old = float(origin.time)
-        t2_old = float(origin.time)+float(stream[0].stats.endtime)-float(stream[0].stats.starttime)
+        t1_old = float(stream[0].stats.starttime)
+        t2_old = float(stream[0].stats.endtime)
         dt_old = float(stream[0].stats.delta)
 
         for trace in stream:
@@ -76,6 +76,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             trace.data = data_new
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
+            trace.stats.npts = len(data_new)
 
         return GreensTensor(stream, station, origin)
 
