@@ -152,7 +152,7 @@ if __name__=='__main__':
 
     stations  = []
     for stream in data:
-        stations += [stream.station]
+        stations += [stream.meta]
     origin = data.get_origin()
 
 
@@ -164,7 +164,7 @@ if __name__=='__main__':
 
 
     print 'Reading Greens functions...\n'
-    factory = mtuq.fk.GreensTensorFactory(path_greens)
+    factory = fk.GreensTensorFactory(path_greens)
     greens = factory(stations, origin)
 
     print 'Processing Greens functions...\n'

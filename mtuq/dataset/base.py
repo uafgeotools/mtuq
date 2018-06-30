@@ -90,7 +90,7 @@ class Dataset(object):
         """ 
         Sorts in-place by hypocentral distance
         """
-        self.sort_by_function(lambda data: data.station.catalog_distance,
+        self.sort_by_function(lambda data: data.meta.catalog_distance,
             reverse=reverse)
 
 
@@ -98,7 +98,7 @@ class Dataset(object):
         """
         Sorts in-place by source-receiver azimuth
         """
-        self.sort_by_function(lambda data: data.station.catalog_azimuth,
+        self.sort_by_function(lambda data: data.meta.catalog_azimuth,
             reverse=reverse)
 
 
@@ -132,7 +132,7 @@ class Dataset(object):
         stream.tag = 'data'
         self.__list__.append(stream)
         try:
-            stream.station = self.get_station()
+            stream.meta = self.get_station()
             stream.catalog_origin = self.get_origin()
         except:
             pass

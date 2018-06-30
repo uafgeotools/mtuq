@@ -402,7 +402,7 @@ GridSearchMPI="""
 
         stations  = []
         for stream in data:
-            stations += [stream.station]
+            stations += [stream.meta]
         origin = data.get_origin()
 
         print 'Processing data...\\n'
@@ -475,7 +475,7 @@ GridSearchMPI2="""
 
         stations  = []
         for stream in data:
-            stations += [stream.station]
+            stations += [stream.meta]
         origin = data.get_origin()
 
         print 'Processing data...\\n'
@@ -547,7 +547,7 @@ RunBenchmarkCAPFK="""
 
     stations  = []
     for stream in data:
-        stations += [stream.station]
+        stations += [stream.meta]
     origin = data.get_origin()
 
 
@@ -559,7 +559,7 @@ RunBenchmarkCAPFK="""
 
 
     print 'Reading Greens functions...\\n'
-    factory = mtuq.fk.GreensTensorFactory(path_greens)
+    factory = fk.GreensTensorFactory(path_greens)
     greens = factory(stations, origin)
 
     print 'Processing Greens functions...\\n'

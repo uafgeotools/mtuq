@@ -131,7 +131,7 @@ if __name__=='__main__':
 
         stations  = []
         for stream in data:
-            stations += [stream.station]
+            stations += [stream.meta]
         origin = data.get_origin()
 
         print 'Processing data...\n'

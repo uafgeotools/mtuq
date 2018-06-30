@@ -2,43 +2,36 @@
 import obspy
 import numpy as np
 
+from copy import deepcopy
 from mtuq.dataset.base import Dataset
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
 from mtuq.util.util import iterable
 
 
-class GreensTensor(object):
+class GreensTensor(obspy.core.Stream):
     """ Elastic Green's tensor object
 
-        Similar to an obpy Trace, except rather than a single time series, holds
-        multiple time series corresponding to the independent elements of an 
-        elastic Green's tensor.
+        Holds multiple time series corresponding to the independent elements 
+        of an elastic Green's tensor.
     """
 
-    def __init__(self, stream, station, origin):
+    def __init__(self, traces, meta, origin):
         """
         Normally, all time series required to describe the response at a given
         station to a source at a given origin should be contained in single 
         obspy stream. Certain subclasses may override this behavior
         
         """
-        assert isinstance(stream, obspy.Stream), ValueError(
-            "An obspy stream must be provided containing multiple traces, "
-            "each representing a Green's function")
-
-        assert hasattr(station, 'id'), ValueError(
-            "Station must have a unique identifier")
-
-        assert check_time_sampling(stream), NotImplementedError(
+        assert check_time_sampling(traces), NotImplementedError(
             "Time sampling differs from trace to trace.")
 
-        stream.tag = 'greens_tensor'
+        super(GreensTensor, self).__init__(traces)
 
-        self.greens_tensor = stream
-        self.greens_tensor.station = self.station = station
-        self.greens_tensor.origin = self.origin = origin
-        self.greens_tensor.id = self.id = station.id
+        self.id = meta.id
+        self.tag = 'greens_tensor'
+        self.meta = deepcopy(meta)
+        self.origin = origin
 
 
     def get_synthetics(self, mt):
@@ -51,17 +44,16 @@ class GreensTensor(object):
 
     def apply(self, function, *args, **kwargs):
         """
-        Applies a function to all time series associated with the given 
+        Applies a function to all time series
         Green's tensor
         """
-        return self.__class__(function(self.greens_tensor, *args, **kwargs),
-            self.station, self.origin)
+        return self.__class__(function(self, *args, **kwargs),
+            self.meta, self.origin)
 
 
     def convolve(self, wavelet):
         """
-        Convolves source wavelet with all time series associated with the
-        given Green's tensor
+        Convolves source wavelet with all time series
         """
         return self.apply(wavelet.convolve_stream)
 
@@ -141,7 +133,7 @@ class GreensTensorList(object):
 
     # the next method is called repeatedly during GreensTensorList creation
     def __add__(self, greens_tensor):
-        assert hasattr(greens_tensor, 'id')
+        #assert hasattr(greens_tensor, 'id')
         self.__list__ += [greens_tensor]
         return self
 
@@ -156,7 +148,7 @@ class GreensTensorList(object):
         """ 
         Sorts in-place by hypocentral distance
         """
-        self.sort_by_function(lambda stream: stream.station.distance,
+        self.sort_by_function(lambda stream: stream.meta.distance,
             reverse=reverse)
 
 
@@ -164,7 +156,7 @@ class GreensTensorList(object):
         """
         Sorts in-place by source-receiver azimuth
         """
-        self.sort_by_function(lambda stream: stream.station.azimuth,
+        self.sort_by_function(lambda stream: stream.meta.azimuth,
             reverse=reverse)
 
 

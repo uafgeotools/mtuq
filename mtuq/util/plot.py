@@ -6,7 +6,7 @@ from obspy.imaging.beachball import beachball
 
 
 def plot_waveforms(filename, data, synthetics, misfit=None, 
-                   annotate=False, normalize=True):
+                   annotate=False, normalize=False):
     """ Creates cap-style data/synthetics comparison
     """
 
@@ -34,7 +34,7 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
         data['surface_waves'], synthetics['surface_waves']):
 
         id = data_bw.id
-        meta = data_bw.station
+        meta = data_bw.meta
 
         # add station labels
         pyplot.subplot(nrow, ncol, ncol*irow+1)
@@ -138,7 +138,7 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
     #pyplot.show()
 
 
-def subplot(dat, syn, label=None, normalize=False):
+def subplot(dat, syn, label=None, normalize=True):
     t1,t2,nt,dt = time_stats(dat)
 
     start = getattr(syn, 'start', 0)

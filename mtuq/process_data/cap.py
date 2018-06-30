@@ -202,9 +202,9 @@ class ProcessData(object):
         # station metadata are required for data processing, e.g.
         # without station location distance-depedent weighting cannont
         # be applied
-        if not hasattr(traces, 'station'):
+        if not hasattr(traces, 'meta'):
             raise Exception('Missing station metadata')
-        meta = traces.station
+        meta = traces.meta
 
         # overwrite existing data?
         if overwrite:
@@ -241,8 +241,8 @@ class ProcessData(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
-        #for trace in traces:
-        #    trace.data = np.cumsum(trace.data)
+        for trace in traces:
+            trace.data = np.cumsum(trace.data)
 
         #
         # part 2: determine phase picks
@@ -383,7 +383,7 @@ class ProcessData(object):
                     else:
                         trace.weight = 0.
 
-            distance = traces.station.catalog_distance
+            distance = traces.meta.catalog_distance
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
@@ -412,7 +412,7 @@ class ProcessData(object):
                     else:
                         trace.weight = 0.
 
-            distance = traces.station.catalog_distance
+            distance = traces.meta.catalog_distance
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
