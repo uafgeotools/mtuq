@@ -37,8 +37,8 @@ if __name__=='__main__':
     # Mw~4 Alaska earthquake
     #
 
-    path_data=    join(root(), 'tests/data/20090407201255351')
-    path_weights= join(root(), 'tests/data/20090407201255351/weights.dat')
+    path_data=    join(root(), 'data/examples/20090407201255351')
+    path_weights= join(root(), 'data/examples/20090407201255351/weights.dat')
     # Fow now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')

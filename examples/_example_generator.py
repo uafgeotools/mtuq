@@ -138,8 +138,8 @@ PathsComments="""
 
 
 PathsDefinitions="""
-    path_data=    join(root(), 'tests/data/20090407201255351')
-    path_weights= join(root(), 'tests/data/20090407201255351/weights.dat')
+    path_data=    join(root(), 'data/examples/20090407201255351')
+    path_weights= join(root(), 'data/examples/20090407201255351/weights.dat')
     # Fow now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
@@ -606,7 +606,7 @@ if __name__=='__main__':
     os.chdir(root())
 
 
-    with open('examples/GridSearch.DoubleCouple.3Parameter.py', 'w') as file:
+    with open('examples/GridSearch.DoubleCouple.3Parameter.MPI.py', 'w') as file:
         file.write(Imports)
         file.write(DocstringDC3)
         file.write(PathsComments)
@@ -619,7 +619,7 @@ if __name__=='__main__':
         file.write(GridSearchMPI)
 
 
-    with open('examples/GridSearch.DoubleCouple.5Parameter.py', 'w') as file:
+    with open('examples/GridSearch.DoubleCouple.5Parameter.MPI.py', 'w') as file:
         file.write(Imports)
         file.write(DocstringDC5)
         file.write(PathsComments)
@@ -631,7 +631,7 @@ if __name__=='__main__':
         file.write(GridSearchMPI2)
 
 
-    with open('examples/GridSearch.FullMomentTensor.5Parameter.py', 'w') as file:
+    with open('examples/GridSearch.FullMomentTensor.5Parameter.MPI.py', 'w') as file:
         file.write(Imports)
         file.write(DocstringFMT5)
         file.write(PathsDefinitions)
