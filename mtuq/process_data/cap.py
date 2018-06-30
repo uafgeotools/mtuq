@@ -195,9 +195,10 @@ class process_data(object):
         # applied to Green's functions and data will be the exactly
         # same. To accomodate CAP-style time shifts, the windowing 
         # will be slightly different.
-        if not hasattr(traces, 'tag'):
-            raise Exception('Missing station identifier')
-        tag = traces.tag
+        if hasattr(traces, 'tag'):
+            tag = traces.tag
+        else:
+            tag = 'data'
 
         # station metadata are required for data processing, e.g.
         # without station location distance-depedent weighting cannont
