@@ -29,7 +29,7 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             _ = func(dat, syn)
 
     irow = 0
-    for data_bw,synthetics_bw,data_sw,synthetics_sw in zip(
+    for data_bw, synthetics_bw, data_sw, synthetics_sw in zip(
         data['body_waves'], synthetics['body_waves'],
         data['surface_waves'], synthetics['surface_waves']):
 

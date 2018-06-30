@@ -36,8 +36,8 @@ class DatasetBase(object):
     # other functions to the dataset
     def apply(self, function, *args, **kwargs):
         """
-        Returns the result of applying a function to each Stream in the 
-        dataset. Similar to the behavior of the python built-in "apply".
+        Applies a function in-place to each Stream in the dataset. Similar to
+        the behavior of the python built-in "apply".
         """
         processed = self.__class__(id=self.id)
         for stream in self.__list__:
@@ -47,10 +47,10 @@ class DatasetBase(object):
 
     def map(self, function, *sequences):
         """
-        Returns the result of applying a function to each Stream in the
-        dataset. If one or more optional sequences are given, the function is 
-        called with an argument list consisting of the corresponding item of
-        each sequence. Similar to the behavior of the python built-in "map".
+        Applies a function in-pace to each Stream in the dataset. If one or 
+        more optional sequences are given, the function is called with an 
+        argument list consisting of the corresponding item of each sequence. 
+        Similar to the behavior of the python built-in "map".
         """
         processed = self.__class__(id=self.id)
         for _i, stream in enumerate(self.__list__):

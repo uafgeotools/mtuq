@@ -24,9 +24,8 @@ class process_data(object):
         2) processed_data = function_handle(data)
 
     In the first step, the user supplies a set of filtering, phase-picking,
-    windowing, and weighting parameters.  In the second step, a
-    single-station obspy stream is given as input and a processed stream
-    returned as output.
+    windowing, and weighting parameters.  In the second step, an obspy stream
+    is given as input and a processed stream returned as output.
     """
 
     def __init__(self,

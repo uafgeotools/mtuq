@@ -116,10 +116,10 @@ class GreensTensorList(object):
 
     def map(self, function, *sequences):
         """
-        Returns the result of applying a function to each GreensTensor in the
-        list. If one or more optional sequences are given, the function is 
-        called with an argument list consisting of the corresponding item of
-        each sequence. Similar to the behavior of the python built-in "map".
+        Applies a function in-pace to each GreensTensor in the list. If one or
+        more optional sequences are given, the function is called with an 
+        argument list consisting of the corresponding item of each sequence. 
+        Similar to the behavior of the python built-in "map".
         """
         processed = GreensTensorList()
         for _i, greens_tensor in enumerate(self.__list__):
