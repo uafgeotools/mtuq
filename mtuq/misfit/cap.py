@@ -7,7 +7,7 @@ import numpy as np
 import warnings
 
 
-class misfit(object):
+class Misfit(object):
     """ 
     CAP-style data misfit function
 

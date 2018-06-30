@@ -3,7 +3,7 @@ import obspy
 import numpy as np
 
 
-class DatasetBase(object):
+class Dataset(object):
     """ Seismic data container
 
         Basically, a list of obspy streams. Each stream corresponds to a

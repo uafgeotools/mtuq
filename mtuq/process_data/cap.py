@@ -11,7 +11,7 @@ from mtuq.util.signal import cut
 from mtuq.util.util import AttribDict, warn
  
 
-class process_data(object):
+class ProcessData(object):
     """
     CAP-style data processing function
 
@@ -241,8 +241,8 @@ class process_data(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
-        for trace in traces:
-            trace.data = np.cumsum(trace.data)
+        #for trace in traces:
+        #    trace.data = np.cumsum(trace.data)
 
         #
         # part 2: determine phase picks

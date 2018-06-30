@@ -2,7 +2,7 @@
 import obspy
 import numpy as np
 
-from mtuq.dataset.base import DatasetBase
+from mtuq.dataset.base import Dataset
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
 from mtuq.util.util import iterable
@@ -94,7 +94,7 @@ class GreensTensorList(object):
         tensor mt, and each each individual stream corresponds to an
         individual station
         """
-        synthetics = DatasetBase()
+        synthetics = Dataset()
         for greens_tensor in self.__list__:
             synthetics += greens_tensor.get_synthetics(mt)
         return synthetics

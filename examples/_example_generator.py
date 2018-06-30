@@ -4,14 +4,14 @@ Imports="""
 import os
 import sys
 import numpy as np
-import mtuq.dataset.sac
-import mtuq.greens_tensor.fk
 
 from os.path import basename, join
+from mtuq.dataset import sac
+from mtuq.greens_tensor import fk
 from mtuq.grid_search import DCGridRandom
 from mtuq.grid_search import grid_search_mpi
-from mtuq.misfit.cap import misfit
-from mtuq.process_data.cap import process_data
+from mtuq.misfit.cap import Misfit
+from mtuq.process_data.cap import ProcessData
 from mtuq.util.cap_util import trapezoid_rise_time, Trapezoid
 from mtuq.util.plot import plot_beachball, plot_waveforms
 from mtuq.util.util import cross, root
@@ -157,7 +157,7 @@ DataProcessingComments="""
 
 
 DataProcessingDefinitions="""
-    process_bw = process_data(
+    process_bw = ProcessData(
         filter_type='Bandpass',
         freq_min= 0.25,
         freq_max= 0.667,
@@ -170,7 +170,7 @@ DataProcessingDefinitions="""
         weight_file=path_weights,
         )
 
-    process_sw = process_data(
+    process_sw = ProcessData(
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
@@ -200,12 +200,12 @@ MisfitComments="""
 
 
 MisfitDefinitions="""
-    misfit_bw = misfit(
+    misfit_bw = Misfit(
         time_shift_max=2.,
         time_shift_groups=['ZR'],
         )
 
-    misfit_sw = misfit(
+    misfit_sw = Misfit(
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
@@ -332,7 +332,7 @@ GridSearchSerial="""
     #
 
     print 'Reading data...\\n'
-    data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
+    data = sac.reader(path_data, wildcard='*.[zrt]')
     data.sort_by_distance()
 
     stations  = []
@@ -349,7 +349,7 @@ GridSearchSerial="""
 
 
     print 'Reading Greens functions...\\n'
-    factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+    factory = fk.GreensTensorFactory(path_greens)
     greens = factory(stations, origin)
 
 
@@ -397,7 +397,7 @@ GridSearchMPI="""
 
     if comm.rank==0:
         print 'Reading data...\\n'
-        data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
+        data = sac.reader(path_data, wildcard='*.[zrt]')
         data.sort_by_distance()
 
         stations  = []
@@ -412,7 +412,7 @@ GridSearchMPI="""
         data = processed_data
 
         print 'Reading Greens functions...\\n'
-        factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+        factory = mtuq.fk.GreensTensorFactory(path_greens)
         greens = factory(stations, origin)
 
         print 'Processing Greens functions...\\n'
@@ -470,7 +470,7 @@ GridSearchMPI2="""
 
     if comm.rank==0:
         print 'Reading data...\\n'
-        data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
+        data = sac.reader(path_data, wildcard='*.[zrt]')
         data.sort_by_distance()
 
         stations  = []
@@ -492,7 +492,7 @@ GridSearchMPI2="""
    for origin, magnitude in cross(origins, magnitudes):
         if comm.rank==0:
             print 'Reading Greens functions...\\n'
-            factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+            factory = mtuq.fk.GreensTensorFactory(path_greens)
             greens = factory(stations, origin)
 
             print 'Processing Greens functions...\\n'
@@ -542,7 +542,7 @@ RunBenchmarkCAPFK="""
     #
 
     print 'Reading data...\\n'
-    data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
+    data = sac.reader(path_data, wildcard='*.[zrt]')
     data.sort_by_distance()
 
     stations  = []
@@ -559,7 +559,7 @@ RunBenchmarkCAPFK="""
 
 
     print 'Reading Greens functions...\\n'
-    factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+    factory = mtuq.fk.GreensTensorFactory(path_greens)
     greens = factory(stations, origin)
 
     print 'Processing Greens functions...\\n'

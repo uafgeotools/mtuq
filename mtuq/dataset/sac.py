@@ -2,20 +2,21 @@
 import glob
 import os
 import warnings
-from copy import deepcopy
-from os.path import join
 import numpy as np
 import obspy
+import mtuq.dataset.base
 
+
+from copy import deepcopy
+from os.path import join
 from obspy.core import Stream
 from obspy.core.event import Origin
 from obspy.geodetics import gps2dist_azimuth
-from mtuq.dataset.base import DatasetBase
 from mtuq.util.signal import check_time_sampling
 from mtuq.util.util import AttribDict, warn
 
 
-class Dataset(DatasetBase):
+class Dataset(mtuq.dataset.base.Dataset):
     """ Seismic data container
  
         Adds SAC-specific metadata extraction methods
