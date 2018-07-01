@@ -148,6 +148,7 @@ if __name__=='__main__':
 
     print 'Reading data...\n'
     data = sac.reader(path_data, wildcard='*.[zrt]')
+    data.add_tag('velocity')
     data.sort_by_distance()
 
     stations  = []
@@ -164,7 +165,7 @@ if __name__=='__main__':
 
 
     print 'Reading Greens functions...\n'
-    factory = fk.GreensTensorFactory(path_greens)
+    factory = syngine.GreensTensorFactory('ak135f_5s')
     greens = factory(stations, origin)
 
     print 'Processing Greens functions...\n'

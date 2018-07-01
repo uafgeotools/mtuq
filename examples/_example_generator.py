@@ -7,7 +7,7 @@ import numpy as np
 
 from os.path import basename, join
 from mtuq.dataset import sac
-from mtuq.greens_tensor import fk
+from mtuq.greens_tensor import syngine
 from mtuq.grid_search import DCGridRandom
 from mtuq.grid_search import grid_search_mpi
 from mtuq.misfit.cap import Misfit
@@ -333,11 +333,12 @@ GridSearchSerial="""
 
     print 'Reading data...\\n'
     data = sac.reader(path_data, wildcard='*.[zrt]')
+    data.add_tag('velocity')
     data.sort_by_distance()
 
     stations  = []
     for stream in data:
-        stations += [stream.station]
+        stations += [stream.meta]
     origin = data.get_origin()
 
 
@@ -349,7 +350,7 @@ GridSearchSerial="""
 
 
     print 'Reading Greens functions...\\n'
-    factory = fk.GreensTensorFactory(path_greens)
+    factory = syngine.GreensTensorFactory('ak135f_5s')
     greens = factory(stations, origin)
 
 
@@ -398,6 +399,7 @@ GridSearchMPI="""
     if comm.rank==0:
         print 'Reading data...\\n'
         data = sac.reader(path_data, wildcard='*.[zrt]')
+        data.add_tag('velocity')
         data.sort_by_distance()
 
         stations  = []
@@ -412,7 +414,7 @@ GridSearchMPI="""
         data = processed_data
 
         print 'Reading Greens functions...\\n'
-        factory = mtuq.fk.GreensTensorFactory(path_greens)
+        factory = syngine.GreensTensorFactory('ak135f_5s')
         greens = factory(stations, origin)
 
         print 'Processing Greens functions...\\n'
@@ -471,6 +473,7 @@ GridSearchMPI2="""
     if comm.rank==0:
         print 'Reading data...\\n'
         data = sac.reader(path_data, wildcard='*.[zrt]')
+        data.add_tag('velocity')
         data.sort_by_distance()
 
         stations  = []
@@ -492,7 +495,7 @@ GridSearchMPI2="""
    for origin, magnitude in cross(origins, magnitudes):
         if comm.rank==0:
             print 'Reading Greens functions...\\n'
-            factory = mtuq.fk.GreensTensorFactory(path_greens)
+            factory = syngine.GreensTensorFactory('ak135f_5s')
             greens = factory(stations, origin)
 
             print 'Processing Greens functions...\\n'
@@ -543,6 +546,7 @@ RunBenchmarkCAPFK="""
 
     print 'Reading data...\\n'
     data = sac.reader(path_data, wildcard='*.[zrt]')
+    data.add_tag('velocity')
     data.sort_by_distance()
 
     stations  = []
@@ -559,7 +563,7 @@ RunBenchmarkCAPFK="""
 
 
     print 'Reading Greens functions...\\n'
-    factory = fk.GreensTensorFactory(path_greens)
+    factory = syngine.GreensTensorFactory('ak135f_5s')
     greens = factory(stations, origin)
 
     print 'Processing Greens functions...\\n'
@@ -682,7 +686,10 @@ if __name__=='__main__':
             re.sub(
             'grid_search_mpi',
             'grid_search_serial',
-            Imports))
+            re.sub(
+            'syngine',
+            'fk',
+            Imports)))
         file.write(DocstringBenchmarkCAPFK)
         file.write(PathsDefinitions)
         file.write(

@@ -5,7 +5,7 @@ import numpy as np
 
 from os.path import basename, join
 from mtuq.dataset import sac
-from mtuq.greens_tensor import fk
+from mtuq.greens_tensor import syngine
 from mtuq.grid_search import DCGridRandom
 from mtuq.grid_search import grid_search_mpi
 from mtuq.misfit.cap import Misfit
@@ -127,6 +127,7 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Reading data...\n'
         data = sac.reader(path_data, wildcard='*.[zrt]')
+        data.add_tag('velocity')
         data.sort_by_distance()
 
         stations  = []
@@ -141,7 +142,7 @@ if __name__=='__main__':
         data = processed_data
 
         print 'Reading Greens functions...\n'
-        factory = mtuq.fk.GreensTensorFactory(path_greens)
+        factory = syngine.GreensTensorFactory('ak135f_5s')
         greens = factory(stations, origin)
 
         print 'Processing Greens functions...\n'
