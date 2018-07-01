@@ -64,7 +64,7 @@ class Dataset(object):
         min_all = np.inf
         for stream in self:
             for trace in stream:
-                weight = getattr(trace, 'weight', 1.):
+                weight = getattr(trace, 'weight', 1.)
                 if not weight:
                     continue
                 if trace.data.min() < min_all:
@@ -76,7 +76,7 @@ class Dataset(object):
         max_all = -np.inf
         for stream in self:
             for trace in stream:
-                weight = getattr(trace, 'weight', 1.):
+                weight = getattr(trace, 'weight', 1.)
                 if not weight:
                     continue
                 if trace.data.max() > max_all:
