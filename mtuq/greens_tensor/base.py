@@ -1,22 +1,20 @@
 
-import obspy
-import numpy as np
-
 from copy import deepcopy
+from obspy.core import Stream
 from mtuq.dataset.base import Dataset
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
 from mtuq.util.util import iterable
 
 
-class GreensTensor(obspy.core.Stream):
+class GreensTensor(Stream):
     """ Elastic Green's tensor object
 
         Holds multiple time series corresponding to the independent elements 
         of an elastic Green's tensor.
     """
 
-    def __init__(self, traces, meta, origin):
+    def __init__(self, traces, station, origin):
         """
         Normally, all time series required to describe the response at a given
         station to a source at a given origin should be contained in single 
@@ -28,21 +26,20 @@ class GreensTensor(obspy.core.Stream):
 
         super(GreensTensor, self).__init__(traces)
 
-        self.id = meta.id
+        self.id = station.id
         self.tag = 'greens_tensor'
-        self.meta = deepcopy(meta)
+        self.meta = deepcopy(station)
         self.origin = origin
 
 
     def get_synthetics(self, mt):
         """
-        Generates synthetic seismogram via linear combination of Green's tensor
-        elements
+        Generates synthetics through a linear combination of tensor elements
         """
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def get_time_shifts(self, data):
+    def _preallocate_synthetics(self):
         raise NotImplementedError("Must be implemented by subclass")
 
 
@@ -62,12 +59,38 @@ class GreensTensor(obspy.core.Stream):
         return self.apply(wavelet.convolve_stream)
 
 
-    def _preallocate_synthetics(self):
+    def get_time_shifts(self, data):
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def _precompute_time_shifts(self):
         raise NotImplementedError("Must be implemented by subclass")
+
+
+    def select(self, *args, **kwargs):
+        # Stream and GreensTensor have different constructors, so it's
+        # necessary to convert back and forth
+
+        # convert to Stream
+        stream = Stream([trace for trace in self]).select(*args, **kwargs)
+        
+        # convert back to GreensTensor
+        return self.__class__(
+            [trace for trace in stream],
+            self.meta,
+            self.origin)
+
+
+    def __add__(self, *args):
+        raise Exception("It doesn't usually make sense to add time series to " 
+           " a GreensTensor (e.g. for a general inhomogeneous medium there are "
+           " 21 time series, any other number is mathematially incorrect)")
+
+
+    def __iadd__(self, *args):
+        raise Exception("It doesn't usually make sense to add time series to "
+           " a GreensTensor (e.g. for a general inhomogeneous medium there are "
+           " 21 time series, any other number is mathematially incorrect)")
 
 
 

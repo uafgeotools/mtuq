@@ -77,7 +77,8 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             trace.stats.delta = dt_new
             trace.stats.npts = len(data_new)
 
-        return GreensTensor(stream, station, origin)
+        traces = [trace for trace in stream]
+        return GreensTensor(traces, station, origin)
 
 
 def download_greens_tensor(model, station, origin):

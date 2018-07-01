@@ -42,9 +42,9 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     """
     Elastic Green's tensor object
     """
-    def __init__(self, traces, meta, origin):
+    def __init__(self, traces, station, origin):
         assert len(traces)==10, ValueError(ErrorMessage)
-        super(GreensTensor, self).__init__(traces, meta, origin)
+        super(GreensTensor, self).__init__(traces, station, origin)
 
 
     def get_synthetics(self, mt):
@@ -212,5 +212,6 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
 
         stream.id = station.id
 
-        return GreensTensor(stream, station, origin)
+        traces = [trace for trace in stream]
+        return GreensTensor(traces, station, origin)
 

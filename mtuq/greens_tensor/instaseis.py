@@ -24,9 +24,8 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     """
     Elastic Green's tensor object
     """
-    def __init__(self, stream, station, origin):
-        assert isinstance(stream, obspy.Stream), ValueError(ErrorMessage)
-        super(GreensTensor, self).__init__(stream, station, origin)
+    def __init__(self, traces, station, origin):
+        super(GreensTensor, self).__init__(traces, station, origin)
 
 
     def _calculate_weights(self):
@@ -43,20 +42,19 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             github.com/krischer/instaseis/instaseis/tests/
             test_instaseis.py::test_get_greens_vs_get_seismogram
         """
-        traces = self.greens_tensor
-        npts = traces[0].meta['npts']
-        az = np.deg2rad(self.station.azimuth)
+        npts = self[0].meta['npts']
+        az = np.deg2rad(self.meta.azimuth)
 
-        TSS = traces.select(channel="TSS")[0].data
-        ZSS = traces.select(channel="ZSS")[0].data
-        RSS = traces.select(channel="RSS")[0].data
-        TDS = traces.select(channel="TDS")[0].data
-        ZDS = traces.select(channel="ZDS")[0].data
-        RDS = traces.select(channel="RDS")[0].data
-        ZDD = traces.select(channel="ZDD")[0].data
-        RDD = traces.select(channel="RDD")[0].data
-        ZEP = traces.select(channel="ZEP")[0].data
-        REP = traces.select(channel="REP")[0].data
+        TSS = self.select(channel="TSS")[0].data
+        ZSS = self.select(channel="ZSS")[0].data
+        RSS = self.select(channel="RSS")[0].data
+        TDS = self.select(channel="TDS")[0].data
+        ZDS = self.select(channel="ZDS")[0].data
+        RDS = self.select(channel="RDS")[0].data
+        ZDD = self.select(channel="ZDD")[0].data
+        RDD = self.select(channel="RDD")[0].data
+        ZEP = self.select(channel="ZEP")[0].data
+        REP = self.select(channel="REP")[0].data
 
         GZ = np.ones((npts, 6))
         GR = np.ones((npts, 6))
@@ -106,7 +104,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_rotated_greens_tensor'):
             self._calculate_weights()
 
-        for _i, channel in enumerate(self.station.channels):
+        for _i, channel in enumerate(self.meta.channels):
             component = channel[-1].upper()
             if component not in ['Z','R','T']:
                 raise Exception("Channels are expected to end in one of the "
@@ -142,13 +140,12 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
 
     def _preallocate_synthetics(self):
-        self.station.npts = self.greens_tensor[0].stats.npts
+        self.meta.npts = self[0].stats.npts
         self._synthetics = Stream()
-        for channel in self.station.channels:
+        for channel in self.meta.channels:
             self._synthetics +=\
-                Trace(np.zeros(self.greens_tensor[0].stats.npts), self.station)
-        self._synthetics.id = self.greens_tensor.id
-
+                Trace(np.zeros(self[0].stats.npts), self.meta)
+        self._synthetics.id = self.id
 
 
 
@@ -192,5 +189,6 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
 
+        traces = [trace for trace in stream]
         return GreensTensor(stream, station, origin)
 
