@@ -111,12 +111,10 @@ if __name__=='__main__':
 
 
     print "Reading FK Greens's functions..."
-    print station.endtime
     model = 'scak'
     factory_fk = fk.GreensTensorFactory(path_greens_fk)
     greens_fk = factory_fk(station, origin)
     greens_fk = greens_fk.map(process_data)
-    print station.endtime
 
 
     print "Downloading syngine Green's functions..."
@@ -140,7 +138,8 @@ if __name__=='__main__':
             float(synthetics_syngine[0].stats.endtime),
             synthetics_syngine[0].stats.npts)
 
-        for component in ['Z', 'R', 'T']:
+        pyplot.figure(figsize=(6., 10.))
+        for _i, component in enumerate(['Z', 'R', 'T']):
             #stream = synthetics_instaseis.select(component=component)
             #d0 = stream[0].data
 
@@ -150,9 +149,10 @@ if __name__=='__main__':
             stream = synthetics_syngine.select(component=component)
             d2 = stream[0].data
 
+            pyplot.subplot(3, 1, _i+1)
             #pyplot.plot(t, d0, t, d1, t, d2)
             pyplot.plot(t, d1, t, d2)
 
-            pyplot.show()
+        pyplot.show()
 
 

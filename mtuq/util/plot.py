@@ -28,6 +28,7 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             dat, syn, func = data[key], synthetics[key], misfit[key]
             _ = func(dat, syn)
 
+
     irow = 0
     for data_bw, synthetics_bw, data_sw, synthetics_sw in zip(
         data['body_waves'], synthetics['body_waves'],

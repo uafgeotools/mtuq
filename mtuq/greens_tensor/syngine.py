@@ -69,7 +69,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
 
         for trace in stream:
             # resample Green's functions
-            data_old = trace.data*1.e20
+            data_old = trace.data*1.e20/3.2e5 # ADHOC
             data_new = resample(data_old, t1_old, t2_old, dt_old, 
                                           t1_new, t2_new, dt_new)
             trace.data = data_new
@@ -152,7 +152,7 @@ def get_synthetics_syngine(model, station, origin, mt):
 
     for trace in stream:
         # resample Green's functions
-        data_old = trace.data*1.e20
+        data_old = trace.data*1.e20/3.2e5 # ADHOC
         data_new = resample(data_old, t1_old, t2_old, dt_old,
                                       t1_new, t2_new, dt_new)
         trace.data = data_new
