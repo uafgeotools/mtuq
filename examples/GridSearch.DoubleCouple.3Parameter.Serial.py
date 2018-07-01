@@ -105,7 +105,7 @@ if __name__=='__main__':
 
 
     #
-    # Here we specify the source parameter grid
+    # Next we specify the source parameter grid
     #
 
     grid = DCGridRandom(

@@ -2,7 +2,6 @@
 import instaseis
 import obspy
 import numpy as np
-
 import mtuq.greens_tensor.base
 
 from collections import defaultdict
@@ -30,7 +29,6 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
     def _calculate_weights(self):
         """ See also
-
             van Driel et al. (2015)
             Instaseis: instant global seismograms
             Solid Earth, 6, 701-717
@@ -113,21 +111,21 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             if component=='R':
                 G = self._GR
             if component=='T':
-                # the negative sign here is needed here because of an 
-                # inconsistency between instaseis and syngine?
+                # the negative sign is needed because of inconsistent
+                # instaseis and syngine moment tensor conventions?
                 G = -self._GT
 
 
             # Order of terms expected by syngine URL parser according to 
             # IRIS documentation:
             #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-
+            #
             # Relations given in instaseis/tests/test_instaseis.py:
             #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
-
-            # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py:
+            #
+            # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
+            # (note sign differences):
             #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
-
             Mxx =  mt[1]
             Myy =  mt[2]
             Mzz =  mt[0]
@@ -173,7 +171,6 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             kind='displacement',
             kernelwidth=self.kernelwidth,
             definition=u'seiscomp')
-
         stream.id = station.id
 
         # what are the start and end times of the data?

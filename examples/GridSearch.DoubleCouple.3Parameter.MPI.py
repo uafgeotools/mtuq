@@ -28,7 +28,7 @@ if __name__=='__main__':
     #
     # For a slightly simpler example, see 
     # GridSearch.DoubleCouple.3Parameter.Serial.py, 
-    # which runs the exactly the same inversion in serial rather than parallel
+    # which runs the same inversion in serial rather than parallel
     #
 
 
@@ -104,7 +104,7 @@ if __name__=='__main__':
 
 
     #
-    # Here we specify the source parameter grid
+    # Next we specify the source parameter grid
     #
 
     grid = DCGridRandom(

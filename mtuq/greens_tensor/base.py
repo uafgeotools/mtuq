@@ -11,12 +11,14 @@ class GreensTensor(Stream):
     """ Elastic Green's tensor object
 
         Holds multiple time series corresponding to the independent elements 
-        of an elastic Green's tensor.
+        of an elastic Green's tensor. Besides data processing utilities
+        inherited from obspy.Stream, provides methods for generating 
+        synthetics, convolving source wavelets, and calculating 
+        cross-correlation lag times.
     """
 
     def __init__(self, traces, station, origin):
         assert check_time_sampling(traces), NotImplementedError(
-
             "Time sampling differs from trace to trace.")
 
         super(GreensTensor, self).__init__(traces)
@@ -29,19 +31,22 @@ class GreensTensor(Stream):
 
     def get_synthetics(self, mt):
         """
-        Generates synthetics through a linear combination of tensor elements
+        Generates synthetics through a linear combination of time series
         """
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def _preallocate_synthetics(self):
+        """
+        Enables fast synthetics calculations through preallocation and
+        and memory reuse
+        """
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def apply(self, function, *args, **kwargs):
         """
         Applies a function to all time series
-        Green's tensor
         """
         return self.__class__(function(self, *args, **kwargs),
             self.meta, self.origin)
@@ -54,18 +59,26 @@ class GreensTensor(Stream):
         return self.apply(wavelet.convolve_stream)
 
 
-    def get_time_shifts(self, data):
+    def get_time_shifts(self, mt):
+        """ 
+        Finds optimal time-shift correction between synthetics and
+        user-supplied data
+        """
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def _precompute_time_shifts(self):
+    def _precompute_time_shifts(self, data):
+        """
+        Enables fast time-shift calculations by computing cross-correlations
+        on an element-by-element basis
+        """
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def select(self, *args, **kwargs):
-        # Stream and GreensTensor have different constructors, so it's
-        # necessary to convert back and forth
-
+        """
+        Same as obspy.Stream.select
+        """
         # convert to Stream
         stream = Stream([trace for trace in self]).select(*args, **kwargs)
         
@@ -79,13 +92,13 @@ class GreensTensor(Stream):
     def __add__(self, *args):
         raise Exception("It doesn't usually make sense to add time series to " 
            " a GreensTensor (e.g. for a general inhomogeneous medium there are "
-           " 21 time series, any other number is mathematially incorrect)")
+           " 21 time series, any other number is incorrect)")
 
 
     def __iadd__(self, *args):
         raise Exception("It doesn't usually make sense to add time series to "
            " a GreensTensor (e.g. for a general inhomogeneous medium there are "
-           " 21 time series, any other number is mathematially incorrect)")
+           " 21 time series, any other number is incorrect)")
 
 
 
