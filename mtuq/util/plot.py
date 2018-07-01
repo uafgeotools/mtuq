@@ -6,7 +6,7 @@ from obspy.imaging.beachball import beachball
 
 
 def plot_waveforms(filename, data, synthetics, misfit=None, 
-                   annotate=False, normalize=False):
+                   annotate=False, normalize=1):
     """ Creates cap-style data/synthetics comparison
     """
 
@@ -64,9 +64,15 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             else:
                 continue
 
-            if normalize:
-                ylim = [min_bw, max_bw]
+            if normalize==1:
+                ylim = [max(abs(min_bw, max_bw))]*2
                 pyplot.ylim(*ylim)
+            elif normalize==2:
+                dmax = max(abs(dat.data))
+                smax = max(abs(syn.data))
+                if dmax > 0.: dat.data /= dmax
+                if smax > 0.: syn.data /= smax
+                ylim = [-1, 1]
             else:
                 ylim = [dat.data.min(), dat.data.max()]
 
@@ -112,9 +118,15 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             else:
                 continue
 
-            if normalize:
-                ylim = [min_sw, max_sw]
+            if normalize==1:
+                ylim = [max(abs(min_bw, max_bw))]*2
                 pyplot.ylim(*ylim)
+            elif normalize==2:
+                dmax = max(abs(dat.data))
+                smax = max(abs(syn.data))
+                if dmax > 0.: dat.data /= dmax
+                if smax > 0.: syn.data /= smax
+                ylim = [-1, 1]
             else:
                 ylim = [dat.data.min(), dat.data.max()]
 
@@ -138,7 +150,7 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
     #pyplot.show()
 
 
-def subplot(dat, syn, label=None, normalize=True):
+def subplot(dat, syn, label=None):
     t1,t2,nt,dt = time_stats(dat)
 
     start = getattr(syn, 'start', 0)
@@ -147,12 +159,6 @@ def subplot(dat, syn, label=None, normalize=True):
     meta = dat.stats
     d = dat.data
     s = syn.data
-
-    if normalize:
-        d0 = max(abs(d))
-        s0 = max(abs(s))
-        if d0 > 0.: d /= d0
-        if s0 > 0.: s /= s0
 
     t = np.linspace(0,t2-t1,nt,dt)
     pyplot.plot(t, d, t, s[start:stop])
