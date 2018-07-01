@@ -1,69 +1,96 @@
 
-import obspy
-import numpy as np
-
-from mtuq.dataset.base import DatasetBase
+from copy import deepcopy
+from obspy.core import Stream
+from mtuq.dataset.base import Dataset
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
 from mtuq.util.util import iterable
 
 
-class GreensTensor(object):
+class GreensTensor(Stream):
     """ Elastic Green's tensor object
 
-        Similar to an obpy Trace, except rather than a single time series, holds
-        multiple time series corresponding to the independent elements of an 
-        elastic Green's tensor.
+        Holds multiple time series corresponding to the independent elements 
+        of an elastic Green's tensor.
     """
 
-    def __init__(self, stream, station, origin):
+    def __init__(self, traces, station, origin):
         """
         Normally, all time series required to describe the response at a given
         station to a source at a given origin should be contained in single 
         obspy stream. Certain subclasses may override this behavior
         
         """
-        assert isinstance(stream, obspy.Stream), ValueError(
-            "An obspy stream must be provided containing multiple traces, "
-            "each representing a Green's function")
-
-        assert hasattr(station, 'id'), ValueError(
-            "Station must have a unique identifier")
-
-        assert check_time_sampling(stream), NotImplementedError(
+        assert check_time_sampling(traces), NotImplementedError(
             "Time sampling differs from trace to trace.")
 
-        stream.tag = 'greens_tensor'
+        super(GreensTensor, self).__init__(traces)
 
-        self.greens_tensor = stream
-        self.greens_tensor.station = self.station = station
-        self.greens_tensor.origin = self.origin = origin
-        self.greens_tensor.id = self.id = station.id
+        self.id = station.id
+        self.tag = 'greens_tensor'
+        self.meta = deepcopy(station)
+        self.origin = origin
 
 
     def get_synthetics(self, mt):
         """
-        Generates synthetic seismogram via linear combination of Green's tensor
-        elements
+        Generates synthetics through a linear combination of tensor elements
         """
+        raise NotImplementedError("Must be implemented by subclass")
+
+
+    def _preallocate_synthetics(self):
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def apply(self, function, *args, **kwargs):
         """
-        Applies a function to all time series associated with the given 
+        Applies a function to all time series
         Green's tensor
         """
-        return self.__class__(function(self.greens_tensor, *args, **kwargs),
-            self.station, self.origin)
+        return self.__class__(function(self, *args, **kwargs),
+            self.meta, self.origin)
 
 
     def convolve(self, wavelet):
         """
-        Convolves source wavelet with all time series associated with the
-        given Green's tensor
+        Convolves source wavelet with all time series
         """
         return self.apply(wavelet.convolve_stream)
+
+
+    def get_time_shifts(self, data):
+        raise NotImplementedError("Must be implemented by subclass")
+
+
+    def _precompute_time_shifts(self):
+        raise NotImplementedError("Must be implemented by subclass")
+
+
+    def select(self, *args, **kwargs):
+        # Stream and GreensTensor have different constructors, so it's
+        # necessary to convert back and forth
+
+        # convert to Stream
+        stream = Stream([trace for trace in self]).select(*args, **kwargs)
+        
+        # convert back to GreensTensor
+        return self.__class__(
+            [trace for trace in stream],
+            self.meta,
+            self.origin)
+
+
+    def __add__(self, *args):
+        raise Exception("It doesn't usually make sense to add time series to " 
+           " a GreensTensor (e.g. for a general inhomogeneous medium there are "
+           " 21 time series, any other number is mathematially incorrect)")
+
+
+    def __iadd__(self, *args):
+        raise Exception("It doesn't usually make sense to add time series to "
+           " a GreensTensor (e.g. for a general inhomogeneous medium there are "
+           " 21 time series, any other number is mathematially incorrect)")
 
 
 
@@ -94,7 +121,7 @@ class GreensTensorList(object):
         tensor mt, and each each individual stream corresponds to an
         individual station
         """
-        synthetics = DatasetBase()
+        synthetics = Dataset()
         for greens_tensor in self.__list__:
             synthetics += greens_tensor.get_synthetics(mt)
         return synthetics
@@ -116,10 +143,10 @@ class GreensTensorList(object):
 
     def map(self, function, *sequences):
         """
-        Returns the result of applying a function to each GreensTensor in the
-        list. If one or more optional sequences are given, the function is 
-        called with an argument list consisting of the corresponding item of
-        each sequence. Similar to the behavior of the python built-in "map".
+        Applies a function in-pace to each GreensTensor in the list. If one or
+        more optional sequences are given, the function is called with an 
+        argument list consisting of the corresponding item of each sequence. 
+        Similar to the behavior of the python built-in "map".
         """
         processed = GreensTensorList()
         for _i, greens_tensor in enumerate(self.__list__):
@@ -141,7 +168,7 @@ class GreensTensorList(object):
 
     # the next method is called repeatedly during GreensTensorList creation
     def __add__(self, greens_tensor):
-        assert hasattr(greens_tensor, 'id')
+        #assert hasattr(greens_tensor, 'id')
         self.__list__ += [greens_tensor]
         return self
 
@@ -156,7 +183,7 @@ class GreensTensorList(object):
         """ 
         Sorts in-place by hypocentral distance
         """
-        self.sort_by_function(lambda stream: stream.station.distance,
+        self.sort_by_function(lambda stream: stream.meta.distance,
             reverse=reverse)
 
 
@@ -164,7 +191,7 @@ class GreensTensorList(object):
         """
         Sorts in-place by source-receiver azimuth
         """
-        self.sort_by_function(lambda stream: stream.station.azimuth,
+        self.sort_by_function(lambda stream: stream.meta.azimuth,
             reverse=reverse)
 
 

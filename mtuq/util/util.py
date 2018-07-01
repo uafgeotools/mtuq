@@ -6,6 +6,7 @@ import time
 import numpy as np
 import obspy
 import re
+import uuid
 import warnings
 import zipfile
 
@@ -135,3 +136,11 @@ def warn(*args, **kwargs):
     except:
        warnings.warn(*args, **kwargs)
 
+
+
+def url2uuid(url):
+    """ Converts a url to a uuid string
+    """
+    namespace = uuid.NAMESPACE_URL
+    name = url
+    return uuid.uuid5(namespace, name)

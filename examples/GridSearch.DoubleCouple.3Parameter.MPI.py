@@ -2,14 +2,14 @@
 import os
 import sys
 import numpy as np
-import mtuq.dataset.sac
-import mtuq.greens_tensor.fk
 
 from os.path import basename, join
+from mtuq.dataset import sac
+from mtuq.greens_tensor import fk
 from mtuq.grid_search import DCGridRandom
 from mtuq.grid_search import grid_search_mpi
-from mtuq.misfit.cap import misfit
-from mtuq.process_data.cap import process_data
+from mtuq.misfit.cap import Misfit
+from mtuq.process_data.cap import ProcessData
 from mtuq.util.cap_util import trapezoid_rise_time, Trapezoid
 from mtuq.util.plot import plot_beachball, plot_waveforms
 from mtuq.util.util import cross, root
@@ -37,8 +37,8 @@ if __name__=='__main__':
     # Mw~4 Alaska earthquake
     #
 
-    path_data=    join(root(), 'tests/data/20090407201255351')
-    path_weights= join(root(), 'tests/data/20090407201255351/weights.dat')
+    path_data=    join(root(), 'data/examples/20090407201255351')
+    path_weights= join(root(), 'data/examples/20090407201255351/weights.dat')
     # Fow now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
@@ -50,7 +50,7 @@ if __name__=='__main__':
     # in memory
     #
 
-    process_bw = process_data(
+    process_bw = ProcessData(
         filter_type='Bandpass',
         freq_min= 0.25,
         freq_max= 0.667,
@@ -63,7 +63,7 @@ if __name__=='__main__':
         weight_file=path_weights,
         )
 
-    process_sw = process_data(
+    process_sw = ProcessData(
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
@@ -87,12 +87,12 @@ if __name__=='__main__':
     # contributions
     #
 
-    misfit_bw = misfit(
+    misfit_bw = Misfit(
         time_shift_max=2.,
         time_shift_groups=['ZR'],
         )
 
-    misfit_sw = misfit(
+    misfit_sw = Misfit(
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
@@ -126,12 +126,12 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print 'Reading data...\n'
-        data = mtuq.dataset.sac.reader(path_data, wildcard='*.[zrt]')
+        data = sac.reader(path_data, wildcard='*.[zrt]')
         data.sort_by_distance()
 
         stations  = []
         for stream in data:
-            stations += [stream.station]
+            stations += [stream.meta]
         origin = data.get_origin()
 
         print 'Processing data...\n'
@@ -141,7 +141,7 @@ if __name__=='__main__':
         data = processed_data
 
         print 'Reading Greens functions...\n'
-        factory = mtuq.greens_tensor.fk.GreensTensorFactory(path_greens)
+        factory = mtuq.fk.GreensTensorFactory(path_greens)
         greens = factory(stations, origin)
 
         print 'Processing Greens functions...\n'

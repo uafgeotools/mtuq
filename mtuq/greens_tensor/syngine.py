@@ -10,11 +10,10 @@ import mtuq.greens_tensor.instaseis
 from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists
-from uuid import uuid4
 from obspy.core import Stream, Trace
 from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
-from mtuq.util.util import unzip
+from mtuq.util.util import unzip, url2uuid
 
 
 GREENS_TENSOR_FILENAMES = [
@@ -78,7 +77,8 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             trace.stats.delta = dt_new
             trace.stats.npts = len(data_new)
 
-        return GreensTensor(stream, station, origin)
+        traces = [trace for trace in stream]
+        return GreensTensor(traces, station, origin)
 
 
 def download_greens_tensor(model, station, origin):
@@ -99,10 +99,12 @@ def download_greens_tensor(model, station, origin):
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
     filename = ('tmp-'
-         +str(uuid4())
+         +str(url2uuid(url))
          +'.zip')
-    download = urllib.URLopener()
-    download.retrieve(url, filename)
+    if not exists(filename):
+        print ' Downloading waveforms for station %s' % station.station
+        download = urllib.URLopener()
+        download.retrieve(url, filename)
     return filename
 
 
@@ -122,10 +124,12 @@ def download_synthetics(model, station, origin, mt):
          +'&starttime='+str(origin.time)[:-1]
          +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt))))
     filename = ('tmp-'
-         +str(uuid4())
+         +str(url2uuid(url))
          +'.zip')
-    download = urllib.URLopener()
-    download.retrieve(url, filename)
+    if not exists(filename):
+        print ' Downloading waveforms for station %s' % station.station
+        download = urllib.URLopener()
+        download.retrieve(url, filename)
     return filename
 
 

@@ -11,7 +11,7 @@ from mtuq.util.signal import cut
 from mtuq.util.util import AttribDict, warn
  
 
-class process_data(object):
+class ProcessData(object):
     """
     CAP-style data processing function
 
@@ -24,9 +24,8 @@ class process_data(object):
         2) processed_data = function_handle(data)
 
     In the first step, the user supplies a set of filtering, phase-picking,
-    windowing, and weighting parameters.  In the second step, a
-    single-station obspy stream is given as input and a processed stream
-    returned as output.
+    windowing, and weighting parameters.  In the second step, an obspy stream
+    is given as input and a processed stream returned as output.
     """
 
     def __init__(self,
@@ -195,16 +194,17 @@ class process_data(object):
         # applied to Green's functions and data will be the exactly
         # same. To accomodate CAP-style time shifts, the windowing 
         # will be slightly different.
-        if not hasattr(traces, 'tag'):
-            raise Exception('Missing station identifier')
-        tag = traces.tag
+        if hasattr(traces, 'tag'):
+            tag = traces.tag
+        else:
+            tag = 'data'
 
         # station metadata are required for data processing, e.g.
         # without station location distance-depedent weighting cannont
         # be applied
-        if not hasattr(traces, 'station'):
+        if not hasattr(traces, 'meta'):
             raise Exception('Missing station metadata')
-        meta = traces.station
+        meta = traces.meta
 
         # overwrite existing data?
         if overwrite:
@@ -383,7 +383,7 @@ class process_data(object):
                     else:
                         trace.weight = 0.
 
-            distance = traces.station.catalog_distance
+            distance = traces.meta.catalog_distance
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
@@ -412,7 +412,7 @@ class process_data(object):
                     else:
                         trace.weight = 0.
 
-            distance = traces.station.catalog_distance
+            distance = traces.meta.catalog_distance
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power

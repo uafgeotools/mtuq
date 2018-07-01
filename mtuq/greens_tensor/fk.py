@@ -42,10 +42,9 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     """
     Elastic Green's tensor object
     """
-    def __init__(self, stream, station, origin):
-        assert isinstance(stream, obspy.Stream), ValueError(ErrorMessage)
-        assert len(stream)==10, ValueError(ErrorMessage)
-        super(GreensTensor, self).__init__(stream, station, origin)
+    def __init__(self, traces, station, origin):
+        assert len(traces)==10, ValueError(ErrorMessage)
+        super(GreensTensor, self).__init__(traces, station, origin)
 
 
     def get_synthetics(self, mt):
@@ -56,22 +55,20 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
-        for _i, channel in enumerate(self.station.channels):
+        for _i, channel in enumerate(self.meta.channels):
             component = channel[-1].upper()
             if component not in COMPONENTS:
                 raise Exception("Channels are expected to end in one of the "
                    "following characters: ZRT")
             self._synthetics[_i].meta.channel = component
 
-            G = self.greens_tensor
-            s = self._synthetics[_i].data
-
             # overwrites previous synthetics
-            s[:] = 0.
+            syn = self._synthetics[_i]
+            syn.data[:] = 0.
 
             # linear combination of Green's functions
             for _j, weight in self._calculate_weights(mt, component):
-                s += weight*G[_j].data
+                syn.data += weight*self[_j].data
 
         return self._synthetics
 
@@ -88,11 +85,11 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
        if component not in COMPONENTS:
            raise Exception
 
-       if not hasattr(self.station, 'azimuth'):
+       if not hasattr(self.meta, 'azimuth'):
            raise Exception
 
-       saz = np.sin(DEG2RAD * self.station.azimuth)
-       caz = np.cos(DEG2RAD * self.station.azimuth)
+       saz = np.sin(DEG2RAD * self.meta.azimuth)
+       caz = np.cos(DEG2RAD * self.meta.azimuth)
        saz2 = 2.*saz*caz
        caz2 = caz**2.-saz**2.
 
@@ -128,10 +125,10 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         Creates obspy streams for use by get_synthetics
         """
         self._synthetics = Stream()
-        for channel in self.station.channels:
+        for channel in self.meta.channels:
             self._synthetics +=\
-                Trace(np.zeros(self.greens_tensor[0].stats.npts), self.station)
-        self._synthetics.id = self.greens_tensor.id
+                Trace(np.zeros(self[0].stats.npts), self.meta)
+        self._synthetics.id = self.id
 
 
 
@@ -215,5 +212,6 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
 
         stream.id = station.id
 
-        return GreensTensor(stream, station, origin)
+        traces = [trace for trace in stream]
+        return GreensTensor(traces, station, origin)
 
