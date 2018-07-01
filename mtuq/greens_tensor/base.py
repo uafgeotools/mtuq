@@ -42,6 +42,10 @@ class GreensTensor(obspy.core.Stream):
         raise NotImplementedError("Must be implemented by subclass")
 
 
+    def get_time_shifts(self, data):
+        raise NotImplementedError("Must be implemented by subclass")
+
+
     def apply(self, function, *args, **kwargs):
         """
         Applies a function to all time series
@@ -56,6 +60,14 @@ class GreensTensor(obspy.core.Stream):
         Convolves source wavelet with all time series
         """
         return self.apply(wavelet.convolve_stream)
+
+
+    def _preallocate_synthetics(self):
+        raise NotImplementedError("Must be implemented by subclass")
+
+
+    def _precompute_time_shifts(self):
+        raise NotImplementedError("Must be implemented by subclass")
 
 
 
