@@ -101,7 +101,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
-        if not hasattr(self, '_rotated_greens_tensor'):
+        if not hasattr(self, '_GZ'):
             self._calculate_weights()
 
         for _i, channel in enumerate(self.meta.channels):
