@@ -90,13 +90,6 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         """
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
-
-        Relations given in test_instaseis.py:
-            m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
-
-        Order of terms expected by syngine URL interface:
-            Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
-
         """
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
@@ -120,7 +113,20 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             if component=='R':
                 G = self._GR
             if component=='T':
+                # the negative sign here is needed here because of an 
+                # inconsistency between instaseis and syngine?
                 G = -self._GT
+
+
+            # Order of terms expected by syngine URL parser according to 
+            # IRIS documentation:
+            #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
+
+            # Relations given in instaseis/tests/test_instaseis.py:
+            #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
+
+            # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py:
+            #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
 
             Mxx =  mt[1]
             Myy =  mt[2]

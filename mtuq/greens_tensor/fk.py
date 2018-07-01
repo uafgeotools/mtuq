@@ -45,6 +45,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     def __init__(self, traces, station, origin):
         assert len(traces)==10, ValueError(ErrorMessage)
         super(GreensTensor, self).__init__(traces, station, origin)
+        self.tags += ['velocity']
 
 
     def get_synthetics(self, mt):

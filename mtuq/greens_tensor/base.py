@@ -15,19 +15,14 @@ class GreensTensor(Stream):
     """
 
     def __init__(self, traces, station, origin):
-        """
-        Normally, all time series required to describe the response at a given
-        station to a source at a given origin should be contained in single 
-        obspy stream. Certain subclasses may override this behavior
-        
-        """
         assert check_time_sampling(traces), NotImplementedError(
+
             "Time sampling differs from trace to trace.")
 
         super(GreensTensor, self).__init__(traces)
 
         self.id = station.id
-        self.tag = 'greens_tensor'
+        self.tags = ['greens_tensor']
         self.meta = deepcopy(station)
         self.origin = origin
 
@@ -104,7 +99,6 @@ class GreensTensorList(object):
         # typically the id is the event name, event origin time, or some other
         # attribute shared by all GreensTensors
         self.id = id
-
         self.__list__ = []
 
         if not greens_tensors:
@@ -164,6 +158,16 @@ class GreensTensorList(object):
         for greens_tensor in self.__list__:
             convolved += greens_tensor.convolve(wavelet)
         return convolved
+
+
+    def add_tag(self, tag):
+       for greens_tensor in self:
+           greens_tensor.tags.append(tag)
+
+
+    def remove_tag(self, tag):
+       for greens_tensor in self:
+           greens_tensor.tags.remove(tag)
 
 
     # the next method is called repeatedly during GreensTensorList creation

@@ -125,11 +125,21 @@ class Dataset(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
+    def add_tag(self, tag):
+       for stream in self:
+           stream.tags.append(tag)
+
+
+    def remove_tag(self, tag):
+       for stream in self:
+           stream.tags.remove(tag)
+
+
     # the next method is called repeatedly during Dataset creation
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
-        stream.tag = 'data'
+        stream.tags = []
         self.__list__.append(stream)
         try:
             stream.meta = self.get_station()
