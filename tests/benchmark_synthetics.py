@@ -25,8 +25,15 @@ if __name__=='__main__':
         Eventually we will generate FK Green's functions using a common model
         and make them available for download
 
-        In the meantime, synthetics are not expected to match exactly
+        In the meantime, synthetics are not expected to match exactly,
+        especially at high frequencies near the upper limit available through
+        syngine
     """
+
+    include_instaseis = False
+    include_fk = True
+    include_syngine = True
+
 
     origin_time = UTCDateTime(
         year = 2009,
@@ -47,7 +54,7 @@ if __name__=='__main__':
         'station': 'BIGB',
         'location': '',
         'id': 'YV.BIGB',
-         'channels': ['BHZ', 'BHR', 'BHT'],
+        'channels': ['BHZ', 'BHR', 'BHT'],
         'catalog_origin_time': origin_time,
         'catalog_depth': 33033.5998535,
         'catalog_distance': 15.8500907298,
@@ -63,8 +70,10 @@ if __name__=='__main__':
 
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-       np.array([1., 1., 1., 0.,  0., 0.]), # explosion source
-       np.array([0., 0., 0., 0., -1., 0.])  # double couple source
+       np.array([1., 1., 1., 0., 0., 0.]), # explosion
+       np.array([0., 0., 0., 1., 1., 0.]), # double-couple #1
+       np.array([0., 0., 0., 0., 1., 0.]), # double-couple #2
+       np.array([0., 0., 0., 0., 0., 1.]), # double-couple #3
        ]
 
 
@@ -95,7 +104,7 @@ if __name__=='__main__':
         pick_type='from_fk_database',
         fk_database=path_greens_fk,
         window_type='cap_bw',
-        window_length=15.,
+        window_length=30.,
         )
 
     process_sw = ProcessData(
@@ -115,39 +124,42 @@ if __name__=='__main__':
         return processed_greens
 
 
-    #print "Reading instaseis Greens's functions..."
-    #model = 'ak135f_5s'
-    #factory_instaseis = instaseis.GreensTensorFactory(path_greens_instaseis)
-    #greens_instaseis = factory_instaseis(station, origin)[0]
-    #greens_instaseis = process_data(greens_fk)
+    if include_instaseis:
+        print "Reading instaseis Greens's functions..."
+        model = 'ak135f_2s'
+        factory_instaseis = instaseis.GreensTensorFactory(path_greens_instaseis)
+        greens_instaseis = factory_instaseis(station, origin)[0]
+        greens_instaseis = process_data(greens_instaseis)
 
 
-    print "Reading FK Greens's functions..."
-    model = 'scak'
-    factory_fk = fk.GreensTensorFactory(path_greens_fk)
-    greens_fk = factory_fk(station, origin)
+    if include_fk:
+        print "Reading FK Greens's functions..."
+        model = 'scak'
+        factory_fk = fk.GreensTensorFactory(path_greens_fk)
+        greens_fk = factory_fk(station, origin)
+        greens_fk = process_data(greens_fk)
 
 
-    print "Downloading syngine Green's functions..."
-    model = 'ak135f_5s'
-    factory_syngine = syngine.GreensTensorFactory(model)
-    greens_syngine = factory_syngine(station, origin)
-
-
-    print "Data processing..."
-    #greens_instaseis = process_data(greens_instaseis)
-    greens_fk = process_data(greens_fk)
-    greens_syngine = process_data(greens_syngine)
+    if include_syngine:
+        print "Downloading syngine Green's functions..."
+        model = 'ak135f_2s'
+        factory_syngine = syngine.GreensTensorFactory(model)
+        greens_syngine = factory_syngine(station, origin)
+        greens_syngine = process_data(greens_syngine)
 
 
     print "Plotting synthetics..."
-    for mt in grid:
-        for key in ['body_waves', 'surface_waves']:
+    for _it, mt in enumerate(grid):
+        print 'Moment tensor %d of %d\n' % (_it+1, len(grid))
 
+        for key in ['body_waves', 'surface_waves']:
             # get synthetics
-            #synthetics_instaseis = greens_instaseis[key].get_synthetics(mt)[0]
-            synthetics_fk = greens_fk[key].get_synthetics(mt)[0]
-            synthetics_syngine = greens_syngine[key].get_synthetics(mt)[0]
+            if include_instaseis:
+                synthetics_instaseis = greens_instaseis[key].get_synthetics(mt)[0]
+            if include_fk:
+                synthetics_fk = greens_fk[key].get_synthetics(mt)[0]
+            if include_syngine:
+                synthetics_syngine = greens_syngine[key].get_synthetics(mt)[0]
 
             # get time scheme
             t = np.linspace(
@@ -155,21 +167,41 @@ if __name__=='__main__':
                 float(synthetics_syngine[0].stats.endtime),
                 synthetics_syngine[0].stats.npts)
 
-            pyplot.figure(figsize=(3., 5.))
+            # new figure object
+            pyplot.figure(figsize=(4, 6.))
+            count = 1
 
-            for _i, component in enumerate(['Z', 'R', 'T']):
-                #stream = synthetics_instaseis.select(component=component)
-                #d0 = stream[0].data
+            for component in ['Z', 'R', 'T']:
+                ax = pyplot.subplot(3, 1, count)
 
-                stream = synthetics_fk.select(component=component)
-                d1 = stream[0].data
+                if include_instaseis:
+                    stream = synthetics_instaseis.select(component=component)
+                    d = stream[0].data
+                    pyplot.plot(t, d, label='instaseis')
 
-                stream = synthetics_syngine.select(component=component)
-                d2 = stream[0].data
+                if include_fk:
+                    stream = synthetics_fk.select(component=component)
+                    d = stream[0].data
+                    pyplot.plot(t, d, label='fk')
 
-                pyplot.subplot(3, 1, _i+1)
-                #pyplot.plot(t, d0, t, d1, t, d2)
-                pyplot.plot(t, d1, t, d2)
+                if include_syngine:
+                    stream = synthetics_syngine.select(component=component)
+                    d = stream[0].data
+                    pyplot.plot(t, d, label='syngine')
+
+                # hide axis labels
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.spines['bottom'].set_visible(False)
+                ax.spines['left'].set_visible(False)
+                ax.get_xaxis().set_ticks([])
+                ax.get_yaxis().set_ticks([])
+
+                # set title
+                title = key + ' ' + component
+                ax.set_title(title)
+
+                count += 1
 
             pyplot.show()
 
