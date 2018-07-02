@@ -7,7 +7,7 @@ from obspy.imaging.beachball import beachball
 
 def plot_waveforms(filename, data, synthetics, misfit=None, 
                    annotate=False, normalize=1):
-    """ Creates cap-style data/synthetics comparison
+    """ Creates CAP-style data/synthetics figure
     """
 
     # create figure object
@@ -28,6 +28,7 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             dat, syn, func = data[key], synthetics[key], misfit[key]
             _ = func(dat, syn)
 
+
     irow = 0
     for data_bw, synthetics_bw, data_sw, synthetics_sw in zip(
         data['body_waves'], synthetics['body_waves'],
@@ -41,13 +42,13 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
         station_labels(meta)
 
 
-        # plot body wave comparisons
+        # plot body wave traces
         for dat, syn in zip(data_bw, synthetics_bw):
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
             if component != syn.stats.channel[-1].upper():
-                warnings.warn('Skipping component')
+                warnings.warn('Mismatched components, skipping...')
                 continue
 
             if weight==0.:
@@ -64,40 +65,33 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             else:
                 continue
 
+            # set axis limits
             if normalize==1:
-                ylim = [max(abs(min_bw, max_bw))]*2
-                pyplot.ylim(*ylim)
+                ymax = max(abs(min_bw), abs(max_bw))
+                ylim = [-ymax, +ymax]
+
             elif normalize==2:
-                dmax = max(abs(dat.data))
-                smax = max(abs(syn.data))
-                if dmax > 0.: dat.data /= dmax
-                if smax > 0.: syn.data /= smax
-                ylim = [-1, 1]
+                _scale(dat)
+                _scale(syn)
+                ylim = [-1., +1.]
+
             else:
-                ylim = [dat.data.min(), dat.data.max()]
+                ymax = _max(dat)
+                ylim = [-ymax, +ymax]
+
+            pyplot.ylim(*ylim)
 
             if annotate:
-                # CAP-style annotations
-                time_shift = getattr(syn, 'time_shift', 'None')
-                pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
-
-                sum_residuals = getattr(syn, 'sum_residuals', 'None')
-                pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
-
-                #label3 = getattr(syn, 'label3', 'None')
-                #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %label3, fontsize=6)
-
-                #label4 = getattr(syn, 'label4', 'None')
-                #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %label4, fontsize=6)
+                channel_labels(dat, syn, ylim)
 
 
-        # plot surface wave comparisons
+        # plot surface wave traces
         for dat, syn in zip(data_sw, synthetics_sw):
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
             if component != syn.stats.channel[-1].upper():
-                warnings.warn('Skipping component')
+                warnings.warn('Mismatched components, skipping...')
                 continue
 
             if weight==0.:
@@ -118,36 +112,27 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             else:
                 continue
 
+            # set axis limits
             if normalize==1:
-                ylim = [max(abs(min_bw, max_bw))]*2
-                pyplot.ylim(*ylim)
+                ymax = max(abs(min_sw), abs(max_sw))
+                ylim = [-ymax, +ymax]
             elif normalize==2:
-                dmax = max(abs(dat.data))
-                smax = max(abs(syn.data))
-                if dmax > 0.: dat.data /= dmax
-                if smax > 0.: syn.data /= smax
-                ylim = [-1, 1]
+                _scale(dat)
+                _scale(syn)
+                ylim = [-1., +1.]
             else:
-                ylim = [dat.data.min(), dat.data.max()]
+                ymax = _max(dat)
+                ylim = [-ymax, +ymax]
+            pyplot.ylim(*ylim)
 
             if annotate:
-                # CAP-style annotations
-                time_shift = getattr(syn, 'time_shift', 'None')
-                pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
-
-                sum_residuals = getattr(syn, 'sum_residuals', 'None')
-                pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
-
-                #label3 = getattr(syn, 'label3', 'None')
-                #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %label3, fontsize=6)
-
-                #label4 = getattr(syn, 'label4', 'None')
-                #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %label4, fontsize=6)
+                channel_labels(dat, syn, ylim)
 
         irow += 1
 
     pyplot.savefig(filename)
     #pyplot.show()
+
 
 
 def subplot(dat, syn, label=None):
@@ -196,11 +181,19 @@ def station_labels(meta):
         pass
 
 
+def channel_labels(dat, syn, ylim):
+    # CAP-style annotations
+    time_shift = getattr(syn, 'time_shift', 'None')
+    pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
 
-def channel_labels(meta):
-    raise NotImplementedError
+    sum_residuals = getattr(syn, 'sum_residuals', 'None')
+    pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
 
+    #label3 = getattr(syn, 'label3', 'None')
+    #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %label3, fontsize=6)
 
+    #label4 = getattr(syn, 'label4', 'None')
+    #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %label4, fontsize=6)
 
 
 def time_stats(trace):
@@ -225,7 +218,6 @@ def shape(dataset):
         nr += 1
 
     return nc, nr
-
 
 
 
@@ -264,6 +256,13 @@ def mesh2grid(v, x, z):
 def _stack(*args):
     return np.column_stack(args)
 
+
+def _scale(trace):
+    dmax = max(abs(trace.data))
+    if dmax > 0.: trace.data /= dmax
+
+def _max(trace):
+     return max(abs(trace.data))
 
 
 def plot_beachball(filename, mt):

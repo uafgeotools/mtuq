@@ -194,10 +194,10 @@ class ProcessData(object):
         # applied to Green's functions and data will be the exactly
         # same. To accomodate CAP-style time shifts, the windowing 
         # will be slightly different.
-        if hasattr(traces, 'tag'):
-            tag = traces.tag
+        if hasattr(traces, 'tags'):
+            tags = traces.tags
         else:
-            tag = 'data'
+            tags = []
 
         # station metadata are required for data processing, e.g.
         # without station location distance-depedent weighting cannont
@@ -216,6 +216,7 @@ class ProcessData(object):
         #
         # part 1: filter traces
         #
+
         if self.filter_type == 'Bandpass':
             for trace in traces:
                 trace.detrend('demean')
@@ -241,8 +242,12 @@ class ProcessData(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
-        for trace in traces:
-            trace.data = np.cumsum(trace.data)
+        # convert to displacement
+        if 'velocity' in traces.tags:
+            for trace in traces:
+                trace.data = np.cumsum(trace.data)
+            traces.tags.remove('velocity')
+
 
         #
         # part 2: determine phase picks
@@ -330,16 +335,13 @@ class ProcessData(object):
             # using a longer window for Green's functions than for data allows
             # time-shift corrections to be efficiently computed
             # in mtuq.misfit.cap
-            if tag == 'greens_tensor':
+            if 'greens_tensor' in tags:
                 starttime = window[0] - self.padding_length
                 endtime = window[1] + self.padding_length
 
-            elif tag == 'data':
+            else: 
                 starttime = window[0]
                 endtime = window[1]
-
-            else:
-                raise ValueError
 
 
         #
@@ -422,7 +424,6 @@ class ProcessData(object):
 
                 # ad hoc factor determined by benchmark_cap_fk.py
                 trace.data *= 2.
-
 
 
         return traces

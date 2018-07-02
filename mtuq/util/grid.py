@@ -19,6 +19,21 @@ class Grid(object):
 
     param dict: dictionary containing names of parameters and values along
         corresponding axes
+    param start: when iterating over the grid, start at this element
+    parm  stop: when iterating over the grid, stop at this element
+
+
+    EXAMPLES
+
+    To cover the unit square with a N-by-N rectangular grid:
+        grid = Grid({'x': np.linspace(0., 1., N),
+                     'y': np.linpsace(0., 1., N)})
+
+
+    To parameterize the surface of the Earth with an N-by-2N Mercator grid:
+        grid = Grid({'latitude': np.linspace(-90., 90., N)
+                     'longitude': np.linspace(-180., 180., 2*N),
+
     """
     def __init__(self, dict, start=0, stop=None, callback=None):
 

@@ -11,42 +11,42 @@ class GreensTensor(Stream):
     """ Elastic Green's tensor object
 
         Holds multiple time series corresponding to the independent elements 
-        of an elastic Green's tensor.
+        of an elastic Green's tensor. Besides data processing utilities
+        inherited from obspy.Stream, provides methods for generating 
+        synthetics, convolving source wavelets, and calculating 
+        cross-correlation lag times.
     """
 
     def __init__(self, traces, station, origin):
-        """
-        Normally, all time series required to describe the response at a given
-        station to a source at a given origin should be contained in single 
-        obspy stream. Certain subclasses may override this behavior
-        
-        """
         assert check_time_sampling(traces), NotImplementedError(
             "Time sampling differs from trace to trace.")
 
         super(GreensTensor, self).__init__(traces)
 
         self.id = station.id
-        self.tag = 'greens_tensor'
+        self.tags = ['greens_tensor']
         self.meta = deepcopy(station)
         self.origin = origin
 
 
     def get_synthetics(self, mt):
         """
-        Generates synthetics through a linear combination of tensor elements
+        Generates synthetics through a linear combination of time series
         """
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def _preallocate_synthetics(self):
+        """
+        Enables fast synthetics calculations through preallocation and
+        and memory reuse
+        """
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def apply(self, function, *args, **kwargs):
         """
         Applies a function to all time series
-        Green's tensor
         """
         return self.__class__(function(self, *args, **kwargs),
             self.meta, self.origin)
@@ -59,18 +59,26 @@ class GreensTensor(Stream):
         return self.apply(wavelet.convolve_stream)
 
 
-    def get_time_shifts(self, data):
+    def get_time_shifts(self, mt):
+        """ 
+        Finds optimal time-shift correction between synthetics and
+        user-supplied data
+        """
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def _precompute_time_shifts(self):
+    def _precompute_time_shifts(self, data):
+        """
+        Enables fast time-shift calculations by computing cross-correlations
+        on an element-by-element basis
+        """
         raise NotImplementedError("Must be implemented by subclass")
 
 
     def select(self, *args, **kwargs):
-        # Stream and GreensTensor have different constructors, so it's
-        # necessary to convert back and forth
-
+        """
+        Same as obspy.Stream.select
+        """
         # convert to Stream
         stream = Stream([trace for trace in self]).select(*args, **kwargs)
         
@@ -84,13 +92,13 @@ class GreensTensor(Stream):
     def __add__(self, *args):
         raise Exception("It doesn't usually make sense to add time series to " 
            " a GreensTensor (e.g. for a general inhomogeneous medium there are "
-           " 21 time series, any other number is mathematially incorrect)")
+           " 21 time series, any other number is incorrect)")
 
 
     def __iadd__(self, *args):
         raise Exception("It doesn't usually make sense to add time series to "
            " a GreensTensor (e.g. for a general inhomogeneous medium there are "
-           " 21 time series, any other number is mathematially incorrect)")
+           " 21 time series, any other number is incorrect)")
 
 
 
@@ -104,7 +112,6 @@ class GreensTensorList(object):
         # typically the id is the event name, event origin time, or some other
         # attribute shared by all GreensTensors
         self.id = id
-
         self.__list__ = []
 
         if not greens_tensors:
@@ -164,6 +171,16 @@ class GreensTensorList(object):
         for greens_tensor in self.__list__:
             convolved += greens_tensor.convolve(wavelet)
         return convolved
+
+
+    def add_tag(self, tag):
+       for greens_tensor in self:
+           greens_tensor.tags.append(tag)
+
+
+    def remove_tag(self, tag):
+       for greens_tensor in self:
+           greens_tensor.tags.remove(tag)
 
 
     # the next method is called repeatedly during GreensTensorList creation

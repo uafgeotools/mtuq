@@ -64,8 +64,8 @@ class Dataset(object):
         min_all = np.inf
         for stream in self:
             for trace in stream:
-                if hasattr(trace, 'weight') and\
-                   trace.weight==0.:
+                weight = getattr(trace, 'weight', 1.)
+                if not weight:
                     continue
                 if trace.data.min() < min_all:
                     min_all = trace.data.min()
@@ -76,8 +76,8 @@ class Dataset(object):
         max_all = -np.inf
         for stream in self:
             for trace in stream:
-                if hasattr(trace, 'weight') and\
-                   trace.weight==0.:
+                weight = getattr(trace, 'weight', 1.)
+                if not weight:
                     continue
                 if trace.data.max() > max_all:
                     max_all = trace.data.max()
@@ -125,11 +125,21 @@ class Dataset(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
+    def add_tag(self, tag):
+       for stream in self:
+           stream.tags.append(tag)
+
+
+    def remove_tag(self, tag):
+       for stream in self:
+           stream.tags.remove(tag)
+
+
     # the next method is called repeatedly during Dataset creation
     def __add__(self, stream):
         assert hasattr(stream, 'id')
         assert isinstance(stream, obspy.Stream)
-        stream.tag = 'data'
+        stream.tags = []
         self.__list__.append(stream)
         try:
             stream.meta = self.get_station()

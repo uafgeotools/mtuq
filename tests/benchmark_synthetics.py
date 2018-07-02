@@ -19,10 +19,10 @@ if __name__=='__main__':
         3) syngine remote database
 
         The comparison is not yet very meaningful because it is carried out
-        using different earth models--there is not yet a common earth model
+        using different earth models--there is not yet an earth model
         shared by all three databases
         
-        Eventually we will generate FK Green's functions using a shared model
+        Eventually we will generate FK Green's functions using a common model
         and make them available for download
 
         In the meantime, synthetics are not expected to match exactly
@@ -88,7 +88,17 @@ if __name__=='__main__':
     # specify data processing
     #
 
-    process_data = ProcessData(
+    process_bw = ProcessData(
+        filter_type='Bandpass',
+        freq_min= 0.25,
+        freq_max= 0.667,
+        pick_type='from_fk_database',
+        fk_database=path_greens_fk,
+        window_type='cap_bw',
+        window_length=15.,
+        )
+
+    process_sw = ProcessData(
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
@@ -96,12 +106,14 @@ if __name__=='__main__':
         fk_database=path_greens_fk,
         window_type='cap_sw',
         window_length=150.,
-        padding_length=0,
         )
 
-    #
-    # the main I/O work starts now
-    #
+    def process_data(greens):
+        processed_greens = {}
+        processed_greens['body_waves'] = greens.map(process_bw)
+        processed_greens['surface_waves'] = greens.map(process_sw)
+        return processed_greens
+
 
     #print "Reading instaseis Greens's functions..."
     #model = 'ak135f_5s'
@@ -111,48 +123,53 @@ if __name__=='__main__':
 
 
     print "Reading FK Greens's functions..."
-    print station.endtime
     model = 'scak'
     factory_fk = fk.GreensTensorFactory(path_greens_fk)
     greens_fk = factory_fk(station, origin)
-    greens_fk = greens_fk.map(process_data)
-    print station.endtime
 
 
     print "Downloading syngine Green's functions..."
     model = 'ak135f_5s'
     factory_syngine = syngine.GreensTensorFactory(model)
     greens_syngine = factory_syngine(station, origin)
-    greens_syngine = greens_syngine.map(process_data)
 
+
+    print "Data processing..."
+    #greens_instaseis = process_data(greens_instaseis)
+    greens_fk = process_data(greens_fk)
+    greens_syngine = process_data(greens_syngine)
 
 
     print "Plotting synthetics..."
     for mt in grid:
-        # get synthetics
-        #synthetics_instaseis = greens_instaseis.get_synthetics(mt)[0]
-        synthetics_fk = greens_fk.get_synthetics(mt)[0]
-        synthetics_syngine = greens_syngine.get_synthetics(mt)[0]
+        for key in ['body_waves', 'surface_waves']:
 
-        # get time scheme
-        t = np.linspace(
-            float(synthetics_syngine[0].stats.starttime),
-            float(synthetics_syngine[0].stats.endtime),
-            synthetics_syngine[0].stats.npts)
+            # get synthetics
+            #synthetics_instaseis = greens_instaseis[key].get_synthetics(mt)[0]
+            synthetics_fk = greens_fk[key].get_synthetics(mt)[0]
+            synthetics_syngine = greens_syngine[key].get_synthetics(mt)[0]
 
-        for component in ['Z', 'R', 'T']:
-            #stream = synthetics_instaseis.select(component=component)
-            #d0 = stream[0].data
+            # get time scheme
+            t = np.linspace(
+                float(synthetics_syngine[0].stats.starttime),
+                float(synthetics_syngine[0].stats.endtime),
+                synthetics_syngine[0].stats.npts)
 
-            stream = synthetics_fk.select(component=component)
-            d1 = stream[0].data
+            pyplot.figure(figsize=(3., 5.))
 
-            stream = synthetics_syngine.select(component=component)
-            d2 = stream[0].data
+            for _i, component in enumerate(['Z', 'R', 'T']):
+                #stream = synthetics_instaseis.select(component=component)
+                #d0 = stream[0].data
 
-            #pyplot.plot(t, d0, t, d1, t, d2)
-            pyplot.plot(t, d1, t, d2)
+                stream = synthetics_fk.select(component=component)
+                d1 = stream[0].data
+
+                stream = synthetics_syngine.select(component=component)
+                d2 = stream[0].data
+
+                pyplot.subplot(3, 1, _i+1)
+                #pyplot.plot(t, d0, t, d1, t, d2)
+                pyplot.plot(t, d1, t, d2)
 
             pyplot.show()
-
 
