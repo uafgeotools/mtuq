@@ -5,7 +5,7 @@ moment tensor (mt) estimation with uncertainty quantification (uq)
 Install
 -------
 
-1) git clone https://github.com/uafseismo/mtuq
+1) git clone https://github.com/uafseismo/mtuq.git
 
 2) pip -e install mtuq
 
