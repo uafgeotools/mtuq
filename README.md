@@ -5,15 +5,17 @@ moment tensor (mt) estimation with uncertainty quantification (uq)
 Install
 -------
 
-1) git clone https://github.com/uafseismo/mtuq.git
+1) `git clone https://github.com/uafseismo/mtuq.git`
 
-2) pip -e install mtuq
+2) `cd mtuq`
+
+3) `pip -e install .`
 
 
 Run example
 -----------
 
-3) bash mtuq/data/examples/unzip.bash
+4) `bash data/examples/unzip.bash`
 
-4) python mtuq/examples/GridSearch.DoubleCouple.3Parameter.Serial.py
+5) `python examples/GridSearch.DoubleCouple.3Parameter.Serial.py`
 
