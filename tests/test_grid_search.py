@@ -45,7 +45,7 @@ if __name__=='__main__':
         window_length=15.,
         padding_length=2.,
         weight_type='cap_bw',
-        weight_file=path_weights,
+        cap_weight_file=path_weights,
         )
 
     process_sw = ProcessData(
@@ -58,7 +58,7 @@ if __name__=='__main__':
         window_length=150.,
         padding_length=10.,
         weight_type='cap_sw',
-        weight_file=path_weights,
+        cap_weight_file=path_weights,
         )
 
     process_data = {

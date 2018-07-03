@@ -149,10 +149,9 @@ PathsComments="""
 PathsDefinitions="""
     path_data=    join(root(), 'data/examples/20090407201255351')
     path_weights= join(root(), 'data/examples/20090407201255351/weights.dat')
-    # Fow now this path exists only in my personal environment.  Eventually, 
-    # we need to include it in the repository or make it available for download
-    path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
-    event_name = '20090407201255351'
+    path_picks=   join(root(), 'data/examples/20090407201255351/picks.dat')
+    event_name=   '20090407201255351'
+    model=        'ak135f_2s'
 
 """
 
@@ -170,26 +169,26 @@ DataProcessingDefinitions="""
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_fk_database',
-        fk_database=path_greens,
+        pick_type='from_pick_file',
+        pick_file=path_picks,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
         weight_type='cap_bw',
-        weight_file=path_weights,
+        cap_weight_file=path_weights,
         )
 
     process_sw = ProcessData(
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_fk_database',
-        fk_database=path_greens,
+        pick_type='from_pick_file',
+        pick_file=path_picks,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
         weight_type='cap_sw',
-        weight_file=path_weights,
+        cap_weight_file=path_weights,
         )
 
     process_data = {
