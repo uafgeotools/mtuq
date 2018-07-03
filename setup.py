@@ -48,6 +48,7 @@ setup(
         "seismology"
     ],
     install_requires=[
-        "numpy", "obspy", "flake8>=3.0", "pytest", "nose"
+        "numpy", "scipy", "obspy", "h5py", "retry",
+        "flake8>=3.0", "pytest", "nose"
     ]
 )
