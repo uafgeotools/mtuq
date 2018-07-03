@@ -15,7 +15,7 @@ Install
 Run example
 -----------
 
-4) `bash data/examples/unpack.bash`
+4) `./data/examples/unpack.bash`
 
-5) `python examples/GridSearch.DoubleCouple.3Parameter.Serial.py`
+5) `./examples/GridSearch.DoubleCouple.3Parameter.Serial.py`
 
