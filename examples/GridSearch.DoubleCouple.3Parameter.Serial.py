@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import os
 import sys
@@ -6,7 +7,7 @@ import numpy as np
 from os.path import basename, join
 from mtuq.dataset import sac
 from mtuq.greens_tensor import syngine
-from mtuq.grid_search import DCGridRandom
+from mtuq.grid_search import DoubleCoupleGridRandom
 from mtuq.grid_search import grid_search_serial
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
@@ -40,10 +41,8 @@ if __name__=='__main__':
 
     path_data=    join(root(), 'data/examples/20090407201255351')
     path_weights= join(root(), 'data/examples/20090407201255351/weights.dat')
-    # Fow now this path exists only in my personal environment.  Eventually, 
-    # we need to include it in the repository or make it available for download
-    path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
-    event_name = '20090407201255351'
+    path_picks=   join(root(), 'data/examples/20090407201255351/picks.dat')
+    event_name=   '20090407201255351'
 
 
     #
@@ -53,28 +52,28 @@ if __name__=='__main__':
 
     process_bw = ProcessData(
         filter_type='Bandpass',
-        freq_min= 0.25,
-        freq_max= 0.667,
-        pick_type='from_fk_database',
-        fk_database=path_greens,
+        freq_min= 0.1,
+        freq_max= 0.333,
+        pick_type='from_pick_file',
+        pick_file=path_picks,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
         weight_type='cap_bw',
-        weight_file=path_weights,
+        cap_weight_file=path_weights,
         )
 
     process_sw = ProcessData(
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_fk_database',
-        fk_database=path_greens,
+        pick_type='from_pick_file',
+        pick_file=path_picks,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
         weight_type='cap_sw',
-        weight_file=path_weights,
+        cap_weight_file=path_weights,
         )
 
     process_data = {
@@ -108,7 +107,7 @@ if __name__=='__main__':
     # Next we specify the source parameter grid
     #
 
-    grid = DCGridRandom(
+    grid = DoubleCoupleGridRandom(
         npts=50000,
         Mw=4.5)
 

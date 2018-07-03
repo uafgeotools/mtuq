@@ -3,7 +3,6 @@ import instaseis
 import obspy
 import numpy as np
 import re
-import urllib
 import mtuq.greens_tensor.base
 import mtuq.greens_tensor.instaseis
 
@@ -13,7 +12,7 @@ from os.path import basename, exists
 from obspy.core import Stream, Trace
 from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
-from mtuq.util.util import root, unzip, url2uuid
+from mtuq.util.util import root, unzip, url2uuid, urlopen_with_retry
 
 
 GREENS_TENSOR_FILENAMES = [
@@ -104,9 +103,8 @@ def download_greens_tensor(model, station, origin):
          +str(url2uuid(url))
          +'.zip')
     if not exists(filename):
-        print ' Downloading waveforms for station %s' % station.station
-        download = urllib.URLopener()
-        download.retrieve(url, filename)
+        print ' Downloading Green''s functions for station %s' % station.station
+        urlopen_with_retry(url, filename)
     return filename
 
 
@@ -130,8 +128,7 @@ def download_synthetics(model, station, origin, mt):
          +'.zip')
     if not exists(filename):
         print ' Downloading waveforms for station %s' % station.station
-        download = urllib.URLopener()
-        download.retrieve(url, filename)
+        urlopen_with_retry(url, filename)
     return filename
 
 

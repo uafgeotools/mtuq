@@ -55,7 +55,7 @@ def grid_search_mpi(data, greens, misfit, grid):
     return grid_search_serial(data, greens, misfit, subset)
 
 
-def MTGridRandom(Mw, npts=50000):
+def FullMomentTensorGridRandom(Mw, npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
     N = npts
@@ -81,7 +81,7 @@ def MTGridRandom(Mw, npts=50000):
         callback=callback)
 
 
-def MTGridRegular(Mw, npts_per_axis=25):
+def FullMomentTensorGridRegular(Mw, npts_per_axis=25):
     """ Full moment tensor grid with regularly-spaced values
     """
     N = npts_per_axis
@@ -107,7 +107,7 @@ def MTGridRegular(Mw, npts_per_axis=25):
         callback=callback)
 
 
-def DCGridRandom(Mw, npts=50000):
+def DoubleCoupleGridRandom(Mw, npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
     """
     N = npts
@@ -131,7 +131,7 @@ def DCGridRandom(Mw, npts=50000):
         callback=callback)
 
 
-def DCGridRegular(Mw, npts_per_axis=25):
+def DoubleCoupleGridRegular(Mw, npts_per_axis=25):
     """ Double-couple moment tensor grid with regularly-spaced values
     """ 
     N = npts_per_axis

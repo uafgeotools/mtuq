@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import os
 import sys
@@ -6,7 +7,7 @@ import numpy as np
 from os.path import basename, join
 from mtuq.dataset import sac
 from mtuq.greens_tensor import syngine
-from mtuq.grid_search import DCGridRandom
+from mtuq.grid_search import DoubleCoupleGridRandom
 from mtuq.grid_search import grid_search_mpi
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
@@ -52,15 +53,15 @@ if __name__=='__main__':
 
     process_bw = ProcessData(
         filter_type='Bandpass',
-        freq_min= 0.25,
-        freq_max= 0.667,
+        freq_min= 0.1,
+        freq_max= 0.333,
         pick_type='from_fk_database',
         fk_database=path_greens,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
         weight_type='cap_bw',
-        weight_file=path_weights,
+        cap_weight_file=path_weights,
         )
 
     process_sw = ProcessData(
@@ -73,7 +74,7 @@ if __name__=='__main__':
         window_length=150.,
         padding_length=10.,
         weight_type='cap_sw',
-        weight_file=path_weights,
+        cap_weight_file=path_weights,
         )
 
     process_data = {
@@ -107,7 +108,7 @@ if __name__=='__main__':
     # Next we specify the source parameter grid
     #
 
-    grid = DCGridRandom(
+    grid = DoubleCoupleGridRandom(
         npts=50000,
         Mw=4.5)
 
