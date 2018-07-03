@@ -108,7 +108,7 @@ def timer_mpi(func):
     return timed_func
 
 
-def root():
+def path_mtuq():
     """ Returns MTUQ root directory
     """
     import mtuq

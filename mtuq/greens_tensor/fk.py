@@ -19,19 +19,19 @@ from mtuq.util.moment_tensor.change_basis import change_basis
 COMPONENTS = ['Z','R','T']
 
 
-# For the vertical and raidal components, there are four associated time series.
-# For the travserce component, there are two associated time series. Thus there
-# ten independent Green's tensor elements altogether, which is fewer than in 
-# the case of a general inhomogeneous medium because fk greens functions 
-# represent the impulse response of a layered medium.
+# fk Green's function describe the impulse response of a horizontally layered 
+# medium. For the vertical and raidal components, there are four associated 
+# time series. For the tranverse component, there are two associated time 
+# series. Thus there ten independent Green's tensor elements altogether, 
+# which is fewer than in the case of a general inhomogeneous medium
 
 
 # If a GreensTensor is created with the wrong input arguments, this error
 # message is displayed.  In practice this is rarely encountered, since
 # GreensTensorFactory normally does all the work
-ErrorMessage =("An obspy stream must be provided containting 10 traces, each"
-    "representing an indepedent Green's tensor element. The order of traces "
-    "must match the scheme used by fk. See fk documentation for details.")
+ErrorMessage =("A list of 10 traces must be provided, each representing an"
+    "indepedent Green's tensor element. The order of traces must match the "
+    "scheme used by fk. See fk documentation for details.")
 
 
 DEG2RAD = np.pi/180.
@@ -141,8 +141,8 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
     by Lupei Zhu.
 
     Generating Green's tensors is a two-step procedure:
-        1) greens_tensor_generator = mtuq.greens.fk.GreensTensorFactory(path, model)
-        2) greens_tensors = greens_tensor_generator(stations, origin)
+        1) factory = mtuq.greens.fk.GreensTensorFactory(path, model)
+        2) greens_tensors = factory(stations, origin)
 
     In the first step, the user supplies the path to an fk directory tree and 
     the name of the  layered Earth model that was used to generate Green's
