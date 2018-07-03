@@ -2,7 +2,7 @@ language: python
 python:
   - "2.7"
 install:
-  - pip install .
+  - pip install -e .
 script:
   - tests/check_import.py
   - tests/check_examples.bash
