@@ -1,8 +1,6 @@
 
 
 Imports="""
-#!/usr/bin/env python
-
 import os
 import sys
 import numpy as np
@@ -585,6 +583,7 @@ if __name__=='__main__':
 
 
     with open('examples/GridSearch.DoubleCouple.3Parameter.MPI.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
         file.write(Imports)
         file.write(DocstringDC3)
         file.write(PathsComments)
@@ -598,6 +597,7 @@ if __name__=='__main__':
 
 
     with open('examples/GridSearch.DoubleCouple.5Parameter.MPI.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
         file.write(Imports)
         file.write(DocstringDC5)
         file.write(PathsComments)
@@ -610,6 +610,7 @@ if __name__=='__main__':
 
 
     with open('examples/GridSearch.FullMomentTensor.5Parameter.MPI.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
         file.write(Imports)
         file.write(DocstringFMT5)
         file.write(PathsDefinitions)
@@ -622,6 +623,7 @@ if __name__=='__main__':
 
 
     with open('examples/GridSearch.DoubleCouple.3Parameter.Serial.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
         file.write(
             re.sub(
             'grid_search_mpi',
