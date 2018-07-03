@@ -1,4 +1,5 @@
 
+import csv
 import obspy
 import numpy as np
 
@@ -90,6 +91,7 @@ class ProcessData(object):
             raise Exception
 
         elif pick_type=='from_sac_headers':
+            # nothing to be checked
             pass
 
         elif pick_type=='from_fk_database':
@@ -97,13 +99,21 @@ class ProcessData(object):
             self._fk_database = parameters['fk_database']
             self._fk_model = basename(self._fk_database)
 
-        elif pick_type=='from_weight_file':
-            assert 'weight_file' in parameters
-            assert exists(parameters['weight_file'])
-            self.weights = parse_weight_file(parameters['weight_file'])
+        elif pick_type=='from_cap_weight_file':
+            raise NotImplementedError
 
-        self.pick_type = pick_type
+        elif pick_type=='from_pick_file':
+            assert exists(parameters['pick_file'])
+            self._pick_file = parameters['pick_file']
+
+        elif pick_type=='from_taup_model':
+            raise NotImplementedError
+
+        else:
+             raise ValueError('Bad parameter: pick_type')
+
         self._picks = defaultdict(AttribDict)
+        self.pick_type = pick_type
 
 
         #
@@ -138,9 +148,9 @@ class ProcessData(object):
             pass
 
         elif weight_type == 'cap_bw':
-            assert 'weight_file' in parameters
-            assert exists(parameters['weight_file'])
-            self.weights = parse_weight_file(parameters['weight_file'])
+            assert 'cap_weight_file' in parameters
+            assert exists(parameters['cap_weight_file'])
+            self.weights = parse_weight_file(parameters['cap_weight_file'])
 
             if 'scaling power' in parameters:
                 self.scaling_power = parameters['scaling_power']
@@ -154,9 +164,9 @@ class ProcessData(object):
 
 
         elif weight_type == 'cap_sw':
-            assert 'weight_file' in parameters
-            assert exists(parameters['weight_file'])
-            self.weights = parse_weight_file(parameters['weight_file'])
+            assert 'cap_weight_file' in parameters
+            assert exists(parameters['cap_weight_file'])
+            self.weights = parse_weight_file(parameters['cap_weight_file'])
 
             if 'scaling power' in parameters:
                 self.scaling_power = parameters['scaling_power']
@@ -242,8 +252,8 @@ class ProcessData(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
-        # convert to displacement
         if 'velocity' in traces.tags:
+            # convert to displacement
             for trace in traces:
                 trace.data = np.cumsum(trace.data)
             traces.tags.remove('velocity')
@@ -279,12 +289,25 @@ class ProcessData(object):
                 picks.S = sac_headers.t2
 
 
-            elif self.pick_type=='from_weight_file':
+
+            elif self.pick_type=='from_cap_weight_file':
                 raise NotImplementedError
+
+
+            elif self.pick_type=='from_pick_file':
+                with open(self._pick_file) as file:
+                    reader = csv.reader(
+                        filter(lambda row: row[0]!='#', file),
+                        delimiter=' ',
+                        skipinitialspace=True)
+                    for row in reader:
+                        id = row[0]
+                        self._picks[id].P = float(row[1])
+                        self._picks[id].S = float(row[2])
+
 
             elif self.pick_type=='from_taup_model':
                 raise NotImplementedError
-
 
 
         #
