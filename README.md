@@ -9,7 +9,7 @@ Install
 
 2) `cd mtuq`
 
-3) `pip -e install .`
+3) `pip install -e .`
 
 
 Run example
