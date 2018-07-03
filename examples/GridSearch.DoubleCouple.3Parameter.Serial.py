@@ -28,7 +28,7 @@ if __name__=='__main__':
     #   python GridSearch.DoubleCouple.3Parameter.Serial.py
     #
     # A typical runtime is about 60 minutes. For faster results try 
-    # GridSearch.DoubleCouple.3Parameter.py,
+    # GridSearch.DoubleCouple.3Parameter.MPI.py,
     # which runs the same inversion in parallel rather than
     # serial
     #
