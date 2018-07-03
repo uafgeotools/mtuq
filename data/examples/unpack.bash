@@ -9,7 +9,7 @@ cd $(dirname ${BASH_SOURCE[0]})
 wd=$PWD
 
 for filename in \
-    examples/20090407201255351.tgz;
+    20090407201255351.tgz;
 do
     cd $wd
     cd $(dirname $filename)
