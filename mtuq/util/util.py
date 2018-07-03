@@ -1,11 +1,14 @@
 
 from os.path import abspath, join
+from retry import retry
+
 import copy
 import csv
 import time
 import numpy as np
 import obspy
 import re
+import urllib2
 import uuid
 import warnings
 import zipfile
@@ -136,6 +139,10 @@ def warn(*args, **kwargs):
     except:
        warnings.warn(*args, **kwargs)
 
+
+@retry(urllib2.URLError, tries=4, delay=2, backoff=2)
+def urlopen_with_retry(url):
+    return urllib2.urlopen(url)
 
 
 def url2uuid(url):
