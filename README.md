@@ -20,5 +20,5 @@ Run example
 5) `./examples/GridSearch.DoubleCouple.3Parameter.Serial.py`
 
 
-[![Build Status](https://travis-ci.org/rmodrak/mtuq.svg?branch=master)](https://travis-ci.org/rmodrak/mtuq)
+[![Build Status](https://travis-ci.org/uafseismo/mtuq.svg?branch=master)](https://travis-ci.org/uafseismo/mtuq)
 
