@@ -31,8 +31,8 @@ class Grid(object):
 
 
     To parameterize the surface of the Earth with an N-by-2N Mercator grid:
-        grid = Grid({'latitude': np.linspace(-90., 90., N)
-                     'longitude': np.linspace(-180., 180., 2*N),
+        grid = Grid({'latitude': np.linspace(-90., 90., N),
+                     'longitude': np.linspace(-180., 180., 2*N)})
 
     """
     def __init__(self, dict, start=0, stop=None, callback=None):

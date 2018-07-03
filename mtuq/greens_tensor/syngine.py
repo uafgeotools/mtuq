@@ -12,7 +12,7 @@ from os.path import basename, exists
 from obspy.core import Stream, Trace
 from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
-from mtuq.util.util import root, unzip, url2uuid, urlopen_with_retry
+from mtuq.util.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
 
 
 GREENS_TENSOR_FILENAMES = [
@@ -99,7 +99,7 @@ def download_greens_tensor(model, station, origin):
          +'&sourcedepthinmeters='+str(int(round(depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
-    filename = (root()+'/'+'data/greens_tensor/syngine/cache/'
+    filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
          +str(url2uuid(url))
          +'.zip')
     if not exists(filename):
@@ -123,7 +123,7 @@ def download_synthetics(model, station, origin, mt):
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1]
          +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt))))
-    filename = (root()+'/'+'data/greens_tensor/syngine/cache/'
+    filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
          +str(url2uuid(url))
          +'.zip')
     if not exists(filename):

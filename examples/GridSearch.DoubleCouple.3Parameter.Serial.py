@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 import os
@@ -13,7 +14,7 @@ from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
 from mtuq.util.cap_util import trapezoid_rise_time, Trapezoid
 from mtuq.util.plot import plot_beachball, plot_waveforms
-from mtuq.util.util import cross, root
+from mtuq.util.util import cross, path_mtuq
 
 
 
@@ -39,10 +40,11 @@ if __name__=='__main__':
     # Mw~4 Alaska earthquake
     #
 
-    path_data=    join(root(), 'data/examples/20090407201255351')
-    path_weights= join(root(), 'data/examples/20090407201255351/weights.dat')
-    path_picks=   join(root(), 'data/examples/20090407201255351/picks.dat')
+    path_data=    join(path_mtuq(), 'data/examples/20090407201255351')
+    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
+    model=        'ak135f_2s'
 
 
     #
@@ -139,7 +141,7 @@ if __name__=='__main__':
 
 
     print 'Reading Greens functions...\n'
-    factory = syngine.GreensTensorFactory('ak135f_5s')
+    factory = syngine.GreensTensorFactory(model)
     greens = factory(stations, origin)
 
 

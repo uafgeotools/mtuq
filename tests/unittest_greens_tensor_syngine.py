@@ -11,7 +11,7 @@ from mtuq.greens_tensor.syngine import\
     download_greens_tensor, download_synthetics,\
     GreensTensor, GreensTensorFactory
 from mtuq.grid_search import MTGridRandom, MTGridRegular
-from mtuq.util.util import AttribDict, root, unzip
+from mtuq.util.util import AttribDict, path_mtuq, unzip
 
  
 class greens_tensor_syngine(unittest.TestCase):
@@ -83,7 +83,7 @@ class greens_tensor_syngine(unittest.TestCase):
 
     def get_data(self):
         if not hasattr(self, '_data'):
-            path = join(root(), 'tests/data/20090407201255351')
+            path = join(path_mtuq(), 'tests/data/20090407201255351')
             data = reader(path, wildcard='*.[zrt]')
             data.sort_by_distance()
             self._data = data
