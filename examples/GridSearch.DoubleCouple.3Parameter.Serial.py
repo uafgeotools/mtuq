@@ -53,8 +53,8 @@ if __name__=='__main__':
 
     process_bw = ProcessData(
         filter_type='Bandpass',
-        freq_min= 0.25,
-        freq_max= 0.667,
+        freq_min= 0.1,
+        freq_max= 0.333,
         pick_type='from_fk_database',
         fk_database=path_greens,
         window_type='cap_bw',
