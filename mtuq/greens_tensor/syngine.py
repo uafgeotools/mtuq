@@ -12,7 +12,7 @@ from os.path import basename, exists
 from obspy.core import Stream, Trace
 from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
-from mtuq.util.util import root, unzip, url2uuid
+from mtuq.util.util import root, unzip, url2uuid, urlopen_with_retry
 
 
 GREENS_TENSOR_FILENAMES = [
