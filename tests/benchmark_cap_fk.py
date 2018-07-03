@@ -6,7 +6,7 @@ import numpy as np
 from os.path import basename, join
 from mtuq.dataset import sac
 from mtuq.greens_tensor import fk
-from mtuq.grid_search import DCGridRandom
+from mtuq.grid_search import DoubleCoupleGridRandom
 from mtuq.grid_search import grid_search_serial
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData

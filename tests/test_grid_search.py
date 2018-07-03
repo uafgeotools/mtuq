@@ -6,7 +6,7 @@ import numpy as np
 from os.path import basename, join
 from mtuq.dataset import sac
 from mtuq.greens_tensor import syngine
-from mtuq.grid_search import DCGridRegular
+from mtuq.grid_search import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search_serial
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
@@ -83,7 +83,7 @@ if __name__=='__main__':
         }
 
 
-    grid = DCGridRegular(Mw=4.5, npts_per_axis=10)
+    grid = DoubleCoupleGridRegular(Mw=4.5, npts_per_axis=10)
     rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
 

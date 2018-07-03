@@ -6,7 +6,7 @@ import numpy as np
 from os.path import basename, join
 from mtuq.dataset import sac
 from mtuq.greens_tensor import syngine
-from mtuq.grid_search import DCGridRandom
+from mtuq.grid_search import DoubleCoupleGridRandom
 from mtuq.grid_search import grid_search_mpi
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
@@ -107,7 +107,7 @@ if __name__=='__main__':
     # Next we specify the source parameter grid
     #
 
-    grid = DCGridRandom(
+    grid = DoubleCoupleGridRandom(
         npts=50000,
         Mw=4.5)
 

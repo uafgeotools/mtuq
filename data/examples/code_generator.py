@@ -8,7 +8,7 @@ import numpy as np
 from os.path import basename, join
 from mtuq.dataset import sac
 from mtuq.greens_tensor import syngine
-from mtuq.grid_search import DCGridRandom
+from mtuq.grid_search import DoubleCoupleGridRandom
 from mtuq.grid_search import grid_search_mpi
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
@@ -232,7 +232,7 @@ GridDC3="""
     # Next we specify the source parameter grid
     #
 
-    grid = DCGridRandom(
+    grid = DoubleCoupleGridRandom(
         npts=50000,
         Mw=4.5)
 
@@ -248,7 +248,7 @@ GridDC5="""
     # Next we specify the source parameter grid
     #
 
-    grid = DCGridRandom(
+    grid = DoubleCoupleGridRandom(
         npts=50000,
         Mw=4.5)
 
@@ -267,7 +267,7 @@ GridFMT5="""
     # Next we specify the source parameter grid
     #
 
-    grid = MTGridRandom(
+    grid = FullMomentTensorGridRandom(
         npts=1000000,
         Mw=4.5)
 
@@ -297,7 +297,7 @@ GridBenchmarkCAPFK="""
 
 
 GridIntegrationTest="""
-    grid = DCGridRegular(Mw=4.5, npts_per_axis=10)
+    grid = DoubleCoupleGridRegular(Mw=4.5, npts_per_axis=10)
     rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
 """
@@ -643,8 +643,8 @@ if __name__=='__main__':
             'grid_search_mpi',
             'grid_search_serial',
             re.sub(
-            'DCGridRandom',
-            'DCGridRegular',
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
             Imports)))
         file.write(DocstringIntegrationTest)
         file.write(PathsDefinitions)
