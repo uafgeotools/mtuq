@@ -1,0 +1,8 @@
+language: python
+python:
+  - "2.7"
+
+script:
+  - tests/check_import.py
+  - tests/check_examples.bash
+
