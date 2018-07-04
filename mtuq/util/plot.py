@@ -5,6 +5,15 @@ import warnings
 from obspy.imaging.beachball import beachball
 
 
+
+def plot_beachball(filename, mt):
+    """ Plots source mechanism
+    """
+    beachball(mt, size=200, linewidth=2, facecolor='b')
+    pyplot.savefig(filename)
+
+
+
 def plot_waveforms(filename, data, synthetics, misfit=None, 
                    annotate=False, normalize=1):
     """ Creates CAP-style data/synthetics figure
@@ -196,10 +205,12 @@ def channel_labels(dat, syn, ylim):
     #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %label4, fontsize=6)
 
 
-def time_stats(trace):
-    if hasattr(trace, 'time_shift'):
-        time_shift_npts = trace.time_shift
 
+### utilities
+
+
+def time_stats(trace):
+    # returns time scheme
     return (
         float(trace.stats.starttime),
         float(trace.stats.endtime),
@@ -209,6 +220,7 @@ def time_stats(trace):
 
 
 def shape(dataset):
+    # how many rows and columns in figure?
     nc = 0
     for i in dataset:
         nc += 1
@@ -228,12 +240,7 @@ def _scale(trace):
     dmax = max(abs(trace.data))
     if dmax > 0.: trace.data /= dmax
 
+
 def _max(trace):
      return max(abs(trace.data))
-
-
-def plot_beachball(filename, mt):
-    beachball(mt, size=200, linewidth=2, facecolor='b')
-    pyplot.savefig(filename)
-
 
