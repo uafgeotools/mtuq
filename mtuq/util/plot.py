@@ -220,39 +220,6 @@ def shape(dataset):
     return nc, nr
 
 
-
-def mesh2grid(v, x, z):
-    """ Interpolates from an unstructured coordinates (mesh) to a structured 
-        coordinates (grid)
-    """
-    lx = x.max() - x.min()
-    lz = z.max() - z.min()
-    nn = v.size
-    mesh = _stack(x, z)
-
-    nx = 100
-    nz = 100
-    dx = lx/nx
-    dz = lz/nz
-
-    # construct structured grid
-    x = np.linspace(x.min(), x.max(), nx)
-    z = np.linspace(z.min(), z.max(), nz)
-    X, Z = np.meshgrid(x, z)
-    grid = _stack(X.flatten(), Z.flatten())
-
-    # interpolate to structured grid
-    V = scipy.interpolate.griddata(mesh, v, grid, 'linear')
-
-    # workaround edge issues
-    if np.any(np.isnan(V)):
-        W = scipy.interpolate.griddata(mesh, v, grid, 'nearest')
-        for i in np.where(np.isnan(V)):
-            V[i] = W[i]
-
-    return X,Z,np.reshape(V, (nz, nx))
-
-
 def _stack(*args):
     return np.column_stack(args)
 

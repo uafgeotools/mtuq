@@ -74,17 +74,6 @@ def timer(func):
     return timed_func
 
 
-def timer2(func):
-    """ Decorator for measuring execution time; discards the output of the
-        original function, instead returns elapsed time (s)
-    """
-    def timed_func(*args, **kwargs):
-        start_time = time.time()
-        _ = func(*args, **kwargs)
-        return time.time() - start_time
-    return timed_func
-
-
 
 def timer_mpi(func):
     """ Decorator for measuring execution time in mpi environment
