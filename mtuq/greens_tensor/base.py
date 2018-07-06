@@ -14,7 +14,7 @@ class GreensTensor(Stream):
         of an elastic Green's tensor. Besides data processing utilities
         inherited from obspy.Stream, provides methods for generating 
         synthetics, convolving source wavelets, and calculating 
-        cross-correlation lag times.
+        cross-correlation time-shifts.
     """
 
     def __init__(self, traces, station, origin):

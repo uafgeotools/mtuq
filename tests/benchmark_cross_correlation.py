@@ -2,16 +2,25 @@
 
 from scipy.signal import fftconvolve
 import numpy as np
-from mtuq.util.util import timer2
 
 
+def timer(func):
+    """ Decorator for measuring execution time; discards the output of the
+        original function, instead returns elapsed time (s)
+    """
+    def timed_func(*args, **kwargs):
+        start_time = time.time()
+        _ = func(*args, **kwargs)
+        return time.time() - start_time
+    return timed_func
 
-@timer2
+
+@timer
 def correlate_fd(w1,w2):
     fftconvolve(w1,w2[::-1],'valid')
 
 
-@timer2
+@timer
 def correlate_td(w1,w2):
     np.convolve(w1,w2,'valid')
 
