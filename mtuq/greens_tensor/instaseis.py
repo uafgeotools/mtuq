@@ -13,10 +13,23 @@ from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
 
 
+# instaseis Green's functions represent vertical, radial, and transverse
+# displacement time series
+COMPONENTS = ['Z','R','T']
+
+
+# instaseis Green's function describe the impulse response of a horizontally-
+# layered medium. For the vertical and raidal components, there are four
+# associated time series. For the tranverse component, there are two associated 
+# time series. Thus there ten independent Green's tensor elements altogether, 
+# which is fewer than in the case of a general inhomogeneous medium
+
+
 # If a GreensTensor is created with the wrong input arguments, this error
-# message is displayed.  In practice this is rarely encounteRED, since
+# message is displayed.  In practice this is rarely encountered, since
 # GreensTensorFactory normally does all the work
-ErrorMessage=''
+ErrorMessage =("A list of 10 traces must be provided, each representing an"
+    "indepedent Green's tensor element.")
 
 
 class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
@@ -28,16 +41,20 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
 
     def _calculate_weights(self):
-        """ See also
-            van Driel et al. (2015)
+        """
+        Calculates weights used in linear combination of Green's functions
+
+        For more information, see
+
+        -   van Driel et al. (2015)
             Instaseis: instant global seismograms
             Solid Earth, 6, 701-717
 
-            Minson, Sarah E. and Douglas S. Dreger (2008)
+        -   Minson, Sarah E. and Douglas S. Dreger (2008)
             Stable Inversions for Complete Moment Tensors
             Geophysical Journal International 174 (2): 585-592
 
-            github.com/krischer/instaseis/instaseis/tests/
+        -   github.com/krischer/instaseis/instaseis/tests/
             test_instaseis.py::test_get_greens_vs_get_seismogram
         """
         npts = self[0].meta['npts']
@@ -97,7 +114,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
         for _i, channel in enumerate(self.meta.channels):
             component = channel[-1].upper()
-            if component not in ['Z','R','T']:
+            if component not in COMPONENTS:
                 raise Exception("Channels are expected to end in one of the "
                    "following characters: ZRT")
             self._synthetics[_i].meta.channel = component

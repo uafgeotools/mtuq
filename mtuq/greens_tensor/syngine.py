@@ -15,6 +15,15 @@ from mtuq.util.signal import resample
 from mtuq.util.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
 
 
+# syngine is an webservice that provides Green's functions and synthetic
+# seismograms for download as compressed SAC files. syngine uses instaseis
+# under the hood for preparing user downloads, so Green's function conventions,
+# moment tensor conventions, metadata format, data processing, and so on are
+# very similar for syngine and instaseis.  In MTUQ, all of the machinery for 
+# generating synthetics from syngine Green's tensors is inherited from 
+# mtuq.greens_tensor.instaseis
+
+
 GREENS_TENSOR_FILENAMES = [
     'greensfunction_XX.GF001..ZSS.sac',
     'greensfunction_XX.GF001..ZDS.sac',

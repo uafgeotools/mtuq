@@ -14,7 +14,7 @@ from mtuq.util.signal import resample
 from mtuq.util.moment_tensor.change_basis import change_basis
 
 
-# Precomputed fk Green's functions represent vertical, radial, and transverse
+# fk Green's functions represent vertical, radial, and transverse
 # velocity time series
 COMPONENTS = ['Z','R','T']
 
@@ -76,7 +76,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
     def _calculate_weights(self, mt, component):
        """
-       Calculates weights used in linear combination over Green's functions
+       Calculates weights used in linear combination of Green's functions
 
        See cap/fk documentation for indexing scheme details; here we try to
        follow as closely as possible the cap way of doing things
