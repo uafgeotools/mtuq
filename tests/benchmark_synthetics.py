@@ -26,8 +26,7 @@ if __name__=='__main__':
         and make them available for download
 
         In the meantime, synthetics are not expected to match exactly,
-        especially at high frequencies near the upper limit available through
-        syngine
+        especially at high frequencies
     """
 
     include_instaseis = False

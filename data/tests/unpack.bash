@@ -14,7 +14,8 @@ do
     cd $wd
     cd $(dirname $filename)
     echo "Unpacking $filename"
-    tar -xzf $filename
+    tar -xzf $(basename $filename)
 done
+echo "Done"
 echo ""
 

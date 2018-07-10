@@ -44,16 +44,19 @@ if __name__=='__main__':
 
 
     path_ref = []
-    path_ref += '/home/rmodrak/projects/mtuq/OUTPUT_DIR0'
-    path_ref += '/home/rmodrak/projects/mtuq/OUTPUT_DIR1'
-    path_ref += '/home/rmodrak/projects/mtuq/OUTPUT_DIR2'
-    path_ref += '/home/rmodrak/projects/mtuq/OUTPUT_DIR3'
+    path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/0')]
+    path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
+    path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
+    path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
+    # For now this path exists only in my personal environment.  Eventually, 
+    # we need to include it in the repository or make it available for download
+    path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
 
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
-    model=        'ak135f_2s'
+    model=        'scak
 
 
     process_bw = ProcessData(
@@ -143,7 +146,7 @@ if __name__=='__main__':
 
 
     print 'Reading Greens functions...\n'
-    factory = syngine.GreensTensorFactory(model)
+    factory = fk..GreensTensorFactory(path_greens)
     greens = factory(stations, origin)
 
     print 'Processing Greens functions...\n'
@@ -159,13 +162,13 @@ if __name__=='__main__':
     from mtuq.util.cap_util import get_data_cap
 
     for _i, mt in enumerate(grid):
-        print ' %d of %d' % (_i+1, grid.size+1)
+        print ' %d of %d' % (_i+1, len(grid)+1)
         synthetics_cap = get_synthetics_cap(deepcopy(data), path_ref[_i])
         synthetics_mtuq = get_synthetics_mtuq(greens, mt)
         filename = 'cap_fk_'+str(_i)+'.png'
         plot_waveforms(filename, synthetics_cap, synthetics_mtuq)
 
-    print ' %d of %d' % (_i+2, grid.size+1)
+    print ' %d of %d' % (_i+2, len(grid)+1)
     data_mtuq = data
     data_cap = get_data_cap(deepcopy(data), path_ref[0])
     filename = 'cap_fk_data.png'
