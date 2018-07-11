@@ -21,4 +21,6 @@ do
 
     rm ${filename}~
 done
+echo "SUCCESS"
+echo ""
 
