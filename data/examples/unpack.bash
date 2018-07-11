@@ -16,5 +16,6 @@ do
     echo "Unpacking $filename"
     tar -xzf $filename
 done
+echo "Done"
 echo ""
 

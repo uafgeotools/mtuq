@@ -15,7 +15,7 @@ def plot_beachball(filename, mt):
 
 
 def plot_waveforms(filename, data, synthetics, misfit=None, 
-                   annotate=False, normalize=1):
+                   annotate=False, normalize=2):
     """ Creates CAP-style data/synthetics figure
     """
 
@@ -63,6 +63,18 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             if weight==0.:
                 continue
 
+            # set axis limits
+            if normalize==1:
+                ymax = max(abs(min_bw), abs(max_bw))
+                ylim = [-ymax, +ymax]
+            elif normalize==2:
+                _scale(dat)
+                _scale(syn)
+                ylim = [-1., +1.]
+            else:
+                ymax = _max(dat)
+                ylim = [-ymax, +ymax]
+
             if component=='Z':
                 pyplot.subplot(nrow, ncol, ncol*irow+2)
                 subplot(dat, syn)
@@ -74,22 +86,7 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             else:
                 continue
 
-            # set axis limits
-            if normalize==1:
-                ymax = max(abs(min_bw), abs(max_bw))
-                ylim = [-ymax, +ymax]
-
-            elif normalize==2:
-                _scale(dat)
-                _scale(syn)
-                ylim = [-1., +1.]
-
-            else:
-                ymax = _max(dat)
-                ylim = [-ymax, +ymax]
-
             pyplot.ylim(*ylim)
-
             if annotate:
                 channel_labels(dat, syn, ylim)
 
@@ -106,6 +103,18 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             if weight==0.:
                 continue
 
+            # set axis limits
+            if normalize==1:
+                ymax = max(abs(min_sw), abs(max_sw))
+                ylim = [-ymax, +ymax]
+            elif normalize==2:
+                _scale(dat)
+                _scale(syn)
+                ylim = [-1., +1.]
+            else:
+                ymax = _max(dat)
+                ylim = [-ymax, +ymax]
+
             if component=='Z':
                 pyplot.subplot(nrow, ncol, ncol*irow+4)
                 subplot(dat, syn)
@@ -121,19 +130,7 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
             else:
                 continue
 
-            # set axis limits
-            if normalize==1:
-                ymax = max(abs(min_sw), abs(max_sw))
-                ylim = [-ymax, +ymax]
-            elif normalize==2:
-                _scale(dat)
-                _scale(syn)
-                ylim = [-1., +1.]
-            else:
-                ymax = _max(dat)
-                ylim = [-ymax, +ymax]
             pyplot.ylim(*ylim)
-
             if annotate:
                 channel_labels(dat, syn, ylim)
 

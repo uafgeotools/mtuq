@@ -11,7 +11,8 @@ cd $(dirname ${BASH_SOURCE[0]})
 
 for filename in \
     ../examples/GridSearch.DoubleCouple.3Parameter.MPI.py\
-    ../examples/GridSearch.DoubleCouple.3Parameter.Serial.py;
+    ../examples/GridSearch.DoubleCouple.3Parameter.Serial.py\
+    ../tests/benchmark_cap_fk.py;
 do
     echo "Checking $filename..."
     cp ${filename}{,~}
@@ -21,4 +22,6 @@ do
 
     rm ${filename}~
 done
+echo "SUCCESS"
+echo ""
 
