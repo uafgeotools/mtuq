@@ -29,7 +29,7 @@ class GreensTensor(Stream):
         self.origin = origin
 
 
-    def get_synthetics(self, mt):
+    def get_synthetics(self, mt, components=None):
         """
         Generates synthetics through a linear combination of time series
         """
@@ -122,7 +122,7 @@ class GreensTensorList(object):
             self.__add__(greens_tensor)
 
 
-    def get_synthetics(self, mt):
+    def get_synthetics(self, mt, components=None):
         """
         Returns an MTUQ Dataset in which all streams correspond to the moment
         tensor mt, and each each individual stream corresponds to an
@@ -130,7 +130,7 @@ class GreensTensorList(object):
         """
         synthetics = Dataset()
         for greens_tensor in self.__list__:
-            synthetics += greens_tensor.get_synthetics(mt)
+            synthetics += greens_tensor.get_synthetics(mt, components)
         return synthetics
 
 

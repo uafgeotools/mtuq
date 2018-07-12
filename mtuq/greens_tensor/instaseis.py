@@ -101,7 +101,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         self._GT = GT
 
 
-    def get_synthetics(self, mt):
+    def get_synthetics(self, mt, components=None):
         """
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
@@ -112,11 +112,10 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_GZ'):
             self._calculate_weights()
 
-        for _i, channel in enumerate(self.meta.channels):
-            component = channel[-1].upper()
-            if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in one of the "
-                   "following characters: ZRT")
+        if not components:
+            components = [channel[-1].upper() for channel in self.meta.channels]
+
+        for _i, component in enumerate(components):
             self._synthetics[_i].meta.channel = component
 
             s = self._synthetics[_i].data

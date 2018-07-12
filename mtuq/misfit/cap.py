@@ -57,13 +57,23 @@ class Misfit(object):
         """ CAP-style misfit calculation
         """ 
         p = self.order
-        synthetics = greens.get_synthetics(mt)
 
         sum_misfit = 0.
-        for d, s in zip(data, synthetics):
+        for _i, d in enumerate(data):
+            # what components are available for this station?
+            components = []
+            for trace in d:
+                components += trace.stats.channel[-1].upper()
+
+            if not components:
+                continue
+
             # time sampling scheme
             npts = d[0].data.size
             dt = d[0].stats.delta
+
+            # generate synthetics
+            s = greens[_i].get_synthetics(mt, components)
 
 
             #
