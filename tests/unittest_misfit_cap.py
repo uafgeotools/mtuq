@@ -4,7 +4,7 @@
 import numpy as np
 import unittest
 import obspy.core
-from mtuq.dataset.base import DatasetBase as Dataset
+from mtuq.dataset.base import Dataset
 from mtuq.misfit import cap
 from mtuq.util.util import AttribDict
 from mtuq.util.wavelets import Gaussian
@@ -46,7 +46,7 @@ class test_misfit_cap(unittest.TestCase):
         #
         # Checks that the correction matches the original shift
         #
-        misfit = cap.misfit(
+        misfit = cap.Misfit(
             time_shift_max=1.)
 
         result = misfit(dat, syn)
@@ -106,11 +106,11 @@ class test_misfit_cap(unittest.TestCase):
         # Checks that, when time shifts are allowed to vary from component to
         # component, the misfit is less than when time-shifts are fixed
         #
-        misfit1 = cap.misfit(
+        misfit1 = cap.Misfit(
             time_shift_max=1.,
             time_shift_groups=['Z','R','T'])
 
-        misfit2 = cap.misfit(
+        misfit2 = cap.Misfit(
             time_shift_max=1.,
             time_shift_groups=['ZRT'])
 
