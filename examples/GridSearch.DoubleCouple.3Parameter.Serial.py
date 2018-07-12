@@ -170,7 +170,7 @@ if __name__=='__main__':
     synthetics = {}
     for key in ['body_waves', 'surface_waves']:
         synthetics[key] = greens[key].get_synthetics(best_mt)
-    plot_waveforms(event_name+'.png', data, synthetics, misfit)
+    plot_waveforms(event_name+'.png', data, greens, best_mt, misfit)
     plot_beachball(event_name+'_beachball.png', best_mt)
 
 

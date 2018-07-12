@@ -53,10 +53,11 @@ class Misfit(object):
         self.polarity_weight = polarity_weight
 
 
-    def __call__(self, data, synthetics):
+    def __call__(self, data, greens, mt):
         """ CAP-style misfit calculation
         """ 
         p = self.order
+        synthetics = greens.get_synthetics(mt)
 
         sum_misfit = 0.
         for d, s in zip(data, synthetics):
