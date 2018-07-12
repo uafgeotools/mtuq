@@ -10,7 +10,7 @@ from mtuq.grid_search import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search_serial
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
-from mtuq.util.cap_util import trapezoid_rise_time, Trapezoid
+from mtuq.util.cap_util import remove_unused_stations, trapezoid_rise_time, Trapezoid
 from mtuq.util.plot import plot_beachball, plot_waveforms
 from mtuq.util.util import cross, path_mtuq
 
@@ -91,8 +91,9 @@ if __name__=='__main__':
     #
 
     print 'Reading data...\n'
-    data = sac.reader(path_data, wildcard='*.[zrt]')
-    data.add_tag('velocity')
+    data = sac.reader(path_data, wildcard='*.[zrt]', id=event_name,
+        tags=['velocity']) 
+    remove_unused_stations(data, path_weights)
     data.sort_by_distance()
 
     stations  = []
