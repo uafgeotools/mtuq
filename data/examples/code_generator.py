@@ -13,7 +13,7 @@ from mtuq.grid_search import grid_search_mpi
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
 from mtuq.util.cap_util import remove_unused_stations, trapezoid_rise_time, Trapezoid
-from mtuq.util.plot import plot_beachball, plot_waveforms
+from mtuq.util.plot import plot_beachball, plot_data_greens_mt
 from mtuq.util.util import cross, path_mtuq
 
 
@@ -367,7 +367,7 @@ GridSearchSerial="""
     synthetics = {}
     for key in ['body_waves', 'surface_waves']:
         synthetics[key] = greens[key].get_synthetics(best_mt)
-    plot_waveforms(event_name+'.png', data, synthetics, misfit)
+    plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
     plot_beachball(event_name+'_beachball.png', best_mt)
 
 
@@ -440,10 +440,7 @@ GridSearchMPI="""
 
     if comm.rank==0:
         print 'Plotting waveforms...\\n'
-        synthetics = {}
-        for key in ['body_waves', 'surface_waves']:
-            synthetics[key] = greens[key].get_synthetics(best_mt)
-        plot_waveforms(event_name+'.png', data, synthetics, misfit)
+        plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
         plot_beachball(event_name+'_beachball.png', best_mt)
 
 
@@ -518,10 +515,7 @@ GridSearchMPI2="""
 
         if comm.rank==0:
             print 'Plotting waveforms...\\n'
-            synthetics = {}
-            for key in ['body_waves', 'surface_waves']:
-                synthetics[key] = greens[key].get_synthetics(best_mt)
-            plot_waveforms(event_name+'.png', data, synthetics, misfit)
+            plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
             plot_beachball(event_name+'_beachball.png', best_mt)
 
 
@@ -574,7 +568,7 @@ RunBenchmarkCAPFK="""
         synthetics_cap = get_synthetics_cap(deepcopy(data), path_ref[_i])
         synthetics_mtuq = get_synthetics_mtuq(greens, mt)
         filename = 'cap_fk_'+str(_i)+'.png'
-        plot_waveforms(filename, synthetics_cap, synthetics_mtuq)
+        plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
     # generates "bonus" figure comparing how CAP processes observed data with
     # how MTUQ processes observed data
@@ -582,7 +576,7 @@ RunBenchmarkCAPFK="""
     data_mtuq = data
     data_cap = get_data_cap(deepcopy(data), path_ref[0])
     filename = 'cap_fk_data.png'
-    plot_waveforms(filename, data_cap, data_mtuq, normalize=False)
+    plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 
 
 """
@@ -593,7 +587,7 @@ if __name__=='__main__':
     import os
     import re
 
-    from mtuq.util.util import path_mtuq
+    from mtuq.util.util import path_mtuq, replace
     os.chdir(path_mtuq())
 
 
@@ -640,10 +634,11 @@ if __name__=='__main__':
     with open('examples/GridSearch.DoubleCouple.3Parameter.Serial.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
-            re.sub(
+            replace(
+            Imports,
             'grid_search_mpi',
             'grid_search_serial',
-            Imports))
+            ))
         file.write(DocstringDC3Serial)
         file.write(PathsComments)
         file.write(PathsDefinitions)
@@ -657,13 +652,13 @@ if __name__=='__main__':
 
     with open('tests/test_grid_search.py', 'w') as file:
         file.write(
-            re.sub(
+            replace(
+            Imports,
             'grid_search_mpi',
             'grid_search_serial',
-            re.sub(
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
-            Imports)))
+            ))
         file.write(DocstringIntegrationTest)
         file.write(PathsDefinitions)
         file.write(DataProcessingDefinitions)
@@ -674,29 +669,34 @@ if __name__=='__main__':
 
     with open('tests/benchmark_cap_fk.py', 'w') as file:
         file.write(
-            re.sub(
+            replace(
+            Imports,
             'grid_search_mpi',
             'grid_search_serial',
-            re.sub(
             'syngine',
             'fk',
-            Imports)))
+            'plot_data_greens_mt',
+            'plot_data_synthetics',
+            ))
         file.write(DocstringBenchmarkCAPFK)
         file.write(
-            re.sub(
+            replace(
+            PathsDefinitions,
             'ak135f_.s',
             'scak',
-            PathsDefinitions))
+            ))
         file.write(
-            re.sub(
+            replace(
+            DataProcessingDefinitions,
             'padding_length=.*',
             'padding_length=0,',
-            DataProcessingDefinitions))
+            ))
         file.write(
-            re.sub(
+            replace(
+            MisfitDefinitions,
             'time_shift_max=.*',
             'time_shift_max=0.,',
-            MisfitDefinitions))
+            ))
         file.write(GridBenchmarkCAPFK)
         file.write(RunBenchmarkCAPFK)
 

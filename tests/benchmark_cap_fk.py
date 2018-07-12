@@ -11,7 +11,7 @@ from mtuq.grid_search import grid_search_serial
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
 from mtuq.util.cap_util import remove_unused_stations, trapezoid_rise_time, Trapezoid
-from mtuq.util.plot import plot_beachball, plot_waveforms
+from mtuq.util.plot import plot_beachball, plot_data_synthetics
 from mtuq.util.util import cross, path_mtuq
 
 
@@ -173,7 +173,7 @@ if __name__=='__main__':
         synthetics_cap = get_synthetics_cap(deepcopy(data), path_ref[_i])
         synthetics_mtuq = get_synthetics_mtuq(greens, mt)
         filename = 'cap_fk_'+str(_i)+'.png'
-        plot_waveforms(filename, synthetics_cap, synthetics_mtuq)
+        plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
     # generates "bonus" figure comparing how CAP processes observed data with
     # how MTUQ processes observed data
@@ -181,6 +181,6 @@ if __name__=='__main__':
     data_mtuq = data
     data_cap = get_data_cap(deepcopy(data), path_ref[0])
     filename = 'cap_fk_data.png'
-    plot_waveforms(filename, data_cap, data_mtuq, normalize=False)
+    plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 
 

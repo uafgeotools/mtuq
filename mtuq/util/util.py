@@ -54,6 +54,16 @@ def iterable(arg):
         return arg
 
 
+def replace(string, *args):
+    narg = len(args)
+
+    iarg = 0
+    while iarg < narg:
+        string = re.sub(args[iarg], args[iarg+1], string)
+        iarg += 2
+    return string
+
+
 def timer(func):
     """ Decorator for measuring execution time; prints elapsed time to
         standard output
