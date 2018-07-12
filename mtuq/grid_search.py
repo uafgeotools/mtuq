@@ -14,7 +14,7 @@ from mtuq.util.math import open_interval as regular
 def grid_search_serial(data, greens, misfit, grid):
     """ 
     Grid search over moment tensors. For each moment tensor in grid, generates
-    corresponding synthetics and evaulates data misfit
+    synthetics and evaluates data misfit
     """
     results = np.zeros(grid.size)
     count = 0
@@ -22,8 +22,7 @@ def grid_search_serial(data, greens, misfit, grid):
     for mt in grid:
         print grid.index
         for key in data:
-            synthetics = greens[key].get_synthetics(mt)
-            results[count] += misfit[key](data[key], synthetics)
+            results[count] += misfit[key](data[key], greens[key], mt)
 
         count += 1
 

@@ -195,32 +195,32 @@ class ProcessData(object):
         input traces: all availables traces for a given station
         type traces: obspy Stream or MTUQ GreensTensor
         '''
-        if not hasattr(traces, 'id'):
-            raise Exception('Missing station identifier')
-        id = traces.id
-
-        # The 'tag' attribute is used to distinguish streams containing 
-        # Green's functions from streams containing data. The filtering 
-        # applied to Green's functions and data will be the exactly
-        # same. To accomodate CAP-style time shifts, the windowing 
-        # will be slightly different.
-        if hasattr(traces, 'tags'):
-            tags = traces.tags
-        else:
-            tags = []
-
-        # station metadata are required for data processing, e.g.
-        # without station location distance-depedent weighting cannont
-        # be applied
-        if not hasattr(traces, 'meta'):
-            raise Exception('Missing station metadata')
-        meta = traces.meta
-
         # overwrite existing data?
         if overwrite:
             traces = traces
         else:
             traces = deepcopy(traces)
+
+        # unique station identifier
+        if not hasattr(traces, 'id'):
+            raise Exception('Missing station identifier')
+        id = traces.id
+
+        # Station metadata dictionary created by dataset.get_station method.
+        # Here we use included station location and catalog origin information
+        # to determine windows and apply distance-dependent weighting
+        if not hasattr(traces, 'meta'):
+            raise Exception('Missing station metadata')
+        meta = traces.meta
+
+        # Tags can be provided through the add_tag method to keep track of
+        # additional metadata or support user customization. Here we use tags
+        # to distinguish data from Green's functions and to distinguish 
+        # displacement time series from velcoity time series
+        if not hasattr(traces, 'tags'):
+            raise Exception('Missing tags attribute')
+        tags = traces.tags
+
 
 
         #
@@ -252,11 +252,11 @@ class ProcessData(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
-        if 'velocity' in traces.tags:
+        if 'velocity' in tags:
             # convert to displacement
             for trace in traces:
-                trace.data = np.cumsum(trace.data)
-            traces.tags.remove('velocity')
+                trace.data = np.cumsum(trace.data)#*meta.delta
+            tags.remove('velocity')
 
 
         #
@@ -301,9 +301,9 @@ class ProcessData(object):
                         delimiter=' ',
                         skipinitialspace=True)
                     for row in reader:
-                        id = row[0]
-                        self._picks[id].P = float(row[1])
-                        self._picks[id].S = float(row[2])
+                        _id = row[0]
+                        self._picks[_id].P = float(row[1])
+                        self._picks[_id].S = float(row[2])
 
 
             elif self.pick_type=='from_taup_model':

@@ -13,7 +13,7 @@ from obspy.core import Stream
 from obspy.core.event import Origin
 from obspy.geodetics import gps2dist_azimuth
 from mtuq.util.signal import check_time_sampling
-from mtuq.util.util import AttribDict, warn
+from mtuq.util.util import AttribDict, iterable, warn
 
 
 class Dataset(mtuq.dataset.base.Dataset):
@@ -170,15 +170,15 @@ class Dataset(mtuq.dataset.base.Dataset):
 
 
 
-def reader(path, wildcard='*.sac', event_name=None, verbose=False):
+def reader(path, wildcard='*.sac', id=None, tags=[], verbose=False):
     """ Reads SAC traces, sorts by station, and returns MTUQ Dataset
 
      Additional processing would be required if the time sampling varies from
      one channel to another for a given station; for now, inconsistent time
      sampling results in an exception
     """
-    if not event_name:
-        event_name = os.path.basename(path)
+    if not id:
+        id = os.path.basename(path)
 
     # read traces one at a time
     data = Stream()
@@ -202,7 +202,7 @@ def reader(path, wildcard='*.sac', event_name=None, verbose=False):
             data_sorted[id] += trace
 
     # create MTUQ Dataset
-    dataset = Dataset(id=event_name)
+    dataset = Dataset(id=id)
     for id, stream in data_sorted.items():
         assert check_time_sampling(stream), NotImplementedError(
             "Time sampling differs from trace to trace.")
@@ -213,6 +213,11 @@ def reader(path, wildcard='*.sac', event_name=None, verbose=False):
 
         stream.id = id
         dataset += stream
+
+    # Tags can be used to keep track of additional metadata or support user
+    # customization
+    for tag in iterable(tags):
+        dataset.add_tag(tag)
 
     return dataset
 
