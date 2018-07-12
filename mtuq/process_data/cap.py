@@ -214,7 +214,7 @@ class ProcessData(object):
         # be applied
         if not hasattr(traces, 'meta'):
             raise Exception('Missing station metadata')
-        meta = traces.meta
+        meta = deepcopy(traces.meta)
 
         # overwrite existing data?
         if overwrite:
@@ -301,9 +301,9 @@ class ProcessData(object):
                         delimiter=' ',
                         skipinitialspace=True)
                     for row in reader:
-                        id = row[0]
-                        self._picks[id].P = float(row[1])
-                        self._picks[id].S = float(row[2])
+                        _id = row[0]
+                        self._picks[_id].P = float(row[1])
+                        self._picks[_id].S = float(row[2])
 
 
             elif self.pick_type=='from_taup_model':
