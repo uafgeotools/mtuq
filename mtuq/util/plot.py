@@ -1,5 +1,6 @@
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as pyplot
 import warnings
 from obspy.imaging.beachball import beachball
@@ -14,8 +15,26 @@ def plot_beachball(filename, mt):
 
 
 
-def plot_waveforms(filename, data, synthetics, misfit=None, 
-                   annotate=False, normalize=2):
+def plot_data_greens_mt(filename, data, greens, mt, 
+        misfit=None, **kwargs):
+
+    # generate synthetics
+    synthetics = {}
+    for key in ['body_waves', 'surface_waves']:
+        synthetics[key] = greens[key].get_synthetics(mt)
+
+    if misfit:
+        # reevaluate misfit to get time shifts
+        for key in ['body_waves', 'surface_waves']:
+            _ = misfit[key](data[key], greens[key], mt)
+
+    plot_data_synthetics(filename, data, synthetics, 
+        **kwargs)
+
+
+
+def plot_data_synthetics(filename, data, synthetics,
+        annotate=False, normalize=1):
     """ Creates CAP-style data/synthetics figure
     """
 
@@ -29,14 +48,6 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
     # determine axis limits
     min_bw, max_bw = data['body_waves'].min(), data['body_waves'].max()
     min_sw, max_sw = data['surface_waves'].min(), data['surface_waves'].max()
-
-
-    if misfit:
-        # reevaluate misfit to get time shifts
-        for key in ['body_waves', 'surface_waves']:
-            dat, syn, func = data[key], synthetics[key], misfit[key]
-            _ = func(dat, syn)
-
 
     irow = 0
     for data_bw, synthetics_bw, data_sw, synthetics_sw in zip(
@@ -137,7 +148,6 @@ def plot_waveforms(filename, data, synthetics, misfit=None,
         irow += 1
 
     pyplot.savefig(filename)
-    #pyplot.show()
 
 
 
