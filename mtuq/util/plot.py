@@ -61,15 +61,14 @@ def plot_data_synthetics(filename, data, synthetics,
         pyplot.subplot(nrow, ncol, ncol*irow+1)
         station_labels(meta)
 
-
         # plot body wave traces
         for dat, syn in zip(data_bw, synthetics_bw):
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
-            if component != syn.stats.channel[-1].upper():
-                warnings.warn('Mismatched components, skipping...')
-                continue
+            #if component != syn.stats.channel[-1].upper():
+            #    warnings.warn('Mismatched components, skipping...')
+            #    continue
 
             if weight==0.:
                 continue
@@ -107,9 +106,9 @@ def plot_data_synthetics(filename, data, synthetics,
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
-            if component != syn.stats.channel[-1].upper():
-                warnings.warn('Mismatched components, skipping...')
-                continue
+            #if component != syn.stats.channel[-1].upper():
+            #    warnings.warn('Mismatched components, skipping...')
+            #    continue
 
             if weight==0.:
                 continue

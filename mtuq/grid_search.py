@@ -23,7 +23,6 @@ def grid_search_serial(data, greens, misfit, grid):
         print grid.index
         for key in data:
             results[count] += misfit[key](data[key], greens[key], mt)
-
         count += 1
 
     return results

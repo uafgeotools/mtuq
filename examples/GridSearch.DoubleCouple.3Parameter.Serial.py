@@ -27,7 +27,7 @@ if __name__=='__main__':
     # USAGE
     #   python GridSearch.DoubleCouple.3Parameter.Serial.py
     #
-    # A typical runtime is about 60 minutes. For faster results try 
+    # A typical runtime is about 20 minutes. For faster results try 
     # GridSearch.DoubleCouple.3Parameter.MPI.py,
     # which runs the same inversion in parallel rather than
     # serial
@@ -109,7 +109,7 @@ if __name__=='__main__':
     #
 
     grid = DoubleCoupleGridRandom(
-        npts=5,
+        npts=50000,
         Mw=4.5)
 
     rise_time = trapezoid_rise_time(Mw=4.5)
@@ -167,9 +167,6 @@ if __name__=='__main__':
 
 
     print 'Plotting waveforms...\n'
-    synthetics = {}
-    for key in ['body_waves', 'surface_waves']:
-        synthetics[key] = greens[key].get_synthetics(best_mt)
     plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
     plot_beachball(event_name+'_beachball.png', best_mt)
 

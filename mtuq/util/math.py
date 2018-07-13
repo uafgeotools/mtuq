@@ -34,6 +34,17 @@ def eig(M, sort_type=1):
     return lsort,Vsort
 
 
+def list_intersect(a, b):
+    """ Intersection of two lists
+    """
+    return list(set(a).intersection(set(b)))
+
+
+def list_intersect_with_indices(a, b):
+    intersection = list(set(a).intersection(set(b)))
+    indices = [a.index(item) for item in intersection]
+    return intersection, indices
+
 
 def rotmat(xdeg, idx):
     """ 3D rotation matrix about given axis
