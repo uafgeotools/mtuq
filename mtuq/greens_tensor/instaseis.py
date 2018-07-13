@@ -109,8 +109,8 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
-        # Order of terms expected by syngine URL parser according to 
-        # IRIS documentation:
+        # Order of terms expected by syngine URL parser from online
+        # documentation:
         #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
         #
         # Relations given in instaseis/tests/test_instaseis.py:
@@ -119,6 +119,12 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
         # (note sign differences):
         #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
+        Mxx =  mt[1]
+        Myy =  mt[2]
+        Mzz =  mt[0]
+        Mxy = -mt[5]
+        Mxz = -mt[3]
+        Myz =  mt[4]
 
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
@@ -136,13 +142,6 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
                 _j=2
             G = self._rotated_tensor[_j]
 
-            Mxx =  mt[1]
-            Myy =  mt[2]
-            Mzz =  mt[0]
-            Mxy = -mt[5]
-            Mxz = -mt[3]
-            Myz =  mt[4]
-
             # we could use np.dot instead, but any speedup appears negiglibe
             s = self._synthetics[_i].data
             s[:] = 0.
@@ -156,7 +155,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         return self._synthetics
 
 
-    def get_time_shift(self, data, mt, time_shift_max):
+    def get_time_shift(self, data, mt, group, time_shift_max):
         """ 
         Finds optimal time-shift correction between synthetics and
         user-supplied data
@@ -174,7 +173,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         Mxz = -mt[3]
         Myz =  mt[4]
 
-        if 'Z' in self.meta.components:
+        if 'Z' in group:
             CC = self._CCZ
             cc += Mxx*CC[:,0]
             cc += Myy*CC[:,1]
@@ -183,7 +182,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             cc += Mxz*CC[:,4]
             cc += Myz*CC[:,5]
 
-        if 'R' in self.meta.components:
+        if 'R' in group:
             CC = self._CCR
             cc += Mxx*CC[:,0]
             cc += Myy*CC[:,1]
@@ -192,7 +191,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             cc += Mxz*CC[:,4]
             cc += Myz*CC[:,5]
 
-        if 'T' in self.meta.components:
+        if 'T' in group:
             CC = self._CCT
             cc += Mxx*CC[:,0]
             cc += Myy*CC[:,1]

@@ -2,7 +2,7 @@
 from collections import defaultdict
 from math import ceil, floor
 from scipy.signal import fftconvolve
-from mtuq.util.math import isclose
+from mtuq.util.math import isclose, list_intersect_with_indices
 import numpy as np
 import warnings
 
@@ -52,6 +52,7 @@ class Misfit(object):
         # should we include polarities in misfit?
         self.polarity_weight = polarity_weight
 
+        # keeps track of what compoents are available in each stream
         self._components = defaultdict(list)
 
 
@@ -68,7 +69,8 @@ class Misfit(object):
                     self._components[_i] += [trace.stats.channel[-1].upper()]
                 greens[_i].meta.components = self._components[_i]
 
-            if not self._components[_i]:
+            components = self._components[_i]
+            if not components:
                 continue
 
             # generate synthetics
@@ -78,7 +80,6 @@ class Misfit(object):
             npts = d[0].data.size
             dt = d[0].stats.delta
             npts_padding = int(self.time_shift_max/dt)
-
 
 
             #
@@ -91,21 +92,11 @@ class Misfit(object):
                 # the maximum cross-correlation value across all components in 
                 # in a given group, subject to time_shift_max constraint
 
-                components = []
-                indices = []
-                for _j in range(len(d)):
-                    weight = getattr(d[_j], 'weight', 1.)
-                    # ignore traces with zero misfit weight
-                    if weight:
-                        channel = d[_j].stats.channel
-                        components += [channel[-1].upper()]
-                        indices += [_j]
-
-                if not components:
-                    continue
+                # what components are in stream d?
+                group, indices = list_intersect_with_indices(components, group)
 
                 # what time-shift yields the maximum cross-correlation value?
-                result = greens[_i].get_time_shift(d, mt, self.time_shift_max)
+                result = greens[_i].get_time_shift(d, mt, group, self.time_shift_max)
                 argmax = result.argmax()
                 time_shift = (argmax-npts_padding)*dt
 
