@@ -221,6 +221,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         """
         npts = self[0].meta['npts']
         npts_padding = int(max_time_shift/self[0].meta['delta'])
+
         print npts, npts_padding
 
         self._npts_padding = npts_padding
@@ -228,21 +229,21 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
         if 'Z' in self.meta.components:
             DZ = data.select(component='Z')[0].data
-            DZ = np.pad(DZ, npts_padding, 'constant')
+            #DZ = np.pad(DZ, npts_padding, 'constant')
 
             CCZ = np.zeros((2*npts_padding+1, 6))
             GZ = self._rotated_tensor[0]
 
         if 'R' in self.meta.components:
             DR = data.select(component='R')[0].data
-            DR = np.pad(DR, npts_padding, 'constant')
+            #DR = np.pad(DR, npts_padding, 'constant')
 
             CCR = np.zeros((2*npts_padding+1, 6))
             GR = self._rotated_tensor[1]
 
         if 'T' in self.meta.components:
             DT = data.select(component='T')[0].data
-            DT = np.pad(DT, npts_padding, 'constant')
+            #DT = np.pad(DT, npts_padding, 'constant')
 
             CCT = np.zeros((2*npts_padding+1, 6))
             GT = self._rotated_tensor[2]
@@ -251,7 +252,6 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         # implementation is usually faster
         if 'Z' in self.meta.components and\
             (npts > 2000 or npts_padding > 200):
-            DZ = data.select(component='Z')[0].data
             CCZ[:,0] = fftconvolve(DZ, GZ[::-1,0], 'valid')
             CCZ[:,1] = fftconvolve(DZ, GZ[::-1,1], 'valid')
             CCZ[:,2] = fftconvolve(DZ, GZ[::-1,2], 'valid')
@@ -272,6 +272,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
         if 'T' in self.meta.components and\
             (npts > 2000 or npts_padding > 200):
+
             CCT[:,0] = fftconvolve(DT, GT[::-1,0], 'valid')
             CCT[:,1] = fftconvolve(DT, GT[::-1,1], 'valid')
             CCT[:,2] = fftconvolve(DT, GT[::-1,2], 'valid')
@@ -283,7 +284,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         # for short traces or short lag times, time-domain
         # implementation is usually faster
         if 'Z' in self.meta.components and\
-            (npts <= 2000 or npts_padding <= 200):
+            (npts <= 2000 and npts_padding <= 200):
             CCZ[:,0] = np.correlate(DZ, GZ[:,0], 'valid')
             CCZ[:,1] = np.correlate(DZ, GZ[:,1], 'valid')
             CCZ[:,2] = np.correlate(DZ, GZ[:,2], 'valid')
@@ -293,7 +294,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             self._CCZ = CCZ
 
         if 'R' in self.meta.components and\
-            (npts <= 2000 or npts_padding <= 200):
+            (npts <= 2000 and npts_padding <= 200):
             CCR[:,0] = np.correlate(DR, GR[:,0], 'valid')
             CCR[:,1] = np.correlate(DR, GR[:,1], 'valid')
             CCR[:,2] = np.correlate(DR, GR[:,2], 'valid')
@@ -303,7 +304,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             self._CCR = CCR
 
         if 'T' in self.meta.components and\
-            (npts <= 2000 or npts_padding <= 200):
+            (npts <= 2000 and npts_padding <= 200):
             CCT[:,0] = np.correlate(DT, GT[:,0], 'valid')
             CCT[:,1] = np.correlate(DT, GT[:,1], 'valid')
             CCT[:,2] = np.correlate(DT, GT[:,2], 'valid')

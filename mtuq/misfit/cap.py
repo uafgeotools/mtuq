@@ -105,8 +105,7 @@ class Misfit(object):
                     continue
 
                 # what time-shift yields the maximum cross-correlation value?
-                result = greens[_i].get_time_shift(mt, data, components, self.time_shift_max)
-                print result.min(), result.max()
+                result = greens[_i].get_time_shift(d, mt, self.time_shift_max)
                 argmax = result.argmax()
                 time_shift = (argmax-npts_padding)*dt
 

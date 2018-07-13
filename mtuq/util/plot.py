@@ -70,8 +70,6 @@ def plot_data_synthetics(filename, data, synthetics,
             #    warnings.warn('Mismatched components, skipping...')
             #    continue
 
-            print id, component, syn.time_shift
-
             if weight==0.:
                 continue
 
@@ -107,9 +105,6 @@ def plot_data_synthetics(filename, data, synthetics,
         for dat, syn in zip(data_sw, synthetics_sw):
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
-
-            print id, component, syn.time_shift
-
 
             #if component != syn.stats.channel[-1].upper():
             #    warnings.warn('Mismatched components, skipping...')
