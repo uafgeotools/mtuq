@@ -142,7 +142,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
                 _j=2
             G = self._rotated_tensor[_j]
 
-            # we could use np.dot instead, but any speedup appears negiglibe
+            # we could use np.dot instead, but any speedup appears negligible
             s = self._synthetics[_i].data
             s[:] = 0.
             s += Mxx*G[:,0]

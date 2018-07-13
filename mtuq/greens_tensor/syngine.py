@@ -41,7 +41,7 @@ SYNTHETICS_FILENAMES = [
     'XX.S0001.SE.BXZ.sac',
     'XX.S0001.SE.BXR.sac',
     'XX.S0001.SE.BXT.sac',
-]
+    ]
 
 
 class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
