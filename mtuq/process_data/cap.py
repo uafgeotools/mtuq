@@ -213,8 +213,8 @@ class ProcessData(object):
             raise Exception('Missing station metadata')
         meta = traces.meta
 
-        # Tags can be provided through the add_tag method to keep track of
-        # additional metadata or support user customization. Here we use tags
+        # Tags can be provided through the dataset.add_tag to keep track of
+        # custom metadata or support other customized uses. Here we use tags 
         # to distinguish data from Green's functions and to distinguish 
         # displacement time series from velcoity time series
         if not hasattr(traces, 'tags'):

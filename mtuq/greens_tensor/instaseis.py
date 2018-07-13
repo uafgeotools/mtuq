@@ -7,8 +7,8 @@ import mtuq.greens_tensor.base
 from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists
-
 from obspy.core import Stream, Trace
+from scipy.signal import fftconvolve
 from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
 
@@ -104,7 +104,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         self._rotated_tensor += [-GT]
 
 
-    def get_synthetics(self, mt, components=None):
+    def get_synthetics(self, mt):
         """
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
@@ -126,7 +126,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_rotated_tensor'):
             self._calculate_weights()
 
-        for _i, component in enumerate(components):
+        for _i, component in enumerate(self.meta.components):
             # which Green's functions correspond to given component?
             if component=='Z':
                 _j=0
@@ -210,9 +210,9 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     def _preallocate_synthetics(self):
         self.meta.npts = self[0].stats.npts
         self._synthetics = Stream()
-        for channel in self.meta.channels:
+        for channel in self.meta.components:
             self._synthetics +=\
-                Trace(np.zeros(self[0].stats.npts), self.meta)
+                Trace(np.zeros(self[0].stats.npts), deepcopy(self.meta))
         self._synthetics.id = self.id
 
 
@@ -293,11 +293,11 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             CCR[:,5] = np.correlate(DR, GR[:,5], 'valid')
 
             CCT[:,0] = np.correlate(DT, GT[:,0], 'valid')
-            CCT[:,1] = np.correlate(DT, GT[:,0], 'valid')
-            CCT[:,2] = np.correlate(DT, GT[:,0], 'valid')
-            CCT[:,3] = np.correlate(DT, GT[:,0], 'valid')
-            CCT[:,4] = np.correlate(DT, GT[:,0], 'valid')
-            CCT[:,5] = np.correlate(DT, GT[:,0], 'valid')
+            CCT[:,1] = np.correlate(DT, GT[:,1], 'valid')
+            CCT[:,2] = np.correlate(DT, GT[:,2], 'valid')
+            CCT[:,3] = np.correlate(DT, GT[:,3], 'valid')
+            CCT[:,4] = np.correlate(DT, GT[:,4], 'valid')
+            CCT[:,5] = np.correlate(DT, GT[:,5], 'valid')
 
         self._CCZ = CCZ
         self._CCR = CCR

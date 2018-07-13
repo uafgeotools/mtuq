@@ -52,6 +52,8 @@ class Misfit(object):
         # should we include polarities in misfit?
         self.polarity_weight = polarity_weight
 
+        self._components = defaultdict(list)
+
 
     def __call__(self, data, greens, mt):
         """ CAP-style misfit calculation
@@ -60,63 +62,27 @@ class Misfit(object):
 
         sum_misfit = 0.
         for _i, d in enumerate(data):
-            # what components are in stream?
-            components = []
-            for trace in d:
-                components += trace.stats.channel[-1].upper()
+            # what components are in stream d?
+            if _i not in self._components:
+                for trace in d:
+                    self._components[_i] += [trace.stats.channel[-1].upper()]
+                greens[_i].meta.components = self._components[_i]
 
-            if not components:
+            if not self._components[_i]:
                 continue
+
+            # generate synthetics
+            s = greens[_i].get_synthetics(mt)
 
             # time sampling scheme
             npts = d[0].data.size
             dt = d[0].stats.delta
+            npts_padding = int(self.time_shift_max/dt)
 
-            # generate synthetics
-            s = greens[_i].get_synthetics(mt, components)
-
-
-            #
-            # PART 1: Prepare for time-shift correction
-            #
-
-            npts_dat = npts
-            npts_syn = s[0].data.size
-            npts_padding = int(round(self.time_shift_max/dt))
-
-            if npts_syn - npts_dat == 2*npts_padding:
-                # synthetics have already been padded, nothing to do just yet
-                pass
-
-            elif npts_dat == npts_syn:
-               warnings.warn("For greater speed, pad synthetics in advance by "
-                   "by setting process_data.padding_length equal to "
-                   "misfit.time_shift_max")
-               for trace in s:
-                   trace.data = np.pad(trace.data, npts_padding, 'constant')
-
-            else:
-               raise Exception("Data and synthetics must be the same "
-                   "length, or synthetics padded by a number of samples "
-                   "equal to 2*time_shift_max/dt")
-
-            if not hasattr(d, 'time_shift_mode'):
-                # Chooses whether to work in the time or frequency domain based 
-                # on length of traces and maximum allowable lag
-                if npts_padding==0:
-                    d.time_shift_mode = 0
-                elif npts > 2000 or npts_padding > 200:
-                    # for long traces or long lag times, frequency-domain
-                    # implementation is usually faster
-                    d.time_shift_mode = 1
-                else:
-                    # for short traces or short lag times, time-domain
-                    # implementation is usually faster
-                    d.time_shift_mode = 2
 
 
             #
-            # PART 2: CAP-style waveform-difference misfit calculation, with
+            # PART 1: CAP-style waveform-difference misfit calculation, with
             #     time-shift corrections
             #
              
@@ -125,30 +91,22 @@ class Misfit(object):
                 # the maximum cross-correlation value across all components in 
                 # in a given group, subject to time_shift_max constraint
 
-                result = np.zeros(2*npts_padding+1)
-                _indices = []
-                for _i in range(len(d)):
+                components = []
+                indices = []
+                for _j in range(len(d)):
+                    weight = getattr(d[_j], 'weight', 1.)
                     # ignore traces with zero misfit weight
-                    if hasattr(d[_i], 'weight') and d[_i].weight == 0.:
-                        continue
+                    if weight:
+                        channel = d[_j].stats.channel
+                        components += [channel[-1].upper()]
+                        indices += [_j]
 
-                    # keep track of which indices correspond to which components
-                    component = d[_i].stats.channel[-1].upper()
-                    if component in group:
-                        _indices += [_i]
-                    else:
-                        continue
-
-                    if d.time_shift_mode==0:
-                        pass
-                    elif d.time_shift_mode==1:
-                        result += fftconvolve(
-                            d[_i].data, s[_i].data[::-1], 'valid')
-                    elif d.time_shift_mode==2:
-                        result += np.correlate(
-                            d[_i].data, s[_i].data, 'valid')
+                if not components:
+                    continue
 
                 # what time-shift yields the maximum cross-correlation value?
+                result = greens[_i].get_time_shift(mt, data, components, self.time_shift_max)
+                print result.min(), result.max()
                 argmax = result.argmax()
                 time_shift = (argmax-npts_padding)*dt
 
@@ -157,23 +115,23 @@ class Misfit(object):
                 start = 2*npts_padding-argmax
                 stop = 2*npts_padding-argmax+npts
 
-                for _i in _indices:
-                    s[_i].time_shift = time_shift
-                    s[_i].time_shift_group = group
-                    s[_i].start = start
-                    s[_i].stop = stop
+                for _j in indices:
+                    s[_j].time_shift = time_shift
+                    s[_j].time_shift_group = group
+                    s[_j].start = start
+                    s[_j].stop = stop
                     
                     # substract data from shifted synthetics
-                    r = s[_i].data[start:stop] - d[_i].data
+                    r = s[_j].data[start:stop] - d[_j].data
 
                     # sum the resulting residuals
-                    d[_i].sum_residuals = np.sum(np.abs(r)**p)*dt
-                    sum_misfit += d[_i].weight * d[_i].sum_residuals
+                    d[_j].sum_residuals = np.sum(np.abs(r)**p)*dt
+                    sum_misfit += d[_j].weight * d[_j].sum_residuals
 
 
 
             #
-            # PART 3: CAP-style polarity calculation
+            # PART 2: CAP-style polarity calculation
             #
 
             if self.polarity_weight > 0.:
