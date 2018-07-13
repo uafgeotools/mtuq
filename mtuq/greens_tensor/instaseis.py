@@ -96,9 +96,12 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         GT[:, 4] = TDS * np.sin(az)
         GT[:, 5] = -TDS * np.cos(az)
 
-        self._GZ = GZ
-        self._GR = GR
-        self._GT = GT
+        self._rotated_tensor = []
+        self._rotated_tensor += [GZ]
+        self._rotated_tensor += [GR]
+        # the negative sign is needed because of inconsistent moment tensor
+        #  conventions?
+        self._rotated_tensor += [-GT]
 
 
     def get_synthetics(self, mt, components=None):
@@ -106,42 +109,33 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
+        # Order of terms expected by syngine URL parser according to 
+        # IRIS documentation:
+        #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
+        #
+        # Relations given in instaseis/tests/test_instaseis.py:
+        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
+        #
+        # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
+        # (note sign differences):
+        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
+
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
-        if not hasattr(self, '_GZ'):
+        if not hasattr(self, '_rotated_tensor'):
             self._calculate_weights()
 
-        if not components:
-            components = [channel[-1].upper() for channel in self.meta.channels]
-
         for _i, component in enumerate(components):
-            self._synthetics[_i].meta.channel = component
-
-            s = self._synthetics[_i].data
-            # overwrite previous synthetics
-            s[:] = 0.
-
+            # which Green's functions correspond to given component?
             if component=='Z':
-                G = self._GZ
-            if component=='R':
-                G = self._GR
-            if component=='T':
-                # the negative sign is needed because of inconsistent
-                # instaseis and syngine moment tensor conventions?
-                G = -self._GT
+                _j=0
+            elif component=='R':
+                _j=1
+            elif component=='T':
+                _j=2
+            G = self._rotated_tensor[_j]
 
-
-            # Order of terms expected by syngine URL parser according to 
-            # IRIS documentation:
-            #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-            #
-            # Relations given in instaseis/tests/test_instaseis.py:
-            #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
-            #
-            # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
-            # (note sign differences):
-            #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
             Mxx =  mt[1]
             Myy =  mt[2]
             Mzz =  mt[0]
@@ -149,6 +143,9 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             Mxz = -mt[3]
             Myz =  mt[4]
 
+            # we could use np.dot instead, but any speedup appears negiglibe
+            s = self._synthetics[_i].data
+            s[:] = 0.
             s += Mxx*G[:,0]
             s += Myy*G[:,1]
             s += Mzz*G[:,2]
@@ -159,6 +156,57 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         return self._synthetics
 
 
+    def get_time_shift(self, mt, data, components, time_shift_max):
+        """ 
+        Finds optimal time-shift correction between synthetics and
+        user-supplied data
+        """
+        if not hasattr(self, '_cross_correlation'):
+            self._precompute_time_shifts(data, time_shift_max)
+
+        cc = self._cross_correlation
+        cc[:] = 0.
+
+        Mxx =  mt[1]
+        Myy =  mt[2]
+        Mzz =  mt[0]
+        Mxy = -mt[5]
+        Mxz = -mt[3]
+        Myz =  mt[4]
+
+        if 'Z' in components:
+            CC = self._CCZ
+            cc += Mxx*CC[:,0]
+            cc += Myy*CC[:,1]
+            cc += Mzz*CC[:,2]
+            cc += Mxy*CC[:,3]
+            cc += Mxz*CC[:,4]
+            cc += Myz*CC[:,5]
+
+        if 'R' in components:
+            CC = self._CCR
+
+            cc += Mxx*CC[:,0]
+            cc += Myy*CC[:,1]
+            cc += Mzz*CC[:,2]
+            cc += Mxy*CC[:,3]
+            cc += Mxz*CC[:,4]
+            cc += Myz*CC[:,5]
+
+        if 'T' in components:
+            CC = self._CCT
+
+            cc += Mxx*CC[:,0]
+            cc += Myy*CC[:,1]
+            cc += Mzz*CC[:,2]
+            cc += Mxy*CC[:,3]
+            cc += Mxz*CC[:,4]
+            cc += Myz*CC[:,5]
+
+        return self._cross_correlation
+
+
+
     def _preallocate_synthetics(self):
         self.meta.npts = self[0].stats.npts
         self._synthetics = Stream()
@@ -166,6 +214,95 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             self._synthetics +=\
                 Trace(np.zeros(self[0].stats.npts), self.meta)
         self._synthetics.id = self.id
+
+
+    def _precompute_time_shifts(self, data, max_time_shift):
+        """
+        Enables fast time-shift calculations by computing cross-correlations
+        on an element-by-element basis
+        """
+        npts = self[0].meta['npts']
+        npts_padding = int(max_time_shift/self[0].meta['delta'])
+
+        self._npts_padding = npts_padding
+        self._cross_correlation = np.zeros(2*npts_padding+1)
+
+        try:
+            DZ = data.select(component='Z')[0].data
+            DZ = np.pad(DZ, npts_padding, 'constant')
+        except:
+            DZ = np.zeros(npts+2*npts_padding)
+        try:
+            DR = data.select(component='R')[0].data
+            DR = np.pad(DZ, npts_padding, 'constant')
+        except:
+            DR = np.zeros(npts+2*npts_padding)
+        try:
+            DT = data.select(component='T')[0].data
+            DT = np.pad(DZ, npts_padding, 'constant')
+        except:
+            DT = np.zeros(npts+2*npts_padding)
+
+        CCZ = np.zeros((2*npts_padding+1, 6))
+        CCR = np.zeros((2*npts_padding+1, 6))
+        CCT = np.zeros((2*npts_padding+1, 6))
+
+        GZ = self._rotated_tensor[0]
+        GR = self._rotated_tensor[1]
+        GT = self._rotated_tensor[2]
+
+        if npts > 2000 or npts_padding > 200:
+            # for long traces or long lag times, frequency-domain
+            # implementation is usually faster
+            CCZ[:,0] = fftconvolve(DZ, GZ[:,0][::-1], 'valid')
+            CCZ[:,1] = fftconvolve(DZ, GZ[:,1][::-1], 'valid')
+            CCZ[:,2] = fftconvolve(DZ, GZ[:,2][::-1], 'valid')
+            CCZ[:,3] = fftconvolve(DZ, GZ[:,3][::-1], 'valid')
+            CCZ[:,4] = fftconvolve(DZ, GZ[:,4][::-1], 'valid')
+            CCZ[:,5] = fftconvolve(DZ, GZ[:,5][::-1], 'valid')
+
+            CCR[:,0] = fftconvolve(DR, GR[:,0][::-1], 'valid')
+            CCR[:,1] = fftconvolve(DR, GR[:,1][::-1], 'valid')
+            CCR[:,2] = fftconvolve(DR, GR[:,2][::-1], 'valid')
+            CCR[:,3] = fftconvolve(DR, GR[:,3][::-1], 'valid')
+            CCR[:,4] = fftconvolve(DR, GR[:,4][::-1], 'valid')
+            CCR[:,5] = fftconvolve(DR, GR[:,5][::-1], 'valid')
+
+            CCT[:,0] = fftconvolve(DT, GT[:,0][::-1], 'valid')
+            CCT[:,1] = fftconvolve(DT, GT[:,1][::-1], 'valid')
+            CCT[:,2] = fftconvolve(DT, GT[:,2][::-1], 'valid')
+            CCT[:,3] = fftconvolve(DT, GT[:,3][::-1], 'valid')
+            CCT[:,4] = fftconvolve(DT, GT[:,4][::-1], 'valid')
+            CCT[:,5] = fftconvolve(DT, GT[:,5][::-1], 'valid')
+
+        else:
+            # for short traces or short lag times, time-domain
+            # implementation is usually faster
+            CCZ[:,0] = np.correlate(DZ, GZ[:,0], 'valid')
+            CCZ[:,1] = np.correlate(DZ, GZ[:,1], 'valid')
+            CCZ[:,2] = np.correlate(DZ, GZ[:,2], 'valid')
+            CCZ[:,3] = np.correlate(DZ, GZ[:,3], 'valid')
+            CCZ[:,4] = np.correlate(DZ, GZ[:,4], 'valid')
+            CCZ[:,5] = np.correlate(DZ, GZ[:,5], 'valid')
+
+            CCR[:,0] = np.correlate(DR, GR[:,0], 'valid')
+            CCR[:,1] = np.correlate(DR, GR[:,1], 'valid')
+            CCR[:,2] = np.correlate(DR, GR[:,2], 'valid')
+            CCR[:,3] = np.correlate(DR, GR[:,3], 'valid')
+            CCR[:,4] = np.correlate(DR, GR[:,4], 'valid')
+            CCR[:,5] = np.correlate(DR, GR[:,5], 'valid')
+
+            CCT[:,0] = np.correlate(DT, GT[:,0], 'valid')
+            CCT[:,1] = np.correlate(DT, GT[:,0], 'valid')
+            CCT[:,2] = np.correlate(DT, GT[:,0], 'valid')
+            CCT[:,3] = np.correlate(DT, GT[:,0], 'valid')
+            CCT[:,4] = np.correlate(DT, GT[:,0], 'valid')
+            CCT[:,5] = np.correlate(DT, GT[:,0], 'valid')
+
+        self._CCZ = CCZ
+        self._CCR = CCR
+        self._CCT = CCT
+
 
 
 
