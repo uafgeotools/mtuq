@@ -60,7 +60,7 @@ class Misfit(object):
 
         sum_misfit = 0.
         for _i, d in enumerate(data):
-            # what components are available for this station?
+            # what components are in this stream?
             components = []
             for trace in d:
                 components += trace.stats.channel[-1].upper()

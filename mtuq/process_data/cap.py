@@ -396,17 +396,25 @@ class ProcessData(object):
         elif self.weight_type == 'cap_bw':
             # applies CAP body wave weighting
             for trace in traces:
+                if 'greens_tensor' in tags:
+                    break
+
                 if trace.stats.channel:
                     component = trace.stats.channel[-1].upper()
 
                     if id not in self.weights: 
-                        trace.weight = 0.
+                        weight = 0.
                     elif component=='Z':
-                        trace.weight = self.weights[id][1]
+                        weight = self.weights[id][1]
                     elif component=='R':
-                        trace.weight = self.weights[id][2]
+                        weight = self.weights[id][2]
                     else:
-                        trace.weight = 0.
+                        weight = 0.
+
+                    if weight:
+                        setattr(trace, 'weight', weight)
+                    else:
+                        traces.remove(trace)
 
             distance = traces.meta.catalog_distance
             for trace in traces:
@@ -423,19 +431,28 @@ class ProcessData(object):
         elif self.weight_type == 'cap_sw':
             # applies CAP surface wave weighting
             for trace in traces:
+                if 'greens_tensor' in tags:
+                    break
+
                 if trace.stats.channel:
                     component = trace.stats.channel[-1].upper()
 
                     if id not in self.weights: 
-                        trace.weight = 0.
+                        weight = 0.
                     elif component=='Z':
-                        trace.weight = self.weights[id][3]
+                        weight = self.weights[id][3]
                     elif component=='R':
-                        trace.weight = self.weights[id][4]
+                        weight = self.weights[id][4]
                     elif component=='T':
-                        trace.weight = self.weights[id][5]
+                        weight = self.weights[id][5]
                     else:
-                        trace.weight = 0.
+                        weight = 0.
+
+                    if weight:
+                        setattr(trace, 'weight', weight)
+                    else:
+                        traces.remove(trace)
+
 
             distance = traces.meta.catalog_distance
             for trace in traces:
