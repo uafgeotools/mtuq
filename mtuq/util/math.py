@@ -37,7 +37,7 @@ def eig(M, sort_type=1):
 def list_intersect(a, b):
     """ Intersection of two lists
     """
-    c = list(set(a).intersection(set(b)))
+    return list(set(a).intersection(set(b)))
 
 
 def list_intersect_with_indices(a, b):
