@@ -61,7 +61,7 @@ def FullMomentTensorGridRandom(Mw, npts=50000):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 16.1 - 20.)
+    M0 = 10.**(1.5*float(Mw) + 9.1)
     rho = M0*np.sqrt(2.)
 
     return UnstructuredGrid({
@@ -87,7 +87,7 @@ def FullMomentTensorGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 16.1 - 20.)
+    M0 = 10.**(1.5*float(Mw) + 9.1)
     rho = asarray(Mw)/np.sqrt(2)
 
     return Grid({
@@ -111,7 +111,7 @@ def DoubleCoupleGridRandom(Mw, npts=50000):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 16.1 - 20.)
+    M0 = 10.**(1.5*float(Mw) + 9.1)
     rho = M0*np.sqrt(2.)
 
     return UnstructuredGrid({
@@ -135,7 +135,7 @@ def DoubleCoupleGridRegular(Mw, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 16.1 - 20.)
+    M0 = 10.**(1.5*float(Mw) + 9.1)
     rho = M0*np.sqrt(2.)
 
     return Grid({
