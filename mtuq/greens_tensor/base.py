@@ -1,6 +1,8 @@
 
+import numpy as np
+
 from copy import deepcopy
-from obspy.core import Stream
+from obspy.core import Stream, Trace
 from mtuq.dataset.base import Dataset
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
@@ -28,6 +30,9 @@ class GreensTensor(Stream):
         self.meta = deepcopy(station)
         self.origin = origin
 
+        # when generating synthetics, create these components
+        self.components = ['Z', 'R', 'T']
+
 
     def get_synthetics(self, mt):
         """
@@ -41,7 +46,16 @@ class GreensTensor(Stream):
         Enables fast synthetics calculations through preallocation and
         and memory reuse
         """
-        raise NotImplementedError("Must be implemented by subclass")
+        self._synthetics = Stream()
+        for channel in self.components:
+            meta = deepcopy(self.meta)
+            meta.update({
+                'npts': self[0].stats.npts,
+                'channel': channel,
+                })
+            self._synthetics += Trace(np.zeros(meta.npts), meta)
+
+        self._synthetics.id = self.id
 
 
     def apply(self, function, *args, **kwargs):
@@ -90,15 +104,13 @@ class GreensTensor(Stream):
 
 
     def __add__(self, *args):
-        raise Exception("It doesn't usually make sense to add time series to " 
-           " a GreensTensor (e.g. for a general inhomogeneous medium there are "
-           " 21 time series, any other number is incorrect)")
+        raise Exception("It doesn't make sense to add time series to "
+           " a GreensTensor")
 
 
     def __iadd__(self, *args):
-        raise Exception("It doesn't usually make sense to add time series to "
-           " a GreensTensor (e.g. for a general inhomogeneous medium there are "
-           " 21 time series, any other number is incorrect)")
+        raise Exception("It doesn't make sense to add time series to "
+           " a GreensTensor")
 
 
 

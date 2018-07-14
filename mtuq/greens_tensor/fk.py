@@ -9,7 +9,7 @@ from copy import deepcopy
 from math import ceil
 from os.path import basename, exists
 
-from obspy.core import Stream, Trace
+from obspy.core import Stream
 from mtuq.util.signal import resample
 from mtuq.util.moment_tensor.change_basis import change_basis
 
@@ -75,61 +75,50 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
 
     def _calculate_weights(self, mt, component):
-       """
-       Calculates weights used in linear combination of Green's functions
-
-       See cap/fk documentation for indexing scheme details; here we try to
-       follow as closely as possible the cap way of doing things
-
-       See also Lupei Zhu's mt_radiat utility
-       """
-       if component not in COMPONENTS:
-           raise Exception
-
-       if not hasattr(self.meta, 'azimuth'):
-           raise Exception
-
-       saz = np.sin(DEG2RAD * self.meta.azimuth)
-       caz = np.cos(DEG2RAD * self.meta.azimuth)
-       saz2 = 2.*saz*caz
-       caz2 = caz**2.-saz**2.
-
-       # instaseis/MTUQ use convention 1 (GCMT)
-       # CAP/FK uses convention 2 (Aki&Richards)
-       mt = change_basis(mt, 1, 2)
-
-       # what weights are used in the linear combination?
-       weights = []
-       if component in ['R','Z']:
-           weights += [(mt[0] + mt[1] + mt[2])/3.]
-           weights += [-0.5*caz2*(mt[0] - mt[1]) - saz2*mt[3]]
-           weights += [-caz*mt[4] - saz*mt[5]]
-           weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
-
-       elif component in ['T']:
-           weights += [-0.5*saz2*(mt[0] - mt[1]) + caz2*mt[3]]
-           weights += [-saz*mt[4] + caz*mt[5]]
-
-       # what Green's tensor elements do the weights correspond to?
-       if component in ['T']:
-           indices = [0, 1]
-       elif component in ['R']:
-           indices = [2, 3, 4, 5]
-       elif component in ['Z']:
-           indices = [6, 7, 8, 9]
-
-       return zip(indices, weights)
-
-
-    def _preallocate_synthetics(self):
-        """ 
-        Creates obspy streams for use by get_synthetics
         """
-        self._synthetics = Stream()
-        for channel in self.meta.channels:
-            self._synthetics +=\
-                Trace(np.zeros(self[0].stats.npts), self.meta)
-        self._synthetics.id = self.id
+        Calculates weights used in linear combination of Green's functions
+ 
+        See cap/fk documentation for indexing scheme details; here we try to
+        follow as closely as possible the cap way of doing things
+ 
+        See also Lupei Zhu's mt_radiat utility
+        """
+        if component not in COMPONENTS:
+            raise Exception
+ 
+        if not hasattr(self.meta, 'azimuth'):
+            raise Exception
+ 
+        saz = np.sin(DEG2RAD * self.meta.azimuth)
+        caz = np.cos(DEG2RAD * self.meta.azimuth)
+        saz2 = 2.*saz*caz
+        caz2 = caz**2.-saz**2.
+ 
+        # instaseis/MTUQ use convention 1 (GCMT)
+        # CAP/FK uses convention 2 (Aki&Richards)
+        mt = change_basis(mt, 1, 2)
+ 
+        # what weights are used in the linear combination?
+        weights = []
+        if component in ['R','Z']:
+            weights += [(mt[0] + mt[1] + mt[2])/3.]
+            weights += [-0.5*caz2*(mt[0] - mt[1]) - saz2*mt[3]]
+            weights += [-caz*mt[4] - saz*mt[5]]
+            weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
+ 
+        elif component in ['T']:
+            weights += [-0.5*saz2*(mt[0] - mt[1]) + caz2*mt[3]]
+            weights += [-saz*mt[4] + caz*mt[5]]
+ 
+        # what Green's tensor elements do the weights correspond to?
+        if component in ['T']:
+            indices = [0, 1]
+        elif component in ['R']:
+            indices = [2, 3, 4, 5]
+        elif component in ['Z']:
+            indices = [6, 7, 8, 9]
+ 
+        return zip(indices, weights)
 
 
 
