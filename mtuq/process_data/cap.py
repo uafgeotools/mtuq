@@ -222,7 +222,6 @@ class ProcessData(object):
         tags = traces.tags
 
 
-
         #
         # part 1: filter traces
         #
@@ -255,7 +254,7 @@ class ProcessData(object):
         if 'velocity' in tags:
             # convert to displacement
             for trace in traces:
-                trace.data = np.cumsum(trace.data)#*meta.delta
+                trace.data = np.cumsum(trace.data)*meta.delta
             tags.remove('velocity')
 
 
@@ -421,11 +420,8 @@ class ProcessData(object):
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
 
-                # ad hoc unit conversion
-                trace.data *= 0.01
-
                 # ad hoc factor determined by benchmark_cap_fk.py
-                trace.data *= 2.
+                trace.data *= 1.
 
 
         elif self.weight_type == 'cap_sw':
@@ -459,11 +455,8 @@ class ProcessData(object):
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
 
-                # ad hoc unit conversion
-                trace.data *= 0.01
-
                 # ad hoc factor determined by benchmark_cap_fk.py
-                trace.data *= 2.
+                trace.data *= 1.
 
 
         return traces

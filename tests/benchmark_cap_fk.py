@@ -118,13 +118,15 @@ if __name__=='__main__':
 
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-       np.array([1., 1., 1., 0., 0., 0.]), # explosion
-       np.array([0., 0., 0., 1., 0., 0.]), # double-couple #1
-       np.array([0., 0., 0., 0., 1., 0.]), # double-couple #2
-       # commented out because uafseismo/capuaf fails unexpectedly
-       #np.array([0., 0., 0., 0., 0., 1.]), # double-couple #3
+       np.array([0.816, 0.816, 0.816, 0., 0., 0.]), # explosion
+       np.array([0., 0., 0., 1., 0., 0.]),          # double-couple #1
+       np.array([0., 0., 0., 0., 1., 0.]),          # double-couple #2
+       #M0*np.array([0., 0., 0., 0., 0., 1.]),      # double-couple #3
        ]
 
+    Mw = 4.5
+    M0 = 10.**(1.5*Mw + 16.1 - 20.)
+    for mt in grid: mt *= M0
     rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
 
