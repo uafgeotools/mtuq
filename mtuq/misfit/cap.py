@@ -52,7 +52,7 @@ class Misfit(object):
         # should we include polarities in misfit?
         self.polarity_weight = polarity_weight
 
-        # keeps track of what compoents are available in each stream
+        # keeps track of what components are available in each stream
         self._components = defaultdict(list)
 
 
