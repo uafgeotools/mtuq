@@ -683,6 +683,8 @@ if __name__=='__main__':
             PathsDefinitions,
             'ak135f_.s',
             'scak',
+            'data/examples/20090407201255351/weights.dat',
+            'data/tests/benchmark_cap_fk/20090407201255351/weights.dat',
             ))
         file.write(
             replace(

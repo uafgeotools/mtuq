@@ -58,7 +58,7 @@ if __name__=='__main__':
 
 
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351')
-    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    path_weights= join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
     model=        'scak'
