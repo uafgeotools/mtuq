@@ -75,7 +75,7 @@ if __name__=='__main__':
        np.array([0., 0., 0., 0., 0., 1.]),          # double-couple #3
        ]
 
-    M0 = 1.e15 # N-m
+    M0 = 1.e15 # units: Neton-meter
     for mt in grid: mt *= M0
 
 
@@ -162,9 +162,6 @@ if __name__=='__main__':
                 synthetics_fk = greens_fk[key].get_synthetics(mt)[0]
             if include_syngine:
                 synthetics_syngine = greens_syngine[key].get_synthetics(mt)[0]
-
-            print synthetics_syngine[0].data.max()
-            print synthetics_fk[0].data.max()
 
             # get time scheme
             t = np.linspace(
