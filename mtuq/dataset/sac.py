@@ -214,7 +214,7 @@ def reader(path, wildcard='*.sac', id=None, tags=[], verbose=False):
         stream.id = id
         dataset += stream
 
-    # Tags can be used to store custom metadata (not already returned by 
+    # tags can be used to store custom metadata (not already returned by 
     # dataset.get_station or dataset.get_origin) or support other customized
     # uses
     for tag in iterable(tags):
