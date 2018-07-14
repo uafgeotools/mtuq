@@ -125,6 +125,9 @@ class Dataset(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
+    # tags can be used to store custom metadata (e.g. not already returned by 
+    # dataset.get_station or dataset.get_origin) or support other customized
+    # uses
     def add_tag(self, tag):
        for stream in self:
            stream.tags.append(tag)

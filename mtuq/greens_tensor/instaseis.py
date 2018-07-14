@@ -7,7 +7,6 @@ import mtuq.greens_tensor.base
 from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists
-from obspy.core import Stream, Trace
 from scipy.signal import fftconvolve
 from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
@@ -38,6 +37,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     """
     def __init__(self, traces, station, origin):
         super(GreensTensor, self).__init__(traces, station, origin)
+        self.components = COMPONENTS
 
 
     def _calculate_weights(self):
@@ -132,7 +132,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_rotated_tensor'):
             self._calculate_weights()
 
-        for _i, component in enumerate(self.meta.components):
+        for _i, component in enumerate(self.components):
             # which Green's functions correspond to given component?
             if component=='Z':
                 _j=0
@@ -142,7 +142,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
                 _j=2
             G = self._rotated_tensor[_j]
 
-            # we could use np.dot instead, but any speedup appears negiglibe
+            # we could use np.dot instead, but any speedup appears negligible
             s = self._synthetics[_i].data
             s[:] = 0.
             s += Mxx*G[:,0]
@@ -204,15 +204,6 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
 
 
-    def _preallocate_synthetics(self):
-        self.meta.npts = self[0].stats.npts
-        self._synthetics = Stream()
-        for channel in self.meta.components:
-            self._synthetics +=\
-                Trace(np.zeros(self[0].stats.npts), deepcopy(self.meta))
-        self._synthetics.id = self.id
-
-
     def _precompute_time_shifts(self, data, max_time_shift):
         """
         Enables fast time-shift calculations by precomputing cross-correlations
@@ -220,8 +211,6 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         """
         npts = self[0].meta['npts']
         npts_padding = int(max_time_shift/self[0].meta['delta'])
-
-        print npts, npts_padding
 
         self._npts_padding = npts_padding
         self._cross_correlation = np.zeros(2*npts_padding+1)
