@@ -124,6 +124,9 @@ def get_synthetics_cap(data, path):
 
             if trace.meta.npts == trace_cap.meta.npts:
                 trace.data = trace_cap.data
+                # convert from cm/s to m/s
+                trace.data *= 1.e-2
+
             else:
                 stream.remove(trace)
             
@@ -143,6 +146,9 @@ def get_synthetics_cap(data, path):
             if component == 'T':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 1)
                 trace.data = read(filename, format='sac')[0].data
+
+            # convert from cm/s to m/s
+            trace.data *= 1.e-2
 
     return {
         'body_waves': bw,
@@ -177,6 +183,8 @@ def get_data_cap(data, path):
 
             if trace.meta.npts == trace_cap.meta.npts:
                 trace.data = trace_cap.data
+                # convert from cm/s to m/s
+                trace.data *= 1.e-2
             else:
                 stream.remove(trace)
 
@@ -189,13 +197,17 @@ def get_data_cap(data, path):
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 4)
                 trace.data = read(filename, format='sac')[0].data
 
-            if component == 'R':
+            elif component == 'R':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 2)
                 trace.data = read(filename, format='sac')[0].data
 
-            if component == 'T':
+            elif component == 'T':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 0)
                 trace.data = read(filename, format='sac')[0].data
+
+            # convert from cm/s to m/s
+            trace.data *= 1.e-2
+
 
     return {
         'body_waves': bw,
@@ -206,7 +218,14 @@ def get_data_cap(data, path):
 
 def get_synthetics_mtuq(greens, mt):
     synthetics_mtuq = {}
-    for key in ['body_waves', 'surface_waves']:
-        synthetics_mtuq[key] = greens[key].get_synthetics(mt)
+
+    key = 'body_waves'
+    greens[key].components = ['Z', 'R']
+    synthetics_mtuq[key] = greens[key].get_synthetics(mt)
+
+    key = 'surface_waves'
+    greens[key].components = ['Z', 'R', 'T']
+    synthetics_mtuq[key] = greens[key].get_synthetics(mt)
+
     return synthetics_mtuq
 

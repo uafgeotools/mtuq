@@ -222,6 +222,21 @@ class ProcessData(object):
         tags = traces.tags
 
 
+        if 'velocity' in tags:
+            # convert to displacement
+            for trace in traces:
+                trace.data = np.cumsum(trace.data)*meta.delta
+            tags.remove('velocity')
+
+
+        if 'cm' in tags:
+            # convert to displacement
+            for trace in traces:
+                trace.data *= 1.e-2
+            index = tags.index('cm')
+            tags[index] = 'm'
+
+
         #
         # part 1: filter traces
         #
@@ -250,13 +265,6 @@ class ProcessData(object):
                 trace.taper(0.05, type='hann')
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
-
-        if 'velocity' in tags:
-            # convert to displacement
-            for trace in traces:
-                trace.data = np.cumsum(trace.data)*meta.delta
-            tags.remove('velocity')
-
 
         #
         # part 2: determine phase picks

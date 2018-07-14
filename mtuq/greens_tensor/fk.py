@@ -195,6 +195,9 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             data_new = resample(data_old, t1_old, t2_old, dt_old, 
                                 t1_new, t2_new, dt_new)
             trace.data = data_new
+            # units are 10^-20 dyne^-1
+            # to convert to N^-1 scale by 10^-15
+            trace.data *= 1.e-15
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
 
