@@ -298,7 +298,7 @@ GridBenchmarkCAPFK="""
        ]
 
     Mw = 4.5
-    M0 = 10.**(1.5*Mw + 16.1 - 20.)
+    M0 = 10.**(1.5*Mw + 9.1)
     for mt in grid: mt *= M0
     rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
@@ -322,7 +322,7 @@ GridSearchSerial="""
 
     print 'Reading data...\\n'
     data = sac.reader(path_data, wildcard='*.[zrt]', id=event_name,
-        tags=['velocity']) 
+        tags=['cm', 'velocity']) 
     remove_unused_stations(data, path_weights)
     data.sort_by_distance()
 
@@ -386,7 +386,7 @@ GridSearchMPI="""
     if comm.rank==0:
         print 'Reading data...\\n'
         data = sac.reader(path_data, wildcard='*.[zrt]', id=event_name,
-            tags=['velocity']) 
+            tags=['cm', 'velocity']) 
         remove_unused_stations(data, path_weights)
         data.sort_by_distance()
 
@@ -458,7 +458,7 @@ GridSearchMPI2="""
     if comm.rank==0:
         print 'Reading data...\\n'
         data = sac.reader(path_data, wildcard='*.[zrt]', id=event_name,
-            tags=['velocity']) 
+            tags=['cm', 'velocity']) 
         remove_unused_stations(data, path_weights)
         data.sort_by_distance()
 
@@ -529,7 +529,7 @@ RunBenchmarkCAPFK="""
 
     print 'Reading data...\\n'
     data = sac.reader(path_data, wildcard='*.[zrt]', id=event_name,
-        tags=['velocity']) 
+        tags=['cm', 'velocity']) 
     remove_unused_stations(data, path_weights)
     data.sort_by_distance()
 
