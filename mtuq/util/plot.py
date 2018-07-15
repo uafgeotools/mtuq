@@ -66,9 +66,9 @@ def plot_data_synthetics(filename, data, synthetics,
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
-            #if component != syn.stats.channel[-1].upper():
-            #    warnings.warn('Mismatched components, skipping...')
-            #    continue
+            if component != syn.stats.channel[-1].upper():
+                warnings.warn('Mismatched components, skipping...')
+                continue
 
             if weight==0.:
                 continue
@@ -106,9 +106,9 @@ def plot_data_synthetics(filename, data, synthetics,
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
-            #if component != syn.stats.channel[-1].upper():
-            #    warnings.warn('Mismatched components, skipping...')
-            #    continue
+            if component != syn.stats.channel[-1].upper():
+                warnings.warn('Mismatched components, skipping...')
+                continue
 
             if weight==0.:
                 continue
@@ -183,7 +183,7 @@ def station_labels(meta):
     ax.get_yaxis().set_ticks([])
 
     # display station name
-    label = '.'.join([meta.network, meta.station, meta.channels[0][:-1]])
+    label = '.'.join([meta.network, meta.station])
     pyplot.text(0.6,0.8, label, fontsize=12)
 
     try:

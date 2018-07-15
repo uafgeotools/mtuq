@@ -67,7 +67,7 @@ class Misfit(object):
             if _i not in self._components:
                 for trace in d:
                     self._components[_i] += [trace.stats.channel[-1].upper()]
-                greens[_i].meta.components = self._components[_i]
+                greens[_i].components = self._components[_i]
 
             components = self._components[_i]
             if not components:
