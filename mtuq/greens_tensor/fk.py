@@ -45,6 +45,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     def __init__(self, traces, station, origin):
         assert len(traces)==10, ValueError(ErrorMessage)
         super(GreensTensor, self).__init__(traces, station, origin)
+        self.components = COMPONENTS
         self.tags += ['velocity']
 
 
@@ -56,11 +57,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
-        for _i, channel in enumerate(self.meta.channels):
-            component = channel[-1].upper()
-            if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in one of the "
-                   "following characters: ZRT")
+        for _i, component in enumerate(self.components):
             self._synthetics[_i].meta.channel = component
 
             # overwrites previous synthetics
@@ -177,12 +174,20 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         # See cap/fk documentation for indexing scheme details;
         # here we try to follow as closely as possible the cap way of
         # doing things
-        for ext in ['8','5',          # t
-                    'b','7','4','1',  # r
-                    'a','6','3','0']: # z
+        channels = [
+            'TSS', 'TDS',
+            'REP', 'RSS', 'RDS', 'RDD',
+            'ZEP', 'ZSS', 'ZDS', 'ZDD',
+            ]
+
+        for _i, ext in enumerate(['8','5',           # t
+                                  'b','7','4','1',   # r
+                                  'a','6','3','0']): # z
             trace = obspy.read('%s/%s_%s/%s.grn.%s' %
                 (self.path, self.model, dep, dst, ext),
                 format='sac')[0]
+
+            trace.channel = channels[_i]
 
             # what are the start and end times of the Green's function?
             t1_old = float(origin.time)+float(trace.stats.starttime)
