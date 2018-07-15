@@ -17,7 +17,7 @@ from mtuq.util.signal import resample
 COMPONENTS = ['Z','R','T']
 
 
-# instaseis Green's function describe the impulse response of a horizontally-
+# instaseis Green's functions describe the impulse response of a horizontally-
 # layered medium. For the vertical and raidal components, there are four
 # associated time series. For the tranverse component, there are two associated 
 # time series. Thus there ten independent Green's tensor elements altogether, 
