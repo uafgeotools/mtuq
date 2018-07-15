@@ -52,7 +52,7 @@ class Misfit(object):
         # should we include polarities in misfit?
         self.polarity_weight = polarity_weight
 
-        # keeps track of what compoents are available in each stream
+        # keeps track of what components are available in each stream
         self._components = defaultdict(list)
 
 
@@ -67,7 +67,7 @@ class Misfit(object):
             if _i not in self._components:
                 for trace in d:
                     self._components[_i] += [trace.stats.channel[-1].upper()]
-                greens[_i].meta.components = self._components[_i]
+                greens[_i].components = self._components[_i]
 
             components = self._components[_i]
             if not components:

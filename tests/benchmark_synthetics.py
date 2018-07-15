@@ -53,7 +53,6 @@ if __name__=='__main__':
         'station': 'BIGB',
         'location': '',
         'id': 'YV.BIGB',
-        'channels': ['BHZ', 'BHR', 'BHT'],
         'catalog_origin_time': origin_time,
         'catalog_depth': 33033.5998535,
         'catalog_distance': 15.8500907298,
@@ -75,7 +74,7 @@ if __name__=='__main__':
        np.array([0., 0., 0., 0., 0., 1.]),          # double-couple #3
        ]
 
-    M0 = 1.e15 # units: Neton-meter
+    M0 = 1.e15 # units: Newton-meter
     for mt in grid: mt *= M0
 
 
