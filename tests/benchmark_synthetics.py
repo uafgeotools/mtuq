@@ -53,7 +53,6 @@ if __name__=='__main__':
         'station': 'BIGB',
         'location': '',
         'id': 'YV.BIGB',
-        'channels': ['BHZ', 'BHR', 'BHT'],
         'catalog_origin_time': origin_time,
         'catalog_depth': 33033.5998535,
         'catalog_distance': 15.8500907298,

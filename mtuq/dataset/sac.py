@@ -25,6 +25,8 @@ class Dataset(mtuq.dataset.base.Dataset):
     def get_origin(self, id=None, event_name=None):
         """ Extracts event metadata from SAC headers
         """
+        # What stream in the dataset should we extract origin metadata from?
+        # If stream id is not provided, then use the most recently-added stream
         if id:
             index = self._get_index(id)
         else:
@@ -76,6 +78,8 @@ class Dataset(mtuq.dataset.base.Dataset):
     def get_station(self, id=None):
         """ Extracts station metadata from SAC headers
         """
+        # What stream in the dataset should we extract station metadata from?
+        # If stream id is not provided, then use the most recently-added stream
         if id:
             index = self._get_index(id)
         else:
@@ -101,14 +105,6 @@ class Dataset(mtuq.dataset.base.Dataset):
             'delta': data[0].meta.delta})
 
         try:
-            meta.channels = []
-            for trace in data:
-                meta.channels += [trace.stats.channel]
-        except:
-            raise Exception(
-                "Could not determine channel names.")
-
-        try:
             station_latitude = sac_headers.stla
             station_longitude = sac_headers.stlo
             meta.update({
@@ -128,16 +124,10 @@ class Dataset(mtuq.dataset.base.Dataset):
 
         try:
             origin = self.get_origin(id)
-        except:
-            origin = None
-
-
-        try:
             meta.update({
                 'catalog_latitude': origin.latitude,
                 'catalog_longitude': origin.longitude,
                 'catalog_depth': origin.depth})
-
         except:
             print("Could not determine event location from SAC headers.")
 
@@ -153,7 +143,6 @@ class Dataset(mtuq.dataset.base.Dataset):
                 'catalog_distance': distance/1000.,
                 'catalog_azimuth': azimuth,
                 'catalog_backazimuth': back_azimuth})
-
         except:
             print("Could not determine event distance.")
 
@@ -161,7 +150,6 @@ class Dataset(mtuq.dataset.base.Dataset):
         try:
             meta.update({
                 'catalog_origin_time': origin.time})
-
         except:
             print("Could not determine origin time.")
 
