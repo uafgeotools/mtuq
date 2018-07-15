@@ -15,7 +15,7 @@ from mtuq.util.moment_tensor.change_basis import change_basis
 
 
 # fk Green's functions represent vertical, radial, and transverse
-# velocity time series
+# velocity time series in dyne/cm units
 COMPONENTS = ['Z','R','T']
 
 
