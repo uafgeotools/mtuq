@@ -13,7 +13,7 @@ from mtuq.util.signal import resample
 
 
 # instaseis Green's functions represent vertical, radial, and transverse
-# displacement time series in Newton/meter units
+# displacement time series (units: m (N-m)^-1)
 COMPONENTS = ['Z','R','T']
 
 

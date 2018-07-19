@@ -15,7 +15,7 @@ from mtuq.util.moment_tensor.change_basis import change_basis
 
 
 # fk Green's functions represent vertical, radial, and transverse
-# velocity time series in dyne/cm units
+# velocity time series (units: 10^-20 cm (dyne-cm)^-1 s^-1) 
 COMPONENTS = ['R','T','Z']
 
 
@@ -180,9 +180,13 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             'ZEP', 'ZSS', 'ZDS', 'ZDD',
             ]
 
-        for _i, ext in enumerate(['8','5',           # t
-                                  'b','7','4','1',   # r
-                                  'a','6','3','0']): # z
+        extensions = [
+            '8','5',           # t
+            'b','7','4','1',   # r
+            'a','6','3','0',   # z
+            ]
+
+        for _i, ext in enumerate(extensions):
             trace = obspy.read('%s/%s_%s/%s.grn.%s' %
                 (self.path, self.model, dep, dst, ext),
                 format='sac')[0]
@@ -200,8 +204,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             data_new = resample(data_old, t1_old, t2_old, dt_old, 
                                 t1_new, t2_new, dt_new)
             trace.data = data_new
-            # units are 10^-20 dyne^-1
-            # to convert to N^-1 scale by 10^-15
+            # convert from 10^-20 dyne to N^-1
             trace.data *= 1.e-15
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new

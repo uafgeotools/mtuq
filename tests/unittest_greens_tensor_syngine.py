@@ -10,7 +10,7 @@ from mtuq.dataset.sac import\
 from mtuq.greens_tensor.syngine import\
     download_greens_tensor, download_synthetics,\
     GreensTensor, GreensTensorFactory
-from mtuq.grid_search import MTGridRandom, MTGridRegular
+from mtuq.grid_search import FullMomentTensorGridRandom, FullMomentTensorGridRegular
 from mtuq.util.util import AttribDict, path_mtuq, unzip
 
  
@@ -65,12 +65,12 @@ class greens_tensor_syngine(unittest.TestCase):
 
     def get_moment_tensor(self):
         return [1.04e22,-0.039e22,-1e22,0.304e22,-1.52e22,-0.119e22]
-        #return MTGridRegular(npts_per_axis=1, Mw=1.).get(0)
+        #return FullMomentTensorGridRegular(npts_per_axis=1, Mw=1.).get(0)
 
 
 
     def get_moment_tensor_randome(self):
-        return MTGridRandom(npts=1, Mw=1.).get(0)
+        return FullMomentTensorGridRandom(npts=1, Mw=1.).get(0)
 
 
     def get_station(self):
