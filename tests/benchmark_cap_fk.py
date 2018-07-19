@@ -118,15 +118,19 @@ if __name__=='__main__':
 
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-       np.array([0.816, 0.816, 0.816, 0., 0., 0.]), # explosion
-       np.array([0., 0., 0., 1., 0., 0.]),          # double-couple #1
-       np.array([0., 0., 0., 0., 1., 0.]),          # double-couple #2
-       np.array([0., 0., 0., 0., 0., 1.]),          # double-couple #3
+       np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
+       np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # double-couple #1
+       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # double-couple #2
+       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # double-couple #3
        ]
 
     Mw = 4.5
-    M0 = 10.**(1.5*Mw + 9.1) # units: Newton-meter
-    for mt in grid: mt *= M0
+    M0 = 10.**(1.5*Mw + 9.1) # units: N-m
+    for mt in grid:
+        mt *= M0
+        # ad hoc factor
+        mt *= np.sqrt(2.)
+
     rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
 

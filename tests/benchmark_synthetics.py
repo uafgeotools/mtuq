@@ -68,10 +68,10 @@ if __name__=='__main__':
 
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-       np.array([0.816, 0.816, 0.816, 0., 0., 0.]), # explosion
-       np.array([0., 0., 0., 1., 1., 0.]),          # double-couple #1
-       np.array([0., 0., 0., 0., 1., 0.]),          # double-couple #2
-       np.array([0., 0., 0., 0., 0., 1.]),          # double-couple #3
+       np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
+       np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # double-couple #1
+       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # double-couple #2
+       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # double-couple #3
        ]
 
     M0 = 1.e15 # units: Newton-meter
