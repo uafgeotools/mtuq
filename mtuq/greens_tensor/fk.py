@@ -16,11 +16,11 @@ from mtuq.util.moment_tensor.change_basis import change_basis
 
 # fk Green's functions represent vertical, radial, and transverse
 # velocity time series (units: 10^-20 cm (dyne-cm)^-1 s^-1) 
-COMPONENTS = ['R','T','Z']
+COMPONENTS = ['Z', 'R','T']
 
 
 # fk Green's functions describe the impulse response of a horizontally layered 
-# medium. For the vertical and raidial components, there are four associated 
+# medium. For the vertical and radial components, there are four associated 
 # time series. For the tranverse component, there are two associated time 
 # series. Thus there ten independent Green's tensor elements altogether, 
 # which is fewer than in the case of a general inhomogeneous medium
