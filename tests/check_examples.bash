@@ -16,13 +16,13 @@ cd $(dirname ${BASH_SOURCE[0]})
 
 for filename in $FILENAMES
 do
-    echo "Checking $filename..."
     cp ${filename}{,~}
 done
 
 python ../data/examples/code_generator.py
 for filename in $FILENAMES
 do
+    echo "Checking $filename..."
     cmp ${filename}{,~}
     rm ${filename}~
 done
