@@ -230,7 +230,7 @@ class ProcessData(object):
 
 
         if 'cm' in tags:
-            # convert to displacement
+            # unit conversion
             for trace in traces:
                 trace.data *= 1.e-2
             index = tags.index('cm')

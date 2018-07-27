@@ -34,30 +34,24 @@ if __name__=='__main__':
     # using the following commands
     #
     # explosion source:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/1.178/90/0.707/90 20090407201255351
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/1.178/90/45/90 20090407201255351
     #
     # double-couple source #1:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/0/90 20090407201255351
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/90/90 20090407201255351
     #
     # double-couple source #2:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/1/0 20090407201255351
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/0/0 20090407201255351
     #
     # double-couple source #3:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/0/0/180 2009040720125535
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/0/90/180 20090407201255351
     #
-    # WARNING
-    # uafseismo/capuaf fails unexpectedly when called with double-couple 
-    # source #3, so this moment tensor has temporarily been commented out from
-    # the benchmark
-    # 
 
 
-    path_ref = []
-    path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/0')]
-    path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
-    path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
-    # commented out because uafseismo/capuaf fails unexpectedly
-    #path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
+    paths = []
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/0')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
     # For now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
@@ -124,15 +118,19 @@ if __name__=='__main__':
 
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-       np.array([0.816, 0.816, 0.816, 0., 0., 0.]), # explosion
-       np.array([0., 0., 0., 1., 0., 0.]),          # double-couple #1
-       np.array([0., 0., 0., 0., 1., 0.]),          # double-couple #2
-       #np.array([0., 0., 0., 0., 0., 1.]),         # double-couple #3
+       np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
+       np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # double-couple #1
+       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # double-couple #2
+       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # double-couple #3
        ]
 
     Mw = 4.5
-    M0 = 10.**(1.5*Mw + 9.1) # units: Newton-meter
-    for mt in grid: mt *= M0
+    M0 = 10.**(1.5*Mw + 9.1) # units: N-m
+    for mt in grid:
+        mt *= M0
+        # ad hoc factor
+        mt *= np.sqrt(2.)
+
     rise_time = trapezoid_rise_time(Mw=4.5)
     wavelet = Trapezoid(rise_time)
 
@@ -172,23 +170,24 @@ if __name__=='__main__':
     greens = processed_greens
 
     print 'Plotting waveforms...'
-    from copy import deepcopy
-    from mtuq.util.cap_util import get_synthetics_cap, get_synthetics_mtuq
-    from mtuq.util.cap_util import get_data_cap
+    from mtuq.util.cap_util import\
+        get_synthetics_cap, get_synthetics_mtuq, get_data_cap
+
+    event_name = model+'_34_'+event_name
 
     for _i, mt in enumerate(grid):
-        print ' %d of %d' % (_i+1, len(grid)+1)
-        synthetics_cap = get_synthetics_cap(deepcopy(data), path_ref[_i])
-        synthetics_mtuq = get_synthetics_mtuq(greens, mt)
+        print ' %d of %d' % (_i+1, len(grid))
+
+        synthetics_cap = get_synthetics_cap(data, paths[_i], event_name)
+        synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
         filename = 'cap_fk_'+str(_i)+'.png'
         plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
-    # generates "bonus" figure comparing how CAP processes observed data with
-    # how MTUQ processes observed data
-    print ' %d of %d' % (_i+2, len(grid)+1)
-    data_mtuq = data
-    data_cap = get_data_cap(deepcopy(data), path_ref[0])
-    filename = 'cap_fk_data.png'
-    plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
-
+    if True:
+        # "bonus" figure comparing how CAP processes observed data with how
+        # MTUQ processes observed data
+        data_mtuq = data
+        data_cap = get_data_cap(data, paths[0], event_name)
+        filename = 'cap_fk_data.png'
+        plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 

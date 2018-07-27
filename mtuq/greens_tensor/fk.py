@@ -15,12 +15,12 @@ from mtuq.util.moment_tensor.change_basis import change_basis
 
 
 # fk Green's functions represent vertical, radial, and transverse
-# velocity time series in dyne/cm units
-COMPONENTS = ['Z','R','T']
+# velocity time series (units: 10^-20 cm (dyne-cm)^-1 s^-1) 
+COMPONENTS = ['Z', 'R','T']
 
 
-# fk Green's function describe the impulse response of a horizontally layered 
-# medium. For the vertical and raidal components, there are four associated 
+# fk Green's functions describe the impulse response of a horizontally layered 
+# medium. For the vertical and radial components, there are four associated 
 # time series. For the tranverse component, there are two associated time 
 # series. Thus there ten independent Green's tensor elements altogether, 
 # which is fewer than in the case of a general inhomogeneous medium
@@ -45,6 +45,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
     def __init__(self, traces, station, origin):
         assert len(traces)==10, ValueError(ErrorMessage)
         super(GreensTensor, self).__init__(traces, station, origin)
+        self.components = COMPONENTS
         self.tags += ['velocity']
 
 
@@ -56,11 +57,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
-        for _i, channel in enumerate(self.meta.channels):
-            component = channel[-1].upper()
-            if component not in COMPONENTS:
-                raise Exception("Channels are expected to end in one of the "
-                   "following characters: ZRT")
+        for _i, component in enumerate(self.components):
             self._synthetics[_i].meta.channel = component
 
             # overwrites previous synthetics
@@ -177,12 +174,24 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         # See cap/fk documentation for indexing scheme details;
         # here we try to follow as closely as possible the cap way of
         # doing things
-        for ext in ['8','5',          # t
-                    'b','7','4','1',  # r
-                    'a','6','3','0']: # z
+        channels = [
+            'TSS', 'TDS',
+            'REP', 'RSS', 'RDS', 'RDD',
+            'ZEP', 'ZSS', 'ZDS', 'ZDD',
+            ]
+
+        extensions = [
+            '8','5',           # t
+            'b','7','4','1',   # r
+            'a','6','3','0',   # z
+            ]
+
+        for _i, ext in enumerate(extensions):
             trace = obspy.read('%s/%s_%s/%s.grn.%s' %
                 (self.path, self.model, dep, dst, ext),
                 format='sac')[0]
+
+            trace.channel = channels[_i]
 
             # what are the start and end times of the Green's function?
             t1_old = float(origin.time)+float(trace.stats.starttime)
@@ -195,8 +204,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
             data_new = resample(data_old, t1_old, t2_old, dt_old, 
                                 t1_new, t2_new, dt_new)
             trace.data = data_new
-            # units are 10^-20 dyne^-1
-            # to convert to N^-1 scale by 10^-15
+            # convert from 10^-20 dyne to N^-1
             trace.data *= 1.e-15
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
