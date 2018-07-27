@@ -177,7 +177,7 @@ if __name__=='__main__':
     for _i, mt in enumerate(grid):
         print ' %d of %d' % (_i+1, len(grid)+1)
         synthetics_cap = get_synthetics_cap(deepcopy(data), path_ref[_i])
-        synthetics_mtuq = get_synthetics_mtuq(greens, mt)
+        synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
         filename = 'cap_fk_'+str(_i)+'.png'
         plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 

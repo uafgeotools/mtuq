@@ -3,6 +3,8 @@
 import csv
 import numpy as np
 import warnings
+import obspy
+from copy import deepcopy
 from mtuq.util.wavelets import Wavelet
 
 
@@ -99,10 +101,6 @@ def taper(array, taper_fraction=0.3, inplace=True):
 
 def get_synthetics_cap(data, path):
     event_name = 'scak_34_20090407201255351'
-
-    from copy import deepcopy
-    from obspy import read
-
     bw = data['body_waves']
     sw = data['surface_waves']
 
@@ -113,11 +111,11 @@ def get_synthetics_cap(data, path):
 
             if component == 'Z':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 9)
-                trace_cap = read(filename, format='sac')[0]
+                trace_cap = obspy.read(filename, format='sac')[0]
 
             elif component == 'R':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 7)
-                trace_cap = read(filename, format='sac')[0]
+                trace_cap = obspy.read(filename, format='sac')[0]
 
             else:
                 continue
@@ -137,15 +135,15 @@ def get_synthetics_cap(data, path):
 
             if component == 'Z':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 5)
-                trace.data = read(filename, format='sac')[0].data
+                trace.data = obspy.read(filename, format='sac')[0].data
 
             if component == 'R':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 3)
-                trace.data = read(filename, format='sac')[0].data
+                trace.data = obspy.read(filename, format='sac')[0].data
 
             if component == 'T':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 1)
-                trace.data = read(filename, format='sac')[0].data
+                trace.data = obspy.read(filename, format='sac')[0].data
 
             # convert from cm/s to m/s
             trace.data *= 1.e-2
@@ -158,10 +156,6 @@ def get_synthetics_cap(data, path):
 
 def get_data_cap(data, path):
     event_name = 'scak_34_20090407201255351'
-
-    from copy import deepcopy
-    from obspy import read
-
     bw = data['body_waves']
     sw = data['surface_waves']
 
@@ -172,11 +166,11 @@ def get_data_cap(data, path):
 
             if component == 'Z':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 8)
-                trace_cap = read(filename, format='sac')[0]
+                trace_cap = obspy.read(filename, format='sac')[0]
 
             elif component == 'R':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 6)
-                trace_cap = read(filename, format='sac')[0]
+                trace_cap = obspy.read(filename, format='sac')[0]
 
             else:
                 continue
@@ -195,15 +189,15 @@ def get_data_cap(data, path):
 
             if component == 'Z':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 4)
-                trace.data = read(filename, format='sac')[0].data
+                trace.data = obspy.read(filename, format='sac')[0].data
 
             elif component == 'R':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 2)
-                trace.data = read(filename, format='sac')[0].data
+                trace.data = obspy.read(filename, format='sac')[0].data
 
             elif component == 'T':
                 filename = '%s/%s.%s.BH.%d' % (path, event_name, stream.id, 0)
-                trace.data = read(filename, format='sac')[0].data
+                trace.data = obspy.read(filename, format='sac')[0].data
 
             # convert from cm/s to m/s
             trace.data *= 1.e-2
@@ -216,16 +210,16 @@ def get_data_cap(data, path):
 
 
 
-def get_synthetics_mtuq(greens, mt):
-    synthetics_mtuq = {}
+def get_synthetics_mtuq(data, greens, mt):
+    container = deepcopy(data)
 
-    key = 'body_waves'
-    greens[key].components = ['Z', 'R']
-    synthetics_mtuq[key] = greens[key].get_synthetics(mt)
+    for key in ['body_waves', 'surface_waves']:
+        for i in range(len(data[key])):
+            synthetics = greens[key][i].get_synthetics(mt)
+            for trace in container[key][i]:
+                trace.weight = 1.
+                component = trace.meta.channel[-1].upper()
+                trace.data = synthetics.select(component=component)[0].data
 
-    key = 'surface_waves'
-    greens[key].components = ['Z', 'R', 'T']
-    synthetics_mtuq[key] = greens[key].get_synthetics(mt)
-
-    return synthetics_mtuq
+    return container
 
