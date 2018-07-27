@@ -107,30 +107,24 @@ if __name__=='__main__':
     # using the following commands
     #
     # explosion source:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/1.178/90/0.707/90 20090407201255351
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/1.178/90/45/90 20090407201255351
     #
     # double-couple source #1:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/0/90 20090407201255351
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/90/90 20090407201255351
     #
     # double-couple source #2:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/1/0 20090407201255351
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/0/0 20090407201255351
     #
     # double-couple source #3:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/0/0/180 2009040720125535
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/0/90/180 20090407201255351
     #
-    # WARNING
-    # uafseismo/capuaf fails unexpectedly when called with double-couple 
-    # source #3, so this moment tensor has temporarily been commented out from
-    # the benchmark
-    # 
 
 
     path_ref = []
     path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/0')]
     path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
     path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
-    # commented out because uafseismo/capuaf fails unexpectedly
-    #path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
+    path_ref += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
     # For now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
@@ -304,7 +298,7 @@ GridBenchmarkCAPFK="""
        ]
 
     Mw = 4.5
-    M0 = 10.**(1.5*Mw + 9.1) # units: Newton-meter
+    M0 = 10.**(1.5*Mw + 9.1) # units: N-m
     for mt in grid:
         mt *= M0
         # ad hoc factor

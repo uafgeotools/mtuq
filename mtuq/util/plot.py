@@ -160,10 +160,12 @@ def subplot(dat, syn, label=None):
     d = dat.data
     s = syn.data
 
-    t = np.linspace(0,t2-t1,nt,dt)
-    pyplot.plot(t, d, t, s[start:stop])
-
     ax = pyplot.gca()
+
+    t = np.linspace(0,t2-t1,nt,dt)
+    ax.plot(t, d, 'k')
+    ax.plot(t, s[start:stop], 'r')
+
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
