@@ -170,7 +170,8 @@ if __name__=='__main__':
     greens = processed_greens
 
     print 'Plotting waveforms...'
-    from mtuq.util.cap_util import        get_synthetics_cap, get_synthetics_mtuq, get_data_cap
+    from mtuq.util.cap_util import\
+        get_synthetics_cap, get_synthetics_mtuq, get_data_cap
 
     event_name = model+'_34_'+event_name
 
