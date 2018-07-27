@@ -99,12 +99,10 @@ def taper(array, taper_fraction=0.3, inplace=True):
         return array
 
 
-def get_synthetics_cap(data, path):
-    event_name = 'scak_34_20090407201255351'
-    bw = data['body_waves']
-    sw = data['surface_waves']
+def get_synthetics_cap(data, path, event_name):
+    container = deepcopy(data)
 
-    for stream in bw:
+    for stream in container['body_waves']:
         for trace in stream:
             trace.weight = 1.
             component = trace.meta.channel[-1].upper()
@@ -128,7 +126,7 @@ def get_synthetics_cap(data, path):
             else:
                 stream.remove(trace)
             
-    for stream in sw:
+    for stream in container['surface_waves']:
         for trace in stream:
             trace.weight = 1.
             component = trace.meta.channel[-1].upper()
@@ -148,18 +146,13 @@ def get_synthetics_cap(data, path):
             # convert from cm/s to m/s
             trace.data *= 1.e-2
 
-    return {
-        'body_waves': bw,
-        'surface_waves': sw,
-        }
+    return container
 
 
-def get_data_cap(data, path):
-    event_name = 'scak_34_20090407201255351'
-    bw = data['body_waves']
-    sw = data['surface_waves']
+def get_data_cap(data, path, event_name):
+    container = deepcopy(data)
 
-    for stream in bw:
+    for stream in container['body_waves']:
         for trace in stream:
             trace.weight = 1.
             component = trace.meta.channel[-1].upper()
@@ -182,7 +175,7 @@ def get_data_cap(data, path):
             else:
                 stream.remove(trace)
 
-    for stream in sw:
+    for stream in container['surface_waves']:
         for trace in stream:
             trace.weight = 1.
             component = trace.meta.channel[-1].upper()
@@ -203,10 +196,7 @@ def get_data_cap(data, path):
             trace.data *= 1.e-2
 
 
-    return {
-        'body_waves': bw,
-        'surface_waves': sw,
-        }
+    return container
 
 
 
