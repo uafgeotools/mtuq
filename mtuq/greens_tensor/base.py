@@ -3,6 +3,7 @@ import numpy as np
 
 from copy import deepcopy
 from obspy.core import Stream, Trace
+from scipy.signal import fftconvolve
 from mtuq.dataset.base import Dataset
 from mtuq.util.geodetics import distance_azimuth
 from mtuq.util.signal import check_time_sampling, convolve
@@ -41,6 +42,13 @@ class GreensTensor(Stream):
         raise NotImplementedError("Must be implemented by subclass")
 
 
+    def _precompute_weights(self):
+        """
+        Calculates weights used in linear combination of Green's functions
+        """
+        raise NotImplementedError("Must be implemented by subclass")
+
+
     def _preallocate_synthetics(self):
         """
         Enables fast synthetics calculations through preallocation and
@@ -73,7 +81,7 @@ class GreensTensor(Stream):
         return self.apply(wavelet.convolve_stream)
 
 
-    def get_time_shifts(self, mt):
+    def get_time_shift(self, data, mt, group, time_shift_max):
         """ 
         Finds optimal time-shift correction between synthetics and
         user-supplied data
@@ -81,7 +89,7 @@ class GreensTensor(Stream):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def _precompute_time_shifts(self, data):
+    def _precompute_time_shifts(self, data, max_time_shift):
         """
         Enables fast time-shift calculations by computing cross-correlations
         on an element-by-element basis

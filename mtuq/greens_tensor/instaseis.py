@@ -40,7 +40,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         self.components = COMPONENTS
 
 
-    def _calculate_weights(self):
+    def _precompute_weights(self):
         """
         Calculates weights used in linear combination of Green's functions
 
@@ -96,12 +96,10 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         GT[:, 4] = TDS * np.sin(az)
         GT[:, 5] = -TDS * np.cos(az)
 
-        self._rotated_tensor = []
-        self._rotated_tensor += [GZ]
-        self._rotated_tensor += [GR]
-        # the negative sign is needed because of inconsistent moment tensor
-        #  conventions?
-        self._rotated_tensor += [-GT]
+        self._weighted_tensor = []
+        self._weighted_tensor += [GZ]
+        self._weighted_tensor += [GR]
+        self._weighted_tensor += [GT]
 
 
     def get_synthetics(self, mt):
@@ -109,16 +107,10 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
-        # Order of terms expected by syngine URL parser from online
-        # documentation:
-        #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-        #
-        # Relations given in instaseis/tests/test_instaseis.py:
-        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
-        #
-        # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
-        # (note sign differences):
-        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
+        # This moment tensor permutation produces a match between instaseis
+        # and fk synthetics.  But what basis conventions does it actually
+        # represent?  The permutation appears similar but not identical to the 
+        # one that maps from GCMT to AkiRichards
         Mxx =  mt[1]
         Myy =  mt[2]
         Mzz =  mt[0]
@@ -129,8 +121,8 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
-        if not hasattr(self, '_rotated_tensor'):
-            self._calculate_weights()
+        if not hasattr(self, '_weighted_tensor'):
+            self._precompute_weights()
 
         for _i, component in enumerate(self.components):
             # which Green's functions correspond to given component?
@@ -140,9 +132,9 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
                 _j=1
             elif component=='T':
                 _j=2
-            G = self._rotated_tensor[_j]
+            G = self._weighted_tensor[_j]
 
-            # we could use np.dot instead, but any speedup appears negligible
+            # we could use np.dot instead, but speedup appears negligible
             s = self._synthetics[_i].data
             s[:] = 0.
             s += Mxx*G[:,0]
@@ -166,6 +158,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         cc = self._cross_correlation
         cc[:] = 0.
 
+        # see comments about moment tensor convention in get_synthetics method
         Mxx =  mt[1]
         Myy =  mt[2]
         Mzz =  mt[0]
@@ -220,21 +213,21 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             #DZ = np.pad(DZ, npts_padding, 'constant')
 
             CCZ = np.zeros((2*npts_padding+1, 6))
-            GZ = self._rotated_tensor[0]
+            GZ = self._weighted_tensor[0]
 
         if 'R' in self.components:
             DR = data.select(component='R')[0].data
             #DR = np.pad(DR, npts_padding, 'constant')
 
             CCR = np.zeros((2*npts_padding+1, 6))
-            GR = self._rotated_tensor[1]
+            GR = self._weighted_tensor[1]
 
         if 'T' in self.components:
             DT = data.select(component='T')[0].data
             #DT = np.pad(DT, npts_padding, 'constant')
 
             CCT = np.zeros((2*npts_padding+1, 6))
-            GT = self._rotated_tensor[2]
+            GT = self._weighted_tensor[2]
 
         # for long traces or long lag times, frequency-domain
         # implementation is usually faster
@@ -300,6 +293,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             CCT[:,4] = np.correlate(DT, GT[:,4], 'valid')
             CCT[:,5] = np.correlate(DT, GT[:,5], 'valid')
             self._CCT = CCT
+
 
 
 

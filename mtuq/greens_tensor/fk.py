@@ -3,6 +3,8 @@ import obspy
 import numpy as np
 
 import mtuq.greens_tensor.base
+import mtuq.greens_tensor.instaseis
+
 
 from collections import defaultdict
 from copy import deepcopy
@@ -38,12 +40,12 @@ DEG2RAD = np.pi/180.
 
 
 
-class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
+class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
     """
     Elastic Green's tensor object
     """
     def __init__(self, traces, station, origin):
-        assert len(traces)==10, ValueError(ErrorMessage)
+        #assert len(traces)==10, ValueError(ErrorMessage)
         super(GreensTensor, self).__init__(traces, station, origin)
         self.components = COMPONENTS
         self.tags += ['velocity']
@@ -54,68 +56,43 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
+        # This moment tensor permutation produces a match between mtuq 
+        # and cap synthetics.  But what basis conventions does it actually
+        # represent?
+        Mxx =  mt[1]
+        Myy =  mt[2]
+        Mzz =  mt[0]
+        Mxy =  mt[5]
+        Mxz = -mt[3]
+        Myz =  mt[4]
+
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
+        if not hasattr(self, '_weighted_tensor'):
+            self._precompute_weights()
+
         for _i, component in enumerate(self.components):
-            self._synthetics[_i].meta.channel = component
+            # which Green's functions correspond to given component?
+            if component=='Z':
+                _j=0
+            elif component=='R':
+                _j=1
+            elif component=='T':
+                _j=2
+            G = self._weighted_tensor[_j]
 
-            # overwrites previous synthetics
-            syn = self._synthetics[_i]
-            syn.data[:] = 0.
-
-            # linear combination of Green's functions
-            for _j, weight in self._calculate_weights(mt, component):
-                syn.data += weight*self[_j].data
+            # we could use np.dot instead, but speedup appears negligible
+            s = self._synthetics[_i].data
+            s[:] = 0.
+            s += Mxx*G[:,0]
+            s += Myy*G[:,1]
+            s += Mzz*G[:,2]
+            s += Mxy*G[:,3]
+            s += Mxz*G[:,4]
+            s += Myz*G[:,5]
 
         return self._synthetics
-
-
-    def _calculate_weights(self, mt, component):
-        """
-        Calculates weights used in linear combination of Green's functions
- 
-        See cap/fk documentation for indexing scheme details; here we try to
-        follow as closely as possible the cap way of doing things
- 
-        See also Lupei Zhu's mt_radiat utility
-        """
-        if component not in COMPONENTS:
-            raise Exception
- 
-        if not hasattr(self.meta, 'azimuth'):
-            raise Exception
- 
-        saz = np.sin(DEG2RAD * self.meta.azimuth)
-        caz = np.cos(DEG2RAD * self.meta.azimuth)
-        saz2 = 2.*saz*caz
-        caz2 = caz**2.-saz**2.
- 
-        # instaseis/MTUQ use convention 1 (GCMT)
-        # CAP/FK uses convention 2 (Aki&Richards)
-        mt = change_basis(mt, 1, 2)
- 
-        # what weights are used in the linear combination?
-        weights = []
-        if component in ['R','Z']:
-            weights += [(mt[0] + mt[1] + mt[2])/3.]
-            weights += [-0.5*caz2*(mt[0] - mt[1]) - saz2*mt[3]]
-            weights += [-caz*mt[4] - saz*mt[5]]
-            weights += [(2.*mt[2] - mt[0] - mt[1])/6.]
- 
-        elif component in ['T']:
-            weights += [-0.5*saz2*(mt[0] - mt[1]) + caz2*mt[3]]
-            weights += [-saz*mt[4] + caz*mt[5]]
- 
-        # what Green's tensor elements do the weights correspond to?
-        if component in ['T']:
-            indices = [0, 1]
-        elif component in ['R']:
-            indices = [2, 3, 4, 5]
-        elif component in ['Z']:
-            indices = [6, 7, 8, 9]
- 
-        return zip(indices, weights)
 
 
 
@@ -191,7 +168,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
                 (self.path, self.model, dep, dst, ext),
                 format='sac')[0]
 
-            trace.channel = channels[_i]
+            trace.stats.channel = channels[_i]
 
             # what are the start and end times of the Green's function?
             t1_old = float(origin.time)+float(trace.stats.starttime)
