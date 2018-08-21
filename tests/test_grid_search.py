@@ -24,7 +24,7 @@ if __name__=='__main__':
     # result equals the expected result
     #
     # The compare against CAP/FK:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I20 -R0/0/0/0/0/360/0/1/-90/90 20090407201255351
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I20 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
 
 
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351')
@@ -138,5 +138,4 @@ if __name__=='__main__':
     print 'Plotting waveforms...\n'
     plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
     plot_beachball(event_name+'_beachball.png', best_mt)
-
 

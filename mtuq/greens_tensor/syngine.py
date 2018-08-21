@@ -45,9 +45,24 @@ SYNTHETICS_FILENAMES = [
 
 
 class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
-    # same as parent class
-    pass
+    def _precompute_weights(self):
+        super(GreensTensor, self)._precompute_weights()
 
+        # the negative sign is needed because of a bug in syngine? or because 
+        # of inconsistent moment tensor conventions?
+        self._weighted_tensor[2] *= -1
+
+
+        # Order of terms expected by syngine URL parser (from online
+        # documentation):
+        #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
+        #
+        # Relations given in instaseis/tests/test_instaseis.py:
+        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
+        #
+        # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
+        # (note sign differences):
+        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
 
 
 class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
@@ -107,11 +122,10 @@ def download_greens_tensor(model, station, origin):
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
-         +str(url2uuid(url))
-         +'.zip')
+         +str(url2uuid(url)))
     if not exists(filename):
         print ' Downloading Green''s functions for station %s' % station.station
-        urlopen_with_retry(url, filename)
+        urlopen_with_retry(url, filename+'.zip')
     return filename
 
 
@@ -131,11 +145,10 @@ def download_synthetics(model, station, origin, mt):
          +'&starttime='+str(origin.time)[:-1]
          +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt))))
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
-         +str(url2uuid(url))
-         +'.zip')
+         +str(url2uuid(url)))
     if not exists(filename):
         print ' Downloading waveforms for station %s' % station.station
-        urlopen_with_retry(url, filename)
+        urlopen_with_retry(url, filename+'.zip')
     return filename
 
 
