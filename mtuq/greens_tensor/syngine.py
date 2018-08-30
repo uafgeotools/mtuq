@@ -149,12 +149,12 @@ def download_synthetics(model, station, origin, mt):
     if not exists(filename):
         print ' Downloading waveforms for station %s' % station.station
         urlopen_with_retry(url, filename+'.zip')
-    return filename
+    return filename+'.zip'
 
 
 
 def get_synthetics_syngine(model, station, origin, mt):
-    from mtuq.data.sac import reader
+    from mtuq.dataset.sac import reader
 
     dirname = unzip(download_synthetics(model, station, origin, mt))
     stream = reader(dirname)[0]
@@ -184,8 +184,8 @@ def get_synthetics_syngine(model, station, origin, mt):
         setattr(trace, 'location', station.location)
 
     synthetics = Stream()
-    for channel in station.channels:
-        component = channel[-1].upper()
+    for trace in stream:
+        component = trace.stats.channel[-1].upper()
         trace = stream.select(component=component)[0]
         synthetics += trace
 
