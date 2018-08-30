@@ -96,14 +96,13 @@ class Misfit(object):
                 group, indices = list_intersect_with_indices(components, group)
 
                 # what time-shift yields the maximum cross-correlation value?
-                result = greens[_i].get_time_shift(d, mt, group, self.time_shift_max)
-                argmax = result.argmax()
-                time_shift = (argmax-npts_padding)*dt
+                offset = greens[_i].get_time_shift(d, mt, group, self.time_shift_max)
+                time_shift = offset*dt
 
                 # what start and stop indices will correctly shift synthetics 
                 # relative to data?
-                start = 2*npts_padding-argmax
-                stop = 2*npts_padding-argmax+npts
+                start = npts_padding-offset
+                stop = npts+npts_padding-offset
 
                 for _j in indices:
                     s[_j].time_shift = time_shift

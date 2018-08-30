@@ -156,6 +156,8 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             self._precompute_time_shifts(data, time_shift_max)
 
         cc = self._cross_correlation
+        npts_padding = self._npts_padding
+
         cc[:] = 0.
 
         # see comments about moment tensor convention in get_synthetics method
@@ -193,17 +195,23 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
             cc += Mxz*CC[:,4]
             cc += Myz*CC[:,5]
 
-        return self._cross_correlation
+        # what is the index of the maximum element of the padded array?
+        argmax = cc.argmax()
+
+        # what is the associated lag, in terms of number of samples?
+        offset = argmax-npts_padding
+
+        return offset
 
 
-
-    def _precompute_time_shifts(self, data, max_time_shift):
+    def _precompute_time_shifts(self, data, time_shift_max):
         """
         Enables fast time-shift calculations by precomputing cross-correlations
         on an element-by-element basis
         """
+        dt = self[0].meta['delta']
         npts = self[0].meta['npts']
-        npts_padding = int(max_time_shift/self[0].meta['delta'])
+        npts_padding = int(time_shift_max/dt)
 
         self._npts_padding = npts_padding
         self._cross_correlation = np.zeros(2*npts_padding+1)
