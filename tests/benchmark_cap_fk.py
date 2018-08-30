@@ -33,16 +33,25 @@ if __name__=='__main__':
     # uafseismo/capuaf:46dd46bdc06e1336c3c4ccf4f99368fe99019c88
     # using the following commands
     #
-    # explosion source:
+    # source #0 (explosion):
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/1.178/90/45/90 20090407201255351
     #
-    # double-couple source #1:
+    # source #1 (diagonal)
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R-0.333/0.972/90/45/90 20090407201255351
+    #
+    # source #2 (diagonal)
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R-0.333/0.972/45/90/180 20090407201255351
+    #
+    # source #3 (diagonal):
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R-0.333/0.972/45/90/0 20090407201255351
+    #
+    # source #4 (off-diagonal):
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/90/90 20090407201255351
     #
-    # double-couple source #2:
+    # source #5 (off-diagonal):
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/90/0/0 20090407201255351
     #
-    # double-couple source #3:
+    # source #6 (off-diagonal):
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/0/90/180 20090407201255351
     #
 
@@ -52,6 +61,9 @@ if __name__=='__main__':
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/4')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/5')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/6')]
     # For now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
@@ -119,9 +131,12 @@ if __name__=='__main__':
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
-       np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # double-couple #1
-       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # double-couple #2
-       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # double-couple #3
+       np.array([1., 0., 0., 0., 0., 0.]), # source 1 (diagonal)
+       np.array([0., 1., 0., 0., 0., 0.]), # source 2 (diagonal)
+       np.array([0., 0., 1., 0., 0., 0.]), # source 3 (diagonal)
+       np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # source 4 (off-diagonal)
+       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # source 5 (off-diagonal)
+       np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # source 6 (off-diagonal)
        ]
 
     Mw = 4.5
