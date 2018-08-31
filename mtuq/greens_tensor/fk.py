@@ -5,7 +5,6 @@ import numpy as np
 import mtuq.greens_tensor.base
 import mtuq.greens_tensor.instaseis
 
-
 from collections import defaultdict
 from copy import deepcopy
 from math import ceil
@@ -56,21 +55,14 @@ class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
         Generates synthetic seismograms for a given moment tensor, via a linear
         combination of Green's functions
         """
-        # This moment tensor permutation produces a match between mtuq 
-        # and cap synthetics.  But what basis conventions does it actually
-        # represent?
-        Mxx =  mt[1]
-        Myy =  mt[2]
-        Mzz =  mt[0]
-        Mxy =  mt[5]
-        Mxz = -mt[3]
-        Myz =  mt[4]
-
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
         if not hasattr(self, '_weighted_tensor'):
             self._precompute_weights()
+
+        # CAP/FK uses convention #2 (Aki&Richards)
+        mt = change_basis(mt, 1, 2)
 
         for _i, component in enumerate(self.components):
             # which Green's functions correspond to given component?
@@ -85,14 +77,68 @@ class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
             # we could use np.dot instead, but speedup appears negligible
             s = self._synthetics[_i].data
             s[:] = 0.
-            s += Mxx*G[:,0]
-            s += Myy*G[:,1]
-            s += Mzz*G[:,2]
-            s += Mxy*G[:,3]
-            s += Mxz*G[:,4]
-            s += Myz*G[:,5]
+            s += mt[0]*G[:,0]
+            s += mt[1]*G[:,1]
+            s += mt[2]*G[:,2]
+            s += mt[3]*G[:,3]
+            s += mt[4]*G[:,4]
+            s += mt[5]*G[:,5]
 
         return self._synthetics
+
+
+    def _precompute_weights(self):
+        """
+        Applies weights used in linear combination of Green's functions
+ 
+        See cap/fk documentation for indexing scheme details; here we try to
+        follow as closely as possible the cap way of doing things
+ 
+        See also Lupei Zhu's mt_radiat utility
+        """
+        npts = self[0].meta['npts']
+        az = np.deg2rad(self.meta.azimuth)
+
+        TSS = self.select(channel="TSS")[0].data
+        ZSS = self.select(channel="ZSS")[0].data
+        RSS = self.select(channel="RSS")[0].data
+        TDS = self.select(channel="TDS")[0].data
+        ZDS = self.select(channel="ZDS")[0].data
+        RDS = self.select(channel="RDS")[0].data
+        ZDD = self.select(channel="ZDD")[0].data
+        RDD = self.select(channel="RDD")[0].data
+        ZEP = self.select(channel="ZEP")[0].data
+        REP = self.select(channel="REP")[0].data
+
+        GZ = np.ones((npts, 6))
+        GR = np.ones((npts, 6))
+        GT = np.ones((npts, 6))
+
+        GZ[:, 0] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+        GZ[:, 1] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+        GZ[:, 2] =  ZDD/3. + ZEP/3.
+        GZ[:, 3] = -ZSS * np.sin(2*az)
+        GZ[:, 4] = -ZDS * np.cos(az)
+        GZ[:, 5] = -ZDS * np.sin(az)
+
+        GR[:, 0] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+        GR[:, 1] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+        GR[:, 2] =  RDD/3. + REP/3.
+        GR[:, 3] = -RSS * np.sin(2*az)
+        GR[:, 4] = -RDS * np.cos(az)
+        GR[:, 5] = -RDS * np.sin(az)
+
+        GT[:, 0] = -TSS/2. * np.sin(2*az)
+        GT[:, 1] =  TSS/2. * np.sin(2*az)
+        GT[:, 2] =  0.
+        GT[:, 3] =  TSS * np.cos(2*az)
+        GT[:, 4] = -TDS * np.sin(az)
+        GT[:, 5] =  TDS * np.cos(az)
+
+        self._weighted_tensor = []
+        self._weighted_tensor += [GZ]
+        self._weighted_tensor += [GR]
+        self._weighted_tensor += [GT]
 
 
 
@@ -191,5 +237,7 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         stream.id = station.id
 
         traces = [trace for trace in stream]
+
         return GreensTensor(traces, station, origin)
+
 
