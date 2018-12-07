@@ -64,6 +64,7 @@ if __name__=='__main__':
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/4')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/5')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/6')]
+
     # For now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
     path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
