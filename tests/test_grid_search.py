@@ -10,9 +10,10 @@ from mtuq.grid_search import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search_serial
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
-from mtuq.util.cap_util import remove_unused_stations, trapezoid_rise_time, Trapezoid
+from mtuq.util.cap_util import remove_unused_stations
 from mtuq.util.plot import plot_beachball, plot_data_greens_mt
 from mtuq.util.util import cross, path_mtuq
+from mtuq.util.wavelets import Trapezoid
 
 
 
@@ -82,9 +83,14 @@ if __name__=='__main__':
         }
 
 
-    grid = DoubleCoupleGridRegular(Mw=4.5, npts_per_axis=10)
-    rise_time = trapezoid_rise_time(Mw=4.5)
-    wavelet = Trapezoid(rise_time)
+    grid = DoubleCoupleGridRegular(
+        Mw=4.5, 
+        npts_per_axis=10)
+
+    wavelet = Trapezoid(
+        rupture_time=1,
+        rise_time=0.5)
+
 
     #
     # The main I/O work starts now
