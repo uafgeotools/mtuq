@@ -6,4 +6,7 @@ install:
 script:
   - tests/check_import.py
   - tests/check_examples.bash
+  # eventually we will use the full unittest framework, but for now invoke
+  # tests individually
+  - python tests/unittest_util_moment_tensor.py
 
