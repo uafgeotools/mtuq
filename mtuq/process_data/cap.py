@@ -222,13 +222,6 @@ class ProcessData(object):
         tags = traces.tags
 
 
-        if 'velocity' in tags:
-            # convert to displacement
-            for trace in traces:
-                trace.data = np.cumsum(trace.data)*meta.delta
-            tags.remove('velocity')
-
-
         if 'cm' in tags:
             # unit conversion
             for trace in traces:
@@ -266,6 +259,13 @@ class ProcessData(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
+        if 'velocity' in tags:
+            # convert to displacement
+            for trace in traces:
+                trace.data = np.cumsum(trace.data)*meta.delta
+            tags.remove('velocity')
+
+
         #
         # part 2: determine phase picks
         #
@@ -275,6 +275,7 @@ class ProcessData(object):
         # called on synthetics
         if not self.pick_type:
             pass
+
 
         elif id not in self._picks:
             picks = self._picks[id]
