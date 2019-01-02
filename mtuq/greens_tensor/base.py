@@ -78,7 +78,8 @@ class GreensTensor(Stream):
         """
         Convolves source wavelet with all time series
         """
-        return self.apply(wavelet.convolve_stream)
+        for trace in self:
+            wavelet.convolve(trace)
 
 
     def get_time_shift(self, data, mt, group, time_shift_max):
