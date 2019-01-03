@@ -239,8 +239,7 @@ def apply_magnitude_dependent_shift(trace, Mw):
       lack such shifts) and CAP synthetics.
     """
     # the amount of the time shift is half the sum of the earthquake's rupture
-    # time and rise time, as calculated by relations given in the 
-    # CAP Perl wrapper
+    # time and rise time, as given by relations in the CAP Perl wrapper
     t_offset = (cap_rupture_time(Mw) + cap_rise_time(Mw))/2.
 
     dt = trace.stats.delta
@@ -249,5 +248,8 @@ def apply_magnitude_dependent_shift(trace, Mw):
     trace.data[nt:] = trace.data[:-nt]
     trace.data[:nt] = 0.
 
+
+def compare_cap_mtuq(synthetics_cap, synthetics_mtuq, bw_tol, sw_tol):
+    raise NotImplementedError
 
 

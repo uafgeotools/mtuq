@@ -114,7 +114,7 @@ if __name__=='__main__':
         Mw=4.5)
 
     wavelet = Trapezoid(
-        rupture_time=1,
+        rupture_time=1.,
         rise_time=0.5)
 
 

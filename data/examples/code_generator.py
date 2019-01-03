@@ -129,20 +129,6 @@ if __name__=='__main__':
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/0/0/90/180 20090407201255351
     #
 
-
-    paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/6')]
-
-    # For now this path exists only in my personal environment.  Eventually, 
-    # we need to include it in the repository or make it available for download
-    path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
-
 """
 
 
@@ -156,6 +142,38 @@ if __name__=='__main__':
     #
     # The compare against CAP/FK:
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I20 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
+
+"""
+
+
+ArgparseCAPFK="""
+    from mtuq.util.cap_util import\\
+        get_synthetics_cap, get_synthetics_mtuq,\\
+         get_data_cap, compare_cap_mtuq
+
+
+    # parse commandline arguments
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('no_checks', action='store_false')
+    parser.add_argument('no_figures', action='store_false')
+    args = parser.parse_args()
+    checks = (not args.no_checks)
+    figures = (not args.no_figures)
+
+
+    paths = []
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/0')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/4')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/5')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/6')]
+
+    # For now this path exists only in my personal environment.  Eventually, 
+    # we need to include it in the repository or make it available for download
+    path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
 
 """
 
@@ -258,7 +276,7 @@ GridDC3="""
         Mw=4.5)
 
     wavelet = Trapezoid(
-        rupture_time=1,
+        rupture_time=1.,
         rise_time=0.5)
 
 """
@@ -587,24 +605,26 @@ RunBenchmarkCAPFK="""
     greens = processed_greens
 
     print 'Plotting waveforms...'
-    from mtuq.util.cap_util import\\
-        get_synthetics_cap, get_synthetics_mtuq, get_data_cap
-
-    event_name = model+'_34_'+event_name
 
     for _i, mt in enumerate(grid):
         print ' %d of %d' % (_i+1, len(grid))
 
-        synthetics_cap = get_synthetics_cap(data, paths[_i], event_name)
+        name = model+'_34_'+event_name
+        synthetics_cap = get_synthetics_cap(data, paths[_i], name)
         synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
-        filename = 'cap_fk_'+str(_i)+'.png'
-        plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
-    if True:
+        if figures:
+            filename = 'cap_fk_'+str(_i)+'.png'
+            plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
+
+        if checks:
+            pass
+
+    if figures:
         # "bonus" figure comparing how CAP processes observed data with how
         # MTUQ processes observed data
         data_mtuq = data
-        data_cap = get_data_cap(data, paths[0], event_name)
+        data_cap = get_data_cap(data, paths[0], name)
         filename = 'cap_fk_data.png'
         plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 
@@ -708,6 +728,7 @@ if __name__=='__main__':
             'plot_data_synthetics',
             ))
         file.write(DocstringBenchmarkCAPFK)
+        file.write(ArgparseCAPFK)
         file.write(
             replace(
             PathsDefinitions,
