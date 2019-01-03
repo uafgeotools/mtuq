@@ -19,7 +19,7 @@ do
     cp ${filename}{,~}
 done
 
-python ../data/examples/code_generator.py
+python ../setup/code_generator.py
 for filename in $FILENAMES
 do
     echo "Checking $filename..."
