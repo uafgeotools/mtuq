@@ -7,6 +7,24 @@ import obspy
 from copy import deepcopy
 from mtuq.util.wavelets import Wavelet
 
+#
+# the following functions allow reading in and performing other operations with
+# CAP-style weight files. Such files can be used to control the weight on  
+# individual stations and components in a moment tensor inversion
+#
+
+def parse_weight_file(filename):
+    """ Parses CAP-style weight file
+    """
+    weights = {}
+    with open(filename) as file:
+        reader = csv.reader(file, delimiter=' ', skipinitialspace=True)
+        for row in reader:
+            id = '.'.join(row[0].split('.')[1:4])
+            weights[id] = [float(w) for w in row[1:]]
+
+    return weights
+
 
 def remove_unused_stations(dataset, filename):
     """ Removes any stations not listed in CAP weight file or any stations
@@ -28,24 +46,43 @@ def remove_unused_stations(dataset, filename):
     for id in unused:
         dataset.remove(id)
 
+#
+# These rupture and rise time utilties can be used to generate source-time
+# functions which match those defined in the cap Perl wrapper.  For use in
+# conjunction with mtuq/util/wavelets.py:Trapezoid
+#
+
+def cap_rupture_time(Mw):
+    if Mw < 1.:
+        return 1.
+    elif 1. <= Mw <= 9.:
+        return int(10.**(0.5*Mw - 2.5) + 0.5)
+    elif 9. < Mw:
+        return 9.
 
 
-def parse_weight_file(filename):
-    """ Parses CAP-style weight file
+def cap_rise_time(Mw):
+    return 0.5*cap_rupture_time(Mw)
+
+
+def Nm_to_dynecm(mt):
+    """ Converts from N-m (used by MTUQ) to dyne-cm (used by CAP)
     """
-    weights = {}
-    with open(filename) as file:
-        reader = csv.reader(file, delimiter=' ', skipinitialspace=True)
-        for row in reader:
-            id = '.'.join(row[0].split('.')[1:4])
-            weights[id] = [float(w) for w in row[1:]]
-
-    return weights
+    raise NotImplementedError
 
 
-def cap_rise_time(*args, **kwargs):
-    return 1.
+def _seismic_moment(mt):
+    return np.sqrt(np.sum(mt[0:3]**2.) + 0.5*np.sum(mt[3:6]**2.))
+ 
 
+def _moment_magnitude(mt):
+    M0 = _seismic_moment(mt)
+
+
+#
+# the following functions help reproduce cap signal processing functionality.
+# See also mtuq/process_data/cap.py
+#
 
 def taper(array, taper_fraction=0.3, inplace=True):
     """ Reproduces CAP taper behavior. Similar to obspy Tukey?
@@ -63,6 +100,11 @@ def taper(array, taper_fraction=0.3, inplace=True):
     if not inplace:
         return array
 
+
+#
+# the following functions are used in benchmark comparisons between CAP and 
+# MTUQ synthetics. See tests/benchmark_cap_fk.py
+#
 
 def get_synthetics_cap(data, path, event_name):
     container = deepcopy(data)
