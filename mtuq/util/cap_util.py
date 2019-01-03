@@ -245,11 +245,44 @@ def apply_magnitude_dependent_shift(trace, Mw):
     dt = trace.stats.delta
     nt = int(t_offset/dt)
 
+    # shift trace to right by nt samples
     trace.data[nt:] = trace.data[:-nt]
     trace.data[:nt] = 0.
 
 
-def compare_cap_mtuq(synthetics_cap, synthetics_mtuq, bw_tol, sw_tol):
-    raise NotImplementedError
+def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-3, norm=1):
+    """ Checks whether CAP and MTUQ synthetics agree within the specified
+      tolerances 
+
+      Even with the magnitude-dependdent time shift correction described above,
+      CAP and MTUQ synthetics will not match perfectly because the correction
+      is made only after tapering
+
+      For body wave windows, the time shift correction is large relative to the
+      window length, and the tapering-related mismatch will be especially
+      pronounced. Thus, checking body waves is turned off by default
+    """
+    for cap_bw, mtuq_bw, cap_sw, mtuq_sw in zip(
+        cap['body_waves'], mtuq['body_waves'],
+        cap['surface_waves'], mtuq['surface_waves']):
+
+        if bw_tol < np.inf:
+            for bw1, bw2 in zip(cap_bw, mtuq_bw):
+                dt = bw1.stats.delta
+                e = np.linalg.norm((bw1.data-bw2.data)*dt, norm)
+                if e > bw_tol:
+                    raise Exception
+
+        if sw_tol < np.inf:
+            for sw1, sw2 in zip(cap_sw, mtuq_sw):
+                dt = sw1.stats.delta
+                e = np.linalg.norm((sw1.data-sw2.data)*dt, norm)
+                if e > sw_tol:
+                    raise Exception
+
+
+
+
+
 
 

@@ -155,8 +155,8 @@ Argparse_CAP_MTUQ="""
     # parse commandline arguments
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('no_checks', action='store_true')
-    parser.add_argument('no_figures', action='store_true')
+    parser.add_argument('--no_checks', action='store_true')
+    parser.add_argument('--no_figures', action='store_true')
     args = parser.parse_args()
     run_checks = (not args.no_checks)
     run_figures = (not args.no_figures)

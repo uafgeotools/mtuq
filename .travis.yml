@@ -6,6 +6,7 @@ install:
 script:
   - tests/check_import.py
   - tests/check_examples.bash
+  - python tests/benchmark_cap_mtuq.py --no_figures
   # eventually we will use the full unittest framework, but for now invoke
   # tests individually
   - python tests/unittest_util_moment_tensor.py
