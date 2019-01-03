@@ -207,7 +207,7 @@ def get_data_cap(data, path, event_name):
 
 
 
-def get_synthetics_mtuq(data, greens, mt, magnitude_dependent_time_shift=True):
+def get_synthetics_mtuq(data, greens, mt, Mw=None, apply_shifts=True):
     container = deepcopy(data)
 
     for key in ['body_waves', 'surface_waves']:
@@ -218,30 +218,45 @@ def get_synthetics_mtuq(data, greens, mt, magnitude_dependent_time_shift=True):
                 component = trace.meta.channel[-1].upper()
                 trace.data = synthetics.select(component=component)[0].data
 
+                if apply_shifts:
+                    if Mw==None:
+                        # what is the seismic moment of the given moment tensor?
+                        M0 = np.sqrt(np.sum(mt[0:3]**2.) + 0.5*np.sum(mt[3:6]**2.))
+                        Mw = (np.log10(M0) - 9.1)/1.5
+
+                    apply_magnitude_dependent_shift(trace, Mw)
+
     return container
 
 
 
 def apply_magnitude_dependent_shift(trace, Mw):
-    """ This type of time shift arises from the idiosyncratic way CAP 
+    """ These type of time shifts arise from the idiosyncratic way CAP 
       implements source-time function convolution. CAP's "conv" function
       results in systematic magnitude-dependent shifts between origin times
       and arrival times. This is arguably a bug. We include this function
-      to allow benchmark comparisons between CAP and MTUQ. 
+      to allow benchmark comparisons between MTUQ synthetics (which normally
+      lack such shifts) and CAP synthetics.
     """
-    raise NotImplementedError
+    # the amount of the time shift is half the sum of the earthquake's rupture
+    # time and rise time, as calculated by relations given in the 
+    # CAP Perl wrapper
+    t_offset = (cap_rupture_time(Mw) + cap_rise_time(Mw))/2.
+
+    dt = trace.stats.delta
+    nt = int(t_offset/dt)
+
+    trace.data[nt:] = trace.data[:-nt]
+    trace.data[:nt] = 0.
 
 
-def cap_rupture_time(Mw):
-    if Mw < 1.:
-        return 1.
-    elif 1. <= Mw <= 9.:
-        return int(10.**(0.5*Mw - 2.5) + 0.5)
-    elif 9. < Mw:
-        return 9.
+def _seismic_moment(mt):
+    return np.sqrt(np.sum(mt[0:3]**2.) + 0.5*np.sum(mt[3:6]**2.))/2.**0.5
+ 
 
-
-def cap_rise_time(Mw):
-    return 0.5*cap_rupture_time(Mw)
+def _moment_magnitude(mt):
+    M0 = _seismic_moment(mt)
+    Mw = (np.log10(M0) - 9.1)/1.5
+    return Mw
 
 
