@@ -231,7 +231,7 @@ def get_synthetics_mtuq(data, greens, mt, Mw=None, apply_shifts=True):
 
 
 def apply_magnitude_dependent_shift(trace, Mw):
-    """ These type of time shifts arise from the idiosyncratic way CAP 
+    """ This type of time shift arises from the idiosyncratic way CAP 
       implements source-time function convolution. CAP's "conv" function
       results in systematic magnitude-dependent shifts between origin times
       and arrival times. This is arguably a bug. We include this function
@@ -249,14 +249,5 @@ def apply_magnitude_dependent_shift(trace, Mw):
     trace.data[nt:] = trace.data[:-nt]
     trace.data[:nt] = 0.
 
-
-def _seismic_moment(mt):
-    return np.sqrt(np.sum(mt[0:3]**2.) + 0.5*np.sum(mt[3:6]**2.))/2.**0.5
- 
-
-def _moment_magnitude(mt):
-    M0 = _seismic_moment(mt)
-    Mw = (np.log10(M0) - 9.1)/1.5
-    return Mw
 
 
