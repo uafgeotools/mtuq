@@ -155,11 +155,11 @@ Argparse_CAP_MTUQ="""
     # parse commandline arguments
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('no_checks', action='store_false')
-    parser.add_argument('no_figures', action='store_false')
+    parser.add_argument('no_checks', action='store_true')
+    parser.add_argument('no_figures', action='store_true')
     args = parser.parse_args()
-    checks = (not args.no_checks)
-    figures = (not args.no_figures)
+    run_checks = (not args.no_checks)
+    run_figures = (not args.no_figures)
 
 
     paths = []
@@ -613,14 +613,14 @@ RunBenchmark_CAP_MTUQ="""
         synthetics_cap = get_synthetics_cap(data, paths[_i], name)
         synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
 
-        if figures:
+        if run_figures:
             filename = 'cap_mtuq_'+str(_i)+'.png'
             plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
-        if checks:
-            pass
+        if run_checks:
+            compare_cap_mtuq(synthetics_cap, synthetics_mtuq)
 
-    if figures:
+    if run_figures:
         # "bonus" figure comparing how CAP processes observed data with how
         # MTUQ processes observed data
         data_mtuq = data
