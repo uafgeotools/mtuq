@@ -48,6 +48,8 @@ def cap_rise_time(*args, **kwargs):
 
 
 def taper(array, taper_fraction=0.3, inplace=True):
+    """ Reproduces CAP taper behavior. Similar to obspy Tukey?
+    """
     if inplace:
         array = array
     else:
@@ -163,7 +165,7 @@ def get_data_cap(data, path, event_name):
 
 
 
-def get_synthetics_mtuq(data, greens, mt):
+def get_synthetics_mtuq(data, greens, mt, magnitude_dependent_time_shift=True):
     container = deepcopy(data)
 
     for key in ['body_waves', 'surface_waves']:
@@ -175,4 +177,29 @@ def get_synthetics_mtuq(data, greens, mt):
                 trace.data = synthetics.select(component=component)[0].data
 
     return container
+
+
+
+def apply_magnitude_dependent_shift(trace, Mw):
+    """ This type of time shift arises from the idiosyncratic way CAP 
+      implements source-time function convolution. CAP's "conv" function
+      results in systematic magnitude-dependent shifts between origin times
+      and arrival times. This is arguably a bug. We include this function
+      to allow benchmark comparisons between CAP and MTUQ. 
+    """
+    raise NotImplementedError
+
+
+def cap_rupture_time(Mw):
+    if Mw < 1.:
+        return 1.
+    elif 1. <= Mw <= 9.:
+        return int(10.**(0.5*Mw - 2.5) + 0.5)
+    elif 9. < Mw:
+        return 9.
+
+
+def cap_rise_time(Mw):
+    return 0.5*cap_rupture_time(Mw)
+
 
