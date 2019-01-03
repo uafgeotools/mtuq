@@ -89,7 +89,7 @@ if __name__=='__main__':
 """
 
 
-DocstringBenchmarkCAPFK="""
+DocstringBenchmark_CAP_MTUQ="""
 if __name__=='__main__':
     #
     # Given four "fundamental" moment tensor, generates MTUQ synthetics and
@@ -146,7 +146,7 @@ if __name__=='__main__':
 """
 
 
-ArgparseCAPFK="""
+Argparse_CAP_MTUQ="""
     from mtuq.util.cap_util import\\
         get_synthetics_cap, get_synthetics_mtuq,\\
          get_data_cap, compare_cap_mtuq
@@ -163,13 +163,13 @@ ArgparseCAPFK="""
 
 
     paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/6')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/0')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/1')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/2')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/3')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/4')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
 
     # For now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
@@ -318,7 +318,7 @@ GridFMT5="""
 """
 
 
-GridBenchmarkCAPFK="""
+GridBenchmark_CAP_MTUQ="""
     #
     # Next we specify the source parameter grid
     #
@@ -569,7 +569,7 @@ GridSearchMPI2="""
 """
 
 
-RunBenchmarkCAPFK="""
+RunBenchmark_CAP_MTUQ="""
     #
     # The benchmark starts now
     #
@@ -614,7 +614,7 @@ RunBenchmarkCAPFK="""
         synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
 
         if figures:
-            filename = 'cap_fk_'+str(_i)+'.png'
+            filename = 'cap_mtuq_'+str(_i)+'.png'
             plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
         if checks:
@@ -625,7 +625,7 @@ RunBenchmarkCAPFK="""
         # MTUQ processes observed data
         data_mtuq = data
         data_cap = get_data_cap(data, paths[0], name)
-        filename = 'cap_fk_data.png'
+        filename = 'cap_mtuq_data.png'
         plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 
 """
@@ -716,7 +716,7 @@ if __name__=='__main__':
         file.write(GridSearchSerial)
 
 
-    with open('tests/benchmark_cap_fk.py', 'w') as file:
+    with open('tests/benchmark_cap_mtuq.py', 'w') as file:
         file.write(
             replace(
             Imports,
@@ -727,15 +727,15 @@ if __name__=='__main__':
             'plot_data_greens_mt',
             'plot_data_synthetics',
             ))
-        file.write(DocstringBenchmarkCAPFK)
-        file.write(ArgparseCAPFK)
+        file.write(DocstringBenchmark_CAP_MTUQ)
+        file.write(Argparse_CAP_MTUQ)
         file.write(
             replace(
             PathsDefinitions,
             'ak135f_.s',
             'scak',
             'data/examples/20090407201255351/weights.dat',
-            'data/tests/benchmark_cap_fk/20090407201255351/weights.dat',
+            'data/tests/benchmark_cap_mtuq/20090407201255351/weights.dat',
             ))
         file.write(
             replace(
@@ -749,8 +749,8 @@ if __name__=='__main__':
             'time_shift_max=.*',
             'time_shift_max=0.,',
             ))
-        file.write(GridBenchmarkCAPFK)
-        file.write(RunBenchmarkCAPFK)
+        file.write(GridBenchmark_CAP_MTUQ)
+        file.write(RunBenchmark_CAP_MTUQ)
 
 
 

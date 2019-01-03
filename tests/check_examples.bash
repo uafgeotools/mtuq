@@ -8,7 +8,7 @@
 FILENAMES="\
     ../examples/GridSearch.DoubleCouple.3Parameter.MPI.py\
     ../examples/GridSearch.DoubleCouple.3Parameter.Serial.py\
-    ../tests/benchmark_cap_fk.py\
+    ../tests/benchmark_cap_mtuq.py\
     "
 
 # navigate to mtuq/tests

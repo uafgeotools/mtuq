@@ -73,13 +73,13 @@ if __name__=='__main__':
 
 
     paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/6')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/0')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/1')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/2')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/3')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/4')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
 
     # For now this path exists only in my personal environment.  Eventually, 
     # we need to include it in the repository or make it available for download
@@ -87,7 +87,7 @@ if __name__=='__main__':
 
 
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351')
-    path_weights= join(path_mtuq(), 'data/tests/benchmark_cap_fk/20090407201255351/weights.dat')
+    path_weights= join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
     model=        'scak'
@@ -212,7 +212,7 @@ if __name__=='__main__':
         synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
 
         if figures:
-            filename = 'cap_fk_'+str(_i)+'.png'
+            filename = 'cap_mtuq_'+str(_i)+'.png'
             plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
         if checks:
@@ -223,6 +223,6 @@ if __name__=='__main__':
         # MTUQ processes observed data
         data_mtuq = data
         data_cap = get_data_cap(data, paths[0], name)
-        filename = 'cap_fk_data.png'
+        filename = 'cap_mtuq_data.png'
         plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 
