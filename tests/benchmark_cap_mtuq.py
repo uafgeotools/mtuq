@@ -76,7 +76,8 @@ if __name__=='__main__':
          get_data_cap, compare_cap_mtuq
 
 
-    # parse commandline arguments
+    # by default, the script runs with figure generation and error checking
+    # turned on; these can be turned off though through argparse arguments
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_checks', action='store_true')
@@ -86,8 +87,8 @@ if __name__=='__main__':
     run_figures = (not args.no_figures)
 
 
-    # The synthetics in the following directories correspond to the moment 
-    # tensors in the list "grid" below
+    # the following directories correspond to the moment tensors in the list 
+    # "grid" below
     paths = []
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/0')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/1')]
@@ -215,7 +216,7 @@ if __name__=='__main__':
         processed_greens[key] = greens.map(process_data[key])
     greens = processed_greens
 
-    print 'Plotting waveforms...'
+    print 'Comparing waveforms...'
 
     for _i, mt in enumerate(grid):
         print ' %d of %d' % (_i+1, len(grid))

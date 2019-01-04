@@ -103,16 +103,16 @@ if __name__=='__main__':
     # grid, and here the final plots are a comparison of MTUQ and CAP/FK 
     # synthetics rather than a comparison of data and synthetics
     #
-    # It is not expectd that CAP and MTUQ synthetics will match exactly
-    # because of the idiosyncratic way CAP implements source-time function
-    # convolution. CAP's "conv" function results in systematic magnitude-
-    # dependent shifts between origin times and arrival times. This is arguably 
-    # a bug in CAP. We deal with this by applying magnitude-dependent 
-    # time-shifts to MTUQ synthetics, which normally lack such shifts, at the
-    # end of the benchmark. Even with this correction, the match will not be
-    # exact because CAP applies the shifts before tapering and MTUQ necessarily
-    # applies the shifts after tapering. The resulting discrepancy is usually
-    # apparent in body-wave windows, but not surface-wave windows
+    # Because of the idiosyncratic way CAP implements source-time function
+    # convolution, it's not expected that CAP and MTUQ synthetics will match 
+    # exactly. CAP's "conv" function results in systematic magnitude-
+    # dependent shifts between origin times and arrival times. We deal with 
+    # this by applying magnitude-dependent time-shifts to MTUQ synthetics 
+    # (which normally lack such shifts) at the end of the benchmark. Even with
+    # this correction, the match will not be exact because CAP applies the 
+    # shifts before tapering and MTUQ after tapering. The resulting mismatch 
+    # will usually be apparent in body-wave windows, but not surface-wave 
+    # windows
     #
     # Note that CAP works with dyne/cm and MTUQ works with N/m, so to make
     # comparisons we convert CAP output from the former to the latter
@@ -163,10 +163,11 @@ if __name__=='__main__':
 Argparse_CAP_MTUQ="""
     from mtuq.util.cap_util import\\
         get_synthetics_cap, get_synthetics_mtuq,\\
-         get_data_cap, compare_cap_mtuq
+        get_data_cap, compare_cap_mtuq
 
 
-    # parse commandline arguments
+    # by default, the script runs with figure generation and error checking
+    # turned on; these can be turned off though through argparse arguments
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_checks', action='store_true')
@@ -176,8 +177,8 @@ Argparse_CAP_MTUQ="""
     run_figures = (not args.no_figures)
 
 
-    # The synthetics in the following directories correspond to the moment 
-    # tensors in the list "grid" below
+    # the following directories correspond to the moment tensors in the list 
+    # "grid" below
     paths = []
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/0')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/1')]
@@ -617,7 +618,7 @@ RunBenchmark_CAP_MTUQ="""
         processed_greens[key] = greens.map(process_data[key])
     greens = processed_greens
 
-    print 'Plotting waveforms...'
+    print 'Comparing waveforms...'
 
     for _i, mt in enumerate(grid):
         print ' %d of %d' % (_i+1, len(grid))
