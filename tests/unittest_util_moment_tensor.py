@@ -72,20 +72,13 @@ class TestMomentTensor(unittest.TestCase):
             0., # m23
             ])
 
-        # perturb off-diagonal element ever so slightly
-        #M[3] += np.random.normal(0., 1.e-6)
-        M[4] += np.random.normal(0., 1.e-6)
+        # perturb off-diagonal element slightly
+        M[3] += np.random.normal(0., 1.e-6)
+        #M[4] += np.random.normal(0., 1.e-6)
         #M[5] += np.random.normal(0., 1.e-6)
 
         M1 = M
         gamma, delta, M0, kappa, theta, sigma = cmt2tt(M1)
-        print 'gamma:', gamma
-        print 'delta:', delta
-        print 'M0:', M0
-        print 'kappa:', kappa
-        print 'theta:', theta
-        print 'sigma:', sigma
-        print '\n'
         assert abs(delta - 90.) < 1.e-3
 
         M2 = tt2cmt(gamma, delta, M0, kappa, theta, sigma)

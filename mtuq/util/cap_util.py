@@ -7,6 +7,24 @@ import obspy
 from copy import deepcopy
 from mtuq.util.wavelets import Wavelet
 
+#
+# the following functions allow reading in and performing other operations with
+# CAP-style weight files. Such files can be used to control the weight on  
+# individual stations and components in a moment tensor inversion
+#
+
+def parse_weight_file(filename):
+    """ Parses CAP-style weight file
+    """
+    weights = {}
+    with open(filename) as file:
+        reader = csv.reader(file, delimiter=' ', skipinitialspace=True)
+        for row in reader:
+            id = '.'.join(row[0].split('.')[1:4])
+            weights[id] = [float(w) for w in row[1:]]
+
+    return weights
+
 
 def remove_unused_stations(dataset, filename):
     """ Removes any stations not listed in CAP weight file or any stations
@@ -28,26 +46,47 @@ def remove_unused_stations(dataset, filename):
     for id in unused:
         dataset.remove(id)
 
+#
+# These rupture and rise time utilties can be used to generate source-time
+# functions which match those defined in the cap Perl wrapper.  For use in
+# conjunction with mtuq/util/wavelets.py:Trapezoid
+#
+
+def cap_rupture_time(Mw):
+    if Mw < 1.:
+        return 1.
+    elif 1. <= Mw <= 9.:
+        return int(10.**(0.5*Mw - 2.5) + 0.5)
+    elif 9. < Mw:
+        return 9.
 
 
-def parse_weight_file(filename):
-    """ Parses CAP-style weight file
+def cap_rise_time(Mw):
+    return 0.5*cap_rupture_time(Mw)
+
+
+def Nm_to_dynecm(mt):
+    """ Converts from N-m (used by MTUQ) to dyne-cm (used by CAP)
     """
-    weights = {}
-    with open(filename) as file:
-        reader = csv.reader(file, delimiter=' ', skipinitialspace=True)
-        for row in reader:
-            id = '.'.join(row[0].split('.')[1:4])
-            weights[id] = [float(w) for w in row[1:]]
-
-    return weights
+    raise NotImplementedError
 
 
-def cap_rise_time(*args, **kwargs):
-    return 1.
+def _seismic_moment(mt):
+    return np.sqrt(np.sum(mt[0:3]**2.) + 0.5*np.sum(mt[3:6]**2.))
+ 
 
+def _moment_magnitude(mt):
+    M0 = _seismic_moment(mt)
+
+
+#
+# the following functions help reproduce cap signal processing functionality.
+# See also mtuq/process_data/cap.py
+#
 
 def taper(array, taper_fraction=0.3, inplace=True):
+    """ Reproduces CAP taper behavior. Similar to obspy Tukey?
+    """
     if inplace:
         array = array
     else:
@@ -61,6 +100,11 @@ def taper(array, taper_fraction=0.3, inplace=True):
     if not inplace:
         return array
 
+
+#
+# the following functions are used in benchmark comparisons between CAP and 
+# MTUQ synthetics. See tests/benchmark_cap_fk.py
+#
 
 def get_synthetics_cap(data, path, event_name):
     container = deepcopy(data)
@@ -163,7 +207,7 @@ def get_data_cap(data, path, event_name):
 
 
 
-def get_synthetics_mtuq(data, greens, mt):
+def get_synthetics_mtuq(data, greens, mt, Mw=None, apply_shifts=True):
     container = deepcopy(data)
 
     for key in ['body_waves', 'surface_waves']:
@@ -174,5 +218,71 @@ def get_synthetics_mtuq(data, greens, mt):
                 component = trace.meta.channel[-1].upper()
                 trace.data = synthetics.select(component=component)[0].data
 
+                if apply_shifts:
+                    if Mw==None:
+                        # what is the seismic moment of the given moment tensor?
+                        M0 = np.sqrt(0.5*np.sum(mt[0:3]**2.) + np.sum(mt[3:6]**2.))
+                        Mw = (np.log10(M0) - 9.1)/1.5
+
+                    apply_magnitude_dependent_shift(trace, Mw)
+
     return container
+
+
+
+def apply_magnitude_dependent_shift(trace, Mw):
+    """ This type of time shift arises from the idiosyncratic way CAP 
+      implements source-time function convolution. CAP's "conv" function
+      results in systematic magnitude-dependent shifts between origin times
+      and arrival times. This is arguably a bug. We include this function
+      to allow benchmark comparisons between MTUQ synthetics (which normally
+      lack such shifts) and CAP synthetics.
+    """
+    # the amount of the time shift is half the sum of the earthquake's rupture
+    # time and rise time, as given by relations in the CAP Perl wrapper
+    t_offset = (cap_rupture_time(Mw) + cap_rise_time(Mw))/2.
+
+    dt = trace.stats.delta
+    nt = int(t_offset/dt)
+
+    # shift trace to right by nt samples
+    trace.data[nt:] = trace.data[:-nt]
+    trace.data[:nt] = 0.
+
+
+def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-3, norm=1):
+    """ Checks whether CAP and MTUQ synthetics agree within the specified
+      tolerances 
+
+      Even with the magnitude-dependent time shift correction described above,
+      CAP and MTUQ synthetics will not match perfectly because the correction
+      is made only after tapering
+
+      For body wave windows, the time shift correction is large relative to the
+      window length, and the tapering-related mismatch will be especially
+      pronounced. Thus, checking body waves is turned off by default
+    """
+    for cap_bw, mtuq_bw, cap_sw, mtuq_sw in zip(
+        cap['body_waves'], mtuq['body_waves'],
+        cap['surface_waves'], mtuq['surface_waves']):
+
+        if bw_tol < np.inf:
+            for bw1, bw2 in zip(cap_bw, mtuq_bw):
+                dt = bw1.stats.delta
+                e = np.linalg.norm((bw1.data-bw2.data)*dt, norm)
+                if e > bw_tol:
+                    raise Exception
+
+        if sw_tol < np.inf:
+            for sw1, sw2 in zip(cap_sw, mtuq_sw):
+                dt = sw1.stats.delta
+                e = np.linalg.norm((sw1.data-sw2.data)*dt, norm)
+                if e > sw_tol:
+                    raise Exception
+
+
+
+
+
+
 

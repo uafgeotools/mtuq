@@ -6,4 +6,15 @@ install:
 script:
   - tests/check_import.py
   - tests/check_examples.bash
+  #
+  # unit tests -- eventually we will use the full unittest framework, but for 
+  # now we invoke tests individually
+  #
+  - python tests/unittest_util_moment_tensor.py
+  #
+  # benchmark comparisons
+  #  
+  - data/examples/unpack.bash
+  - data/tests/unpack.bash
+  - python tests/benchmark_cap_mtuq.py --no_figures
 
