@@ -92,13 +92,27 @@ if __name__=='__main__':
 DocstringBenchmark_CAP_MTUQ="""
 if __name__=='__main__':
     #
-    # Given four "fundamental" moment tensor, generates MTUQ synthetics and
+    # Given seven "fundamental" moment tensors, generates MTUQ synthetics and
     # compares with corresponding CAP/FK synthetics
     #
+    # Before running this script, it is necessary to unpack the CAP/FK 
+    # synthetics using data/tests/unpack.bash
+    #
     # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
-    # except here we consider only four grid points rather than an entire
+    # except here we consider only seven grid points rather than an entire
     # grid, and here the final plots are a comparison of MTUQ and CAP/FK 
     # synthetics rather than a comparison of data and synthetics
+    #
+    # It is not expectd that CAP and MTUQ synthetics will match exactly
+    # because of the idiosyncratic way CAP implements source-time function
+    # convolution. CAP's "conv" function results in systematic magnitude-
+    # dependent shifts between origin times and arrival times. This is arguably 
+    # a bug in CAP. We deal with this by applying magnitude-dependent 
+    # time-shifts to MTUQ synthetics, which normally lack such shifts, at the
+    # end of the benchmark. Even with this correction, the match will not be
+    # exact because CAP applies the shifts before tapering and MTUQ necessarily
+    # applies the shifts after tapering. The resulting discrepancy is usually
+    # apparent in body-wave windows, but not surface-wave windows
     #
     # Note that CAP works with dyne/cm and MTUQ works with N/m, so to make
     # comparisons we convert CAP output from the former to the latter
@@ -110,13 +124,13 @@ if __name__=='__main__':
     # source #0 (explosion):
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R0/1.178/90/45/90 20090407201255351
     #
-    # source #1 (diagonal)
+    # source #1 (on-diagonal)
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R-0.333/0.972/90/45/90 20090407201255351
     #
-    # source #2 (diagonal)
+    # source #2 (on-diagonal)
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R-0.333/0.972/45/90/180 20090407201255351
     #
-    # source #3 (diagonal):
+    # source #3 (on-diagonal):
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1 -R-0.333/0.972/45/90/0 20090407201255351
     #
     # source #4 (off-diagonal):
@@ -162,6 +176,8 @@ Argparse_CAP_MTUQ="""
     run_figures = (not args.no_figures)
 
 
+    # The synthetics in the following directories correspond to the moment 
+    # tensors in the list "grid" below
     paths = []
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/0')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/1')]
@@ -171,10 +187,7 @@ Argparse_CAP_MTUQ="""
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
 
-    # For now this path exists only in my personal environment.  Eventually, 
-    # we need to include it in the repository or make it available for download
-    path_greens=  join(os.getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
-
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
 """
 
 

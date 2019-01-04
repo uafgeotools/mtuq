@@ -254,7 +254,7 @@ def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-3, norm=1):
     """ Checks whether CAP and MTUQ synthetics agree within the specified
       tolerances 
 
-      Even with the magnitude-dependdent time shift correction described above,
+      Even with the magnitude-dependent time shift correction described above,
       CAP and MTUQ synthetics will not match perfectly because the correction
       is made only after tapering
 

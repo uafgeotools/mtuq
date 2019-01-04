@@ -190,7 +190,8 @@ class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
         t2_new = float(station.endtime)
         dt_new = float(station.delta)
 
-        dep = str(int(round(origin.depth/1000.)))
+        #dep = str(int(round(origin.depth/1000.)))
+        dep = str(int(ceil(origin.depth/1000.)))
         #dst = str(int(round(station.distance)))
         dst = str(int(ceil(station.distance)))
 
