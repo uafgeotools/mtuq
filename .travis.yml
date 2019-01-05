@@ -11,6 +11,7 @@ script:
   # now we invoke tests individually
   #
   - python tests/unittest_util_moment_tensor.py
+  - python tests/unittest_util_wavelets.py
   #
   # benchmark comparisons
   #  
