@@ -5,10 +5,8 @@ import sys
 import numpy as np
 
 from os.path import basename, join
-from mtuq.dataset import sac
-from mtuq.greens_tensor import syngine
-from mtuq.grid_search import DoubleCoupleGridRandom
-from mtuq.grid_search import grid_search_serial
+from mtuq import read, open_greens_db
+from mtuq.grid_search import DoubleCoupleGridRandom, grid_search_serial
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
 from mtuq.util.cap_util import remove_unused_stations, Trapezoid
@@ -39,7 +37,7 @@ if __name__=='__main__':
     # Mw~4 Alaska earthquake
     #
 
-    path_data=    join(path_mtuq(), 'data/examples/20090407201255351')
+    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
@@ -121,7 +119,7 @@ if __name__=='__main__':
     #
 
     print 'Reading data...\n'
-    data = sac.read(path_data+'/'+'*.[zrt]', id=event_name,
+    data = read(path_data, format='sac', id=event_name,
         tags=['cm', 'velocity']) 
     remove_unused_stations(data, path_weights)
     data.sort_by_distance()
@@ -140,8 +138,8 @@ if __name__=='__main__':
 
 
     print 'Reading Greens functions...\n'
-    factory = syngine.GreensTensorFactory(model)
-    greens = factory(stations, origin)
+    db = open_greens_db(model=model, format='syngine')
+    greens = db.read(stations, origin)
 
 
     print 'Processing Greens functions...\n'

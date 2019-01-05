@@ -22,9 +22,10 @@ ENTRY_POINTS = {
         'SAC = mtuq.dataset.sac:read',
         ],
     'greens_databases': [
-        'FK = mtuq.greens_tensor.fk:GreensTensorFactory',
-        'INSTASEIS = mtuq.greens_tensor.instaseis:GreensTensorFactory',
-        'SYNGINE = mtuq.greens_tensor.syngine:GreensTensorFactory',
+        'AXISEM = mtuq.greens_tensor.instaseis:GreensTensorDatabase',
+        'FK = mtuq.greens_tensor.fk:GreensTensorDatabase',
+        'INSTASEIS = mtuq.greens_tensor.instaseis:GreensTensorDatabase',
+        'SYNGINE = mtuq.greens_tensor.syngine:GreensTensorDatabase',
         ]
     }
 

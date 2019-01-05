@@ -2,12 +2,13 @@
 from pkg_resources import iter_entry_points
 
 
-def greens_dbs():
-    for entry_point in iter_entry_points('greens_dbs'):
-        greens_dbs[entry_point.name] = entry_point.load()
-    return greens_dbs
+def _greens_databases():
+    databases = {}
+    for entry_point in iter_entry_points('greens_databases'):
+        databases[entry_point.name] = entry_point.load()
+    return databases
 
-def open_greens_db(filename_or_url, format=''):
+def open_greens_db(format='', **kwargs):
     format = format.upper()
-    return greens_dbs()[format](id=id, **kwargs)
+    return _greens_databases()[format](**kwargs)
 
