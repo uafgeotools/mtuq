@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 import obspy
 from copy import deepcopy
-from mtuq.util.wavelets import Wavelet
+from mtuq.util.wavelets import EarthquakeTrapezoid
 
 #
 # the following functions allow reading in and performing other operations with
@@ -51,6 +51,16 @@ def remove_unused_stations(dataset, filename):
 # functions which match those defined in the cap Perl wrapper.  For use in
 # conjunction with mtuq/util/wavelets.py:Trapezoid
 #
+
+def Trapezoid(moment_magnitude=None):
+    if moment_magnitude==None:
+        raise ValueError
+    Mw = moment_magnitude
+
+    return EarthquakeTrapezoid(
+        rupture_time=cap_rupture_time(Mw),
+        rise_time=cap_rise_time(Mw))
+
 
 def cap_rupture_time(Mw):
     if Mw < 1.:

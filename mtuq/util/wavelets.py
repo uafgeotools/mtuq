@@ -5,23 +5,28 @@ from scipy import signal
 
 
 
-class Wavelet(object):
-    """ Symmetric wavelet base class
+class Base(object):
+    """ Wavelet base class
+
+       Provides methods for evaluating wavelets on intervals and convolving
+       wavelets with user-supplied time series
+
+       Specification of the wavelet itself is deferred to the subclass
     """
-
-    def evaluate(self, t):
-        """ Evaluates wavelet at chosen points
-        """
-        raise NotImplementedError
-
 
     def evaluate_on_interval(self, half_duration, nt):
         """ Evaluate wavelet on the interval
         """
-        assert half_duration > 0
+        assert half_duration > 0.
+
         t = np.linspace(-half_duration, +half_duration, nt)
-        y = self.evaluate(t)
-        return np.trim_zeros(y)
+        w = self.evaluate(t)
+
+        # trim symmetric wavelets only
+        if _is_symmetric(w):
+            w = np.trim_zeros(w)
+
+        return w
 
 
     def convolve_array(self, y, dt, mode=1):
@@ -30,6 +35,7 @@ class Wavelet(object):
         nt = len(y)
         half_duration = (nt-1)*dt/2.
         w = self.evaluate_on_interval(half_duration, nt)
+        w /= np.sum(w)
 
         if mode==1:
             # frequency-domain implementation
@@ -52,52 +58,17 @@ class Wavelet(object):
          return trace
 
 
-class Trapezoid(Wavelet):
-    """ Trapezoid-like wavelet obtained by convolving two boxes
-        Reproduces capuaf:trap.c
-    """
-
-    def __init__(self, rise_time=None, rupture_time=None):
-        if rise_time:
-            self.rise_time = rise_time
-        else:
-            raise ValueError
-
-        if rupture_time:
-            self.rupture_time = rupture_time
-        else:
-            raise ValueError
-
-        assert rupture_time > rise_time
-
-
     def evaluate(self, t):
         """ Evaluates wavelet at chosen points
         """
-        t1 = self.rise_time
-        t2 = self.rupture_time
-        dt = (t1+t2)/200
-
-        n1 = max(int(round(t1/dt)),1)
-        n2 = max(int(round(t2/dt)),1)
-
-        t0 = np.linspace(-(t1+t2)/2., +(t1+t2)/2., n1+n2)
-        y0 = np.zeros(n1+n2)
-
-        r = 1./(n1+n2)
-        for i in range(1,n1+1):
-            y0[i] = y0[i-1] + r
-            y0[-i-1] = y0[i]
-        for i in range(i,n2):
-            y0[i] = y0[i-1]
-
-        y0 /= 0.5*np.sum(y0)
-        y = np.interp(t,t0,y0)
-
-        return y
+        raise NotImplementedError("Must be implemented by subclass")
 
 
-class Triangle(Wavelet):
+#
+# basic mathematical shapes and functions
+#
+
+class Triangle(Base):
     def __init__(self, half_duration=None):
         if half_duration:
             self.half_duration = half_duration
@@ -105,36 +76,132 @@ class Triangle(Wavelet):
             raise ValueError
 
     def evaluate(self, t):
-        t0 = self.half_duration
-        y = (1. - abs(t)/t0)
-        return np.clip(y/t0, 0, np.inf)
+        # construct a triangle with height = 1 and base = 2*half_duration
+        w = 1. - abs(t)/half_duration
+        w = np.max(w, 0.)
+
+        # area = (0.5)*(base)*(height)
+        area = (0.5)*(2.*half_duration)*(1.)
+
+        # normalize by area
+        w /= area
+
+        return w
 
 
-class Gaussian(Wavelet):
+class Trapezoid(Base):
+    """ Symmetric trapezoid
+    """
+    def __init__(self, rise_time=None, half_duration=None):
+        if rise_time:
+            self.rise_time = rise_time
+        else:
+            raise ValueError
+
+        if half_duration:
+            self.half_duration = half_duration
+        else:
+            raise ValueError
+
+        assert rise_time <= half_duration
+
+
+    def evaluate(self, t):
+        # construct a trapezoid with height = 1
+        w = (self.half_duration - abs(t))/self.rise_time
+        w = np.clip(w, 0., 1.)
+
+
+        top = 2*(self.half_duration-self.rise_time)
+        bottom = 2.*self.half_duration
+        height = 1.
+
+        # normalize by area
+        area = (0.5)*(top + bottom)*(height)
+        w /= area
+
+        return w
+
+
+class Gaussian(Base):
     def __init__(self, sigma=1., mu=0.):
         self.sigma = sigma
         self.mu = mu
 
     def evaluate(self, t):
-        return np.exp(-(0.5*(t-self.mu)/self.sigma)**2.)
+        a = (2*np.pi)**0.5*self.sigma
+        return a**-1*np.exp(-(0.5*(t-self.mu)/self.sigma)**2.)
 
 
-class Ricker(Wavelet):
-    def __init__(self, freq):
+
+#
+# earthquake seismology "source-time functions" defined in terms of earthquake
+# source parameters
+#
+
+def EarthquakeTrapezoid(rise_time=None, rupture_time=None):
+    if not rise_time:
+        raise ValueError
+
+    if not rupture_time:
+        raise ValueError
+
+    assert rupture_time > rise_time
+
+    return Trapezoid(
+        rise_time=rise_time,
+        half_duration=(rise_time + rupture_time)/2.)
+
+
+
+
+#
+# exploration seismology "wavelets" defined in terms of dominant frequency
+#
+
+class GaussianWavelet(Base):
+    def __init__():
+        raise NotImplementedError
+
+
+class RickerWavelet(Base):
+    def __init__(self, dominant_frequency):
         # dominant frequency
-        self.freq = freq
+        self.freq = dominant_frequency
 
     def evaluate(self, t):
         a = 2.*np.pi*self.freq
         return (1-0.5*(a*t)**2.)*np.exp(-0.25*(a*t)**2.)
 
 
-class Gabor(Wavelet):
-    def __init__(self, freq):
+class GaborWavelet(Base):
+    def __init__(self, dominant_frequency):
         # dominant frequency
-        self.freq = freq
+        self.freq = dominant_frequency
 
     def evaluate(self, t):
         a = np.pi*self.freq
         b = 2*np.pi*self.freq
         return np.exp(-(a*t)**2.)*np.cos(b*t)
+
+
+#
+# utility functions
+#
+
+def _is_symmetric(w):
+    npts = len(w)
+
+    if np.remainder(npts, 2) == 0:
+        # even number of points
+        return _is_close(w[:npts/2], w[npts/2:])
+
+    else:
+        # odd number of points
+        return _is_close(w[:(npts-1)/2], w[(npts+1)/2:])
+
+
+def _is_close(w1, w2):
+    return np.all(np.isclose(w1, w2))
+
+
