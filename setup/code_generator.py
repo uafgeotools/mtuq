@@ -110,7 +110,7 @@ if __name__=='__main__':
     # (which normally lack such shifts) at the end of the benchmark. Even with
     # this correction, the match will not be exact because CAP applies the 
     # shifts before tapering and MTUQ after tapering. The resulting mismatch 
-    # will usually be apparent in body-wave windows, but not surface-wave 
+    # will usually be apparent in body-wave windows, but not in surface-wave 
     # windows
     #
     # Note that CAP works with dyne/cm and MTUQ works with N/m, so to make
@@ -166,7 +166,7 @@ Argparse_CAP_MTUQ="""
 
 
     # by default, the script runs with figure generation and error checking
-    # turned on; these can be turned off though through argparse arguments
+    # turned on; these can be turned off through argparse arguments
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_checks', action='store_true')
