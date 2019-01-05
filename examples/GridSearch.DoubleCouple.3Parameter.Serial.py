@@ -4,12 +4,12 @@ import os
 import sys
 import numpy as np
 
-from os.path import basename, join
+from os.path import join
 from mtuq import read, open_greens_db
 from mtuq.grid_search import DoubleCoupleGridRandom, grid_search_serial
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
-from mtuq.util.cap_util import remove_unused_stations, Trapezoid
+from mtuq.util.cap_util import Trapezoid
 from mtuq.util.plot import plot_beachball, plot_data_greens_mt
 from mtuq.util.util import cross, path_mtuq
 
@@ -121,12 +121,9 @@ if __name__=='__main__':
     print 'Reading data...\n'
     data = read(path_data, format='sac', id=event_name,
         tags=['units:cm', 'type:velocity']) 
-    remove_unused_stations(data, path_weights)
-    data.sort_by_distance()
 
-    stations  = []
-    for stream in data:
-        stations += [stream.meta]
+    data.sort_by_distance()
+    stations = data.get_stations()
     origin = data.get_origin()
 
 

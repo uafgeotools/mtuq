@@ -120,9 +120,19 @@ class Dataset(object):
 
     def get_station(self):
         """
-        Extracts station metadata
+        Extracts station metadata from a single stream in list
         """
         raise NotImplementedError("Must be implemented by subclass")
+
+
+    def get_stations(self):
+        """
+        Extracts station metadata from all streams in list
+        """
+        stations  = []
+        for stream in self:
+            stations += [stream.meta]
+        return stations
 
 
     # tags can be used to store custom metadata (e.g. not already returned by 

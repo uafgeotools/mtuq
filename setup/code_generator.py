@@ -5,12 +5,12 @@ import os
 import sys
 import numpy as np
 
-from os.path import basename, join
+from os.path import join
 from mtuq import read, open_greens_db
 from mtuq.grid_search import DoubleCoupleGridRandom, grid_search_mpi
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
-from mtuq.util.cap_util import remove_unused_stations, Trapezoid
+from mtuq.util.cap_util import Trapezoid
 from mtuq.util.plot import plot_beachball, plot_data_greens_mt
 from mtuq.util.util import cross, path_mtuq
 
@@ -345,9 +345,7 @@ GridBenchmark_CAP_MTUQ="""
     Mw = 4.5
     M0 = 10.**(1.5*Mw + 9.1) # units: N-m
     for mt in grid:
-        mt *= M0
-        # ad hoc factor
-        mt *= np.sqrt(2.)
+        mt *= np.sqrt(2)*M0
 
     wavelet = Trapezoid(
         moment_magnitude=Mw)
@@ -377,12 +375,9 @@ GridSearchSerial="""
     print 'Reading data...\\n'
     data = read(path_data, format='sac', id=event_name,
         tags=['units:cm', 'type:velocity']) 
-    remove_unused_stations(data, path_weights)
-    data.sort_by_distance()
 
-    stations  = []
-    for stream in data:
-        stations += [stream.meta]
+    data.sort_by_distance()
+    stations = data.get_stations()
     origin = data.get_origin()
 
 
@@ -441,12 +436,9 @@ GridSearchMPI="""
         print 'Reading data...\\n'
         data = read(path_data, format='sac', id=event_name,
             tags=['units:cm', 'type:velocity']) 
-        remove_unused_stations(data, path_weights)
-        data.sort_by_distance()
 
-        stations  = []
-        for stream in data:
-            stations += [stream.meta]
+        data.sort_by_distance()
+        tatiotations = data.get_stations()
         origin = data.get_origin()
 
         print 'Processing data...\\n'
@@ -513,12 +505,10 @@ GridSearchMPI2="""
         print 'Reading data...\\n'
         data = read(path_data, format='sac', id=event_name,
             tags=['units:cm', 'type:velocity']) 
-        remove_unused_stations(data, path_weights)
         data.sort_by_distance()
 
-        stations  = []
-        for stream in data:
-            stations += [stream.meta]
+        data.sort_by_distance()
+        stations = data.get_stations()
         origin = data.get_origin()
 
         print 'Processing data...\\n'
@@ -583,12 +573,10 @@ RunBenchmark_CAP_MTUQ="""
     print 'Reading data...\\n'
     data = read(path_data, format='sac', id=event_name,
         tags=['units:cm', 'type:velocity']) 
-    remove_unused_stations(data, path_weights)
     data.sort_by_distance()
 
-    stations  = []
-    for stream in data:
-        stations += [stream.meta]
+    data.sort_by_distance()
+    stations = data.get_stations()
     origin = data.get_origin()
 
 
