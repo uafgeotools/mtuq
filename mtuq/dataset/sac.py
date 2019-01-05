@@ -158,7 +158,7 @@ class Dataset(mtuq.dataset.base.Dataset):
 
 
 
-def reader(path, wildcard='*.sac', id=None, tags=[], verbose=False):
+def read(filename_or_wildcard, id=None, tags=[], verbose=False):
     """ Reads SAC traces, sorts by station, and returns MTUQ Dataset
 
      Additional processing would be required if the time sampling varies from
@@ -170,7 +170,7 @@ def reader(path, wildcard='*.sac', id=None, tags=[], verbose=False):
 
     # read traces one at a time
     data = Stream()
-    for filename in glob.glob(join(path, wildcard)):
+    for filename in glob.glob(filename_or_wildcard):
         try:
             data += obspy.read(filename, format='sac')
         except:

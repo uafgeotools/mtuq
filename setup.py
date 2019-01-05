@@ -17,6 +17,18 @@ class PyTest(test_command):
         sys.exit(errno)
 
 
+ENTRY_POINTS = {
+    'readers': [
+        'SAC = mtuq.dataset.sac:read',
+        ],
+    'greens_databases': [
+        'FK = mtuq.greens_tensor.fk:GreensTensorFactory',
+        'INSTASEIS = mtuq.greens_tensor.instaseis:GreensTensorFactory',
+        'SYNGINE = mtuq.greens_tensor.syngine:GreensTensorFactory',
+        ]
+    }
+
+
 setup(
     name="mtuq",
     version="0.2.0",
@@ -47,6 +59,7 @@ setup(
     keywords=[
         "seismology"
     ],
+    entry_points=ENTRY_POINTS,
     python_requires='~=2.7',
     install_requires=[
         "numpy", "scipy", "obspy", "h5py", "retry",
