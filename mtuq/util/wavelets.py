@@ -35,7 +35,7 @@ class Base(object):
         nt = len(y)
         half_duration = (nt-1)*dt/2.
         w = self.evaluate_on_interval(half_duration, nt)
-        w /= np.sum(w)
+        w *= dt
 
         if mode==1:
             # frequency-domain implementation
