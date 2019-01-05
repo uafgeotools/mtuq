@@ -14,9 +14,11 @@ class Base(object):
        Specification of the wavelet itself is deferred to the subclass
     """
 
-    def evaluate_on_interval(self, half_duration, nt):
+    def evaluate_on_interval(self, half_duration=None, nt=100):
         """ Evaluate wavelet on the interval
         """
+        if not half_duration:
+            raise ValueError
         assert half_duration > 0.
 
         t = np.linspace(-half_duration, +half_duration, nt)
@@ -77,11 +79,11 @@ class Triangle(Base):
 
     def evaluate(self, t):
         # construct a triangle with height = 1 and base = 2*half_duration
-        w = 1. - abs(t)/half_duration
-        w = np.max(w, 0.)
+        w = 1. - abs(t)/self.half_duration
+        w = np.clip(w, 0., np.inf)
 
         # area = (0.5)*(base)*(height)
-        area = (0.5)*(2.*half_duration)*(1.)
+        area = (0.5)*(2.*self.half_duration)*(1.)
 
         # normalize by area
         w /= area
@@ -129,8 +131,8 @@ class Gaussian(Base):
         self.mu = mu
 
     def evaluate(self, t):
-        a = (2*np.pi)**0.5*self.sigma
-        return a**-1*np.exp(-(0.5*(t-self.mu)/self.sigma)**2.)
+        return ((2*np.pi)**0.5*self.sigma)**(-1.)*\
+            np.exp(-0.5*((t-self.mu)/self.sigma)**2.)
 
 
 
@@ -146,7 +148,7 @@ def EarthquakeTrapezoid(rise_time=None, rupture_time=None):
     if not rupture_time:
         raise ValueError
 
-    assert rupture_time > rise_time
+    assert rupture_time >= rise_time
 
     return Trapezoid(
         rise_time=rise_time,
