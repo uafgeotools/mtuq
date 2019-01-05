@@ -125,7 +125,7 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print 'Reading data...\n'
-        data = sac.reader(path_data, wildcard='*.[zrt]', id=event_name,
+        data = sac.read(path_data+'/'+'*.[zrt]', id=event_name,
             tags=['cm', 'velocity']) 
         remove_unused_stations(data, path_weights)
         data.sort_by_distance()
