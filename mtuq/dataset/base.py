@@ -13,7 +13,7 @@ class Dataset(object):
 
         Each supported file format will have a corresponding reader utility
         that creates an MTUQ Dataset from files stored in that format.  For an
-        example, see mtuq.dataset.sac.reader
+        example, see mtuq.dataset.sac.read
     """
 
     def __init__(self, streams=None, id=None):

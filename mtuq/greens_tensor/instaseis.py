@@ -305,8 +305,24 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
 
 
-class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
-    def __init__(self, path, kernelwidth=12):
+class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
+    """ 
+    Interface to Instaseis/AxiSEM database of Green's functions
+
+    Generates GreenTensorLists via a two-step procedure
+        1) db = mtuq.greens.open_db(path=path, format='instaseis')
+        2) greens_tensors = db.read(stations, origin)
+
+    In the first step, the user supplies the path or URL to an AxiSEM NetCDF
+    output file
+
+    In the second step, the user supplies a list of stations and the origin
+    location and time of an event. GreensTensors are then created for all the
+    corresponding station-event pairs.
+
+    """
+
+    def __init__(self, path=None, kernelwidth=12):
         try:
             db = instaseis.open_db(path)
         except:

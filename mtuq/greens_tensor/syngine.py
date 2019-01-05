@@ -65,8 +65,25 @@ class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
         #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
 
 
-class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
-    def __init__(self, model):
+class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
+    """ 
+    Interface to syngine Green's function web service
+
+    Generates GreenTensorLists via a two-step procedure
+        1) db = mtuq.greens.open_db(model=model, format='syngine')
+        2) greens_tensors = db.read(stations, origin)
+
+    In the first step, the user supplies one of the available Earth model's
+    listed at http://ds.iris.edu/ds/products/syngine/#models
+
+    In the second step, the user supplies a list of stations and the origin
+    location and time of an event. GreensTensors are then created for all the
+    corresponding station-event pairs.
+    """
+
+    def __init__(self, model=None):
+        if not model:
+            raise ValueError
         self.model = model
 
 
@@ -154,10 +171,10 @@ def download_synthetics(model, station, origin, mt):
 
 
 def get_synthetics_syngine(model, station, origin, mt):
-    from mtuq.dataset.sac import reader
+    from mtuq.dataset.sac import read
 
     dirname = unzip(download_synthetics(model, station, origin, mt))
-    stream = reader(dirname)[0]
+    stream = read(dirname)[0]
 
     # what are the start and end times of the data?
     t1_new = float(station.starttime)

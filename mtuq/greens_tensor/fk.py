@@ -29,7 +29,7 @@ COMPONENTS = ['Z', 'R','T']
 
 # If a GreensTensor is created with the wrong input arguments, this error
 # message is displayed.  In practice this is rarely encountered, since
-# GreensTensorFactory normally does all the work
+# Database normally does all the work
 ErrorMessage =("A list of 10 traces must be provided, each representing an"
     "indepedent Green's tensor element. The order of traces must match the "
     "scheme used by fk. See fk documentation for details.")
@@ -142,24 +142,27 @@ class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
 
 
 
-class GreensTensorFactory(mtuq.greens_tensor.base.GreensTensorFactory):
+class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
     """ 
-    Creates a GreensTensorList by reading precomputed Green's tensors from an
-    fk directory tree.  Such trees contain SAC files organized by model, event
-    depth, and event distance and are associated with the solver package "fk"
-    by Lupei Zhu.
+    Interface to FK database of Green's functions
 
-    Generating Green's tensors is a two-step procedure:
-        1) factory = mtuq.greens.fk.GreensTensorFactory(path, model)
-        2) greens_tensors = factory(stations, origin)
+    Generates GreenTensorLists via a two-step procedure
+        1) db = mtuq.greens.open_db(path=path, model=model, format='FK')
+        2) greens_tensors = db.read(stations, origin)
 
-    In the first step, the user supplies the path to an fk directory tree and 
+    In the first step, the user supplies the path to an FK directory tree and 
     the name of the  layered Earth model that was used to generate Green's
     tensors contained in the tree.
 
     In the second step, the user supplies a list of stations and the origin
     location and time of an event. GreensTensors are then created for all the
     corresponding station-event pairs.
+
+    GreensTensorLists are created by reading precomputed Green's tensors from an
+    fk directory tree.  Such trees contain SAC files organized by model, event
+    depth, and event distance and are associated with the software package FK
+    by Lupei Zhu.
+
     """
     def __init__(self, path=None, model=None):
         if not path:
