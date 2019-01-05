@@ -222,12 +222,12 @@ class ProcessData(object):
         tags = traces.tags
 
 
-        if 'cm' in tags:
-            # unit conversion
+        if 'units:cm' in tags:
+            # convert to meters
             for trace in traces:
                 trace.data *= 1.e-2
-            index = tags.index('cm')
-            tags[index] = 'm'
+            index = tags.index('units:cm')
+            tags[index] = 'units:m'
 
 
         #
@@ -259,11 +259,12 @@ class ProcessData(object):
                 trace.filter('highpass', zerophase=False,
                           freq=self.freq)
 
-        if 'velocity' in tags:
+        if 'type:velocity' in tags:
             # convert to displacement
             for trace in traces:
                 trace.data = np.cumsum(trace.data)*meta.delta
-            tags.remove('velocity')
+            index = tags.index('type:velocity')
+            tags[index] = 'type:displacement'
 
 
         #
