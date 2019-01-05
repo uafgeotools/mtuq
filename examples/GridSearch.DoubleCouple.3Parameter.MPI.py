@@ -107,7 +107,7 @@ if __name__=='__main__':
 
     grid = DoubleCoupleGridRandom(
         npts=50000,
-        Mw=4.5)
+        moment_magnitude=4.5)
 
     wavelet = Trapezoid(
         moment_magnitude=4.5)
