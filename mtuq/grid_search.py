@@ -48,10 +48,14 @@ def grid_search_mpi(data, greens, misfit, grid):
     return grid_search_serial(data, greens, misfit, subset)
 
 
-def FullMomentTensorGridRandom(Mw, npts=50000):
+def FullMomentTensorGridRandom(moment_magnitude=None, npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
     N = npts
+
+    if not moment_magnitude:
+        raise ValueError
+    Mw = moment_magnitude
 
     # upper bound, lower bound, number of points
     v = [-1./3., 1./3., N]
@@ -74,10 +78,14 @@ def FullMomentTensorGridRandom(Mw, npts=50000):
         callback=callback)
 
 
-def FullMomentTensorGridRegular(Mw, npts_per_axis=25):
+def FullMomentTensorGridRegular(moment_magnitude=None, npts_per_axis=25):
     """ Full moment tensor grid with regularly-spaced values
     """
     N = npts_per_axis
+
+    if not moment_magnitude:
+        raise ValueError
+    Mw = moment_magnitude
 
     # upper bound, lower bound, number of points
     v = [-1./3., 1./3., N]
@@ -100,10 +108,14 @@ def FullMomentTensorGridRegular(Mw, npts_per_axis=25):
         callback=callback)
 
 
-def DoubleCoupleGridRandom(Mw, npts=50000):
+def DoubleCoupleGridRandom(moment_magnitude=None, npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
     """
     N = npts
+
+    if not moment_magnitude:
+        raise ValueError
+    Mw = moment_magnitude
 
     # upper bound, lower bound, number of points
     kappa = [0., 360, N]
@@ -124,10 +136,14 @@ def DoubleCoupleGridRandom(Mw, npts=50000):
         callback=callback)
 
 
-def DoubleCoupleGridRegular(Mw, npts_per_axis=25):
+def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
     """ Double-couple moment tensor grid with regularly-spaced values
     """ 
     N = npts_per_axis
+
+    if not moment_magnitude:
+        raise ValueError
+    Mw = moment_magnitude
 
     # upper bound, lower bound, number of points
     kappa = [0., 360, N]

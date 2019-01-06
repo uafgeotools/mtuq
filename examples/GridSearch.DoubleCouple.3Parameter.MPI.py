@@ -4,14 +4,12 @@ import os
 import sys
 import numpy as np
 
-from os.path import basename, join
-from mtuq.dataset import sac
-from mtuq.greens_tensor import syngine
-from mtuq.grid_search import DoubleCoupleGridRandom
-from mtuq.grid_search import grid_search_mpi
+from os.path import join
+from mtuq import read, open_greens_db
+from mtuq.grid_search import DoubleCoupleGridRandom, grid_search_mpi
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
-from mtuq.util.cap_util import remove_unused_stations, Trapezoid
+from mtuq.util.cap_util import Trapezoid
 from mtuq.util.plot import plot_beachball, plot_data_greens_mt
 from mtuq.util.util import cross, path_mtuq
 
@@ -38,7 +36,7 @@ if __name__=='__main__':
     # Mw~4 Alaska earthquake
     #
 
-    path_data=    join(path_mtuq(), 'data/examples/20090407201255351')
+    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
@@ -109,7 +107,7 @@ if __name__=='__main__':
 
     grid = DoubleCoupleGridRandom(
         npts=50000,
-        Mw=4.5)
+        moment_magnitude=4.5)
 
     wavelet = Trapezoid(
         moment_magnitude=4.5)
@@ -125,14 +123,11 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print 'Reading data...\n'
-        data = sac.reader(path_data, wildcard='*.[zrt]', id=event_name,
-            tags=['cm', 'velocity']) 
-        remove_unused_stations(data, path_weights)
-        data.sort_by_distance()
+        data = read(path_data, format='sac', id=event_name,
+            tags=['units:cm', 'type:velocity']) 
 
-        stations  = []
-        for stream in data:
-            stations += [stream.meta]
+        data.sort_by_distance()
+        tatiotations = data.get_stations()
         origin = data.get_origin()
 
         print 'Processing data...\n'
@@ -142,8 +137,8 @@ if __name__=='__main__':
         data = processed_data
 
         print 'Reading Greens functions...\n'
-        factory = syngine.GreensTensorFactory(model)
-        greens = factory(stations, origin)
+        db = open_greens_db(format='syngine', model=model)
+        greens = db.read(stations, origin)
 
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)

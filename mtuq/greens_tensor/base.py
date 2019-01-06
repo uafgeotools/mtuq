@@ -264,12 +264,13 @@ class GreensTensorList(object):
 
 
 
-class GreensTensorFactory(object):
+class GreensTensorDatabase(object):
     """
-    Creates GreensTensorLists via a two-step procedure:
+    Interface to Green's function database 
 
-        1) factory = GreensTensorFactory(*args, **kwargs)
-        2) greens_tensors = factory(stations, origin) 
+    Creates GreensTensorLists via a two-step procedure
+        1) db = mtuq.greens.open_db(format=..., **kwargs)
+        2) greens_tensors = db.read(stations, origin) 
 
     In the second step, the user supplies a list of station objects and
     an origin object. The result is a GreensTensorList containing a
@@ -279,15 +280,12 @@ class GreensTensorFactory(object):
     Details regarding how the GreenTensors are actually created--whether
     they are generated on-the-fly or read from a pre-computed database--
     are deferred to the subclass.
-
-    This class's __call__ method is very similar to an mtuq.dataset.reader, 
-    excecpt it returns a GreensTensorsList rather than a Dataset
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def __call__(self, stations, origin, verbose=False):
+    def read(self, stations, origin, verbose=False):
         """
         Reads Green's tensors corresponding to given stations and origin
         """

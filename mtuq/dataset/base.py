@@ -13,7 +13,7 @@ class Dataset(object):
 
         Each supported file format will have a corresponding reader utility
         that creates an MTUQ Dataset from files stored in that format.  For an
-        example, see mtuq.dataset.sac.reader
+        example, see mtuq.dataset.sac.read
     """
 
     def __init__(self, streams=None, id=None):
@@ -120,9 +120,19 @@ class Dataset(object):
 
     def get_station(self):
         """
-        Extracts station metadata
+        Extracts station metadata from a single stream in list
         """
         raise NotImplementedError("Must be implemented by subclass")
+
+
+    def get_stations(self):
+        """
+        Extracts station metadata from all streams in list
+        """
+        stations  = []
+        for stream in self:
+            stations += [stream.meta]
+        return stations
 
 
     # tags can be used to store custom metadata (e.g. not already returned by 

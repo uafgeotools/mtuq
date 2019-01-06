@@ -241,14 +241,14 @@ def get_synthetics_mtuq(data, greens, mt, Mw=None, apply_shifts=True):
 
 
 def apply_magnitude_dependent_shift(trace, Mw):
-    """ This type of time shift arises from the idiosyncratic way CAP 
+    """ This type of time-shift arises from the idiosyncratic way CAP 
       implements source-time function convolution. CAP's "conv" function
       results in systematic magnitude-dependent shifts between origin times
       and arrival times. This is arguably a bug. We include this function
       to allow benchmark comparisons between MTUQ synthetics (which normally
       lack such shifts) and CAP synthetics.
     """
-    # the amount of the time shift is half the sum of the earthquake's rupture
+    # the amount of the time-shift is half the sum of the earthquake's rupture
     # time and rise time, as given by relations in the CAP Perl wrapper
     t_offset = (cap_rupture_time(Mw) + cap_rise_time(Mw))/2.
 
@@ -260,38 +260,68 @@ def apply_magnitude_dependent_shift(trace, Mw):
     trace.data[:nt] = 0.
 
 
-def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-3, norm=1):
+def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-2, norm=2):
     """ Checks whether CAP and MTUQ synthetics agree within the specified
       tolerances 
 
-      Even with the magnitude-dependent time shift correction described above,
+      Even with the magnitude-dependent time-shift correction described above,
       CAP and MTUQ synthetics will not match perfectly because the correction
       is made only after tapering
 
-      For body wave windows, the time shift correction is large relative to the
-      window length, and the tapering-related mismatch will be especially
+      For body wave windows, the time-shift correction is large relative to the
+      window length, and the tapering-related mismatch will usually be
       pronounced. Thus, checking body waves is turned off by default
     """
+    # keep track of number of mismatches
+    count = 0
+
     for cap_bw, mtuq_bw, cap_sw, mtuq_sw in zip(
         cap['body_waves'], mtuq['body_waves'],
         cap['surface_waves'], mtuq['surface_waves']):
 
         if bw_tol < np.inf:
+            maxval = 0.
+            for bw in mtuq_sw:
+                maxval = max(maxval, abs(bw.data).max())
+
             for bw1, bw2 in zip(cap_bw, mtuq_bw):
                 dt = bw1.stats.delta
                 e = np.linalg.norm((bw1.data-bw2.data)*dt, norm)
+                e /= np.sum(abs(bw1.data))
                 if e > bw_tol:
-                    raise Exception
+                    print ((
+                        "Discrepancy between CAP and MTUQ synthetics\n"+
+                        "  category:  body waves\n"+
+                        "  error:     %e\n"+
+                        "  threshold: %e\n") %
+                        (e, bw_tol))
+
+                    count += 1
+
 
         if sw_tol < np.inf:
+            maxval = 0.
+            for sw in mtuq_sw:
+                maxval = max(maxval, abs(sw.data).max())
+
             for sw1, sw2 in zip(cap_sw, mtuq_sw):
                 dt = sw1.stats.delta
                 e = np.linalg.norm((sw1.data-sw2.data)*dt, norm)
+                e *= dt/maxval 
                 if e > sw_tol:
-                    raise Exception
+                    print ((
+                        "Discrepancy between CAP and MTUQ synthetics\n"+
+                        "  category:  surface waves\n"+
+                        "  id:        %s\n"+
+                        "  error:     %e\n"+
+                        "  threshold: %e\n") %
+                        (sw1.id, e, sw_tol))
 
+                    count += 1
 
-
+    if count > 0:
+        raise Exception(
+            "Discrepancy between CAP and MTUQ synthetics")
 
 
 
