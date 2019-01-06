@@ -268,13 +268,13 @@ def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-2, norm=2):
 
         if bw_tol < np.inf:
             maxval = 0.
-            for bw in mtuq_sw:
+            for bw in mtuq_bw:
                 maxval = max(maxval, abs(bw.data).max())
 
             for bw1, bw2 in zip(cap_bw, mtuq_bw):
                 dt = bw1.stats.delta
                 e = np.linalg.norm((bw1.data-bw2.data)*dt, norm)
-                e /= np.sum(abs(bw1.data))
+                e *= dt/maxval
                 if e > bw_tol:
                     print ((
                         "Discrepancy between CAP and MTUQ synthetics\n"+
