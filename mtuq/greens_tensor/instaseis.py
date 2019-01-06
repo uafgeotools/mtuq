@@ -20,7 +20,7 @@ COMPONENTS = ['Z','R','T']
 # instaseis Green's functions describe the impulse response of a horizontally-
 # layered medium. For the vertical and raidal components, there are four
 # associated time series. For the tranverse component, there are two associated 
-# time series. Thus there ten independent Green's tensor elements altogether, 
+# time series. Thus there are ten independent Green's tensor elements altogether, 
 # which is fewer than in the case of a general inhomogeneous medium
 
 

@@ -21,8 +21,8 @@ if __name__=='__main__':
     # except here we use a coarser grid, and at the end we assert that the test
     # result equals the expected result
     #
-    # The compare against CAP/FK:
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.3 -I20 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
+    # The compare against CAP/FK
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1/1/10/10/10 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
 
 
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')

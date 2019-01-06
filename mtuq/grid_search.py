@@ -57,7 +57,7 @@ def FullMomentTensorGridRandom(moment_magnitude=None, npts=50000):
         raise ValueError
     Mw = moment_magnitude
 
-    # upper bound, lower bound, number of points
+    # lower bound, upper bound, number of points
     v = [-1./3., 1./3., N]
     w = [-3./8.*PI, 3./8.*PI, N]
     kappa = [0., 360, N]
@@ -87,7 +87,7 @@ def FullMomentTensorGridRegular(moment_magnitude=None, npts_per_axis=25):
         raise ValueError
     Mw = moment_magnitude
 
-    # upper bound, lower bound, number of points
+    # lower bound, upper bound, number of points
     v = [-1./3., 1./3., N]
     w = [-3./8.*PI, 3./8.*PI, N]
     kappa = [0., 360, N]
@@ -117,7 +117,7 @@ def DoubleCoupleGridRandom(moment_magnitude=None, npts=50000):
         raise ValueError
     Mw = moment_magnitude
 
-    # upper bound, lower bound, number of points
+    # lower bound, upper bound, number of points
     kappa = [0., 360, N]
     sigma = [-90., 90., N]
     h = [0., 1., N]
@@ -145,7 +145,7 @@ def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
         raise ValueError
     Mw = moment_magnitude
 
-    # upper bound, lower bound, number of points
+    # lower bound, upper bound, number of points
     kappa = [0., 360, N]
     sigma = [-90., 90., N]
     h = [0., 1., N]
