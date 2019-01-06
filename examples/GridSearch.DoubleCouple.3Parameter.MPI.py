@@ -127,7 +127,7 @@ if __name__=='__main__':
             tags=['units:cm', 'type:velocity']) 
 
         data.sort_by_distance()
-        tatiotations = data.get_stations()
+        stations = data.get_stations()
         origin = data.get_origin()
 
         print 'Processing data...\n'

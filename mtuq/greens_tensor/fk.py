@@ -23,7 +23,7 @@ COMPONENTS = ['Z', 'R','T']
 # fk Green's functions describe the impulse response of a horizontally layered 
 # medium. For the vertical and radial components, there are four associated 
 # time series. For the tranverse component, there are two associated time 
-# series. Thus there ten independent Green's tensor elements altogether, 
+# series. Thus there are ten independent Green's tensor elements altogether, 
 # which is fewer than in the case of a general inhomogeneous medium
 
 

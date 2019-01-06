@@ -75,19 +75,6 @@ def cap_rise_time(Mw):
     return 0.5*cap_rupture_time(Mw)
 
 
-def Nm_to_dynecm(mt):
-    """ Converts from N-m (used by MTUQ) to dyne-cm (used by CAP)
-    """
-    raise NotImplementedError
-
-
-def _seismic_moment(mt):
-    return np.sqrt(np.sum(mt[0:3]**2.) + 0.5*np.sum(mt[3:6]**2.))
- 
-
-def _moment_magnitude(mt):
-    M0 = _seismic_moment(mt)
-
 
 #
 # the following functions help reproduce cap signal processing functionality.
@@ -113,7 +100,7 @@ def taper(array, taper_fraction=0.3, inplace=True):
 
 #
 # the following functions are used in benchmark comparisons between CAP and 
-# MTUQ synthetics. See tests/benchmark_cap_fk.py
+# MTUQ synthetics. See tests/benchmark_cap_mtuq.py
 #
 
 def get_synthetics_cap(data, path, event_name):
@@ -281,13 +268,13 @@ def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-2, norm=2):
 
         if bw_tol < np.inf:
             maxval = 0.
-            for bw in mtuq_sw:
+            for bw in mtuq_bw:
                 maxval = max(maxval, abs(bw.data).max())
 
             for bw1, bw2 in zip(cap_bw, mtuq_bw):
                 dt = bw1.stats.delta
                 e = np.linalg.norm((bw1.data-bw2.data)*dt, norm)
-                e /= np.sum(abs(bw1.data))
+                e *= dt/maxval
                 if e > bw_tol:
                     print ((
                         "Discrepancy between CAP and MTUQ synthetics\n"+

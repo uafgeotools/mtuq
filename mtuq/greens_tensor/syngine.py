@@ -62,7 +62,7 @@ class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
         #
         # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
         # (note sign differences):
-        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=M-xz, m_rp=Myz, m_tp=-Mxy
+        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=-Mxz, m_rp=Myz, m_tp=-Mxy
 
 
 class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
