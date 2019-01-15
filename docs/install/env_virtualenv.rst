@@ -1,14 +1,6 @@
 Installation under virtualenv
 =============================
 
-.. note::
-
-    If you prefer locations other than ``$HOME/packages`` and ``$HOME/virtual``, modify the following accordingly.
-
-
-.. code::
-
-
 Create a fresh virtual environment:
 
 .. code::

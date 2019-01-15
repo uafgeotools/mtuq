@@ -1,10 +1,10 @@
 Installation under conda
 ========================
 
-1. Download and install miniconda following `these instructions <https://conda.io/docs/user-guide/install/index.html>`_.
+Download and install miniconda following `these instructions <https://conda.io/docs/user-guide/install/index.html>`_.
 
 
-2. Create a conda virtual environment:
+Create a conda virtual environment:
 
 .. code::
 
@@ -12,7 +12,7 @@ Installation under conda
    conda install numpy obspy h5py
 
 
-3. Install MTUQ: 
+Install MTUQ: 
 
 .. note::
 
