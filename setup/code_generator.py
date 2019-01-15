@@ -6,7 +6,7 @@ import sys
 import numpy as np
 
 from os.path import join
-from mtuq import read, open_greens_db
+from mtuq import read, open_db
 from mtuq.grid_search import DoubleCoupleGridRandom, grid_search_mpi
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
@@ -389,8 +389,8 @@ GridSearchSerial="""
 
 
     print 'Reading Greens functions...\\n'
-    db = open_greens_db(model=model, format='syngine')
-    greens = db.read(stations, origin)
+    db = open_db(model=model, format='syngine')
+    greens = db.get_greens_tensors(stations, origin)
 
 
     print 'Processing Greens functions...\\n'
@@ -448,8 +448,8 @@ GridSearchMPI="""
         data = processed_data
 
         print 'Reading Greens functions...\\n'
-        db = open_greens_db(format='syngine', model=model)
-        greens = db.read(stations, origin)
+        db = open_db(format='syngine', model=model)
+        greens = db.get_greens_tensors(stations, origin)
 
         print 'Processing Greens functions...\\n'
         greens.convolve(wavelet)
@@ -525,8 +525,8 @@ GridSearchMPI2="""
    for origin, magnitude in cross(origins, magnitudes):
         if comm.rank==0:
             print 'Reading Greens functions...\\n'
-            db = open_greens_db(format='syngine', model=model)
-            greens = db.read(stations, origin)
+            db = open_db(format='syngine', model=model)
+            greens = db.get_greens_tensors(stations, origin)
 
             print 'Processing Greens functions...\\n'
             wavelet = Trapezoid(magnitude)
@@ -588,8 +588,8 @@ RunBenchmark_CAP_MTUQ="""
 
 
     print 'Reading Greens functions...\\n'
-    db = open_greens_db(path=path_greens, format='FK')
-    greens = db.read(stations, origin)
+    db = open_db(path=path_greens, format='FK')
+    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
