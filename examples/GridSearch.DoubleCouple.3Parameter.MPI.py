@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 from os.path import join
-from mtuq import read, open_greens_db
+from mtuq import read, open_db
 from mtuq.grid_search import DoubleCoupleGridRandom, grid_search_mpi
 from mtuq.misfit.cap import Misfit
 from mtuq.process_data.cap import ProcessData
@@ -137,8 +137,8 @@ if __name__=='__main__':
         data = processed_data
 
         print 'Reading Greens functions...\n'
-        db = open_greens_db(format='syngine', model=model)
-        greens = db.read(stations, origin)
+        db = open_db(format='syngine', model=model)
+        greens = db.get_greens_tensors(stations, origin)
 
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)

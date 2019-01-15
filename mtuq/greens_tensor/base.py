@@ -11,13 +11,17 @@ from mtuq.util.util import iterable
 
 
 class GreensTensor(Stream):
-    """ Elastic Green's tensor object
+    """ Green's tensor base class
 
         Holds multiple time series corresponding to the independent elements 
-        of an elastic Green's tensor. Besides data processing utilities
-        inherited from obspy.Stream, provides methods for generating 
-        synthetics, convolving source wavelets, and calculating 
-        cross-correlation time-shifts.
+        of an elastic Green's tensor. 
+
+        .. note::
+
+            Besides those methods described below, also includes data 
+            processing methods inherited from ``obspy.Stream``.
+            For descriptions of inherited methods, see `ObsPy documentation
+            <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
     """
 
     def __init__(self, traces, station, origin):
@@ -31,22 +35,60 @@ class GreensTensor(Stream):
         self.meta = deepcopy(station)
         self.origin = origin
 
-        # when generating synthetics, create these components
-        self.components = ['Z', 'R', 'T']
-
 
     def get_synthetics(self, mt):
         """
-        Generates synthetics through a linear combination of time series
+        Generates synthetics through a linear combination of Green's tensor
+        elements
         """
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def _precompute_weights(self):
-        """
-        Calculates weights used in linear combination of Green's functions
+    def get_time_shift(self, data, mt, group, time_shift_max):
+        """ 
+        Finds optimal time-shift correction between synthetics and
+        user-supplied data
+
+        :type data: mtuq.Dataset
+        :param data: Data to be cross-correlated with synthetics
+        :type mt: mtuq.MomentTensor
+        :param mt: Moment tensor used to generate synthetics
+        :type group: str
+        :param group: Which components to consider when computing optimal time-
+            shift, e.g. ``"Z"``, ``"R"``, ``"T"``, ``"ZR"``, ``"ZRT"``. If 
+            multiple characters are given, then time-shift will be fixed across
+            multiple components.
+        :type time_shift_max: float
+        :param time_shift_max: Maximum allowable time-shift. Lag times greater 
+            than this value are not computed in the cross-correlation.
         """
         raise NotImplementedError("Must be implemented by subclass")
+
+
+    def apply(self, function, *args, **kwargs):
+        """ 
+        Applies a function to all time series
+
+        :type function: func
+        :param function: Any function that acts on an obspy ``Stream``
+        :rtype: Always returns a new ``GreensTensor``. (Never operates in-place
+           on the existing one.)
+        
+        """
+        return self.__class__(function(self, *args, **kwargs),
+            self.meta, self.origin)
+
+
+    def convolve(self, wavelet):
+        """
+        Convolves source wavelet with all time series
+
+        :type wavelet: mtuq.util.wavelets.Wavelet
+        :param wavelet: Source wavelet or source-time function to be used in
+            convolution
+        """
+        for trace in self:
+            wavelet.convolve(trace)
 
 
     def _preallocate_synthetics(self):
@@ -66,26 +108,9 @@ class GreensTensor(Stream):
         self._synthetics.id = self.id
 
 
-    def apply(self, function, *args, **kwargs):
+    def _precompute_weights(self):
         """
-        Applies a function to all time series
-        """
-        return self.__class__(function(self, *args, **kwargs),
-            self.meta, self.origin)
-
-
-    def convolve(self, wavelet):
-        """
-        Convolves source wavelet with all time series
-        """
-        for trace in self:
-            wavelet.convolve(trace)
-
-
-    def get_time_shift(self, data, mt, group, time_shift_max):
-        """ 
-        Finds optimal time-shift correction between synthetics and
-        user-supplied data
+        Calculates weights used in linear combination of Green's functions
         """
         raise NotImplementedError("Must be implemented by subclass")
 
@@ -100,12 +125,15 @@ class GreensTensor(Stream):
 
     def select(self, *args, **kwargs):
         """
-        Same as obspy.Stream.select
+        Return new GreensTensor with only those traces that match the supplied
+        metadata criteria
         """
-        # convert to Stream
+        # Inherited method "select" doesn't work because it tries to return a
+        # a parent class instance. To fix it, we need to convert to Stream,
+        # then call the method, then convert back to  GreensTensor
+
         stream = Stream([trace for trace in self]).select(*args, **kwargs)
-        
-        # convert back to GreensTensor
+
         return self.__class__(
             [trace for trace in stream],
             self.meta,
@@ -144,10 +172,13 @@ class GreensTensorList(object):
 
 
     def get_synthetics(self, mt):
-        """
-        Returns an MTUQ Dataset in which all streams correspond to the moment
-        tensor mt, and each each individual stream corresponds to an
-        individual station
+        """ Generates synthetic seismograms by summing Green's functions in a 
+        linear combination weighted by moment tensor elements
+
+        :param mt: Moment tensor to be used in linear combination
+        :rtype: An MTUQ ``Dataset`` in which all streams correspond to the
+            given moment tensor, and each each individual stream corresponds to
+            an individual station
         """
         synthetics = Dataset()
         for greens_tensor in self.__list__:
@@ -158,9 +189,12 @@ class GreensTensorList(object):
     # the next three methods can be used to apply signal processing or other
     # operations to all time series in all GreensTensors
     def apply(self, function, *args, **kwargs):
-        """
-        Returns the result of applying a function to each GreensTensor in the 
-        list. Similar to the behavior of the python built-in "apply".
+        """ Returns the result of applying a function to each GreensTensor in
+        the list. Similar to the Python built-in "apply".
+
+        :type function: func
+        :param function: Function that acts on obspy an ``Stream``
+        :rtype: ``GreensTensorList``
         """
         processed = GreensTensorList()
         for greens_tensor in self.__list__:
@@ -170,9 +204,8 @@ class GreensTensorList(object):
 
 
     def map(self, function, *sequences):
-        """
-        Applies a function in-pace to each GreensTensor in the list. If one or
-        more optional sequences are given, the function is called with an 
+        """ Applies a function in-pace to each GreensTensor in the list. If one
+        or more optional sequences are given, the function is called with an 
         argument list consisting of the corresponding item of each sequence. 
         Similar to the behavior of the python built-in "map".
         """
@@ -265,17 +298,7 @@ class GreensTensorList(object):
 
 
 class GreensTensorDatabase(object):
-    """
-    Interface to Green's function database 
-
-    Creates GreensTensorLists via a two-step procedure
-        1) db = mtuq.greens.open_db(format=..., **kwargs)
-        2) greens_tensors = db.read(stations, origin) 
-
-    In the second step, the user supplies a list of station objects and
-    an origin object. The result is a GreensTensorList containing a
-    GreensTensor for each station-event pair, with the order of GreensTensors 
-    matching the order of the stations in the input argument.
+    """ Abstract base class for database or web service clients
 
     Details regarding how the GreenTensors are actually created--whether
     they are generated on-the-fly or read from a pre-computed database--
@@ -285,9 +308,17 @@ class GreensTensorDatabase(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def read(self, stations, origin, verbose=False):
-        """
-        Reads Green's tensors corresponding to given stations and origin
+    def get_greens_tensors(self, stations, origin, verbose=False):
+        """ Reads Green's tensors from database
+
+        Returns a ``GreensTensorList`` in which each element corresponds to the
+        given station and all elements correspond to the given origin
+
+        :type stations: list
+        :param stations: List of station metadata dictionaries
+        :type origin: obspy.core.event.Origin
+        :param origin: Event metadata dictionary
+        :rtype: mtuq.greens_tensor.GreensTensorList
         """
         greens_tensors = GreensTensorList()
 
