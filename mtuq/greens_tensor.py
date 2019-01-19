@@ -3,11 +3,8 @@ import numpy as np
 
 from copy import deepcopy
 from obspy.core import Stream, Trace
-from scipy.signal import fftconvolve
-from mtuq.dataset.base import Dataset
-from mtuq.util.geodetics import distance_azimuth
-from mtuq.util.signal import check_time_sampling, convolve
-from mtuq.util.util import iterable
+from mtuq.dataset import Dataset
+from mtuq.util.signal import check_time_sampling
 
 
 class GreensTensor(Stream):
@@ -31,8 +28,8 @@ class GreensTensor(Stream):
         super(GreensTensor, self).__init__(traces)
 
         self.id = station.id
-        self.tags = ['greens_tensor']
-        self.meta = deepcopy(station)
+        self.tags = ['type:greens_tensor']
+        self.stats = deepcopy(station)
         self.origin = origin
 
 
@@ -76,7 +73,7 @@ class GreensTensor(Stream):
         
         """
         return self.__class__(function(self, *args, **kwargs),
-            self.meta, self.origin)
+            self.stats, self.origin)
 
 
     def convolve(self, wavelet):
@@ -98,12 +95,12 @@ class GreensTensor(Stream):
         """
         self._synthetics = Stream()
         for channel in self.components:
-            meta = deepcopy(self.meta)
-            meta.update({
+            stats = deepcopy(self.stats)
+            stats.update({
                 'npts': self[0].stats.npts,
                 'channel': channel,
                 })
-            self._synthetics += Trace(np.zeros(meta.npts), meta)
+            self._synthetics += Trace(np.zeros(stats.npts), stats)
 
         self._synthetics.id = self.id
 
@@ -136,7 +133,7 @@ class GreensTensor(Stream):
 
         return self.__class__(
             [trace for trace in stream],
-            self.meta,
+            self.stats,
             self.origin)
 
 
@@ -152,10 +149,11 @@ class GreensTensor(Stream):
 
 
 class GreensTensorList(object):
-    """ A list of GreensTensors
+    """ Container for one or more GreensTensor objects
 
-        Very similar to an MTUQ Dataset, except rather observed data, holds
-        synthetic Green's tensors
+    Basically, a list of GreensTensors. Very similar to an MTUQ Dataset, except 
+    rather than a list of Streams containing  observed data, holds synthetic 
+    Green's tensors
     """
     def __init__(self, greens_tensors=None, id=None):
         # typically the id is the event name, event origin time, or some other
@@ -254,7 +252,7 @@ class GreensTensorList(object):
         """ 
         Sorts in-place by hypocentral distance
         """
-        self.sort_by_function(lambda stream: stream.meta.distance,
+        self.sort_by_function(lambda stream: stream.stats.distance,
             reverse=reverse)
 
 
@@ -262,7 +260,7 @@ class GreensTensorList(object):
         """
         Sorts in-place by source-receiver azimuth
         """
-        self.sort_by_function(lambda stream: stream.meta.azimuth,
+        self.sort_by_function(lambda stream: stream.stats.azimuth,
             reverse=reverse)
 
 
@@ -296,45 +294,4 @@ class GreensTensorList(object):
         return len(self.__list__)
 
 
-
-class GreensTensorDatabase(object):
-    """ Abstract base class for database or web service clients
-
-    Details regarding how the GreenTensors are actually created--whether
-    they are generated on-the-fly or read from a pre-computed database--
-    are deferred to the subclass.
-    """
-    def __init__(self, **kwargs):
-        raise NotImplementedError("Must be implemented by subclass")
-
-
-    def get_greens_tensors(self, stations, origin, verbose=False):
-        """ Reads Green's tensors from database
-
-        Returns a ``GreensTensorList`` in which each element corresponds to the
-        given station and all elements correspond to the given origin
-
-        :type stations: list
-        :param stations: List of station metadata dictionaries
-        :type origin: obspy.core.event.Origin
-        :param origin: Event metadata dictionary
-        :rtype: mtuq.greens_tensor.GreensTensorList
-        """
-        greens_tensors = GreensTensorList()
-
-        for station in iterable(stations):
-            # if hypocenter is an inversion parameter, then the values 
-            # calculated below will in general differ from catalog_distance and
-            # catalog_azimuth
-            station.distance, station.azimuth = distance_azimuth(
-                station, origin)
-
-            greens_tensors += self.get_greens_tensor(
-                station, origin)
-
-        return greens_tensors
-
-
-    def get_greens_tensor(self, station, origin):
-        raise NotImplementedError("Must be implemented by subclass")
 
