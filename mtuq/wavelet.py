@@ -5,13 +5,25 @@ from scipy import signal
 
 
 
-class Base(object):
-    """ Wavelet base class
+class Wavelet(object):
+    """ Base class for earthquake source-time functions and exploration
+    geophysics source wavelets
 
-       Provides methods for evaluating wavelets on intervals and convolving
-       wavelets with user-supplied time series
+    The ``evaluate`` method, which defines the mathematical expression for the
+    the wavelet, must be implemented in a subclass
 
-       Specification of the wavelet itself is deferred to the subclass
+    When defining a particular wavelet through the ``evaluate`` method, an 
+    analytical expression for the source as a function of time, a numerical 
+    procedure, or a recorded time series can be used.
+
+    For example, the following code defines a Guassian wavelet with unit 
+    standard deviation:
+
+    .. code::
+        class Gaussian(Wavelet):
+            def evaluate(self, t):
+                return ((2*np.pi)**0.5)**(-1.)*np.exp(-0.5*(t)**2.)
+
     """
 
     def evaluate_on_interval(self, half_duration=None, nt=100):
@@ -24,15 +36,16 @@ class Base(object):
         t = np.linspace(-half_duration, +half_duration, nt)
         w = self.evaluate(t)
 
-        # trim symmetric wavelets only
         if _is_symmetric(w):
+            # trim symmetric wavelets only, otherwise any convolution results
+            # will be off-center
             w = np.trim_zeros(w)
 
         return w
 
 
     def convolve_array(self, y, dt, mode=1):
-        """ Convolves numpy array with given wavelet
+        """ Convolves NumPy array with given wavelet
         """
         nt = len(y)
         half_duration = (nt-1)*dt/2.
@@ -67,10 +80,22 @@ class Base(object):
 
 
 #
+# user-supplied wavelet
+#
+
+
+class UserSupplied(Wavelet):
+    """ Wavelet obtained from an arbitrary user-supplied time series
+    """
+    def __init__(self):
+        raise NotImplementedError
+
+
+#
 # basic mathematical shapes and functions
 #
 
-class Triangle(Base):
+class Triangle(Wavelet):
     def __init__(self, half_duration=None):
         if half_duration:
             self.half_duration = half_duration
@@ -82,7 +107,7 @@ class Triangle(Base):
         w = 1. - abs(t)/self.half_duration
         w = np.clip(w, 0., np.inf)
 
-        # area = (0.5)*(base)*(height)
+        # area = (0.5)*(Wavelet)*(height)
         area = (0.5)*(2.*self.half_duration)*(1.)
 
         # normalize by area
@@ -91,7 +116,7 @@ class Triangle(Base):
         return w
 
 
-class Trapezoid(Base):
+class Trapezoid(Wavelet):
     """ Symmetric trapezoid
     """
     def __init__(self, rise_time=None, half_duration=None):
@@ -125,7 +150,7 @@ class Trapezoid(Base):
         return w
 
 
-class Gaussian(Base):
+class Gaussian(Wavelet):
     def __init__(self, sigma=1., mu=0.):
         self.sigma = sigma
         self.mu = mu
@@ -161,12 +186,12 @@ def EarthquakeTrapezoid(rise_time=None, rupture_time=None):
 # exploration seismology "wavelets" defined in terms of dominant frequency
 #
 
-class GaussianWavelet(Base):
-    def __init__():
+class GaussianWavelet(Wavelet):
+    def __init__(self, dominant_frequency):
         raise NotImplementedError
 
 
-class RickerWavelet(Base):
+class RickerWavelet(Wavelet):
     def __init__(self, dominant_frequency):
         # dominant frequency
         self.freq = dominant_frequency
@@ -176,7 +201,7 @@ class RickerWavelet(Base):
         return (1-0.5*(a*t)**2.)*np.exp(-0.25*(a*t)**2.)
 
 
-class GaborWavelet(Base):
+class GaborWavelet(Wavelet):
     def __init__(self, dominant_frequency):
         # dominant frequency
         self.freq = dominant_frequency
