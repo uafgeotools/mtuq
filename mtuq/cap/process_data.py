@@ -6,8 +6,7 @@ import numpy as np
 from collections import defaultdict
 from copy import deepcopy
 from os.path import basename, exists, join
-from obspy.geodetics import kilometers2degrees as km2deg
-from mtuq.util.cap_util import taper, parse_weight_file
+from mtuq.cap.util import taper, parse_weight_file
 from mtuq.util.signal import cut
 from mtuq.util.util import AttribDict, warn
  
@@ -160,7 +159,7 @@ class ProcessData(object):
             if 'scaling_distance' in parameters:
                 self.scaling_distance = parameters['scaling_distance']
             else:
-                self.scaling_distance = 100.
+                self.scaling_distance = 1.e5
 
 
         elif weight_type == 'cap_sw':
@@ -176,7 +175,7 @@ class ProcessData(object):
             if 'scaling_distance' in parameters:
                 self.scaling_distance = parameters['scaling_distance']
             else:
-                self.scaling_distance = 100.
+                self.scaling_distance = 1.e5
 
 
         else:
@@ -209,9 +208,9 @@ class ProcessData(object):
         # Station metadata dictionary created by dataset.get_station method.
         # Here we use included station location and catalog origin information
         # to determine windows and apply distance-dependent weighting
-        if not hasattr(traces, 'meta'):
+        if not hasattr(traces, 'stats'):
             raise Exception('Missing station metadata')
-        meta = traces.meta
+        stats = traces.stats
 
         # Tags can be added through the dataset.add_tag method to keep track 
         # of custom metadata or support other customized uses. Here we use tags 
@@ -262,7 +261,7 @@ class ProcessData(object):
         if 'type:velocity' in tags:
             # convert to displacement
             for trace in traces:
-                trace.data = np.cumsum(trace.data)*meta.delta
+                trace.data = np.cumsum(trace.data)*stats.delta
             index = tags.index('type:velocity')
             tags[index] = 'type:displacement'
 
@@ -282,7 +281,7 @@ class ProcessData(object):
             picks = self._picks[id]
 
             if self.pick_type=='from_sac_headers':
-                sac_headers = meta.sac
+                sac_headers = stats.sac
                 picks.P = sac_headers.t5
                 picks.S = sac_headers.t6
 
@@ -291,9 +290,9 @@ class ProcessData(object):
                 sac_headers = obspy.read('%s/%s_%s/%s.grn.0' %
                     (self._fk_database,
                      self._fk_model,
-                     str(int(round(meta.catalog_depth/1000.))),
-                     str(int(round(meta.catalog_distance)))),
-                    format='sac')[0].meta.sac
+                     str(int(round(stats.preliminary_event_depth_in_m/1000.))),
+                     str(int(round(stats.preliminary_distance_in_m/1000.)))),
+                    format='sac')[0].stats.sac
                 picks.P = sac_headers.t1
                 picks.S = sac_headers.t2
 
@@ -330,7 +329,7 @@ class ProcessData(object):
             pass
 
         elif id not in self._windows:
-            origin_time = float(meta.catalog_origin_time)
+            origin_time = float(stats.preliminary_origin_time)
             picks = self._picks[id]
 
             if self.window_type == 'cap_bw':
@@ -367,7 +366,7 @@ class ProcessData(object):
             # using a longer window for Green's functions than for data allows
             # time-shift corrections to be efficiently computed
             # in mtuq.misfit.cap
-            if 'greens_tensor' in tags:
+            if 'type:greens_tensor' in tags:
                 starttime = window[0] - self.padding_length
                 endtime = window[1] + self.padding_length
 
@@ -386,7 +385,7 @@ class ProcessData(object):
             window = self._windows[id]
             for trace in traces:
                 cut(trace, starttime, endtime)
-            meta.npts = int(round((endtime-starttime)/meta.delta))
+            stats.npts = int(round((endtime-starttime)/stats.delta))
 
         for trace in traces:
             taper(trace.data)
@@ -405,7 +404,7 @@ class ProcessData(object):
         elif self.weight_type == 'cap_bw':
             # applies CAP body wave weighting
             for trace in traces:
-                if 'greens_tensor' in tags:
+                if 'type:greens_tensor' in tags:
                     break
 
                 if trace.stats.channel:
@@ -425,7 +424,7 @@ class ProcessData(object):
                     else:
                         traces.remove(trace)
 
-            distance = traces.meta.catalog_distance
+            distance = traces.stats.preliminary_distance_in_m
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
@@ -437,7 +436,7 @@ class ProcessData(object):
         elif self.weight_type == 'cap_sw':
             # applies CAP surface wave weighting
             for trace in traces:
-                if 'greens_tensor' in tags:
+                if 'type:greens_tensor' in tags:
                     break
 
                 if trace.stats.channel:
@@ -460,7 +459,7 @@ class ProcessData(object):
                         traces.remove(trace)
 
 
-            distance = traces.meta.catalog_distance
+            distance = traces.stats.preliminary_distance_in_m
             for trace in traces:
                 trace.data *=\
                      (distance/self.scaling_distance)**self.scaling_power
