@@ -4,7 +4,7 @@
 import unittest
 import numpy as np
 
-from mtuq.util.wavelets import\
+from mtuq.wavelet import\
     Gaussian,\
     Triangle,\
     Trapezoid,\

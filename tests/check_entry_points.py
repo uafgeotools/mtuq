@@ -4,7 +4,7 @@ from pkg_resources import iter_entry_points
 
 if __name__ == '__main__':
 
-    for key in ['readers', 'greens_databases']:
+    for key in ['readers', 'greens_tensor_clients']:
 
         print key.upper()
 
