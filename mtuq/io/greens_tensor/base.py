@@ -39,8 +39,10 @@ class Client(object):
             # calculated below will in general differ from preliminary_distance
             # and preliminary_azimuth
             station.distance_in_m, station.azimuth, _ = gps2dist_azimuth(
-                station.latitude, station.longitude,
-                origin.latitude, origin.longitude)
+                origin.latitude,
+                origin.longitude,
+                station.latitude,
+                station.longitude)
 
             greens_tensors += self._get_greens_tensor(
                 station, origin)

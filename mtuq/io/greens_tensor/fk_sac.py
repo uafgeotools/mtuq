@@ -1,14 +1,10 @@
 
 import obspy
 import numpy as np
-
 import mtuq.io.greens_tensor.axisem_netcdf
 
-from collections import defaultdict
-from copy import deepcopy
 from math import ceil
 from os.path import basename, exists
-
 from obspy.core import Stream
 from mtuq.util.signal import resample
 from mtuq.util.moment_tensor.change_basis import change_basis
@@ -185,7 +181,6 @@ class Client(mtuq.io.greens_tensor.base.Client):
         Reads a Greens tensor from a directory tree organized by model, event
         depth, and event distance
         """
-        print origin
         stream = Stream()
 
         # what are the start and end times of the data?

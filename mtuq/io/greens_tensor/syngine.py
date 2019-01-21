@@ -1,12 +1,9 @@
 
-import instaseis
 import obspy
 import numpy as np
 import re
 import mtuq.io.greens_tensor.axisem_netcdf
 
-from collections import defaultdict
-from copy import deepcopy
 from os.path import basename, exists
 from obspy.core import Stream, Trace
 from mtuq.util.signal import resample

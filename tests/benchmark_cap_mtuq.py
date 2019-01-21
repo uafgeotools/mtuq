@@ -10,7 +10,7 @@ from mtuq.grid_search.serial import grid_search_serial
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
-#from mtuq.util.plot import plot_beachball, plot_data_synthetics
+from mtuq.util.plot import plot_beachball, plot_data_synthetics
 from mtuq.util.util import path_mtuq
 
 
@@ -219,7 +219,7 @@ if __name__=='__main__':
 
         if run_figures:
             filename = 'cap_mtuq_'+str(_i)+'.png'
-            #plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
+            plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
         if run_checks:
             compare_cap_mtuq(synthetics_cap, synthetics_mtuq)

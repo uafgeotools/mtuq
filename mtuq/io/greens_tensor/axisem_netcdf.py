@@ -1,13 +1,13 @@
 
-import instaseis
+try:
+    import instaseis
+except:
+    pass
 import obspy
 import numpy as np
-import mtuq.greens_tensor
 import mtuq.io.greens_tensor.base
 
-from collections import defaultdict
-from copy import deepcopy
-from os.path import basename, exists
+from os.path import basename
 from scipy.signal import fftconvolve
 from mtuq.util.signal import resample
 
@@ -333,8 +333,8 @@ class Client(mtuq.io.greens_tensor.base.Client):
 
     def _get_greens_tensor(self, station, origin):
         stream = self.db.get_greens_function(
-            epicentral_distance_in_degree=km2deg(station.distance),
-            source_depth_in_m=station.depth, 
+            epicentral_distance_in_degree=_in_deg(station.distance_in_m),
+            source_depth_in_m=station.depth_in_m, 
             origin_time=origin.time,
             kind='displacement',
             kernelwidth=self.kernelwidth,
@@ -364,6 +364,7 @@ class Client(mtuq.io.greens_tensor.base.Client):
         return GreensTensor(stream, station, origin)
 
 
-def km2deg(distance_in_km):
-    return kilometers2degrees(distance_in_km, radius=6371.)
+def _in_deg(distance_in_m):
+    from obspy.geodetics import kilometers2degrees
+    return kilometers2degrees(distance_in_m/1000., radius=6371.)
 
