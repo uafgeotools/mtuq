@@ -5,12 +5,13 @@ import numpy as np
 
 from os.path import join
 from mtuq import read, open_db
-from mtuq.grid_search import DoubleCoupleGridRandom, grid_search_serial
-from mtuq.misfit.cap import Misfit
-from mtuq.process_data.cap import ProcessData
-from mtuq.util.cap_util import Trapezoid
+from mtuq.grid import DoubleCoupleGridRandom
+from mtuq.grid_search.serial import grid_search_serial
+from mtuq.cap.misfit import Misfit
+from mtuq.cap.process_data import ProcessData
+from mtuq.cap.util import Trapezoid
 from mtuq.util.plot import plot_beachball, plot_data_synthetics
-from mtuq.util.util import cross, path_mtuq
+from mtuq.util.util import path_mtuq
 
 
 
@@ -68,7 +69,7 @@ if __name__=='__main__':
     #
 
 
-    from mtuq.util.cap_util import\
+    from mtuq.cap.util import\
         get_synthetics_cap, get_synthetics_mtuq,\
         get_data_cap, compare_cap_mtuq
 
@@ -181,11 +182,10 @@ if __name__=='__main__':
     #
 
     print 'Reading data...\n'
-    data = read(path_data, format='sac', id=event_name,
+    data = read(path_data, format='sac', event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
     data.sort_by_distance()
 
-    data.sort_by_distance()
     stations = data.get_stations()
     origin = data.get_origin()
 

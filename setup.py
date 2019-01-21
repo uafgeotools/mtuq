@@ -19,13 +19,12 @@ class PyTest(test_command):
 
 ENTRY_POINTS = {
     'readers': [
-        'SAC = mtuq.dataset.sac:read',
+        'SAC = mtuq.io.readers.sac:read',
         ],
-    'greens_databases': [
-        'AXISEM = mtuq.greens_tensor.instaseis:GreensTensorDatabase',
-        'FK = mtuq.greens_tensor.fk:GreensTensorDatabase',
-        'INSTASEIS = mtuq.greens_tensor.instaseis:GreensTensorDatabase',
-        'SYNGINE = mtuq.greens_tensor.syngine:GreensTensorDatabase',
+    'greens_tensor_clients': [
+        'AXISEM = mtuq.io.greens_tensor.axisem_netcdf:Client',
+        'FK = mtuq.io.greens_tensor.fk_sac:Client',
+        'SYNGINE = mtuq.io.greens_tensor.syngine:Client',
         ]
     }
 
@@ -63,7 +62,7 @@ setup(
     entry_points=ENTRY_POINTS,
     python_requires='~=2.7',
     install_requires=[
-        "numpy", "scipy", "obspy", "h5py", "retry",
+        "numpy==1.15.4", "scipy", "obspy", "h5py", "retry",
         "flake8>=3.0", "pytest", "nose"
     ]
 )

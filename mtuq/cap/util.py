@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 import obspy
 from copy import deepcopy
-from mtuq.util.wavelets import EarthquakeTrapezoid
+from mtuq.wavelet import EarthquakeTrapezoid
 
 #
 # the following functions allow reading in and performing other operations with

@@ -1,16 +1,11 @@
 
-import instaseis
 import obspy
 import numpy as np
 import re
-import mtuq.greens_tensor.base
-import mtuq.greens_tensor.instaseis
+import mtuq.io.greens_tensor.axisem_netcdf
 
-from collections import defaultdict
-from copy import deepcopy
 from os.path import basename, exists
 from obspy.core import Stream, Trace
-from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
 from mtuq.util.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
 
@@ -44,7 +39,7 @@ SYNTHETICS_FILENAMES = [
     ]
 
 
-class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
+class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
     def _precompute_weights(self):
         super(GreensTensor, self)._precompute_weights()
 
@@ -65,7 +60,7 @@ class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
         #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=-Mxz, m_rp=Myz, m_tp=-Mxy
 
 
-class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
+class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
     """ 
     Interface to syngine Green's function web service
 
@@ -87,7 +82,7 @@ class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
         self.model = model
 
 
-    def get_greens_tensor(self, station, origin):
+    def _get_greens_tensor(self, station, origin):
         # download and unizp data
         dirname = unzip(download_greens_tensor(self.model, station, origin))
 
@@ -124,18 +119,17 @@ class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
 def download_greens_tensor(model, station, origin):
     """ Downloads Green's functions through syngine URL interface
     """
-    try:
-        distance_in_deg = km2deg(station.distance)
-    except:
-        distance_in_deg = km2deg(station.catalog_distance)
-    depth_in_m = origin.depth
+    if hasattr(station, 'distance_in_m'):
+        distance_in_deg = _in_deg(station.distance_in_m)
+    else:
+        distance_in_deg = _in_deg(station.preliminary_distance_in_m)
 
     url = ('http://service.iris.edu/irisws/syngine/1/query'
          +'?model='+model
          +'&dt='+str(station.delta)
          +'&greensfunction=1'
          +'&sourcedistanceindegrees='+str(distance_in_deg)
-         +'&sourcedepthinmeters='+str(int(round(depth_in_m)))
+         +'&sourcedepthinmeters='+str(int(round(origin.depth)))
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
@@ -157,7 +151,7 @@ def download_synthetics(model, station, origin, mt):
          +'&receiverlongitude='+str(station.longitude)
          +'&sourcelatitude='+str(origin.latitude)
          +'&sourcelongitude='+str(origin.longitude)
-         +'&sourcedepthinmeters='+str(int(round(origin.depth)))
+         +'&sourcedepthinmeters='+str(int(round(origin.depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1]
          +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt))))
@@ -207,4 +201,9 @@ def get_synthetics_syngine(model, station, origin, mt):
         synthetics += trace
 
     return synthetics
+
+
+def _in_deg(distance_in_m):
+    from obspy.geodetics import kilometers2degrees
+    return kilometers2degrees(distance_in_m/1000., radius=6371.)
 

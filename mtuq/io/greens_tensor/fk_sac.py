@@ -1,18 +1,13 @@
 
 import obspy
 import numpy as np
+import mtuq.io.greens_tensor.axisem_netcdf
 
-import mtuq.greens_tensor.base
-import mtuq.greens_tensor.instaseis
-
-from collections import defaultdict
-from copy import deepcopy
 from math import ceil
 from os.path import basename, exists
-
 from obspy.core import Stream
 from mtuq.util.signal import resample
-from mtuq.util.moment_tensor.change_basis import change_basis
+from mtuq.util.moment_tensor.basis import change_basis
 
 
 # fk Green's functions represent vertical, radial, and transverse
@@ -39,7 +34,7 @@ DEG2RAD = np.pi/180.
 
 
 
-class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
+class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
     """
     Elastic Green's tensor object
     """
@@ -96,8 +91,8 @@ class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
  
         See also Lupei Zhu's mt_radiat utility
         """
-        npts = self[0].meta['npts']
-        az = np.deg2rad(self.meta.azimuth)
+        npts = self[0].stats['npts']
+        az = np.deg2rad(self.stats.azimuth)
 
         TSS = self.select(channel="TSS")[0].data
         ZSS = self.select(channel="ZSS")[0].data
@@ -142,7 +137,7 @@ class GreensTensor(mtuq.greens_tensor.instaseis.GreensTensor):
 
 
 
-class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
+class Client(mtuq.io.greens_tensor.base.Client):
     """ 
     Interface to FK database of Green's functions
 
@@ -181,7 +176,7 @@ class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
         self.model = model
 
 
-    def get_greens_tensor(self, station, origin):
+    def _get_greens_tensor(self, station, origin):
         """ 
         Reads a Greens tensor from a directory tree organized by model, event
         depth, and event distance
@@ -195,8 +190,8 @@ class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
 
         #dep = str(int(round(origin.depth/1000.)))
         dep = str(int(ceil(origin.depth/1000.)))
-        #dst = str(int(round(station.distance)))
-        dst = str(int(ceil(station.distance)))
+        #dst = str(int(round(station.distance_in_m/1000.)))
+        dst = str(int(ceil(station.distance_in_m/1000.)))
 
         # See cap/fk documentation for indexing scheme details;
         # here we try to follow as closely as possible the cap way of

@@ -1,14 +1,14 @@
 
-import instaseis
+try:
+    import instaseis
+except:
+    pass
 import obspy
 import numpy as np
-import mtuq.greens_tensor.base
+import mtuq.io.greens_tensor.base
 
-from collections import defaultdict
-from copy import deepcopy
-from os.path import basename, exists
+from os.path import basename
 from scipy.signal import fftconvolve
-from mtuq.util.geodetics import km2deg
 from mtuq.util.signal import resample
 
 
@@ -31,7 +31,7 @@ ErrorMessage =("A list of 10 traces must be provided, each representing an"
     "indepedent Green's tensor element.")
 
 
-class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
+class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
     """
     Elastic Green's tensor object
     """
@@ -57,8 +57,8 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         -   github.com/krischer/instaseis/instaseis/tests/
             test_instaseis.py::test_get_greens_vs_get_seismogram
         """
-        npts = self[0].meta['npts']
-        az = np.deg2rad(self.meta.azimuth)
+        npts = self[0].stats['npts']
+        az = np.deg2rad(self.stats.azimuth)
 
         TSS = self.select(channel="TSS")[0].data
         ZSS = self.select(channel="ZSS")[0].data
@@ -209,8 +209,8 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
         Enables fast time-shift calculations by precomputing cross-correlations
         on an element-by-element basis
         """
-        dt = self[0].meta['delta']
-        npts = self[0].meta['npts']
+        dt = self[0].stats['delta']
+        npts = self[0].stats['npts']
         npts_padding = int(time_shift_max/dt)
 
         self._npts_padding = npts_padding
@@ -305,7 +305,7 @@ class GreensTensor(mtuq.greens_tensor.base.GreensTensor):
 
 
 
-class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
+class Client(mtuq.io.greens_tensor.base.Client):
     """ 
     Interface to Instaseis/AxiSEM database of Green's functions
 
@@ -331,10 +331,10 @@ class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
         self.kernelwidth=12
 
 
-    def get_greens_tensor(self, station, origin):
+    def _get_greens_tensor(self, station, origin):
         stream = self.db.get_greens_function(
-            epicentral_distance_in_degree=km2deg(station.distance),
-            source_depth_in_m=station.depth, 
+            epicentral_distance_in_degree=_in_deg(station.distance_in_m),
+            source_depth_in_m=station.depth_in_m, 
             origin_time=origin.time,
             kind='displacement',
             kernelwidth=self.kernelwidth,
@@ -362,4 +362,9 @@ class GreensTensorDatabase(mtuq.greens_tensor.base.GreensTensorDatabase):
 
         traces = [trace for trace in stream]
         return GreensTensor(stream, station, origin)
+
+
+def _in_deg(distance_in_m):
+    from obspy.geodetics import kilometers2degrees
+    return kilometers2degrees(distance_in_m/1000., radius=6371.)
 

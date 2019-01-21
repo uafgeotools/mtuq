@@ -2,22 +2,6 @@
 import numpy as np
 from mtuq.util.math import isclose
 
-def convolve(data, wavelet, overwrite=True):
-    """
-    data: obspy stream
-    wavelet: numpy array
-    """
-    if overwrite:
-        convolved_data = data
-    else:
-        convolved_data = deepcopy(data)
-
-    for _i in range(len(data)):
-        convolved_data[_i].data = np.convolve(data[_i].data, wavelet, mode='same')
-
-    return convolved_data
-
-
 def cut(trace, t1, t2):
     """ 
     trace: obspy trace
@@ -73,7 +57,6 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
     nt = int(round((t2_new-t1_new)/dt))
     resampled_data = np.zeros(nt+1)
 
-    #FIXME: NEED TO DOUBLE CHECK ALL CASES
     # cut both ends
     if t1_old <= t1_new <= t2_new <= t2_old:
         resampled_data[0:nt] = data[i1:i2]

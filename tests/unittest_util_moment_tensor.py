@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from mtuq.util.moment_tensor.tape2015 import cmt2tt, cmt2tt15, tt2cmt, tt152cmt
-from mtuq.util.moment_tensor.change_basis import change_basis
+from mtuq.util.moment_tensor.basis import change_basis
 from mtuq.util.math import PI, DEG
 
 

@@ -46,8 +46,8 @@ def plot_data_synthetics(filename, data, synthetics,
 
 
     # determine axis limits
-    min_bw, max_bw = data['body_waves'].min(), data['body_waves'].max()
-    min_sw, max_sw = data['surface_waves'].min(), data['surface_waves'].max()
+    max_bw = data['body_waves'].max()
+    max_sw = data['surface_waves'].max()
 
     irow = 0
     for data_bw, synthetics_bw, data_sw, synthetics_sw in zip(
@@ -55,7 +55,7 @@ def plot_data_synthetics(filename, data, synthetics,
         data['surface_waves'], synthetics['surface_waves']):
 
         id = data_bw.id
-        meta = data_bw.meta
+        meta = data_bw.stats
 
         # add station labels
         pyplot.subplot(nrow, ncol, ncol*irow+1)
@@ -75,7 +75,7 @@ def plot_data_synthetics(filename, data, synthetics,
 
             # set axis limits
             if normalize==1:
-                ymax = max(abs(min_bw), abs(max_bw))
+                ymax = max_bw
                 ylim = [-ymax, +ymax]
             elif normalize==2:
                 _scale(dat)
@@ -115,7 +115,7 @@ def plot_data_synthetics(filename, data, synthetics,
 
             # set axis limits
             if normalize==1:
-                ymax = max(abs(min_sw), abs(max_sw))
+                ymax = max_sw
                 ylim = [-ymax, +ymax]
             elif normalize==2:
                 _scale(dat)
