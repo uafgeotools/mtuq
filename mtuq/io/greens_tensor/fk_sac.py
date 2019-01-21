@@ -7,7 +7,7 @@ from math import ceil
 from os.path import basename, exists
 from obspy.core import Stream
 from mtuq.util.signal import resample
-from mtuq.util.moment_tensor.change_basis import change_basis
+from mtuq.util.moment_tensor.basis import change_basis
 
 
 # fk Green's functions represent vertical, radial, and transverse
