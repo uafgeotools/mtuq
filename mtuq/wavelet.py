@@ -6,28 +6,46 @@ from scipy import signal
 
 
 class Wavelet(object):
-    """ Base class for earthquake source-time functions and exploration
-    geophysics source wavelets
+    """ Base class source wavelets or source-time functions
 
-    The ``evaluate`` method, which defines the mathematical expression for the
-    the wavelet, must be implemented in a subclass
+    By creating a subclass and implementing the ``evaluate`` method, this base
+    class can be used to construct an arbitrary source wavelet.
 
-    When defining a particular wavelet through the ``evaluate`` method, an 
-    analytical expression for the source as a function of time, a numerical 
-    procedure, or a recorded time series can be used.
+    (Most commonly an analytical expression will be used in defining a 
+    particular wavelet through the ``evaluate`` method, but a user-supplied
+    time series can be used.)
 
-    For example, the following code defines a Guassian wavelet with unit 
-    standard deviation:
+    .. rubric:: Example
 
+    Through the parent class ``Wavelet``, we can create a subclass that defines
+    a Gaussian wavelet with unit standard deviation:
+    
     .. code::
-        class Gaussian(Wavelet):
+
+        class SimpleGaussian(Wavelet):
             def evaluate(self, t):
                 return ((2*np.pi)**0.5)**(-1.)*np.exp(-0.5*(t)**2.)
+
+    Having defined ``SimpleGaussian``, we can evaluate it on a chosen set, say
+    on the interval [-5, +5]:
+
+    .. code::
+
+       t = np.linspace(-5,. +5., 101)
+       y = SimpleGaussian(t)
+
+    Or we can convolve it  with an ObsPy trace:
+
+    .. code::
+
+       from obspy import read
+       trace = read('http://examples.obspy.org/exaple_data.sac')[0]
+       convolved_trace = SimpleGaussian.convolve(trace)
 
     """
 
     def evaluate_on_interval(self, half_duration=None, nt=100):
-        """ Evaluate wavelet on the interval
+        """ Evaluates wavelet on an interval about  zero
         """
         if not half_duration:
             raise ValueError
@@ -62,7 +80,7 @@ class Wavelet(object):
 
 
     def convolve(self, trace):
-         """ Convolves obspy trace with given wavelet
+         """ Convolves ObsPy trace with given wavelet
          """
          try:
              y = trace.data

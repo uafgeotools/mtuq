@@ -32,29 +32,29 @@ class Grid(object):
 
     .. rubric:: Examples
 
-       To cover the unit square with a N-by-N rectangular grid:
+    To cover the unit square with a N-by-N rectangular grid:
 
-         .. code ::
+    .. code ::
 
-            grid = Grid({'x': np.linspace(0., 1., N),
-                         'y': np.linpsace(0., 1., N)})
+       grid = Grid({'x': np.linspace(0., 1., N),
+                    'y': np.linpsace(0., 1., N)})
 
 
-       To parameterize the surface of the Earth with an N-by-2N Mercator grid:
+    To parameterize the surface of the Earth with an N-by-2N Mercator grid:
 
-         .. code::          
+    .. code::          
 
-            grid = Grid({'latitude': np.linspace(-90., 90., N),
-                         'longitude': np.linspace(-180., 180., 2*N)})
+       grid = Grid({'latitude': np.linspace(-90., 90., N),
+                    'longitude': np.linspace(-180., 180., 2*N)})
 
 
     .. rubric:: Iterating over grids
 
-       The order of iteration over a grid is determined by the order of keys in
-       the dictionary input argument.
+    The order of iteration over a grid is determined by the order of keys in
+    the dictionary input argument.
 
-       In the unit square example above, ``"x"`` is the fast axis and 
-       ``"y"`` is the slow axis.
+    In the unit square example above, ``"x"`` is the fast axis and 
+    y"`` is the slow axis.
 
     """
     def __init__(self, dict, start=0, stop=None, callback=None):
@@ -153,13 +153,13 @@ class UnstructuredGrid(object):
 
     .. rubric:: Examples
 
-       Unstructured grid consisting of N randomly-chosen points within the unit 
-       square:
+   Unstructured grid consisting of N randomly-chosen points within the unit 
+   square:
 
-         .. code ::
+   .. code ::
 
-            grid = UnstructuredGrid({'x': np.random.rand(N),
-                                     'y': np.random.rand(N)})
+      grid = UnstructuredGrid({'x': np.random.rand(N),
+                               'y': np.random.rand(N)})
 
     """
     def __init__(self, dict, start=0, stop=None, callback=None):

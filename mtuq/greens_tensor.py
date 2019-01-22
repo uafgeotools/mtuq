@@ -226,11 +226,21 @@ class GreensTensorList(object):
 
 
     def add_tag(self, tag):
+       """ Appends string to tags list
+       
+       Tags can be used to support customized uses, such as storing metdata not
+       included in mtuq.Station
+       """
+       if type(tag) not in [str, unicode]:
+           raise TypeError
+
        for greens_tensor in self:
            greens_tensor.tags.append(tag)
 
 
     def remove_tag(self, tag):
+       """ Removes string from tags list
+       """
        for greens_tensor in self:
            greens_tensor.tags.remove(tag)
 

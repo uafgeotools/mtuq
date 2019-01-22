@@ -6,9 +6,12 @@ from obspy.geodetics import gps2dist_azimuth
 class Station(Stats):
     """ Station metadata object
 
-    We use ``obspy.core.traces.Stats`` as a base class because
-    ``obspy.core.inventory.station.Station`` is more complex than we need.
-    All we really require is an attribute-dictionary.
+    Holds the following station metadata:
+
+    - network, station, and location codes
+    - preliminary event location and origin time estimates
+    - time discretization information for all traces recorded at the given 
+      station
 
     At the beginning of an inversion, MTUQ requires preliminary estimates for
     event location and depth. Attributes with the suffix "preliminary"
@@ -19,6 +22,12 @@ class Station(Stats):
     ``endtime`` are inherited from the ObsPy base class. This works because we
     always check in ``mtuq.io.readers`` that all traces at a given station have 
     the same time discretization.
+
+    .. note::
+
+        We use ``obspy.core.traces.Stats`` as a base class because
+        ``obspy.core.inventory.station.Station`` is more complex than we need.
+        (All we require is an attribute-dictionary.)
     """
     readonly = [
         'endtime',
