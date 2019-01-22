@@ -335,9 +335,9 @@ GridBenchmark_CAP_MTUQ="""
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
-       np.array([1., 0., 0., 0., 0., 0.]), # source 1 (diagonal)
-       np.array([0., 1., 0., 0., 0., 0.]), # source 2 (diagonal)
-       np.array([0., 0., 1., 0., 0., 0.]), # source 3 (diagonal)
+       np.array([1., 0., 0., 0., 0., 0.]), # source 1 (on-diagonal)
+       np.array([0., 1., 0., 0., 0., 0.]), # source 2 (on-diagonal)
+       np.array([0., 0., 1., 0., 0., 0.]), # source 3 (on-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # source 4 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # source 5 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # source 6 (off-diagonal)
