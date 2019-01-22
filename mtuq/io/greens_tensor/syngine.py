@@ -82,8 +82,22 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
         self.model = model
 
 
-    def _get_greens_tensor(self, station, origin):
-        # download and unizp data
+    def _get_greens_tensor(self, station, origin, 
+            force_response=False, mt_response=True):
+
+        traces = []
+        if force_response:
+            traces += self._get_force_response(station, origin)
+        elif mt_response:
+            traces += self._get_mt_response(station, origin) 
+        else:
+            raise ValueError
+
+        return GreensTensor(traces, station, origin)
+
+
+    def _get_mt_response(self, station, origin):
+        # download and unzip data
         dirname = unzip(download_greens_tensor(self.model, station, origin))
 
         # read data
@@ -92,10 +106,35 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
         for filename in GREENS_TENSOR_FILENAMES:
             stream += obspy.read(dirname+'/'+filename, format='sac')
 
+        return self._resample(stream, station)
+
+
+    def _get_force_response(self, station, origin):
+        # download and unzip data
+        filenames = download_force_response(self.model, station, origin)
+        dirnames = []
+        for filename in filenames:
+            dirnames += [unzip(filename)]
+
+        # read data
+        stream = Stream()
+        stream.id = station.id
+
+        for dirname in dirnames:
+            for filename in SYNTHETICS_FILENAMES:
+                stream += obspy.read(dirname+'/'+filename, format='sac')
+
+                # set component attribute
+                #raise NotImplementedError
+
+        return self._resample(stream, station)
+
+
+    def _resample(self, stream, stats):
         # what are the start and end times of the data?
-        t1_new = float(station.starttime)
-        t2_new = float(station.endtime)
-        dt_new = float(station.delta)
+        t1_new = float(stats.starttime)
+        t2_new = float(stats.endtime)
+        dt_new = float(stats.delta)
 
         # what are the start and end times of the Green's function?
         t1_old = float(stream[0].stats.starttime)
@@ -105,15 +144,14 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
         for trace in stream:
             # resample Green's functions
             data_old = trace.data
-            data_new = resample(data_old, t1_old, t2_old, dt_old, 
+            data_new = resample(data_old, t1_old, t2_old, dt_old,
                                           t1_new, t2_new, dt_new)
             trace.data = data_new
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
             trace.stats.npts = len(data_new)
 
-        traces = [trace for trace in stream]
-        return GreensTensor(traces, station, origin)
+        return [trace for trace in stream]
 
 
 def download_greens_tensor(model, station, origin):
@@ -161,6 +199,18 @@ def download_synthetics(model, station, origin, source):
         print ' Downloading waveforms for station %s' % station.station
         urlopen_with_retry(url, filename+'.zip')
     return filename+'.zip'
+
+
+def download_force_response(model, station, origin):
+    forces = []
+    forces += [np.array([1., 0., 0.])]
+    forces += [np.array([0., 1., 0.])]
+    forces += [np.array([0., 0., 1.])]
+
+    filenames = []
+    for force in forces:
+        filenames += [download_synthetics(model, station, origin, force)]
+    return filenames
 
 
 def get_synthetics_syngine(model, station, origin, mt):
@@ -211,7 +261,7 @@ def _syngine_source_args(source):
     if len(source)==6:
         return '&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
     elif len(source)==3:
-        return '&sourceforce='++re.sub('\+','',",".join(map(str, source)))
+        return '&sourceforce='+re.sub('\+','',",".join(map(str, source)))
     else:
         raise TypeError
 
