@@ -9,9 +9,8 @@ class Origin(obspy.core.AttribDict):
 
     Origin encompasses the location, depth, and time of an event
 
-    We use ``obspy.core.traces.Stats`` as a base class because
+    We use ``obspy.core.AttribDict`` as a base class because
     ``obspy.core.inventory.station.Station`` is more complex than we need.
-    All we really require is an attribute-dictionary.
     """
     defaults = {
         'time': UTCDateTime(0),

@@ -5,6 +5,7 @@ import numpy as np
 
 from collections import defaultdict
 from copy import deepcopy
+from math import ceil
 from os.path import basename, exists, join
 from mtuq.cap.util import taper, parse_weight_file
 from mtuq.util.signal import cut
@@ -292,8 +293,8 @@ class ProcessData(object):
                 sac_headers = obspy.read('%s/%s_%s/%s.grn.0' %
                     (self._fk_database,
                      self._fk_model,
-                     str(int(round(stats.preliminary_event_depth_in_m/1000.))),
-                     str(int(round(stats.preliminary_distance_in_m/1000.)))),
+                     str(int(ceil(stats.preliminary_event_depth_in_m/1000.))),
+                     str(int(ceil(stats.preliminary_distance_in_m/1000.)))),
                     format='sac')[0].stats.sac
                 picks.P = sac_headers.t1
                 picks.S = sac_headers.t2
