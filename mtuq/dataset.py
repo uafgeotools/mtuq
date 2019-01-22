@@ -51,7 +51,7 @@ class Dataset(object):
 
 
     def map(self, function, *sequences):
-        """ Maps a function to all streams in the dataset
+        """ Maps function to all streams in the dataset
 
         Applies a function to each Stream. If one or more optional sequences 
         are given, the function is called with an argument list consisting of
@@ -118,15 +118,22 @@ class Dataset(object):
         return self.origin
 
 
-    # tags can be used to store custom metadata (e.g. not already returned by 
-    # dataset.get_stations) or support other customized
-    # uses
     def add_tag(self, tag):
+       """ Appends string to tags list
+       
+       Tags can be used to support customized uses, such as storing metdata not
+       included in mtuq.Station
+       """
+       if type(tag) not in [str, unicode]:
+           raise TypeError
+
        for stream in self:
            stream.tags.append(tag)
 
 
     def remove_tag(self, tag):
+       """ Removes string from tags list
+       """
        for stream in self:
            stream.tags.remove(tag)
 

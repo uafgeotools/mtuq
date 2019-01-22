@@ -98,13 +98,13 @@ def _get_origin(stream, event_id):
               "Setting origin time to zero...")
         origin_time = obspy.UTCDateTime(0)
 
-    return Origin(
-        resource_id=event_id,
-        time=origin_time,
-        longitude=sac_headers.evlo,
-        latitude=sac_headers.evla,
-        depth=depth_in_m
-        )
+    return Origin({
+        'id': event_id,
+        'time': origin_time,
+        'longitude': longitude,
+        'latitude': latitude,
+        'depth_in_m': depth_in_m
+        })
 
 
 def _get_station(stream, origin):
@@ -140,7 +140,7 @@ def _get_station(stream, origin):
         station.update({
             'preliminary_event_latitude': origin.latitude,
             'preliminary_event_longitude': origin.longitude,
-            'preliminary_event_depth_in_m': origin.depth})
+            'preliminary_event_depth_in_m': origin.depth_in_m})
     except:
         print("Could not determine event location.")
 

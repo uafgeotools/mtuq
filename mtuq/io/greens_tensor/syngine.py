@@ -129,7 +129,7 @@ def download_greens_tensor(model, station, origin):
          +'&dt='+str(station.delta)
          +'&greensfunction=1'
          +'&sourcedistanceindegrees='+str(distance_in_deg)
-         +'&sourcedepthinmeters='+str(int(round(origin.depth)))
+         +'&sourcedepthinmeters='+str(int(round(origin.depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
@@ -140,7 +140,7 @@ def download_greens_tensor(model, station, origin):
     return filename
 
 
-def download_synthetics(model, station, origin, mt):
+def download_synthetics(model, station, origin, source):
     """ Downloads synthetics through syngine URL interface
     """
     url = ('http://service.iris.edu/irisws/syngine/1/query'
@@ -154,14 +154,13 @@ def download_synthetics(model, station, origin, mt):
          +'&sourcedepthinmeters='+str(int(round(origin.depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1]
-         +'&sourcemomenttensor='+re.sub('\+','',",".join(map(str, mt))))
+         +_syngine_source_args(source))
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
          +str(url2uuid(url)))
     if not exists(filename):
         print ' Downloading waveforms for station %s' % station.station
         urlopen_with_retry(url, filename+'.zip')
     return filename+'.zip'
-
 
 
 def get_synthetics_syngine(model, station, origin, mt):
@@ -206,4 +205,13 @@ def get_synthetics_syngine(model, station, origin, mt):
 def _in_deg(distance_in_m):
     from obspy.geodetics import kilometers2degrees
     return kilometers2degrees(distance_in_m/1000., radius=6371.)
+
+
+def _syngine_source_args(source):
+    if len(source)==6:
+        return '&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+    elif len(source)==3:
+        return '&sourceforce='++re.sub('\+','',",".join(map(str, source)))
+    else:
+        raise TypeError
 

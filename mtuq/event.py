@@ -1,27 +1,31 @@
 
 import numpy as np
 import obspy
+from obspy.core import UTCDateTime
 
 
-class Origin(obspy.core.event.Origin):
-    """ Event origin
+class Origin(obspy.core.AttribDict):
+    """ Origin metadata object
 
-    Can be used to store the location, depth, and time of an event
+    Origin encompasses the location, depth, and time of an event
+
+    We use ``obspy.core.AttribDict`` as a base class because
+    ``obspy.core.inventory.station.Station`` is more complex than we need.
     """
-    pass
-    #def __init__(self, depth_in_m=None, **kwargs):
-    #    self.depth_in_m = depth_in_m
-    #    super(Origin, self).__init__(**kwargs)
+    defaults = {
+        'time': UTCDateTime(0),
+        'latitude': None,
+        'longitude': None,
+        'depth_in_m': None,
+        }
 
-    #def __setattr__(self, key):
-    #    if key=='depth':
-    #        key='depth_in_m'
-    #    return super(Origin, self).__getattr__(key)
+    def __setitem__(self, key, value):
+        # enforce types
+        if key in ['time']:
+            value = UTCDateTime(value)
 
-    #def __setattr__(self, key, value):
-    #    if key=='depth':
-    #        key='depth_in_m'
-    #    super(Origin, self).__setattr__(key, value)
+        super(Origin, self).__setitem__(key, value)
+
 
 
 class MomentTensor(object):

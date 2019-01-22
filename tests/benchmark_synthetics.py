@@ -1,20 +1,21 @@
 
 import obspy
 import numpy as np
-from mtuq.greens_tensor import fk, instaseis, syngine
+from mtuq.io.greens_tensor import fk_sac, axisem_netcdf, syngine
 
 from matplotlib import pyplot
 from os import getenv
 from os.path import basename, join
 from obspy import UTCDateTime
 from obspy.core import Stats
-from obspy.core.event import Origin
-from mtuq.process_data.cap import ProcessData
+from mtuq.event import Origin
+from mtuq.cap.process_data import ProcessData
+from mtuq.util.util import path_mtuq
 
 
 if __name__=='__main__':
     """ Compares synthetics from three different sources
-        1) Instaseis local database
+        1) AxiSEM NetCDF local database
         2) FK local database
         3) syngine remote database
 
@@ -33,7 +34,7 @@ if __name__=='__main__':
     #key = 'body_waves'
     key = 'surface_waves'
 
-    include_instaseis = False
+    include_axisem = False
     include_fk = True
     include_syngine = True
 
@@ -60,12 +61,12 @@ if __name__=='__main__':
         second = 55,
         )
 
-    origin = Origin(
-        time= origin_time,
-        latitude= 61.4542007446,
-        longitude= -149.742797852,
-        depth= 33033.5998535,
-        )
+    origin = Origin({
+        'time': origin_time,
+        'latitude': 61.4542007446,
+        'longitude': -149.742797852,
+        'depth_in_m': 33033.5998535,
+        })
 
     stations = [
         Stats({
@@ -79,10 +80,10 @@ if __name__=='__main__':
         'station': 'BIGB',
         'location': '',
         'id': 'YV.BIGB.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 15.8500907298,
-        'catalog_azimuth': 345.527768889,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 15850.0907298,
+        'preliminary_azimuth': 345.527768889,
         }),
         Stats({
         'latitude': 61.245,
@@ -95,10 +96,10 @@ if __name__=='__main__':
         'station': 'ALPI',
         'location': '',
         'id': 'YV.ALPI.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 25.7412111914,
-        'catalog_azimuth': 154.937206124,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 25741.2111914,
+        'preliminary_azimuth': 154.937206124,
         }),
         Stats({
         'latitude': 61.592,
@@ -111,10 +112,10 @@ if __name__=='__main__':
         'station': 'PMR',
         'location': '',
         'id': 'AT.PMR.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 36.0158231741,
-        'catalog_azimuth': 64.4545662238,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 36015.8231741,
+        'preliminary_azimuth': 64.4545662238,
         }),
         Stats({
         'latitude': 61.089,
@@ -127,10 +128,10 @@ if __name__=='__main__':
         'station': 'RC01',
         'location': '',
         'id': 'AK.RC01.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 40.7071235329,
-        'catalog_azimuth': 179.711452236,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 40707.1235329,
+        'preliminary_azimuth': 179.711452236,
         }),
         Stats({
         'latitude': 61.864,
@@ -143,10 +144,10 @@ if __name__=='__main__':
         'station': 'KASH',
         'location': '',
         'id': 'YV.KASH.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 49.0297145289,
-        'catalog_azimuth': 338.666195532,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 49029.7145289,
+        'preliminary_azimuth': 338.666195532,
         }),
         Stats({
         'latitude': 60.874,
@@ -159,10 +160,10 @@ if __name__=='__main__':
         'station': 'HOPE',
         'location': '',
         'id': 'YV.HOPE.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 65.1451360155,
-        'catalog_azimuth': 173.050656466,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 65145.1360155,
+        'preliminary_azimuth': 173.050656466,
         }),
         Stats({
         'latitude': 60.805,
@@ -175,10 +176,10 @@ if __name__=='__main__':
         'station': 'TUPA',
         'location': '',
         'id': 'YV.TUPA.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 78.3428543629,
-        'catalog_azimuth': 157.288772085,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 78342.8543629,
+        'preliminary_azimuth': 157.288772085,
         }),
         Stats({
         'latitude': 61.807,
@@ -191,10 +192,10 @@ if __name__=='__main__':
         'station': 'SAW',
         'location': '',
         'id': 'AK.SAW.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 84.5340195001,
-        'catalog_azimuth': 61.6653748926,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 84534.0195001,
+        'preliminary_azimuth': 61.6653748926,
         }),
         Stats({
         'latitude': 60.672,
@@ -207,10 +208,10 @@ if __name__=='__main__':
         'station': 'LSUM',
         'location': '',
         'id': 'YV.LSUM.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 88.3326378166,
-        'catalog_azimuth': 170.67598173,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 88332.6378166,
+        'preliminary_azimuth': 170.67598173,
         }),
         Stats({
         'latitude': 60.735,
@@ -223,10 +224,10 @@ if __name__=='__main__':
         'station': 'MPEN',
         'location': '',
         'id': 'YV.MPEN.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 89.5001194601,
-        'catalog_azimuth': 206.794148235,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 89500.1194601,
+        'preliminary_azimuth': 206.794148235,
         }),
         Stats({
         'latitude': 60.551,
@@ -239,10 +240,10 @@ if __name__=='__main__':
         'station': 'DEVL',
         'location': '',
         'id': 'YV.DEVL.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 100.986018723,
-        'catalog_azimuth': 175.365654906,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 100986.018723,
+        'preliminary_azimuth': 175.365654906,
         }),
         Stats({
         'latitude': 60.775,
@@ -255,10 +256,10 @@ if __name__=='__main__':
         'station': 'BLAK',
         'location': '',
         'id': 'YV.BLAK.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 104.126076067,
-        'catalog_azimuth': 136.074440283,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 104126.076067,
+        'preliminary_azimuth': 136.074440283,
         }),
         Stats({
         'latitude': 60.488,
@@ -271,10 +272,10 @@ if __name__=='__main__':
         'station': 'RUSS',
         'location': '',
         'id': 'YV.RUSS.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 108.781455802,
-        'catalog_azimuth': 188.392980537,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 108781.455802,
+        'preliminary_azimuth': 188.392980537,
         }),
         Stats({
         'latitude': 60.483,
@@ -287,10 +288,10 @@ if __name__=='__main__':
         'station': 'LSKI',
         'location': '',
         'id': 'YV.LSKI.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 114.988115602,
-        'catalog_azimuth': 200.106720707,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 114988.115602,
+        'preliminary_azimuth': 200.106720707,
         }),
         Stats({
         'latitude': 60.662,
@@ -303,10 +304,10 @@ if __name__=='__main__':
         'station': 'NSKI',
         'location': '',
         'id': 'YV.NSKI.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 121.048414873,
-        'catalog_azimuth': 223.868000167,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 121048.414873,
+        'preliminary_azimuth': 223.868000167,
         }),
         Stats({
         'latitude': 60.375,
@@ -319,10 +320,10 @@ if __name__=='__main__':
         'station': 'AVAL',
         'location': '',
         'id': 'YV.AVAL.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 122.101412556,
-        'catalog_azimuth': 169.692916508,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 122101.412556,
+        'preliminary_azimuth': 169.692916508,
         }),
         Stats({
         'latitude': 60.710,
@@ -335,10 +336,10 @@ if __name__=='__main__':
         'station': 'PERI',
         'location': '',
         'id': 'YV.PERI.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 127.296105568,
-        'catalog_azimuth': 129.875238053,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 127.296105568,
+        'preliminary_azimuth': 129.875238053,
         }),
         Stats({
         'latitude': 60.464,
@@ -351,10 +352,10 @@ if __name__=='__main__':
         'station': 'SOLD',
         'location': '',
         'id': 'YV.SOLD.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 132.023528432,
-        'catalog_azimuth': 213.907196416,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 132023.528432,
+        'preliminary_azimuth': 213.907196416,
         }),
         Stats({
         'latitude': 61.259,
@@ -367,10 +368,10 @@ if __name__=='__main__':
         'station': 'SPBG',
         'location': '',
         'id': 'AV.SPBG.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 142.331966923,
-        'catalog_azimuth': 262.369826639,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 142331.966923,
+        'preliminary_azimuth': 262.369826639,
         }),
         Stats({
         'latitude': 60.104,
@@ -383,10 +384,10 @@ if __name__=='__main__':
         'station': 'SWD',
         'location': '',
         'id': 'AK.SWD.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 151.241318202,
-        'catalog_azimuth': 173.8727135,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 151241.318202,
+        'preliminary_azimuth': 173.8727135,
         }),
         Stats({
         'latitude': 60.008,
@@ -399,10 +400,10 @@ if __name__=='__main__':
         'station': 'HEAD',
         'location': '',
         'id': 'YV.HEAD.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 162.120434579,
-        'catalog_azimuth': 173.413686902,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 162120.434579,
+        'preliminary_azimuth': 173.413686902,
         }),
         Stats({
         'latitude': 61.129,
@@ -415,10 +416,10 @@ if __name__=='__main__':
         'station': 'DIV',
         'location': '',
         'id': 'AK.DIV.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 215.746816221,
-        'catalog_azimuth': 97.9180072487,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 215746.816221,
+        'preliminary_azimuth': 97.9180072487,
         }),
         Stats({
         'latitude': 63.450,
@@ -431,10 +432,10 @@ if __name__=='__main__':
         'station': 'TRF',
         'location': '',
         'id': 'AK.TRF.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 224.239111212,
-        'catalog_azimuth': 353.014641671,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 224239.111212,
+        'preliminary_azimuth': 353.014641671,
         }),
         Stats({
         'latitude': 60.549,
@@ -447,10 +448,10 @@ if __name__=='__main__':
         'station': 'EYAK',
         'location': '',
         'id': 'AK.EYAK.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 238.379702635,
-        'catalog_azimuth': 113.279988085,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 238379.702635,
+        'preliminary_azimuth': 113.279988085,
         }),
         Stats({
         'latitude': 62.970,
@@ -463,10 +464,10 @@ if __name__=='__main__':
         'station': 'PAX',
         'location': '',
         'id': 'AK.PAX.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 279.134053993,
-        'catalog_azimuth': 50.8967398602,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 279134.053993,
+        'preliminary_azimuth': 50.8967398602,
         }),
         Stats({
         'latitude': 60.968,
@@ -479,10 +480,10 @@ if __name__=='__main__':
         'station': 'BMR',
         'location': '',
         'id': 'AK.BMR.',
-        'catalog_origin_time': origin_time,
-        'catalog_depth': 33033.5998535,
-        'catalog_distance': 281.334781059,
-        'catalog_azimuth': 98.8479894406,
+        'preliminary_origin_time': origin_time,
+        'preliminary_event_depth_in_m': 33033.5998535,
+        'preliminary_distance_in_m': 281334.781059,
+        'preliminary_azimuth': 98.8479894406,
         }),]
 
 
@@ -490,14 +491,14 @@ if __name__=='__main__':
     # download Green's function databases
     #
 
-    path_greens_fk = join(getenv('CENTER1'), 'data/wf/FK_SYNTHETICS/scak')
+    path_greens_fk = join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
     # once AK135 FK database become available we'll uncomment these lines
     #if not exists(path_greens_fk):
     #    wget()
     #    unpack(path_greens_fk)
 
-    #path_greens_instaseis = ''
-    #if not exists(path_greens_instaseis)
+    #path_greens_axisem = ''
+    #if not exists(path_greens_axisem)
     #    wget()
     #    unpack(path_greens_fk)
 
@@ -533,27 +534,27 @@ if __name__=='__main__':
         return processed_greens
 
 
-    if include_instaseis:
-        print "Reading instaseis Greens's functions..."
+    if include_axisem:
+        print "Reading AxiSEM Greens's functions..."
         model = 'ak135f_2s'
-        factory_instaseis = instaseis.GreensTensorFactory(path_greens_instaseis)
-        greens_instaseis = factory_instaseis(stations, origin)
-        greens_instaseis = process_data(greens_instaseis)
+        client_axisem = axisem_netcdf.Client(path_greens_axisem)
+        greens_axisem = client_axisem.get_greens_tensors(stations, origin)
+        greens_axisem = process_data(greens_axisem)
 
 
     if include_fk:
         print "Reading FK Greens's functions..."
         model = 'scak'
-        factory_fk = fk.GreensTensorFactory(path_greens_fk)
-        greens_fk = factory_fk(stations, origin)
+        client_fk = fk_sac.Client(path_greens_fk)
+        greens_fk = client_fk.get_greens_tensors(stations, origin)
         greens_fk = process_data(greens_fk)
 
 
     if include_syngine:
         print "Downloading syngine Green's functions..."
         model = 'ak135f_2s'
-        factory_syngine = syngine.GreensTensorFactory(model)
-        greens_syngine = factory_syngine(stations, origin)
+        client_syngine = syngine.Client(model)
+        greens_syngine = client_syngine.get_greens_tensors(stations, origin)
         greens_syngine = process_data(greens_syngine)
 
 
@@ -565,12 +566,12 @@ if __name__=='__main__':
 
         for _j, mt in enumerate(grid):
             # get synthetics
-            if include_instaseis:
-                synthetics_instaseis = greens_instaseis[key].get_synthetics(mt)[_j]
+            if include_axisem:
+                synthetics_axisem = greens_axisem[key].get_synthetics(mt)[_i]
             if include_fk:
-                synthetics_fk = greens_fk[key].get_synthetics(mt)[_j]
+                synthetics_fk = greens_fk[key].get_synthetics(mt)[_i]
             if include_syngine:
-                synthetics_syngine = greens_syngine[key].get_synthetics(mt)[_j]
+                synthetics_syngine = greens_syngine[key].get_synthetics(mt)[_i]
 
             # get time scheme
             t = np.linspace(
@@ -581,10 +582,10 @@ if __name__=='__main__':
             for _k, component in enumerate(['Z', 'R', 'T']):
                 ax = pyplot.subplot(3, len(grid), len(grid)*_k + _j + 1)
 
-                if include_instaseis:
-                    stream = synthetics_instaseis.select(component=component)
+                if include_axisem:
+                    stream = synthetics_axisem.select(component=component)
                     d = stream[0].data
-                    pyplot.plot(t, d, color='blue', label='instaseis')
+                    pyplot.plot(t, d, color='blue', label='axisem')
 
                 if include_fk:
                     stream = synthetics_fk.select(component=component)
