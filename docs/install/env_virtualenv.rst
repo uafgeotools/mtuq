@@ -1,6 +1,15 @@
 Installation under virtualenv
 =============================
 
+Confirm that you have ``virtualenv`` utility installed:
+
+.. code::
+
+   which virtualenv
+
+If it is not present, `install it yourself <https://virtualenv.pypa.io/en/latest/installation/>`_ or ask a system administrator to.
+
+
 Create a fresh virtual environment:
 
 .. code::
