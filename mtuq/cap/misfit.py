@@ -8,18 +8,21 @@ import warnings
 
 
 class Misfit(object):
-    """ 
-    CAP-style data misfit function
+    """ CAP-style data misfit function
 
     Evaluating misfit is a two-step procedure:
-        1) function_handle = cap_misfit(**parameters)
-        2) misfit = function_handle(data, synthetics)
+
+    .. code::
+
+        function_handle = cap_misfit(**parameters)
+        misfit = function_handle(data, greens, mt)
 
     In the first step, the user supplies a list of parameters, including
     the order of the norm applied to the residuals, whether or not to use
     polarity information, and various tuning parameters (see below for detailed
-    descriptions.) In the second step, the user supplies data and synthetics 
-    and gets back the corresponding misfit value.
+    descriptions.) In the second step, the user supplies data, greens function,
+    and source object. Synthetics are then generated and compared with data, and
+    a corresponding misfit value returned.
     """
 
     def __init__(self,

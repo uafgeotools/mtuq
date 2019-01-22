@@ -14,5 +14,9 @@ autogen
    mtuq.grid.Grid
    mtuq.grid.UnstructuredGrid
    mtuq.wavelet.Wavelet
+   mtuq.cap.process_data.ProcessData
+   mtuq.cap.misfit.Misfit
+   mtuq.open_db
+   mtuq.read
    
    

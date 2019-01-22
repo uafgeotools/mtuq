@@ -2,6 +2,11 @@
 Library Reference
 =================
 
+.. warning::
+
+   MTUQ is still in under development.  This documentation is incomplete and describes planned rather than current functionality.
+
+
 .. rubric:: Data structures
 
 =================================================================================================  =================================================================================================
@@ -36,8 +41,8 @@ Library Reference
 .. rubric:: CAP-style functions
 
 =================================================================================================  =================================================================================================
-`mtuq.cap.process_data.ProcessData <generated/mtuq.ProcessData.html>`_                              Data processing function
-`mtuq.cap.misfit.Misfit <generated/mtuq.Misfit.html>`_                                              Misfit function
+`mtuq.cap.process_data.ProcessData <generated/mtuq.cap.process_data.ProcessData.html>`_             Data processing function
+`mtuq.cap.misfit.Misfit <generated/mtuq.cap.misfit.Misfit.html>`_                                   Misfit function
 =================================================================================================  =================================================================================================
 
 

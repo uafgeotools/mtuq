@@ -12,16 +12,18 @@ from mtuq.util.util import AttribDict, warn
  
 
 class ProcessData(object):
-    """
-    CAP-style data processing function
+    """ CAP-style data processing function
 
-    Processing data is a two-step procedure
-        1) function_handle = process_data(filter_type=..., **filter_parameters, 
-                                          pick_type=...,   **pick_parameters,
-                                          window_type=..., **window_parameters,
-                                          weight_type=..., **weight_parameters)
+    Processing data is a two-step procedure:
 
-        2) processed_data = function_handle(data)
+    .. code::
+
+        function_handle = process_data(filter_type=..., **filter_parameters, 
+                                       pick_type=...,   **pick_parameters,
+                                       window_type=..., **window_parameters,
+                                       weight_type=..., **weight_parameters)
+
+        processed_data = function_handle(data)
 
     In the first step, the user supplies a set of filtering, phase-picking,
     windowing, and weighting parameters.  In the second step, an obspy stream
