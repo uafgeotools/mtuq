@@ -188,8 +188,8 @@ class Client(mtuq.io.greens_tensor.base.Client):
         t2_new = float(station.endtime)
         dt_new = float(station.delta)
 
-        #dep = str(int(round(origin.depth/1000.)))
-        dep = str(int(ceil(origin.depth/1000.)))
+        #dep = str(int(round(origin.depth_in_m/1000.)))
+        dep = str(int(ceil(origin.depth_in_m/1000.)))
         #dst = str(int(round(station.distance_in_m/1000.)))
         dst = str(int(ceil(station.distance_in_m/1000.)))
 

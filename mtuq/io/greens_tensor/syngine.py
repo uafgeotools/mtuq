@@ -129,7 +129,7 @@ def download_greens_tensor(model, station, origin):
          +'&dt='+str(station.delta)
          +'&greensfunction=1'
          +'&sourcedistanceindegrees='+str(distance_in_deg)
-         +'&sourcedepthinmeters='+str(int(round(origin.depth)))
+         +'&sourcedepthinmeters='+str(int(round(origin.depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
