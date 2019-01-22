@@ -567,11 +567,11 @@ if __name__=='__main__':
         for _j, mt in enumerate(grid):
             # get synthetics
             if include_axisem:
-                synthetics_axisem = greens_axisem[key].get_synthetics(mt)[_j]
+                synthetics_axisem = greens_axisem[key].get_synthetics(mt)[_i]
             if include_fk:
-                synthetics_fk = greens_fk[key].get_synthetics(mt)[_j]
+                synthetics_fk = greens_fk[key].get_synthetics(mt)[_i]
             if include_syngine:
-                synthetics_syngine = greens_syngine[key].get_synthetics(mt)[_j]
+                synthetics_syngine = greens_syngine[key].get_synthetics(mt)[_i]
 
             # get time scheme
             t = np.linspace(
