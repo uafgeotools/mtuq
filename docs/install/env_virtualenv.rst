@@ -1,21 +1,14 @@
 Installation under virtualenv
 =============================
 
-Confirm that you have ``virtualenv`` utility installed:
+Install the <virtualenv https://virtualenv.pypa.io/en/latest/installation/>`_ program, if not already present.
 
-.. code::
-
-   which virtualenv
-
-If it is not present, `install it yourself <https://virtualenv.pypa.io/en/latest/installation/>`_ or ask a system administrator to.
-
-
-Create a fresh virtual environment:
+Create a new virtual environment:
 
 .. code::
 
    cd $HOME/virtual
-   virtualenv mtuq_env
+   virtualenv --python=python2.7 mtuq_env
 
 
 Download MTUQ source code:
