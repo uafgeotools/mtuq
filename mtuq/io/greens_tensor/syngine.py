@@ -107,30 +107,18 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
     corresponding station-event pairs.
     """
 
-    def __init__(self, model=None, 
-            include_mt_response=True, include_force_response=False):
+    def __init__(self, model=None, enable_force_sources=False):
 
-        self.include_mt_response = include_mt_response
-        self.include_force_response = include_force_response
+        self.enable_force_sources = enable_force_sources
 
         if not model:
             raise ValueError
         self.model = model
 
 
-    def _get_greens_tensor(self, station, origin):
+    def _get_greens_tensor(self, station=None, origin=None):
         traces = []
 
-        if self.include_force_response:
-            traces += self._get_force_response(station, origin)
-
-        if self.include_mt_response:
-            traces += self._get_mt_response(station, origin) 
-
-        return GreensTensor(traces, station, origin)
-
-
-    def _get_mt_response(self, station, origin):
         # download and unzip data
         dirname = unzip(download_greens_tensor(self.model, station, origin))
 
@@ -139,29 +127,31 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
         stream.id = station.id
         for filename in GREENS_TENSOR_FILENAMES:
             stream += obspy.read(dirname+'/'+filename, format='sac')
+        traces += self._resample(stream, station)
 
-        return self._resample(stream, station)
 
+        if self.enable_force_sources:
+            # download and unzip data
+            filenames = download_force_response(self.model, station, origin)
+            dirnames = []
+            for filename in filenames:
+                dirnames += [unzip(filename)]
 
-    def _get_force_response(self, station, origin):
-        # download and unzip data
-        filenames = download_force_response(self.model, station, origin)
-        dirnames = []
-        for filename in filenames:
-            dirnames += [unzip(filename)]
+            # read data
+            stream = Stream()
+            stream.id = station.id
 
-        # read data
-        stream = Stream()
-        stream.id = station.id
+            for _i, dirname in enumerate(dirnames):
+                for filename in SYNTHETICS_FILENAMES:
+                    stream += obspy.read(dirname+'/'+filename, format='sac')
 
-        for _i, dirname in enumerate(dirnames):
-            for filename in SYNTHETICS_FILENAMES:
-                stream += obspy.read(dirname+'/'+filename, format='sac')
+                    # overwrite channel name
+                    stream[-1].stats.channel = str(_i)+stream[-1].stats.channel[-1]
 
-                # overwrite channel name
-                stream[-1].stats.channel = str(_i)+stream[-1].stats.channel[-1]
+            traces += self._resample(stream, station)
 
-        return self._resample(stream, station)
+        return GreensTensor(traces=traces, station=station, origin=origin)
+
 
 
     def _resample(self, stream, stats):
@@ -284,6 +274,11 @@ def get_synthetics_syngine(model, station, origin, mt):
         synthetics += trace
 
     return synthetics
+
+
+def get_greens_tensors(stations=None, origin=None, **kwargs):
+    client = Client(**kwargs)
+    return client.get_greens_tensors(stations=stations, origin=origin)
 
 
 def _in_deg(distance_in_m):
