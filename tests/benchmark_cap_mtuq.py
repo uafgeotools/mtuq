@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 from os.path import join
-from mtuq import read, open_db
+from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search.serial import grid_search_serial
 from mtuq.cap.misfit import Misfit
@@ -198,7 +198,7 @@ if __name__=='__main__':
 
 
     print 'Reading Greens functions...\n'
-    db = open_db(path=path_greens, format='FK')
+    db = open_db(path_greens, format='FK')
     greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\n'
