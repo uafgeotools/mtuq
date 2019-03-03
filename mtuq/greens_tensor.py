@@ -21,7 +21,7 @@ class GreensTensor(Stream):
             <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
     """
 
-    def __init__(self, traces, station, origin):
+    def __init__(self, traces, station, origin, components):
         assert check_time_sampling(traces), NotImplementedError(
             "Time sampling differs from trace to trace.")
 
@@ -31,6 +31,7 @@ class GreensTensor(Stream):
         self.tags = ['type:greens_tensor']
         self.stats = deepcopy(station)
         self.origin = origin
+        self.components = components
 
 
     def get_synthetics(self, mt):
