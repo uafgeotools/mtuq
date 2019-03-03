@@ -22,7 +22,7 @@ class GreensTensor(Stream):
     """
 
     def __init__(self, traces=None, station=None, origin=None,
-            components=['Z', 'T', 'R']):
+            components=['Z', 'R', 'T']):
 
         assert check_time_sampling(traces), NotImplementedError(
             "Time sampling differs from trace to trace.")

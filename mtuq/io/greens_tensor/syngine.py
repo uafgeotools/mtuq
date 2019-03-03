@@ -46,7 +46,7 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
         # the negative sign is needed because of a bug in syngine? or because 
         # of inconsistent moment tensor conventions?
         if 'T' in self.components:
-            self._rotated_tensor[:, self.components.index('T'), :] *= -1
+            self._rotated_tensor[self.components.index('T'), :, :] *= -1
 
         # Order of terms expected by syngine URL parser (from online
         # documentation):
