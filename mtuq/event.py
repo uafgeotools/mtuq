@@ -84,6 +84,14 @@ class Force(object):
         return self._array
 
 
+
+class CompositeSource(object):
+   """ General combination of force or moment tensor objects
+   """
+   def __init__(self):
+       raise NotImplementedError
+
+
 #
 # utility functions
 #
