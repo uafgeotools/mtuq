@@ -33,7 +33,7 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
     AxiSEM Green's tensor object
 
     Overloads Green's tensor base class with the mathematical machinery
-    required for working with AxiSEM-style Green's tensors
+    for working with AxiSEM-style Green's tensors
     """
 
     def _precompute_weights(self):
@@ -57,7 +57,7 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
 
         npts = self[0].stats['npts']
         nc = len(self.components)
-        self._rotated_tensor = np.zeros((npts, nc, 6))
+        self._rotated_tensor = np.zeros((nc, 6, npts))
 
         G = self._rotated_tensor
         ic = 0
@@ -68,12 +68,12 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
             ZDD = self.select(channel="ZDD")[0].data
             ZEP = self.select(channel="ZEP")[0].data
 
-            G[:, ic, 0] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            G[:, ic, 1] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            G[:, ic, 2] =  ZDD/3. + ZEP/3.
-            G[:, ic, 3] =  ZSS * np.sin(2*az)
-            G[:, ic, 4] =  ZDS * np.cos(az)
-            G[:, ic, 5] =  ZDS * np.sin(az)
+            G[ic, 0, :] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+            G[ic, 1, :] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+            G[ic, 2, :] =  ZDD/3. + ZEP/3.
+            G[ic, 3, :] =  ZSS * np.sin(2*az)
+            G[ic, 4, :] =  ZDS * np.cos(az)
+            G[ic, 5, :] =  ZDS * np.sin(az)
 
             ic += 1
 
@@ -83,12 +83,12 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
             RDD = self.select(channel="RDD")[0].data
             REP = self.select(channel="REP")[0].data
 
-            G[:, ic, 0] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            G[:, ic, 1] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            G[:, ic, 2] =  RDD/3. + REP/3.
-            G[:, ic, 3] =  RSS * np.sin(2*az)
-            G[:, ic, 4] =  RDS * np.cos(az)
-            G[:, ic, 5] =  RDS * np.sin(az)
+            G[ic, 0, :] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+            G[ic, 1, :] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+            G[ic, 2, :] =  RDD/3. + REP/3.
+            G[ic, 3, :] =  RSS * np.sin(2*az)
+            G[ic, 4, :] =  RDS * np.cos(az)
+            G[ic, 5, :] =  RDS * np.sin(az)
 
             ic += 1
 
@@ -96,12 +96,12 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
             TSS = self.select(channel="TSS")[0].data
             TDS = self.select(channel="TDS")[0].data
 
-            G[:, ic, 0] = TSS/2. * np.sin(2*az)
-            G[:, ic, 1] = -TSS/2. * np.sin(2*az)
-            G[:, ic, 2] = 0.
-            G[:, ic, 3] = -TSS * np.cos(2*az)
-            G[:, ic, 4] = TDS * np.sin(az)
-            G[:, ic, 5] = -TDS * np.cos(az)
+            G[ic, 0, :] = TSS/2. * np.sin(2*az)
+            G[ic, 1, :] = -TSS/2. * np.sin(2*az)
+            G[ic, 2, :] = 0.
+            G[ic, 3, :] = -TSS * np.cos(2*az)
+            G[ic, 4, :] = TDS * np.sin(az)
+            G[ic, 5, :] = -TDS * np.cos(az)
 
             ic += 1
 
@@ -134,12 +134,12 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
             # we could use np.dot instead, but speedup appears negligible
             s = self._synthetics[ic].data
             s[:] = 0.
-            s += Mxx*G[:, ic, 0]
-            s += Myy*G[:, ic, 1]
-            s += Mzz*G[:, ic, 2]
-            s += Mxy*G[:, ic, 3]
-            s += Mxz*G[:, ic, 4]
-            s += Myz*G[:, ic, 5]
+            s += Mxx*G[ic, 0, :]
+            s += Myy*G[ic, 1, :]
+            s += Mzz*G[ic, 2, :]
+            s += Mxy*G[ic, 3, :]
+            s += Mxz*G[ic, 4, :]
+            s += Myz*G[ic, 5, :]
 
         return self._synthetics
 
@@ -167,30 +167,30 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
 
         if 'Z' in group:
             CC = self._CCZ
-            cc += Mxx*CC[:,0]
-            cc += Myy*CC[:,1]
-            cc += Mzz*CC[:,2]
-            cc += Mxy*CC[:,3]
-            cc += Mxz*CC[:,4]
-            cc += Myz*CC[:,5]
+            cc += Mxx*CC[0, :]
+            cc += Myy*CC[1, :]
+            cc += Mzz*CC[2, :]
+            cc += Mxy*CC[3, :]
+            cc += Mxz*CC[4, :]
+            cc += Myz*CC[5, :]
 
         if 'R' in group:
             CC = self._CCR
-            cc += Mxx*CC[:,0]
-            cc += Myy*CC[:,1]
-            cc += Mzz*CC[:,2]
-            cc += Mxy*CC[:,3]
-            cc += Mxz*CC[:,4]
-            cc += Myz*CC[:,5]
+            cc += Mxx*CC[0, :]
+            cc += Myy*CC[1, :]
+            cc += Mzz*CC[2, :]
+            cc += Mxy*CC[3, :]
+            cc += Mxz*CC[4, :]
+            cc += Myz*CC[5, :]
 
         if 'T' in group:
             CC = self._CCT
-            cc += Mxx*CC[:,0]
-            cc += Myy*CC[:,1]
-            cc += Mzz*CC[:,2]
-            cc += Mxy*CC[:,3]
-            cc += Mxz*CC[:,4]
-            cc += Myz*CC[:,5]
+            cc += Mxx*CC[0, :]
+            cc += Myy*CC[1, :]
+            cc += Mzz*CC[2, :]
+            cc += Mxy*CC[3, :]
+            cc += Mxz*CC[4, :]
+            cc += Myz*CC[5, :]
 
         # what is the index of the maximum element of the padded array?
         argmax = cc.argmax()
@@ -213,90 +213,95 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
         self._npts_padding = npts_padding
         self._cross_correlation = np.zeros(2*npts_padding+1)
 
+        ic = 0
+
         if 'Z' in self.components:
             DZ = data.select(component='Z')[0].data
             #DZ = np.pad(DZ, npts_padding, 'constant')
 
-            CCZ = np.zeros((2*npts_padding+1, 6))
-            GZ = self._rotated_tensor[0]
+            CCZ = np.zeros((6, 2*npts_padding+1))
+            GZ = self._rotated_tensor[ic, :, :]
+            ic += 1
 
         if 'R' in self.components:
             DR = data.select(component='R')[0].data
             #DR = np.pad(DR, npts_padding, 'constant')
 
-            CCR = np.zeros((2*npts_padding+1, 6))
-            GR = self._rotated_tensor[1]
+            CCR = np.zeros((6, 2*npts_padding+1))
+            GR = self._rotated_tensor[ic, :, :]
+            ic += 1
 
         if 'T' in self.components:
             DT = data.select(component='T')[0].data
             #DT = np.pad(DT, npts_padding, 'constant')
 
-            CCT = np.zeros((2*npts_padding+1, 6))
-            GT = self._rotated_tensor[2]
+            CCT = np.zeros((6, 2*npts_padding+1))
+            GT = self._rotated_tensor[ic, :, :]
+            ic += 1
 
         # for long traces or long lag times, frequency-domain
         # implementation is usually faster
         if 'Z' in self.components and\
             (npts > 2000 or npts_padding > 200):
-            CCZ[:,0] = fftconvolve(DZ, GZ[::-1,0], 'valid')
-            CCZ[:,1] = fftconvolve(DZ, GZ[::-1,1], 'valid')
-            CCZ[:,2] = fftconvolve(DZ, GZ[::-1,2], 'valid')
-            CCZ[:,3] = fftconvolve(DZ, GZ[::-1,3], 'valid')
-            CCZ[:,4] = fftconvolve(DZ, GZ[::-1,4], 'valid')
-            CCZ[:,5] = fftconvolve(DZ, GZ[::-1,5], 'valid')
+            CCZ[0, :] = fftconvolve(DZ, GZ[0, ::-1], 'valid')
+            CCZ[1, :] = fftconvolve(DZ, GZ[1, ::-1], 'valid')
+            CCZ[2, :] = fftconvolve(DZ, GZ[2, ::-1], 'valid')
+            CCZ[3, :] = fftconvolve(DZ, GZ[3, ::-1], 'valid')
+            CCZ[4, :] = fftconvolve(DZ, GZ[4, ::-1], 'valid')
+            CCZ[5, :] = fftconvolve(DZ, GZ[5, ::-1], 'valid')
             self._CCZ = CCZ
 
         if 'R' in self.components and\
             (npts > 2000 or npts_padding > 200):
-            CCR[:,0] = fftconvolve(DR, GR[::-1,0], 'valid')
-            CCR[:,1] = fftconvolve(DR, GR[::-1,1], 'valid')
-            CCR[:,2] = fftconvolve(DR, GR[::-1,2], 'valid')
-            CCR[:,3] = fftconvolve(DR, GR[::-1,3], 'valid')
-            CCR[:,4] = fftconvolve(DR, GR[::-1,4], 'valid')
-            CCR[:,5] = fftconvolve(DR, GR[::-1,5], 'valid')
+            CCR[0, :] = fftconvolve(DR, GR[0, ::-1], 'valid')
+            CCR[1, :] = fftconvolve(DR, GR[1, ::-1], 'valid')
+            CCR[2, :] = fftconvolve(DR, GR[2, ::-1], 'valid')
+            CCR[3, :] = fftconvolve(DR, GR[3, ::-1], 'valid')
+            CCR[4, :] = fftconvolve(DR, GR[4, ::-1], 'valid')
+            CCR[5, :] = fftconvolve(DR, GR[5, ::-1], 'valid')
             self._CCR = CCR
 
         if 'T' in self.components and\
             (npts > 2000 or npts_padding > 200):
 
-            CCT[:,0] = fftconvolve(DT, GT[::-1,0], 'valid')
-            CCT[:,1] = fftconvolve(DT, GT[::-1,1], 'valid')
-            CCT[:,2] = fftconvolve(DT, GT[::-1,2], 'valid')
-            CCT[:,3] = fftconvolve(DT, GT[::-1,3], 'valid')
-            CCT[:,4] = fftconvolve(DT, GT[::-1,4], 'valid')
-            CCT[:,5] = fftconvolve(DT, GT[::-1,5], 'valid')
+            CCT[0, :] = fftconvolve(DT, GT[0, ::-1], 'valid')
+            CCT[1, :] = fftconvolve(DT, GT[1, ::-1], 'valid')
+            CCT[2, :] = fftconvolve(DT, GT[2, ::-1], 'valid')
+            CCT[3, :] = fftconvolve(DT, GT[3, ::-1], 'valid')
+            CCT[4, :] = fftconvolve(DT, GT[4, ::-1], 'valid')
+            CCT[5, :] = fftconvolve(DT, GT[5, ::-1], 'valid')
             self._CCT = CCT
 
         # for short traces or short lag times, time-domain
         # implementation is usually faster
         if 'Z' in self.components and\
             (npts <= 2000 and npts_padding <= 200):
-            CCZ[:,0] = np.correlate(DZ, GZ[:,0], 'valid')
-            CCZ[:,1] = np.correlate(DZ, GZ[:,1], 'valid')
-            CCZ[:,2] = np.correlate(DZ, GZ[:,2], 'valid')
-            CCZ[:,3] = np.correlate(DZ, GZ[:,3], 'valid')
-            CCZ[:,4] = np.correlate(DZ, GZ[:,4], 'valid')
-            CCZ[:,5] = np.correlate(DZ, GZ[:,5], 'valid')
+            CCZ[0, :] = np.correlate(DZ, GZ[0, :], 'valid')
+            CCZ[1, :] = np.correlate(DZ, GZ[1, :], 'valid')
+            CCZ[2, :] = np.correlate(DZ, GZ[2, :], 'valid')
+            CCZ[3, :] = np.correlate(DZ, GZ[3, :], 'valid')
+            CCZ[4, :] = np.correlate(DZ, GZ[4, :], 'valid')
+            CCZ[5, :] = np.correlate(DZ, GZ[5, :], 'valid')
             self._CCZ = CCZ
 
         if 'R' in self.components and\
             (npts <= 2000 and npts_padding <= 200):
-            CCR[:,0] = np.correlate(DR, GR[:,0], 'valid')
-            CCR[:,1] = np.correlate(DR, GR[:,1], 'valid')
-            CCR[:,2] = np.correlate(DR, GR[:,2], 'valid')
-            CCR[:,3] = np.correlate(DR, GR[:,3], 'valid')
-            CCR[:,4] = np.correlate(DR, GR[:,4], 'valid')
-            CCR[:,5] = np.correlate(DR, GR[:,5], 'valid')
+            CCR[0, :] = np.correlate(DR, GR[0, :], 'valid')
+            CCR[1, :] = np.correlate(DR, GR[1, :], 'valid')
+            CCR[2, :] = np.correlate(DR, GR[2, :], 'valid')
+            CCR[3, :] = np.correlate(DR, GR[3, :], 'valid')
+            CCR[4, :] = np.correlate(DR, GR[4, :], 'valid')
+            CCR[5, :] = np.correlate(DR, GR[5, :], 'valid')
             self._CCR = CCR
 
         if 'T' in self.components and\
             (npts <= 2000 and npts_padding <= 200):
-            CCT[:,0] = np.correlate(DT, GT[:,0], 'valid')
-            CCT[:,1] = np.correlate(DT, GT[:,1], 'valid')
-            CCT[:,2] = np.correlate(DT, GT[:,2], 'valid')
-            CCT[:,3] = np.correlate(DT, GT[:,3], 'valid')
-            CCT[:,4] = np.correlate(DT, GT[:,4], 'valid')
-            CCT[:,5] = np.correlate(DT, GT[:,5], 'valid')
+            CCT[0, :] = np.correlate(DT, GT[0, :], 'valid')
+            CCT[1, :] = np.correlate(DT, GT[1, :], 'valid')
+            CCT[2, :] = np.correlate(DT, GT[2, :], 'valid')
+            CCT[3, :] = np.correlate(DT, GT[3, :], 'valid')
+            CCT[4, :] = np.correlate(DT, GT[4, :], 'valid')
+            CCT[5, :] = np.correlate(DT, GT[5, :], 'valid')
             self._CCT = CCT
 
 
