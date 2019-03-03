@@ -54,9 +54,13 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
         -   github.com/krischer/instaseis/instaseis/tests/
             test_instaseis.py::test_get_greens_vs_get_seismogram
         """
-        npts = self[0].stats['npts']
         az = np.deg2rad(self.stats.azimuth)
-        self._weighted_tensor = []
+
+        npts = self[0].stats['npts']
+        nc = len(self.components)
+        self._rotated_tensor = np.zeros((npts, nc, 6))
+        G = self._rotated_tensor
+        ic = 0
 
         if 'Z' in self.components:
             ZSS = self.select(channel="ZSS")[0].data
@@ -64,17 +68,14 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
             ZDD = self.select(channel="ZDD")[0].data
             ZEP = self.select(channel="ZEP")[0].data
 
-            GZ = np.ones((npts, 6))
+            G[:, ic, 0] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+            G[:, ic, 1] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+            G[:, ic, 2] =  ZDD/3. + ZEP/3.
+            G[:, ic, 3] =  ZSS * np.sin(2*az)
+            G[:, ic, 4] =  ZDS * np.cos(az)
+            G[:, ic, 5] =  ZDS * np.sin(az)
 
-            GZ[:, 0] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            GZ[:, 1] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            GZ[:, 2] =  ZDD/3. + ZEP/3.
-            GZ[:, 3] =  ZSS * np.sin(2*az)
-            GZ[:, 4] =  ZDS * np.cos(az)
-            GZ[:, 5] =  ZDS * np.sin(az)
-
-            self._weighted_tensor += [GZ]
-
+            ic += 1
 
         if 'R' in self.components:
             RSS = self.select(channel="RSS")[0].data
@@ -82,32 +83,27 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
             RDD = self.select(channel="RDD")[0].data
             REP = self.select(channel="REP")[0].data
 
-            GR = np.ones((npts, 6))
+            G[:, ic, 0] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+            G[:, ic, 1] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+            G[:, ic, 2] =  RDD/3. + REP/3.
+            G[:, ic, 3] =  RSS * np.sin(2*az)
+            G[:, ic, 4] =  RDS * np.cos(az)
+            G[:, ic, 5] =  RDS * np.sin(az)
 
-            GR[:, 0] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            GR[:, 1] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            GR[:, 2] =  RDD/3. + REP/3.
-            GR[:, 3] =  RSS * np.sin(2*az)
-            GR[:, 4] =  RDS * np.cos(az)
-            GR[:, 5] =  RDS * np.sin(az)
-
-            self._weighted_tensor += [GR]
-
+            ic += 1
 
         if 'T' in self.components:
             TSS = self.select(channel="TSS")[0].data
             TDS = self.select(channel="TDS")[0].data
 
-            GT = np.ones((npts, 6))
+            G[:, ic, 0] = TSS/2. * np.sin(2*az)
+            G[:, ic, 1] = -TSS/2. * np.sin(2*az)
+            G[:, ic, 2] = 0.
+            G[:, ic, 3] = -TSS * np.cos(2*az)
+            G[:, ic, 4] = TDS * np.sin(az)
+            G[:, ic, 5] = -TDS * np.cos(az)
 
-            GT[:, 0] = TSS/2. * np.sin(2*az)
-            GT[:, 1] = -TSS/2. * np.sin(2*az)
-            GT[:, 2] = 0.
-            GT[:, 3] = -TSS * np.cos(2*az)
-            GT[:, 4] = TDS * np.sin(az)
-            GT[:, 5] = -TDS * np.cos(az)
-
-            self._weighted_tensor += [GT]
+            ic += 1
 
 
     def get_synthetics(self, mt):
@@ -129,21 +125,21 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()
 
-        if not hasattr(self, '_weighted_tensor'):
+        if not hasattr(self, '_rotated_tensor'):
             self._precompute_weights()
 
-        for _i, component in enumerate(self.components):
-            G = self._weighted_tensor[_i]
+        for ic, component in enumerate(self.components):
+            G = self._rotated_tensor
 
             # we could use np.dot instead, but speedup appears negligible
-            s = self._synthetics[_i].data
+            s = self._synthetics[ic].data
             s[:] = 0.
-            s += Mxx*G[:,0]
-            s += Myy*G[:,1]
-            s += Mzz*G[:,2]
-            s += Mxy*G[:,3]
-            s += Mxz*G[:,4]
-            s += Myz*G[:,5]
+            s += Mxx*G[:, ic, 0]
+            s += Myy*G[:, ic, 1]
+            s += Mzz*G[:, ic, 2]
+            s += Mxy*G[:, ic, 3]
+            s += Mxz*G[:, ic, 4]
+            s += Myz*G[:, ic, 5]
 
         return self._synthetics
 
@@ -222,21 +218,21 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
             #DZ = np.pad(DZ, npts_padding, 'constant')
 
             CCZ = np.zeros((2*npts_padding+1, 6))
-            GZ = self._weighted_tensor[0]
+            GZ = self._rotated_tensor[0]
 
         if 'R' in self.components:
             DR = data.select(component='R')[0].data
             #DR = np.pad(DR, npts_padding, 'constant')
 
             CCR = np.zeros((2*npts_padding+1, 6))
-            GR = self._weighted_tensor[1]
+            GR = self._rotated_tensor[1]
 
         if 'T' in self.components:
             DT = data.select(component='T')[0].data
             #DT = np.pad(DT, npts_padding, 'constant')
 
             CCT = np.zeros((2*npts_padding+1, 6))
-            GT = self._weighted_tensor[2]
+            GT = self._rotated_tensor[2]
 
         # for long traces or long lag times, frequency-domain
         # implementation is usually faster

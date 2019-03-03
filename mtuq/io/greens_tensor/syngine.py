@@ -45,8 +45,8 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
 
         # the negative sign is needed because of a bug in syngine? or because 
         # of inconsistent moment tensor conventions?
-        self._weighted_tensor[2] *= -1
-
+        if 'T' in self.components:
+            self._rotated_tensor[:, self.components.index('T'), :] *= -1
 
         # Order of terms expected by syngine URL parser (from online
         # documentation):
@@ -108,7 +108,7 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
     """
 
     def __init__(self, model=None, 
-            include_mt_response=True, include_force_response=True):
+            include_mt_response=True, include_force_response=False):
 
         self.include_mt_response = include_mt_response
         self.include_force_response = include_force_response
@@ -160,7 +160,6 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
 
                 # overwrite channel name
                 stream[-1].stats.channel = str(_i)+stream[-1].stats.channel[-1]
-                print stream[-1].stats.channel
 
         return self._resample(stream, station)
 
