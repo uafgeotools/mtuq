@@ -60,6 +60,37 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
         #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=-Mxz, m_rp=Myz, m_tp=-Mxy
 
 
+    def get_synthetics(self, source):
+        if len(source)==6:
+            return self._get_mt_synthetics(source)
+
+        elif len(source)==3:
+            return self._get_force_synthetics(source)
+
+
+    def _get_force_synthetics(self, force):
+        for _i, component in enumerate(self.components):
+            # which Green's functions correspond to given component?
+            if component=='Z':
+                _j=0
+            elif component=='R':
+                _j=1
+            elif component=='T':
+                _j=2
+            G = self._weighted_tensor[_j]
+
+            # we could use np.dot instead, but speedup appears negligible
+            s = self._synthetics[_i].data
+            s[:] = 0.
+            s += force[0]*G[:,0]
+            s += force[1]*G[:,1]
+            s += force[2]*G[:,2]
+
+
+    def _get_mt_synthetics(self, mt):
+        return super(GreensTensor, self).get_synthetics(mt)
+
+
 class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
     """ 
     Interface to syngine Green's function web service
@@ -76,22 +107,25 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
     corresponding station-event pairs.
     """
 
-    def __init__(self, model=None):
+    def __init__(self, model=None, 
+            include_mt_response=True, include_force_response=True):
+
+        self.include_mt_response = include_mt_response
+        self.include_force_response = include_force_response
+
         if not model:
             raise ValueError
         self.model = model
 
 
-    def _get_greens_tensor(self, station, origin, 
-            force_response=False, mt_response=True):
-
+    def _get_greens_tensor(self, station, origin):
         traces = []
-        if force_response:
+
+        if self.include_force_response:
             traces += self._get_force_response(station, origin)
-        elif mt_response:
+
+        if self.include_mt_response:
             traces += self._get_mt_response(station, origin) 
-        else:
-            raise ValueError
 
         return GreensTensor(traces, station, origin)
 
@@ -120,12 +154,13 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
         stream = Stream()
         stream.id = station.id
 
-        for dirname in dirnames:
+        for _i, dirname in enumerate(dirnames):
             for filename in SYNTHETICS_FILENAMES:
                 stream += obspy.read(dirname+'/'+filename, format='sac')
 
-                # set component attribute
-                #raise NotImplementedError
+                # overwrite channel name
+                stream[-1].stats.channel = str(_i)+stream[-1].stats.channel[-1]
+                print stream[-1].stats.channel
 
         return self._resample(stream, station)
 
