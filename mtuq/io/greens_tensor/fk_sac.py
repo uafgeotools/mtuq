@@ -12,7 +12,6 @@ from mtuq.util.moment_tensor.basis import change_basis
 
 # fk Green's functions represent vertical, radial, and transverse
 # velocity time series (units: 10^-20 cm (dyne-cm)^-1 s^-1) 
-COMPONENTS = ['Z', 'R','T']
 
 
 # fk Green's functions describe the impulse response of a horizontally layered 
@@ -34,8 +33,8 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
     """
     Elastic Green's tensor object
     """
-    def __init__(self, traces, station, origin, components=COMPONENTS):
-        super(GreensTensor, self).__init__(traces, station, origin, components)
+    def __init__(self, *args, **kwargs):
+        super(GreensTensor, self).__init__(*args, **kwargs)
         self.tags += ['type:velocity']
 
 
@@ -181,7 +180,7 @@ class Client(mtuq.io.greens_tensor.base.Client):
         self.model = model
 
 
-    def _get_greens_tensor(self, station, origin):
+    def _get_greens_tensor(self, station=None, origin=None):
         """ 
         Reads a Greens tensor from a directory tree organized by model, event
         depth, and event distance
@@ -241,7 +240,7 @@ class Client(mtuq.io.greens_tensor.base.Client):
         stream.id = station.id
 
         traces = [trace for trace in stream]
+        return GreensTensor(traces=traces, station=station, origin=origin)
 
-        return GreensTensor(traces, station, origin)
 
 

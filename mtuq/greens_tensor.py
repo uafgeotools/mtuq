@@ -21,17 +21,19 @@ class GreensTensor(Stream):
             <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
     """
 
-    def __init__(self, traces, station, origin, components):
+    def __init__(self, traces=None, station=None, origin=None,
+            components=['Z', 'T', 'R']):
+
         assert check_time_sampling(traces), NotImplementedError(
             "Time sampling differs from trace to trace.")
 
         super(GreensTensor, self).__init__(traces)
 
         self.id = station.id
-        self.tags = ['type:greens_tensor']
         self.stats = deepcopy(station)
         self.origin = origin
         self.components = components
+        self.tags = ['type:greens_tensor']
 
 
     def get_synthetics(self, mt):
@@ -74,7 +76,7 @@ class GreensTensor(Stream):
         
         """
         return self.__class__(function(self, *args, **kwargs),
-            self.stats, self.origin)
+            station=self.stats, origin=self.origin, components=self.components)
 
 
     def convolve(self, wavelet):

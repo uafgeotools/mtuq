@@ -14,7 +14,6 @@ from mtuq.util.signal import resample
 
 # instaseis Green's functions represent vertical, radial, and transverse
 # displacement time series (units: m (N-m)^-1)
-COMPONENTS = ['Z','R','T']
 
 
 # instaseis Green's functions describe the impulse response of a horizontally-
@@ -31,11 +30,11 @@ COMPONENTS = ['Z','R','T']
 
 class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
     """
-    Elastic Green's tensor object
-    """
-    def __init__(self, traces, station, origin, components=COMPONENTS):
-        super(GreensTensor, self).__init__(traces, station, origin, components)
+    AxiSEM Green's tensor object
 
+    Overloads Green's tensor base class with the mathematical machinery
+    required for working with AxiSEM-style Green's tensors
+    """
 
     def _precompute_weights(self):
         """
@@ -59,6 +58,7 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
         npts = self[0].stats['npts']
         nc = len(self.components)
         self._rotated_tensor = np.zeros((npts, nc, 6))
+
         G = self._rotated_tensor
         ic = 0
 
@@ -328,7 +328,7 @@ class Client(mtuq.io.greens_tensor.base.Client):
         self.kernelwidth=12
 
 
-    def _get_greens_tensor(self, station, origin):
+    def _get_greens_tensor(self, station=None, origin=None):
         stream = self.db.get_greens_function(
             epicentral_distance_in_degree=_in_deg(station.distance_in_m),
             source_depth_in_m=station.depth_in_m, 
@@ -358,7 +358,7 @@ class Client(mtuq.io.greens_tensor.base.Client):
             trace.stats.delta = dt_new
 
         traces = [trace for trace in stream]
-        return GreensTensor(stream, station, origin)
+        return GreensTensor(traces=traces, station=station, origin=origin)
 
 
 def _in_deg(distance_in_m):

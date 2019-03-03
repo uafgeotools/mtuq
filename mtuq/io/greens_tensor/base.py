@@ -20,7 +20,7 @@ class Client(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def get_greens_tensors(self, stations, origin, verbose=False):
+    def get_greens_tensors(self, stations=None, origin=None):
         """ Reads Green's tensors from database
 
         Returns a ``GreensTensorList`` in which each element corresponds to the
@@ -45,12 +45,12 @@ class Client(object):
                 station.longitude)
 
             greens_tensors += self._get_greens_tensor(
-                station, origin)
+                station=station, origin=origin)
 
         return greens_tensors
 
 
-    def _get_greens_tensor(self, station, origin):
+    def _get_greens_tensor(self, station=None, origin=None):
         raise NotImplementedError("Must be implemented by subclass")
 
 
