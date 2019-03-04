@@ -10,8 +10,7 @@ class Station(Stats):
 
     - network, station, and location codes
     - preliminary event location and origin time estimates
-    - time discretization information for all traces recorded at the given 
-      station
+    - time discretization information for traces recorded at the station
 
     At the beginning of an inversion, MTUQ requires preliminary estimates for
     event location and depth. Attributes with the suffix "preliminary"

@@ -5,6 +5,7 @@ from copy import deepcopy
 from obspy.core import Stream, Trace
 from mtuq.dataset import Dataset
 from mtuq.util.signal import check_time_sampling
+from scipy.signal import fftconvolve
 
 
 class GreensTensor(Stream):
@@ -20,7 +21,6 @@ class GreensTensor(Stream):
             For descriptions of inherited methods, see `ObsPy documentation
             <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
     """
-
     def __init__(self, traces=None, station=None, origin=None,
             components=['Z', 'R', 'T']):
 
@@ -33,15 +33,31 @@ class GreensTensor(Stream):
         self.stats = deepcopy(station)
         self.origin = origin
         self.components = components
-        self.tags = ['type:greens_tensor']
 
 
     def get_synthetics(self, mt):
         """
-        Generates synthetics through a linear combination of Green's tensor
-        elements
+        Generates synthetics through a source-weighted linear combination
         """
-        raise NotImplementedError("Must be implemented by subclass")
+        if not hasattr(self, '_synthetics'):
+            self._preallocate_synthetics()
+
+        if not hasattr(self, '_rotated_tensor'):
+            self._precompute_synthetics()
+
+        for _i, component in enumerate(self.components):
+            s = self._synthetics[_i].data
+            s[:] = 0.
+
+            # we could use np.dot instead, but speedup appears negligible
+            s += mt[0]*self._rotated_tensor[_i, 0, :]
+            s += mt[1]*self._rotated_tensor[_i, 1, :]
+            s += mt[2]*self._rotated_tensor[_i, 2, :]
+            s += mt[3]*self._rotated_tensor[_i, 3, :]
+            s += mt[4]*self._rotated_tensor[_i, 4, :]
+            s += mt[5]*self._rotated_tensor[_i, 5, :]
+
+        return self._synthetics
 
 
     def get_time_shift(self, data, mt, group, time_shift_max):
@@ -62,7 +78,30 @@ class GreensTensor(Stream):
         :param time_shift_max: Maximum allowable time-shift. Lag times greater 
             than this value are not computed in the cross-correlation.
         """
-        raise NotImplementedError("Must be implemented by subclass")
+        if not hasattr(self, '_cc_all'):
+            self._precompute_time_shifts(data, time_shift_max)
+
+        npts_padding = self._npts_padding
+        cc_all = self._cc_all
+        cc_sum = self._cc_sum
+        cc_sum[:] = 0.
+
+        for component in group:
+            _i = self.components.index(component)
+            cc_sum += mt[0] * cc_all[_i, 0, :]
+            cc_sum += mt[1] * cc_all[_i, 1, :]
+            cc_sum += mt[2] * cc_all[_i, 2, :]
+            cc_sum += mt[3] * cc_all[_i, 3, :]
+            cc_sum += mt[4] * cc_all[_i, 4, :]
+            cc_sum += mt[5] * cc_all[_i, 5, :]
+
+        # what is the index of the maximum element of the padded array?
+        argmax = cc_sum.argmax()
+
+        # what is the associated cross correlation lag?
+        ioff = argmax-npts_padding
+
+        return ioff
 
 
     def apply(self, function, *args, **kwargs):
@@ -108,19 +147,44 @@ class GreensTensor(Stream):
         self._synthetics.id = self.id
 
 
-    def _precompute_weights(self):
+    def _precompute_synthetics(self):
         """
-        Calculates weights used in linear combination of Green's functions
+        Enables fast synthetics calculations by precomputing time series used 
+        in source-weighted linear combination
         """
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def _precompute_time_shifts(self, data, max_time_shift):
+    def _precompute_time_shifts(self, data, time_shift_max):
         """
         Enables fast time-shift calculations by computing cross-correlations
         on an element-by-element basis
         """
-        raise NotImplementedError("Must be implemented by subclass")
+        dt = self[0].stats.delta
+        npts_padding = int(time_shift_max/dt)
+
+        G = self._rotated_tensor
+        n1,n2,npts = G.shape
+
+        self._npts_padding = npts_padding
+        self._cc_sum = np.zeros(2*npts_padding+1)
+        self._cc_all = np.zeros((n1, n2, 2*npts_padding+1))
+
+        # compute cross-correlations
+        cc = self._cc_all
+        for _i1, component in enumerate(self.components):
+            d = data.select(component=component)[0].data
+
+            for _i2 in range(n2):
+                if (npts > 2000 or npts_padding > 200):
+                    # for long traces or long lag times, frequency-domain
+                    # implementation is usually faster
+                    cc[_i1, _i2, :] = fftconvolve(d, G[_i1, _i2, ::-1], 'valid')
+
+                else:
+                    # for short traces or short lag times, time-domain
+                    # implementation is usually faster
+                    cc[_i1, _i2, :] = np.correlate(d, G[_i1, _i2, :], 'valid')
 
 
     def select(self, *args, **kwargs):

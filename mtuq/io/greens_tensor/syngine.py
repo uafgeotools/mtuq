@@ -2,10 +2,11 @@
 import obspy
 import numpy as np
 import re
-import mtuq.io.greens_tensor.axisem_netcdf
 
 from os.path import basename, exists
 from obspy.core import Stream, Trace
+from mtuq.io.greens_tensor.axisem_netcdf import GreensTensor as GreensTensorBase
+from mtuq.io.greens_tensor.base import Client as ClientBase
 from mtuq.util.signal import resample
 from mtuq.util.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
 
@@ -39,9 +40,9 @@ SYNTHETICS_FILENAMES = [
     ]
 
 
-class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
-    def _precompute_weights(self):
-        super(GreensTensor, self)._precompute_weights()
+class GreensTensor(GreensTensorBase):
+    def _precompute_synthetics(self):
+        super(GreensTensor, self)._precompute_synthetics()
 
         # the negative sign is needed because of a bug in syngine? or because 
         # of inconsistent moment tensor conventions?
@@ -92,7 +93,7 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
         return super(GreensTensor, self).get_synthetics(mt)
 
 
-class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
+class Client(ClientBase):
     """ 
     Interface to syngine Green's function web service
 

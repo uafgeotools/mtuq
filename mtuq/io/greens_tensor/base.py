@@ -5,10 +5,6 @@ from obspy.geodetics import gps2dist_azimuth
 
 
 
-class GreensTensor(mtuq.greens_tensor.GreensTensor):
-    pass
-
-
 class Client(object):
     """ Abstract base class for database or web service clients
 

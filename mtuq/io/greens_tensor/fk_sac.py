@@ -1,17 +1,18 @@
 
 import obspy
 import numpy as np
-import mtuq.io.greens_tensor.axisem_netcdf
 
 from math import ceil
 from os.path import basename, exists
 from obspy.core import Stream
+from mtuq import GreensTensor as GreensTensorBase
+from mtuq.io.greens_tensor.base import Client as ClientBase
 from mtuq.util.signal import resample
 from mtuq.util.moment_tensor.basis import change_basis
 
 
 
-class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
+class GreensTensor(GreensTensorBase):
     """
     FK Green's tensor object
 
@@ -29,99 +30,92 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
     """
     def __init__(self, *args, **kwargs):
         super(GreensTensor, self).__init__(*args, **kwargs)
+
+        self.tags = []
+        self.tags += ['type:greens']
         self.tags += ['type:velocity']
+        self.tags += ['units:m']
 
 
     def get_synthetics(self, mt):
         """
-        Generates synthetic seismograms through a linear combination of Green's
-        functions
+        Generates synthetic seismograms for a given moment tensor, via a linear
+        combination of Green's functions
         """
-        if not hasattr(self, '_synthetics'):
-            self._preallocate_synthetics()
-
-        if not hasattr(self, '_weighted_tensor'):
-            self._precompute_weights()
-
-        # CAP/FK uses convention #2 (Aki&Richards)
-        mt = change_basis(mt, 1, 2)
-
-        G = self._rotated_tensor
-        for _i, component in enumerate(self.components):
-
-            # we could use np.dot instead, but speedup appears negligible
-            s = self._synthetics[_i].data
-            s[:] = 0.
-            s += mt[0]*G[component][0,:]
-            s += mt[1]*G[component][1,:]
-            s += mt[2]*G[component][2,:]
-            s += mt[3]*G[component][3,:]
-            s += mt[4]*G[component][4,:]
-            s += mt[5]*G[component][5,:]
-
-        return self._synthetics
+        return super(GreensTensor, self).get_synthetics(
+            change_basis(mt, 1, 2))
 
 
-    def _precompute_weights(self):
+    def get_time_shift(self, data, mt, group, time_shift_max):
+        """ 
+        Finds optimal time-shift correction between synthetics and
+        user-supplied data
         """
-        Applies weights used in linear combination of Green's functions
+        return super(GreensTensor, self).get_time_shift(
+            data,
+            change_basis(mt, 1, 2),
+            group,
+            time_shift_max)
+
+
+    def _precompute_synthetics(self):
+        """
+        Computes rotated time series used in source-weighted linear combinations
  
-        See cap/fk documentation for indexing scheme details; here we try to
-        follow as closely as possible the cap way of doing things
- 
-        See also Lupei Zhu's mt_radiat utility
+        The following expressions were obtained using CAP's mt_radiat utility as
+        a starting point
         """
         az = np.deg2rad(self.stats.azimuth)
 
-        npts = self[0].stats['npts']
+        # array dimensions
+        nt = self[0].stats.npts
         nc = len(self.components)
-        self._rotated_tensor = {component: np.zeros((6, npts))
-            for component in self.components}
+        nr = 9
 
-        G = self._rotated_tensor
+        G = np.zeros((nc, nr, nt))
+        self._rotated_tensor = G
 
-        if 'Z' in self.components:
-            ZSS = self.select(channel="ZSS")[0].data
-            ZDS = self.select(channel="ZDS")[0].data
-            ZDD = self.select(channel="ZDD")[0].data
-            ZEP = self.select(channel="ZEP")[0].data
+        for _i, component in enumerate(self.components):
+            if component=='Z':
+                ZSS = self.select(channel="ZSS")[0].data
+                ZDS = self.select(channel="ZDS")[0].data
+                ZDD = self.select(channel="ZDD")[0].data
+                ZEP = self.select(channel="ZEP")[0].data
+                G[_i, 0, :] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+                G[_i, 1, :] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+                G[_i, 2, :] =  ZDD/3. + ZEP/3.
+                G[_i, 3, :] = -ZSS * np.sin(2*az)
+                G[_i, 4, :] = -ZDS * np.cos(az)
+                G[_i, 5, :] = -ZDS * np.sin(az)
 
-            G['Z'][0, :] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            G['Z'][1, :] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            G['Z'][2, :] =  ZDD/3. + ZEP/3.
-            G['Z'][3, :] = -ZSS * np.sin(2*az)
-            G['Z'][4, :] = -ZDS * np.cos(az)
-            G['Z'][5, :] = -ZDS * np.sin(az)
+            elif component=='R':
+                RSS = self.select(channel="RSS")[0].data
+                RDS = self.select(channel="RDS")[0].data
+                RDD = self.select(channel="RDD")[0].data
+                REP = self.select(channel="REP")[0].data
+                G[_i, 0, :] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+                G[_i, 1, :] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+                G[_i, 2, :] =  RDD/3. + REP/3.
+                G[_i, 3, :] = -RSS * np.sin(2*az)
+                G[_i, 4, :] = -RDS * np.cos(az)
+                G[_i, 5, :] = -RDS * np.sin(az)
 
+            elif component=='T':
+                TSS = self.select(channel="TSS")[0].data
+                TDS = self.select(channel="TDS")[0].data
+                G[_i, 0, :] = -TSS/2. * np.sin(2*az)
+                G[_i, 1, :] =  TSS/2. * np.sin(2*az)
+                G[_i, 2, :] =  0.
+                G[_i, 3, :] =  TSS * np.cos(2*az)
+                G[_i, 4, :] = -TDS * np.sin(az)
+                G[_i, 5, :] =  TDS * np.cos(az)
 
-        if 'R' in self.components:
-            RSS = self.select(channel="RSS")[0].data
-            RDS = self.select(channel="RDS")[0].data
-            RDD = self.select(channel="RDD")[0].data
-            REP = self.select(channel="REP")[0].data
-
-            G['R'][0, :] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            G['R'][1, :] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            G['R'][2, :] =  RDD/3. + REP/3.
-            G['R'][3, :] = -RSS * np.sin(2*az)
-            G['R'][4, :] = -RDS * np.cos(az)
-            G['R'][5, :] = -RDS * np.sin(az)
-
-
-        if 'T' in self.components:
-            TSS = self.select(channel="TSS")[0].data
-            TDS = self.select(channel="TDS")[0].data
-
-            G['T'][0, :] = -TSS/2. * np.sin(2*az)
-            G['T'][1, :] =  TSS/2. * np.sin(2*az)
-            G['T'][2, :] =  0.
-            G['T'][3, :] =  TSS * np.cos(2*az)
-            G['T'][4, :] = -TDS * np.sin(az)
-            G['T'][5, :] =  TDS * np.cos(az)
-
+            else:
+                raise ValueError
 
 
-class Client(mtuq.io.greens_tensor.base.Client):
+
+class Client(ClientBase):
     """ 
     Interface to FK database of Green's functions
 
