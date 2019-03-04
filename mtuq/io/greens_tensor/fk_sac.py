@@ -52,25 +52,18 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
         # CAP/FK uses convention #2 (Aki&Richards)
         mt = change_basis(mt, 1, 2)
 
+        G = self._rotated_tensor
         for _i, component in enumerate(self.components):
-            # which Green's functions correspond to given component?
-            if component=='Z':
-                _j=0
-            elif component=='R':
-                _j=1
-            elif component=='T':
-                _j=2
-            G = self._weighted_tensor[_j]
 
             # we could use np.dot instead, but speedup appears negligible
             s = self._synthetics[_i].data
             s[:] = 0.
-            s += mt[0]*G[:,0]
-            s += mt[1]*G[:,1]
-            s += mt[2]*G[:,2]
-            s += mt[3]*G[:,3]
-            s += mt[4]*G[:,4]
-            s += mt[5]*G[:,5]
+            s += mt[0]*G[component][0,:]
+            s += mt[1]*G[component][1,:]
+            s += mt[2]*G[component][2,:]
+            s += mt[3]*G[component][3,:]
+            s += mt[4]*G[component][4,:]
+            s += mt[5]*G[component][5,:]
 
         return self._synthetics
 
@@ -84,9 +77,14 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
  
         See also Lupei Zhu's mt_radiat utility
         """
-        npts = self[0].stats['npts']
         az = np.deg2rad(self.stats.azimuth)
-        self._weighted_tensor = []
+
+        npts = self[0].stats['npts']
+        nc = len(self.components)
+        self._rotated_tensor = {component: np.zeros((6, npts))
+            for component in self.components}
+
+        G = self._rotated_tensor
 
         if 'Z' in self.components:
             ZSS = self.select(channel="ZSS")[0].data
@@ -94,16 +92,12 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
             ZDD = self.select(channel="ZDD")[0].data
             ZEP = self.select(channel="ZEP")[0].data
 
-            GZ = np.ones((npts, 6))
-
-            GZ[:, 0] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            GZ[:, 1] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            GZ[:, 2] =  ZDD/3. + ZEP/3.
-            GZ[:, 3] = -ZSS * np.sin(2*az)
-            GZ[:, 4] = -ZDS * np.cos(az)
-            GZ[:, 5] = -ZDS * np.sin(az)
-
-            self._weighted_tensor += [GZ]
+            G['Z'][0, :] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+            G['Z'][1, :] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+            G['Z'][2, :] =  ZDD/3. + ZEP/3.
+            G['Z'][3, :] = -ZSS * np.sin(2*az)
+            G['Z'][4, :] = -ZDS * np.cos(az)
+            G['Z'][5, :] = -ZDS * np.sin(az)
 
 
         if 'R' in self.components:
@@ -112,32 +106,24 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
             RDD = self.select(channel="RDD")[0].data
             REP = self.select(channel="REP")[0].data
 
-            GR = np.ones((npts, 6))
-
-            GR[:, 0] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            GR[:, 1] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            GR[:, 2] =  RDD/3. + REP/3.
-            GR[:, 3] = -RSS * np.sin(2*az)
-            GR[:, 4] = -RDS * np.cos(az)
-            GR[:, 5] = -RDS * np.sin(az)
-
-            self._weighted_tensor += [GR]
+            G['R'][0, :] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+            G['R'][1, :] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+            G['R'][2, :] =  RDD/3. + REP/3.
+            G['R'][3, :] = -RSS * np.sin(2*az)
+            G['R'][4, :] = -RDS * np.cos(az)
+            G['R'][5, :] = -RDS * np.sin(az)
 
 
         if 'T' in self.components:
             TSS = self.select(channel="TSS")[0].data
             TDS = self.select(channel="TDS")[0].data
 
-            GT = np.ones((npts, 6))
-
-            GT[:, 0] = -TSS/2. * np.sin(2*az)
-            GT[:, 1] =  TSS/2. * np.sin(2*az)
-            GT[:, 2] =  0.
-            GT[:, 3] =  TSS * np.cos(2*az)
-            GT[:, 4] = -TDS * np.sin(az)
-            GT[:, 5] =  TDS * np.cos(az)
-
-            self._weighted_tensor += [GT]
+            G['T'][0, :] = -TSS/2. * np.sin(2*az)
+            G['T'][1, :] =  TSS/2. * np.sin(2*az)
+            G['T'][2, :] =  0.
+            G['T'][3, :] =  TSS * np.cos(2*az)
+            G['T'][4, :] = -TDS * np.sin(az)
+            G['T'][5, :] =  TDS * np.cos(az)
 
 
 
