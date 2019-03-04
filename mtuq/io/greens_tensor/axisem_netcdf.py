@@ -27,70 +27,79 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
     series. For the tranverse component, there are two associated time
     series. Thus there are ten independent Green's tensor elements altogether, 
     which is fewer than in the case of a general inhomogeneous medium
+
+    For more information, see
+
+    -  van Driel et al. (2015), Instaseis: instant global seismograms,
+       Solid Earth, 6, 701-717
+
+    -  Minson, Sarah E. and Dreger, D. (2008), Stable inversions for complete
+       moment tensors, GJI, 174 (2): 585-592
+
+    -  github.com/krischer/instaseis/instaseis/tests/
+       test_instaseis.py::test_get_greens_vs_get_seismogram
+
     """
+    def __init__(self, *args, **kwargs):
+        super(GreensTensor, self).__init__(*args, **kwargs)
+
+        self.tags = []
+        self.tags += ['type:greens']
+        self.tags += ['type:displacement']
+        self.tags += ['units:m']
+
 
     def _precompute_weights(self):
         """
-        Calculates weights used in linear combination of Green's functions
-
-        For more information, see
-
-        -  van Driel et al. (2015), Instaseis: instant global seismograms
-           Solid Earth, 6, 701-717
-
-        -  Minson, Sarah E. and Dreger, D. (2008), Stable inversions for
-           for complete moment tensors, GJI 174 (2): 585-592
-
-        -  github.com/krischer/instaseis/instaseis/tests/
-           test_instaseis.py::test_get_greens_vs_get_seismogram
+        Computes rotated time series used in source-weighted linear 
+        combinations
         """
         az = np.deg2rad(self.stats.azimuth)
 
-        npts = self[0].stats['npts']
+        # allocate array
+        nt = self[0].stats.npts
         nc = len(self.components)
-        self._rotated_tensor = {component: np.zeros((6, npts))
-            for component in self.components}
+        nr = 9
+        G = np.zeros((nc, nr, nt))
+        self._rotated_tensor = G
 
-        G = self._rotated_tensor
+        for _i, component in enumerate(self.components):
+            if component=='Z':
+                ZSS = self.select(channel="ZSS")[0].data
+                ZDS = self.select(channel="ZDS")[0].data
+                ZDD = self.select(channel="ZDD")[0].data
+                ZEP = self.select(channel="ZEP")[0].data
+                G[_i, 0, :] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+                G[_i, 1, :] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+                G[_i, 2, :] =  ZDD/3. + ZEP/3.
+                G[_i, 3, :] =  ZSS * np.sin(2*az)
+                G[_i, 4, :] =  ZDS * np.cos(az)
+                G[_i, 5, :] =  ZDS * np.sin(az)
 
-        if 'Z' in self.components:
-            ZSS = self.select(channel="ZSS")[0].data
-            ZDS = self.select(channel="ZDS")[0].data
-            ZDD = self.select(channel="ZDD")[0].data
-            ZEP = self.select(channel="ZEP")[0].data
+            elif component=='R':
+                RSS = self.select(channel="RSS")[0].data
+                RDS = self.select(channel="RDS")[0].data
+                RDD = self.select(channel="RDD")[0].data
+                REP = self.select(channel="REP")[0].data
+                G[_i, 0, :] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+                G[_i, 1, :] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+                G[_i, 2, :] =  RDD/3. + REP/3.
+                G[_i, 3, :] =  RSS * np.sin(2*az)
+                G[_i, 4, :] =  RDS * np.cos(az)
+                G[_i, 5, :] =  RDS * np.sin(az)
 
-            G['Z'][0, :] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            G['Z'][1, :] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-            G['Z'][2, :] =  ZDD/3. + ZEP/3.
-            G['Z'][3, :] =  ZSS * np.sin(2*az)
-            G['Z'][4, :] =  ZDS * np.cos(az)
-            G['Z'][5, :] =  ZDS * np.sin(az)
+            elif component=='T':
+                TSS = self.select(channel="TSS")[0].data
+                TDS = self.select(channel="TDS")[0].data
+                G[_i, 0, :] = TSS/2. * np.sin(2*az)
+                G[_i, 1, :] = -TSS/2. * np.sin(2*az)
+                G[_i, 2, :] = 0.
+                G[_i, 3, :] = -TSS * np.cos(2*az)
+                G[_i, 4, :] = TDS * np.sin(az)
+                G[_i, 5, :] = -TDS * np.cos(az)
 
-
-        if 'R' in self.components:
-            RSS = self.select(channel="RSS")[0].data
-            RDS = self.select(channel="RDS")[0].data
-            RDD = self.select(channel="RDD")[0].data
-            REP = self.select(channel="REP")[0].data
-
-            G['R'][0, :] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            G['R'][1, :] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-            G['R'][2, :] =  RDD/3. + REP/3.
-            G['R'][3, :] =  RSS * np.sin(2*az)
-            G['R'][4, :] =  RDS * np.cos(az)
-            G['R'][5, :] =  RDS * np.sin(az)
-
-
-        if 'T' in self.components:
-            TSS = self.select(channel="TSS")[0].data
-            TDS = self.select(channel="TDS")[0].data
-
-            G['T'][0, :] = TSS/2. * np.sin(2*az)
-            G['T'][1, :] = -TSS/2. * np.sin(2*az)
-            G['T'][2, :] = 0.
-            G['T'][3, :] = -TSS * np.cos(2*az)
-            G['T'][4, :] = TDS * np.sin(az)
-            G['T'][5, :] = -TDS * np.cos(az)
+            else:
+                raise ValueError
 
 
     def get_synthetics(self, mt):
@@ -121,12 +130,12 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
             # we could use np.dot instead, but speedup appears negligible
             s = self._synthetics[_i].data
             s[:] = 0.
-            s += Mxx*G[component][0, :]
-            s += Myy*G[component][1, :]
-            s += Mzz*G[component][2, :]
-            s += Mxy*G[component][3, :]
-            s += Mxz*G[component][4, :]
-            s += Myz*G[component][5, :]
+            s += Mxx*G[_i, 0, :]
+            s += Myy*G[_i, 1, :]
+            s += Mzz*G[_i, 2, :]
+            s += Mxy*G[_i, 3, :]
+            s += Mxz*G[_i, 4, :]
+            s += Myz*G[_i, 5, :]
 
         return self._synthetics
 
@@ -153,18 +162,18 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
         Myz =  mt[4]
 
         for component in group:
-            cc_sum += Mxx * cc_all[component][0, :]
-            cc_sum += Myy * cc_all[component][1, :]
-            cc_sum += Mzz * cc_all[component][2, :]
-            cc_sum += Mxy * cc_all[component][3, :]
-            cc_sum += Mxz * cc_all[component][4, :]
-            cc_sum += Myz * cc_all[component][5, :]
+            _i = self.components.index(component)
+            cc_sum += Mxx * cc_all[_i, 0, :]
+            cc_sum += Myy * cc_all[_i, 1, :]
+            cc_sum += Mzz * cc_all[_i, 2, :]
+            cc_sum += Mxy * cc_all[_i, 3, :]
+            cc_sum += Mxz * cc_all[_i, 4, :]
+            cc_sum += Myz * cc_all[_i, 5, :]
 
         # what is the index of the maximum element of the padded array?
         argmax = cc_sum.argmax()
 
-        # what is the associated cross correlation lag, in terms of 
-        # number of samples?
+        # what is the associated cross correlation lag?
         ioff = argmax-npts_padding
 
         return ioff
@@ -178,34 +187,34 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
         dt = self[0].stats['delta']
         npts = self[0].stats['npts']
         npts_padding = int(time_shift_max/dt)
+        nc = len(self.components)
 
         self._npts_padding = npts_padding
         self._cc_sum = np.zeros(2*npts_padding+1)
-        self._cc_all = {component: np.zeros((6, 2*npts_padding+1)) 
-                for component in self.components}
+        self._cc_all = np.zeros((nc, 6, 2*npts_padding+1)) 
 
+        g = self._rotated_tensor
         cc = self._cc_all
-        for component in self.components:
+        for _i, component in enumerate(self.components):
             d = data.select(component=component)[0].data
-            g = self._rotated_tensor[component]
 
             # for long traces or long lag times, frequency-domain
             # implementation is usually faster
             if (npts > 2000 or npts_padding > 200):
-                cc[component][0, :] = fftconvolve(d, g[0, ::-1], 'valid')
-                cc[component][1, :] = fftconvolve(d, g[1, ::-1], 'valid')
-                cc[component][2, :] = fftconvolve(d, g[2, ::-1], 'valid')
-                cc[component][3, :] = fftconvolve(d, g[3, ::-1], 'valid')
-                cc[component][4, :] = fftconvolve(d, g[4, ::-1], 'valid')
-                cc[component][5, :] = fftconvolve(d, g[5, ::-1], 'valid')
+                cc[_i, 0, :] = fftconvolve(d, g[_i, 0, ::-1], 'valid')
+                cc[_i, 1, :] = fftconvolve(d, g[_i, 1, ::-1], 'valid')
+                cc[_i, 2, :] = fftconvolve(d, g[_i, 2, ::-1], 'valid')
+                cc[_i, 3, :] = fftconvolve(d, g[_i, 3, ::-1], 'valid')
+                cc[_i, 4, :] = fftconvolve(d, g[_i, 4, ::-1], 'valid')
+                cc[_i, 5, :] = fftconvolve(d, g[_i, 5, ::-1], 'valid')
 
             else:
-                cc[component][0, :] = np.correlate(d, g[0, :], 'valid')
-                cc[component][1, :] = np.correlate(d, g[1, :], 'valid')
-                cc[component][2, :] = np.correlate(d, g[2, :], 'valid')
-                cc[component][3, :] = np.correlate(d, g[3, :], 'valid')
-                cc[component][4, :] = np.correlate(d, g[4, :], 'valid')
-                cc[component][5, :] = np.correlate(d, g[5, :], 'valid')
+                cc[_i, 0, :] = np.correlate(d, g[_i, 0, :], 'valid')
+                cc[_i, 1, :] = np.correlate(d, g[_i, 1, :], 'valid')
+                cc[_i, 2, :] = np.correlate(d, g[_i, 2, :], 'valid')
+                cc[_i, 3, :] = np.correlate(d, g[_i, 3, :], 'valid')
+                cc[_i, 4, :] = np.correlate(d, g[_i, 4, :], 'valid')
+                cc[_i, 5, :] = np.correlate(d, g[_i, 5, :], 'valid')
 
 
 

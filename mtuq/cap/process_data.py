@@ -369,7 +369,7 @@ class ProcessData(object):
             # using a longer window for Green's functions than for data allows
             # time-shift corrections to be efficiently computed
             # in mtuq.misfit.cap
-            if 'type:greens_tensor' in tags:
+            if 'type:greens' in tags:
                 starttime = window[0] - self.padding_length
                 endtime = window[1] + self.padding_length
 
@@ -407,7 +407,7 @@ class ProcessData(object):
         elif self.weight_type == 'cap_bw':
             # applies CAP body wave weighting
             for trace in traces:
-                if 'type:greens_tensor' in tags:
+                if 'type:greens' in tags:
                     break
 
                 if trace.stats.channel:
@@ -439,7 +439,7 @@ class ProcessData(object):
         elif self.weight_type == 'cap_sw':
             # applies CAP surface wave weighting
             for trace in traces:
-                if 'type:greens_tensor' in tags:
+                if 'type:greens' in tags:
                     break
 
                 if trace.stats.channel:
