@@ -183,19 +183,17 @@ class Client(mtuq.io.greens_tensor.base.Client):
         #dst = str(int(round(station.distance_in_m/1000.)))
         dst = str(int(ceil(station.distance_in_m/1000.)))
 
-        # The output of an FK simulation consists of 12 SAC files with single
-        # character filename extensions.  The SAC files ending in *.2 and *.9 
-        # contain only zero data, so we exclude them from the following list.  
-        # The order of traces in the following list is the order in which CAP
-        # stores the individual time series.
+        # An FK simulation outputs 12 SAC files each with filename extensions
+        # 0,1,2,3,4,5,6,7,8,9,a,b.  The SAC files ending in .2 and .9 contain 
+        # only zero data, so we exclude them from the following list. 
+        # The order of traces in the list is the order in which CAP stores
+        # the time series.
         extensions = [
             '8','5',           # t
             'b','7','4','1',   # r
             'a','6','3','0',   # z
             ]
 
-        # The filename extensions above correspond to the following instaseis
-        # channel names.
         channels = [
             'TSS', 'TDS',
             'REP', 'RSS', 'RDS', 'RDD',
