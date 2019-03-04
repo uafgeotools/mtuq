@@ -185,7 +185,7 @@ class Client(mtuq.io.greens_tensor.base.Client):
         Reads a Greens tensor from a directory tree organized by model, event
         depth, and event distance
         """
-        stream = Stream()
+        traces = []
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
@@ -197,19 +197,23 @@ class Client(mtuq.io.greens_tensor.base.Client):
         #dst = str(int(round(station.distance_in_m/1000.)))
         dst = str(int(ceil(station.distance_in_m/1000.)))
 
-        # See cap/fk documentation for indexing scheme details;
-        # here we try to follow as closely as possible the cap way of
-        # doing things
-        channels = [
-            'TSS', 'TDS',
-            'REP', 'RSS', 'RDS', 'RDD',
-            'ZEP', 'ZSS', 'ZDS', 'ZDD',
-            ]
-
+        # The output of an FK simulation consists of 12 SAC files with single
+        # character filename extensions.  The SAC files ending in *.2 and *.9 
+        # contain only zero data, so we exclude them from the following list.  
+        # The order of traces in the following list is the order in which CAP
+        # stores the individual time series.
         extensions = [
             '8','5',           # t
             'b','7','4','1',   # r
             'a','6','3','0',   # z
+            ]
+
+        # The filename extensions above correspond to the following instaseis
+        # channel names.
+        channels = [
+            'TSS', 'TDS',
+            'REP', 'RSS', 'RDS', 'RDD',
+            'ZEP', 'ZSS', 'ZDS', 'ZDD',
             ]
 
         for _i, ext in enumerate(extensions):
@@ -222,25 +226,20 @@ class Client(mtuq.io.greens_tensor.base.Client):
             # what are the start and end times of the Green's function?
             t1_old = float(origin.time)+float(trace.stats.starttime)
             t2_old = float(origin.time)+float(trace.stats.endtime)
-
             dt_old = float(trace.stats.delta)
+            data_old = trace.data
 
             # resample Green's function
-            data_old = trace.data
             data_new = resample(data_old, t1_old, t2_old, dt_old, 
-                                t1_new, t2_new, dt_new)
+                                          t1_new, t2_new, dt_new)
             trace.data = data_new
             # convert from 10^-20 dyne to N^-1
             trace.data *= 1.e-15
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
 
-            stream += trace
+            traces += [trace]
 
-        stream.id = station.id
-
-        traces = [trace for trace in stream]
-        return GreensTensor(traces=traces, station=station, origin=origin)
-
+        return GreensTensor(traces, station, origin)
 
 

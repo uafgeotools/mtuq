@@ -271,8 +271,8 @@ class Client(mtuq.io.greens_tensor.base.Client):
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
 
-        traces = [trace for trace in stream]
-        return GreensTensor(traces=traces, station=station, origin=origin)
+        return GreensTensor(traces=[trace for trace in stream], 
+            station=station, origin=origin)
 
 
 def _in_deg(distance_in_m):
