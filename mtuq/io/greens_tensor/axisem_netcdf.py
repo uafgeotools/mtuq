@@ -42,14 +42,14 @@ class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
 
         For more information, see
 
-        -   van Driel et al. (2015), Instaseis: instant global seismograms
-            Solid Earth, 6, 701-717
+        -  van Driel et al. (2015), Instaseis: instant global seismograms
+           Solid Earth, 6, 701-717
 
-        -   Minson, Sarah E. and Dreger, D. (2008), Stable inversions for
-            for complete moment tensors, GJI 174 (2): 585-592
+        -  Minson, Sarah E. and Dreger, D. (2008), Stable inversions for
+           for complete moment tensors, GJI 174 (2): 585-592
 
-        -   github.com/krischer/instaseis/instaseis/tests/
-            test_instaseis.py::test_get_greens_vs_get_seismogram
+        -  github.com/krischer/instaseis/instaseis/tests/
+           test_instaseis.py::test_get_greens_vs_get_seismogram
         """
         az = np.deg2rad(self.stats.azimuth)
 

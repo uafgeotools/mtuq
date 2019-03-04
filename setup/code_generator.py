@@ -389,7 +389,7 @@ GridSearchSerial="""
     data = processed_data
 
 
-    print 'Downloadings Greens functions...\\n'
+    print 'Downloading Greens functions...\\n'
     greens = get_greens_tensors(stations, origin, model=model)
 
 
