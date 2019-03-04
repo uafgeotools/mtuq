@@ -10,28 +10,22 @@ from mtuq.util.signal import resample
 from mtuq.util.moment_tensor.basis import change_basis
 
 
-# fk Green's functions represent vertical, radial, and transverse
-# velocity time series (units: 10^-20 cm (dyne-cm)^-1 s^-1) 
-
-
-# fk Green's functions describe the impulse response of a horizontally layered 
-# medium. For the vertical and radial components, there are four associated 
-# time series. For the tranverse component, there are two associated time 
-# series. Thus there are ten independent Green's tensor elements altogether, 
-# which is fewer than in the case of a general inhomogeneous medium
-
-
-# If a GreensTensor is created with the wrong input arguments, this error
-# message is displayed.  In practice this is rarely encountered, since
-# Database normally does all the work
-
-DEG2RAD = np.pi/180.
-
-
 
 class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
     """
-    Elastic Green's tensor object
+    FK Green's tensor object
+
+    Overloads base class with the mathematical machinery for working with
+    FK-style Green's functions
+
+    FK Green's functions describe the impulse response of a horizontally-
+    layered medium.  Time series represent vertical, radial, and transverse
+    velocity in units of 10^-20*cm*(dyne-cm)^-1 s^-1
+
+    For the vertical and raidal components, there are four associated time 
+    series. For the tranverse component, there are two associated time
+    series. Thus there are ten independent Green's tensor elements altogether, 
+    which is fewer than in the case of a general inhomogeneous medium
     """
     def __init__(self, *args, **kwargs):
         super(GreensTensor, self).__init__(*args, **kwargs)
@@ -40,8 +34,8 @@ class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
 
     def get_synthetics(self, mt):
         """
-        Generates synthetic seismograms for a given moment tensor, via a linear
-        combination of Green's functions
+        Generates synthetic seismograms through a linear combination of Green's
+        functions
         """
         if not hasattr(self, '_synthetics'):
             self._preallocate_synthetics()

@@ -12,28 +12,21 @@ from scipy.signal import fftconvolve
 from mtuq.util.signal import resample
 
 
-# instaseis Green's functions represent vertical, radial, and transverse
-# displacement time series (units: m (N-m)^-1)
-
-
-# instaseis Green's functions describe the impulse response of a horizontally-
-# layered medium. For the vertical and raidal components, there are four
-# associated time series. For the tranverse component, there are two associated 
-# time series. Thus there are ten independent Green's tensor elements altogether, 
-# which is fewer than in the case of a general inhomogeneous medium
-
-
-# If a GreensTensor is created with the wrong input arguments, this error
-# message is displayed.  In practice this is rarely encountered, since
-# GreensTensorFactory normally does all the work
-
-
 class GreensTensor(mtuq.io.greens_tensor.base.GreensTensor):
     """
     AxiSEM Green's tensor object
 
-    Overloads Green's tensor base class with the mathematical machinery
-    for working with AxiSEM-style Green's tensors
+    Overloads base class with the mathematical machinery for working with
+    AxiSEM-style Green's functions
+
+    AxiSEM Green's functions describe the impulse response of a horizontally-
+    layered medium.  Time series represent vertical, radial, and transverse
+    displacement in units of m*(N-m)^-1
+
+    For the vertical and raidal components, there are four associated time 
+    series. For the tranverse component, there are two associated time
+    series. Thus there are ten independent Green's tensor elements altogether, 
+    which is fewer than in the case of a general inhomogeneous medium
     """
 
     def _precompute_weights(self):
