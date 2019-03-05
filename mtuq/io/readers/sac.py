@@ -35,10 +35,8 @@ def read(filenames, event_id=None, tags=[]):
         else:
             data_sorted[id] += trace
 
-    station_ids = []
     streams = []
     for id in data_sorted:
-        station_ids += [id]
         streams += [data_sorted[id]]
 
     # collect event metadata
@@ -56,7 +54,6 @@ def read(filenames, event_id=None, tags=[]):
     return Dataset(streams=streams, 
         stations=stations, 
         preliminary_origin=origin,
-        station_ids=station_ids,
         event_id=event_id,
         tags=tags)
 

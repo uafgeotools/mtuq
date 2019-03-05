@@ -17,7 +17,7 @@ class Dataset(object):
 
     """
     def __init__(self, streams=[], stations=[], preliminary_origin=None,
-                 station_ids=[], event_id=None, tags=[]):
+                 event_id=None, tags=[]):
         """ Constructor
         """
         self.__list__ = []
@@ -26,7 +26,7 @@ class Dataset(object):
             self.__list__[_i].tags = copy(tags)
             
             # add station-related attributes
-            self.__list__[_i].id = station_ids[_i]
+            self.__list__[_i].id = stations[_i].id
             self.__list__[_i].stats = stations[_i]
 
         # add event-related attributes
