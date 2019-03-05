@@ -30,9 +30,9 @@ class Station(Stats):
     """
     readonly = [
         'endtime',
-        'preliminary_distance_in_m',
-        'preliminary_azimuth',
-        'preliminary_backazimuth',
+        #'preliminary_distance_in_m',
+        #'preliminary_azimuth',
+        #'preliminary_backazimuth',
         ]
 
     defaults = {
