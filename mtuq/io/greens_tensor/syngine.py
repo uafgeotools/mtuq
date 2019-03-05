@@ -3,7 +3,7 @@ import obspy
 import numpy as np
 import re
 
-from os.path import basename, exists
+from os.path import exists
 from obspy.core import Stream, Trace
 from mtuq.io.greens_tensor.axisem_netcdf import GreensTensor as GreensTensorBase
 from mtuq.io.greens_tensor.base import Client as ClientBase
@@ -43,6 +43,14 @@ class GreensTensor(GreensTensorBase):
     AxiSEM, and it is not necessary to modify any of the machinery for 
     generating synthetics (except for one possible sign discrepacny).
     """
+    def __init__(self, *args, **kwargs):
+        super(GreensTensor, self).__init__(*args, **kwargs)
+
+        if self.enable_force:
+            raise NotImplementedError(
+                "Force source implementation not usuable due to suspected "
+                "syngine bugs")
+
     def _precompute(self):
         super(GreensTensor, self)._precompute()
 
