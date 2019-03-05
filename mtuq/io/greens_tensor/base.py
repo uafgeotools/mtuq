@@ -1,7 +1,6 @@
 
 import mtuq.greens_tensor
 from mtuq.util.util import iterable
-from obspy.geodetics import gps2dist_azimuth
 
 
 
@@ -31,15 +30,6 @@ class Client(object):
         greens_tensors = mtuq.greens_tensor.GreensTensorList()
 
         for station in iterable(stations):
-            # if hypocenter is an inversion parameter, then the values 
-            # calculated below will in general differ from preliminary_distance
-            # and preliminary_azimuth
-            station.distance_in_m, station.azimuth, _ = gps2dist_azimuth(
-                origin.latitude,
-                origin.longitude,
-                station.latitude,
-                station.longitude)
-
             greens_tensors += self._get_greens_tensor(
                 station=station, origin=origin)
 

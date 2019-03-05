@@ -4,12 +4,12 @@ import numpy as np
 
 from math import ceil
 from os.path import basename, exists
-from obspy.core import Stream
 from mtuq import GreensTensor as GreensTensorBase
 from mtuq.io.greens_tensor.base import Client as ClientBase
 from mtuq.util.signal import resample
 from mtuq.util.moment_tensor.basis import change_basis
-
+from obspy.core import Stream
+from obspy.geodetics import gps2dist_azimuth
 
 
 class GreensTensor(GreensTensorBase):
@@ -65,12 +65,12 @@ class GreensTensor(GreensTensorBase):
         The following expressions were obtained using CAP's mt_radiat utility as
         a starting point
         """
-        az = np.deg2rad(self.stats.azimuth)
+        phi = np.deg2rad(self.azimuth)
 
         # array dimensions
         nt = self[0].stats.npts
         nc = len(self.components)
-        nr = 9
+        nr = 6
 
         G = np.zeros((nc, nr, nt))
         self._tensor = G
@@ -81,34 +81,34 @@ class GreensTensor(GreensTensorBase):
                 ZDS = self.select(channel="ZDS")[0].data
                 ZDD = self.select(channel="ZDD")[0].data
                 ZEP = self.select(channel="ZEP")[0].data
-                G[_i, 0, :] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-                G[_i, 1, :] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+                G[_i, 0, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
+                G[_i, 1, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 G[_i, 2, :] =  ZDD/3. + ZEP/3.
-                G[_i, 3, :] = -ZSS * np.sin(2*az)
-                G[_i, 4, :] = -ZDS * np.cos(az)
-                G[_i, 5, :] = -ZDS * np.sin(az)
+                G[_i, 3, :] = -ZSS * np.sin(2*phi)
+                G[_i, 4, :] = -ZDS * np.cos(phi)
+                G[_i, 5, :] = -ZDS * np.sin(phi)
 
             elif component=='R':
                 RSS = self.select(channel="RSS")[0].data
                 RDS = self.select(channel="RDS")[0].data
                 RDD = self.select(channel="RDD")[0].data
                 REP = self.select(channel="REP")[0].data
-                G[_i, 0, :] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-                G[_i, 1, :] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+                G[_i, 0, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
+                G[_i, 1, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 G[_i, 2, :] =  RDD/3. + REP/3.
-                G[_i, 3, :] = -RSS * np.sin(2*az)
-                G[_i, 4, :] = -RDS * np.cos(az)
-                G[_i, 5, :] = -RDS * np.sin(az)
+                G[_i, 3, :] = -RSS * np.sin(2*phi)
+                G[_i, 4, :] = -RDS * np.cos(phi)
+                G[_i, 5, :] = -RDS * np.sin(phi)
 
             elif component=='T':
                 TSS = self.select(channel="TSS")[0].data
                 TDS = self.select(channel="TDS")[0].data
-                G[_i, 0, :] = -TSS/2. * np.sin(2*az)
-                G[_i, 1, :] =  TSS/2. * np.sin(2*az)
+                G[_i, 0, :] = -TSS/2. * np.sin(2*phi)
+                G[_i, 1, :] =  TSS/2. * np.sin(2*phi)
                 G[_i, 2, :] =  0.
-                G[_i, 3, :] =  TSS * np.cos(2*az)
-                G[_i, 4, :] = -TDS * np.sin(az)
-                G[_i, 5, :] =  TDS * np.cos(az)
+                G[_i, 3, :] =  TSS * np.cos(2*phi)
+                G[_i, 4, :] = -TDS * np.sin(phi)
+                G[_i, 5, :] =  TDS * np.cos(phi)
 
             else:
                 raise ValueError
@@ -161,6 +161,12 @@ class Client(ClientBase):
         """
         traces = []
 
+        distance_in_m, _, _ = gps2dist_azimuth(
+            origin.latitude,
+            origin.longitude,
+            station.latitude,
+            station.longitude)
+
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
         t2_new = float(station.endtime)
@@ -168,8 +174,8 @@ class Client(ClientBase):
 
         #dep = str(int(round(origin.depth_in_m/1000.)))
         dep = str(int(ceil(origin.depth_in_m/1000.)))
-        #dst = str(int(round(station.distance_in_m/1000.)))
-        dst = str(int(ceil(station.distance_in_m/1000.)))
+        #dst = str(int(round(distance_in_m/1000.)))
+        dst = str(int(ceil(distance_in_m/1000.)))
 
         # An FK simulation outputs 12 SAC files each with filename extensions
         # 0,1,2,3,4,5,6,7,8,9,a,b.  The SAC files ending in .2 and .9 contain 

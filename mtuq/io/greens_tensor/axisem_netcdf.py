@@ -75,7 +75,7 @@ class GreensTensor(GreensTensorBase):
 
         Based on formulas from Minson & Dreger 2008
         """
-        az = np.deg2rad(self.stats.azimuth)
+        phi = np.deg2rad(self.azimuth)
 
         # array dimensions
         nt = self[0].stats.npts
@@ -93,34 +93,34 @@ class GreensTensor(GreensTensorBase):
                 ZDS = self.select(channel="ZDS")[0].data
                 ZDD = self.select(channel="ZDD")[0].data
                 ZEP = self.select(channel="ZEP")[0].data
-                G[_i, 0, :] =  ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
-                G[_i, 1, :] = -ZSS/2. * np.cos(2*az) - ZDD/6. + ZEP/3.
+                G[_i, 0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
+                G[_i, 1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 G[_i, 2, :] =  ZDD/3. + ZEP/3.
-                G[_i, 3, :] =  ZSS * np.sin(2*az)
-                G[_i, 4, :] =  ZDS * np.cos(az)
-                G[_i, 5, :] =  ZDS * np.sin(az)
+                G[_i, 3, :] =  ZSS * np.sin(2*phi)
+                G[_i, 4, :] =  ZDS * np.cos(phi)
+                G[_i, 5, :] =  ZDS * np.sin(phi)
 
             elif component=='R':
                 RSS = self.select(channel="RSS")[0].data
                 RDS = self.select(channel="RDS")[0].data
                 RDD = self.select(channel="RDD")[0].data
                 REP = self.select(channel="REP")[0].data
-                G[_i, 0, :] =  RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
-                G[_i, 1, :] = -RSS/2. * np.cos(2*az) - RDD/6. + REP/3.
+                G[_i, 0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
+                G[_i, 1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 G[_i, 2, :] =  RDD/3. + REP/3.
-                G[_i, 3, :] =  RSS * np.sin(2*az)
-                G[_i, 4, :] =  RDS * np.cos(az)
-                G[_i, 5, :] =  RDS * np.sin(az)
+                G[_i, 3, :] =  RSS * np.sin(2*phi)
+                G[_i, 4, :] =  RDS * np.cos(phi)
+                G[_i, 5, :] =  RDS * np.sin(phi)
 
             elif component=='T':
                 TSS = self.select(channel="TSS")[0].data
                 TDS = self.select(channel="TDS")[0].data
-                G[_i, 0, :] = TSS/2. * np.sin(2*az)
-                G[_i, 1, :] = -TSS/2. * np.sin(2*az)
+                G[_i, 0, :] = TSS/2. * np.sin(2*phi)
+                G[_i, 1, :] = -TSS/2. * np.sin(2*phi)
                 G[_i, 2, :] = 0.
-                G[_i, 3, :] = -TSS * np.cos(2*az)
-                G[_i, 4, :] = TDS * np.sin(az)
-                G[_i, 5, :] = -TDS * np.cos(az)
+                G[_i, 3, :] = -TSS * np.cos(2*phi)
+                G[_i, 4, :] = TDS * np.sin(phi)
+                G[_i, 5, :] = -TDS * np.cos(phi)
 
             if component=='Z' and\
                 self.enable_force:

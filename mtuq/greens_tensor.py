@@ -2,11 +2,12 @@
 import numpy as np
 
 from copy import deepcopy
-from obspy.core import Stream, Trace
 from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
 from mtuq.util.signal import check_time_sampling
+from obspy.core import Stream, Trace
+from obspy.geodetics import gps2dist_azimuth
 from scipy.signal import fftconvolve
 
 
@@ -62,6 +63,12 @@ class GreensTensor(Stream):
 
         # enable synthetics from force sources?
         self.enable_force = enable_force
+
+        self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
+            origin.latitude,
+            origin.longitude,
+            station.latitude,
+            station.longitude)
 
         super(GreensTensor, self).__init__(traces)
 
@@ -376,7 +383,7 @@ class GreensTensorList(object):
         """ 
         Sorts in-place by hypocentral distance
         """
-        self.sort_by_function(lambda stream: stream.stats.distance,
+        self.sort_by_function(lambda stream: stream.distance,
             reverse=reverse)
 
 
@@ -384,7 +391,7 @@ class GreensTensorList(object):
         """
         Sorts in-place by source-receiver azimuth
         """
-        self.sort_by_function(lambda stream: stream.stats.azimuth,
+        self.sort_by_function(lambda stream: stream.azimuth,
             reverse=reverse)
 
 
