@@ -127,27 +127,27 @@ class GreensTensor(GreensTensorBase):
                 Z0 = self.select(channel="Z0")[0].data
                 Z1 = self.select(channel="Z1")[0].data
                 Z2 = self.select(channel="Z2")[0].data
-                G[_i, 5, :] = Z0
-                G[_i, 6, :] = Z1
-                G[_i, 7, :] = Z2
+                G[_i, 6, :] = Z0
+                G[_i, 7, :] = Z1
+                G[_i, 8, :] = Z2
 
             elif component=='R' and\
                 self.enable_force:
                 R0 = self.select(channel="R0")[0].data
                 R1 = self.select(channel="R1")[0].data
                 R2 = self.select(channel="Z2")[0].data
-                G[_i, 5, :] = R0
-                G[_i, 6, :] = R1
-                G[_i, 7, :] = R2
+                G[_i, 6, :] = R0
+                G[_i, 7, :] = R1
+                G[_i, 8, :] = R2
 
-            elif component=='Z' and\
+            elif component=='T' and\
                 self.enable_force:
                 T0 = self.select(channel="T0")[0].data
                 T1 = self.select(channel="T1")[0].data
                 T2 = self.select(channel="T2")[0].data
-                G[_i, 5, :] = T0
-                G[_i, 6, :] = T1
-                G[_i, 7, :] = T2
+                G[_i, 6, :] = T0
+                G[_i, 7, :] = T1
+                G[_i, 8, :] = T2
 
 
 
@@ -233,9 +233,9 @@ def _permute(source):
 
     elif len(source)==3:
         return np.array([
+            source[0],
             source[1],
-            source[2],
-            source[0]])
+            source[2]])
 
 
 def _in_deg(distance_in_m):

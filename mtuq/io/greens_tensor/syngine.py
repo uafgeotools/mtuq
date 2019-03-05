@@ -50,7 +50,7 @@ class GreensTensor(GreensTensorBase):
         # of inconsistent moment tensor conventions?
         if 'T' in self.components:
             _i = self.components.index('T')
-            self._tensor[_i, :, :] *= -1
+            self._tensor[_i, :6, :] *= -1
 
         # Order of terms expected by syngine URL parser (from online
         # documentation): Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
@@ -109,6 +109,7 @@ class Client(ClientBase):
 
                     # overwrite channel name
                     stream[-1].stats.channel = stream[-1].stats.channel[-1]+str(_i)
+
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
