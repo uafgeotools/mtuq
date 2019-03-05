@@ -144,7 +144,6 @@ class Grid(object):
 
 
 
-
 class UnstructuredGrid(object):
     """ Unstructured grid
 
@@ -365,8 +364,39 @@ def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
         callback=tape2015_to_Mij)
 
 
+def ForceGridRegular(moment_magnitude=None, npts=25):
+    """ Full moment tensor grid with randomly-spaced values
+    """
+    raise NotImplementedError
+
+
+def ForceGridRandom(moment_magnitude=None, npts=50000):
+    """ Full moment tensor grid with randomly-spaced values
+    """
+    N = npts
+
+    if not moment_magnitude:
+        raise ValueError
+    Mw = moment_magnitude
+
+    theta = [0., 180, N]
+    phi = [0., 360., N]
+
+    # magnitude is treated separately
+    M0 = 10.**(1.5*float(Mw) + 9.1)
+    r = M0*np.sqrt(2.)
+
+    return UnstructuredGrid({
+        'r': r*np.ones(N),
+        'theta': random(*theta),
+        'phi': random(*phi)},
+        callback=spherical_to_Cartesian)
+
+
+
 def OriginGrid():
     raise NotImplementedError
+
 
 
 def cross():
@@ -374,6 +404,17 @@ def cross():
     """
     raise NotImplementedError
 
+
+def spherical_to_Cartesian(dict):
+    r = dict.r
+    theta = dict.theta
+    phi = dict.phi
+
+    x = r*np.sin(theta)*cos(phi)
+    y = r*np.sin(theta)*cos(phi)
+    z = r*np.cos(theta)
+
+    return np.array([x, y, z])
 
 
 def tape2015_to_Mij(*args, **kwargs):

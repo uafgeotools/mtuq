@@ -2,21 +2,13 @@
 import obspy
 import numpy as np
 import re
-import mtuq.io.greens_tensor.axisem_netcdf
 
-from os.path import basename, exists
+from os.path import exists
 from obspy.core import Stream, Trace
+from mtuq.io.greens_tensor.axisem_netcdf import GreensTensor as GreensTensorBase
+from mtuq.io.greens_tensor.base import Client as ClientBase
 from mtuq.util.signal import resample
 from mtuq.util.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
-
-
-# syngine is an webservice that provides Green's functions and synthetic
-# seismograms for download as compressed SAC files. syngine uses instaseis
-# under the hood for preparing user downloads, so Green's function conventions,
-# moment tensor conventions, metadata format, data processing, and so on are
-# very similar for syngine and instaseis.  In MTUQ, all of the machinery for 
-# generating synthetics from syngine Green's tensors is inherited from 
-# mtuq.greens_tensor.instaseis
 
 
 GREENS_TENSOR_FILENAMES = [
@@ -39,28 +31,44 @@ SYNTHETICS_FILENAMES = [
     ]
 
 
-class GreensTensor(mtuq.io.greens_tensor.axisem_netcdf.GreensTensor):
-    def _precompute_weights(self):
-        super(GreensTensor, self)._precompute_weights()
+class GreensTensor(GreensTensorBase):
+    """
+    Adds syngine capabilities to AxiSEM base class
+
+    Syngine is an webservice that provides Green's functions and synthetic
+    seismograms for download as compressed SAC files. 
+
+    Syngine uses precomputed AxiSEM databases under the hood, so Green's 
+    function conventions, moment tensor conventions, and so on are very similar to
+    AxiSEM, and it is not necessary to modify any of the machinery for 
+    generating synthetics (except for one possible sign discrepacny).
+    """
+    def __init__(self, *args, **kwargs):
+        super(GreensTensor, self).__init__(*args, **kwargs)
+
+        if self.enable_force:
+            raise NotImplementedError(
+                "Force source implementation not usuable due to suspected "
+                "syngine bugs")
+
+    def _precompute(self):
+        super(GreensTensor, self)._precompute()
 
         # the negative sign is needed because of a bug in syngine? or because 
         # of inconsistent moment tensor conventions?
-        self._weighted_tensor[2] *= -1
-
+        if 'T' in self.components:
+            _i = self.components.index('T')
+            self._tensor[_i, :6, :] *= -1
 
         # Order of terms expected by syngine URL parser (from online
-        # documentation):
-        #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-        #
+        # documentation): Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
+         
         # Relations given in instaseis/tests/test_instaseis.py:
-        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
-        #
-        # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
-        # (note sign differences):
-        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=-Mxz, m_rp=Myz, m_tp=-Mxy
+        # m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
+         
 
 
-class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
+class Client(ClientBase):
     """ 
     Interface to syngine Green's function web service
 
@@ -76,14 +84,19 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
     corresponding station-event pairs.
     """
 
-    def __init__(self, model=None):
+    def __init__(self, model=None, enable_force=False):
+
         if not model:
             raise ValueError
+
         self.model = model
+        self.enable_force = enable_force
 
 
-    def _get_greens_tensor(self, station, origin):
-        # download and unizp data
+    def _get_greens_tensor(self, station=None, origin=None):
+        stream = Stream()
+
+        # download and unzip data
         dirname = unzip(download_greens_tensor(self.model, station, origin))
 
         # read data
@@ -91,6 +104,20 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
         stream.id = station.id
         for filename in GREENS_TENSOR_FILENAMES:
             stream += obspy.read(dirname+'/'+filename, format='sac')
+
+        if self.enable_force:
+            filenames = download_force_response(self.model, station, origin)
+            dirnames = []
+            for filename in filenames:
+                dirnames += [unzip(filename)]
+
+            for _i, dirname in enumerate(dirnames):
+                for filename in SYNTHETICS_FILENAMES:
+                    stream += obspy.read(dirname+'/'+filename, format='sac')
+
+                    # overwrite channel name
+                    stream[-1].stats.channel = stream[-1].stats.channel[-1]+str(_i)
+
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
@@ -105,15 +132,16 @@ class Client(mtuq.io.greens_tensor.axisem_netcdf.Client):
         for trace in stream:
             # resample Green's functions
             data_old = trace.data
-            data_new = resample(data_old, t1_old, t2_old, dt_old, 
+            data_new = resample(data_old, t1_old, t2_old, dt_old,
                                           t1_new, t2_new, dt_new)
             trace.data = data_new
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
             trace.stats.npts = len(data_new)
 
-        traces = [trace for trace in stream]
-        return GreensTensor(traces, station, origin)
+        return GreensTensor(traces=[trace for trace in stream], 
+            station=station, origin=origin, enable_force=self.enable_force)
+
 
 
 def download_greens_tensor(model, station, origin):
@@ -143,6 +171,13 @@ def download_greens_tensor(model, station, origin):
 def download_synthetics(model, station, origin, source):
     """ Downloads synthetics through syngine URL interface
     """
+    if len(source)==6:
+        args='&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+    elif len(source)==3:
+        args='&sourceforce='+re.sub('\+','',",".join(map(str, source)))
+    else:
+        raise TypeError
+
     url = ('http://service.iris.edu/irisws/syngine/1/query'
          +'?model='+model
          +'&dt='+str(station.delta)
@@ -153,14 +188,33 @@ def download_synthetics(model, station, origin, source):
          +'&sourcelongitude='+str(origin.longitude)
          +'&sourcedepthinmeters='+str(int(round(origin.depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
-         +'&starttime='+str(origin.time)[:-1]
-         +_syngine_source_args(source))
+         +'&starttime='+str(origin.time)[:-1])
+
+    if len(source)==6:
+        url+='&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+    elif len(source)==3:
+        url+='&sourceforce='+re.sub('\+','',",".join(map(str, source)))
+    else:
+        raise TypeError
+
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
          +str(url2uuid(url)))
     if not exists(filename):
         print ' Downloading waveforms for station %s' % station.station
         urlopen_with_retry(url, filename+'.zip')
     return filename+'.zip'
+
+
+def download_force_response(model, station, origin):
+    forces = []
+    forces += [np.array([1., 0., 0.])]
+    forces += [np.array([0., 1., 0.])]
+    forces += [np.array([0., 0., 1.])]
+
+    filenames = []
+    for force in forces:
+        filenames += [download_synthetics(model, station, origin, force)]
+    return filenames
 
 
 def get_synthetics_syngine(model, station, origin, mt):
@@ -202,16 +256,13 @@ def get_synthetics_syngine(model, station, origin, mt):
     return synthetics
 
 
+def get_greens_tensors(stations=None, origin=None, **kwargs):
+    client = Client(**kwargs)
+    return client.get_greens_tensors(stations=stations, origin=origin)
+
+
 def _in_deg(distance_in_m):
     from obspy.geodetics import kilometers2degrees
     return kilometers2degrees(distance_in_m/1000., radius=6371.)
 
-
-def _syngine_source_args(source):
-    if len(source)==6:
-        return '&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
-    elif len(source)==3:
-        return '&sourceforce='++re.sub('\+','',",".join(map(str, source)))
-    else:
-        raise TypeError
 

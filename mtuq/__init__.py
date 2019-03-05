@@ -14,6 +14,7 @@ from mtuq.station import Station
 #
 
 from pkg_resources import iter_entry_points
+from mtuq.io.greens_tensor.syngine import get_greens_tensors
 
 
 def _greens_tensor_clients():
@@ -23,7 +24,7 @@ def _greens_tensor_clients():
     return clients
 
 
-def open_db(path='', format='', **kwargs):
+def open_db(path, format='', **kwargs):
     """ Opens databse containing Green's functions
 
     Once opened, ``GreensTensor`` objects can be generated using the

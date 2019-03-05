@@ -6,9 +6,9 @@ import sys
 import numpy as np
 
 from os.path import join
-from mtuq import read, open_db
+from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.serial import grid_search_serial
+from mtuq.grid_search.mpi import grid_search_mpi
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -335,9 +335,9 @@ GridBenchmark_CAP_MTUQ="""
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
-       np.array([1., 0., 0., 0., 0., 0.]), # source 1 (diagonal)
-       np.array([0., 1., 0., 0., 0., 0.]), # source 2 (diagonal)
-       np.array([0., 0., 1., 0., 0., 0.]), # source 3 (diagonal)
+       np.array([1., 0., 0., 0., 0., 0.]), # source 1 (on-diagonal)
+       np.array([0., 1., 0., 0., 0., 0.]), # source 2 (on-diagonal)
+       np.array([0., 0., 1., 0., 0., 0.]), # source 3 (on-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # source 4 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # source 5 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # source 6 (off-diagonal)
@@ -389,9 +389,9 @@ GridSearchSerial="""
     data = processed_data
 
 
-    print 'Reading Greens functions...\\n'
-    db = open_db(model=model, format='syngine')
-    greens = db.get_greens_tensors(stations, origin)
+    print 'Downloading Greens functions...\\n'
+    greens = get_greens_tensors(stations, origin, model=model)
+
 
 
     print 'Processing Greens functions...\\n'
@@ -449,8 +449,7 @@ GridSearchMPI="""
         data = processed_data
 
         print 'Reading Greens functions...\\n'
-        db = open_db(format='syngine', model=model)
-        greens = db.get_greens_tensors(stations, origin)
+        greens = get_greens_tensors(stations, origin, model=model)
 
         print 'Processing Greens functions...\\n'
         greens.convolve(wavelet)
@@ -524,9 +523,8 @@ GridSearchMPI2="""
 
    for origin, magnitude in cross(origins, magnitudes):
         if comm.rank==0:
-            print 'Reading Greens functions...\\n'
-            db = open_db(format='syngine', model=model)
-            greens = db.get_greens_tensors(stations, origin)
+            print 'Downloading Greens functions...\\n'
+            greens = get_greens_tensors(stations, origin, model=model)
 
             print 'Processing Greens functions...\\n'
             wavelet = Trapezoid(magnitude)
@@ -587,7 +585,7 @@ RunBenchmark_CAP_MTUQ="""
 
 
     print 'Reading Greens functions...\\n'
-    db = open_db(path=path_greens, format='FK')
+    db = open_db(path_greens, format='FK')
     greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\\n'

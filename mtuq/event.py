@@ -53,13 +53,13 @@ class MomentTensor(object):
 
 
     def asvector():
-        """ Returns independent moment tensor elements
+        """ Returns independent elements as 1D numpy array
         """
         return self._array
 
 
     def asmatrix():
-        """ Returns symmetric moment tensor matrix
+        """ Returns 2D symmetric numpy array
         """
         return np.array([m[0], m[3], m[4]],
                         [m[3], m[1], m[5]],
@@ -82,6 +82,14 @@ class Force(object):
 
     def asvector():
         return self._array
+
+
+
+class CompositeSource(object):
+   """ General combination of force or moment tensor objects
+   """
+   def __init__(self):
+       raise NotImplementedError
 
 
 #

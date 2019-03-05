@@ -7,9 +7,9 @@ from matplotlib import pyplot
 from os import getenv
 from os.path import basename, join
 from obspy import UTCDateTime
-from obspy.core import Stats
-from mtuq.event import Origin
 from mtuq.cap.process_data import ProcessData
+from mtuq.event import Origin
+from mtuq.station import Station
 from mtuq.util.util import path_mtuq
 
 
@@ -41,9 +41,9 @@ if __name__=='__main__':
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
-       np.array([1., 0., 0., 0., 0., 0.]), # source 1 (diagonal)
-       np.array([0., 1., 0., 0., 0., 0.]), # source 2 (diagonal)
-       np.array([0., 0., 1., 0., 0., 0.]), # source 3 (diagonal)
+       np.array([1., 0., 0., 0., 0., 0.]), # source 1 (on-diagonal)
+       np.array([0., 1., 0., 0., 0., 0.]), # source 2 (on-diagonal)
+       np.array([0., 0., 1., 0., 0., 0.]), # source 3 (on-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # source 4 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # source 5 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # source 6 (off-diagonal)
@@ -69,7 +69,7 @@ if __name__=='__main__':
         })
 
     stations = [
-        Stats({
+        Station({
         'latitude': 61.592,
         'longitude': -149.817,
         'starttime': origin_time-100.,
@@ -85,7 +85,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 15850.0907298,
         'preliminary_azimuth': 345.527768889,
         }),
-        Stats({
+        Station({
         'latitude': 61.245,
         'longitude': -149.540,
         'starttime': origin_time-100.,
@@ -101,7 +101,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 25741.2111914,
         'preliminary_azimuth': 154.937206124,
         }),
-        Stats({
+        Station({
         'latitude': 61.592,
         'longitude': -149.131,
         'starttime': origin_time-100.,
@@ -117,7 +117,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 36015.8231741,
         'preliminary_azimuth': 64.4545662238,
         }),
-        Stats({
+        Station({
         'latitude': 61.089,
         'longitude': -149.739,
         'starttime': origin_time-100.,
@@ -133,7 +133,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 40707.1235329,
         'preliminary_azimuth': 179.711452236,
         }),
-        Stats({
+        Station({
         'latitude': 61.864,
         'longitude': -150.082,
         'starttime': origin_time-100.,
@@ -149,7 +149,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 49029.7145289,
         'preliminary_azimuth': 338.666195532,
         }),
-        Stats({
+        Station({
         'latitude': 60.874,
         'longitude': -149.598,
         'starttime': origin_time-100.,
@@ -165,7 +165,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 65145.1360155,
         'preliminary_azimuth': 173.050656466,
         }),
-        Stats({
+        Station({
         'latitude': 60.805,
         'longitude': -149.187,
         'starttime': origin_time-100.,
@@ -181,7 +181,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 78342.8543629,
         'preliminary_azimuth': 157.288772085,
         }),
-        Stats({
+        Station({
         'latitude': 61.807,
         'longitude': -148.332,
         'starttime': origin_time-100.,
@@ -197,7 +197,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 84534.0195001,
         'preliminary_azimuth': 61.6653748926,
         }),
-        Stats({
+        Station({
         'latitude': 60.672,
         'longitude': -149.481,
         'starttime': origin_time-100.,
@@ -213,7 +213,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 88332.6378166,
         'preliminary_azimuth': 170.67598173,
         }),
-        Stats({
+        Station({
         'latitude': 60.735,
         'longitude': -150.482,
         'starttime': origin_time-100.,
@@ -229,7 +229,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 89500.1194601,
         'preliminary_azimuth': 206.794148235,
         }),
-        Stats({
+        Station({
         'latitude': 60.551,
         'longitude': -149.594,
         'starttime': origin_time-100.,
@@ -245,7 +245,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 100986.018723,
         'preliminary_azimuth': 175.365654906,
         }),
-        Stats({
+        Station({
         'latitude': 60.775,
         'longitude': -148.417,
         'starttime': origin_time-100.,
@@ -261,7 +261,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 104126.076067,
         'preliminary_azimuth': 136.074440283,
         }),
-        Stats({
+        Station({
         'latitude': 60.488,
         'longitude': -150.032,
         'starttime': origin_time-100.,
@@ -277,7 +277,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 108781.455802,
         'preliminary_azimuth': 188.392980537,
         }),
-        Stats({
+        Station({
         'latitude': 60.483,
         'longitude': -150.462,
         'starttime': origin_time-100.,
@@ -293,7 +293,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 114988.115602,
         'preliminary_azimuth': 200.106720707,
         }),
-        Stats({
+        Station({
         'latitude': 60.662,
         'longitude': -151.277,
         'starttime': origin_time-100.,
@@ -309,7 +309,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 121048.414873,
         'preliminary_azimuth': 223.868000167,
         }),
-        Stats({
+        Station({
         'latitude': 60.375,
         'longitude': -149.347,
         'starttime': origin_time-100.,
@@ -325,7 +325,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 122101.412556,
         'preliminary_azimuth': 169.692916508,
         }),
-        Stats({
+        Station({
         'latitude': 60.710,
         'longitude': -147.953,
         'starttime': origin_time-100.,
@@ -341,7 +341,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 127.296105568,
         'preliminary_azimuth': 129.875238053,
         }),
-        Stats({
+        Station({
         'latitude': 60.464,
         'longitude': -151.081,
         'starttime': origin_time-100.,
@@ -357,7 +357,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 132023.528432,
         'preliminary_azimuth': 213.907196416,
         }),
-        Stats({
+        Station({
         'latitude': 61.259,
         'longitude': -152.372,
         'starttime': origin_time-100.,
@@ -373,7 +373,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 142331.966923,
         'preliminary_azimuth': 262.369826639,
         }),
-        Stats({
+        Station({
         'latitude': 60.104,
         'longitude': -149.453,
         'starttime': origin_time-100.,
@@ -389,7 +389,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 151241.318202,
         'preliminary_azimuth': 173.8727135,
         }),
-        Stats({
+        Station({
         'latitude': 60.008,
         'longitude': -149.410,
         'starttime': origin_time-100.,
@@ -405,7 +405,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 162120.434579,
         'preliminary_azimuth': 173.413686902,
         }),
-        Stats({
+        Station({
         'latitude': 61.129,
         'longitude': -145.775,
         'starttime': origin_time-100.,
@@ -421,7 +421,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 215746.816221,
         'preliminary_azimuth': 97.9180072487,
         }),
-        Stats({
+        Station({
         'latitude': 63.450,
         'longitude': -150.289,
         'starttime': origin_time-100.,
@@ -437,7 +437,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 224239.111212,
         'preliminary_azimuth': 353.014641671,
         }),
-        Stats({
+        Station({
         'latitude': 60.549,
         'longitude': -145.750,
         'starttime': origin_time-100.,
@@ -453,7 +453,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 238379.702635,
         'preliminary_azimuth': 113.279988085,
         }),
-        Stats({
+        Station({
         'latitude': 62.970,
         'longitude': -145.470,
         'starttime': origin_time-100.,
@@ -469,7 +469,7 @@ if __name__=='__main__':
         'preliminary_distance_in_m': 279134.053993,
         'preliminary_azimuth': 50.8967398602,
         }),
-        Stats({
+        Station({
         'latitude': 60.968,
         'longitude': -144.605,
         'starttime': origin_time-100.,

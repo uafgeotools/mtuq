@@ -6,19 +6,18 @@ from scipy import signal
 
 
 class Wavelet(object):
-    """ Base class source wavelets or source-time functions
+    """ Source wavelet base class
 
-    By creating a subclass and implementing the ``evaluate`` method, this base
-    class can be used to construct an arbitrary source wavelet.
+    By inheriting from this class and implementing the ``evaluate`` method,
+    an arbitrary source wavelet or source-time function can be defined.
 
-    (Most commonly an analytical expression will be used in defining a 
-    particular wavelet through the ``evaluate`` method, but a user-supplied
-    time series can be used.)
+    Most commonly an analytical expression will be used in the ``evaluate``
+    method, but a user-supplied time series can also be used.
 
     .. rubric:: Example
 
-    Through the parent class ``Wavelet``, we can create a subclass that defines
-    a Gaussian wavelet with unit standard deviation:
+    By inheriting from the parent class ``Wavelet``, we can implement a Gaussian
+    wavelet with unit standard deviation:
     
     .. code::
 
