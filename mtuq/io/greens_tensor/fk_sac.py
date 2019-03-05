@@ -58,7 +58,7 @@ class GreensTensor(GreensTensorBase):
             time_shift_max)
 
 
-    def _precompute_synthetics(self):
+    def _precompute(self):
         """
         Computes rotated time series used in source-weighted linear combinations
  
@@ -73,7 +73,7 @@ class GreensTensor(GreensTensorBase):
         nr = 9
 
         G = np.zeros((nc, nr, nt))
-        self._rotated_tensor = G
+        self._tensor = G
 
         for _i, component in enumerate(self.components):
             if component=='Z':

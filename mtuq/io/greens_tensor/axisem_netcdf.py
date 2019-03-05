@@ -69,9 +69,9 @@ class GreensTensor(GreensTensorBase):
             time_shift_max)
 
 
-    def _precompute_synthetics(self):
+    def _precompute(self):
         """
-        Computes rotated time series used in source-weighted linear combinations
+        Precomputes time series used in source-weighted linear combinations
 
         Based on formulas from Minson & Dreger 2008
         """
@@ -80,10 +80,12 @@ class GreensTensor(GreensTensorBase):
         # array dimensions
         nt = self[0].stats.npts
         nc = len(self.components)
-        nr = 9
+        nr = 6
+        if self.enable_force:
+            nr += 3
 
         G = np.zeros((nc, nr, nt))
-        self._rotated_tensor = G
+        self._tensor = G
 
         for _i, component in enumerate(self.components):
             if component=='Z':
@@ -120,18 +122,46 @@ class GreensTensor(GreensTensorBase):
                 G[_i, 4, :] = TDS * np.sin(az)
                 G[_i, 5, :] = -TDS * np.cos(az)
 
-            else:
-                raise ValueError
+            if component=='Z' and\
+                self.enable_force:
+                Z0 = self.select(channel="Z0")[0].data
+                Z1 = self.select(channel="Z1")[0].data
+                Z2 = self.select(channel="Z2")[0].data
+                G[_i, 5, :] = Z0
+                G[_i, 6, :] = Z1
+                G[_i, 7, :] = Z2
+
+            elif component=='R' and\
+                self.enable_force:
+                R0 = self.select(channel="R0")[0].data
+                R1 = self.select(channel="R1")[0].data
+                R2 = self.select(channel="Z2")[0].data
+                G[_i, 5, :] = R0
+                G[_i, 6, :] = R1
+                G[_i, 7, :] = R2
+
+            elif component=='Z' and\
+                self.enable_force:
+                T0 = self.select(channel="T0")[0].data
+                T1 = self.select(channel="T1")[0].data
+                T2 = self.select(channel="T2")[0].data
+                G[_i, 5, :] = T0
+                G[_i, 6, :] = T1
+                G[_i, 7, :] = T2
 
 
 
 class Client(ClientBase):
     """ 
-    Interface to Instaseis/AxiSEM database of Green's functions
+    Interface to AxiSEM/Instaseis database
 
     Generates GreenTensorLists via a two-step procedure
-        1) db = mtuq.greens.open_db(path=path, format='instaseis')
-        2) greens_tensors = db.read(stations, origin)
+
+    .. code:
+
+        db = mtuq.greens.open_db(path, format='instaseis')
+
+        greens_tensors = db.read(stations, origin)
 
     In the first step, the user supplies the path or URL to an AxiSEM NetCDF
     output file
@@ -184,22 +214,28 @@ class Client(ClientBase):
             station=station, origin=origin)
 
 
-def _permute(mt):
+def _permute(source):
     # This moment tensor permutation produces a match between instaseis
     # and fk synthetics.  But what basis conventions does it actually
     # represent?  The permutation appears similar but not identical to the 
     # one that maps from GCMT to AkiRichards
 
     # for better performance, we will eventually apply this permutation to 
-    # _rotated_tensor rather than mt
-    return np.array([
-        mt[1],
-        mt[2],
-        mt[0],
-       -mt[5],
-       -mt[3],
-        mt[4]
-        ])
+    # _tensor rather than source
+    if len(source)==6:
+        return np.array([
+            source[1],
+            source[2],
+            source[0],
+           -source[5],
+           -source[3],
+            source[4]])
+
+    elif len(source)==3:
+        return np.array([
+            source[1],
+            source[2],
+            source[0]])
 
 
 def _in_deg(distance_in_m):

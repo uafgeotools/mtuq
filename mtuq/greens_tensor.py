@@ -3,6 +3,8 @@ import numpy as np
 
 from copy import deepcopy
 from obspy.core import Stream, Trace
+from mtuq.event import Origin
+from mtuq.station import Station
 from mtuq.dataset import Dataset
 from mtuq.util.signal import check_time_sampling
 from scipy.signal import fftconvolve
@@ -21,41 +23,81 @@ class GreensTensor(Stream):
             For descriptions of inherited methods, see `ObsPy documentation
             <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
     """
-    def __init__(self, traces=None, station=None, origin=None,
-            components=['Z', 'R', 'T']):
+    def __init__(self, 
+            traces=None, 
+            station=None, 
+            origin=None,
+            id=None, 
+            components=['Z', 'R', 'T'], 
+            enable_force=False):
+
+        for trace in traces:
+            assert isinstance(trace, Trace)
 
         assert check_time_sampling(traces), NotImplementedError(
             "Time sampling differs from trace to trace.")
 
-        super(GreensTensor, self).__init__(traces)
+        if not isinstance(station, Station):
+            raise TypeError
 
-        self.id = station.id
+        if not isinstance(origin, Origin):
+            raise TypeError
+
+        for component in components:
+            assert component in ['Z', 'R', 'T']
+
+        if id:
+            self.id = id
+        else:
+            self.id = station.id
+
+        # station location and other metdata
         self.stats = deepcopy(station)
+
+        # event location and other metadata
         self.origin = origin
+
+        # what components are created when generating synthetics?
         self.components = components
 
+        # enable synthetics from force sources?
+        self.enable_force = enable_force
 
-    def get_synthetics(self, mt):
+        super(GreensTensor, self).__init__(traces)
+
+
+    def get_synthetics(self, source):
         """
         Generates synthetics through a source-weighted linear combination
         """
         if not hasattr(self, '_synthetics'):
-            self._preallocate_synthetics()
+            self._preallocate()
 
-        if not hasattr(self, '_rotated_tensor'):
-            self._precompute_synthetics()
+        if not hasattr(self, '_tensor'):
+            self._precompute()
 
         for _i, component in enumerate(self.components):
             s = self._synthetics[_i].data
             s[:] = 0.
 
-            # we could use np.dot instead, but speedup appears negligible
-            s += mt[0]*self._rotated_tensor[_i, 0, :]
-            s += mt[1]*self._rotated_tensor[_i, 1, :]
-            s += mt[2]*self._rotated_tensor[_i, 2, :]
-            s += mt[3]*self._rotated_tensor[_i, 3, :]
-            s += mt[4]*self._rotated_tensor[_i, 4, :]
-            s += mt[5]*self._rotated_tensor[_i, 5, :]
+            # we could use np.dot below, but speedup appears negligible
+            if len(source)==6:
+                # moment tensor source
+                s += source[0]*self._tensor[_i, 0, :]
+                s += source[1]*self._tensor[_i, 1, :]
+                s += source[2]*self._tensor[_i, 2, :]
+                s += source[3]*self._tensor[_i, 3, :]
+                s += source[4]*self._tensor[_i, 4, :]
+                s += source[5]*self._tensor[_i, 5, :]
+
+            elif len(source)==3:
+                # force source
+                s += source[0]*self._tensor[_i, 6, :]
+                s += source[1]*self._tensor[_i, 7, :]
+                s += source[2]*self._tensor[_i, 8, :]
+
+            else:
+                raise TypeError
 
         return self._synthetics
 
@@ -63,7 +105,7 @@ class GreensTensor(Stream):
     def get_time_shift(self, data, mt, group, time_shift_max):
         """ 
         Finds optimal time-shift correction between synthetics and
-        user-supplied data
+        user-supplied da
 
         :type data: mtuq.Dataset
         :param data: Data to be cross-correlated with synthetics
@@ -115,7 +157,11 @@ class GreensTensor(Stream):
         
         """
         return self.__class__(function(self, *args, **kwargs),
-            station=self.stats, origin=self.origin, components=self.components)
+            station=self.stats, 
+            origin=self.origin, 
+            id=self.id, 
+            components=self.components,
+            enable_force=self.enable_force)
 
 
     def convolve(self, wavelet):
@@ -130,7 +176,7 @@ class GreensTensor(Stream):
             wavelet.convolve(trace)
 
 
-    def _preallocate_synthetics(self):
+    def _preallocate(self):
         """
         Enables fast synthetics calculations through preallocation and
         and memory reuse
@@ -147,7 +193,7 @@ class GreensTensor(Stream):
         self._synthetics.id = self.id
 
 
-    def _precompute_synthetics(self):
+    def _precompute(self):
         """
         Enables fast synthetics calculations by precomputing time series used 
         in source-weighted linear combination
@@ -158,12 +204,12 @@ class GreensTensor(Stream):
     def _precompute_time_shifts(self, data, time_shift_max):
         """
         Enables fast time-shift calculations by computing cross-correlations
-        on an element-by-element basis
+        between data and Green's functions
         """
         dt = self[0].stats.delta
         npts_padding = int(time_shift_max/dt)
 
-        G = self._rotated_tensor
+        G = self._tensor
         n1,n2,npts = G.shape
 
         self._npts_padding = npts_padding
@@ -193,15 +239,16 @@ class GreensTensor(Stream):
         metadata criteria
         """
         # Inherited method "select" doesn't work because it tries to return a
-        # a parent class instance. To fix it, we need to convert to Stream,
-        # then call the method, then convert back to  GreensTensor
-
+        # a Stream rather than GreensTensor. To fix it, we need to manually 
+        # convert to Stream, call select, then convert back to a GreensTensor
         stream = Stream([trace for trace in self]).select(*args, **kwargs)
-
         return self.__class__(
             [trace for trace in stream],
-            self.stats,
-            self.origin)
+            station=self.stats,
+            origin=self.origin,
+            id=self.id,
+            components=self.components,
+            enable_force=self.enable_force)
 
 
     def __add__(self, *args):

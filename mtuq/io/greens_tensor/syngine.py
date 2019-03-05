@@ -11,15 +11,6 @@ from mtuq.util.signal import resample
 from mtuq.util.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
 
 
-# syngine is an webservice that provides Green's functions and synthetic
-# seismograms for download as compressed SAC files. syngine uses instaseis
-# under the hood for preparing user downloads, so Green's function conventions,
-# moment tensor conventions, metadata format, data processing, and so on are
-# very similar for syngine and instaseis.  In MTUQ, all of the machinery for 
-# generating synthetics from syngine Green's tensors is inherited from 
-# mtuq.greens_tensor.instaseis
-
-
 GREENS_TENSOR_FILENAMES = [
     'greensfunction_XX.GF001..ZSS.sac',
     'greensfunction_XX.GF001..ZDS.sac',
@@ -41,56 +32,32 @@ SYNTHETICS_FILENAMES = [
 
 
 class GreensTensor(GreensTensorBase):
-    def _precompute_synthetics(self):
-        super(GreensTensor, self)._precompute_synthetics()
+    """
+    Adds syngine capabilities to AxiSEM base class
+
+    Syngine is an webservice that provides Green's functions and synthetic
+    seismograms for download as compressed SAC files. 
+
+    Syngine uses precomputed AxiSEM databases under the hood, so Green's 
+    function conventions, moment tensor conventions, and so on are very similar to
+    AxiSEM, and it is not necessary to modify any of the machinery for 
+    generating synthetics (except for one possible sign discrepacny).
+    """
+    def _precompute(self):
+        super(GreensTensor, self)._precompute()
 
         # the negative sign is needed because of a bug in syngine? or because 
         # of inconsistent moment tensor conventions?
         if 'T' in self.components:
             _i = self.components.index('T')
-            self._rotated_tensor[_i, :, :] *= -1
+            self._tensor[_i, :, :] *= -1
 
         # Order of terms expected by syngine URL parser (from online
-        # documentation):
-        #    Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-        #
+        # documentation): Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
+         
         # Relations given in instaseis/tests/test_instaseis.py:
-        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
-        #
-        # Relations suggested by mtuq/tests/unittest_greens_tensor_syngine.py
-        # (note sign differences):
-        #    m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=-Mxz, m_rp=Myz, m_tp=-Mxy
-
-
-    def get_synthetics(self, source):
-        if len(source)==6:
-            return self._get_mt_synthetics(source)
-
-        elif len(source)==3:
-            return self._get_force_synthetics(source)
-
-
-    def _get_force_synthetics(self, force):
-        for _i, component in enumerate(self.components):
-            # which Green's functions correspond to given component?
-            if component=='Z':
-                _j=0
-            elif component=='R':
-                _j=1
-            elif component=='T':
-                _j=2
-            G = self._weighted_tensor[_j]
-
-            # we could use np.dot instead, but speedup appears negligible
-            s = self._synthetics[_i].data
-            s[:] = 0.
-            s += force[0]*G[:,0]
-            s += force[1]*G[:,1]
-            s += force[2]*G[:,2]
-
-
-    def _get_mt_synthetics(self, mt):
-        return super(GreensTensor, self).get_synthetics(mt)
+        # m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
+         
 
 
 class Client(ClientBase):
@@ -109,17 +76,17 @@ class Client(ClientBase):
     corresponding station-event pairs.
     """
 
-    def __init__(self, model=None, enable_force_sources=False):
-
-        self.enable_force_sources = enable_force_sources
+    def __init__(self, model=None, enable_force=False):
 
         if not model:
             raise ValueError
+
         self.model = model
+        self.enable_force = enable_force
 
 
     def _get_greens_tensor(self, station=None, origin=None):
-        traces = []
+        stream = Stream()
 
         # download and unzip data
         dirname = unzip(download_greens_tensor(self.model, station, origin))
@@ -129,38 +96,24 @@ class Client(ClientBase):
         stream.id = station.id
         for filename in GREENS_TENSOR_FILENAMES:
             stream += obspy.read(dirname+'/'+filename, format='sac')
-        traces += self._resample(stream, station)
 
-
-        if self.enable_force_sources:
-            # download and unzip data
+        if self.enable_force:
             filenames = download_force_response(self.model, station, origin)
             dirnames = []
             for filename in filenames:
                 dirnames += [unzip(filename)]
-
-            # read data
-            stream = Stream()
-            stream.id = station.id
 
             for _i, dirname in enumerate(dirnames):
                 for filename in SYNTHETICS_FILENAMES:
                     stream += obspy.read(dirname+'/'+filename, format='sac')
 
                     # overwrite channel name
-                    stream[-1].stats.channel = str(_i)+stream[-1].stats.channel[-1]
+                    stream[-1].stats.channel = stream[-1].stats.channel[-1]+str(_i)
 
-            traces += self._resample(stream, station)
-
-        return GreensTensor(traces=traces, station=station, origin=origin)
-
-
-
-    def _resample(self, stream, stats):
         # what are the start and end times of the data?
-        t1_new = float(stats.starttime)
-        t2_new = float(stats.endtime)
-        dt_new = float(stats.delta)
+        t1_new = float(station.starttime)
+        t2_new = float(station.endtime)
+        dt_new = float(station.delta)
 
         # what are the start and end times of the Green's function?
         t1_old = float(stream[0].stats.starttime)
@@ -177,7 +130,9 @@ class Client(ClientBase):
             trace.stats.delta = dt_new
             trace.stats.npts = len(data_new)
 
-        return [trace for trace in stream]
+        return GreensTensor(traces=[trace for trace in stream], 
+            station=station, origin=origin, enable_force=self.enable_force)
+
 
 
 def download_greens_tensor(model, station, origin):
@@ -207,6 +162,13 @@ def download_greens_tensor(model, station, origin):
 def download_synthetics(model, station, origin, source):
     """ Downloads synthetics through syngine URL interface
     """
+    if len(source)==6:
+        args='&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+    elif len(source)==3:
+        args='&sourceforce='+re.sub('\+','',",".join(map(str, source)))
+    else:
+        raise TypeError
+
     url = ('http://service.iris.edu/irisws/syngine/1/query'
          +'?model='+model
          +'&dt='+str(station.delta)
@@ -217,8 +179,15 @@ def download_synthetics(model, station, origin, source):
          +'&sourcelongitude='+str(origin.longitude)
          +'&sourcedepthinmeters='+str(int(round(origin.depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
-         +'&starttime='+str(origin.time)[:-1]
-         +_syngine_source_args(source))
+         +'&starttime='+str(origin.time)[:-1])
+
+    if len(source)==6:
+        url+='&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+    elif len(source)==3:
+        url+='&sourceforce='+re.sub('\+','',",".join(map(str, source)))
+    else:
+        raise TypeError
+
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
          +str(url2uuid(url)))
     if not exists(filename):
@@ -287,12 +256,4 @@ def _in_deg(distance_in_m):
     from obspy.geodetics import kilometers2degrees
     return kilometers2degrees(distance_in_m/1000., radius=6371.)
 
-
-def _syngine_source_args(source):
-    if len(source)==6:
-        return '&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
-    elif len(source)==3:
-        return '&sourceforce='+re.sub('\+','',",".join(map(str, source)))
-    else:
-        raise TypeError
 
