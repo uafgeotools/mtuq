@@ -3,7 +3,7 @@
 # Creates MTUQ virtual environment on chinook
 
 
-if [[ $HOSTNAME != chinook* ]];
+if [[ ! $HOSTNAME == chinook* ]];
 then
     echo "Error: This script works only on chinook.alaska.edu"
     exit 1

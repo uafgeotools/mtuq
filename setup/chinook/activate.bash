@@ -19,22 +19,23 @@ fi
 ERROR="
 This script works only on chinook.alaska.edu
 "
-if [[ $HOSTNAME != chinook* ]];
+if [[ ! $HOSTNAME == chinook* ]];
 then
     echo "This script works only on chinook.alaska.edu"
     return 1
 fi
 
 
-# what is the absolute path of mtuq/setup/chinook?
+# what is the relative path to mtuq/setup/chinook?
 SETUP=$(dirname ${BASH_SOURCE[0]})
+echo path $SETUP
 
 
 ERROR="
 Virtual environment not found.
 Run mtuq/setup/chinook/install.bash and try again.
 "
-if [[ -d $SETUP/virtual/mtuq  ]];
+if [[ ! -d $SETUP/virtual/mtuq  ]];
 then
     echo "$ERROR"
     return 1
