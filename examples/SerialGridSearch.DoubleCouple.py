@@ -24,12 +24,10 @@ if __name__=='__main__':
     # moment tensors
     #
     # USAGE
-    #   python GridSearch.DoubleCouple.Serial.py
+    #   python SerialGridSearch.DoubleCouple.py
     #
     # A typical runtime is about 20 minutes. For faster results try 
-    # GridSearch.DoubleCouple.3Parameter.MPI.py,
-    # which runs the same inversion in parallel rather than
-    # serial
+    # GridSearch.DoubleCouple.py, which runs the same inversion in parallel
     #
 
 

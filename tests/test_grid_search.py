@@ -18,7 +18,7 @@ from mtuq.util.util import path_mtuq
 if __name__=='__main__':
     #
     #
-    # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
+    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
     # except here we use a coarser grid, and at the end we assert that the test
     # result equals the expected result
     #

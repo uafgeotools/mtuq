@@ -24,11 +24,10 @@ if __name__=='__main__':
     # moment tensors
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.MPI.py
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.py
     #
-    # For a slightly simpler example, see 
-    # GridSearch.DoubleCouple.3Parameter.Serial.py, 
-    # which runs the same inversion in serial rather than parallel
+    # For a simpler example, see SerialGridSearch.DoubleCouple.py, 
+    # which runs the same inversion in serial
     #
 
 
