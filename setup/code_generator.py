@@ -374,8 +374,10 @@ GridSearchSerial="""
     #
 
     print 'Reading data...\\n'
-    data = read(path_data, format='sac', event_id=event_name,
+    data = read(path_data, format='sac',
+        event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
+
     data.sort_by_distance()
 
     stations = data.get_stations()
@@ -435,8 +437,10 @@ GridSearchMPI="""
 
     if comm.rank==0:
         print 'Reading data...\\n'
-        data = read(path_data, format='sac', event_id=event_name,
+        data = read(path_data, format='sac', 
+            event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
+
         data.sort_by_distance()
 
         stations = data.get_stations()
@@ -503,8 +507,10 @@ GridSearchMPI2="""
 
     if comm.rank==0:
         print 'Reading data...\\n'
-        data = read(path_data, format='sac', event_id=event_name,
+        data = read(path_data, format='sac', 
+            event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
+
         data.sort_by_distance()
 
         stations = data.get_stations()
@@ -569,8 +575,10 @@ RunBenchmark_CAP_MTUQ="""
     #
 
     print 'Reading data...\\n'
-    data = read(path_data, format='sac', event_id=event_name,
+    data = read(path_data, format='sac', 
+        event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
+
     data.sort_by_distance()
 
     stations = data.get_stations()
@@ -742,11 +750,5 @@ if __name__=='__main__':
             ))
         file.write(GridBenchmark_CAP_MTUQ)
         file.write(RunBenchmark_CAP_MTUQ)
-
-
-
-
-
-
 
 

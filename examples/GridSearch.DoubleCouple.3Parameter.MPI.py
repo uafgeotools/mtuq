@@ -124,8 +124,10 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print 'Reading data...\n'
-        data = read(path_data, format='sac', event_id=event_name,
+        data = read(path_data, format='sac', 
+            event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
+
         data.sort_by_distance()
 
         stations = data.get_stations()
