@@ -6,8 +6,8 @@
 #
 
 FILENAMES="\
-    ../examples/GridSearch.DoubleCouple.3Parameter.MPI.py\
-    ../examples/GridSearch.DoubleCouple.3Parameter.Serial.py\
+    ../examples/GridSearch.DoubleCouple.MPI.py\
+    ../examples/GridSearch.DoubleCouple.Serial.py\
     ../tests/benchmark_cap_mtuq.py\
     "
 
