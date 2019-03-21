@@ -8,7 +8,7 @@
 FILENAMES="\
     ../examples/GridSearch.DoubleCouple.py\
     ../examples/SerialGridSearch.DoubleCouple.py\
-    ../tests/benchmark_cap_mtuq.py\
+    ../tests/benchmark_cap.py\
     "
 
 # navigate to mtuq/tests

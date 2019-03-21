@@ -727,7 +727,7 @@ if __name__=='__main__':
         file.write(SerialGridSearch)
 
 
-    with open('tests/benchmark_cap_mtuq.py', 'w') as file:
+    with open('tests/benchmark_cap.py', 'w') as file:
         file.write(
             replace(
             Imports,
