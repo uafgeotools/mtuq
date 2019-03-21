@@ -1,0 +1,104 @@
+
+Installing mtuq on chinook
+--------------------------
+
+Clone mtuq in a directory of your choice:
+
+    > git clone https://github.com/uafseismo/mtuq
+
+
+Then run the installation script:
+
+    > cd mtuq/setup/chinook
+    > bash install.bash
+
+
+NOTES 
+
+-  `install.bash` loads required chinook modules and creates a pip virtual
+environment that can be used during the current session and any subsequent
+sessions.  
+
+- `install.bash` creates an editable virtual environment, which means
+that any changes to the git repository go into effect immediately. This in turn
+means that users can `git pull` at any time without having to re-install.
+
+- By choosing appropriate modules and following the more general instructions
+in `mtuq/docs`, users can, at greater effort, obtain the same result as
+`install.bash`.
+
+
+
+Activating the MTUQ virtual environment
+---------------------------------------
+
+At the beginning of each session, users must activate the pip virtual 
+environment:
+
+   > source setup/chinook/activate.bash
+
+At the end of a session, it is a good idea to deactivate the environment:
+
+   > deactivate
+
+
+
+Running the examples
+--------------------
+
+After activating the pip virtual environment, users can run either the serial
+examples located in `mtuq/examples` or the parallel examples located in
+`mtuq/setup/chinook/examples`.
+
+
+The serial examples can be invoked directly, i.e.
+
+    > bash name_of_example.Serial.py
+
+
+The parallel example must be invoked with sbatch, i.e.
+
+    > sbatch submit_example.py
+
+
+NOTES
+
+Scripts in `mtuq/examples` use the syngine webservice to obtain AxiSEM Green's
+functions.  Scripts in `mtuq/setup/chinook/examples` use a local (chinook) 
+database to obtain FK Green's functions.  FK Green's functions are also used by
+the legacy software CAP, hence the string `CapStyleGridSearch` in some of the 
+filenames.
+
+
+
+Modifying the examples
+----------------------
+
+The above examples reproduce results from Silwal2016. Earthquake waveforms for
+the main Silwal2016 test case are included the mtuq repository, so it is not    
+necessary to download them. 
+
+To obtain a moment tensor estimate for a different event, users must download 
+waveforms using uafseismo/pysep and modify the mtuq example script as follows:
+
+- Update `path_data` to match the pysep download directory.
+
+- Update `path_weights` to match the path to the CAP-style weight file included 
+in the pysep download.
+
+- If magnitude is fixed in the example, then update the `moment_magnitude` 
+keyword arguments with the estimated moment magnitude.
+
+- Optionally, adjust the Earth model, data processing and misfit settings.
+Current choices match Silwal2016.
+
+
+
+References
+----------
+
+[Silwal2016] Vipul Silwal and Carl Tape (2016), Seismic moment tensors and 
+estimated uncertainties in southern Alaska, JGR, https://doi.org/10.1002/2015JB012588
+
+
+

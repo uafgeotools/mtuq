@@ -6,9 +6,9 @@
 #
 
 FILENAMES="\
-    ../examples/GridSearch.DoubleCouple.3Parameter.MPI.py\
-    ../examples/GridSearch.DoubleCouple.3Parameter.Serial.py\
-    ../tests/benchmark_cap_mtuq.py\
+    ../examples/GridSearch.DoubleCouple.py\
+    ../examples/SerialGridSearch.DoubleCouple.py\
+    ../tests/benchmark_cap.py\
     "
 
 # navigate to mtuq/tests

@@ -23,7 +23,7 @@ if __name__=='__main__':
     # Before running this script, it is necessary to unpack the CAP/FK 
     # synthetics using data/tests/unpack.bash
     #
-    # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
+    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
     # except here we consider only seven grid points rather than an entire
     # grid, and here the final plots are a comparison of MTUQ and CAP/FK 
     # synthetics rather than a comparison of data and synthetics
@@ -182,8 +182,10 @@ if __name__=='__main__':
     #
 
     print 'Reading data...\n'
-    data = read(path_data, format='sac', event_id=event_name,
+    data = read(path_data, format='sac', 
+        event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
+
     data.sort_by_distance()
 
     stations = data.get_stations()

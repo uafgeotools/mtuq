@@ -9,6 +9,7 @@ import numpy as np
 from os.path import basename
 from mtuq import GreensTensor as GreensTensorBase
 from mtuq.io.greens_tensor.base import Client as ClientBase
+from mtuq.util.moment_tensor.basis import change_basis
 from mtuq.util.signal import resample
 
 
@@ -54,7 +55,7 @@ class GreensTensor(GreensTensorBase):
         Generates synthetics through a source-weighted linear combination
         """
         return super(GreensTensor, self).get_synthetics(
-            _permute(mt))
+            change_basis(mt, 1, 2))
 
 
     def get_time_shift(self, data, mt, group, time_shift_max):
@@ -93,6 +94,8 @@ class GreensTensor(GreensTensorBase):
                 ZDS = self.select(channel="ZDS")[0].data
                 ZDD = self.select(channel="ZDD")[0].data
                 ZEP = self.select(channel="ZEP")[0].data
+                ZDS *= -1
+
                 G[_i, 0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 G[_i, 1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 G[_i, 2, :] =  ZDD/3. + ZEP/3.
@@ -105,6 +108,8 @@ class GreensTensor(GreensTensorBase):
                 RDS = self.select(channel="RDS")[0].data
                 RDD = self.select(channel="RDD")[0].data
                 REP = self.select(channel="REP")[0].data
+                RDS *= -1
+
                 G[_i, 0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 G[_i, 1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 G[_i, 2, :] =  RDD/3. + REP/3.
@@ -115,6 +120,8 @@ class GreensTensor(GreensTensorBase):
             elif component=='T':
                 TSS = self.select(channel="TSS")[0].data
                 TDS = self.select(channel="TDS")[0].data
+                TSS *= -1
+
                 G[_i, 0, :] = TSS/2. * np.sin(2*phi)
                 G[_i, 1, :] = -TSS/2. * np.sin(2*phi)
                 G[_i, 2, :] = 0.

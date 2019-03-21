@@ -19,7 +19,7 @@ from mtuq.util.util import path_mtuq
 """
 
 
-DocstringDC3Serial="""
+Docstring_SerialGridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
     # Double-couple inversion example
@@ -28,18 +28,16 @@ if __name__=='__main__':
     # moment tensors
     #
     # USAGE
-    #   python GridSearch.DoubleCouple.3Parameter.Serial.py
+    #   python SerialGridSearch.DoubleCouple.py
     #
     # A typical runtime is about 20 minutes. For faster results try 
-    # GridSearch.DoubleCouple.3Parameter.MPI.py,
-    # which runs the same inversion in parallel rather than
-    # serial
+    # GridSearch.DoubleCouple.py, which runs the same inversion in parallel
     #
 
 """
 
 
-DocstringDC3="""
+Docstring_GridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
     # Double-couple inversion example
@@ -48,31 +46,45 @@ if __name__=='__main__':
     # moment tensors
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.3Parameter.py
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.py
     #
-    # For a slightly simpler example, see 
-    # GridSearch.DoubleCouple.3Parameter.Serial.py, 
-    # which runs the same inversion in serial rather than parallel
+    # For a simpler example, see SerialGridSearch.DoubleCouple.py, 
+    # which runs the same inversion in serial
     #
 
 """
 
 
-DocstringDC5="""
+Docstring_CapStyleGridSearch_DoubleCouple="""
+if __name__=='__main__':
+    #
+    # CAP-style Double-couple inversion example
+    # 
+    # Carries out grid search over 50,000 randomly chosen double-couple 
+    # moment tensors
+    #
+    # USAGE
+    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
+    #
+
+"""
+
+
+Docstring_GridSearch_DoubleCoupleMagnitudeDepth="""
 if __name__=='__main__':
     #
     # Double-couple inversion example
     #   
-    # Carries out grid search over source orientation, magnitude and depth
+    # Carries out grid search over source orientation, magnitude, and depth
     #   
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.5Parameter.py
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
     #   
 
 """
 
 
-DocstringFMT5="""
+Docstring_GridSearch_FullMomentTensor="""
 if __name__=='__main__':
     #
     # Full moment tensor inversion example
@@ -81,13 +93,13 @@ if __name__=='__main__':
     # magnitude 
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.5Parameter.py
+    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
     #   
 
 """
 
 
-DocstringBenchmark_CAP_MTUQ="""
+Docstring_BenchmarkCAP="""
 if __name__=='__main__':
     #
     # Given seven "fundamental" moment tensors, generates MTUQ synthetics and
@@ -96,7 +108,7 @@ if __name__=='__main__':
     # Before running this script, it is necessary to unpack the CAP/FK 
     # synthetics using data/tests/unpack.bash
     #
-    # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
+    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
     # except here we consider only seven grid points rather than an entire
     # grid, and here the final plots are a comparison of MTUQ and CAP/FK 
     # synthetics rather than a comparison of data and synthetics
@@ -144,11 +156,11 @@ if __name__=='__main__':
 """
 
 
-DocstringIntegrationTest="""
+Docstring_IntegrationTest="""
 if __name__=='__main__':
     #
     #
-    # This script is similar to examples/GridSearch.DoubleCouple3.Serial.py,
+    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
     # except here we use a coarser grid, and at the end we assert that the test
     # result equals the expected result
     #
@@ -158,7 +170,7 @@ if __name__=='__main__':
 """
 
 
-Argparse_CAP_MTUQ="""
+Argparse_BenchmarkCAP="""
     from mtuq.cap.util import\\
         get_synthetics_cap, get_synthetics_mtuq,\\
         get_data_cap, compare_cap_mtuq
@@ -278,7 +290,7 @@ MisfitDefinitions="""
 """
 
 
-GridDC3="""
+Grid_DoubleCouple="""
     #
     # Next we specify the source parameter grid
     #
@@ -293,7 +305,7 @@ GridDC3="""
 """
 
 
-GridDC5="""
+Grid_DoubleCouple_Magnitude_Depth="""
     #
     # Next we specify the source parameter grid
     #
@@ -312,7 +324,7 @@ GridDC5="""
 """
 
 
-GridFMT5="""
+Grid_FullMomentTensor="""
     #
     # Next we specify the source parameter grid
     #
@@ -327,7 +339,7 @@ GridFMT5="""
 """
 
 
-GridBenchmark_CAP_MTUQ="""
+Grid_BenchmarkCAP="""
     #
     # Next we specify the source parameter grid
     #
@@ -368,14 +380,16 @@ GridIntegrationTest="""
 
 
 
-GridSearchSerial="""
+SerialGridSearch="""
     #
     # The main I/O work starts now
     #
 
     print 'Reading data...\\n'
-    data = read(path_data, format='sac', event_id=event_name,
+    data = read(path_data, format='sac',
+        event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
+
     data.sort_by_distance()
 
     stations = data.get_stations()
@@ -435,8 +449,10 @@ GridSearchMPI="""
 
     if comm.rank==0:
         print 'Reading data...\\n'
-        data = read(path_data, format='sac', event_id=event_name,
+        data = read(path_data, format='sac', 
+            event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
+
         data.sort_by_distance()
 
         stations = data.get_stations()
@@ -503,8 +519,10 @@ GridSearchMPI2="""
 
     if comm.rank==0:
         print 'Reading data...\\n'
-        data = read(path_data, format='sac', event_id=event_name,
+        data = read(path_data, format='sac', 
+            event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
+
         data.sort_by_distance()
 
         stations = data.get_stations()
@@ -563,14 +581,16 @@ GridSearchMPI2="""
 """
 
 
-RunBenchmark_CAP_MTUQ="""
+Run_BenchmarkCAP="""
     #
     # The benchmark starts now
     #
 
     print 'Reading data...\\n'
-    data = read(path_data, format='sac', event_id=event_name,
+    data = read(path_data, format='sac', 
+        event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
+
     data.sort_by_distance()
 
     stations = data.get_stations()
@@ -631,47 +651,47 @@ if __name__=='__main__':
     os.chdir(path_mtuq())
 
 
-    with open('examples/GridSearch.DoubleCouple.3Parameter.MPI.py', 'w') as file:
+    with open('examples/GridSearch.DoubleCouple.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(Imports)
-        file.write(DocstringDC3)
+        file.write(Docstring_GridSearch_DoubleCouple)
         file.write(PathsComments)
         file.write(PathsDefinitions)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
-        file.write(GridDC3)
+        file.write(Grid_DoubleCouple)
         file.write(GridSearchMPI)
 
 
-    with open('examples/GridSearch.DoubleCouple.5Parameter.MPI.py', 'w') as file:
+    with open('examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(Imports)
-        file.write(DocstringDC5)
+        file.write(Docstring_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(PathsComments)
         file.write(PathsDefinitions)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
-        file.write(GridDC5)
+        file.write(Grid_DoubleCouple_Magnitude_Depth)
         file.write(GridSearchMPI2)
 
 
-    with open('examples/GridSearch.FullMomentTensor.5Parameter.MPI.py', 'w') as file:
+    with open('examples/GridSearch.FullMomentTensor.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(Imports)
-        file.write(DocstringFMT5)
+        file.write(Docstring_GridSearch_FullMomentTensor)
         file.write(PathsDefinitions)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
-        file.write(GridFMT5)
+        file.write(Grid_FullMomentTensor)
         file.write(GridSearchMPI)
 
 
-    with open('examples/GridSearch.DoubleCouple.3Parameter.Serial.py', 'w') as file:
+    with open('examples/SerialGridSearch.DoubleCouple.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
@@ -679,15 +699,15 @@ if __name__=='__main__':
             'grid_search_mpi',
             'grid_search_serial',
             ))
-        file.write(DocstringDC3Serial)
+        file.write(Docstring_SerialGridSearch_DoubleCouple)
         file.write(PathsComments)
         file.write(PathsDefinitions)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
-        file.write(GridDC3)
-        file.write(GridSearchSerial)
+        file.write(Grid_DoubleCouple)
+        file.write(SerialGridSearch)
 
 
     with open('tests/test_grid_search.py', 'w') as file:
@@ -699,15 +719,15 @@ if __name__=='__main__':
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             ))
-        file.write(DocstringIntegrationTest)
+        file.write(Docstring_IntegrationTest)
         file.write(PathsDefinitions)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
         file.write(GridIntegrationTest)
-        file.write(GridSearchSerial)
+        file.write(SerialGridSearch)
 
 
-    with open('tests/benchmark_cap_mtuq.py', 'w') as file:
+    with open('tests/benchmark_cap.py', 'w') as file:
         file.write(
             replace(
             Imports,
@@ -718,8 +738,8 @@ if __name__=='__main__':
             'plot_data_greens_mt',
             'plot_data_synthetics',
             ))
-        file.write(DocstringBenchmark_CAP_MTUQ)
-        file.write(Argparse_CAP_MTUQ)
+        file.write(Docstring_BenchmarkCAP)
+        file.write(Argparse_BenchmarkCAP)
         file.write(
             replace(
             PathsDefinitions,
@@ -740,13 +760,26 @@ if __name__=='__main__':
             'time_shift_max=.*',
             'time_shift_max=0.,',
             ))
-        file.write(GridBenchmark_CAP_MTUQ)
-        file.write(RunBenchmark_CAP_MTUQ)
+        file.write(Grid_BenchmarkCAP)
+        file.write(Run_BenchmarkCAP)
 
 
-
-
-
-
-
+    with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py', 'w') as file:
+        file.write(
+            replace(
+            Imports,
+            'syngine',
+            'fk'
+            ))
+        file.write(Docstring_CapStyleGridSearch_DoubleCouple)
+        file.write(
+            replace(
+            PathsDefinitions,
+            'ak135f_.s',
+            'scak',
+            ))
+        file.write(DataProcessingDefinitions)
+        file.write(MisfitDefinitions)
+        file.write(Grid_DoubleCouple)
+        file.write(GridSearchMPI)
 

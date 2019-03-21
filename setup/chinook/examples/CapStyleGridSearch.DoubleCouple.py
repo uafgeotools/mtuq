@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import os
 import sys
@@ -18,36 +17,22 @@ from mtuq.util.util import path_mtuq
 
 if __name__=='__main__':
     #
-    # Double-couple inversion example
+    # CAP-style Double-couple inversion example
     # 
     # Carries out grid search over 50,000 randomly chosen double-couple 
     # moment tensors
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.3Parameter.py
-    #
-    # For a slightly simpler example, see 
-    # GridSearch.DoubleCouple.3Parameter.Serial.py, 
-    # which runs the same inversion in serial rather than parallel
+    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
     #
 
-
-    #
-    # Here we specify the data used for the inversion. The event is an 
-    # Mw~4 Alaska earthquake
-    #
 
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
-    model=        'ak135f_2s'
+    model=        'scak'
 
-
-    #
-    # Body- and surface-wave data are processed separately and held separately 
-    # in memory
-    #
 
     process_bw = ProcessData(
         filter_type='Bandpass',
@@ -80,11 +65,6 @@ if __name__=='__main__':
        'surface_waves': process_sw,
        }
 
-
-    #
-    # We define misfit as a sum of indepedent body- and surface-wave 
-    # contributions
-    #
 
     misfit_bw = Misfit(
         time_shift_max=2.,
@@ -124,8 +104,10 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print 'Reading data...\n'
-        data = read(path_data, format='sac', event_id=event_name,
+        data = read(path_data, format='sac', 
+            event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
+
         data.sort_by_distance()
 
         stations = data.get_stations()

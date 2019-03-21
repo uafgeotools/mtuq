@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import os
 import sys
@@ -5,7 +6,7 @@ import numpy as np
 
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
-from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search.mpi import grid_search_serial
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
@@ -17,14 +18,23 @@ from mtuq.util.util import path_mtuq
 
 if __name__=='__main__':
     #
+    # Double-couple inversion example
+    # 
+    # Carries out grid search over 50,000 randomly chosen double-couple 
+    # moment tensors
     #
-    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
-    # except here we use a coarser grid, and at the end we assert that the test
-    # result equals the expected result
+    # USAGE
+    #   python SerialGridSearch.DoubleCouple.py
     #
-    # The compare against CAP/FK
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1/1/10/10/10 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
+    # A typical runtime is about 20 minutes. For faster results try 
+    # GridSearch.DoubleCouple.py, which runs the same inversion in parallel
+    #
 
+
+    #
+    # Here we specify the data used for the inversion. The event is an 
+    # Mw~4 Alaska earthquake
+    #
 
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
@@ -32,6 +42,11 @@ if __name__=='__main__':
     event_name=   '20090407201255351'
     model=        'ak135f_2s'
 
+
+    #
+    # Body- and surface-wave data are processed separately and held separately 
+    # in memory
+    #
 
     process_bw = ProcessData(
         filter_type='Bandpass',
@@ -65,6 +80,11 @@ if __name__=='__main__':
        }
 
 
+    #
+    # We define misfit as a sum of indepedent body- and surface-wave 
+    # contributions
+    #
+
     misfit_bw = Misfit(
         time_shift_max=2.,
         time_shift_groups=['ZR'],
@@ -81,13 +101,16 @@ if __name__=='__main__':
         }
 
 
-    grid = DoubleCoupleGridRegular(
-        moment_magnitude=4.5, 
-        npts_per_axis=10)
+    #
+    # Next we specify the source parameter grid
+    #
+
+    grid = DoubleCoupleGridRandom(
+        npts=50000,
+        moment_magnitude=4.5)
 
     wavelet = Trapezoid(
         moment_magnitude=4.5)
-
 
 
     #
