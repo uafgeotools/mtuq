@@ -51,21 +51,6 @@ class GreensTensor(GreensTensorBase):
                 "Force source implementation not usuable due to suspected "
                 "syngine bugs")
 
-    def _precompute(self):
-        super(GreensTensor, self)._precompute()
-
-        # the negative sign is needed because of a bug in syngine? or because 
-        # of inconsistent moment tensor conventions?
-        if 'T' in self.components:
-            _i = self.components.index('T')
-            self._tensor[_i, :6, :] *= -1
-
-        # Order of terms expected by syngine URL parser (from online
-        # documentation): Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
-         
-        # Relations given in instaseis/tests/test_instaseis.py:
-        # m_tt=Mxx, m_pp=Myy, m_rr=Mzz, m_rt=Mxz, m_rp=Myz, m_tp=Mxy
-         
 
 
 class Client(ClientBase):
@@ -129,6 +114,15 @@ class Client(ClientBase):
         t2_old = float(stream[0].stats.endtime)
         dt_old = float(stream[0].stats.delta)
 
+        print 't1_old', t1_old
+        print 't1_new', t1_new
+
+        print 't2_old', t2_old
+        print 't2_new', t2_new
+
+        print 'nt_old', (t2_old-t1_old)/dt_old
+        print 'nt_new', (t2_new-t1_new)/dt_new
+
         for trace in stream:
             # resample Green's functions
             data_old = trace.data
@@ -151,6 +145,7 @@ def download_greens_tensor(model, station, origin):
         distance_in_deg = _in_deg(station.distance_in_m)
     else:
         distance_in_deg = _in_deg(station.preliminary_distance_in_m)
+
 
     url = ('http://service.iris.edu/irisws/syngine/1/query'
          +'?model='+model
