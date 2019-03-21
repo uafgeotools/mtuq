@@ -7,7 +7,7 @@ import numpy as np
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search_serial
+from mtuq.grid_search.mpi import grid_search_mpi
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -24,12 +24,11 @@ if __name__=='__main__':
     # moment tensors
     #
     # USAGE
-    #   python GridSearch.DoubleCouple.3Parameter.Serial.py
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.MPI.py
     #
-    # A typical runtime is about 20 minutes. For faster results try 
-    # GridSearch.DoubleCouple.3Parameter.MPI.py,
-    # which runs the same inversion in parallel rather than
-    # serial
+    # For a slightly simpler example, see 
+    # GridSearch.DoubleCouple.3Parameter.Serial.py, 
+    # which runs the same inversion in serial rather than parallel
     #
 
 
@@ -115,56 +114,69 @@ if __name__=='__main__':
         moment_magnitude=4.5)
 
 
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+
+
     #
     # The main I/O work starts now
     #
 
-    print 'Reading data...\n'
-    data = read(path_data, format='sac',
-        event_id=event_name,
-        tags=['units:cm', 'type:velocity']) 
+    if comm.rank==0:
+        print 'Reading data...\n'
+        data = read(path_data, format='sac', 
+            event_id=event_name,
+            tags=['units:cm', 'type:velocity']) 
 
-    data.sort_by_distance()
+        data.sort_by_distance()
 
-    stations = data.get_stations()
-    origin = data.get_origin()
+        stations = data.get_stations()
+        origin = data.get_origin()
 
+        print 'Processing data...\n'
+        processed_data = {}
+        for key in ['body_waves', 'surface_waves']:
+            processed_data[key] = data.map(process_data[key])
+        data = processed_data
 
-    print 'Processing data...\n'
-    processed_data = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_data[key] = data.map(process_data[key])
-    data = processed_data
+        print 'Reading Greens functions...\n'
+        greens = get_greens_tensors(stations, origin, model=model)
 
+        print 'Processing Greens functions...\n'
+        greens.convolve(wavelet)
+        processed_greens = {}
+        for key in ['body_waves', 'surface_waves']:
+            processed_greens[key] = greens.map(process_data[key])
+        greens = processed_greens
 
-    print 'Downloading Greens functions...\n'
-    greens = get_greens_tensors(stations, origin, model=model)
+    else:
+        data = None
+        greens = None
 
-
-
-    print 'Processing Greens functions...\n'
-    greens.convolve(wavelet)
-    processed_greens = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_greens[key] = greens.map(process_data[key])
-    greens = processed_greens
+    data = comm.bcast(data, root=0)
+    greens = comm.bcast(greens, root=0)
 
 
     #
-    # The main computational work starts nows
+    # The main computational work starts now
     #
 
-    print 'Carrying out grid search...\n'
-    results = grid_search_serial(data, greens, misfit, grid)
+    if comm.rank==0:
+        print 'Carrying out grid search...\n'
+    results = grid_search_mpi(data, greens, misfit, grid)
+    results = comm.gather(results, root=0)
 
 
-    print 'Saving results...\n'
-    #grid.save(event_name+'.h5', {'misfit': results})
-    best_mt = grid.get(results.argmin())
+    if comm.rank==0:
+        print 'Saving results...\n'
+        results = np.concatenate(results)
+        #grid.save(event_name+'.h5', {'misfit': results})
+        best_mt = grid.get(results.argmin())
 
 
-    print 'Plotting waveforms...\n'
-    plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
-    plot_beachball(event_name+'_beachball.png', best_mt)
+    if comm.rank==0:
+        print 'Plotting waveforms...\n'
+        plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
+        plot_beachball(event_name+'_beachball.png', best_mt)
 
 
