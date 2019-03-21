@@ -28,7 +28,6 @@ fi
 
 # what is the relative path to mtuq/setup/chinook?
 SETUP=$(dirname ${BASH_SOURCE[0]})
-echo path $SETUP
 
 
 ERROR="

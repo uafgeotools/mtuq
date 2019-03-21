@@ -765,6 +765,7 @@ if __name__=='__main__':
 
 
     with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
             Imports,
