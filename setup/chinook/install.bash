@@ -10,27 +10,26 @@ then
 fi
 
 
-# load system modules
-module load lang/Python/2.7.12-pic-intel-2016b
-
-
 # navigate to mtuq/setup/chinook
 cd $(dirname ${BASH_SOURCE[0]})
 VDIR="$PWD/virtual"
 VENV="mtuq"
 
-
-if [[ -d $SETUP/virtual/mtuq  ]];
+if [[ -d ${VIDR}/${VENV} ]];
 then
     echo "Error: Virtual environment already exists"
     exit 1
 fi
 
 
+# load system modules
+module load lang/Python/2.7.12-pic-intel-2016b
+
+
 # create virutal environment
-cd $VDIR
-virtualenv $VENV
-source "$VENV/bin/activate"
+mkdir -p $VDIR
+virtualenv "${VDIR}/${VENV}"
+source "${VDIR}/${VENV}/bin/activate"
 
 
 # install dependencies

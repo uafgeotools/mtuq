@@ -47,18 +47,18 @@ Running the examples
 --------------------
 
 After activating the pip virtual environment, users can run either the serial
-examples located in `mtuq/examples` or the parallel examples located in
+example located in `mtuq/examples` or the parallel example located in
 `mtuq/setup/chinook/examples`.
 
 
 The serial examples can be invoked directly, i.e.
 
-    > bash name_of_example.Serial.py
+    > bash SerialGridSearch.DoubleCouple.py
 
 
 The parallel example must be invoked with sbatch, i.e.
 
-    > sbatch submit_example.py
+    > sbatch submit.bash
 
 
 NOTES
