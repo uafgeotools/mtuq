@@ -760,7 +760,26 @@ if __name__=='__main__':
             'time_shift_max=.*',
             'time_shift_max=0.,',
             ))
-        file.write(GridBenchmark_CAP_MTUQ)
-        file.write(RunBenchmark_CAP_MTUQ)
+        file.write(Grid_BenchmarkCAP)
+        file.write(Run_BenchmarkCAP)
 
+
+    with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py', 'w') as file:
+        file.write(
+            replace(
+            Imports,
+            'syngine',
+            'fk'
+            ))
+        file.write(Docstring_CapStyleGridSearch_DoubleCouple)
+        file.write(
+            replace(
+            PathsDefinitions,
+            'ak135f_.s',
+            'scak',
+            ))
+        file.write(DataProcessingDefinitions)
+        file.write(MisfitDefinitions)
+        file.write(Grid_DoubleCouple)
+        file.write(GridSearchMPI)
 
