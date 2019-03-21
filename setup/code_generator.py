@@ -645,7 +645,7 @@ if __name__=='__main__':
         file.write(GridSearchMPI)
 
 
-    with open('examples/GridSearch.DoubleCouple.5Parameter.MPI.py', 'w') as file:
+    with open('examples/GridSearch.DoubleCouple+Magnitude+Depth.5Parameter.MPI.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(Imports)
         file.write(DocstringDC5)
