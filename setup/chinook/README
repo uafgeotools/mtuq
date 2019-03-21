@@ -51,23 +51,21 @@ example located in `mtuq/examples` or the parallel example located in
 `mtuq/setup/chinook/examples`.
 
 
-The serial examples can be invoked directly, i.e.
+The serial examples can be invoked directly:
 
     > bash SerialGridSearch.DoubleCouple.py
 
 
-The parallel example must be invoked with sbatch, i.e.
+The parallel example must be invoked with wrappers:
 
-    > sbatch submit.bash
+    > sbatch submit.bash CapStyleGridSearch.DoubleCouple.py
 
 
-NOTES
+NOTE
 
-Scripts in `mtuq/examples` use the syngine webservice to obtain AxiSEM Green's
-functions.  Scripts in `mtuq/setup/chinook/examples` use a local (chinook) 
-database to obtain FK Green's functions.  FK Green's functions are also used by
-the legacy software CAP, hence the string `CapStyleGridSearch` in some of the 
-filenames.
+The serial example uses the syngine webservice to obtain AxiSEM Green's
+functions.  The parallel example uses a local chinook databaset to obtain
+FK Green's functions, similar to the legacy program CAP.
 
 
 
