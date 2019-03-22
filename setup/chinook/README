@@ -15,24 +15,25 @@ Then run the installation script:
 
 NOTES 
 
--  `install.bash` loads required chinook modules and creates a pip virtual
+- `install.bash` loads required chinook modules and creates a pip virtual
 environment that can be used during the current session and any subsequent
 sessions.  
 
 - `install.bash` creates an editable virtual environment, which means
-that any changes to the git repository go into effect immediately. This in turn
-means that users can `git pull` at any time without having to re-install.
+that any changes to the git repository go into effect immediately. As a result
+users can `git pull` at any time or make other changes without having to 
+re-install.
 
-- By choosing appropriate modules and following the more general instructions
-in `mtuq/docs`, users can, at greater effort, obtain the same result as
-`install.bash`.
+- At greater effort, users can obtain the same result as `install.bash` by
+following the more general instructions in `mtuq/docs` and loading appropriate 
+chinook modules
 
 
 
 Activating the MTUQ virtual environment
 ---------------------------------------
 
-At the beginning of each session, users must activate the pip virtual 
+At the beginning of a session, users must activate the pip virtual 
 environment:
 
    > source setup/chinook/activate.bash
@@ -56,14 +57,16 @@ The serial examples can be invoked directly:
     > bash SerialGridSearch.DoubleCouple.py
 
 
-The parallel example must be invoked with wrappers:
+The parallel example must be invoked using an sbatch wrapper:
 
     > sbatch submit.bash CapStyleGridSearch.DoubleCouple.py
 
 
-NOTE
+NOTES
 
-The serial example uses the syngine webservice to obtain AxiSEM Green's
+- The above examples reproduce results from Silwal2016
+
+- The serial example uses the syngine webservice to obtain AxiSEM Green's
 functions.  The parallel example uses a local chinook databaset to obtain
 FK Green's functions, similar to the legacy program CAP.
 
@@ -72,17 +75,15 @@ FK Green's functions, similar to the legacy program CAP.
 Modifying the examples
 ----------------------
 
-The above examples reproduce results from Silwal2016. Earthquake waveforms for
-the main Silwal2016 test case are included the mtuq repository, so it is not    
-necessary to download them. 
+Recorded seismic data for the main Silwal2016 test case are included the mtuq
+repository, so it is not necessary to download them.  To obtain a moment tensor
+estimate for a different event, users must download waveforms using
+uafseismo/pysep and modify the mtuq example script as follows:
 
-To obtain a moment tensor estimate for a different event, users must download 
-waveforms using uafseismo/pysep and modify the mtuq example script as follows:
+- Update `path_data` to the pysep download directory.
 
-- Update `path_data` to match the pysep download directory.
-
-- Update `path_weights` to match the path to the CAP-style weight file included 
-in the pysep download.
+- Update `path_weights` to the path to the CAP-style weight file included in 
+the pysep download.
 
 - If magnitude is fixed in the example, then update the `moment_magnitude` 
 keyword arguments with the estimated moment magnitude.

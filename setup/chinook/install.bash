@@ -12,7 +12,7 @@ fi
 
 # navigate to mtuq/setup/chinook
 cd $(dirname ${BASH_SOURCE[0]})
-VDIR="$PWD/virtual"
+VDIR="$PWD/install"
 VENV="mtuq"
 
 if [[ -d ${VIDR}/${VENV} ]];
@@ -32,14 +32,10 @@ virtualenv "${VDIR}/${VENV}"
 source "${VDIR}/${VENV}/bin/activate"
 
 
-# install dependencies
-pip install numpy
-pip install mpi4py
-
-
 # install mtuq in editable mode
 cd "../.."
 pip install -e .
+pip install mpi4py
 
 
 # unpack examples
