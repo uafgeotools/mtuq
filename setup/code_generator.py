@@ -198,7 +198,6 @@ Argparse_BenchmarkCAP="""
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
 
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
 """
 
 
@@ -210,7 +209,7 @@ PathsComments="""
 """
 
 
-PathsDefinitions="""
+Paths_Syngine="""
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
@@ -218,6 +217,18 @@ PathsDefinitions="""
     model=        'ak135f_2s'
 
 """
+
+
+Paths_FK="""
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
+    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
+    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
+    event_name=   '20090407201255351'
+    model=        'scak'
+
+"""
+
 
 
 DataProcessingComments="""
@@ -625,7 +636,7 @@ Main_BenchmarkCAP="""
         synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
 
         if run_figures:
-            filename = 'cap_mtuq_'+str(_i)+'.png'
+            filename = 'cap_vs_mtuq_'+str(_i)+'.png'
             plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
         if run_checks:
@@ -636,7 +647,7 @@ Main_BenchmarkCAP="""
         # MTUQ processes observed data
         data_mtuq = data
         data_cap = get_data_cap(data, paths[0], name)
-        filename = 'cap_mtuq_data.png'
+        filename = 'cap_vs_mtuq_data.png'
         plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 
 """
@@ -656,7 +667,7 @@ if __name__=='__main__':
         file.write(Imports)
         file.write(Docstring_GridSearch_DoubleCouple)
         file.write(PathsComments)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
@@ -670,7 +681,7 @@ if __name__=='__main__':
         file.write(Imports)
         file.write(Docstring_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(PathsComments)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
@@ -682,7 +693,7 @@ if __name__=='__main__':
         file.write("#!/usr/bin/env python\n")
         file.write(Imports)
         file.write(Docstring_GridSearch_FullMomentTensor)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
@@ -701,7 +712,7 @@ if __name__=='__main__':
             ))
         file.write(Docstring_SerialGridSearch_DoubleCouple)
         file.write(PathsComments)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
@@ -720,7 +731,7 @@ if __name__=='__main__':
             'DoubleCoupleGridRegular',
             ))
         file.write(Docstring_IntegrationTest)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
         file.write(Grid_IntegrationTest)
@@ -740,19 +751,15 @@ if __name__=='__main__':
             ))
         file.write(Docstring_BenchmarkCAP)
         file.write(Argparse_BenchmarkCAP)
-        file.write(
-            replace(
-            PathsDefinitions,
-            'ak135f_.s',
-            'scak',
-            'data/examples/20090407201255351/weights.dat',
-            'data/tests/benchmark_cap_mtuq/20090407201255351/weights.dat',
-            ))
+        file.write(Paths_FK)
         file.write(
             replace(
             DataProcessingDefinitions,
             'padding_length=.*',
             'padding_length=0,',
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',\n        "
+           +"fk_database=path_greens,",
             ))
         file.write(
             replace(
@@ -775,12 +782,9 @@ if __name__=='__main__':
         file.write(Docstring_CapStyleGridSearch_DoubleCouple)
         file.write(
             replace(
-            PathsDefinitions,
-           r"path_data=(.*)",
-           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/'\n    "+\
-           r"path_data=\1",
-            'ak135f_.s',
-            'scak',
+            Paths_FK,
+           r"path_greens=.*",
+           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/'",
             ))
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
@@ -791,8 +795,8 @@ if __name__=='__main__':
             'print ''Downloading Greens functions...\\n''',
             'print ''Reading Greens functions...\\n''',
             'greens = get_greens_tensors\(stations, origin, model=model\)',
-            'db = open_db(path_greens, format=\'FK\', model=model)\n        '+\
-            'greens = db.get_greens_tensors(stations, origin)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n        '
+           +'greens = db.get_greens_tensors(stations, origin)',
             ))
 
 

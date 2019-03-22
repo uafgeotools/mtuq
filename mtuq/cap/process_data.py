@@ -92,11 +92,10 @@ class ProcessData(object):
         if pick_type==None:
             raise Exception
 
-        elif pick_type=='from_sac_headers':
-            # nothing to be checked
-            pass
+        elif pick_type=='from_taup_model':
+            self._taup_model = obspy.taup(model=taup_model)
 
-        elif pick_type=='from_fk_database':
+        elif pick_type=='from_fk_metadata':
             assert 'fk_database' in parameters
             self._fk_database = parameters['fk_database']
             self._fk_model = basename(self._fk_database)
@@ -107,9 +106,6 @@ class ProcessData(object):
         elif pick_type=='from_pick_file':
             assert exists(parameters['pick_file'])
             self._pick_file = parameters['pick_file']
-
-        elif pick_type=='from_taup_model':
-            raise NotImplementedError
 
         else:
              raise ValueError('Bad parameter: pick_type')
@@ -283,13 +279,22 @@ class ProcessData(object):
         elif id not in self._picks:
             picks = self._picks[id]
 
-            if self.pick_type=='from_sac_headers':
+            if self.pick_type=='from_taup':
+                distance_in_deg = _in_deg(stats.preliminary_event_depth_in_m)
+                depth_in_km = stats.preliminary_event_depth_in_m/1000.
+                arrivals = self.taup_model.get_travel_times(
+                    distance_in_deg, depth_in_km, phase_list=['P', 'S'])
+                picks.P = arrivals[0]
+                picks.S = arrivals[1]
+
+
+            elif self.pick_type=='from_sac_headers':
                 sac_headers = stats.sac
                 picks.P = sac_headers.t5
                 picks.S = sac_headers.t6
 
 
-            elif self.pick_type=='from_fk_database':
+            elif self.pick_type=='from_fk_metadata':
                 sac_headers = obspy.read('%s/%s_%s/%s.grn.0' %
                     (self._fk_database,
                      self._fk_model,
