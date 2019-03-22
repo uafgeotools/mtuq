@@ -7,8 +7,9 @@
 
 # error checking
 ERROR="
-Virtual environment not activated.
-Run mtuq/setup/chinook/activate.bash and try again
+Virtual environment not activated
+
+source activate.bash and try again
 "
 if [[ $( pip -V ) != *mtuq* ]];
 then
@@ -18,6 +19,8 @@ fi
 
 
 ERROR="
+Wrong number of input arguments
+
 USAGE
     sbatch submit.bash name_of_example
 "
@@ -29,6 +32,6 @@ fi
 
 
 # run example
-mpirun -np 24 $1
+mpirun -n 24 python $1
 
 
