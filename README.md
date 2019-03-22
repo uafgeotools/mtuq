@@ -17,7 +17,7 @@ Run example
 
 4) `./data/examples/unpack.bash`
 
-5) `./examples/GridSearch.DoubleCouple.Serial.py`
+5) `./examples/SerialGridSearch.DoubleCouple.py`
 
 
 [![Build Status](https://travis-ci.org/uafseismo/mtuq.svg?branch=master)](https://travis-ci.org/uafseismo/mtuq)
