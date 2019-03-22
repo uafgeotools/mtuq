@@ -38,6 +38,10 @@ pip install -e .
 pip install mpi4py
 
 
+# adjust matplotlib backend
+find . -name matplotlibrc -exec sed -i '/backend *:/s/TkAgg/Agg/' {} +
+
+
 # unpack examples
 ./data/examples/unpack.bash
 ./data/tests/unpack.bash
