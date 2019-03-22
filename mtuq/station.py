@@ -6,8 +6,7 @@ from obspy.geodetics import gps2dist_azimuth
 class Station(Stats):
     """ Station metadata object
 
-    Holds the following station metadata:
-
+    Holds the following station metadata
     - network, station, and location codes
     - preliminary event location and origin time estimates
     - time discretization information for traces recorded at the station
