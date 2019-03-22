@@ -28,6 +28,7 @@ if __name__=='__main__':
     #
 
 
+    path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/'
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
@@ -121,7 +122,8 @@ if __name__=='__main__':
         data = processed_data
 
         print 'Reading Greens functions...\n'
-        greens = get_greens_tensors(stations, origin, model=model)
+        db = open_db(path_greens, format='FK', model=model)
+        greens = db.get_greens_tensors(stations, origin)
 
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)

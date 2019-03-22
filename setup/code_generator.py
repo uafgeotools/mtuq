@@ -305,7 +305,7 @@ Grid_DoubleCouple="""
 """
 
 
-Grid_DoubleCouple_Magnitude_Depth="""
+Grid_DoubleCoupleMagnitudeDepth="""
     #
     # Next we specify the source parameter grid
     #
@@ -366,7 +366,7 @@ Grid_BenchmarkCAP="""
 """
 
 
-GridIntegrationTest="""
+Grid_IntegrationTest="""
     grid = DoubleCoupleGridRegular(
         moment_magnitude=4.5, 
         npts_per_axis=10)
@@ -380,7 +380,7 @@ GridIntegrationTest="""
 
 
 
-SerialGridSearch="""
+Main_SerialGridSearch="""
     #
     # The main I/O work starts now
     #
@@ -438,7 +438,7 @@ SerialGridSearch="""
 
 
 
-GridSearchMPI="""
+Main_GridSearch_DoubleCouple="""
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
 
@@ -509,7 +509,7 @@ GridSearchMPI="""
 
 
 
-GridSearchMPI2="""
+Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
     # The main work of the grid search starts now
     #
@@ -581,7 +581,7 @@ GridSearchMPI2="""
 """
 
 
-Run_BenchmarkCAP="""
+Main_BenchmarkCAP="""
     #
     # The benchmark starts now
     #
@@ -662,7 +662,7 @@ if __name__=='__main__':
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
-        file.write(GridSearchMPI)
+        file.write(Main_GridSearch_DoubleCouple)
 
 
     with open('examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
@@ -674,8 +674,8 @@ if __name__=='__main__':
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
-        file.write(Grid_DoubleCouple_Magnitude_Depth)
-        file.write(GridSearchMPI2)
+        file.write(Grid_DoubleCoupleMagnitudeDepth)
+        file.write(Main_GridSearch_DoubleCoupleMagnitudeDepth)
 
 
     with open('examples/GridSearch.FullMomentTensor.py', 'w') as file:
@@ -688,7 +688,7 @@ if __name__=='__main__':
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
         file.write(Grid_FullMomentTensor)
-        file.write(GridSearchMPI)
+        file.write(Main_GridSearch_DoubleCouple)
 
 
     with open('examples/SerialGridSearch.DoubleCouple.py', 'w') as file:
@@ -707,7 +707,7 @@ if __name__=='__main__':
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
-        file.write(SerialGridSearch)
+        file.write(Main_SerialGridSearch)
 
 
     with open('tests/test_grid_search.py', 'w') as file:
@@ -723,8 +723,8 @@ if __name__=='__main__':
         file.write(PathsDefinitions)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
-        file.write(GridIntegrationTest)
-        file.write(SerialGridSearch)
+        file.write(Grid_IntegrationTest)
+        file.write(Main_SerialGridSearch)
 
 
     with open('tests/benchmark_cap.py', 'w') as file:
@@ -761,7 +761,7 @@ if __name__=='__main__':
             'time_shift_max=0.,',
             ))
         file.write(Grid_BenchmarkCAP)
-        file.write(Run_BenchmarkCAP)
+        file.write(Main_BenchmarkCAP)
 
 
     with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py', 'w') as file:
@@ -776,11 +776,23 @@ if __name__=='__main__':
         file.write(
             replace(
             PathsDefinitions,
+           r"path_data=(.*)",
+           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/'\n    "+\
+           r"path_data=\1",
             'ak135f_.s',
             'scak',
             ))
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
-        file.write(GridSearchMPI)
+        file.write(
+            replace(
+            Main_GridSearch_DoubleCouple,
+            'print ''Downloading Greens functions...\\n''',
+            'print ''Reading Greens functions...\\n''',
+            'greens = get_greens_tensors\(stations, origin, model=model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n        '+\
+            'greens = db.get_greens_tensors(stations, origin)',
+            ))
+
 
