@@ -25,6 +25,30 @@ SYNTHETICS_FILENAMES = [
     'XX.S0001.SE.BXT.sac',
     ]
 
+SYNGINE_MODELS = [
+    'ak135f_2s',
+    'ak135f_5s',
+    'iasp91_2s',
+    'prem_i_2s',
+    'prem_a_2s',
+    'prem_a_5s',
+    'prem_a_10s',
+    'prem_a_20s',
+    ]
+
+def resolve_model(name):
+    if not name:
+        raise ValueError('Bad model')
+
+    if name in SYNGINE_MODELS:
+        return name
+
+    name+='_2s'
+    if name in SYNGINE_MODELS:
+        return name
+    else:
+        raise ValueError('Bad model')
+
 
 def download_greens_tensor(model, station, origin):
     """ Downloads Green's functions through syngine URL interface

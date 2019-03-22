@@ -30,7 +30,7 @@ if __name__=='__main__':
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
-    model=        'ak135f_2s'
+    model=        'ak135f'
 
 
     process_bw = ProcessData(
