@@ -66,7 +66,7 @@ class GreensTensor(GreensTensorBase):
         """
         return super(GreensTensor, self).get_time_shift(
             data,
-            _permute(mt),
+            change_basis(mt, 1, 2),
             group,
             time_shift_max)
 
@@ -220,29 +220,5 @@ class Client(ClientBase):
 
         return GreensTensor(traces=[trace for trace in stream], 
             station=station, origin=origin)
-
-
-def _permute(source):
-    # This moment tensor permutation produces a match between instaseis
-    # and fk synthetics.  But what basis conventions does it actually
-    # represent?  The permutation appears similar but not identical to the 
-    # one that maps from GCMT to AkiRichards
-
-    # for better performance, we will eventually apply this permutation to 
-    # _tensor rather than source
-    if len(source)==6:
-        return np.array([
-            source[1],
-            source[2],
-            source[0],
-           -source[5],
-           -source[3],
-            source[4]])
-
-    elif len(source)==3:
-        return np.array([
-            source[0],
-            source[1],
-            source[2]])
 
 
