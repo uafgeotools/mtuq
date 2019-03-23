@@ -28,17 +28,16 @@ if __name__=='__main__':
 
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
-    path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
-    model=        'ak135f_2s'
+    model=        'ak135'
 
 
     process_bw = ProcessData(
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_pick_file',
-        pick_file=path_picks,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
@@ -50,8 +49,8 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_pick_file',
-        pick_file=path_picks,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,

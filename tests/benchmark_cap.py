@@ -96,11 +96,10 @@ if __name__=='__main__':
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
 
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
 
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
-    path_weights= join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/weights.dat')
-    path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
+    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 
@@ -109,8 +108,8 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_pick_file',
-        pick_file=path_picks,
+        pick_type='from_fk_metadata',
+        fk_database=path_greens,
         window_type='cap_bw',
         window_length=15.,
         padding_length=0,
@@ -122,8 +121,8 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_pick_file',
-        pick_file=path_picks,
+        pick_type='from_fk_metadata',
+        fk_database=path_greens,
         window_type='cap_sw',
         window_length=150.,
         padding_length=0,
@@ -220,7 +219,7 @@ if __name__=='__main__':
         synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
 
         if run_figures:
-            filename = 'cap_mtuq_'+str(_i)+'.png'
+            filename = 'cap_vs_mtuq_'+str(_i)+'.png'
             plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
         if run_checks:
@@ -231,6 +230,6 @@ if __name__=='__main__':
         # MTUQ processes observed data
         data_mtuq = data
         data_cap = get_data_cap(data, paths[0], name)
-        filename = 'cap_mtuq_data.png'
+        filename = 'cap_vs_mtuq_data.png'
         plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 

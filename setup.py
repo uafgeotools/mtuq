@@ -62,7 +62,7 @@ setup(
     entry_points=ENTRY_POINTS,
     python_requires='~=2.7',
     install_requires=[
-        "numpy==1.15.4", "scipy", "obspy", "h5py", "retry",
+        "numpy", "scipy", "obspy", "h5py", "retry",
         "flake8>=3.0", "pytest", "nose"
     ]
 )

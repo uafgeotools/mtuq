@@ -198,7 +198,6 @@ Argparse_BenchmarkCAP="""
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
     paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
 
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
 """
 
 
@@ -210,14 +209,24 @@ PathsComments="""
 """
 
 
-PathsDefinitions="""
+Paths_Syngine="""
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
-    path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
-    model=        'ak135f_2s'
+    model=        'ak135'
 
 """
+
+
+Paths_FK="""
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
+    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
+    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    event_name=   '20090407201255351'
+    model=        'scak'
+
+"""
+
 
 
 DataProcessingComments="""
@@ -233,8 +242,8 @@ DataProcessingDefinitions="""
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_pick_file',
-        pick_file=path_picks,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
@@ -246,8 +255,8 @@ DataProcessingDefinitions="""
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_pick_file',
-        pick_file=path_picks,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
@@ -305,7 +314,7 @@ Grid_DoubleCouple="""
 """
 
 
-Grid_DoubleCouple_Magnitude_Depth="""
+Grid_DoubleCoupleMagnitudeDepth="""
     #
     # Next we specify the source parameter grid
     #
@@ -366,7 +375,7 @@ Grid_BenchmarkCAP="""
 """
 
 
-GridIntegrationTest="""
+Grid_IntegrationTest="""
     grid = DoubleCoupleGridRegular(
         moment_magnitude=4.5, 
         npts_per_axis=10)
@@ -380,7 +389,7 @@ GridIntegrationTest="""
 
 
 
-SerialGridSearch="""
+Main_SerialGridSearch="""
     #
     # The main I/O work starts now
     #
@@ -438,7 +447,7 @@ SerialGridSearch="""
 
 
 
-GridSearchMPI="""
+Main_GridSearch_DoubleCouple="""
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
 
@@ -509,7 +518,7 @@ GridSearchMPI="""
 
 
 
-GridSearchMPI2="""
+Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
     # The main work of the grid search starts now
     #
@@ -581,7 +590,7 @@ GridSearchMPI2="""
 """
 
 
-Run_BenchmarkCAP="""
+Main_BenchmarkCAP="""
     #
     # The benchmark starts now
     #
@@ -625,7 +634,7 @@ Run_BenchmarkCAP="""
         synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
 
         if run_figures:
-            filename = 'cap_mtuq_'+str(_i)+'.png'
+            filename = 'cap_vs_mtuq_'+str(_i)+'.png'
             plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
 
         if run_checks:
@@ -636,7 +645,7 @@ Run_BenchmarkCAP="""
         # MTUQ processes observed data
         data_mtuq = data
         data_cap = get_data_cap(data, paths[0], name)
-        filename = 'cap_mtuq_data.png'
+        filename = 'cap_vs_mtuq_data.png'
         plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 
 """
@@ -656,13 +665,13 @@ if __name__=='__main__':
         file.write(Imports)
         file.write(Docstring_GridSearch_DoubleCouple)
         file.write(PathsComments)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
-        file.write(GridSearchMPI)
+        file.write(Main_GridSearch_DoubleCouple)
 
 
     with open('examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
@@ -670,25 +679,25 @@ if __name__=='__main__':
         file.write(Imports)
         file.write(Docstring_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(PathsComments)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
-        file.write(Grid_DoubleCouple_Magnitude_Depth)
-        file.write(GridSearchMPI2)
+        file.write(Grid_DoubleCoupleMagnitudeDepth)
+        file.write(Main_GridSearch_DoubleCoupleMagnitudeDepth)
 
 
     with open('examples/GridSearch.FullMomentTensor.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(Imports)
         file.write(Docstring_GridSearch_FullMomentTensor)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
         file.write(Grid_FullMomentTensor)
-        file.write(GridSearchMPI)
+        file.write(Main_GridSearch_DoubleCouple)
 
 
     with open('examples/SerialGridSearch.DoubleCouple.py', 'w') as file:
@@ -701,13 +710,13 @@ if __name__=='__main__':
             ))
         file.write(Docstring_SerialGridSearch_DoubleCouple)
         file.write(PathsComments)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
-        file.write(SerialGridSearch)
+        file.write(Main_SerialGridSearch)
 
 
     with open('tests/test_grid_search.py', 'w') as file:
@@ -720,11 +729,11 @@ if __name__=='__main__':
             'DoubleCoupleGridRegular',
             ))
         file.write(Docstring_IntegrationTest)
-        file.write(PathsDefinitions)
+        file.write(Paths_Syngine)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
-        file.write(GridIntegrationTest)
-        file.write(SerialGridSearch)
+        file.write(Grid_IntegrationTest)
+        file.write(Main_SerialGridSearch)
 
 
     with open('tests/benchmark_cap.py', 'w') as file:
@@ -740,19 +749,16 @@ if __name__=='__main__':
             ))
         file.write(Docstring_BenchmarkCAP)
         file.write(Argparse_BenchmarkCAP)
-        file.write(
-            replace(
-            PathsDefinitions,
-            'ak135f_.s',
-            'scak',
-            'data/examples/20090407201255351/weights.dat',
-            'data/tests/benchmark_cap_mtuq/20090407201255351/weights.dat',
-            ))
+        file.write(Paths_FK)
         file.write(
             replace(
             DataProcessingDefinitions,
             'padding_length=.*',
             'padding_length=0,',
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
             ))
         file.write(
             replace(
@@ -761,10 +767,11 @@ if __name__=='__main__':
             'time_shift_max=0.,',
             ))
         file.write(Grid_BenchmarkCAP)
-        file.write(Run_BenchmarkCAP)
+        file.write(Main_BenchmarkCAP)
 
 
     with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
             Imports,
@@ -774,12 +781,28 @@ if __name__=='__main__':
         file.write(Docstring_CapStyleGridSearch_DoubleCouple)
         file.write(
             replace(
-            PathsDefinitions,
-            'ak135f_.s',
-            'scak',
+            Paths_FK,
+           r"path_greens=.*",
+           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/scak'",
             ))
-        file.write(DataProcessingDefinitions)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
-        file.write(GridSearchMPI)
+        file.write(
+            replace(
+            Main_GridSearch_DoubleCouple,
+            'print ''Downloading Greens functions...\\n''',
+            'print ''Reading Greens functions...\\n''',
+            'greens = get_greens_tensors\(stations, origin, model=model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n        '
+           +'greens = db.get_greens_tensors(stations, origin)',
+            ))
+
 

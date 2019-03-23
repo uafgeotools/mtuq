@@ -7,6 +7,7 @@ from mtuq.io.greens_tensor.axisem_netcdf import GreensTensor as GreensTensorBase
 from mtuq.io.greens_tensor.base import Client as ClientBase
 from mtuq.util.signal import resample
 from mtuq.util.syngine import download_greens_tensor, download_force_response,\
+     resolve_model,\
      GREENS_TENSOR_FILENAMES, SYNTHETICS_FILENAMES
 from mtuq.util.util import unzip
 
@@ -43,11 +44,12 @@ class Client(ClientBase):
     """
 
     def __init__(self, model=None, enable_force=False):
+        # Checks against list of currently supported models. If necessary,
+        # appends required period band suffix
+        self.model = resolve_model(model)
 
-        if not model:
-            raise ValueError
-
-        self.model = model
+        # Moment tensor response will always be downloaded. Optionally, force
+        # response can be downloaded as well
         self.enable_force = enable_force
 
 

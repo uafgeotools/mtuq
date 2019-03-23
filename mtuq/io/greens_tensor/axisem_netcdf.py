@@ -10,6 +10,7 @@ from os.path import basename
 from mtuq import GreensTensor as GreensTensorBase
 from mtuq.io.greens_tensor.base import Client as ClientBase
 from mtuq.util.moment_tensor.basis import change_basis
+from mtuq.util.plot import m_to_deg
 from mtuq.util.signal import resample
 
 
@@ -190,7 +191,7 @@ class Client(ClientBase):
 
     def _get_greens_tensor(self, station=None, origin=None):
         stream = self.db.get_greens_function(
-            epicentral_distance_in_degree=_in_deg(station.distance_in_m),
+            epicentral_distance_in_degree=m_to_deg(station.distance_in_m),
             source_depth_in_m=station.depth_in_m, 
             origin_time=origin.time,
             kind='displacement',
@@ -244,8 +245,4 @@ def _permute(source):
             source[1],
             source[2]])
 
-
-def _in_deg(distance_in_m):
-    from obspy.geodetics import kilometers2degrees
-    return kilometers2degrees(distance_in_m/1000., radius=6371.)
 

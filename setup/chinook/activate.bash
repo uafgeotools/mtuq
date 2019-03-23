@@ -19,14 +19,14 @@ fi
 ERROR="
 This script works only on chinook.alaska.edu
 "
-if [[ $HOSTNAME != chinook* ]];
+if [[ ! $HOSTNAME == chinook* ]];
 then
-    echo "This script works only on chinook.alaska.edu"
+    echo "$ERROR"
     return 1
 fi
 
 
-# what is the absolute path of mtuq/setup/chinook?
+# what is the relative path to mtuq/setup/chinook?
 SETUP=$(dirname ${BASH_SOURCE[0]})
 
 
@@ -34,7 +34,7 @@ ERROR="
 Virtual environment not found.
 Run mtuq/setup/chinook/install.bash and try again.
 "
-if [[ -d $SETUP/virtual/mtuq  ]];
+if [[ ! -d $SETUP/install/mtuq  ]];
 then
     echo "$ERROR"
     return 1
@@ -46,6 +46,6 @@ module load lang/Python/2.7.12-pic-intel-2016b
 
 
 # activate virutal environment
-source $SETUP/virtual/$VENV/mtuq/bin/activate
+source $SETUP/install/$VENV/mtuq/bin/activate
 
 

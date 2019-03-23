@@ -9,14 +9,15 @@ class Wavelet(object):
     """ Source wavelet base class
 
     By inheriting from this class and implementing the ``evaluate`` method,
-    an arbitrary source wavelet or source-time function can be defined.
+    almost any type of source wavelet or source-time function can be defined.
 
-    Most commonly an analytical expression will be used in the ``evaluate``
-    method, but a user-supplied time series can also be used.
+    (Most commonly an analytical expression will be used to define the wavelet,
+    but a user-supplied time series or on-the-fly numerical procedure can also
+    be used.)
 
     .. rubric:: Example
 
-    By inheriting from the parent class ``Wavelet``, we can implement a Gaussian
+    By inheriting from the base class ``Wavelet``, we can implement a Gaussian
     wavelet with unit standard deviation:
     
     .. code::
@@ -33,7 +34,7 @@ class Wavelet(object):
        t = np.linspace(-5,. +5., 101)
        y = SimpleGaussian(t)
 
-    Or we can convolve it  with an ObsPy trace:
+    Or we can convolve it with an ObsPy trace:
 
     .. code::
 
