@@ -212,9 +212,8 @@ PathsComments="""
 Paths_Syngine="""
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
-    path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
-    model=        'ak135f'
+    model=        'ak135'
 
 """
 
@@ -223,7 +222,6 @@ Paths_FK="""
     path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
-    path_picks=   join(path_mtuq(), 'data/examples/20090407201255351/picks.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 
@@ -244,8 +242,8 @@ DataProcessingDefinitions="""
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_pick_file',
-        pick_file=path_picks,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
@@ -257,8 +255,8 @@ DataProcessingDefinitions="""
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_pick_file',
-        pick_file=path_picks,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
@@ -758,8 +756,9 @@ if __name__=='__main__':
             'padding_length=.*',
             'padding_length=0,',
             'pick_type=.*',
-            "pick_type='from_fk_metadata',\n        "
-           +"fk_database=path_greens,",
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
             ))
         file.write(
             replace(
@@ -784,9 +783,16 @@ if __name__=='__main__':
             replace(
             Paths_FK,
            r"path_greens=.*",
-           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/'",
+           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/scak'",
             ))
-        file.write(DataProcessingDefinitions)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
         file.write(
