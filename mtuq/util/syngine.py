@@ -3,6 +3,7 @@ import numpy as np
 
 from os.path import exists
 from obspy.core import Stream, Trace
+from mtuq.util.plot import m_to_deg
 from mtuq.util.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
 
 
@@ -40,6 +41,10 @@ def resolve_model(name):
     if not name:
         raise ValueError('Bad model')
 
+    if name=='ak135':
+        # temporary workaround, because obspy lacks ak135f
+        name+='f'
+
     if name in SYNGINE_MODELS:
         return name
 
@@ -54,9 +59,9 @@ def download_greens_tensor(model, station, origin):
     """ Downloads Green's functions through syngine URL interface
     """
     if hasattr(station, 'distance_in_m'):
-        distance_in_deg = _in_deg(station.distance_in_m)
+        distance_in_deg = m_to_deg(station.distance_in_m)
     else:
-        distance_in_deg = _in_deg(station.preliminary_distance_in_m)
+        distance_in_deg = m_to_deg(station.preliminary_distance_in_m)
 
 
     url = ('http://service.iris.edu/irisws/syngine/1/query'
@@ -163,7 +168,4 @@ def get_synthetics_syngine(model, station, origin, mt):
     return synthetics
 
 
-def _in_deg(distance_in_m):
-    from obspy.geodetics import kilometers2degrees
-    return kilometers2degrees(distance_in_m/1000., radius=6371.)
 

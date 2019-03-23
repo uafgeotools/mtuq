@@ -6,8 +6,10 @@ import numpy as np
 from collections import defaultdict
 from copy import deepcopy
 from math import ceil
+from obspy import taup
 from os.path import basename, exists, join
 from mtuq.cap.util import taper, parse_weight_file
+from mtuq.util.plot import m_to_deg
 from mtuq.util.signal import cut
 from mtuq.util.util import AttribDict, warn
  
@@ -93,12 +95,18 @@ class ProcessData(object):
             raise Exception
 
         elif pick_type=='from_taup_model':
-            self._taup_model = obspy.taup(model=taup_model)
+            assert 'taup_model' in parameters
+            self._taup_model = parameters["taup_model"]
+            self._taup = taup.TauPyModel(model=parameters["taup_model"])
 
         elif pick_type=='from_fk_metadata':
             assert 'fk_database' in parameters
             self._fk_database = parameters['fk_database']
             self._fk_model = basename(self._fk_database)
+
+        elif pick_type=='from_sac_metadata':
+             # nothing to check now
+             pass
 
         elif pick_type=='from_cap_weight_file':
             raise NotImplementedError
@@ -279,19 +287,15 @@ class ProcessData(object):
         elif id not in self._picks:
             picks = self._picks[id]
 
-            if self.pick_type=='from_taup':
-                distance_in_deg = _in_deg(stats.preliminary_event_depth_in_m)
-                depth_in_km = stats.preliminary_event_depth_in_m/1000.
-                arrivals = self.taup_model.get_travel_times(
-                    distance_in_deg, depth_in_km, phase_list=['P', 'S'])
-                picks.P = arrivals[0]
-                picks.S = arrivals[1]
-
-
-            elif self.pick_type=='from_sac_headers':
-                sac_headers = stats.sac
-                picks.P = sac_headers.t5
-                picks.S = sac_headers.t6
+            if self.pick_type=='from_taup_model':
+                event_depth_in_km = stats.preliminary_event_depth_in_m/1000.
+                distance_in_deg = m_to_deg(stats.preliminary_distance_in_m)
+                arrivals = self._taup.get_travel_times(
+                    event_depth_in_km, 
+                    distance_in_deg, 
+                    phase_list=['p', 's'])
+                picks.P = arrivals[0].time
+                picks.S = arrivals[1].time
 
 
             elif self.pick_type=='from_fk_metadata':
@@ -304,6 +308,11 @@ class ProcessData(object):
                 picks.P = sac_headers.t1
                 picks.S = sac_headers.t2
 
+
+            elif self.pick_type=='from_sac_metadata':
+                sac_headers = stats.sac
+                picks.P = sac_headers.t5
+                picks.S = sac_headers.t6
 
 
             elif self.pick_type=='from_cap_weight_file':
@@ -321,9 +330,6 @@ class ProcessData(object):
                         self._picks[_id].P = float(row[1])
                         self._picks[_id].S = float(row[2])
 
-
-            elif self.pick_type=='from_taup_model':
-                raise NotImplementedError
 
 
         #

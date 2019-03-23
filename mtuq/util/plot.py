@@ -252,3 +252,13 @@ def _scale(trace):
 def _max(trace):
      return max(abs(trace.data))
 
+
+def m_to_deg(distance_in_m):
+    from obspy.geodetics import kilometers2degrees
+    return kilometers2degrees(distance_in_m/1000., radius=6371.)
+
+def km_to_deg(distance_in_m):
+    from obspy.geodetics import kilometers2degrees
+    return kilometers2degrees(distance_in_m, radius=6371.)
+
+
