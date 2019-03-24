@@ -269,25 +269,20 @@ class GreensTensor(Stream):
 
 
 
-class GreensTensorList(object):
+class GreensTensorList(list):
     """ Container for one or more GreensTensor objects
 
     Basically, a list of GreensTensors. Very similar to an MTUQ Dataset, except 
     rather than a list of Streams containing  observed data, holds synthetic 
     Green's tensors
     """
-    def __init__(self, greens_tensors=None, id=None):
+    def __init__(self, greens_tensors=[], id=None):
         # typically the id is the event name, event origin time, or some other
         # attribute shared by all GreensTensors
         self.id = id
-        self.__list__ = []
-
-        if not greens_tensors:
-            # return an empty container, GreensTensors can be added later
-            return
 
         for greens_tensor in greens_tensors:
-            self.__add__(greens_tensor)
+            self += [greens_tensor]
 
 
     def get_synthetics(self, mt):
@@ -300,8 +295,8 @@ class GreensTensorList(object):
             an individual station
         """
         synthetics = Dataset()
-        for greens_tensor in self.__list__:
-            synthetics += greens_tensor.get_synthetics(mt)
+        for greens_tensor in self:
+            synthetics += [greens_tensor.get_synthetics(mt)]
         return synthetics
 
 
@@ -316,9 +311,9 @@ class GreensTensorList(object):
         :rtype: ``GreensTensorList``
         """
         processed = GreensTensorList()
-        for greens_tensor in self.__list__:
+        for greens_tensor in self:
             processed +=\
-                greens_tensor.apply(function, *args, **kwargs)
+                [greens_tensor.apply(function, *args, **kwargs)]
         return processed
 
 
@@ -329,10 +324,10 @@ class GreensTensorList(object):
         Similar to the behavior of the python built-in "map".
         """
         processed = GreensTensorList()
-        for _i, greens_tensor in enumerate(self.__list__):
+        for _i, greens_tensor in enumerate(self):
             args = [sequence[_i] for sequence in sequences]
             processed +=\
-                greens_tensor.apply(function, *args)
+                [greens_tensor.apply(function, *args)]
         return processed
 
 
@@ -341,8 +336,8 @@ class GreensTensorList(object):
         Convolves all Green's tensors with given wavelet
         """
         convolved = GreensTensorList()
-        for greens_tensor in self.__list__:
-            convolved += greens_tensor.convolve(wavelet)
+        for greens_tensor in self:
+            convolved += [greens_tensor.convolve(wavelet)]
         return convolved
 
 
@@ -366,19 +361,6 @@ class GreensTensorList(object):
            greens_tensor.tags.remove(tag)
 
 
-    # the next method is called repeatedly during GreensTensorList creation
-    def __add__(self, greens_tensor):
-        #assert hasattr(greens_tensor, 'id')
-        self.__list__ += [greens_tensor]
-        return self
-
-
-    def remove(self, id):
-        index = self._get_index(id)
-        self.__list__.pop(index)
-
-
-    # various sorting methods
     def sort_by_distance(self, reverse=False):
         """ 
         Sorts in-place by hypocentral distance
@@ -399,30 +381,5 @@ class GreensTensorList(object):
         """ 
         Sorts in-place using the python built-in "sort"
         """
-        self.__list__.sort(key=function, reverse=reverse)
-
-
-    # the remaining methods deal with indexing and iteration
-    def _get_index(self, id):
-        for index, greens_tensor in enumerate(self.__list__):
-            if id==greens_tensor.id:
-                return index
-
-
-    def __iter__(self):
-        return self.__list__.__iter__()
-
-
-    def __getitem__(self, index):
-        return self.__list__[index]
-
-
-    def __setitem__(self, index, value):
-        self.__list__[index] = value
-
-
-    def __len__(self):
-        return len(self.__list__)
-
-
+        self.sort(key=function, reverse=reverse)
 

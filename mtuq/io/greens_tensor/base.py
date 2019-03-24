@@ -30,8 +30,8 @@ class Client(object):
         greens_tensors = mtuq.greens_tensor.GreensTensorList()
 
         for station in iterable(stations):
-            greens_tensors += self._get_greens_tensor(
-                station=station, origin=origin)
+            greens_tensors += [self._get_greens_tensor(
+                station=station, origin=origin)]
 
         return greens_tensors
 
