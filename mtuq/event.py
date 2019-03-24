@@ -7,10 +7,11 @@ from obspy.core import UTCDateTime
 class Origin(obspy.core.AttribDict):
     """ Origin metadata object
 
-    Origin encompasses the location, depth, and time of an event
+    Holds the following information
+        - hypocenter location
+        - depth
+        - origin
 
-    We use ``obspy.core.AttribDict`` as a base class because
-    ``obspy.core.inventory.station.Station`` is more complex than we need.
     """
     defaults = {
         'time': UTCDateTime(0),
