@@ -4,7 +4,7 @@ import numpy as np
 from copy import copy
 
 
-class Dataset(object):
+class Dataset(list):
     """ Seismic data container
 
     A list of ObsPy streams in which each stream corresponds to a single
@@ -20,23 +20,23 @@ class Dataset(object):
                  event_id=None, tags=[]):
         """ Constructor
         """
-        self.__list__ = []
-        for _i, stream in enumerate(streams):
-            self.__list__ += [stream]
-            self.__list__[_i].tags = copy(tags)
-            
-            # add station-related attributes
-            self.__list__[_i].id = stations[_i].id
-            self.__list__[_i].stats = stations[_i]
+        if len(streams)!=len(stations):
+            raise Exception
 
-        # add event-related attributes
+        for _i, stream in enumerate(streams):
+            stream.tags = copy(tags)
+
+            # station-realted attributes
+            stream.stats = stations[_i]
+            stream.id = stations[_i].id
+
+            self += [stream]
+
+        # event-related attributes
         self.origin = preliminary_origin
         self.id = event_id
 
 
-
-    # the next two methods can be used to apply signal processing operations or
-    # other functions to the dataset
     def apply(self, function, *args, **kwargs):
         """ Applies function to all streams in the dataset
 
@@ -46,7 +46,7 @@ class Dataset(object):
         processed =\
             self.__class__(event_id=self.id, preliminary_origin=self.origin)
         for stream in self:
-            processed += function(stream, *args, **kwargs)
+            processed += [function(stream, *args, **kwargs)]
         return processed
 
 
@@ -62,7 +62,7 @@ class Dataset(object):
             self.__class__(event_id=self.id, preliminary_origin=self.origin)
         for _i, stream in enumerate(self):
             args = [sequence[_i] for sequence in sequences]
-            processed += function(stream, *args)
+            processed += [function(stream, *args)]
         return processed
 
 
@@ -80,8 +80,6 @@ class Dataset(object):
         return max_all
 
 
-
-    # various sorting methods
     def sort_by_distance(self, reverse=False):
         """ Sorts in-place by hypocentral distance
         """
@@ -99,10 +97,9 @@ class Dataset(object):
     def sort_by_function(self, function, reverse=False):
         """ Sorts in-place by user-supplied function
         """
-        self.__list__.sort(key=function, reverse=reverse)
+        self.sort(key=function, reverse=reverse)
 
 
-    # metadata extraction methods
     def get_stations(self):
         """ Extracts station metadata from all streams in list
         """
@@ -136,33 +133,4 @@ class Dataset(object):
        """
        for stream in self:
            stream.tags.remove(tag)
-
-
-
-    # the remaining methods deal with indexing and iteration over the dataset
-    def __add__(self, item):
-        self.__list__ += [item]
-        return self
-
-
-    def _get_index(self, id):
-        for index, stream in enumerate(self.__list__):
-            if id==stream.id:
-                return index
-
-    def __iter__(self):
-        return self.__list__.__iter__()
-
-
-    def __getitem__(self, index):
-        return self.__list__[index]
-
-
-    def __setitem__(self, index, value):
-        self.__list__[index] = value
-
-
-    def __len__(self):
-        return len(self.__list__)
-
 
