@@ -192,22 +192,34 @@ if __name__=='__main__':
 
 
     print 'Processing data...\n'
-    processed_data = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_data[key] = data.map(process_data[key])
-    data = processed_data
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
 
-
-    print 'Reading Greens functions...\n'
-    db = open_db(path_greens, format='FK')
+    print 'Downloading Greens functions...\n'
+    db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
+
 
     print 'Processing Greens functions...\n'
     greens.convolve(wavelet)
-    processed_greens = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_greens[key] = greens.map(process_data[key])
-    greens = processed_greens
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
+
+
+    processed_data = {
+         'body_waves': data_bw,
+         'surface_waves': data_sw,
+         }
+
+    processed_greens = {
+         'body_waves': greens_bw,
+         'surface_waves': greens_sw,
+         }
+
+    misfit = {
+         'body_waves': misfit_bw,
+         'surface_waves': misfit_sw,
+         }
 
     print 'Comparing waveforms...'
 
@@ -215,8 +227,8 @@ if __name__=='__main__':
         print ' %d of %d' % (_i+1, len(grid))
 
         name = model+'_34_'+event_name
-        synthetics_cap = get_synthetics_cap(data, paths[_i], name)
-        synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
+        synthetics_cap = get_synthetics_cap(processed_data, paths[_i], name)
+        synthetics_mtuq = get_synthetics_mtuq(processed_data, processed_greens, mt)
 
         if run_figures:
             filename = 'cap_vs_mtuq_'+str(_i)+'.png'
@@ -228,8 +240,8 @@ if __name__=='__main__':
     if run_figures:
         # "bonus" figure comparing how CAP processes observed data with how
         # MTUQ processes observed data
-        data_mtuq = data
-        data_cap = get_data_cap(data, paths[0], name)
+        data_mtuq = processed_data
+        data_cap = get_data_cap(processed_data, paths[0], name)
         filename = 'cap_vs_mtuq_data.png'
         plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
 

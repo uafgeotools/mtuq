@@ -115,29 +115,38 @@ if __name__=='__main__':
         origin = data.get_origin()
 
         print 'Processing data...\n'
-        processed_data = {}
-        for key in ['body_waves', 'surface_waves']:
-            processed_data[key] = data.map(process_data[key])
-        data = processed_data
+        data_bw = data.map(process_bw)
+        data_sw = data.map(process_sw)
 
-        print 'Reading Greens functions...\n'
+        print 'Downloading Greens functions...\n'
         db = open_db(path_greens, format='FK', model=model)
         greens = db.get_greens_tensors(stations, origin)
 
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)
-        processed_greens = {}
-        for key in ['body_waves', 'surface_waves']:
-            processed_greens[key] = greens.map(process_data[key])
-        greens = processed_greens
+        greens_bw = greens.map(process_bw)
+        greens_sw = greens.map(process_sw)
 
     else:
-        data = None
-        greens = None
+        data_bw = None
+        data_sw = None
+        greens_bw = None
+        greens_sw = None
 
-    data = comm.bcast(data, root=0)
-    greens = comm.bcast(greens, root=0)
+    data_bw = comm.bcast(data_bw, root=0)
+    data_sw = comm.bcast(data_sw, root=0)
+    greens_bw = comm.bcast(greens_bw, root=0)
+    greens_sw = comm.bcast(greens_sw, root=0)
 
+    processed_data = {
+         'body_waves': data_bw,
+         'surface_waves': data_sw,
+         }
+
+    processed_greens = {
+         'body_waves': greens_bw,
+         'surface_waves': greens_sw,
+         }
 
     #
     # The main computational work starts now
@@ -145,20 +154,21 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print 'Carrying out grid search...\n'
-    results = grid_search_mpi(data, greens, misfit, grid)
+    results = grid_search_mpi(processed_data, processed_greens, misfit, grid)
     results = comm.gather(results, root=0)
 
 
     if comm.rank==0:
         print 'Saving results...\n'
         results = np.concatenate(results)
-        #grid.save(event_name+'.h5', {'misfit': results})
         best_mt = grid.get(results.argmin())
 
 
     if comm.rank==0:
         print 'Plotting waveforms...\n'
-        plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_data_greens_mt(event_name+'.png',
+            processed_data, processed_greens, best_mt, misfit)
+        plot_beachball(event_name+'_beachball.png', 
+            best_mt)
 
 
