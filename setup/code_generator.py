@@ -402,21 +402,21 @@ Main_SerialGridSearch="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_origins()[0]
+    origins = data.get_origins()
 
 
     print 'Processing data...\\n'
-    data_bw = data.map(process_bw)
-    data_sw = data.map(process_sw)
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
 
     print 'Downloading Greens functions...\\n'
-    greens = get_greens_tensors(stations, origin, model=model)
+    greens = get_greens_tensors(stations, origins[0], model=model)
 
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw)
-    greens_sw = greens.map(process_sw)
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
 
 
     processed_data = {
@@ -474,19 +474,19 @@ Main_GridSearch_DoubleCouple="""
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origin = data.get_origins()[0]
+        origins = data.get_origins()
 
         print 'Processing data...\\n'
-        data_bw = data.map(process_bw)
-        data_sw = data.map(process_sw)
+        data_bw = data.map(process_bw, stations, origins)
+        data_sw = data.map(process_sw, stations, origins)
 
         print 'Downloading Greens functions...\\n'
-        greens = get_greens_tensors(stations, origin, model=model)
+        greens = get_greens_tensors(stations, origins[0], model=model)
 
         print 'Processing Greens functions...\\n'
         greens.convolve(wavelet)
-        greens_bw = greens.map(process_bw)
-        greens_sw = greens.map(process_sw)
+        greens_bw = greens.map(process_bw, stations, origins)
+        greens_sw = greens.map(process_sw, stations, origins)
 
     else:
         data_bw = None
@@ -554,8 +554,8 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data.sort_by_distance()
 
         print 'Processing data...\\n'
-        data_bw = data.map(process_bw)
-        data_sw = data.map(process_sw)
+        data_bw = data.map(process_bw, stations, origins)
+        data_sw = data.map(process_sw, stations, origins)
 
     else:
         data_bw = None
@@ -570,8 +570,8 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         if comm.rank==0:
             greens = get_greens_tensors(stations, origin, model=model)
             greens.convolve(wavelet)
-            greens_bw = greens.map(process_bw)
-            greens_sw = greens.map(process_sw)
+            greens_bw = greens.map(process_bw, stations, origins)
+            greens_sw = greens.map(process_sw, stations, origins)
 
         else:
             greens_bw = None
@@ -619,22 +619,22 @@ Main_BenchmarkCAP="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_origins()[0]
+    origins = data.get_origins()
 
 
     print 'Processing data...\\n'
-    data_bw = data.map(process_bw)
-    data_sw = data.map(process_sw)
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
 
     print 'Downloading Greens functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origin)
+    greens = db.get_greens_tensors(stations, origins[0])
 
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw)
-    greens_sw = greens.map(process_sw)
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
 
 
     processed_data = {
@@ -828,9 +828,9 @@ if __name__=='__main__':
             Main_GridSearch_DoubleCouple,
             'print ''Downloading Greens functions...\\n''',
             'print ''Reading Greens functions...\\n''',
-            'greens = get_greens_tensors\(stations, origin, model=model\)',
+            'greens = get_greens_tensors\(stations, origins[0], model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n        '
-           +'greens = db.get_greens_tensors(stations, origin)',
+           +'greens = db.get_greens_tensors(stations, origins[0])',
             ))
 
 

@@ -7,6 +7,7 @@ from collections import defaultdict
 from copy import deepcopy
 from math import ceil
 from obspy import taup
+from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists, join
 from mtuq.cap.util import taper, parse_weight_file
 from mtuq.util.plot import m_to_deg
@@ -193,7 +194,7 @@ class ProcessData(object):
 
 
 
-    def __call__(self, traces, overwrite=False):
+    def __call__(self, traces, station, origin, overwrite=False):
         ''' 
         Carries out data processing operations on obspy streams
         MTUQ GreensTensors
@@ -212,12 +213,15 @@ class ProcessData(object):
             raise Exception('Missing station identifier')
         id = traces.id
 
-        # Station metadata dictionary created by dataset.get_station method.
-        # Here we use included station location and catalog origin information
-        # to determine windows and apply distance-dependent weighting
-        if not hasattr(traces, 'stats'):
-            raise Exception('Missing station metadata')
-        stats = traces.stats
+        # collect location information
+        distance_in_m, azimuth, _ = gps2dist_azimuth(
+            origin.latitude,
+            origin.longitude,
+            station.latitude,
+            station.longitude)
+
+        # collect time sampling information
+        nt, dt = traces[0].stats.npts, traces[0].stats.delta
 
         # Tags can be added through the dataset.add_tag method to keep track 
         # of custom metadata or support other customized uses. Here we use tags 
@@ -268,7 +272,7 @@ class ProcessData(object):
         if 'type:velocity' in tags:
             # convert to displacement
             for trace in traces:
-                trace.data = np.cumsum(trace.data)*stats.delta
+                trace.data = np.cumsum(trace.data)*dt
             index = tags.index('type:velocity')
             tags[index] = 'type:displacement'
 
@@ -288,10 +292,9 @@ class ProcessData(object):
             picks = self._picks[id]
 
             if self.pick_type=='from_taup_model':
-                event_depth_in_km = stats.preliminary_event_depth_in_m/1000.
-                distance_in_deg = m_to_deg(stats.preliminary_distance_in_m)
+                distance_in_deg = m_to_deg(distance_in_m)
                 arrivals = self._taup.get_travel_times(
-                    event_depth_in_km, 
+                    origin.depth_in_m/1000., 
                     distance_in_deg, 
                     phase_list=['p', 's'])
                 picks.P = arrivals[0].time
@@ -302,15 +305,15 @@ class ProcessData(object):
                 sac_headers = obspy.read('%s/%s_%s/%s.grn.0' %
                     (self._fk_database,
                      self._fk_model,
-                     str(int(ceil(stats.preliminary_event_depth_in_m/1000.))),
-                     str(int(ceil(stats.preliminary_distance_in_m/1000.)))),
+                     str(int(ceil(origin.depth_in_m/1000.))),
+                     str(int(ceil(distance_in_m/1000.)))),
                     format='sac')[0].stats.sac
                 picks.P = sac_headers.t1
                 picks.S = sac_headers.t2
 
 
             elif self.pick_type=='from_sac_metadata':
-                sac_headers = stats.sac
+                sac_headers = traces[0].sac
                 picks.P = sac_headers.t5
                 picks.S = sac_headers.t6
 
@@ -343,7 +346,7 @@ class ProcessData(object):
             pass
 
         elif id not in self._windows:
-            origin_time = float(stats.preliminary_origin_time)
+            origin_time = float(origin.time)
             picks = self._picks[id]
 
             if self.window_type == 'cap_bw':
@@ -399,7 +402,6 @@ class ProcessData(object):
             window = self._windows[id]
             for trace in traces:
                 cut(trace, starttime, endtime)
-            stats.npts = int(round((endtime-starttime)/stats.delta))
 
         for trace in traces:
             taper(trace.data)
@@ -438,10 +440,9 @@ class ProcessData(object):
                     else:
                         traces.remove(trace)
 
-            distance = traces.stats.preliminary_distance_in_m
             for trace in traces:
                 trace.data *=\
-                     (distance/self.scaling_distance)**self.scaling_power
+                     (distance_in_m/self.scaling_distance)**self.scaling_power
 
                 # ad hoc factor determined by benchmark_cap_fk.py
                 trace.data *= 1.
@@ -473,10 +474,9 @@ class ProcessData(object):
                         traces.remove(trace)
 
 
-            distance = traces.stats.preliminary_distance_in_m
             for trace in traces:
                 trace.data *=\
-                     (distance/self.scaling_distance)**self.scaling_power
+                     (distance_in_m/self.scaling_distance)**self.scaling_power
 
                 # ad hoc factor determined by benchmark_cap_fk.py
                 trace.data *= 1.

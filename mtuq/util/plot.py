@@ -54,12 +54,21 @@ def plot_data_synthetics(filename, data, synthetics,
         data['body_waves'], synthetics['body_waves'],
         data['surface_waves'], synthetics['surface_waves']):
 
-        id = data_bw.id
-        meta = data_bw.stats
+        if len(data_bw)==len(data_sw)==0:
+            continue
+
+        try:
+            id = data_bw.id
+            meta = data_bw[0].stats
+        except:
+            id = data_sw.id
+            meta = data_sw[0].stats
 
         # add station labels
-        pyplot.subplot(nrow, ncol, ncol*irow+1)
         station_labels(meta)
+
+        pyplot.subplot(nrow, ncol, ncol*irow+1)
+
 
         # plot body wave traces
         for dat, syn in zip(data_bw, synthetics_bw):

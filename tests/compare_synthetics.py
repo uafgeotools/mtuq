@@ -529,8 +529,8 @@ if __name__=='__main__':
 
     def process_data(greens):
         processed_greens = {}
-        processed_greens['body_waves'] = greens.map(process_bw)
-        processed_greens['surface_waves'] = greens.map(process_sw)
+        processed_greens['body_waves'] = greens.map(process_bw, stations, origins)
+        processed_greens['surface_waves'] = greens.map(process_sw, stations, origins)
         return processed_greens
 
 

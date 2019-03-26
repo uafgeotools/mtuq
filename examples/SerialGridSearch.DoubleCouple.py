@@ -124,21 +124,21 @@ if __name__=='__main__':
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_origins()[0]
+    origins = data.get_origins()
 
 
     print 'Processing data...\n'
-    data_bw = data.map(process_bw)
-    data_sw = data.map(process_sw)
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
 
     print 'Downloading Greens functions...\n'
-    greens = get_greens_tensors(stations, origin, model=model)
+    greens = get_greens_tensors(stations, origins[0], model=model)
 
 
     print 'Processing Greens functions...\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw)
-    greens_sw = greens.map(process_sw)
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
 
 
     processed_data = {

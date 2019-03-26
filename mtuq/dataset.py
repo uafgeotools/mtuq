@@ -2,6 +2,7 @@
 import obspy
 import numpy as np
 from copy import copy
+from obspy.geodetics import gps2dist_azimuth
 
 
 class Dataset(list):
@@ -20,24 +21,37 @@ class Dataset(list):
                  id=None, tags=[]):
         """ Constructor
         """
-        size = len(streams)
-
-        if len(stations)!=size:
+        if len(stations)!=len(streams):
             raise Exception
 
-        if len(origins)!=size:
+        if len(origins)!=len(streams):
             raise Exception
 
         for _i, stream in enumerate(streams):
-            stream.stats = stations[_i]
-            stream.id = stations[_i].id
 
+            # collection location information
+            (stream.preliminary_distance_in_m,
+            stream.preliminary_azimuth, _) =\
+                gps2dist_azimuth(
+                    origins[_i].latitude,
+                    origins[_i].longitude,
+                    stations[_i].latitude,
+                    stations[_i].longitude)
+
+            # create unique identifier
+            stream.id = '.'.join([
+                stations[_i].network,
+                stations[_i].station,
+                stations[_i].location])
+
+            # append tags to stream
             if not hasattr(stream, 'tags'):
-                stream.tags = []
-            for tag in tags:
-                stream.tags.append(tag)
+                stream.tags = list()
+            stream.tags.extend(copy(tags))
 
+            # append stream to list
             self.append(stream)
+
 
         self.stations = stations
         self.origins = origins
@@ -92,14 +106,14 @@ class Dataset(list):
     def sort_by_distance(self, reverse=False):
         """ Sorts in-place by hypocentral distance
         """
-        self.sort_by_function(lambda data: data.stats.preliminary_distance_in_m,
+        self.sort_by_function(lambda data: data.preliminary_distance_in_m,
             reverse=reverse)
 
 
     def sort_by_azimuth(self, reverse=False):
         """ Sorts in-place by source-receiver azimuth
         """
-        self.sort_by_function(lambda data: data.stats.preliminary_azimuth,
+        self.sort_by_function(lambda data: data.preliminary_azimuth,
             reverse=reverse)
 
 
