@@ -1,6 +1,7 @@
 
 import numpy as np
 import time
+from mtuq.util.util import iterable
 
 try:
     import h5py
@@ -32,13 +33,16 @@ def grid_search_serial(data, greens, misfit, grid):
     Grid search over moment tensors. For each moment tensor in grid, generates
     synthetics and evaluates data misfit
     """
+    # creates an object we can iterate over
+    zipped = zip(iterable(data), iterable(greens), iterable(misfit))
+
     results = np.zeros(grid.size)
     count = 0
 
     for mt in grid:
         print grid.index
-        for key in data:
-            results[count] += misfit[key](data[key], greens[key], mt)
+        for _data, _greens, _misfit in zipped:
+            results[count] += _misfit(_data, _greens, mt)
         count += 1
 
     return results

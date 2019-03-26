@@ -30,7 +30,7 @@ if __name__=='__main__':
     # USAGE
     #   python SerialGridSearch.DoubleCouple.py
     #
-    # A typical runtime is about 20 minutes. For faster results try 
+    # A typical runtime is about 10 minutes. For faster results try 
     # GridSearch.DoubleCouple.py, which runs the same inversion in parallel
     #
 
@@ -264,11 +264,6 @@ DataProcessingDefinitions="""
         cap_weight_file=path_weights,
         )
 
-    process_data = {
-       'body_waves': process_bw,
-       'surface_waves': process_sw,
-       }
-
 """
 
 
@@ -290,11 +285,6 @@ MisfitDefinitions="""
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
-
-    misfit = {
-        'body_waves': misfit_bw,
-        'surface_waves': misfit_sw,
-        }
 
 """
 
@@ -388,7 +378,6 @@ Grid_IntegrationTest="""
 
 
 
-
 Main_SerialGridSearch="""
     #
     # The main I/O work starts now
@@ -419,21 +408,6 @@ Main_SerialGridSearch="""
     greens_sw = greens.map(process_sw, stations, origins)
 
 
-    processed_data = {
-         'body_waves': data_bw,
-         'surface_waves': data_sw,
-         }
-
-    processed_greens = {
-         'body_waves': greens_bw,
-         'surface_waves': greens_sw,
-         }
-
-    misfit = {
-         'body_waves': misfit_bw,
-         'surface_waves': misfit_sw,
-         }
-
     #
     # The main computational work starts nows
     #
@@ -441,15 +415,16 @@ Main_SerialGridSearch="""
     print 'Carrying out grid search...\\n'
 
     results = grid_search_serial(
-         processed_data, processed_greens, misfit, grid)
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid)
 
     best_mt = grid.get(results.argmin())
 
     plot_data_greens_mt(event_name+'.png',
-        processed_data, processed_greens, best_mt, misfit)
+        data_bw, data_sw, greens_bw, greens_sw,
+        misfit_bw, misfit_sw, best_mt)
 
-    plot_beachball(event_name+'_beachball.png',
-        best_mt)
+    plot_beachball(event_name+'_beachball.png', best_mt)
 
 
 """
@@ -499,15 +474,6 @@ Main_GridSearch_DoubleCouple="""
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
 
-    processed_data = {
-         'body_waves': data_bw,
-         'surface_waves': data_sw,
-         }
-
-    processed_greens = {
-         'body_waves': greens_bw,
-         'surface_waves': greens_sw,
-         }
 
     #
     # The main computational work starts now
@@ -515,20 +481,25 @@ Main_GridSearch_DoubleCouple="""
 
     if comm.rank==0:
         print 'Carrying out grid search...\\n'
-    results = grid_search_mpi(processed_data, processed_greens, misfit, grid)
+
+    results = grid_search_mpi(
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid)
+
     results = comm.gather(results, root=0)
 
 
     if comm.rank==0:
         print 'Saving results...\\n'
+
         results = np.concatenate(results)
+
         best_mt = grid.get(results.argmin())
 
-
-    if comm.rank==0:
-        print 'Plotting waveforms...\\n'
         plot_data_greens_mt(event_name+'.png',
-            processed_data, processed_greens, best_mt, misfit)
+            data_bw, data_sw, greens_bw, greens_sw,
+            misfit_bw, misfit_sw, best_mt)
+
         plot_beachball(event_name+'_beachball.png', 
             best_mt)
 
@@ -564,43 +535,46 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
 
+    greens_bw = {}
+    greens_sw = {}
 
-    results = []
-    for _i, depth in enumerate(depths):
-        if comm.rank==0:
-            greens = get_greens_tensors(stations, origin, model=model)
+    if comm.rank==0:
+        print 'Downloading Green's functions...\\n'
+
+        for _i, depth in enumerate(depths):
+            [setattr(origin, 'depth', depth) for origin in origins]
+            greens = get_greens_tensors(stations, origins, model=model)
             greens.convolve(wavelet)
-            greens_bw = greens.map(process_bw, stations, origins)
-            greens_sw = greens.map(process_sw, stations, origins)
+            greens_bw[depth] = greens.map(process_bw, stations, origins)
+            greens_sw[depth] = greens.map(process_sw, stations, origins)
 
-        else:
-            greens_bw = None
-            greens_sw = None
-
-        greens_bw = comm.bcast(greens_bw, root=0)
-        greens_sw = comm.bcast(greens_sw, root=0)
+    greens_bw = comm.bcast(greens_bw, root=0)
+    greens_sw = comm.bcast(greens_sw, root=0)
 
 
-        if comm.rank==0:
-            print 'Carrying out grid search...\\n'
-        results += [grid_search_mpi(data, greens, misfit, grid)]
-        results[_i] = comm.gather(results[_i], root=0)
+    if comm.rank==0:
+        print 'Carrying out grid search...\\n'
+
+    results = grid_search_mpi(
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid)
+
+    results = [comm.gather(results, root=0)]
 
 
     if comm.rank==0:
         print 'Saving results...\\n'
-        results = concatenate(results)
-        best_mt = grid(results.argmin())
-        grid = grid.cross(depths)
 
+        results = np.concatenate(results)
 
-    if comm.rank==0:
-        print 'Plotting waveforms...\\n'
-        plot_data_greens_mt(event_name+'.png', 
-            processed_data, processed_greens, best_mt, misfit)
+        best_mt = grid.get(results.argmin())
+
+        plot_data_greens_mt(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw,
+            misfit_bw, misfit_sw, best_mt)
+
         plot_beachball(event_name+'_beachball.png', 
             best_mt)
-
 
 
 """

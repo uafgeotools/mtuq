@@ -130,11 +130,6 @@ if __name__=='__main__':
         cap_weight_file=path_weights,
         )
 
-    process_data = {
-       'body_waves': process_bw,
-       'surface_waves': process_sw,
-       }
-
 
     misfit_bw = Misfit(
         time_shift_max=0.,
@@ -145,11 +140,6 @@ if __name__=='__main__':
         time_shift_max=0.,
         time_shift_groups=['ZR','T'],
         )
-
-    misfit = {
-        'body_waves': misfit_bw,
-        'surface_waves': misfit_sw,
-        }
 
 
     #

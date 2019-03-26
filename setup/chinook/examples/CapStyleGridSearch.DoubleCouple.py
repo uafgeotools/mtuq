@@ -61,11 +61,6 @@ if __name__=='__main__':
         cap_weight_file=path_weights,
         )
 
-    process_data = {
-       'body_waves': process_bw,
-       'surface_waves': process_sw,
-       }
-
 
     misfit_bw = Misfit(
         time_shift_max=2.,
@@ -76,11 +71,6 @@ if __name__=='__main__':
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
-
-    misfit = {
-        'body_waves': misfit_bw,
-        'surface_waves': misfit_sw,
-        }
 
 
     #
@@ -138,15 +128,6 @@ if __name__=='__main__':
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
 
-    processed_data = {
-         'body_waves': data_bw,
-         'surface_waves': data_sw,
-         }
-
-    processed_greens = {
-         'body_waves': greens_bw,
-         'surface_waves': greens_sw,
-         }
 
     #
     # The main computational work starts now
@@ -154,20 +135,25 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print 'Carrying out grid search...\n'
-    results = grid_search_mpi(processed_data, processed_greens, misfit, grid)
+
+    results = grid_search_mpi(
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid)
+
     results = comm.gather(results, root=0)
 
 
     if comm.rank==0:
         print 'Saving results...\n'
+
         results = np.concatenate(results)
+
         best_mt = grid.get(results.argmin())
 
-
-    if comm.rank==0:
-        print 'Plotting waveforms...\n'
         plot_data_greens_mt(event_name+'.png',
-            processed_data, processed_greens, best_mt, misfit)
+            data_bw, data_sw, greens_bw, greens_sw,
+            misfit_bw, misfit_sw, best_mt)
+
         plot_beachball(event_name+'_beachball.png', 
             best_mt)
 
