@@ -14,15 +14,14 @@ def timer(func):
         standard output
     """
     def timed_func(*args, **kwargs):
-        if getattr(kwargs, 'verbose', False):
-            return func(*args, **kwargs)
-
-        else:
+        if kwargs.get('verbose', True):
             start_time = time.time()
             output = func(*args, **kwargs)
-            _elapsed_time = time.time() - start_time
-            print '  Elapsed time (s): %f\n' % _elapsed_time
+            elapsed_time = time.time() - start_time
+            print '  Elapsed time (s): %f\n' % elapsed_time
             return output
+        else:
+            return func(*args, **kwargs)
 
     return timed_func
 
@@ -41,7 +40,7 @@ def grid_search_mt(data, greens, misfit, grid, verbose=True):
     count = 0
 
     for mt in grid:
-        print grid.index
+        #print grid.index
         for _data, _greens, _misfit in zipped:
             results[count] += _misfit(_data, _greens, mt)
         count += 1
