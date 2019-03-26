@@ -7,7 +7,7 @@ import numpy as np
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search_mpi
+from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -136,7 +136,7 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Carrying out grid search...\n'
 
-    results = grid_search_mpi(
+    results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid)
 

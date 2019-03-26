@@ -8,7 +8,7 @@ import numpy as np
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search_mpi
+from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -414,7 +414,7 @@ Main_SerialGridSearch="""
 
     print 'Carrying out grid search...\\n'
 
-    results = grid_search_serial(
+    results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid)
 
@@ -482,7 +482,7 @@ Main_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print 'Carrying out grid search...\\n'
 
-    results = grid_search_mpi(
+    results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid)
 
@@ -555,7 +555,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     if comm.rank==0:
         print 'Carrying out grid search...\\n'
 
-    results = grid_search_mpi(
+    results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid)
 
@@ -707,8 +707,8 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search_mpi',
-            'grid_search_serial',
+            'grid_search.mpi',
+            'grid_search.serial',
             ))
         file.write(Docstring_SerialGridSearch_DoubleCouple)
         file.write(PathsComments)
@@ -725,8 +725,8 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search_mpi',
-            'grid_search_serial',
+            'grid_search.mpi',
+            'grid_search.serial',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             ))
@@ -742,8 +742,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search_mpi',
-            'grid_search_serial',
             'syngine',
             'fk',
             'plot_data_greens_mt',

@@ -275,7 +275,7 @@ def FullMomentTensorGridRandom(moment_magnitude=None, npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=tape2015_to_Mij)
+        callback=TapeTape2015_to_UpSouthEast)
 
 
 def FullMomentTensorGridRegular(moment_magnitude=None, npts_per_axis=25):
@@ -305,7 +305,7 @@ def FullMomentTensorGridRegular(moment_magnitude=None, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=tape2015_to_Mij)
+        callback=TapeTape2015_to_UpSouthEast)
 
 
 def DoubleCoupleGridRandom(moment_magnitude=None, npts=50000):
@@ -333,7 +333,7 @@ def DoubleCoupleGridRandom(moment_magnitude=None, npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=tape2015_to_Mij)
+        callback=TapeTape2015_to_UpSouthEast)
 
 
 def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
@@ -361,7 +361,7 @@ def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=tape2015_to_Mij)
+        callback=TapeTape2015_to_UpSouthEast)
 
 
 def ForceGridRegular(moment_magnitude=None, npts=25):
@@ -417,10 +417,9 @@ def spherical_to_Cartesian(dict):
     return np.array([x, y, z])
 
 
-def tape2015_to_Mij(*args, **kwargs):
+def TapeTape2015_to_UpSouthEast(*args, **kwargs):
     """ Converts from Tape2015 parameterization in which the grid is defined
-    to Mij parameterization used elsewhere in the code (up-south-east
-    convention)
+    to up-south-east parameterization used elsewhere in the code
     """
     from mtuq.util.moment_tensor.tape2015 import tt152cmt
     return tt152cmt(*args, **kwargs)

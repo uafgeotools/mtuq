@@ -14,20 +14,21 @@ def timer(func):
         standard output
     """
     def timed_func(*args, **kwargs):
-        start_time = time.time()
+        if getattr(kwargs, 'verbose', False):
+            return func(*args, **kwargs)
 
-        output = func(*args, **kwargs)
-
-        _elapsed_time = time.time() - start_time
-        print '  Elapsed time (s): %f\n' % _elapsed_time
-
-        return output
+        else:
+            start_time = time.time()
+            output = func(*args, **kwargs)
+            _elapsed_time = time.time() - start_time
+            print '  Elapsed time (s): %f\n' % _elapsed_time
+            return output
 
     return timed_func
 
 
 @timer
-def grid_search_serial(data, greens, misfit, grid):
+def grid_search_mt(data, greens, misfit, grid, verbose=True):
     """ Serial grid search 
 
     Grid search over moment tensors. For each moment tensor in grid, generates
@@ -46,4 +47,9 @@ def grid_search_serial(data, greens, misfit, grid):
         count += 1
 
     return results
+
+
+def grid_search_mt_origin(data, greens, misfit, grid):
+    raise NotImplementedError
+
 
