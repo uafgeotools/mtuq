@@ -53,7 +53,7 @@ class GreensTensor(Stream):
             self.id = station.id
 
         # station location and other metdata
-        self.stats = deepcopy(station)
+        self.station = deepcopy(station)
 
         # event location and other metadata
         self.origin = origin
@@ -164,7 +164,7 @@ class GreensTensor(Stream):
         
         """
         return self.__class__(function(self, *args, **kwargs),
-            station=self.stats, 
+            station=self.station, 
             origin=self.origin, 
             id=self.id, 
             components=self.components,
@@ -190,7 +190,7 @@ class GreensTensor(Stream):
         """
         self._synthetics = Stream()
         for channel in self.components:
-            stats = deepcopy(self.stats)
+            stats = deepcopy(self.station)
             stats.update({
                 'npts': self[0].stats.npts,
                 'channel': channel,
@@ -251,7 +251,7 @@ class GreensTensor(Stream):
         stream = Stream([trace for trace in self]).select(*args, **kwargs)
         return self.__class__(
             [trace for trace in stream],
-            station=self.stats,
+            station=self.station,
             origin=self.origin,
             id=self.id,
             components=self.components,

@@ -15,7 +15,7 @@ class Client(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def get_greens_tensors(self, stations=None, origin=None):
+    def get_greens_tensors(self, stations=[], origins=[]):
         """ Reads Green's tensors from database
 
         Returns a ``GreensTensorList`` in which each element corresponds to the
@@ -29,9 +29,8 @@ class Client(object):
         """
         greens_tensors = mtuq.greens_tensor.GreensTensorList()
 
-        for station in iterable(stations):
-            greens_tensors += [self._get_greens_tensor(
-                station=station, origin=origin)]
+        for station, origin in zip(iterable(stations), iterable(origins)):
+            greens_tensors += [self._get_greens_tensor(station, origin)]
 
         return greens_tensors
 

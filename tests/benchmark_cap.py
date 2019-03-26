@@ -197,7 +197,7 @@ if __name__=='__main__':
 
     print 'Downloading Greens functions...\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins[0])
+    greens = db.get_greens_tensors(stations, origins)
 
 
     print 'Processing Greens functions...\n'

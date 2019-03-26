@@ -132,7 +132,7 @@ if __name__=='__main__':
     data_sw = data.map(process_sw, stations, origins)
 
     print 'Downloading Greens functions...\n'
-    greens = get_greens_tensors(stations, origins[0], model=model)
+    greens = get_greens_tensors(stations, origins, model=model)
 
 
     print 'Processing Greens functions...\n'

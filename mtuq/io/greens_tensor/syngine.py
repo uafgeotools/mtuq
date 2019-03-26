@@ -104,9 +104,9 @@ class Client(ClientBase):
 
 
 
-def get_greens_tensors(stations=None, origin=None, **kwargs):
+def get_greens_tensors(stations=[], origins=[], **kwargs):
     client = Client(**kwargs)
-    return client.get_greens_tensors(stations=stations, origin=origin)
+    return client.get_greens_tensors(stations, origins)
 
 
 

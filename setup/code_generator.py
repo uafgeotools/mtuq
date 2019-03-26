@@ -410,7 +410,7 @@ Main_SerialGridSearch="""
     data_sw = data.map(process_sw, stations, origins)
 
     print 'Downloading Greens functions...\\n'
-    greens = get_greens_tensors(stations, origins[0], model=model)
+    greens = get_greens_tensors(stations, origins, model=model)
 
 
     print 'Processing Greens functions...\\n'
@@ -481,7 +481,7 @@ Main_GridSearch_DoubleCouple="""
         data_sw = data.map(process_sw, stations, origins)
 
         print 'Downloading Greens functions...\\n'
-        greens = get_greens_tensors(stations, origins[0], model=model)
+        greens = get_greens_tensors(stations, origins, model=model)
 
         print 'Processing Greens functions...\\n'
         greens.convolve(wavelet)
@@ -628,7 +628,7 @@ Main_BenchmarkCAP="""
 
     print 'Downloading Greens functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins[0])
+    greens = db.get_greens_tensors(stations, origins)
 
 
     print 'Processing Greens functions...\\n'
@@ -828,9 +828,9 @@ if __name__=='__main__':
             Main_GridSearch_DoubleCouple,
             'print ''Downloading Greens functions...\\n''',
             'print ''Reading Greens functions...\\n''',
-            'greens = get_greens_tensors\(stations, origins[0], model=model\)',
+            'greens = get_greens_tensors\(stations, origins, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n        '
-           +'greens = db.get_greens_tensors(stations, origins[0])',
+           +'greens = db.get_greens_tensors(stations, origins)',
             ))
 
 
