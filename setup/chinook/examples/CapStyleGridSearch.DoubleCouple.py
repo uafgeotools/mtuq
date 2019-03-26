@@ -112,7 +112,7 @@ if __name__=='__main__':
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origin = data.get_origin()
+        origin = data.get_origins()[0]
 
         print 'Processing data...\n'
         data_bw = data.map(process_bw)
