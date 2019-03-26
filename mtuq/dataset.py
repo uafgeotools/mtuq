@@ -16,25 +16,32 @@ class Dataset(list):
         MTUQ Dataset (see ``mtuq.io.readers``).
 
     """
-    def __init__(self, streams=[], stations=[], preliminary_origin=None,
-                 event_id=None, tags=[]):
+    def __init__(self, streams=[], stations=[], origins=[],
+                 id=None, tags=[]):
         """ Constructor
         """
-        if len(streams)!=len(stations):
+        size = len(streams)
+
+        if len(stations)!=size:
+            raise Exception
+
+        if len(origins)!=size:
             raise Exception
 
         for _i, stream in enumerate(streams):
-            stream.tags = copy(tags)
-
-            # station-realted attributes
             stream.stats = stations[_i]
             stream.id = stations[_i].id
 
-            self += [stream]
+            if not hasattr(stream, 'tags'):
+                stream.tags = []
+            for tag in tags:
+                stream.tags.append(tag)
 
-        # event-related attributes
-        self.origin = preliminary_origin
-        self.id = event_id
+            self.append(stream)
+
+        self.stations = stations
+        self.origins = origins
+        self.id = id
 
 
     def apply(self, function, *args, **kwargs):
@@ -43,11 +50,12 @@ class Dataset(list):
         Applies a function to each Stream, similar to the Python built-in
         ``apply``.
         """
-        processed =\
-            self.__class__(event_id=self.id, preliminary_origin=self.origin)
+        processed = []
         for stream in self:
             processed += [function(stream, *args, **kwargs)]
-        return processed
+
+        return self.__class__(
+            processed, self.stations, self.origins, id=self.id)
 
 
     def map(self, function, *sequences):
@@ -58,12 +66,13 @@ class Dataset(list):
         corresponding items of each sequence. Similar to the Python built-in
         ``map``.
         """
-        processed =\
-            self.__class__(event_id=self.id, preliminary_origin=self.origin)
+        processed = []
         for _i, stream in enumerate(self):
             args = [sequence[_i] for sequence in sequences]
             processed += [function(stream, *args)]
-        return processed
+
+        return self.__class__(
+            processed, self.stations, self.origins, id=self.id)
 
 
     def max(self):
@@ -97,22 +106,24 @@ class Dataset(list):
     def sort_by_function(self, function, reverse=False):
         """ Sorts in-place by user-supplied function
         """
+        wrapped_function = lambda x: function(x[0])
+        _, self.stations, self.origins = zip(*sorted(zip(
+            [stream for stream in self], self.stations, self.origins),
+            key=wrapped_function, reverse=reverse))
+
         self.sort(key=function, reverse=reverse)
 
 
     def get_stations(self):
         """ Extracts station metadata from all streams in list
         """
-        stations  = []
-        for stream in self:
-            stations += [stream.stats]
-        return stations
+        return self.stations
 
 
-    def get_origin(self):
+    def get_origins(self):
         """ Returns preliminary origin location and time
         """
-        return self.origin
+        return self.origins
 
 
     def add_tag(self, tag):
@@ -133,4 +144,27 @@ class Dataset(list):
        """
        for stream in self:
            stream.tags.remove(tag)
+
+
+def EventDataset(streams=[], stations=[], origin=None,            
+                 id=None, tags=[]):
+    """ Returns single-event seismic data container
+
+    Returns a Dataset object in which each stream corresponds to a single
+    station and all streams correspond to the same event
+
+    """
+    size = len(streams)
+
+    if len(stations)!=size:
+        raise Exception
+
+    if not origin:
+        raise Exception
+
+    origins = []
+    for _ in range(size):
+        origins += [copy(origin)]
+
+    return Dataset(streams, stations, origins, id, tags)
 

@@ -6,7 +6,7 @@ import obspy
 
 from os.path import join
 from obspy.core import Stream
-from mtuq import Dataset, Origin, Station
+from mtuq import EventDataset, Origin, Station
 from mtuq.util.signal import check_time_sampling
 from mtuq.util.util import iterable, warn
 
@@ -40,21 +40,21 @@ def read(filenames, event_id=None, tags=[]):
         streams += [data_sorted[id]]
 
     # collect event metadata
-    origin = _get_origin(streams[0], event_id)
+    preliminary_origin = _get_origin(streams[0], event_id)
     for stream in streams:
-        assert origin==_get_origin(stream, event_id)
+        assert preliminary_origin==_get_origin(stream, event_id)
 
     # collect station metadata
     stations = []
     for stream in streams:
-        station = _get_station(stream, origin)
+        station = _get_station(stream, preliminary_origin)
         stations += [station]
 
     # create MTUQ Dataset
-    return Dataset(streams=streams, 
+    return EventDataset(streams=streams, 
         stations=stations, 
-        preliminary_origin=origin,
-        event_id=event_id,
+        origin=preliminary_origin,
+        id=event_id,
         tags=tags)
 
 
