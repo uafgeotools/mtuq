@@ -486,6 +486,9 @@ if __name__=='__main__':
         'preliminary_azimuth': 98.8479894406,
         }),]
 
+    nstations = len(stations)
+    origins = nstations*[origin]
+
 
     #
     # download Green's function databases
@@ -538,7 +541,7 @@ if __name__=='__main__':
         print "Reading AxiSEM Greens's functions..."
         model = 'ak135f_2s'
         client_axisem = axisem_netcdf.Client(path_greens_axisem)
-        greens_axisem = client_axisem.get_greens_tensors(stations, origin)
+        greens_axisem = client_axisem.get_greens_tensors(stations, origins)
         greens_axisem = process_data(greens_axisem)
 
 
@@ -546,7 +549,7 @@ if __name__=='__main__':
         print "Reading FK Greens's functions..."
         model = 'scak'
         client_fk = fk_sac.Client(path_greens_fk)
-        greens_fk = client_fk.get_greens_tensors(stations, origin)
+        greens_fk = client_fk.get_greens_tensors(stations, origins)
         greens_fk = process_data(greens_fk)
 
 
@@ -554,7 +557,7 @@ if __name__=='__main__':
         print "Downloading syngine Green's functions..."
         model = 'ak135f_2s'
         client_syngine = syngine.Client(model)
-        greens_syngine = client_syngine.get_greens_tensors(stations, origin)
+        greens_syngine = client_syngine.get_greens_tensors(stations, origins)
         greens_syngine = process_data(greens_syngine)
 
 
