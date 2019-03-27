@@ -19,13 +19,11 @@ NOTES
 environment that can be used during the current session and any subsequent
 sessions.  
 
-- The resulting virtual environment in "editable", which means that any changes
- to the python go into effect immediately without having to reinstall. As a 
-result, users can `git pull` at any time or make other changes.
+- The resulting virtual environment is "editable", which means that any changes
+to the python code go into effect immediately without having to reinstall. 
 
 - At greater effort, users can obtain the same result as `install.bash` by
-following the more general instructions in `mtuq/docs` and loading appropriate 
-chinook modules
+following the more general instructions in `mtuq/docs`.
 
 
 
@@ -53,7 +51,7 @@ example located in `mtuq/examples` or the parallel example located in
 
 The serial examples can be invoked directly:
 
-    > bash SerialGridSearch.DoubleCouple.py
+    > python SerialGridSearch.DoubleCouple.py
 
 
 The parallel example must be invoked using an sbatch wrapper:
