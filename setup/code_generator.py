@@ -611,34 +611,20 @@ Main_BenchmarkCAP="""
     greens_sw = greens.map(process_sw, stations, origins)
 
 
-    processed_data = {
-         'body_waves': data_bw,
-         'surface_waves': data_sw,
-         }
+    depth = int(origins[0].depth_in_m/1000.)+1
+    name = '_'.join([model, str(depth), event_name])
 
-    processed_greens = {
-         'body_waves': greens_bw,
-         'surface_waves': greens_sw,
-         }
-
-    misfit = {
-         'body_waves': misfit_bw,
-         'surface_waves': misfit_sw,
-         }
 
     print 'Comparing waveforms...'
 
     for _i, mt in enumerate(grid):
         print ' %d of %d' % (_i+1, len(grid))
 
-        name = model+'_34_'+event_name
-        synthetics_cap = get_synthetics_cap(processed_data, paths[_i], name)
-        synthetics_mtuq = get_synthetics_mtuq(processed_data, processed_greens, mt)
+        cap_bw, cap_sw = get_synthetics_cap(
+            data_bw, data_sw, paths[_i], name)
 
-        cap_bw = synthetics_cap['body_waves'] 
-        cap_sw = synthetics_cap['surface_waves']
-        mtuq_bw= synthetics_mtuq['body_waves']
-        mtuq_sw= synthetics_mtuq['surface_waves']
+        mtuq_bw, mtuq_sw = get_synthetics_mtuq(
+            data_bw, data_sw, greens_bw, greens_sw, mt)
 
         if run_figures:
             plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
@@ -651,13 +637,10 @@ Main_BenchmarkCAP="""
     if run_figures:
         # "bonus" figure comparing how CAP processes observed data with how
         # MTUQ processes observed data
-        data_mtuq = processed_data
-        data_cap = get_data_cap(processed_data, paths[0], name)
+        mtuq_sw, mtuq_bw = data_bw, data_sw
 
-        cap_bw = data_cap['body_waves'] 
-        cap_sw = data_cap['surface_waves']
-        mtuq_bw= data_mtuq['body_waves']
-        mtuq_sw= data_mtuq['surface_waves']
+        cap_sw, cap_bw = get_data_cap(
+            data_bw, data_sw, paths[0], name)
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
