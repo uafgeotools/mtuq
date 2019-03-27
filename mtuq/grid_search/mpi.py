@@ -1,6 +1,6 @@
 
 import time
-from mtuq.grid_search.serial import grid_search_serial
+from mtuq.grid_search import serial
 
 
 def is_mpi_env():
@@ -35,7 +35,7 @@ def timer_mpi(func):
 
         if comm.rank==0:
             _elapsed_time = time.time() - start_time
-            print '  Elapsed time: %f\n' % _elapsed_time
+            print '  Elapsed time (s): %f\n' % _elapsed_time
 
         return output
 
@@ -43,7 +43,7 @@ def timer_mpi(func):
 
 
 @timer_mpi
-def grid_search_mpi(data, greens, misfit, grid):
+def grid_search_mt(data, greens, misfit, grid):
     """  Parallel grid search
 
     To carry out a grid search over multiple MPI processes, we decompose the
@@ -63,5 +63,10 @@ def grid_search_mpi(data, greens, misfit, grid):
         subset = None
     subset = comm.scatter(subset, root=0)
 
-    return grid_search_serial(data, greens, misfit, subset)
+    return serial.grid_search_mt(data, greens, misfit, subset, verbose=False)
+
+
+def grid_search_mt_origin(data, greens, misfit, grid):
+    raise NotImplementedError
+
 

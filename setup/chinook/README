@@ -19,14 +19,11 @@ NOTES
 environment that can be used during the current session and any subsequent
 sessions.  
 
-- `install.bash` creates an editable virtual environment, which means
-that any changes to the git repository go into effect immediately. As a result
-users can `git pull` at any time or make other changes without having to 
-re-install.
+- The resulting virtual environment is "editable", which means that any changes
+to the python code go into effect immediately without having to reinstall. 
 
 - At greater effort, users can obtain the same result as `install.bash` by
-following the more general instructions in `mtuq/docs` and loading appropriate 
-chinook modules
+following the more general instructions in `mtuq/docs`.
 
 
 
@@ -54,7 +51,7 @@ example located in `mtuq/examples` or the parallel example located in
 
 The serial examples can be invoked directly:
 
-    > bash SerialGridSearch.DoubleCouple.py
+    > python SerialGridSearch.DoubleCouple.py
 
 
 The parallel example must be invoked using an sbatch wrapper:
@@ -66,6 +63,9 @@ NOTES
 
 - The above examples reproduce results from Silwal2016
 
+- Recorded seismic data for the main Silwal2016 test case are included the mtuq
+repository, so it is not necessary to download them
+
 - The serial example uses the syngine webservice to obtain AxiSEM Green's
 functions.  The parallel example uses a local chinook databaset to obtain
 FK Green's functions, similar to the legacy program CAP.
@@ -75,21 +75,21 @@ FK Green's functions, similar to the legacy program CAP.
 Modifying the examples
 ----------------------
 
-Recorded seismic data for the main Silwal2016 test case are included the mtuq
-repository, so it is not necessary to download them.  To obtain a moment tensor
-estimate for a different event, users must download waveforms using
-uafseismo/pysep and modify the mtuq example script as follows:
+To obtain moment tensor estimates for events other than the main Silwal2016 
+event, users can download waveforms using uafseismo/pysep and modify the mtuq
+examples as follows:
 
-- Update `path_data` to the pysep download directory.
+- Change `path_data` to the pysep download directory
 
-- Update `path_weights` to the path to the CAP-style weight file included in 
-the pysep download.
+- Change `path_weights` to the CAP-style weight file included with the pysep
+ download
 
-- If magnitude is fixed in the example, then update the `moment_magnitude` 
-keyword arguments with the estimated moment magnitude.
+- Change the `moment_magnitude` keyword arguments to the desired value for the
+current event (if you wish magnitude to be fixed) or to the desired range of
+magnitudes (if you wish to include magnitude as a search parameter)
 
 - Optionally, adjust the Earth model, data processing and misfit settings.
-Current choices match Silwal2016.
+(Default choices match Silwal2016.)
 
 
 

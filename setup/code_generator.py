@@ -8,7 +8,7 @@ import numpy as np
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search_mpi
+from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -30,7 +30,7 @@ if __name__=='__main__':
     # USAGE
     #   python SerialGridSearch.DoubleCouple.py
     #
-    # A typical runtime is about 20 minutes. For faster results try 
+    # A typical runtime is about 10 minutes. For faster results try 
     # GridSearch.DoubleCouple.py, which runs the same inversion in parallel
     #
 
@@ -264,11 +264,6 @@ DataProcessingDefinitions="""
         cap_weight_file=path_weights,
         )
 
-    process_data = {
-       'body_waves': process_bw,
-       'surface_waves': process_sw,
-       }
-
 """
 
 
@@ -290,11 +285,6 @@ MisfitDefinitions="""
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
-
-    misfit = {
-        'body_waves': misfit_bw,
-        'surface_waves': misfit_sw,
-        }
 
 """
 
@@ -388,7 +378,6 @@ Grid_IntegrationTest="""
 
 
 
-
 Main_SerialGridSearch="""
     #
     # The main I/O work starts now
@@ -402,27 +391,21 @@ Main_SerialGridSearch="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_origin()
+    origins = data.get_origins()
 
 
     print 'Processing data...\\n'
-    processed_data = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_data[key] = data.map(process_data[key])
-    data = processed_data
-
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
 
     print 'Downloading Greens functions...\\n'
-    greens = get_greens_tensors(stations, origin, model=model)
-
+    greens = get_greens_tensors(stations, origins, model=model)
 
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
-    processed_greens = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_greens[key] = greens.map(process_data[key])
-    greens = processed_greens
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
 
 
     #
@@ -430,16 +413,17 @@ Main_SerialGridSearch="""
     #
 
     print 'Carrying out grid search...\\n'
-    results = grid_search_serial(data, greens, misfit, grid)
 
+    results = grid_search_mt(
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid)
 
-    print 'Saving results...\\n'
-    #grid.save(event_name+'.h5', {'misfit': results})
     best_mt = grid.get(results.argmin())
 
+    plot_data_greens_mt(event_name+'.png',
+        data_bw, data_sw, greens_bw, greens_sw,
+        best_mt, misfit_bw, misfit_sw)
 
-    print 'Plotting waveforms...\\n'
-    plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
     plot_beachball(event_name+'_beachball.png', best_mt)
 
 
@@ -465,30 +449,30 @@ Main_GridSearch_DoubleCouple="""
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origin = data.get_origin()
+        origins = data.get_origins()
 
         print 'Processing data...\\n'
-        processed_data = {}
-        for key in ['body_waves', 'surface_waves']:
-            processed_data[key] = data.map(process_data[key])
-        data = processed_data
+        data_bw = data.map(process_bw, stations, origins)
+        data_sw = data.map(process_sw, stations, origins)
 
-        print 'Reading Greens functions...\\n'
-        greens = get_greens_tensors(stations, origin, model=model)
+        print 'Downloading Greens functions...\\n'
+        greens = get_greens_tensors(stations, origins, model=model)
 
         print 'Processing Greens functions...\\n'
         greens.convolve(wavelet)
-        processed_greens = {}
-        for key in ['body_waves', 'surface_waves']:
-            processed_greens[key] = greens.map(process_data[key])
-        greens = processed_greens
+        greens_bw = greens.map(process_bw, stations, origins)
+        greens_sw = greens.map(process_sw, stations, origins)
 
     else:
-        data = None
-        greens = None
+        data_bw = None
+        data_sw = None
+        greens_bw = None
+        greens_sw = None
 
-    data = comm.bcast(data, root=0)
-    greens = comm.bcast(greens, root=0)
+    data_bw = comm.bcast(data_bw, root=0)
+    data_sw = comm.bcast(data_sw, root=0)
+    greens_bw = comm.bcast(greens_bw, root=0)
+    greens_sw = comm.bcast(greens_sw, root=0)
 
 
     #
@@ -497,21 +481,27 @@ Main_GridSearch_DoubleCouple="""
 
     if comm.rank==0:
         print 'Carrying out grid search...\\n'
-    results = grid_search_mpi(data, greens, misfit, grid)
+
+    results = grid_search_mt(
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid)
+
     results = comm.gather(results, root=0)
 
 
     if comm.rank==0:
         print 'Saving results...\\n'
+
         results = np.concatenate(results)
-        #grid.save(event_name+'.h5', {'misfit': results})
+
         best_mt = grid.get(results.argmin())
 
+        plot_data_greens_mt(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw,
+            best_mt, misfit_bw, misfit_sw)
 
-    if comm.rank==0:
-        print 'Plotting waveforms...\\n'
-        plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_beachball(event_name+'_beachball.png', 
+            best_mt)
 
 
 """
@@ -534,57 +524,57 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         data.sort_by_distance()
 
-        stations = data.get_stations()
-        origin = data.get_origin()
-
         print 'Processing data...\\n'
-        processed_data = {}
-        for key in ['body_waves', 'surface_waves']:
-            processed_data[key] = data.map(process_data[key])
-        data = processed_data
+        data_bw = data.map(process_bw, stations, origins)
+        data_sw = data.map(process_sw, stations, origins)
+
     else:
-        data = None
+        data_bw = None
+        data_sw = None
 
-    data = comm.bcast(data, root=0)
+    data_bw = comm.bcast(data_bw, root=0)
+    data_sw = comm.bcast(data_sw, root=0)
 
+    greens_bw = {}
+    greens_sw = {}
 
-   for origin, magnitude in cross(origins, magnitudes):
-        if comm.rank==0:
-            print 'Downloading Greens functions...\\n'
-            greens = get_greens_tensors(stations, origin, model=model)
+    if comm.rank==0:
+        print 'Downloading Green's functions...\\n'
 
-            print 'Processing Greens functions...\\n'
-            wavelet = Trapezoid(magnitude)
+        for _i, depth in enumerate(depths):
+            [setattr(origin, 'depth', depth) for origin in origins]
+            greens = get_greens_tensors(stations, origins, model=model)
             greens.convolve(wavelet)
+            greens_bw[depth] = greens.map(process_bw, stations, origins)
+            greens_sw[depth] = greens.map(process_sw, stations, origins)
 
-            processed_greens = {}
-            for key in ['body_waves', 'surface_waves']:
-                processed_greens[key] = greens.map(process_data[key])
-            greens = processed_greens
-
-        else:
-            greens = None
-
-        greens = comm.bcast(greens, root=0)
+    greens_bw = comm.bcast(greens_bw, root=0)
+    greens_sw = comm.bcast(greens_sw, root=0)
 
 
-        if comm.rank==0:
-            print 'Carrying out grid search...\\n'
-        results = grid_search_mpi(data, greens, misfit, grid)
-        results = comm.gather(results, root=0)
+    if comm.rank==0:
+        print 'Carrying out grid search...\\n'
+
+    results = grid_search_mt(
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid)
+
+    results = [comm.gather(results, root=0)]
 
 
-        if comm.rank==0:
-            print 'Saving results...\\n'
-            results = np.concatenate(results)
-            #grid.save(event_name+'.h5', {'misfit': results})
+    if comm.rank==0:
+        print 'Saving results...\\n'
 
+        results = np.concatenate(results)
 
-        if comm.rank==0:
-            print 'Plotting waveforms...\\n'
-            plot_data_greens_mt(event_name+'.png', data, greens, best_mt, misfit)
-            plot_beachball(event_name+'_beachball.png', best_mt)
+        best_mt = grid.get(results.argmin())
 
+        plot_data_greens_mt(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw,
+            best_mt, misfit_bw, misfit_sw)
+
+        plot_beachball(event_name+'_beachball.png', 
+            best_mt)
 
 
 """
@@ -603,50 +593,57 @@ Main_BenchmarkCAP="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_origin()
+    origins = data.get_origins()
 
 
     print 'Processing data...\\n'
-    processed_data = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_data[key] = data.map(process_data[key])
-    data = processed_data
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
 
+    print 'Downloading Greens functions...\\n'
+    db = open_db(path_greens, format='FK', model=model)
+    greens = db.get_greens_tensors(stations, origins)
 
-    print 'Reading Greens functions...\\n'
-    db = open_db(path_greens, format='FK')
-    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
-    processed_greens = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_greens[key] = greens.map(process_data[key])
-    greens = processed_greens
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
+
+
+    depth = int(origins[0].depth_in_m/1000.)+1
+    name = '_'.join([model, str(depth), event_name])
+
 
     print 'Comparing waveforms...'
 
     for _i, mt in enumerate(grid):
         print ' %d of %d' % (_i+1, len(grid))
 
-        name = model+'_34_'+event_name
-        synthetics_cap = get_synthetics_cap(data, paths[_i], name)
-        synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
+        cap_bw, cap_sw = get_synthetics_cap(
+            data_bw, data_sw, paths[_i], name)
+
+        mtuq_bw, mtuq_sw = get_synthetics_mtuq(
+            data_bw, data_sw, greens_bw, greens_sw, mt)
 
         if run_figures:
-            filename = 'cap_vs_mtuq_'+str(_i)+'.png'
-            plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
+            plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
+                cap_bw, cap_sw, mtuq_bw, mtuq_sw)
 
         if run_checks:
-            compare_cap_mtuq(synthetics_cap, synthetics_mtuq)
+            compare_cap_mtuq(
+                cap_bw, cap_sw, mtuq_bw, mtuq_sw)
 
     if run_figures:
         # "bonus" figure comparing how CAP processes observed data with how
         # MTUQ processes observed data
-        data_mtuq = data
-        data_cap = get_data_cap(data, paths[0], name)
-        filename = 'cap_vs_mtuq_data.png'
-        plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
+        mtuq_sw, mtuq_bw = data_bw, data_sw
+
+        cap_sw, cap_bw = get_data_cap(
+            data_bw, data_sw, paths[0], name)
+
+        plot_data_synthetics('cap_vs_mtuq_data.png',
+            cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
 
 """
 
@@ -705,8 +702,8 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search_mpi',
-            'grid_search_serial',
+            'grid_search.mpi',
+            'grid_search.serial',
             ))
         file.write(Docstring_SerialGridSearch_DoubleCouple)
         file.write(PathsComments)
@@ -723,8 +720,8 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search_mpi',
-            'grid_search_serial',
+            'grid_search.mpi',
+            'grid_search.serial',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             ))
@@ -740,8 +737,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search_mpi',
-            'grid_search_serial',
             'syngine',
             'fk',
             'plot_data_greens_mt',
@@ -800,9 +795,9 @@ if __name__=='__main__':
             Main_GridSearch_DoubleCouple,
             'print ''Downloading Greens functions...\\n''',
             'print ''Reading Greens functions...\\n''',
-            'greens = get_greens_tensors\(stations, origin, model=model\)',
+            'greens = get_greens_tensors\(stations, origins, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n        '
-           +'greens = db.get_greens_tensors(stations, origin)',
+           +'greens = db.get_greens_tensors(stations, origins)',
             ))
 
 

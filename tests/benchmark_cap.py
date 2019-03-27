@@ -6,7 +6,7 @@ import numpy as np
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search_serial
+from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -130,11 +130,6 @@ if __name__=='__main__':
         cap_weight_file=path_weights,
         )
 
-    process_data = {
-       'body_waves': process_bw,
-       'surface_waves': process_sw,
-       }
-
 
     misfit_bw = Misfit(
         time_shift_max=0.,
@@ -145,11 +140,6 @@ if __name__=='__main__':
         time_shift_max=0.,
         time_shift_groups=['ZR','T'],
         )
-
-    misfit = {
-        'body_waves': misfit_bw,
-        'surface_waves': misfit_sw,
-        }
 
 
     #
@@ -188,48 +178,55 @@ if __name__=='__main__':
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_origin()
+    origins = data.get_origins()
 
 
     print 'Processing data...\n'
-    processed_data = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_data[key] = data.map(process_data[key])
-    data = processed_data
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
 
+    print 'Downloading Greens functions...\n'
+    db = open_db(path_greens, format='FK', model=model)
+    greens = db.get_greens_tensors(stations, origins)
 
-    print 'Reading Greens functions...\n'
-    db = open_db(path_greens, format='FK')
-    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\n'
     greens.convolve(wavelet)
-    processed_greens = {}
-    for key in ['body_waves', 'surface_waves']:
-        processed_greens[key] = greens.map(process_data[key])
-    greens = processed_greens
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
+
+
+    depth = int(origins[0].depth_in_m/1000.)+1
+    name = '_'.join([model, str(depth), event_name])
+
 
     print 'Comparing waveforms...'
 
     for _i, mt in enumerate(grid):
         print ' %d of %d' % (_i+1, len(grid))
 
-        name = model+'_34_'+event_name
-        synthetics_cap = get_synthetics_cap(data, paths[_i], name)
-        synthetics_mtuq = get_synthetics_mtuq(data, greens, mt)
+        cap_bw, cap_sw = get_synthetics_cap(
+            data_bw, data_sw, paths[_i], name)
+
+        mtuq_bw, mtuq_sw = get_synthetics_mtuq(
+            data_bw, data_sw, greens_bw, greens_sw, mt)
 
         if run_figures:
-            filename = 'cap_vs_mtuq_'+str(_i)+'.png'
-            plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
+            plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
+                cap_bw, cap_sw, mtuq_bw, mtuq_sw)
 
         if run_checks:
-            compare_cap_mtuq(synthetics_cap, synthetics_mtuq)
+            compare_cap_mtuq(
+                cap_bw, cap_sw, mtuq_bw, mtuq_sw)
 
     if run_figures:
         # "bonus" figure comparing how CAP processes observed data with how
         # MTUQ processes observed data
-        data_mtuq = data
-        data_cap = get_data_cap(data, paths[0], name)
-        filename = 'cap_vs_mtuq_data.png'
-        plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
+        mtuq_sw, mtuq_bw = data_bw, data_sw
+
+        cap_sw, cap_bw = get_data_cap(
+            data_bw, data_sw, paths[0], name)
+
+        plot_data_synthetics('cap_vs_mtuq_data.png',
+            cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
 

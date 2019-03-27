@@ -9,24 +9,18 @@ class Station(Stats):
     Holds the following station metadata
     - network, station, and location codes
     - preliminary event location and origin time estimates
-    - time discretization information for traces recorded at the station
+    - time discretization of traces recorded at station
 
-    At the beginning of an inversion, MTUQ requires preliminary estimates for
+    At the beginning of an inversion, MTUQ requires initial estimates for
     event location and depth. Attributes with the suffix "preliminary"
-    represent these initial estimates, which are usually based on catalog 
-    solutions stored in IRIS waveform metadata.
+    represent these estimates, which are usually based on IRIS catalog 
 
     Time discretization attributes ``npts``, ``delta``, ``starttime``, and
-    ``endtime`` are inherited from the ObsPy base class. This works because we
-    always check in ``mtuq.io.readers`` that all traces at a given station have 
-    the same time discretization.
-
-    .. note::
-
-        We use ``obspy.core.traces.Stats`` as a base class because
-        ``obspy.core.inventory.station.Station`` is more complex than we need.
-        (All we require is an attribute-dictionary.)
+    ``endtime`` are inherited from the ObsPy base class. This works only because
+    we always check in ``mtuq.io.readers`` that all traces at a given station 
+    have the same time discretization.
     """
+
     readonly = [
         'endtime',
         #'preliminary_distance_in_m',

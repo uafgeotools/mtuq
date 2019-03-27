@@ -15,50 +15,56 @@ def plot_beachball(filename, mt):
 
 
 
-def plot_data_greens_mt(filename, data, greens, mt, 
-        misfit=None, **kwargs):
+def plot_data_greens_mt(filename, data_bw, data_sw, greens_bw, greens_sw, mt, 
+        misfit_bw=None, misfit_sw=None, **kwargs):
 
     # generate synthetics
-    synthetics = {}
-    for key in ['body_waves', 'surface_waves']:
-        synthetics[key] = greens[key].get_synthetics(mt)
+    synthetics_bw = greens_bw.get_synthetics(mt)
+    synthetics_sw = greens_sw.get_synthetics(mt)
 
-    if misfit:
-        # reevaluate misfit to get time shifts
-        for key in ['body_waves', 'surface_waves']:
-            _ = misfit[key](data[key], greens[key], mt)
+    # reevaluate misfit to get time shifts
+    if misfit_bw:
+        _ = misfit_bw(data_bw, greens_bw, mt)
 
-    plot_data_synthetics(filename, data, synthetics, 
-        **kwargs)
+    if misfit_sw:
+        _ = misfit_sw(data_sw, greens_sw, mt)
+
+    plot_data_synthetics(filename, data_bw, data_sw, 
+        synthetics_bw, synthetics_sw, **kwargs)
 
 
-
-def plot_data_synthetics(filename, data, synthetics,
-        annotate=False, normalize=1):
+def plot_data_synthetics(filename, data_bw_, data_sw_, synthetics_bw_, 
+        synthetics_sw_, annotate=False, normalize=1):
     """ Creates CAP-style data/synthetics figure
     """
 
     # create figure object
     ncol = 6
-    _, nrow = shape(data)
+    nrow = len(data_bw_)
     figsize = (16, 1.4*nrow)
     pyplot.figure(figsize=figsize)
 
 
     # determine axis limits
-    max_bw = data['body_waves'].max()
-    max_sw = data['surface_waves'].max()
+    max_bw = data_bw_.max()
+    max_sw = data_sw_.max()
 
     irow = 0
     for data_bw, synthetics_bw, data_sw, synthetics_sw in zip(
-        data['body_waves'], synthetics['body_waves'],
-        data['surface_waves'], synthetics['surface_waves']):
+        data_bw_, synthetics_bw_, data_sw_, synthetics_sw_):
 
-        id = data_bw.id
-        meta = data_bw.stats
+        if len(data_bw)==len(data_sw)==0:
+            continue
+        try:
+            id = data_bw.id
+            meta = data_bw[0].stats
+        except:
+            id = data_sw.id
+            meta = data_sw[0].stats
+
+        pyplot.subplot(nrow, ncol, ncol*irow+1)
 
         # add station labels
-        pyplot.subplot(nrow, ncol, ncol*irow+1)
         station_labels(meta)
 
         # plot body wave traces
@@ -225,19 +231,6 @@ def time_stats(trace):
         trace.stats.npts,
         trace.stats.delta,
         )
-
-
-def shape(dataset):
-    # how many rows and columns in figure?
-    nc = 0
-    for i in dataset:
-        nc += 1
-
-    nr = 0
-    for j in dataset[i]:
-        nr += 1
-
-    return nc, nr
 
 
 def _stack(*args):
