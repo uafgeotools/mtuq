@@ -182,7 +182,6 @@ def subplot(dat, syn, label=None):
 
 
 def station_labels(meta):
-    print 'made it here'
     ax = pyplot.gca()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)

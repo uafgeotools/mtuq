@@ -635,9 +635,14 @@ Main_BenchmarkCAP="""
         synthetics_cap = get_synthetics_cap(processed_data, paths[_i], name)
         synthetics_mtuq = get_synthetics_mtuq(processed_data, processed_greens, mt)
 
+        cap_bw = synthetics_cap['body_waves'] 
+        cap_sw = synthetics_cap['surface_waves']
+        mtuq_bw= synthetics_mtuq['body_waves']
+        mtuq_sw= synthetics_mtuq['surface_waves']
+
         if run_figures:
-            filename = 'cap_vs_mtuq_'+str(_i)+'.png'
-            plot_data_synthetics(filename, synthetics_cap, synthetics_mtuq)
+            plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
+                cap_bw, cap_sw, mtuq_bw, mtuq_sw)
 
         if run_checks:
             compare_cap_mtuq(synthetics_cap, synthetics_mtuq)
@@ -647,8 +652,14 @@ Main_BenchmarkCAP="""
         # MTUQ processes observed data
         data_mtuq = processed_data
         data_cap = get_data_cap(processed_data, paths[0], name)
-        filename = 'cap_vs_mtuq_data.png'
-        plot_data_synthetics(filename, data_cap, data_mtuq, normalize=False)
+
+        cap_bw = data_cap['body_waves'] 
+        cap_sw = data_cap['surface_waves']
+        mtuq_bw= data_mtuq['body_waves']
+        mtuq_sw= data_mtuq['surface_waves']
+
+        plot_data_synthetics('cap_vs_mtuq_data.png',
+            cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
 
 """
 
