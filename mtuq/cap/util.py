@@ -247,7 +247,8 @@ def apply_magnitude_dependent_shift(trace, Mw):
     trace.data[:nt] = 0.
 
 
-def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-2, norm=2):
+def compare_cap_mtuq(cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_, 
+                     bw_tol=np.inf, sw_tol=1.e-2, norm=2):
     """ Checks whether CAP and MTUQ synthetics agree within the specified
       tolerances 
 
@@ -262,9 +263,8 @@ def compare_cap_mtuq(cap, mtuq, bw_tol=np.inf, sw_tol=1.e-2, norm=2):
     # keep track of number of mismatches
     count = 0
 
-    for cap_bw, mtuq_bw, cap_sw, mtuq_sw in zip(
-        cap['body_waves'], mtuq['body_waves'],
-        cap['surface_waves'], mtuq['surface_waves']):
+    for cap_bw, cap_sw, mtuq_bw, mtuq_sw in zip(
+        cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_):
 
         if bw_tol < np.inf:
             maxval = 0.

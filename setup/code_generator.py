@@ -645,7 +645,8 @@ Main_BenchmarkCAP="""
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw)
 
         if run_checks:
-            compare_cap_mtuq(synthetics_cap, synthetics_mtuq)
+            compare_cap_mtuq(
+                cap_bw, cap_sw, mtuq_bw, mtuq_sw)
 
     if run_figures:
         # "bonus" figure comparing how CAP processes observed data with how
