@@ -145,7 +145,7 @@ if __name__=='__main__':
 
     plot_data_greens_mt(event_name+'.png',
         data_bw, data_sw, greens_bw, greens_sw,
-        misfit_bw, misfit_sw, best_mt)
+        best_mt, misfit_bw, misfit_sw)
 
     plot_beachball(event_name+'_beachball.png', best_mt)
 
