@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np
 
+from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRegular
@@ -125,7 +126,7 @@ if __name__=='__main__':
 
     results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+        [misfit_bw, misfit_sw], grid, verbose=False)
 
     best_mt = grid.get(results.argmin())
 
@@ -141,7 +142,7 @@ if __name__=='__main__':
     if run_checks:
         def isclose(a, b, atol=1.e6, rtol=1.e-8):
             # the default absolute tolerance (1.e6) is several orders of 
-            # magnitude less than the moment of a Mw=0 event
+            # magnitude less than the moment of an Mw=0 event
 
             result = np.isclose(a, b, atol=atol, rtol=rtol)
 

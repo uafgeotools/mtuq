@@ -7,8 +7,8 @@ import numpy as np
 from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
-from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search_mt
+from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.grid_search.mpi import grid_search_mt_depth
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -19,29 +19,37 @@ from mtuq.util.util import path_mtuq
 
 if __name__=='__main__':
     #
-    # CAP-style Double-couple inversion example
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors
-    #
+    # Double-couple inversion example
+    #   
+    # Carries out grid search over source orientation, magnitude, and depth
+    #   
     # USAGE
-    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
+    #   
+
+
+    #
+    # Here we specify the data used for the inversion. The event is an 
+    # Mw~4 Alaska earthquake
     #
 
-
-    path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/scak'
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
-    model=        'scak'
+    model=        'ak135'
 
+
+    #
+    # Body- and surface-wave data are processed separately and held separately 
+    # in memory
+    #
 
     process_bw = ProcessData(
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
@@ -53,8 +61,8 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
@@ -78,21 +86,27 @@ if __name__=='__main__':
     # Next we specify the source parameter grid
     #
 
-    grid = DoubleCoupleGridRandom(
-        npts=50000,
-        magnitude=4.5)
+    magnitudes = np.array(
+        [4.3, 4.4, 4.5, 4.6, 4.7, 4.8])
+
+    depths = np.array(
+        [24])#, 26, 28, 30, 32, 34, 36, 38, 40, 42])
+
+    grid = DoubleCoupleGridRegular(
+        npts_per_axis=20,
+        magnitude=magnitudes)
 
     wavelet = Trapezoid(
-        magnitude=4.5)
-
-
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
+        magnitude=np.mean(magnitudes))
 
 
     #
     # The main I/O work starts now
     #
+
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+
 
     if comm.rank==0:
         print 'Reading data...\n'
@@ -105,27 +119,34 @@ if __name__=='__main__':
         stations = data.get_stations()
         origins = data.get_origins()
 
+
         print 'Processing data...\n'
         data_bw = data.map(process_bw, stations, origins)
         data_sw = data.map(process_sw, stations, origins)
 
-        print 'Downloading Greens functions...\n'
-        db = open_db(path_greens, format='FK', model=model)
-        greens = db.get_greens_tensors(stations, origins)
-
-        print 'Processing Greens functions...\n'
-        greens.convolve(wavelet)
-        greens_bw = greens.map(process_bw, stations, origins)
-        greens_sw = greens.map(process_sw, stations, origins)
-
     else:
         data_bw = None
         data_sw = None
-        greens_bw = None
-        greens_sw = None
 
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
+
+    greens_bw = {}
+    greens_sw = {}
+
+    if comm.rank==0:
+        print 'Downloading Greens functions...\n'
+
+        for _i, depth in enumerate(depths):
+            origins = deepcopy(origins)
+            [setattr(origin, 'depth_in_m', depth) for origin in origins]
+
+            greens = get_greens_tensors(stations, origins, model=model)
+
+            greens.convolve(wavelet)
+            greens_bw[depth] = greens.map(process_bw, stations, origins)
+            greens_sw[depth] = greens.map(process_sw, stations, origins)
+
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
 
@@ -137,25 +158,20 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Carrying out grid search...\n'
 
-    results = grid_search_mt(
+    results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+        [misfit_bw, misfit_sw], grid, depths)
 
-    results = comm.gather(results, root=0)
+    results = [comm.gather(results, root=0)]
 
 
     if comm.rank==0:
         print 'Saving results...\n'
 
-        results = np.concatenate(results)
+        for depth in depths:
+            results[depth] = np.concatenate(results[depth])
 
-        best_mt = grid.get(results.argmin())
-
-        plot_data_greens_mt(event_name+'.png',
-            data_bw, data_sw, greens_bw, greens_sw,
-            best_mt, misfit_bw, misfit_sw)
-
-        plot_beachball(event_name+'_beachball.png', 
-            best_mt)
+        plot_depth_test(event_name+'_depth_test.png', 
+            grid, results)
 
 

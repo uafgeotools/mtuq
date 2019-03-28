@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np
 
+from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
@@ -229,4 +230,6 @@ if __name__=='__main__':
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
+
+    print ''
 

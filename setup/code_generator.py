@@ -5,6 +5,7 @@ import os
 import sys
 import numpy as np
 
+from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
@@ -312,16 +313,18 @@ Grid_DoubleCoupleMagnitudeDepth="""
     # Next we specify the source parameter grid
     #
 
-    grid = DoubleCoupleGridRandom(
-        npts=50000,
-        magnitude=4.5)
+    magnitudes = np.array(
+        [4.3, 4.4, 4.5, 4.6, 4.7, 4.8])
 
-    origins = OriginGrid(depth=np.arange(2500.,20000.,2500.),
-        latitude=origin.latitude,
-        longitude=origin.longitude)
+    depths = np.array(
+        [24, 26, 28, 30, 32, 34, 36, 38, 40, 42])
+
+    grid = DoubleCoupleGridRegular(
+        npts_per_axis=20,
+        magnitude=magnitudes)
 
     wavelet = Trapezoid(
-        magnitude=4.5)
+        magnitude=np.mean(magnitudes))
 
 """
 
@@ -513,8 +516,9 @@ Main_GridSearch_DoubleCouple="""
 
 Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
-    # The main work of the grid search starts now
+    # The main I/O work starts now
     #
+
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
 
@@ -526,6 +530,10 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             tags=['units:cm', 'type:velocity']) 
 
         data.sort_by_distance()
+
+        stations = data.get_stations()
+        origins = data.get_origins()
+
 
         print 'Processing data...\\n'
         data_bw = data.map(process_bw, stations, origins)
@@ -542,11 +550,14 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     greens_sw = {}
 
     if comm.rank==0:
-        print 'Downloading Green's functions...\\n'
+        print 'Downloading Greens functions...\\n'
 
         for _i, depth in enumerate(depths):
-            [setattr(origin, 'depth', depth) for origin in origins]
+            origins = deepcopy(origins)
+            [setattr(origin, 'depth_in_m', depth) for origin in origins]
+
             greens = get_greens_tensors(stations, origins, model=model)
+
             greens.convolve(wavelet)
             greens_bw[depth] = greens.map(process_bw, stations, origins)
             greens_sw[depth] = greens.map(process_sw, stations, origins)
@@ -555,12 +566,16 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     greens_sw = comm.bcast(greens_sw, root=0)
 
 
+    #
+    # The main computational work starts now
+    #
+
     if comm.rank==0:
         print 'Carrying out grid search...\\n'
 
-    results = grid_search_mt(
+    results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+        [misfit_bw, misfit_sw], grid, depths)
 
     results = [comm.gather(results, root=0)]
 
@@ -568,16 +583,11 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     if comm.rank==0:
         print 'Saving results...\\n'
 
-        results = np.concatenate(results)
+        for depth in depths:
+            results[depth] = np.concatenate(results[depth])
 
-        best_mt = grid.get(results.argmin())
-
-        plot_data_greens_mt(event_name+'.png',
-            data_bw, data_sw, greens_bw, greens_sw,
-            best_mt, misfit_bw, misfit_sw)
-
-        plot_beachball(event_name+'_beachball.png', 
-            best_mt)
+        plot_depth_test(event_name+'_depth_test.png', 
+            grid, results)
 
 
 """
@@ -616,7 +626,7 @@ Main_IntegrationTest="""
 
     results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+        [misfit_bw, misfit_sw], grid, verbose=False)
 
     best_mt = grid.get(results.argmin())
 
@@ -632,7 +642,7 @@ Main_IntegrationTest="""
     if run_checks:
         def isclose(a, b, atol=1.e6, rtol=1.e-8):
             # the default absolute tolerance (1.e6) is several orders of 
-            # magnitude less than the moment of a Mw=0 event
+            # magnitude less than the moment of an Mw=0 event
 
             result = np.isclose(a, b, atol=atol, rtol=rtol)
 
@@ -731,6 +741,8 @@ Main_BenchmarkCAP="""
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
 
+    print ''
+
 """
 
 
@@ -758,7 +770,14 @@ if __name__=='__main__':
 
     with open('examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
-        file.write(Imports)
+        file.write(
+            replace(
+            Imports,
+            'grid_search_mt',
+            'grid_search_mt_depth',
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+            ))
         file.write(Docstring_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(PathsComments)
         file.write(Paths_Syngine)

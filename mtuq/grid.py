@@ -415,9 +415,7 @@ def TapeTape2015_to_UpSouthEast(*args, **kwargs):
 
 
 def _check_magnitude(M):
-    if not M:
-        raise ValueError
-    if type(M) in [list, tuple]:
+    if type(M) in [np.ndarray, list, tuple]:
         count = len(M)
     elif type(M) in [int, float]:
         M = [float(M)]
