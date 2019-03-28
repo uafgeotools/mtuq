@@ -3,7 +3,7 @@ import numpy as np
 import time
 from mtuq import Dataset, GreensTensorList
 from mtuq.grid import Grid, UnstructuredGrid
-from mtuq.util.util import divides, timer
+from mtuq.util.util import timer
 
 try:
     import h5py

@@ -24,10 +24,6 @@ def asarray(x):
     return np.array(x, dtype=np.float64, ndmin=1, copy=False)
 
 
-def cross(*args):
-    raise NotImplementedError
-
-
 def is_mpi_env():
     try:
         import mpi4py
@@ -112,6 +108,22 @@ def path_mtuq():
     """
     import mtuq
     return abspath(join(mtuq.__path__[0], '..'))
+
+
+def timer(func):
+    """ Decorator for measuring execution time
+    """
+    def timed_func(*args, **kwargs):
+        if kwargs.get('verbose', True):
+            start_time = time.time()
+            output = func(*args, **kwargs)
+            elapsed_time = time.time() - start_time
+            print '  Elapsed time (s): %f\n' % elapsed_time
+            return output
+        else:
+            return func(*args, **kwargs)
+
+    return timed_func
 
 
 def unzip(filename):
