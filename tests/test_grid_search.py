@@ -26,18 +26,30 @@ if __name__=='__main__':
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1/1/10/10/10 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
 
 
+    # by default, the script runs with figure generation and error checking
+    # turned on
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no_checks', action='store_true')
+    parser.add_argument('--no_figures', action='store_true')
+    args = parser.parse_args()
+    run_checks = (not args.no_checks)
+    run_figures = (not args.no_figures)
+
+
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
-    model=        'ak135'
+    model=        'scak'
 
 
     process_bw = ProcessData(
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_taup_model',
-        taup_model=model,
+        pick_type='from_fk_metadata',
+        fk_database=path_greens,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
@@ -49,8 +61,8 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_taup_model',
-        taup_model=model,
+        pick_type='from_fk_metadata',
+        fk_database=path_greens,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
@@ -80,7 +92,7 @@ if __name__=='__main__':
 
 
     #
-    # The main I/O work starts now
+    # The integration test starts now
     #
 
     print 'Reading data...\n'
@@ -99,7 +111,8 @@ if __name__=='__main__':
     data_sw = data.map(process_sw, stations, origins)
 
     print 'Downloading Greens functions...\n'
-    greens = get_greens_tensors(stations, origins, model=model)
+    db = open_db(path_greens, format='FK', model=model)
+    greens = db.get_greens_tensors(stations, origins)
 
 
     print 'Processing Greens functions...\n'
@@ -107,10 +120,6 @@ if __name__=='__main__':
     greens_bw = greens.map(process_bw, stations, origins)
     greens_sw = greens.map(process_sw, stations, origins)
 
-
-    #
-    # The main computational work starts nows
-    #
 
     print 'Carrying out grid search...\n'
 
@@ -120,21 +129,26 @@ if __name__=='__main__':
 
     best_mt = grid.get(results.argmin())
 
-    plot_data_greens_mt(event_name+'.png',
-        data_bw, data_sw, greens_bw, greens_sw,
-        best_mt, misfit_bw, misfit_sw)
 
-    plot_beachball(event_name+'_beachball.png', best_mt)
+    if run_figures:
+        plot_data_greens_mt(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw,
+            best_mt, misfit_bw, misfit_sw)
+
+        plot_beachball(event_name+'_beachball.png', best_mt)
 
 
-
-    expected_mt = np.array([
-        -1.92678437e+15,
-        -1.42813064e+00,
-         1.92678437e+15,
-         2.35981928e+15,
-         6.81221149e+14,
-         1.66864422e+15])
-
-    if not np.all(np.isclose(best_mt, expected_mt)):
-        raise Exception("Grid search result differs from previous mtuq result")
+    if run_checks:
+        if not np.all(np.isclose(
+            best_mt,
+            np.array([
+                -1.92678437e+15,
+                -1.42813064e+00,
+                 1.92678437e+15,
+                 2.35981928e+15,
+                 6.81221149e+14,
+                 1.66864422e+15,
+                 ])
+            )):
+            raise Exception(
+                "Grid search result differs from previous mtuq result")

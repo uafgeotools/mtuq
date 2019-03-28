@@ -170,14 +170,9 @@ if __name__=='__main__':
 """
 
 
-Argparse_BenchmarkCAP="""
-    from mtuq.cap.util import\\
-        get_synthetics_cap, get_synthetics_mtuq,\\
-        get_data_cap, compare_cap_mtuq
-
-
+ArgparseDefinitions="""
     # by default, the script runs with figure generation and error checking
-    # turned on; these can be turned off through argparse arguments
+    # turned on
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_checks', action='store_true')
@@ -185,6 +180,14 @@ Argparse_BenchmarkCAP="""
     args = parser.parse_args()
     run_checks = (not args.no_checks)
     run_figures = (not args.no_figures)
+
+"""
+
+
+Paths_BenchmarkCAP="""
+    from mtuq.cap.util import\\
+        get_synthetics_cap, get_synthetics_mtuq,\\
+        get_data_cap, compare_cap_mtuq
 
 
     # the following directories correspond to the moment tensors in the list 
@@ -579,6 +582,69 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 """
 
+Main_IntegrationTest="""
+    #
+    # The integration test starts now
+    #
+
+    print 'Reading data...\\n'
+    data = read(path_data, format='sac',
+        event_id=event_name,
+        tags=['units:cm', 'type:velocity']) 
+
+    data.sort_by_distance()
+
+    stations = data.get_stations()
+    origins = data.get_origins()
+
+
+    print 'Processing data...\\n'
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
+
+    print 'Downloading Greens functions...\\n'
+    greens = get_greens_tensors(stations, origins, model=model)
+
+
+    print 'Processing Greens functions...\\n'
+    greens.convolve(wavelet)
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
+
+
+    print 'Carrying out grid search...\\n'
+
+    results = grid_search_mt(
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid)
+
+    best_mt = grid.get(results.argmin())
+
+
+    if run_figures:
+        plot_data_greens_mt(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw,
+            best_mt, misfit_bw, misfit_sw)
+
+        plot_beachball(event_name+'_beachball.png', best_mt)
+
+
+    if run_checks:
+        if not np.all(np.isclose(
+            best_mt,
+            np.array([
+                -1.92678437e+15,
+                -1.42813064e+00,
+                 1.92678437e+15,
+                 2.35981928e+15,
+                 6.81221149e+14,
+                 1.66864422e+15,
+                 ])
+            )):
+            raise Exception(
+                "Grid search result differs from previous mtuq result")
+"""
+
 
 Main_BenchmarkCAP="""
     #
@@ -648,21 +714,6 @@ Main_BenchmarkCAP="""
 """
 
 
-Main_IntegrationTest = Main_SerialGridSearch+"""
-    expected_mt = np.array([
-        -1.92678437e+15,
-        -1.42813064e+00,
-         1.92678437e+15,
-         2.35981928e+15,
-         6.81221149e+14,
-         1.66864422e+15])
-
-    if not np.all(np.isclose(best_mt, expected_mt)):
-        raise Exception("Grid search result differs from previous mtuq result")
-"""
-
-
-
 if __name__=='__main__':
     import os
     import re
@@ -730,55 +781,6 @@ if __name__=='__main__':
         file.write(Main_SerialGridSearch)
 
 
-    with open('tests/test_grid_search.py', 'w') as file:
-        file.write(
-            replace(
-            Imports,
-            'grid_search.mpi',
-            'grid_search.serial',
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
-            ))
-        file.write(Docstring_IntegrationTest)
-        file.write(Paths_Syngine)
-        file.write(DataProcessingDefinitions)
-        file.write(MisfitDefinitions)
-        file.write(Grid_IntegrationTest)
-        file.write(Main_IntegrationTest)
-
-
-    with open('tests/benchmark_cap.py', 'w') as file:
-        file.write(
-            replace(
-            Imports,
-            'syngine',
-            'fk',
-            'plot_data_greens_mt',
-            'plot_data_synthetics',
-            ))
-        file.write(Docstring_BenchmarkCAP)
-        file.write(Argparse_BenchmarkCAP)
-        file.write(Paths_FK)
-        file.write(
-            replace(
-            DataProcessingDefinitions,
-            'padding_length=.*',
-            'padding_length=0,',
-            'pick_type=.*',
-            "pick_type='from_fk_metadata',",
-            'taup_model=.*,',
-            'fk_database=path_greens,',
-            ))
-        file.write(
-            replace(
-            MisfitDefinitions,
-            'time_shift_max=.*',
-            'time_shift_max=0.,',
-            ))
-        file.write(Grid_BenchmarkCAP)
-        file.write(Main_BenchmarkCAP)
-
-
     with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
@@ -813,5 +815,71 @@ if __name__=='__main__':
             'db = open_db(path_greens, format=\'FK\', model=model)\n        '
            +'greens = db.get_greens_tensors(stations, origins)',
             ))
+
+
+    with open('tests/test_grid_search.py', 'w') as file:
+        file.write(
+            replace(
+            Imports,
+            'grid_search.mpi',
+            'grid_search.serial',
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+            ))
+        file.write(Docstring_IntegrationTest)
+        file.write(ArgparseDefinitions)
+        file.write(Paths_FK)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(MisfitDefinitions)
+        file.write(Grid_IntegrationTest)
+        file.write(
+            replace(
+            Main_IntegrationTest,
+            'print ''Downloading Greens functions...\\n''',
+            'print ''Reading Greens functions...\\n''',
+            'greens = get_greens_tensors\(stations, origins, model=model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n    '
+           +'greens = db.get_greens_tensors(stations, origins)',
+            ))
+
+
+    with open('tests/benchmark_cap.py', 'w') as file:
+        file.write(
+            replace(
+            Imports,
+            'syngine',
+            'fk',
+            'plot_data_greens_mt',
+            'plot_data_synthetics',
+            ))
+        file.write(Docstring_BenchmarkCAP)
+        file.write(ArgparseDefinitions)
+        file.write(Paths_BenchmarkCAP)
+        file.write(Paths_FK)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'padding_length=.*',
+            'padding_length=0,',
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(
+            replace(
+            MisfitDefinitions,
+            'time_shift_max=.*',
+            'time_shift_max=0.,',
+            ))
+        file.write(Grid_BenchmarkCAP)
+        file.write(Main_BenchmarkCAP)
 
 

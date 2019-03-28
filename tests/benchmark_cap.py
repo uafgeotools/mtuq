@@ -69,13 +69,8 @@ if __name__=='__main__':
     #
 
 
-    from mtuq.cap.util import\
-        get_synthetics_cap, get_synthetics_mtuq,\
-        get_data_cap, compare_cap_mtuq
-
-
     # by default, the script runs with figure generation and error checking
-    # turned on; these can be turned off through argparse arguments
+    # turned on
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_checks', action='store_true')
@@ -83,6 +78,11 @@ if __name__=='__main__':
     args = parser.parse_args()
     run_checks = (not args.no_checks)
     run_figures = (not args.no_figures)
+
+
+    from mtuq.cap.util import\
+        get_synthetics_cap, get_synthetics_mtuq,\
+        get_data_cap, compare_cap_mtuq
 
 
     # the following directories correspond to the moment tensors in the list 
