@@ -23,7 +23,7 @@ if __name__=='__main__':
     # Before running this script, it is necessary to unpack the CAP/FK 
     # synthetics using data/tests/unpack.bash
     #
-    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
+    # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
     # except here we consider only seven grid points rather than an entire
     # grid, and here the final plots are a comparison of MTUQ and CAP/FK 
     # synthetics rather than a comparison of data and synthetics

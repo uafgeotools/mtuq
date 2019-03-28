@@ -630,7 +630,21 @@ Main_IntegrationTest="""
 
 
     if run_checks:
-        if not np.all(np.isclose(
+        def isclose(a, b, atol=1.e-5, rtol=1.e-8):
+            result = np.isclose(a, b, atol=atol, rtol=rtol)
+            schema = '%.e <= %.1e + %.1e * %.1e'
+
+            # print debugging values
+            for _a, _b in zip(a,b):
+                print schema % (abs(_a-_b), atol, rtol, abs(_b))
+            print ''
+            for boolean in result:
+                print boolean
+            print ''
+
+            return np.all(result)
+
+        if not isclose(
             best_mt,
             np.array([
                 -1.92678437e+15,
@@ -640,9 +654,10 @@ Main_IntegrationTest="""
                  6.81221149e+14,
                  1.66864422e+15,
                  ])
-            )):
+            ):
             raise Exception(
                 "Grid search result differs from previous mtuq result")
+
 """
 
 
