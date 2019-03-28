@@ -111,7 +111,7 @@ class Grid(object):
         for iproc in range(nproc):
             start=iproc*self.size/nproc
             stop=(iproc+1)*self.size/nproc
-            items = zip(self.keys, self.values)
+            items = zip(self.keys, self.vals)
             subsets += [Grid(dict(items), start, stop, callback=self.callback)]
         return subsets
 
