@@ -12,8 +12,7 @@ except:
 
 
 @timer
-def grid_search_mt(data_list, greens_list, misfit_list, grid, 
-    verbose=True):
+def grid_search_mt(data_list, greens_list, misfit_list, grid, verbose=True):
     """ Serial grid search over moment tensors
     """
 
@@ -25,8 +24,10 @@ def grid_search_mt(data_list, greens_list, misfit_list, grid,
     for misfit in misfit_list:
         assert hasattr(misfit, '__call__'), TypeError
 
+    # create iterator
     zipped = zip(data_list, greens_list, misfit_list)
 
+    # initialize results
     npts = grid.size
     results = np.zeros(npts)
 
@@ -41,9 +42,9 @@ def grid_search_mt(data_list, greens_list, misfit_list, grid,
     return results
 
 
+
 @timer
-def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths,
-    verbose=True):
+def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths, verbose=True):
     """ Serial grid search over moment tensors and depths
     """
 
@@ -60,30 +61,30 @@ def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths,
     for misfit in misfit_list:
         assert hasattr(misfit, '__call__'), TypeError
 
+    # create iterator
+    zipped = zip(data_list, greens_list, misfit_list)
+
+    # initialize results
     npts_inner = grid.size
     npts_outer = grid.size*len(depths)
-
     results = {}
     for depth in depths:
-        results[depth] = np.zeros(npts)
+        results[depth] = np.zeros(npts_inner)
 
     # carry out search
-    for data, greens, misfit in zip(
-        data_list, greens_list, misfit_list):
+    for _i, depth in enumerate(depths):
+        for _j, mt in enumerate(grid):
 
-        for _i, depth in enumerate(depths):
-            _greens = greens[depth]
-            _results = results[depth]
+            if verbose and not(_i*npts_inner+_j % int(0.01*npts_outer)):
+                print _message(_i*npts_inner+_j, npts_outer)
 
-            for _j, mt in enumerate(grid):
-                if verbose and not(_i*npts_inner+j % int(0.01*npts_outer)):
-                    print _message(_i*npts_inner+j, npts_outer)
+            for data, greens, misfit in zipped:
+                results[depth][_j] += misfit(data, greens[depth], mt)
 
-                _results[_j] += misfit(data, _greens, mt)
-
-            grid.index = grid.start
+        grid.index = grid.start
 
     return results
+
 
 
 def _message(pt, npts):
