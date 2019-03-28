@@ -139,16 +139,21 @@ if __name__=='__main__':
 
 
     if run_checks:
-        def isclose(a, b, atol=1.e-5, rtol=1.e-8):
-            result = np.isclose(a, b, atol=atol, rtol=rtol)
-            schema = '%.e <= %.1e + %.1e * %.1e'
+        def isclose(a, b, atol=1.e6, rtol=1.e-8):
+            # the default absolute tolerance (1.e6) is several orders of 
+            # magnitude less than the moment of a Mw=0 event
 
-            # print debugging values
+            result = np.isclose(a, b, atol=atol, rtol=rtol)
+
+            print ''
+            print 'Debugging information:'
+            print ''
             for _a, _b in zip(a,b):
-                print schema % (abs(_a-_b), atol, rtol, abs(_b))
+                print '  %.e <= %.1e + %.1e * %.1e' %\
+                     (abs(_a-_b), atol, rtol, abs(_b))
             print ''
             for boolean in result:
-                print boolean
+                print '  %s' %  boolean
             print ''
 
             return np.all(result)
