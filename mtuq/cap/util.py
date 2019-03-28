@@ -52,14 +52,13 @@ def remove_unused_stations(dataset, filename):
 # conjunction with mtuq/util/wavelets.py:Trapezoid
 #
 
-def Trapezoid(moment_magnitude=None):
-    if moment_magnitude==None:
+def Trapezoid(magnitude=None):
+    if magnitude==None:
         raise ValueError
-    Mw = moment_magnitude
 
     return EarthquakeTrapezoid(
-        rupture_time=cap_rupture_time(Mw),
-        rise_time=cap_rise_time(Mw))
+        rupture_time=cap_rupture_time(magnitude),
+        rise_time=cap_rise_time(magnitude))
 
 
 def cap_rupture_time(Mw):

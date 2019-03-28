@@ -296,10 +296,10 @@ Grid_DoubleCouple="""
 
     grid = DoubleCoupleGridRandom(
         npts=50000,
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 """
 
@@ -311,14 +311,14 @@ Grid_DoubleCoupleMagnitudeDepth="""
 
     grid = DoubleCoupleGridRandom(
         npts=50000,
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
     origins = OriginGrid(depth=np.arange(2500.,20000.,2500.),
         latitude=origin.latitude,
         longitude=origin.longitude)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 """
 
@@ -330,10 +330,10 @@ Grid_FullMomentTensor="""
 
     grid = FullMomentTensorGridRandom(
         npts=1000000,
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 """
 
@@ -360,18 +360,18 @@ Grid_BenchmarkCAP="""
         mt *= np.sqrt(2)*M0
 
     wavelet = Trapezoid(
-        moment_magnitude=Mw)
+        magnitude=Mw)
 
 """
 
 
 Grid_IntegrationTest="""
     grid = DoubleCoupleGridRegular(
-        moment_magnitude=4.5, 
+        magnitude=4.5, 
         npts_per_axis=10)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 
 """

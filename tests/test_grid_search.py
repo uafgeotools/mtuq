@@ -71,11 +71,11 @@ if __name__=='__main__':
 
 
     grid = DoubleCoupleGridRegular(
-        moment_magnitude=4.5, 
+        magnitude=4.5, 
         npts_per_axis=10)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 
 

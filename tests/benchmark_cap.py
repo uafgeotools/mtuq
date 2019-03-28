@@ -163,7 +163,7 @@ if __name__=='__main__':
         mt *= np.sqrt(2)*M0
 
     wavelet = Trapezoid(
-        moment_magnitude=Mw)
+        magnitude=Mw)
 
 
     #
