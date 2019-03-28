@@ -90,7 +90,7 @@ if __name__=='__main__':
         [4.3, 4.4, 4.5, 4.6, 4.7, 4.8])
 
     depths = np.array(
-        [24])#, 26, 28, 30, 32, 34, 36, 38, 40, 42])
+        [24, 34])#, 28, 30, 32, 34, 36, 38, 40, 42])
 
     grid = DoubleCoupleGridRegular(
         npts_per_axis=20,
@@ -106,9 +106,10 @@ if __name__=='__main__':
 
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
+    rank = comm.rank
+    nproc = comm.Get_size()
 
-
-    if comm.rank==0:
+    if rank==0:
         print 'Reading data...\n'
         data = read(path_data, format='sac', 
             event_id=event_name,
@@ -134,7 +135,7 @@ if __name__=='__main__':
     greens_bw = {}
     greens_sw = {}
 
-    if comm.rank==0:
+    if rank==0:
         print 'Downloading Greens functions...\n'
 
         for _i, depth in enumerate(depths):
@@ -155,23 +156,24 @@ if __name__=='__main__':
     # The main computational work starts now
     #
 
-    if comm.rank==0:
+    if rank==0:
         print 'Carrying out grid search...\n'
 
     results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid, depths)
 
-    results = [comm.gather(results, root=0)]
-
-
-    if comm.rank==0:
-        print 'Saving results...\n'
-
+    # gathering results
+    results_unsorted = comm.gather(results, root=0)
+    if rank==0:
+        results = {}
         for depth in depths:
-            results[depth] = np.concatenate(results[depth])
+            results[depth] = np.concatenate(
+                [results_unsorted[iproc][depth] for iproc in range(nproc)])
 
-        plot_depth_test(event_name+'_depth_test.png', 
-            grid, results)
+    #if comm.rank==0:
+    #    print 'Saving results...\n'
+    #    plot_depth_test(event_name+'_depth_test.png', 
+    #        grid, results)
 
 
