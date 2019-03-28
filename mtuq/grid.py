@@ -248,10 +248,6 @@ class UnstructuredGrid(object):
         return self
 
 
-#
-# fixed magnitude grids
-#
-
 def FullMomentTensorGridRandom(magnitude=None, npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
@@ -284,7 +280,8 @@ def FullMomentTensorGridRandom(magnitude=None, npts=50000):
 def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
     """ Full moment tensor grid with regularly-spaced values
     """
-    magnitude, N = _check_magnitude(magnitude)
+    magnitude, count = _check_magnitude(magnitude)
+    N = npts_per_axis
 
     # lower bound, upper bound, number of points
     v = [-1./3., 1./3., N]
@@ -294,8 +291,10 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 9.1)
-    rho = asarray(Mw)/np.sqrt(2)
+    rho = []
+    for Mw in magnitude:
+        M0 = 10.**(1.5*float(Mw) + 9.1)
+        rho += [M0/np.sqrt(2)]
 
     return Grid({
         'rho': asarray(rho),
@@ -311,7 +310,6 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
-
     N = npts*count
 
     # lower bound, upper bound, number of points
@@ -335,14 +333,11 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000):
         callback=TapeTape2015_to_UpSouthEast)
 
 
-def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
+def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
     """ Double-couple moment tensor grid with regularly-spaced values
     """ 
+    magnitude, count = _check_magnitude(magnitude)
     N = npts_per_axis
-
-    if not moment_magnitude:
-        raise ValueError
-    Mw = moment_magnitude
 
     # lower bound, upper bound, number of points
     kappa = [0., 360, N]
@@ -350,8 +345,10 @@ def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 9.1)
-    rho = M0*np.sqrt(2.)
+    rho = []
+    for Mw in magnitude:
+        M0 = 10.**(1.5*float(Mw) + 9.1)
+        rho += [M0/np.sqrt(2)]
 
     return Grid({
         'rho': asarray(rho),
@@ -363,7 +360,7 @@ def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
         callback=TapeTape2015_to_UpSouthEast)
 
 
-def ForceGridRegular(moment_magnitude=None, npts=25):
+def ForceGridRegular(magnitude=None, npts=25):
     """ Full moment tensor grid with randomly-spaced values
     """
     raise NotImplementedError
