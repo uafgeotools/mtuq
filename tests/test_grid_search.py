@@ -72,7 +72,7 @@ if __name__=='__main__':
 
     grid = DoubleCoupleGridRegular(
         magnitude=4.5, 
-        npts_per_axis=10)
+        npts_per_axis=5)
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -127,3 +127,14 @@ if __name__=='__main__':
     plot_beachball(event_name+'_beachball.png', best_mt)
 
 
+
+    expected_mt = np.array([
+        -1.92678437e+15,
+        -1.42813064e+00,
+         1.92678437e+15,
+         2.35981928e+15,
+         6.81221149e+14,
+         1.66864422e+15])
+
+    if not np.all(np.isclose(best_mt, expected_mt)):
+        raise Exception("Grid search result differs from previous mtuq result")

@@ -368,7 +368,7 @@ Grid_BenchmarkCAP="""
 Grid_IntegrationTest="""
     grid = DoubleCoupleGridRegular(
         magnitude=4.5, 
-        npts_per_axis=10)
+        npts_per_axis=5)
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -648,6 +648,20 @@ Main_BenchmarkCAP="""
 """
 
 
+Main_IntegrationTest = Main_SerialGridSearch+"""
+    expected_mt = np.array([
+        -1.92678437e+15,
+        -1.42813064e+00,
+         1.92678437e+15,
+         2.35981928e+15,
+         6.81221149e+14,
+         1.66864422e+15])
+
+    if not np.all(np.isclose(best_mt, expected_mt)):
+        raise Exception("Grid search result differs from previous mtuq result")
+"""
+
+
 
 if __name__=='__main__':
     import os
@@ -730,7 +744,7 @@ if __name__=='__main__':
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
         file.write(Grid_IntegrationTest)
-        file.write(Main_SerialGridSearch)
+        file.write(Main_IntegrationTest)
 
 
     with open('tests/benchmark_cap.py', 'w') as file:

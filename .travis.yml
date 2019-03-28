@@ -19,4 +19,6 @@ script:
   - data/examples/unpack.bash
   - data/tests/unpack.bash
   - python tests/benchmark_cap.py --no_figures
+  - python tests/test_grid_search.py
+
 
