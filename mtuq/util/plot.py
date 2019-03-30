@@ -14,32 +14,41 @@ def plot_beachball(filename, mt):
     pyplot.savefig(filename)
 
 
-def plot_beachballs(mt_list):
+def beachball_vs_depth(filename, mt_dict):
+    n=len(mt_dict)
 
-    beachball_list = []
-    for _i, mt in enumerate(mt_list):
-        beachball_list += [beach(mt, xy=(_i+1,  0), width=.5)]
+    fig = pyplot.figure(figsize=(n+1, 1))
+    ax = pyplot.gca()
 
+    # plot beachballs
+    for _i, mt in enumerate(mt_dict.values()):
+        ax.add_collection(
+            beach(mt, xy=(_i+1, 0), width=0.5))
+
+    # add depth labels
+    for _i, depth_in_m in enumerate(mt_dict.keys()):
+        label = str(depth_in_m/1000.)+' '+'km'
+        x, y = _i+1, -0.33
+
+        pyplot.text(x, y, label,
+            fontsize=8,
+            horizontalalignment='center')
+
+    ax.set_aspect("equal")
+    ax.set_xlim((0, n+1))
+    ax.set_ylim((-0.5, +0.5))
+    _invisible(ax)
+
+    pyplot.savefig(filename)
+    pyplot.close()
+
+
+def misfit_vs_depth(filename, misfit_dict):
     fig = pyplot.figure()
     ax = pyplot.gca()
 
-    for beachball in beachball_list:
-        ax.add_collection(beachball)
+    pyplot.plot(misfit_dict.keys(), misfit_dict.values(), '.')
 
-    ax.set_aspect("equal")
-    ax.set_xlim((0, len(mt_list)+1))
-    ax.set_ylim((-0.5, +0.5))
-
-
-def plot_depth_test(filename, grid, results):
-
-    best_misfit = {}
-    best_mt = {}
-    for depth in results:
-        best_misfit[depth] = results[depth].min()
-        best_mt[depth] = grid.get(results[depth].argmin())
-
-    plot_beachballs(best_mt.values())
     pyplot.savefig(filename)
     pyplot.close()
 
@@ -201,6 +210,10 @@ def subplot(dat, syn, label=None):
     ax.plot(t, d, 'k')
     ax.plot(t, s[start:stop], 'r')
 
+    _invisible(ax)
+
+
+def _invisible(ax):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
