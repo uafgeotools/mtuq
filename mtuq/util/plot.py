@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as pyplot
 import warnings
-from obspy.imaging.beachball import beachball
+from obspy.imaging.beachball import beach, beachball
 
 
 
@@ -13,6 +13,35 @@ def plot_beachball(filename, mt):
     beachball(mt, size=200, linewidth=2, facecolor='b')
     pyplot.savefig(filename)
 
+
+def plot_beachballs(mt_list):
+
+    beachball_list = []
+    for _i, mt in enumerate(mt_list):
+        beachball_list += [beach(mt, xy=(_i+1,  0), width=.5)]
+
+    fig = pyplot.figure()
+    ax = pyplot.gca()
+
+    for beachball in beachball_list:
+        ax.add_collection(beachball)
+
+    ax.set_aspect("equal")
+    ax.set_xlim((0, len(mt_list)+1))
+    ax.set_ylim((-0.5, +0.5))
+
+
+def plot_depth_test(filename, grid, results):
+
+    best_misfit = {}
+    best_mt = {}
+    for depth in results:
+        best_misfit[depth] = results[depth].min()
+        best_mt[depth] = grid.get(results[depth].argmin())
+
+    plot_beachballs(best_mt.values())
+    pyplot.savefig(filename)
+    pyplot.close()
 
 
 def plot_data_greens_mt(filename, data_bw, data_sw, greens_bw, greens_sw, mt, 
