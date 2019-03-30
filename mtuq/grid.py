@@ -134,6 +134,7 @@ class Grid(object):
            # get the i-th point in grid
            p = self.get(self.index)
         else:
+            self.index = self.start
             raise StopIteration
         self.index += 1
         return p
@@ -239,6 +240,7 @@ class UnstructuredGrid(object):
            # get the i-th point in grid
            p = self.get(self.index)
         else:
+            self.index = self.start
             raise StopIteration
         self.index += 1
         return p
