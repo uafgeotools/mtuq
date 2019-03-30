@@ -204,7 +204,7 @@ if __name__=='__main__':
     print 'Comparing waveforms...'
 
     for _i, mt in enumerate(grid):
-        print ' %d of %d' % (_i+1, len(grid))
+        print '  %d of %d' % (_i+1, len(grid))
 
         cap_bw, cap_sw = get_synthetics_cap(
             data_bw, data_sw, paths[_i], name)

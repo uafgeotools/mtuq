@@ -87,13 +87,17 @@ if __name__=='__main__':
     #
 
     magnitudes = np.array(
-        [4.3, 4.4, 4.5, 4.6, 4.7, 4.8]) # moment magnitude scale (Mw)
+         # moment magnitude (Mw)
+        [4.3, 4.4, 4.5,     
+         4.6, 4.7, 4.8]) 
 
-    depths = 1000.*np.array(
-        [24, 26, 28, 30, 32, 34, 36, 38, 40, 42]) # depth in  meters
+    depths = np.array(
+         # depth in meters
+        [25000, 30000, 35000, 40000,                    
+         45000, 50000, 55000, 60000])         
 
     grid = DoubleCoupleGridRegular(
-        npts_per_axis=20,
+        npts_per_axis=25,
         magnitude=magnitudes)
 
     wavelet = Trapezoid(
@@ -139,6 +143,8 @@ if __name__=='__main__':
         print 'Downloading Greens functions...\n'
 
         for _i, depth in enumerate(depths):
+            print '  Depth %d of %d' % (_i+1, len(depths))
+
             origins = deepcopy(origins)
             [setattr(origin, 'depth_in_m', depth) for origin in origins]
 
