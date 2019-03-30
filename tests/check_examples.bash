@@ -8,6 +8,8 @@
 FILENAMES="\
     ../examples/GridSearch.DoubleCouple.py\
     ../examples/SerialGridSearch.DoubleCouple.py\
+    ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py\
+    ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple+Magnitude+Depth.py\
     ../tests/benchmark_cap.py\
     "
 
