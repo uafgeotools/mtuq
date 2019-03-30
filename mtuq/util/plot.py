@@ -20,14 +20,32 @@ def beachball_vs_depth(filename, mt_dict):
     fig = pyplot.figure(figsize=(n+1, 1))
     ax = pyplot.gca()
 
+    depths = mt_dict.keys()
+    mt_list = mt_dict.values()
+    magnitudes =  [_magnitude(mt) for mt in mt_list]
+
+    # create iterator
+    zipped = zip(depths, mt_list, magnitudes)
+    zipped = sorted(zipped, key=lambda x: x[0])
+
     # plot beachballs
-    for _i, mt in enumerate(mt_dict.values()):
+    for _i, item in enumerate(zipped):
+        depth_in_m, mt, magnitude = item
+
+        # add beachball
         ax.add_collection(
             beach(mt, xy=(_i+1, 0), width=0.5))
 
-    # add depth labels
-    for _i, depth_in_m in enumerate(mt_dict.keys()):
+        # add depth label
         label = str(depth_in_m/1000.)+' '+'km'
+        x, y = _i+1, -0.5
+
+        pyplot.text(x, y, label,
+            fontsize=8,
+            horizontalalignment='center')
+
+        # add magnitude label
+        label = '%2.1f' % magnitude
         x, y = _i+1, -0.33
 
         pyplot.text(x, y, label,
@@ -296,4 +314,15 @@ def km_to_deg(distance_in_m):
     from obspy.geodetics import kilometers2degrees
     return kilometers2degrees(distance_in_m, radius=6371.)
 
+
+def _magnitude(mt):
+    M = _asmatrix(mt)
+    return (np.tensordot(M,M)/2.)*0.5
+
+
+def _asmatrix(m):
+    return np.array([
+        [m[0], m[3], m[4]],
+        [m[3], m[1], m[5]],
+        [m[4], m[5], m[2]]])
 

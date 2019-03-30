@@ -72,6 +72,7 @@ def download_greens_tensor(model, station, origin):
          +'&sourcedepthinmeters='+str(int(round(origin.depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
+
     filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
          +str(url2uuid(url)))
     if exists(filename):
@@ -122,7 +123,7 @@ def download_synthetics(model, station, origin, source):
     else:
         print ' Downloading waveforms for station %s' % station.station
         urlopen_with_retry(url, filename+'.zip')
-    return filename+'.zip'
+        return filename+'.zip'
 
 
 def download_force_response(model, station, origin):
