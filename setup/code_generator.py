@@ -846,7 +846,7 @@ if __name__=='__main__':
             replace(
             Imports,
             'syngine',
-            'fk'
+            'fk',
             ))
         file.write(Docstring_CapStyleGridSearch_DoubleCouple)
         file.write(
@@ -882,14 +882,20 @@ if __name__=='__main__':
             replace(
             Imports,
             'syngine',
-            'fk'
+            'fk',
+            'grid_search_mt',
+            'grid_search_mt_depth',
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+            'plot_beachball',
+            'beachball_vs_depth, misfit_vs_depth',
             ))
         file.write(Docstring_CapStyleGridSearch_DoubleCouple)
         file.write(
             replace(
             Paths_FK,
            r"path_greens=.*",
-           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/scak'",
+           r"path_greens= '/import/c1/ERTHQUAK/ERTHQUAK/FK_synthetics/scak'",
             ))
         file.write(
             replace(
@@ -900,14 +906,14 @@ if __name__=='__main__':
             'fk_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
-        file.write(Grid_DoubleCouple)
+        file.write(Grid_DoubleCoupleMagnitudeDepth)
         file.write(
             replace(
             Main_GridSearch_DoubleCoupleMagnitudeDepth,
             'print ''Downloading Greens functions...\\n''',
             'print ''Reading Greens functions...\\n''',
             'greens = get_greens_tensors\(stations, origins, model=model\)',
-            'db = open_db(path_greens, format=\'FK\', model=model)\n        '
+            'db = open_db(path_greens, format=\'FK\', model=model)\n            '
            +'greens = db.get_greens_tensors(stations, origins)',
             ))
 
