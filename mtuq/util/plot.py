@@ -37,11 +37,11 @@ def beachball_vs_depth(filename, mt_dict):
             beach(mt, xy=(_i+1, 0.125), width=0.5))
 
         # add depth label
-        label = str(depth_in_m/1000.)+' '+'km'
+        label = '%d km' % (depth_in_m/1000.)
         x, y = _i+1, -0.5
 
         pyplot.text(x, y, label,
-            fontsize=8,
+            fontsize=6,
             horizontalalignment='center')
 
         # add magnitude label
@@ -321,7 +321,7 @@ def km_to_deg(distance_in_m):
 def _magnitude(mt):
     M = _asmatrix(mt)
     M0 = (np.tensordot(M,M)/2.)**0.5
-    Mw = 3./2.*(np.log10(M0) - 9.1)
+    Mw = 2./3.*(np.log10(M0) - 9.1)
     return Mw
 
 
