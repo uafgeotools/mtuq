@@ -34,6 +34,7 @@ source "${VDIR}/${VENV}/bin/activate"
 
 # install mtuq in editable mode
 cd "../.."
+pip install numpy
 pip install -e .
 pip install mpi4py
 
