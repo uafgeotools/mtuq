@@ -314,10 +314,10 @@ Grid_DoubleCoupleMagnitudeDepth="""
     #
 
     magnitudes = np.array(
-        [4.3, 4.4, 4.5, 4.6, 4.7, 4.8])
+        [4.3, 4.4, 4.5, 4.6, 4.7, 4.8]) # moment magnitude scale (Mw)
 
-    depths = np.array(
-        [24, 26, 28, 30, 32, 34, 36, 38, 40, 42])
+    depths = 1000.*np.array(
+        [24, 26, 28, 30, 32, 34, 36, 38, 40, 42]) # depth in  meters
 
     grid = DoubleCoupleGridRegular(
         npts_per_axis=20,
@@ -586,10 +586,20 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             results[depth] = np.concatenate(
                 [results_unsorted[iproc][depth] for iproc in range(nproc)])
 
-    #if comm.rank==0:
-    #    print 'Saving results...\\n'
-    #    plot_depth_test(event_name+'_depth_test.png', 
-    #        grid, results)
+    if comm.rank==0:
+        print 'Saving results...\\n'
+
+        best_misfit = {}
+        best_mt = {}
+        for depth in depths:
+            best_misfit[depth] = results[depth].min()
+            best_mt[depth] = grid.get(results[depth].argmin())
+
+        filename = event_name+'_beachball_vs_depth.png'
+        beachball_vs_depth(filename, best_mt)
+
+        filename = event_name+'_misfit_vs_depth.png'
+        misfit_vs_depth(filename, best_misfit)
 
 
 """
@@ -779,6 +789,8 @@ if __name__=='__main__':
             'grid_search_mt_depth',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
+            'plot_beachball',
+            'beachball_vs_depth, misfit_vs_depth',
             ))
         file.write(Docstring_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(PathsComments)
@@ -850,6 +862,42 @@ if __name__=='__main__':
         file.write(
             replace(
             Main_GridSearch_DoubleCouple,
+            'print ''Downloading Greens functions...\\n''',
+            'print ''Reading Greens functions...\\n''',
+            'greens = get_greens_tensors\(stations, origins, model=model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n        '
+           +'greens = db.get_greens_tensors(stations, origins)',
+            ))
+
+
+    with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
+        file.write(
+            replace(
+            Imports,
+            'syngine',
+            'fk'
+            ))
+        file.write(Docstring_CapStyleGridSearch_DoubleCouple)
+        file.write(
+            replace(
+            Paths_FK,
+           r"path_greens=.*",
+           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/scak'",
+            ))
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(MisfitDefinitions)
+        file.write(Grid_DoubleCouple)
+        file.write(
+            replace(
+            Main_GridSearch_DoubleCoupleMagnitudeDepth,
             'print ''Downloading Greens functions...\\n''',
             'print ''Reading Greens functions...\\n''',
             'greens = get_greens_tensors\(stations, origins, model=model\)',

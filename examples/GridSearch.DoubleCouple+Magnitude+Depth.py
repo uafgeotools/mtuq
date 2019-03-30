@@ -12,7 +12,7 @@ from mtuq.grid_search.mpi import grid_search_mt_depth
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
-from mtuq.util.plot import plot_beachball, plot_data_greens_mt
+from mtuq.util.plot import beachball_vs_depth, misfit_vs_depth, plot_data_greens_mt
 from mtuq.util.util import path_mtuq
 
 
@@ -87,10 +87,10 @@ if __name__=='__main__':
     #
 
     magnitudes = np.array(
-        [4.3, 4.4, 4.5, 4.6, 4.7, 4.8])
+        [4.3, 4.4, 4.5, 4.6, 4.7, 4.8]) # moment magnitude scale (Mw)
 
-    depths = np.array(
-        [24, 34])#, 28, 30, 32, 34, 36, 38, 40, 42])
+    depths = 1000.*np.array(
+        [24, 26, 28, 30, 32, 34, 36, 38, 40, 42]) # depth in  meters
 
     grid = DoubleCoupleGridRegular(
         npts_per_axis=20,
@@ -171,9 +171,19 @@ if __name__=='__main__':
             results[depth] = np.concatenate(
                 [results_unsorted[iproc][depth] for iproc in range(nproc)])
 
-    #if comm.rank==0:
-    #    print 'Saving results...\n'
-    #    plot_depth_test(event_name+'_depth_test.png', 
-    #        grid, results)
+    if comm.rank==0:
+        print 'Saving results...\n'
+
+        best_misfit = {}
+        best_mt = {}
+        for depth in depths:
+            best_misfit[depth] = results[depth].min()
+            best_mt[depth] = grid.get(results[depth].argmin())
+
+        filename = event_name+'_beachball_vs_depth.png'
+        beachball_vs_depth(filename, best_mt)
+
+        filename = event_name+'_misfit_vs_depth.png'
+        misfit_vs_depth(filename, best_misfit)
 
 
