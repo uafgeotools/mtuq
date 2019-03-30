@@ -29,7 +29,7 @@ class GreensTensor(Stream):
             station=None, 
             origin=None,
             id=None, 
-            components=['Z', 'R', 'T'], 
+            components=None,
             enable_force=False):
 
         for trace in traces:
@@ -43,9 +43,6 @@ class GreensTensor(Stream):
 
         if not isinstance(origin, Origin):
             raise TypeError
-
-        for component in components:
-            assert component in ['Z', 'R', 'T']
 
         if id:
             self.id = id
@@ -196,7 +193,6 @@ class GreensTensor(Stream):
                 'channel': channel,
                 })
             self._synthetics += Trace(np.zeros(stats.npts), stats)
-
         self._synthetics.id = self.id
 
 
