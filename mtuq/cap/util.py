@@ -52,14 +52,13 @@ def remove_unused_stations(dataset, filename):
 # conjunction with mtuq/util/wavelets.py:Trapezoid
 #
 
-def Trapezoid(moment_magnitude=None):
-    if moment_magnitude==None:
+def Trapezoid(magnitude=None):
+    if magnitude==None:
         raise ValueError
-    Mw = moment_magnitude
 
     return EarthquakeTrapezoid(
-        rupture_time=cap_rupture_time(Mw),
-        rise_time=cap_rise_time(Mw))
+        rupture_time=cap_rupture_time(magnitude),
+        rise_time=cap_rise_time(magnitude))
 
 
 def cap_rupture_time(Mw):
@@ -214,6 +213,10 @@ def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt,
 
     for synthetics, greens in ((synthetics_bw, greens_bw), (synthetics_sw, greens_sw)):
         for i in range(len(synthetics)):
+            components = []
+            for trace in synthetics[i]:
+                components += [trace.meta.channel[-1]]
+            greens[i].components = components
             dummy = greens[i].get_synthetics(mt)
             for trace in synthetics[i]:
                 trace.weight = 1.

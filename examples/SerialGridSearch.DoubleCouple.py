@@ -4,6 +4,7 @@ import os
 import sys
 import numpy as np
 
+from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
@@ -96,10 +97,10 @@ if __name__=='__main__':
 
     grid = DoubleCoupleGridRandom(
         npts=50000,
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 
     #

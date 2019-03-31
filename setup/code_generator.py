@@ -5,6 +5,7 @@ import os
 import sys
 import numpy as np
 
+from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
@@ -108,7 +109,7 @@ if __name__=='__main__':
     # Before running this script, it is necessary to unpack the CAP/FK 
     # synthetics using data/tests/unpack.bash
     #
-    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
+    # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
     # except here we consider only seven grid points rather than an entire
     # grid, and here the final plots are a comparison of MTUQ and CAP/FK 
     # synthetics rather than a comparison of data and synthetics
@@ -160,7 +161,7 @@ Docstring_IntegrationTest="""
 if __name__=='__main__':
     #
     #
-    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
+    # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
     # except here we use a coarser grid, and at the end we assert that the test
     # result equals the expected result
     #
@@ -170,14 +171,9 @@ if __name__=='__main__':
 """
 
 
-Argparse_BenchmarkCAP="""
-    from mtuq.cap.util import\\
-        get_synthetics_cap, get_synthetics_mtuq,\\
-        get_data_cap, compare_cap_mtuq
-
-
+ArgparseDefinitions="""
     # by default, the script runs with figure generation and error checking
-    # turned on; these can be turned off through argparse arguments
+    # turned on
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_checks', action='store_true')
@@ -185,6 +181,14 @@ Argparse_BenchmarkCAP="""
     args = parser.parse_args()
     run_checks = (not args.no_checks)
     run_figures = (not args.no_figures)
+
+"""
+
+
+Paths_BenchmarkCAP="""
+    from mtuq.cap.util import\\
+        get_synthetics_cap, get_synthetics_mtuq,\\
+        get_data_cap, compare_cap_mtuq
 
 
     # the following directories correspond to the moment tensors in the list 
@@ -296,10 +300,10 @@ Grid_DoubleCouple="""
 
     grid = DoubleCoupleGridRandom(
         npts=50000,
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 """
 
@@ -309,16 +313,22 @@ Grid_DoubleCoupleMagnitudeDepth="""
     # Next we specify the source parameter grid
     #
 
-    grid = DoubleCoupleGridRandom(
-        npts=50000,
-        moment_magnitude=4.5)
+    magnitudes = np.array(
+         # moment magnitude (Mw)
+        [4.3, 4.4, 4.5,     
+         4.6, 4.7, 4.8]) 
 
-    origins = OriginGrid(depth=np.arange(2500.,20000.,2500.),
-        latitude=origin.latitude,
-        longitude=origin.longitude)
+    depths = np.array(
+         # depth in meters
+        [25000, 30000, 35000, 40000,                    
+         45000, 50000, 55000, 60000])         
+
+    grid = DoubleCoupleGridRegular(
+        npts_per_axis=25,
+        magnitude=magnitudes)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=np.mean(magnitudes))
 
 """
 
@@ -330,10 +340,10 @@ Grid_FullMomentTensor="""
 
     grid = FullMomentTensorGridRandom(
         npts=1000000,
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 """
 
@@ -360,18 +370,18 @@ Grid_BenchmarkCAP="""
         mt *= np.sqrt(2)*M0
 
     wavelet = Trapezoid(
-        moment_magnitude=Mw)
+        magnitude=Mw)
 
 """
 
 
 Grid_IntegrationTest="""
     grid = DoubleCoupleGridRegular(
-        moment_magnitude=4.5, 
-        npts_per_axis=10)
+        magnitude=4.5, 
+        npts_per_axis=5)
 
     wavelet = Trapezoid(
-        moment_magnitude=4.5)
+        magnitude=4.5)
 
 
 """
@@ -510,19 +520,25 @@ Main_GridSearch_DoubleCouple="""
 
 Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
-    # The main work of the grid search starts now
+    # The main I/O work starts now
     #
+
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
+    rank = comm.rank
+    nproc = comm.Get_size()
 
-
-    if comm.rank==0:
+    if rank==0:
         print 'Reading data...\\n'
         data = read(path_data, format='sac', 
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
 
         data.sort_by_distance()
+
+        stations = data.get_stations()
+        origins = data.get_origins()
+
 
         print 'Processing data...\\n'
         data_bw = data.map(process_bw, stations, origins)
@@ -538,12 +554,17 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     greens_bw = {}
     greens_sw = {}
 
-    if comm.rank==0:
-        print 'Downloading Green's functions...\\n'
+    if rank==0:
+        print 'Downloading Greens functions...\\n'
 
         for _i, depth in enumerate(depths):
-            [setattr(origin, 'depth', depth) for origin in origins]
+            print '  Depth %d of %d' % (_i+1, len(depths))
+
+            origins = deepcopy(origins)
+            [setattr(origin, 'depth_in_m', depth) for origin in origins]
+
             greens = get_greens_tensors(stations, origins, model=model)
+
             greens.convolve(wavelet)
             greens_bw[depth] = greens.map(process_bw, stations, origins)
             greens_sw[depth] = greens.map(process_sw, stations, origins)
@@ -552,30 +573,123 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     greens_sw = comm.bcast(greens_sw, root=0)
 
 
-    if comm.rank==0:
+    #
+    # The main computational work starts now
+    #
+
+    if rank==0:
         print 'Carrying out grid search...\\n'
 
-    results = grid_search_mt(
+    results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+        [misfit_bw, misfit_sw], grid, depths)
 
-    results = [comm.gather(results, root=0)]
-
+    # gathering results
+    results_unsorted = comm.gather(results, root=0)
+    if rank==0:
+        results = {}
+        for depth in depths:
+            results[depth] = np.concatenate(
+                [results_unsorted[iproc][depth] for iproc in range(nproc)])
 
     if comm.rank==0:
         print 'Saving results...\\n'
 
-        results = np.concatenate(results)
+        best_misfit = {}
+        best_mt = {}
+        for depth in depths:
+            best_misfit[depth] = results[depth].min()
+            best_mt[depth] = grid.get(results[depth].argmin())
 
-        best_mt = grid.get(results.argmin())
+        filename = event_name+'_beachball_vs_depth.png'
+        beachball_vs_depth(filename, best_mt)
 
+        filename = event_name+'_misfit_vs_depth.png'
+        misfit_vs_depth(filename, best_misfit)
+
+
+"""
+
+Main_IntegrationTest="""
+    #
+    # The integration test starts now
+    #
+
+    print 'Reading data...\\n'
+    data = read(path_data, format='sac',
+        event_id=event_name,
+        tags=['units:cm', 'type:velocity']) 
+
+    data.sort_by_distance()
+
+    stations = data.get_stations()
+    origins = data.get_origins()
+
+
+    print 'Processing data...\\n'
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
+
+    print 'Downloading Greens functions...\\n'
+    greens = get_greens_tensors(stations, origins, model=model)
+
+
+    print 'Processing Greens functions...\\n'
+    greens.convolve(wavelet)
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
+
+
+    print 'Carrying out grid search...\\n'
+
+    results = grid_search_mt(
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], grid, verbose=False)
+
+    best_mt = grid.get(results.argmin())
+
+
+    if run_figures:
         plot_data_greens_mt(event_name+'.png',
             data_bw, data_sw, greens_bw, greens_sw,
             best_mt, misfit_bw, misfit_sw)
 
-        plot_beachball(event_name+'_beachball.png', 
-            best_mt)
+        plot_beachball(event_name+'_beachball.png', best_mt)
 
+
+    if run_checks:
+        def isclose(a, b, atol=1.e6, rtol=1.e-8):
+            # the default absolute tolerance (1.e6) is several orders of 
+            # magnitude less than the moment of an Mw=0 event
+
+            result = np.isclose(a, b, atol=atol, rtol=rtol)
+
+            print ''
+            print 'Debugging information:\'
+            print ''
+            for _a, _b in zip(a,b):
+                print '  %.e <= %.1e + %.1e * %.1e' %\\
+                     (abs(_a-_b), atol, rtol, abs(_b))
+            print ''
+            for boolean in result:
+                print '  %s' %  boolean
+            print ''
+
+            return np.all(result)
+
+        if not isclose(
+            best_mt,
+            np.array([
+                -1.92678437e+15,
+                -1.42813064e+00,
+                 1.92678437e+15,
+                 2.35981928e+15,
+                 6.81221149e+14,
+                 1.66864422e+15,
+                 ])
+            ):
+            raise Exception(
+                "Grid search result differs from previous mtuq result")
 
 """
 
@@ -618,7 +732,7 @@ Main_BenchmarkCAP="""
     print 'Comparing waveforms...'
 
     for _i, mt in enumerate(grid):
-        print ' %d of %d' % (_i+1, len(grid))
+        print '  %d of %d' % (_i+1, len(grid))
 
         cap_bw, cap_sw = get_synthetics_cap(
             data_bw, data_sw, paths[_i], name)
@@ -645,8 +759,9 @@ Main_BenchmarkCAP="""
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
 
-"""
+    print ''
 
+"""
 
 
 if __name__=='__main__':
@@ -673,7 +788,16 @@ if __name__=='__main__':
 
     with open('examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
-        file.write(Imports)
+        file.write(
+            replace(
+            Imports,
+            'grid_search_mt',
+            'grid_search_mt_depth',
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+            'plot_beachball',
+            'beachball_vs_depth, misfit_vs_depth',
+            ))
         file.write(Docstring_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(PathsComments)
         file.write(Paths_Syngine)
@@ -716,62 +840,13 @@ if __name__=='__main__':
         file.write(Main_SerialGridSearch)
 
 
-    with open('tests/test_grid_search.py', 'w') as file:
-        file.write(
-            replace(
-            Imports,
-            'grid_search.mpi',
-            'grid_search.serial',
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
-            ))
-        file.write(Docstring_IntegrationTest)
-        file.write(Paths_Syngine)
-        file.write(DataProcessingDefinitions)
-        file.write(MisfitDefinitions)
-        file.write(Grid_IntegrationTest)
-        file.write(Main_SerialGridSearch)
-
-
-    with open('tests/benchmark_cap.py', 'w') as file:
-        file.write(
-            replace(
-            Imports,
-            'syngine',
-            'fk',
-            'plot_data_greens_mt',
-            'plot_data_synthetics',
-            ))
-        file.write(Docstring_BenchmarkCAP)
-        file.write(Argparse_BenchmarkCAP)
-        file.write(Paths_FK)
-        file.write(
-            replace(
-            DataProcessingDefinitions,
-            'padding_length=.*',
-            'padding_length=0,',
-            'pick_type=.*',
-            "pick_type='from_fk_metadata',",
-            'taup_model=.*,',
-            'fk_database=path_greens,',
-            ))
-        file.write(
-            replace(
-            MisfitDefinitions,
-            'time_shift_max=.*',
-            'time_shift_max=0.,',
-            ))
-        file.write(Grid_BenchmarkCAP)
-        file.write(Main_BenchmarkCAP)
-
-
     with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
             Imports,
             'syngine',
-            'fk'
+            'fk',
             ))
         file.write(Docstring_CapStyleGridSearch_DoubleCouple)
         file.write(
@@ -799,5 +874,113 @@ if __name__=='__main__':
             'db = open_db(path_greens, format=\'FK\', model=model)\n        '
            +'greens = db.get_greens_tensors(stations, origins)',
             ))
+
+
+    with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
+        file.write(
+            replace(
+            Imports,
+            'syngine',
+            'fk',
+            'grid_search_mt',
+            'grid_search_mt_depth',
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+            'plot_beachball',
+            'beachball_vs_depth, misfit_vs_depth',
+            ))
+        file.write(Docstring_CapStyleGridSearch_DoubleCouple)
+        file.write(
+            replace(
+            Paths_FK,
+           r"path_greens=.*",
+           r"path_greens= '/import/c1/ERTHQUAK/ERTHQUAK/FK_synthetics/scak'",
+            ))
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(MisfitDefinitions)
+        file.write(Grid_DoubleCoupleMagnitudeDepth)
+        file.write(
+            replace(
+            Main_GridSearch_DoubleCoupleMagnitudeDepth,
+            'print ''Downloading Greens functions...\\n''',
+            'print ''Reading Greens functions...\\n''',
+            'greens = get_greens_tensors\(stations, origins, model=model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n            '
+           +'greens = db.get_greens_tensors(stations, origins)',
+            ))
+
+
+    with open('tests/test_grid_search.py', 'w') as file:
+        file.write(
+            replace(
+            Imports,
+            'grid_search.mpi',
+            'grid_search.serial',
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+            ))
+        file.write(Docstring_IntegrationTest)
+        file.write(ArgparseDefinitions)
+        file.write(Paths_FK)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(MisfitDefinitions)
+        file.write(Grid_IntegrationTest)
+        file.write(
+            replace(
+            Main_IntegrationTest,
+            'print ''Downloading Greens functions...\\n''',
+            'print ''Reading Greens functions...\\n''',
+            'greens = get_greens_tensors\(stations, origins, model=model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n    '
+           +'greens = db.get_greens_tensors(stations, origins)',
+            ))
+
+
+    with open('tests/benchmark_cap.py', 'w') as file:
+        file.write(
+            replace(
+            Imports,
+            'syngine',
+            'fk',
+            'plot_data_greens_mt',
+            'plot_data_synthetics',
+            ))
+        file.write(Docstring_BenchmarkCAP)
+        file.write(ArgparseDefinitions)
+        file.write(Paths_BenchmarkCAP)
+        file.write(Paths_FK)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'padding_length=.*',
+            'padding_length=0,',
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(
+            replace(
+            MisfitDefinitions,
+            'time_shift_max=.*',
+            'time_shift_max=0.,',
+            ))
+        file.write(Grid_BenchmarkCAP)
+        file.write(Main_BenchmarkCAP)
 
 

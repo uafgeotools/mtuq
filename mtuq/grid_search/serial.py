@@ -1,7 +1,9 @@
 
 import numpy as np
 import time
-from mtuq.util.util import iterable
+from mtuq import Dataset, GreensTensorList
+from mtuq.grid import Grid, UnstructuredGrid
+from mtuq.util.util import timer
 
 try:
     import h5py
@@ -9,46 +11,83 @@ except:
     warn('Could not import h5py.')
 
 
-def timer(func):
-    """ Decorator for measuring execution time; prints elapsed time to
-        standard output
-    """
-    def timed_func(*args, **kwargs):
-        if kwargs.get('verbose', True):
-            start_time = time.time()
-            output = func(*args, **kwargs)
-            elapsed_time = time.time() - start_time
-            print '  Elapsed time (s): %f\n' % elapsed_time
-            return output
-        else:
-            return func(*args, **kwargs)
-
-    return timed_func
-
-
 @timer
-def grid_search_mt(data, greens, misfit, grid, verbose=True):
-    """ Serial grid search 
-
-    Grid search over moment tensors. For each moment tensor in grid, generates
-    synthetics and evaluates data misfit
+def grid_search_mt(data_list, greens_list, misfit_list, grid, verbose=True):
+    """ Serial grid search over moment tensors
     """
-    # creates an object we can iterate over
-    zipped = zip(iterable(data), iterable(greens), iterable(misfit))
 
-    results = np.zeros(grid.size)
-    count = 0
+    # type checking
+    for data in data_list:
+        assert isinstance(data, Dataset), TypeError
+    for greens in greens_list:
+        assert isinstance(greens, GreensTensorList), TypeError
+    for misfit in misfit_list:
+        assert hasattr(misfit, '__call__'), TypeError
 
-    for mt in grid:
-        #print grid.index
-        for _data, _greens, _misfit in zipped:
-            results[count] += _misfit(_data, _greens, mt)
-        count += 1
+    # create iterator
+    zipped = zip(data_list, greens_list, misfit_list)
+
+    # initialize results
+    npts = grid.size
+    results = np.zeros(npts)
+
+    # carry out search
+    for _i, mt in enumerate(grid):
+        if verbose and not(_i % int(0.1*npts)):
+            print _message(_i, npts)
+
+        for data, greens, misfit in zipped:
+            results[_i] += misfit(data, greens, mt)
 
     return results
 
 
-def grid_search_mt_origin(data, greens, misfit, grid):
-    raise NotImplementedError
 
+@timer
+def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths, verbose=True):
+    """ Serial grid search over moment tensors and depths
+    """
+
+    # type checking
+    for data in data_list:
+        assert isinstance(data, Dataset), TypeError
+
+    for greens in greens_list:
+        # Green's functions are depth dependent
+        assert isinstance(greens, dict), TypeError
+        for depth, _greens in greens.items():
+            assert isinstance(_greens, GreensTensorList), TypeError
+
+    for misfit in misfit_list:
+        assert hasattr(misfit, '__call__'), TypeError
+
+    # create iterator
+    zipped = zip(data_list, greens_list, misfit_list)
+
+    # initialize results
+    npts_inner = grid.size
+    npts_outer = grid.size*len(depths)
+    results = {}
+    for depth in depths:
+        results[depth] = np.zeros(npts_inner)
+
+    # carry out search
+    for _i, depth in enumerate(depths):
+        for _j, mt in enumerate(grid):
+
+            if verbose and not ((_i*npts_inner+_j) % int(0.01*npts_outer)):
+                print _message(_i*npts_inner+_j, npts_outer)
+
+            for data, greens, misfit in zipped:
+                results[depth][_j] += misfit(data, greens[depth], mt)
+
+    return results
+
+
+
+def _message(pt, npts):
+    return (
+            '  about %2d%% finished\n'
+            % (int(100*pt/npts))
+           )
 

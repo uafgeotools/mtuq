@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np
 
+from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
@@ -23,7 +24,7 @@ if __name__=='__main__':
     # Before running this script, it is necessary to unpack the CAP/FK 
     # synthetics using data/tests/unpack.bash
     #
-    # This script is similar to examples/SerialGridSearch.DoubleCouple3.py,
+    # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
     # except here we consider only seven grid points rather than an entire
     # grid, and here the final plots are a comparison of MTUQ and CAP/FK 
     # synthetics rather than a comparison of data and synthetics
@@ -69,13 +70,8 @@ if __name__=='__main__':
     #
 
 
-    from mtuq.cap.util import\
-        get_synthetics_cap, get_synthetics_mtuq,\
-        get_data_cap, compare_cap_mtuq
-
-
     # by default, the script runs with figure generation and error checking
-    # turned on; these can be turned off through argparse arguments
+    # turned on
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_checks', action='store_true')
@@ -83,6 +79,11 @@ if __name__=='__main__':
     args = parser.parse_args()
     run_checks = (not args.no_checks)
     run_figures = (not args.no_figures)
+
+
+    from mtuq.cap.util import\
+        get_synthetics_cap, get_synthetics_mtuq,\
+        get_data_cap, compare_cap_mtuq
 
 
     # the following directories correspond to the moment tensors in the list 
@@ -163,7 +164,7 @@ if __name__=='__main__':
         mt *= np.sqrt(2)*M0
 
     wavelet = Trapezoid(
-        moment_magnitude=Mw)
+        magnitude=Mw)
 
 
     #
@@ -203,7 +204,7 @@ if __name__=='__main__':
     print 'Comparing waveforms...'
 
     for _i, mt in enumerate(grid):
-        print ' %d of %d' % (_i+1, len(grid))
+        print '  %d of %d' % (_i+1, len(grid))
 
         cap_bw, cap_sw = get_synthetics_cap(
             data_bw, data_sw, paths[_i], name)
@@ -229,4 +230,6 @@ if __name__=='__main__':
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
+
+    print ''
 

@@ -111,7 +111,7 @@ class Grid(object):
         for iproc in range(nproc):
             start=iproc*self.size/nproc
             stop=(iproc+1)*self.size/nproc
-            items = zip(self.keys, self.values)
+            items = zip(self.keys, self.vals)
             subsets += [Grid(dict(items), start, stop, callback=self.callback)]
         return subsets
 
@@ -134,6 +134,7 @@ class Grid(object):
            # get the i-th point in grid
            p = self.get(self.index)
         else:
+            self.index = self.start
             raise StopIteration
         self.index += 1
         return p
@@ -239,6 +240,7 @@ class UnstructuredGrid(object):
            # get the i-th point in grid
            p = self.get(self.index)
         else:
+            self.index = self.start
             raise StopIteration
         self.index += 1
         return p
@@ -248,14 +250,11 @@ class UnstructuredGrid(object):
         return self
 
 
-def FullMomentTensorGridRandom(moment_magnitude=None, npts=50000):
+def FullMomentTensorGridRandom(magnitude=None, npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
-    N = npts
-
-    if not moment_magnitude:
-        raise ValueError
-    Mw = moment_magnitude
+    magnitude, count = _check_magnitude(magnitude)
+    N = npts*count
 
     # lower bound, upper bound, number of points
     v = [-1./3., 1./3., N]
@@ -265,11 +264,13 @@ def FullMomentTensorGridRandom(moment_magnitude=None, npts=50000):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 9.1)
-    rho = M0*np.sqrt(2.)
+    rho = np.zeros((count, npts))
+    for _i, Mw in enumerate(magnitude):
+        M0 = 10.**(1.5*float(Mw) + 9.1)
+        rho[_i, :] = M0*np.sqrt(2.)
 
     return UnstructuredGrid({
-        'rho': rho*np.ones(N),
+        'rho': rho.flatten(),
         'v': random(*v),
         'w': random(*w),
         'kappa': random(*kappa),
@@ -278,14 +279,11 @@ def FullMomentTensorGridRandom(moment_magnitude=None, npts=50000):
         callback=TapeTape2015_to_UpSouthEast)
 
 
-def FullMomentTensorGridRegular(moment_magnitude=None, npts_per_axis=25):
+def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
     """ Full moment tensor grid with regularly-spaced values
     """
+    magnitude, count = _check_magnitude(magnitude)
     N = npts_per_axis
-
-    if not moment_magnitude:
-        raise ValueError
-    Mw = moment_magnitude
 
     # lower bound, upper bound, number of points
     v = [-1./3., 1./3., N]
@@ -295,8 +293,10 @@ def FullMomentTensorGridRegular(moment_magnitude=None, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 9.1)
-    rho = asarray(Mw)/np.sqrt(2)
+    rho = []
+    for Mw in magnitude:
+        M0 = 10.**(1.5*float(Mw) + 9.1)
+        rho += [M0/np.sqrt(2)]
 
     return Grid({
         'rho': asarray(rho),
@@ -308,14 +308,11 @@ def FullMomentTensorGridRegular(moment_magnitude=None, npts_per_axis=25):
         callback=TapeTape2015_to_UpSouthEast)
 
 
-def DoubleCoupleGridRandom(moment_magnitude=None, npts=50000):
+def DoubleCoupleGridRandom(magnitude=None, npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
     """
-    N = npts
-
-    if not moment_magnitude:
-        raise ValueError
-    Mw = moment_magnitude
+    magnitude, count = _check_magnitude(magnitude)
+    N = npts*count
 
     # lower bound, upper bound, number of points
     kappa = [0., 360, N]
@@ -323,11 +320,13 @@ def DoubleCoupleGridRandom(moment_magnitude=None, npts=50000):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 9.1)
-    rho = M0*np.sqrt(2.)
+    rho = np.zeros((count, npts))
+    for _i, Mw in enumerate(magnitude):
+        M0 = 10.**(1.5*float(Mw) + 9.1)
+        rho[_i, :] = M0*np.sqrt(2.)
 
     return UnstructuredGrid({
-        'rho': rho*np.ones(N),
+        'rho': rho.flatten(),
         'v': np.zeros(N),
         'w': np.zeros(N),
         'kappa': random(*kappa),
@@ -336,14 +335,11 @@ def DoubleCoupleGridRandom(moment_magnitude=None, npts=50000):
         callback=TapeTape2015_to_UpSouthEast)
 
 
-def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
+def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
     """ Double-couple moment tensor grid with regularly-spaced values
     """ 
+    magnitude, count = _check_magnitude(magnitude)
     N = npts_per_axis
-
-    if not moment_magnitude:
-        raise ValueError
-    Mw = moment_magnitude
 
     # lower bound, upper bound, number of points
     kappa = [0., 360, N]
@@ -351,8 +347,10 @@ def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
     h = [0., 1., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 9.1)
-    rho = M0*np.sqrt(2.)
+    rho = []
+    for Mw in magnitude:
+        M0 = 10.**(1.5*float(Mw) + 9.1)
+        rho += [M0/np.sqrt(2)]
 
     return Grid({
         'rho': asarray(rho),
@@ -364,30 +362,29 @@ def DoubleCoupleGridRegular(moment_magnitude=None, npts_per_axis=25):
         callback=TapeTape2015_to_UpSouthEast)
 
 
-def ForceGridRegular(moment_magnitude=None, npts=25):
+def ForceGridRegular(magnitude=None, npts=25):
     """ Full moment tensor grid with randomly-spaced values
     """
     raise NotImplementedError
 
 
-def ForceGridRandom(moment_magnitude=None, npts=50000):
+def ForceGridRandom(magnitude=None, npts=50000):
     """ Full moment tensor grid with randomly-spaced values
     """
-    N = npts
-
-    if not moment_magnitude:
-        raise ValueError
-    Mw = moment_magnitude
+    magnitude, count = _check_magnitude(magnitude)
+    N = npts*count
 
     theta = [0., 180, N]
     phi = [0., 360., N]
 
     # magnitude is treated separately
-    M0 = 10.**(1.5*float(Mw) + 9.1)
-    r = M0*np.sqrt(2.)
+    r = np.zeros((count, npts))
+    for _i, Mw in enumerate(magnitude):
+        M0 = 10.**(1.5*float(Mw) + 9.1)
+        r[_i, :] = M0*np.sqrt(2.)
 
     return UnstructuredGrid({
-        'r': r*np.ones(N),
+        'r': r.flatten(),
         'theta': random(*theta),
         'phi': random(*phi)},
         callback=spherical_to_Cartesian)
@@ -397,12 +394,6 @@ def ForceGridRandom(moment_magnitude=None, npts=50000):
 def OriginGrid():
     raise NotImplementedError
 
-
-
-def cross():
-    """ Cartesian product utility
-    """
-    raise NotImplementedError
 
 
 def spherical_to_Cartesian(dict):
@@ -423,4 +414,15 @@ def TapeTape2015_to_UpSouthEast(*args, **kwargs):
     """
     from mtuq.util.moment_tensor.tape2015 import tt152cmt
     return tt152cmt(*args, **kwargs)
+
+
+def _check_magnitude(M):
+    if type(M) in [np.ndarray, list, tuple]:
+        count = len(M)
+    elif type(M) in [int, float]:
+        M = [float(M)]
+        count = 1
+    else:
+        raise TypeError
+    return M, count
 
