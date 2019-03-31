@@ -77,6 +77,9 @@ def misfit_vs_depth(filename, misfit_dict):
 def plot_data_greens_mt(filename, data_bw, data_sw, greens_bw, greens_sw, mt, 
         misfit_bw=None, misfit_sw=None, **kwargs):
 
+    greens_bw.map(_set_components, data_bw)
+    greens_sw.map(_set_components, data_sw)
+
     # generate synthetics
     synthetics_bw = greens_bw.get_synthetics(mt)
     synthetics_sw = greens_sw.get_synthetics(mt)
@@ -330,4 +333,10 @@ def _asmatrix(m):
         [m[0], m[3], m[4]],
         [m[3], m[1], m[5]],
         [m[4], m[5], m[2]]])
+
+
+def _set_components(greens, data):
+    greens.components = [trace.stats.channel[-1] for trace in data]
+    return greens
+
 
