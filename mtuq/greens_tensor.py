@@ -106,7 +106,7 @@ class GreensTensor(Stream):
         return self._synthetics
 
 
-    def get_time_shift(self, data, mt, group, time_shift_max):
+    def get_time_shift(self, data, source, group, time_shift_max):
         """ 
         Finds optimal time-shift correction between synthetics and
         user-supplied da
@@ -134,12 +134,19 @@ class GreensTensor(Stream):
 
         for component in group:
             _i = self.components.index(component)
-            cc_sum += mt[0] * cc_all[_i, 0, :]
-            cc_sum += mt[1] * cc_all[_i, 1, :]
-            cc_sum += mt[2] * cc_all[_i, 2, :]
-            cc_sum += mt[3] * cc_all[_i, 3, :]
-            cc_sum += mt[4] * cc_all[_i, 4, :]
-            cc_sum += mt[5] * cc_all[_i, 5, :]
+            if len(source)==6:
+                cc_sum += source[0] * cc_all[_i, 0, :]
+                cc_sum += source[1] * cc_all[_i, 1, :]
+                cc_sum += source[2] * cc_all[_i, 2, :]
+                cc_sum += source[3] * cc_all[_i, 3, :]
+                cc_sum += source[4] * cc_all[_i, 4, :]
+                cc_sum += source[5] * cc_all[_i, 5, :]
+            elif len(source)==3:
+                # force source
+                cc_sum += source[0] * cc_all[_i, 6, :]
+                cc_sum += source[1] * cc_all[_i, 7, :]
+                cc_sum += source[2] * cc_all[_i, 8, :]
+
 
         # what is the index of the maximum element of the padded array?
         argmax = cc_sum.argmax()
