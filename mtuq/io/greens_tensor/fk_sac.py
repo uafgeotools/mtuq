@@ -137,8 +137,8 @@ class Client(ClientBase):
     by Lupei Zhu.
 
     """
-    def __init__(self, path=None, model=None):
-        if not path:
+    def __init__(self, path_or_url=None, model=None):
+        if not path_or_url:
             raise Exception
 
         if not exists(path):
@@ -148,7 +148,7 @@ class Client(ClientBase):
             model = basename(path)
 
         # path to fk directory tree
-        self.path = path
+        self.path = path_or_url
 
         # model from which fk Green's functions were computed
         self.model = model

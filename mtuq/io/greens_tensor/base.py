@@ -11,7 +11,7 @@ class Client(object):
     they are downloaded on-the-fly or read from a pre-computed database--
     are deferred to the subclass.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, path_or_url='', **kwargs):
         raise NotImplementedError("Must be implemented by subclass")
 
 
