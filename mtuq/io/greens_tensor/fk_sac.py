@@ -141,11 +141,11 @@ class Client(ClientBase):
         if not path_or_url:
             raise Exception
 
-        if not exists(path):
+        if not exists(path_or_url):
             raise Exception
 
         if not model:
-            model = basename(path)
+            model = basename(path_or_url)
 
         # path to fk directory tree
         self.path = path_or_url
