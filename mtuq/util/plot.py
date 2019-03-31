@@ -41,7 +41,7 @@ def beachball_vs_depth(filename, mt_dict):
         x, y = _i+1, -0.5
 
         pyplot.text(x, y, label,
-            fontsize=6,
+            fontsize=8,
             horizontalalignment='center')
 
         # add magnitude label
