@@ -157,17 +157,35 @@ if __name__=='__main__':
 """
 
 
-Docstring_IntegrationTest="""
+Docstring_Test_GridSearchMt="""
 if __name__=='__main__':
     #
+    # Grid search integration test
     #
     # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
     # except here we use a coarser grid, and at the end we assert that the test
     # result equals the expected result
     #
-    # The compare against CAP/FK
+    # The compare against CAP/FK:
+    #
     # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1/1/10/10/10 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
+    #
+    # Note however that CAP uses a different method for defining regular grids
+    #
 
+"""
+
+
+
+Docstring_Test_GridSearchMtMagnitudeDepth="""
+if __name__=='__main__':
+    #
+    # Grid search integration test
+    #
+    # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
+    # except here we use a coarser grid, and at the end we assert that the test
+    # result equals the expected result
+    #
 """
 
 
@@ -375,7 +393,7 @@ Grid_BenchmarkCAP="""
 """
 
 
-Grid_IntegrationTest="""
+Grid_Test_GridSearchMtMagnitudeDepth="""
     grid = DoubleCoupleGridRegular(
         magnitude=4.5, 
         npts_per_axis=5)
@@ -610,7 +628,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 """
 
-Main_IntegrationTest="""
+Main_Test_GridSearchMtMagnitudeDepth="""
     #
     # The integration test starts now
     #
@@ -918,7 +936,7 @@ if __name__=='__main__':
             ))
 
 
-    with open('tests/test_grid_search.py', 'w') as file:
+    with open('tests/test_grid_search_mt.py', 'w') as file:
         file.write(
             replace(
             Imports,
@@ -927,7 +945,7 @@ if __name__=='__main__':
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             ))
-        file.write(Docstring_IntegrationTest)
+        file.write(Docstring_Test_GridSearchMtMagnitudeDepth)
         file.write(ArgparseDefinitions)
         file.write(Paths_FK)
         file.write(
@@ -939,10 +957,10 @@ if __name__=='__main__':
             'fk_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
-        file.write(Grid_IntegrationTest)
+        file.write(Grid_Test_GridSearchMtMagnitudeDepth)
         file.write(
             replace(
-            Main_IntegrationTest,
+            Main_Test_GridSearchMtMagnitudeDepth,
             'print ''Downloading Greens functions...\\n''',
             'print ''Reading Greens functions...\\n''',
             'greens = get_greens_tensors\(stations, origins, model=model\)',
