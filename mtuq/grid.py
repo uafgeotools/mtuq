@@ -27,7 +27,7 @@ class Grid(object):
     :param: stop: when iterating over the grid, stop at this element
     :param: callback: optional function applied to each grid point
        through a callback to the ``get`` method. Can be used to carry out a
-       coordinate transformation or a more general reparameterizatoin.
+       linear coordinate transformation or a more general reparameterization
 
 
     .. rubric:: Examples
@@ -150,6 +150,11 @@ class UnstructuredGrid(object):
 
     param dict: dictionary containing the complete set of coordinate values for
        each parameter
+    :param: start: when iterating over the grid, start at this element
+    :param: stop: when iterating over the grid, stop at this element
+    :param: callback: optional function applied to each grid point
+       through a callback to the ``get`` method. Can be used to carry out a
+       linear coordinate transformation or a more general reparameterization
 
     .. rubric:: Examples
 
@@ -409,8 +414,9 @@ def spherical_to_Cartesian(dict):
 
 
 def TapeTape2015_to_UpSouthEast(*args, **kwargs):
-    """ Converts from Tape2015 parameterization in which the grid is defined
-    to up-south-east parameterization used elsewhere in the code
+    """ Converts from Tape2015 parameterization in which several of the above
+    grids are defined to up-south-east parameterization used elsewhere in the 
+    code
     """
     from mtuq.util.moment_tensor.tape2015 import tt152cmt
     return tt152cmt(*args, **kwargs)
