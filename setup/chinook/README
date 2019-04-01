@@ -15,7 +15,7 @@ Then run the installation script:
 
 NOTES 
 
-- `install.bash` loads required chinook modules and creates a pip virtual
+- `install.bash` loads required chinook modules and creates a virtual
 environment that can be used during the current session and any subsequent
 sessions.  
 
@@ -30,8 +30,7 @@ following the more general instructions in `mtuq/docs`.
 Activating the MTUQ virtual environment
 ---------------------------------------
 
-At the beginning of a session, users must activate the pip virtual 
-environment:
+At the beginning of a session, users must activate the virtual environment:
 
    > source setup/chinook/activate.bash
 
@@ -44,7 +43,7 @@ At the end of a session, it is a good idea to deactivate the environment:
 Running the examples
 --------------------
 
-After activating the pip virtual environment, users can run either the serial
+After activating the virtual environment, users can run either the serial
 example located in `mtuq/examples` or the parallel example located in
 `mtuq/setup/chinook/examples`.
 
@@ -63,8 +62,8 @@ NOTES
 
 - The above examples reproduce results from Silwal2016
 
-- Recorded seismic data for the main Silwal2016 test case are included the mtuq
-repository, so it is not necessary to download them
+- Recorded seismic data for the main Silwal2016 test case are included in the
+mtuq repository, so it is not necessary to re-download them
 
 - The serial example uses the syngine webservice to obtain AxiSEM Green's
 functions.  The parallel example uses a local chinook databaset to obtain
@@ -84,9 +83,9 @@ examples as follows:
 - Change `path_weights` to the CAP-style weight file included with the pysep
  download
 
-- Change the `moment_magnitude` keyword arguments to the desired value for the
-current event (if you wish magnitude to be fixed) or to the desired range of
-magnitudes (if you wish to include magnitude as a search parameter)
+- Change the `magnitude` keyword arguments to the desired value for the
+current event, or to the desired list of magnitudes if you wish to include
+magnitude as a search parameter
 
 - Optionally, adjust the Earth model, data processing and misfit settings.
 (Default choices match Silwal2016.)
