@@ -151,3 +151,5 @@ if __name__=='__main__':
     plot_beachball(event_name+'_beachball.png', best_mt)
 
 
+    print 'Finished\n'
+

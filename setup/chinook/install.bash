@@ -35,7 +35,7 @@ pip --no-cache-dir install mpi4py
 
 
 # install mtuq in editable mode
-cd "../.."
+cd ../..
 pip --no-cache-dir install -e .
 
 

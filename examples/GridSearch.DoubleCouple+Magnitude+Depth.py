@@ -195,4 +195,6 @@ if __name__=='__main__':
         filename = event_name+'_misfit_vs_depth.png'
         misfit_vs_depth(filename, best_misfit)
 
+        print 'Finished\n'
+
 

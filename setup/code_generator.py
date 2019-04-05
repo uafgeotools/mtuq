@@ -458,6 +458,8 @@ Main_SerialGridSearch="""
     plot_beachball(event_name+'_beachball.png', best_mt)
 
 
+    print 'Finished\\n'
+
 """
 
 
@@ -534,6 +536,7 @@ Main_GridSearch_DoubleCouple="""
         plot_beachball(event_name+'_beachball.png', 
             best_mt)
 
+        print 'Finished\\n'
 
 """
 
@@ -627,6 +630,8 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         filename = event_name+'_misfit_vs_depth.png'
         misfit_vs_depth(filename, best_misfit)
+
+        print 'Finished\\n'
 
 
 """
