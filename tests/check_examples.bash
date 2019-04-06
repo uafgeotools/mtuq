@@ -7,10 +7,12 @@
 
 FILENAMES="\
     ../examples/GridSearch.DoubleCouple.py\
+    ../examples/GridSearch.DoubleCouple+Magnitude+Depth.py\
     ../examples/SerialGridSearch.DoubleCouple.py\
     ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py\
     ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple+Magnitude+Depth.py\
     ../tests/benchmark_cap.py\
+    ../tests/test_grid_search_mt.py\
     "
 
 # navigate to mtuq/tests

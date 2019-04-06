@@ -25,6 +25,9 @@ if __name__=='__main__':
     #   
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
+    #
+    # This is the most complicated example. For much simpler one, see
+    # SerialGridSearch.DoubleCouple.py
     #   
 
 
@@ -191,5 +194,7 @@ if __name__=='__main__':
 
         filename = event_name+'_misfit_vs_depth.png'
         misfit_vs_depth(filename, best_misfit)
+
+        print 'Finished\n'
 
 

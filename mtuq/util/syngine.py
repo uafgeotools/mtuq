@@ -55,7 +55,7 @@ def resolve_model(name):
         raise ValueError('Bad model')
 
 
-def download_greens_tensor(model, station, origin):
+def download_greens_tensor(url, model, station, origin):
     """ Downloads Green's functions through syngine URL interface
     """
     if hasattr(station, 'distance_in_m'):
@@ -64,7 +64,7 @@ def download_greens_tensor(model, station, origin):
         distance_in_deg = m_to_deg(station.preliminary_distance_in_m)
 
 
-    url = ('http://service.iris.edu/irisws/syngine/1/query'
+    url = (url+'/'+'query'
          +'?model='+model
          +'&dt='+str(station.delta)
          +'&greensfunction=1'
@@ -85,7 +85,7 @@ def download_greens_tensor(model, station, origin):
         return filename
 
 
-def download_synthetics(model, station, origin, source):
+def download_synthetics(url, model, station, origin, source):
     """ Downloads synthetics through syngine URL interface
     """
     if len(source)==6:
@@ -95,7 +95,7 @@ def download_synthetics(model, station, origin, source):
     else:
         raise TypeError
 
-    url = ('http://service.iris.edu/irisws/syngine/1/query'
+    url = (url+'/'+'query'
          +'?model='+model
          +'&dt='+str(station.delta)
          +'&components=ZRT'
@@ -126,7 +126,7 @@ def download_synthetics(model, station, origin, source):
         return filename+'.zip'
 
 
-def download_force_response(model, station, origin):
+def download_force_response(url, model, station, origin):
     forces = []
     forces += [np.array([1., 0., 0.])]
     forces += [np.array([0., 1., 0.])]
@@ -134,14 +134,14 @@ def download_force_response(model, station, origin):
 
     filenames = []
     for force in forces:
-        filenames += [download_synthetics(model, station, origin, force)]
+        filenames += [download_synthetics(url, model, station, origin, force)]
     return filenames
 
 
-def get_synthetics_syngine(model, station, origin, mt):
+def get_synthetics_syngine(url, model, station, origin, mt):
     from mtuq.dataset.sac import read
 
-    dirname = unzip(download_synthetics(model, station, origin, mt))
+    dirname = unzip(download_synthetics(url, model, station, origin, mt))
     stream = read(dirname)[0]
 
     # what are the start and end times of the data?

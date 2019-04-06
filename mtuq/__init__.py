@@ -24,14 +24,14 @@ def _greens_tensor_clients():
     return clients
 
 
-def open_db(path, format='', **kwargs):
+def open_db(path_or_url='', format='', **kwargs):
     """ Opens databse containing Green's functions
 
     Once opened, ``GreensTensor`` objects can be generated using the
     ``get_greens_tensor`` method of the database.
     """
     format = format.upper()
-    return _greens_tensor_clients()[format](path, **kwargs)
+    return _greens_tensor_clients()[format](path_or_url=path_or_url, **kwargs)
 
 
 def _readers():

@@ -12,10 +12,10 @@ fi
 
 # navigate to mtuq/setup/chinook
 cd $(dirname ${BASH_SOURCE[0]})
-VDIR="$PWD/install"
-VENV="mtuq"
 
-if [[ -d ${VIDR}/${VENV} ]];
+
+DIR="$PWD/install/mtuq"
+if [[ -d $DIR ]];
 then
     echo "Error: Virtual environment already exists"
     exit 1
@@ -27,16 +27,16 @@ module load lang/Python/2.7.12-pic-intel-2016b
 
 
 # create virutal environment
-mkdir -p $VDIR
-virtualenv "${VDIR}/${VENV}"
-source "${VDIR}/${VENV}/bin/activate"
+mkdir -p $DIR
+virtualenv "$DIR"
+source "${DIR}/bin/activate"
+pip --no-cache-dir install numpy
+pip --no-cache-dir install mpi4py
 
 
 # install mtuq in editable mode
-cd "../.."
-pip install numpy
-pip install -e .
-pip install mpi4py
+cd ../..
+pip --no-cache-dir install -e .
 
 
 # adjust matplotlib backend

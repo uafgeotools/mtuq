@@ -43,7 +43,11 @@ class Client(ClientBase):
     corresponding station-event pairs.
     """
 
-    def __init__(self, model=None, enable_force=False):
+    def __init__(self, path_or_url=None, model=None, enable_force=False):
+        if not path_or_url:
+            path_or_url = 'http://service.iris.edu/irisws/syngine/1'
+        self.url = path_or_url
+
         # Checks against list of currently supported models. If necessary,
         # appends required period band suffix
         self.model = resolve_model(model)
@@ -57,7 +61,8 @@ class Client(ClientBase):
         stream = Stream()
 
         # download and unzip data
-        dirname = unzip(download_greens_tensor(self.model, station, origin))
+        dirname = unzip(
+            download_greens_tensor(self.url, self.model, station, origin))
 
         # read data
         stream = Stream()
@@ -66,7 +71,9 @@ class Client(ClientBase):
             stream += obspy.read(dirname+'/'+filename, format='sac')
 
         if self.enable_force:
-            filenames = download_force_response(self.model, station, origin)
+            filenames = download_force_response(
+                self.url, self.model, station, origin)
+
             dirnames = []
             for filename in filenames:
                 dirnames += [unzip(filename)]

@@ -180,7 +180,9 @@ class Client(ClientBase):
 
     """
 
-    def __init__(self, path=None, kernelwidth=12):
+    def __init__(self, path_or_url='', kernelwidth=12):
+        if not path:
+            raise Exception
         try:
             db = instaseis.open_db(path)
         except:
