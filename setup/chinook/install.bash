@@ -5,7 +5,9 @@
 
 if [[ ! $HOSTNAME == chinook* ]];
 then
-    echo "Error: This script works only on chinook.alaska.edu"
+    echo ""
+    echo "Error: This script works only on chinook*.alaska.edu"
+    echo ""
     exit 1
 fi
 
@@ -17,7 +19,9 @@ cd $(dirname ${BASH_SOURCE[0]})
 DIR="$PWD/install/mtuq"
 if [[ -d $DIR ]];
 then
+    echo ""
     echo "Error: Virtual environment already exists"
+    echo ""
     exit 1
 fi
 

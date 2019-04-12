@@ -6,22 +6,20 @@
 # > source activate.bash
 
 
-ERROR="
-This script is not being sourced
-"
 if [ "${BASH_SOURCE[0]}" == "${0}" ];
 then
-    echo $ERROR
+    echo ""
+    echo "This script must be sourced"
+    echo ""
     exit 1
 fi
 
 
-ERROR="
-This script works only on chinook.alaska.edu
-"
 if [[ ! $HOSTNAME == chinook* ]];
 then
-    echo "$ERROR"
+    echo ""
+    echo "This script works only on chinook*.alaska.edu"
+    echo ""
     return 1
 fi
 
