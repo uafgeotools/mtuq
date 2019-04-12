@@ -102,7 +102,7 @@ def plot_data_synthetics(filename, data_bw_, data_sw_, synthetics_bw_,
 
     # create figure object
     ncol = 6
-    nrow = len(data_bw_)
+    nrow = count_stations(data_bw_, data_sw_)
     figsize = (16, 1.4*nrow)
     pyplot.figure(figsize=figsize)
 
@@ -124,9 +124,8 @@ def plot_data_synthetics(filename, data_bw_, data_sw_, synthetics_bw_,
             id = data_sw.id
             meta = data_sw[0].stats
 
-        pyplot.subplot(nrow, ncol, ncol*irow+1)
-
         # add station labels
+        pyplot.subplot(nrow, ncol, ncol*irow+1)
         station_labels(meta)
 
         # plot body wave traces
@@ -340,3 +339,11 @@ def _set_components(greens, data):
     return greens
 
 
+def count_stations(data_bw, data_sw):
+    # counts number of stations with nonzero weights
+    count = 0
+    for stream_bw, stream_sw in zip(data_bw, data_sw):
+        if len(stream_bw) > 0 or\
+           len(stream_sw) > 0:
+            count += 1
+    return count
