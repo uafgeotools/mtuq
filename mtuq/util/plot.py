@@ -143,14 +143,14 @@ def plot_data_synthetics(filename, data_bw_, data_sw_, synthetics_bw_,
             # set axis limits
             if normalize==1:
                 ymax = max_bw
-                ylim = [-ymax, +ymax]
+                ylim = [-2*ymax, +2*ymax]
             elif normalize==2:
                 _scale(dat)
                 _scale(syn)
-                ylim = [-1., +1.]
+                ylim = [-2., +2.]
             else:
                 ymax = _max(dat)
-                ylim = [-ymax, +ymax]
+                ylim = [-2*ymax, +2*ymax]
 
             if component=='Z':
                 pyplot.subplot(nrow, ncol, ncol*irow+2)
@@ -257,13 +257,13 @@ def station_labels(meta):
 
     # display station name
     label = '.'.join([meta.network, meta.station])
-    pyplot.text(0.6,0.8, label, fontsize=12)
+    pyplot.text(0.6,0.5, label, fontsize=8)
 
     # display distance and azimuth
     distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
     azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(0.6,0.6,distance, fontsize=12)
-    pyplot.text(0.6,0.4,azimuth, fontsize=12)
+    pyplot.text(0.6,0.3,distance, fontsize=8)
+    pyplot.text(0.6,0.1,azimuth, fontsize=8)
 
 
 def channel_labels(dat, syn, ylim):
