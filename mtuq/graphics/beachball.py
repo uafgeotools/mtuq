@@ -72,3 +72,16 @@ def misfit_vs_depth(filename, misfit_dict):
     pyplot.close()
 
 
+def _magnitude(mt):
+    M = _asmatrix(mt)
+    M0 = (np.tensordot(M,M)/2.)**0.5
+    Mw = 2./3.*(np.log10(M0) - 9.1)
+    return Mw
+
+
+def _asmatrix(m):
+    return np.array([
+        [m[0], m[3], m[4]],
+        [m[3], m[1], m[5]],
+        [m[4], m[5], m[2]]])
+

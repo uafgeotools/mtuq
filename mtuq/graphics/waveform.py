@@ -257,29 +257,6 @@ def _stack(*args):
     return np.column_stack(args)
 
 
-def m_to_deg(distance_in_m):
-    from obspy.geodetics import kilometers2degrees
-    return kilometers2degrees(distance_in_m/1000., radius=6371.)
-
-def km_to_deg(distance_in_m):
-    from obspy.geodetics import kilometers2degrees
-    return kilometers2degrees(distance_in_m, radius=6371.)
-
-
-def _magnitude(mt):
-    M = _asmatrix(mt)
-    M0 = (np.tensordot(M,M)/2.)**0.5
-    Mw = 2./3.*(np.log10(M0) - 9.1)
-    return Mw
-
-
-def _asmatrix(m):
-    return np.array([
-        [m[0], m[3], m[4]],
-        [m[3], m[1], m[5]],
-        [m[4], m[5], m[2]]])
-
-
 def _set_components(greens, data):
     greens.components = [trace.stats.channel[-1] for trace in data]
     return greens

@@ -10,9 +10,8 @@ from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists, join
 from mtuq.cap.util import taper, parse_weight_file
-from mtuq.util.plot import m_to_deg
 from mtuq.util.signal import cut
-from mtuq.util.util import AttribDict, warn
+from mtuq.util.util import AttribDict, warn, m_to_deg
  
 
 class ProcessData(object):
