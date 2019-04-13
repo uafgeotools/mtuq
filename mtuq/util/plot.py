@@ -96,7 +96,7 @@ def plot_data_greens_mt(filename, data_bw, data_sw, greens_bw, greens_sw, mt,
 
 
 def plot_data_synthetics(filename, data_bw_, data_sw_, synthetics_bw_, 
-        synthetics_sw_, annotate=False, normalize=1):
+        synthetics_sw_, stations=None, annotate=True, normalize=1):
     """ Creates CAP-style data/synthetics figure
     """
 
@@ -117,12 +117,12 @@ def plot_data_synthetics(filename, data_bw_, data_sw_, synthetics_bw_,
 
         if len(data_bw)==len(data_sw)==0:
             continue
-        try:
-            id = data_bw.id
-            meta = data_bw[0].stats
-        except:
-            id = data_sw.id
-            meta = data_sw[0].stats
+
+        id = data_bw.id
+        if stations:
+            meta = _get_station(stations, id)
+        else:
+            meta = data_bw[0].meta
 
         # add station labels
         pyplot.subplot(nrow, ncol, ncol*irow+1)
@@ -259,14 +259,11 @@ def station_labels(meta):
     label = '.'.join([meta.network, meta.station])
     pyplot.text(0.6,0.8, label, fontsize=12)
 
-    try:
-        # display distance and azimuth
-        distance = '%d km' % round(meta.catalog_distance)
-        azimuth =  '%d%s' % (round(meta.catalog_azimuth), u'\N{DEGREE SIGN}')
-        pyplot.text(0.6,0.6,distance, fontsize=12)
-        pyplot.text(0.6,0.4,azimuth, fontsize=12)
-    except:
-        pass
+    # display distance and azimuth
+    distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
+    azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
+    pyplot.text(0.6,0.6,distance, fontsize=12)
+    pyplot.text(0.6,0.4,azimuth, fontsize=12)
 
 
 def channel_labels(dat, syn, ylim):
@@ -274,8 +271,8 @@ def channel_labels(dat, syn, ylim):
     time_shift = getattr(syn, 'time_shift', 'None')
     pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
 
-    sum_residuals = getattr(syn, 'sum_residuals', 'None')
-    pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
+    #sum_residuals = getattr(syn, 'sum_residuals', 'None')
+    #pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
 
     #label3 = getattr(syn, 'label3', 'None')
     #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %label3, fontsize=6)
@@ -347,3 +344,9 @@ def count_stations(data_bw, data_sw):
            len(stream_sw) > 0:
             count += 1
     return count
+
+
+def _get_station(stations, id):
+    index = [station.id for station in stations].index(id)
+    return stations[index]
+
