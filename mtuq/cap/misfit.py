@@ -119,8 +119,8 @@ class Misfit(object):
                     r = s[_j].data[start:stop] - d[_j].data
 
                     # sum the resulting residuals
-                    d[_j].sum_residuals = np.sum(np.abs(r)**p)*dt
-                    sum_misfit += d[_j].weight * d[_j].sum_residuals
+                    s[_j].misfit = np.sum(np.abs(r)**p)*dt
+                    sum_misfit += d[_j].weight * s[_j].misfit
 
 
 

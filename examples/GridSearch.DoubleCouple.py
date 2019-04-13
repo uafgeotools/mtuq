@@ -172,7 +172,8 @@ if __name__=='__main__':
         _ = misfit_sw(data_sw, greens_sw, best_mt)
 
         plot_data_greens_mt(event_name+'.png',
-            data_bw, data_sw, greens_bw, greens_sw, best_mt,
+            [data_bw, data_sw], [greens_bw, greens_sw],
+            [misfit_bw, misfit_sw], grid
             annotate=True, stations=stations)
 
         plot_beachball(event_name+'_beachball.png', best_mt)

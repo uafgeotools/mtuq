@@ -55,7 +55,7 @@ def beachball_vs_depth(filename, mt_dict):
     ax.set_aspect("equal")
     ax.set_xlim((0, n+1))
     ax.set_ylim((-0.5, +0.5))
-    _invisible(ax)
+    hide_axes(ax)
 
     pyplot.savefig(filename)
     pyplot.close()
@@ -74,142 +74,177 @@ def misfit_vs_depth(filename, misfit_dict):
     pyplot.close()
 
 
-def plot_data_greens_mt(filename, data_bw, data_sw, greens_bw, greens_sw, mt, 
-        misfit_bw=None, misfit_sw=None, **kwargs):
+def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
+    """ Creates CAP-style data/synthetics figure
 
-    greens_bw.map(_set_components, data_bw)
-    greens_sw.map(_set_components, data_sw)
-
+    Similar to plot_data_synthetics, except provides different input argument
+    syntax
+    """
     # generate synthetics
-    synthetics_bw = greens_bw.get_synthetics(mt)
-    synthetics_sw = greens_sw.get_synthetics(mt)
+    greens[0].map(_set_components, data[0])
+    greens[1].map(_set_components, data[1])
+    synthetics = []
+    synthetics += [greens[0].get_synthetics(mt)]
+    synthetics += [greens[1].get_synthetics(mt)]
 
-    # reevaluate misfit to get time shifts
-    if misfit_bw:
-        _ = misfit_bw(data_bw, greens_bw, mt)
+    # evaluate misfit
+    total_misfit = []
+    total_misfit += [misfit[0](data[0], greens[0], mt)]
+    total_misfit += [misfit[1](data[1], greens[1], mt)]
 
-    if misfit_sw:
-        _ = misfit_sw(data_sw, greens_sw, mt)
-
-    plot_data_synthetics(filename, data_bw, data_sw, 
-        synthetics_bw, synthetics_sw, **kwargs)
+    plot_data_synthetics(filename, data[0], data[1], 
+        synthetics[0], synthetics[1], total_misfit[0], total_misfit[1],
+        **kwargs)
 
 
-def plot_data_synthetics(filename, data_bw_, data_sw_, synthetics_bw_, 
-        synthetics_sw_, stations=None, annotate=True, normalize=1):
+def plot_data_synthetics(filename, data_bw, data_sw, 
+        synthetics_bw, synthetics_sw, total_misfit_bw=1., total_misfit_sw=1.,
+        annotate=False, normalize_by_trace=False):
     """ Creates CAP-style data/synthetics figure
     """
 
-    # create figure object
+    # gather station metadata
+    stations = data_bw.get_stations()
+    assert stations == data_sw.get_stations()
+
+
+    # keep track of maximum amplitudes
+    max_amplitude_bw = 0.
+    if data_bw.max() > max_amplitude_bw:
+        max_amplitude_bw = data_bw.max()
+    if synthetics_bw.max() > max_amplitude_bw:
+        max_amplitude_bw = synthetics_bw.max()
+
+    max_amplitude_sw = 0.
+    if data_sw.max() > max_amplitude_sw:
+        max_amplitude_sw = data_sw.max()
+    if synthetics_sw.max() > max_amplitude_sw:
+        max_amplitude_sw = synthetics_sw.max()
+
+
+    # dimensions of subplot array
     ncol = 6
-    nrow = count_stations(data_bw_, data_sw_)
+    nrow = count_nonempty([data_bw, data_sw])
+
+    # initialize pyplot figure
     figsize = (16, 1.4*nrow)
     pyplot.figure(figsize=figsize)
 
 
-    # determine axis limits
-    max_bw = data_bw_.max()
-    max_sw = data_sw_.max()
+    #
+    # loop over stations
+    #
 
     irow = 0
-    for data_bw, synthetics_bw, data_sw, synthetics_sw in zip(
-        data_bw_, synthetics_bw_, data_sw_, synthetics_sw_):
+    for _i in range(len(stations)):
 
-        if len(data_bw)==len(data_sw)==0:
+        # skip empty stations
+        if len(data_bw[_i])==len(data_sw[_i])==0:
             continue
 
-        id = data_bw.id
-        if stations:
-            meta = _get_station(stations, id)
-        else:
-            meta = data_bw[0].meta
-
         # add station labels
-        pyplot.subplot(nrow, ncol, ncol*irow+1)
-        station_labels(meta)
+        try:
+            meta = stations[_i]
+            pyplot.subplot(nrow, ncol, ncol*irow+1)
+            station_labels(meta)
+        except:
+            meta = stream_dat[0].stats
+            pyplot.subplot(nrow, ncol, ncol*irow+1)
+            station_labels(meta)
 
+        #
         # plot body wave traces
-        for dat, syn in zip(data_bw, synthetics_bw):
+        #
+
+        stream_dat = data_bw[_i]
+        stream_syn = synthetics_bw[_i]
+
+        for dat, syn in zip(stream_dat, stream_syn):
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
+            # skip bad traces
             if component != syn.stats.channel[-1].upper():
                 warnings.warn('Mismatched components, skipping...')
                 continue
-
-            if weight==0.:
+            elif weight==0.:
                 continue
 
-            # set axis limits
-            if normalize==1:
-                ymax = max_bw
-                ylim = [-2*ymax, +2*ymax]
-            elif normalize==2:
-                _scale(dat)
-                _scale(syn)
-                ylim = [-2., +2.]
-            else:
-                ymax = _max(dat)
-                ylim = [-2*ymax, +2*ymax]
-
+            # plot traces
             if component=='Z':
                 pyplot.subplot(nrow, ncol, ncol*irow+2)
                 subplot(dat, syn)
-
             elif component=='R':
                 pyplot.subplot(nrow, ncol, ncol*irow+3)
                 subplot(dat, syn)
-
             else:
                 continue
 
-            pyplot.ylim(*ylim)
+            # amplitude normalization
+            if normalize_by_trace:
+                # trace-by-trace normalization
+                max_trace = _max(dat, syn)
+                ylim = [-2*max_trace, +2*max_trace]
+                pyplot.ylim(*ylim)
+            else:
+                # absolute amplitude normalization
+                ylim = [-2*max_amplitude_bw, +2*max_amplitude_bw]
+                pyplot.ylim(*ylim)
+
             if annotate:
-                channel_labels(dat, syn, ylim)
+                time_shift = syn.time_shift
+                misfit = syn.misfit
+                misfit /= total_misfit_bw
+                channel_labels(time_shift, misfit)
 
 
+        #
         # plot surface wave traces
-        for dat, syn in zip(data_sw, synthetics_sw):
+        #
+
+        stream_dat = data_sw[_i]
+        stream_syn = synthetics_sw[_i]
+
+        for dat, syn in zip(stream_dat, stream_syn):
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
+            # skip bad traces
             if component != syn.stats.channel[-1].upper():
                 warnings.warn('Mismatched components, skipping...')
                 continue
-
-            if weight==0.:
+            elif weight==0.:
                 continue
 
-            # set axis limits
-            if normalize==1:
-                ymax = max_sw
-                ylim = [-ymax, +ymax]
-            elif normalize==2:
-                _scale(dat)
-                _scale(syn)
-                ylim = [-1., +1.]
-            else:
-                ymax = _max(dat)
-                ylim = [-ymax, +ymax]
-
+            # plot traces
             if component=='Z':
                 pyplot.subplot(nrow, ncol, ncol*irow+4)
                 subplot(dat, syn)
-
             elif component=='R':
                 pyplot.subplot(nrow, ncol, ncol*irow+5)
                 subplot(dat, syn)
-
             elif component=='T':
                 pyplot.subplot(nrow, ncol, ncol*irow+6)
                 subplot(dat, syn)
-
             else:
                 continue
 
-            pyplot.ylim(*ylim)
+            # amplitude normalization
+            if normalize_by_trace:
+                # trace-by-trace normalization
+                max_trace = _max(dat, syn)
+                ylim = [-max_trace, +max_trace]
+                pyplot.ylim(*ylim)
+            else:
+                # absolute amplitude normalization
+                ylim = [-max_amplitude_sw, +max_amplitude_sw]
+                pyplot.ylim(*ylim)
+
             if annotate:
-                channel_labels(dat, syn, ylim)
+                time_shift = syn.time_shift
+                misfit = syn.misfit
+                misfit /= total_misfit_bw
+                channel_labels(time_shift, misfit)
 
         irow += 1
 
@@ -233,10 +268,10 @@ def subplot(dat, syn, label=None):
     ax.plot(t, d, 'k')
     ax.plot(t, s[start:stop], 'r')
 
-    _invisible(ax)
+    hide_axes(ax)
 
 
-def _invisible(ax):
+def hide_axes(ax):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
@@ -259,26 +294,23 @@ def station_labels(meta):
     label = '.'.join([meta.network, meta.station])
     pyplot.text(0.6,0.5, label, fontsize=8)
 
-    # display distance and azimuth
+    # display distance
     distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
-    azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
     pyplot.text(0.6,0.3,distance, fontsize=8)
+
+    # display azimuth
+    azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
     pyplot.text(0.6,0.1,azimuth, fontsize=8)
 
 
-def channel_labels(dat, syn, ylim):
+def channel_labels(dat, syn, ylim, total_misfit=1.):
     # CAP-style annotations
     time_shift = getattr(syn, 'time_shift', 'None')
     pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
 
-    #sum_residuals = getattr(syn, 'sum_residuals', 'None')
-    #pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
-
-    #label3 = getattr(syn, 'label3', 'None')
-    #pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %label3, fontsize=6)
-
-    #label4 = getattr(syn, 'label4', 'None')
-    #pyplot.text(0.,(4/4.)*ylim[0], '%.2f' %label4, fontsize=6)
+    misfit = getattr(dat, 'misfit', 'None')
+    sum_residuals /= total_misfit
+    pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
 
 
 
@@ -297,15 +329,6 @@ def time_stats(trace):
 
 def _stack(*args):
     return np.column_stack(args)
-
-
-def _scale(trace):
-    dmax = max(abs(trace.data))
-    if dmax > 0.: trace.data /= dmax
-
-
-def _max(trace):
-     return max(abs(trace.data))
 
 
 def m_to_deg(distance_in_m):
@@ -336,17 +359,18 @@ def _set_components(greens, data):
     return greens
 
 
-def count_stations(data_bw, data_sw):
+def count_nonempty(data):
     # counts number of stations with nonzero weights
     count = 0
-    for stream_bw, stream_sw in zip(data_bw, data_sw):
-        if len(stream_bw) > 0 or\
-           len(stream_sw) > 0:
-            count += 1
+    for streams in zip(*data):
+        for stream in streams:
+            if len(stream) > 0:
+                count += 1
+                continue
     return count
 
-
-def _get_station(stations, id):
-    index = [station.id for station in stations].index(id)
-    return stations[index]
+def _max(dat, syn):
+    return max(
+        abs(dat.max()),
+        abs(syn.max()))
 
