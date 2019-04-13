@@ -99,7 +99,7 @@ def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
 
 def plot_data_synthetics(filename, data_bw, data_sw, 
         synthetics_bw, synthetics_sw, total_misfit_bw=1., total_misfit_sw=1.,
-        annotate=False, normalize_by_trace=False):
+        annotate=False, normalize='maximum_amplitude'):
     """ Creates CAP-style data/synthetics figure
     """
 
@@ -123,8 +123,8 @@ def plot_data_synthetics(filename, data_bw, data_sw,
 
 
     # dimensions of subplot array
-    ncol = 6
     nrow = count_nonempty([data_bw, data_sw])
+    ncol = 6
 
     # initialize pyplot figure
     figsize = (16, 1.4*nrow)
@@ -180,14 +180,12 @@ def plot_data_synthetics(filename, data_bw, data_sw,
             else:
                 continue
 
-            # amplitude normalization
-            if normalize_by_trace:
-                # trace-by-trace normalization
+            # normalize amplitudes
+            if normalize=='trace_by_trace':
                 max_trace = _max(dat, syn)
                 ylim = [-2*max_trace, +2*max_trace]
                 pyplot.ylim(*ylim)
-            else:
-                # absolute amplitude normalization
+            elif normalize=='maximum_amplitude':
                 ylim = [-2*max_amplitude_bw, +2*max_amplitude_bw]
                 pyplot.ylim(*ylim)
 
@@ -230,13 +228,11 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 continue
 
             # amplitude normalization
-            if normalize_by_trace:
-                # trace-by-trace normalization
+            if normalize=='trace_by_trace':
                 max_trace = _max(dat, syn)
                 ylim = [-max_trace, +max_trace]
                 pyplot.ylim(*ylim)
-            else:
-                # absolute amplitude normalization
+            elif normalize=='maximum_amplitude':
                 ylim = [-max_amplitude_sw, +max_amplitude_sw]
                 pyplot.ylim(*ylim)
 
