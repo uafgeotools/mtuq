@@ -1,10 +1,10 @@
 
+import numpy as np
+
 from collections import defaultdict
-from math import ceil, floor
 from scipy.signal import fftconvolve
 from mtuq.util.math import isclose, list_intersect_with_indices
-import numpy as np
-import warnings
+
 
 
 class Misfit(object):

@@ -1,12 +1,13 @@
 
 
 import csv
-import math
 import numpy as np
 import warnings
 import obspy
 from copy import deepcopy
 from mtuq.wavelet import EarthquakeTrapezoid
+
+
 
 #
 # the following functions allow reading in and performing other operations with
@@ -63,7 +64,7 @@ def Trapezoid(magnitude=None):
 
 
 def cap_rupture_time(Mw):
-    rupture_time = math.ceil(
+    rupture_time = np.ceil(
         10.**(0.5*Mw - 2.5) + 0.5)
 
     if rupture_time < 1.:

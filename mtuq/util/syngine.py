@@ -3,7 +3,7 @@ import numpy as np
 
 from os.path import exists
 from obspy.core import Stream, Trace
-from mtuq.util.util import m_to_deg, path_mtuq, unzip, url2uuid, urlopen_with_retry
+from mtuq.util import m_to_deg, path_mtuq, unzip, url2uuid, urlopen_with_retry
 
 
 GREENS_TENSOR_FILENAMES = [

@@ -11,7 +11,8 @@ from mtuq import GreensTensor as GreensTensorBase
 from mtuq.io.greens_tensor.base import Client as ClientBase
 from mtuq.util.moment_tensor.basis import change_basis
 from mtuq.util.signal import resample
-from mtuq.util.util import m_to_deg
+from mtuq.util import m_to_deg
+
 
 
 class GreensTensor(GreensTensorBase):

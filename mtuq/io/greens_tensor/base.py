@@ -1,6 +1,6 @@
 
 import mtuq.greens_tensor
-from mtuq.util.util import iterable
+from mtuq.util import iterable
 
 
 
