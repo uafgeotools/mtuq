@@ -23,9 +23,9 @@ class Station(Stats):
 
     readonly = [
         'endtime',
-        #'preliminary_distance_in_m',
-        #'preliminary_azimuth',
-        #'preliminary_backazimuth',
+        'preliminary_distance_in_m',
+        'preliminary_azimuth',
+        'preliminary_backazimuth',
         ]
 
     defaults = {
@@ -46,10 +46,10 @@ class Station(Stats):
         'preliminary_origin_time': None,
         'preliminary_event_latitude': None,
         'preliminary_event_longitude': None,
-        'preliminary_event_depth_in_m': 0.,
-        'preliminary_distance_in_m': 0.,
-        'preliminary_azimuth': 0.,
-        'preliminary_backazimuth': 0.,
+        'preliminary_event_depth_in_m': None,
+        'preliminary_distance_in_m': None,
+        'preliminary_azimuth': None,
+        'preliminary_backazimuth': None,
         }
 
 
@@ -83,6 +83,6 @@ class Station(Stats):
 
             self.__dict__['preliminary_distance_in_m'] = distance_in_m
             self.__dict__['preliminary_azimuth'] = azimuth
-            self.__dict__['preliminary_azimuth'] = backazimuth
+            self.__dict__['preliminary_backazimuth'] = backazimuth
 
 
