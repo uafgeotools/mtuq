@@ -1,6 +1,7 @@
 
 
 import csv
+import math
 import numpy as np
 import warnings
 import obspy
@@ -62,12 +63,16 @@ def Trapezoid(magnitude=None):
 
 
 def cap_rupture_time(Mw):
-    if Mw < 1.:
-        return 1.
-    elif 1. <= Mw <= 9.:
-        return int(10.**(0.5*Mw - 2.5) + 0.5)
-    elif 9. < Mw:
-        return 9.
+    rupture_time = math.ceil(
+        10.**(0.5*Mw - 2.5) + 0.5)
+
+    if rupture_time < 1.:
+        rupture_time = 1.
+
+    if rupture_time > 9.:
+        rupture_time = 9.
+
+    return rupture_time
 
 
 def cap_rise_time(Mw):
