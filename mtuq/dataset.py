@@ -11,7 +11,7 @@ class Dataset(list):
     """ Seismic data container
 
     A list of ObsPy streams in which each stream corresponds to a single
-    seismic station and all streams correspond to a single event.
+    seismic station
 
     .. note::
 
