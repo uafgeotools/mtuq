@@ -197,16 +197,6 @@ def subplot(dat, syn, label=None):
     hide_axes(ax)
 
 
-def hide_axes(ax):
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])
-
-
-
 def station_labels(meta):
     ax = pyplot.gca()
     ax.spines['top'].set_visible(False)
@@ -253,10 +243,6 @@ def time_stats(trace):
         )
 
 
-def _stack(*args):
-    return np.column_stack(args)
-
-
 def _set_components(greens, data):
     greens.components = [trace.stats.channel[-1] for trace in data]
     return greens
@@ -272,8 +258,21 @@ def count_nonempty(data):
                 continue
     return count
 
+
 def _max(dat, syn):
     return max(
         abs(dat.max()),
         abs(syn.max()))
+
+
+def hide_axes(ax):
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
+
+
+
 
