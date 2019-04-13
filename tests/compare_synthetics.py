@@ -10,7 +10,7 @@ from obspy import UTCDateTime
 from mtuq.cap.process_data import ProcessData
 from mtuq.event import Origin
 from mtuq.station import Station
-from mtuq.util.util import path_mtuq
+from mtuq.util import path_mtuq
 
 
 if __name__=='__main__':

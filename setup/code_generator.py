@@ -14,7 +14,7 @@ from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util.util import path_mtuq
+from mtuq.util import path_mtuq
 
 
 """
@@ -790,7 +790,7 @@ if __name__=='__main__':
     import os
     import re
 
-    from mtuq.util.util import path_mtuq, replace
+    from mtuq.util import path_mtuq, replace
     os.chdir(path_mtuq())
 
 

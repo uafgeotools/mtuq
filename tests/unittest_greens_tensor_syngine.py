@@ -13,7 +13,7 @@ from mtuq.greens_tensor.syngine import\
     download_greens_tensor, download_synthetics, get_synthetics_syngine,\
     GreensTensor, GreensTensorFactory
 from mtuq.grid_search import FullMomentTensorGridRandom, FullMomentTensorGridRegular
-from mtuq.util.util import AttribDict, path_mtuq, unzip
+from mtuq.util import AttribDict, path_mtuq, unzip
 
  
 class greens_tensor_syngine(unittest.TestCase):
