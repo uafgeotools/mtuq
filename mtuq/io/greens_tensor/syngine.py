@@ -9,7 +9,7 @@ from mtuq.util.signal import resample
 from mtuq.util.syngine import download_greens_tensor, download_force_response,\
      resolve_model,\
      GREENS_TENSOR_FILENAMES, SYNTHETICS_FILENAMES
-from mtuq.util.util import unzip
+from mtuq.util import unzip
 
 
 class GreensTensor(GreensTensorBase):

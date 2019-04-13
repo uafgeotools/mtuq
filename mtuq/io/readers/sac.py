@@ -7,8 +7,8 @@ import obspy
 from os.path import join
 from obspy.core import Stream
 from mtuq import EventDataset, Origin, Station
+from mtuq.util import iterable, warn
 from mtuq.util.signal import check_time_sampling
-from mtuq.util.util import iterable, warn
 
 
 def read(filenames, event_id=None, tags=[]):

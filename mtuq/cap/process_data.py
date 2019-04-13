@@ -5,14 +5,12 @@ import numpy as np
 
 from collections import defaultdict
 from copy import deepcopy
-from math import ceil
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists, join
 from mtuq.cap.util import taper, parse_weight_file
-from mtuq.util.plot import m_to_deg
+from mtuq.util import AttribDict, warn, m_to_deg
 from mtuq.util.signal import cut
-from mtuq.util.util import AttribDict, warn
  
 
 class ProcessData(object):
@@ -223,10 +221,10 @@ class ProcessData(object):
         # collect time sampling information
         nt, dt = traces[0].stats.npts, traces[0].stats.delta
 
-        # Tags can be added through the dataset.add_tag method to keep track 
-        # of custom metadata or support other customized uses. Here we use tags 
-        # to distinguish data from Green's functions and to distinguish 
-        # displacement time series from velcoity time series
+        # Tags can be added through dataset.add_tag to keep track of custom
+        # metadata or support other customized uses. Here we use tags to
+        # distinguish data from Green's functions and displacement time series 
+        # from velcoity time series
         if not hasattr(traces, 'tags'):
             raise Exception('Missing tags attribute')
         tags = traces.tags
@@ -305,8 +303,8 @@ class ProcessData(object):
                 sac_headers = obspy.read('%s/%s_%s/%s.grn.0' %
                     (self._fk_database,
                      self._fk_model,
-                     str(int(ceil(origin.depth_in_m/1000.))),
-                     str(int(ceil(distance_in_m/1000.)))),
+                     str(int(np.ceil(origin.depth_in_m/1000.))),
+                     str(int(np.ceil(distance_in_m/1000.)))),
                     format='sac')[0].stats.sac
                 picks.P = sac_headers.t1
                 picks.S = sac_headers.t2

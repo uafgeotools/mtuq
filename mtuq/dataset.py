@@ -1,8 +1,10 @@
 
 import obspy
 import numpy as np
+
 from copy import copy
 from obspy.geodetics import gps2dist_azimuth
+
 
 
 class Dataset(list):

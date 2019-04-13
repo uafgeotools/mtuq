@@ -6,7 +6,7 @@ import unittest
 import obspy.core
 from mtuq.dataset.base import DatasetBase as Dataset
 from mtuq.misfit import cap
-from mtuq.util.util import AttribDict
+from mtuq.util import AttribDict
 from mtuq.util.wavelets import Gaussian
 
  

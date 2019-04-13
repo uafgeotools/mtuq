@@ -2,7 +2,6 @@
 
 Imports="""
 import os
-import sys
 import numpy as np
 
 from copy import deepcopy
@@ -13,8 +12,9 @@ from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
-from mtuq.util.plot import plot_beachball, plot_data_greens_mt
-from mtuq.util.util import path_mtuq
+from mtuq.graphics.beachball import plot_beachball
+from mtuq.graphics.waveform import plot_data_greens_mt
+from mtuq.util import path_mtuq
 
 
 """
@@ -432,7 +432,6 @@ Main_SerialGridSearch="""
     print 'Downloading Greens functions...\\n'
     greens = get_greens_tensors(stations, origins, model=model)
 
-
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw, stations, origins)
@@ -451,13 +450,9 @@ Main_SerialGridSearch="""
 
     best_mt = grid.get(results.argmin())
 
-    # reevalute misfit to attach time shifts
-    _ = misfit_bw(data_bw, greens_bw, best_mt)
-    _ = misfit_sw(data_sw, greens_sw, best_mt)
-
     plot_data_greens_mt(event_name+'.png',
-        data_bw, data_sw, greens_bw, greens_sw, best_mt,
-        annotate=True, stations=stations)
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], best_mt)
 
     plot_beachball(event_name+'_beachball.png', best_mt)
 
@@ -532,13 +527,9 @@ Main_GridSearch_DoubleCouple="""
 
         best_mt = grid.get(results.argmin())
 
-        # reevalute misfit to attach time shifts
-        _ = misfit_bw(data_bw, greens_bw, best_mt)
-        _ = misfit_sw(data_sw, greens_sw, best_mt)
-
         plot_data_greens_mt(event_name+'.png',
-            data_bw, data_sw, greens_bw, greens_sw, best_mt,
-            annotate=True, stations=stations)
+            [data_bw, data_sw], [greens_bw, greens_sw],
+            [misfit_bw, misfit_sw], best_mt)
 
         plot_beachball(event_name+'_beachball.png', best_mt)
 
@@ -680,14 +671,10 @@ Main_Test_GridSearchMtMagnitudeDepth="""
 
     best_mt = grid.get(results.argmin())
 
-    # reevalute misfit to attach time shifts
-    _ = misfit_bw(data_bw, greens_bw, best_mt)
-    _ = misfit_sw(data_sw, greens_sw, best_mt)
-
     if run_figures:
         plot_data_greens_mt(event_name+'.png',
-            data_bw, data_sw, greens_bw, greens_sw, best_mt,
-            annotate=True, stations=stations)
+            [data_bw, data_sw], [greens_bw, greens_sw],
+            [misfit_bw, misfit_sw], best_mt)
 
         plot_beachball(event_name+'_beachball.png', best_mt)
 
@@ -803,7 +790,7 @@ if __name__=='__main__':
     import os
     import re
 
-    from mtuq.util.util import path_mtuq, replace
+    from mtuq.util import path_mtuq, replace
     os.chdir(path_mtuq())
 
 

@@ -1,10 +1,10 @@
 
+import numpy as np
+
 from collections import defaultdict
-from math import ceil, floor
 from scipy.signal import fftconvolve
 from mtuq.util.math import isclose, list_intersect_with_indices
-import numpy as np
-import warnings
+
 
 
 class Misfit(object):
@@ -119,8 +119,8 @@ class Misfit(object):
                     r = s[_j].data[start:stop] - d[_j].data
 
                     # sum the resulting residuals
-                    d[_j].sum_residuals = np.sum(np.abs(r)**p)*dt
-                    sum_misfit += d[_j].weight * d[_j].sum_residuals
+                    s[_j].misfit = np.sum(np.abs(r)**p)*dt
+                    sum_misfit += d[_j].weight * s[_j].misfit
 
 
 

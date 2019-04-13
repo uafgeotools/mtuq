@@ -1,17 +1,13 @@
 
 
 import numpy as np
-from mtuq.util.math import PI
-from mtuq.util.util import asarray
-
-from mtuq.util.moment_tensor import tape2015
-from numpy.random import uniform as random
-from mtuq.util.math import open_interval as regular
-
 import warnings
-import numpy as np
 
-from mtuq.util.util import AttribDict, warn
+from numpy import pi as PI
+from numpy.random import uniform as random
+from mtuq.util import AttribDict, asarray, warn
+from mtuq.util.moment_tensor import tape2015
+from mtuq.util.math import open_interval as regular
 
 
 

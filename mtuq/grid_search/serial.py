@@ -2,8 +2,7 @@
 import numpy as np
 import time
 from mtuq import Dataset, GreensTensorList
-from mtuq.grid import Grid, UnstructuredGrid
-from mtuq.util.util import timer
+from mtuq.util import timer
 
 try:
     import h5py
@@ -33,7 +32,7 @@ def grid_search_mt(data_list, greens_list, misfit_list, grid, verbose=True):
 
     # carry out search
     for _i, mt in enumerate(grid):
-        if verbose and not(_i % int(0.1*npts)):
+        if verbose and not(_i % np.ceil(0.1*npts)):
             print _message(_i, npts)
 
         for data, greens, misfit in zipped:
@@ -75,7 +74,7 @@ def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths, verb
     for _i, depth in enumerate(depths):
         for _j, mt in enumerate(grid):
 
-            if verbose and not ((_i*npts_inner+_j) % int(0.01*npts_outer)):
+            if verbose and not ((_i*npts_inner+_j) % np.ceil(0.01*npts_outer)):
                 print _message(_i*npts_inner+_j, npts_outer)
 
             for data, greens, misfit in zipped:
@@ -85,9 +84,9 @@ def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths, verb
 
 
 
-def _message(pt, npts):
+def _message(ii, nn):
     return (
             '  about %2d%% finished\n'
-            % (int(100*pt/npts))
+            % np.ceil((100.*ii/nn))
            )
 

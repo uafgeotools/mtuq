@@ -1,6 +1,5 @@
 
 import os
-import sys
 import numpy as np
 
 from copy import deepcopy
@@ -11,8 +10,9 @@ from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
-from mtuq.util.plot import plot_beachball, plot_data_synthetics
-from mtuq.util.util import path_mtuq
+from mtuq.graphics.beachball import plot_beachball
+from mtuq.graphics.waveform import plot_data_synthetics
+from mtuq.util import path_mtuq
 
 
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import numpy as np
 
 from copy import deepcopy
@@ -12,8 +11,9 @@ from mtuq.grid_search.mpi import grid_search_mt_depth
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
-from mtuq.util.plot import beachball_vs_depth, misfit_vs_depth, plot_data_greens_mt
-from mtuq.util.util import path_mtuq
+from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
+from mtuq.graphics.waveform import plot_data_greens_mt
+from mtuq.util import path_mtuq
 
 
 
