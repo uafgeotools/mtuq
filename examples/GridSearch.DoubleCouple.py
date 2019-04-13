@@ -167,12 +167,15 @@ if __name__=='__main__':
 
         best_mt = grid.get(results.argmin())
 
-        plot_data_greens_mt(event_name+'.png',
-            data_bw, data_sw, greens_bw, greens_sw,
-            best_mt, misfit_bw, misfit_sw)
+        # reevalute misfit to attach time shifts
+        _ = misfit_bw(data_bw, greens_bw, best_mt)
+        _ = misfit_sw(data_sw, greens_sw, best_mt)
 
-        plot_beachball(event_name+'_beachball.png', 
-            best_mt)
+        plot_data_greens_mt(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw, best_mt,
+            annotate=True, stations=stations)
+
+        plot_beachball(event_name+'_beachball.png', best_mt)
 
         print 'Finished\n'
 
