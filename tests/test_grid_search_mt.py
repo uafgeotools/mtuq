@@ -24,6 +24,13 @@ if __name__=='__main__':
     # except here we use a coarser grid, and at the end we assert that the test
     # result equals the expected result
     #
+    # The compare against CAP/FK:
+    #
+    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1/1/10/10/10 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
+    #
+    # Note however that CAP uses a different method for defining regular grids
+    #
+
 
     # by default, the script runs with figure generation and error checking
     # turned on
@@ -81,17 +88,20 @@ if __name__=='__main__':
         )
 
 
+    #
+    # Next we specify the source parameter grid
+    #
+
     grid = DoubleCoupleGridRegular(
-        magnitude=4.5, 
-        npts_per_axis=5)
+        npts_per_axis=5,
+        magnitude=4.5)
 
     wavelet = Trapezoid(
         magnitude=4.5)
 
 
-
     #
-    # The integration test starts now
+    # The main I/O work starts now
     #
 
     print 'Reading data...\n'
@@ -109,10 +119,9 @@ if __name__=='__main__':
     data_bw = data.map(process_bw, stations, origins)
     data_sw = data.map(process_sw, stations, origins)
 
-    print 'Downloading Greens functions...\n'
+    print 'Reading Greens functions...\n'
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
-
 
     print 'Processing Greens functions...\n'
     greens.convolve(wavelet)
@@ -120,11 +129,16 @@ if __name__=='__main__':
     greens_sw = greens.map(process_sw, stations, origins)
 
 
+    #
+    # The main computational work starts nows
+    #
+
     print 'Carrying out grid search...\n'
 
     results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, verbose=False)
+        [misfit_bw, misfit_sw], grid)
+
 
     best_mt = grid.get(results.argmin())
 
@@ -169,4 +183,3 @@ if __name__=='__main__':
             ):
             raise Exception(
                 "Grid search result differs from previous mtuq result")
-

@@ -143,7 +143,7 @@ if __name__=='__main__':
     greens_sw = {}
 
     if rank==0:
-        print 'Downloading Greens functions...\n'
+        print 'Reading Greens functions...\n'
 
         for _i, depth in enumerate(depths):
             print '  Depth %d of %d' % (_i+1, len(depths))
@@ -196,5 +196,3 @@ if __name__=='__main__':
         misfit_vs_depth(filename, best_misfit)
 
         print 'Finished\n'
-
-

@@ -19,10 +19,18 @@ from mtuq.util import path_mtuq
 
 if __name__=='__main__':
     #
-    # CAP-style Double-couple inversion example
+    # THIS EXAMPLE ONLY WORKS ON CHINOOK.ALASKA.EDU
+    #
+
+    #
+    # CAP-style double-couple inversion example
+    # 
+
     # 
     # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors
+    # moment tensors, using Green's functions and phase picks from a local
+    # FK database
+
     #
     # USAGE
     #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
@@ -109,7 +117,7 @@ if __name__=='__main__':
         data_bw = data.map(process_bw, stations, origins)
         data_sw = data.map(process_sw, stations, origins)
 
-        print 'Downloading Greens functions...\n'
+        print 'Reading Greens functions...\n'
         db = open_db(path_greens, format='FK', model=model)
         greens = db.get_greens_tensors(stations, origins)
 

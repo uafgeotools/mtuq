@@ -122,7 +122,7 @@ if __name__=='__main__':
     data_bw = data.map(process_bw, stations, origins)
     data_sw = data.map(process_sw, stations, origins)
 
-    print 'Downloading Greens functions...\n'
+    print 'Reading Greens functions...\n'
     greens = get_greens_tensors(stations, origins, model=model)
 
     print 'Processing Greens functions...\n'
@@ -140,6 +140,7 @@ if __name__=='__main__':
     results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid)
+
 
     best_mt = grid.get(results.argmin())
 
