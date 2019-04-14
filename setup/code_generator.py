@@ -840,7 +840,8 @@ Main_BenchmarkCAP="""
 
         if run_figures:
             plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
-                cap_bw, cap_sw, mtuq_bw, mtuq_sw)
+                cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+                annotate=False)
 
         if run_checks:
             compare_cap_mtuq(
@@ -855,7 +856,8 @@ Main_BenchmarkCAP="""
             data_bw, data_sw, paths[0], name)
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
-            cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
+            cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+            annotate=False, normalize=False)
 
     print '\\nSUCCESS\\n'
 
