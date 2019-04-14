@@ -24,7 +24,7 @@ def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
 
     plot_data_synthetics(filename, data[0], data[1], 
         synthetics[0], synthetics[1], total_misfit[0], total_misfit[1],
-        mt=best_mt, **kwargs)
+        mt=mt, **kwargs)
 
 
 def plot_data_synthetics(filename, data_bw, data_sw, 
