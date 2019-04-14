@@ -97,11 +97,10 @@ class Dataset(list):
         max_all = -np.inf
         for stream in self:
             for trace in stream:
-                weight = getattr(trace, 'weight', 1.)
-                if not weight:
+                if not getattr(trace, 'weight', 1.):
                     continue
                 if trace.data.max() > max_all:
-                    max_all = trace.data.max()
+                    max_all = abs(trace.data).max()
         return max_all
 
 
