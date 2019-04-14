@@ -137,7 +137,7 @@ if __name__=='__main__':
 
     results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+        [misfit_bw, misfit_sw], grid, verbose=False)
 
 
     best_mt = grid.get(results.argmin())
@@ -155,20 +155,14 @@ if __name__=='__main__':
             # the default absolute tolerance (1.e6) is several orders of 
             # magnitude less than the moment of an Mw=0 event
 
-            result = np.isclose(a, b, atol=atol, rtol=rtol)
+            for _a, _b, _bool in zip(
+                a, b, np.isclose(a, b, atol=atol, rtol=rtol)):
 
-            print ''
-            print 'Debugging information:'
-            print ''
-            for _a, _b in zip(a,b):
-                print '  %.e <= %.1e + %.1e * %.1e' %\
-                     (abs(_a-_b), atol, rtol, abs(_b))
-            print ''
-            for boolean in result:
-                print '  %s' %  boolean
+                print '%s:  %.e <= %.1e + %.1e * %.1e' %                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
             print ''
 
-            return np.all(result)
+            return np.all(
+                np.isclose(a, b, atol=atol, rtol=rtol))
 
         if not isclose(
             best_mt,
@@ -184,4 +178,4 @@ if __name__=='__main__':
             raise Exception(
                 "Grid search result differs from previous mtuq result")
 
-        print 'Finished\n'
+        print 'SUCCESS\n'

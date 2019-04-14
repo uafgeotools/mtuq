@@ -155,6 +155,8 @@ if __name__=='__main__':
             greens_bw[depth] = greens.map(process_bw, stations, origins)
             greens_sw[depth] = greens.map(process_sw, stations, origins)
 
+        print ''
+
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
 

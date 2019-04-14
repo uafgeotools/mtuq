@@ -121,8 +121,6 @@ if __name__=='__main__':
     print 'Reading Greens functions...\n'
 
     for _i, depth in enumerate(depths):
-        print '  Depth %d of %d' % (_i+1, len(depths))
-
         origins = deepcopy(origins)
         [setattr(origin, 'depth_in_m', depth) for origin in origins]
 
@@ -160,4 +158,6 @@ if __name__=='__main__':
 
     if run_checks:
         pass
+
+    print 'SUCCESS\n'
 

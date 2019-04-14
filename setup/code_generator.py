@@ -555,6 +555,8 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             greens_bw[depth] = greens.map(process_bw, stations, origins)
             greens_sw[depth] = greens.map(process_sw, stations, origins)
 
+        print ''
+
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
 
@@ -617,7 +619,7 @@ Main_SerialGridSearch_DoubleCouple="""
 
     results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+        [misfit_bw, misfit_sw], grid, verbose=True)
 
 """
 
@@ -648,8 +650,6 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     print 'Reading Greens functions...\\n'
 
     for _i, depth in enumerate(depths):
-        print '  Depth %d of %d' % (_i+1, len(depths))
-
         origins = deepcopy(origins)
         [setattr(origin, 'depth_in_m', depth) for origin in origins]
 
@@ -743,20 +743,15 @@ WrapUp_TestGridSearch_DoubleCouple="""
             # the default absolute tolerance (1.e6) is several orders of 
             # magnitude less than the moment of an Mw=0 event
 
-            result = np.isclose(a, b, atol=atol, rtol=rtol)
+            for _a, _b, _bool in zip(
+                a, b, np.isclose(a, b, atol=atol, rtol=rtol)):
 
-            print ''
-            print 'Debugging information:\'
-            print ''
-            for _a, _b in zip(a,b):
-                print '  %.e <= %.1e + %.1e * %.1e' %\\
-                     (abs(_a-_b), atol, rtol, abs(_b))
-            print ''
-            for boolean in result:
-                print '  %s' %  boolean
+                print '%s:  %.e <= %.1e + %.1e * %.1e' %\
+                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
             print ''
 
-            return np.all(result)
+            return np.all(
+                np.isclose(a, b, atol=atol, rtol=rtol))
 
         if not isclose(
             best_mt,
@@ -772,7 +767,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
             raise Exception(
                 "Grid search result differs from previous mtuq result")
 
-        print 'Finished\\n'
+        print 'SUCCESS\\n'
 """
 
 
@@ -792,6 +787,8 @@ WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
 
     if run_checks:
         pass
+
+    print 'SUCCESS\\n'
 
 """
 
@@ -860,7 +857,7 @@ Main_BenchmarkCAP="""
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
 
-    print ''
+    print '\\nSUCCESS\\n'
 
 """
 
@@ -1061,6 +1058,8 @@ if __name__=='__main__':
             'greens = get_greens_tensors\(stations, origins, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n    '
            +'greens = db.get_greens_tensors(stations, origins)',
+            'verbose=True',
+            'verbose=False',
             ))
         file.write(WrapUp_TestGridSearch_DoubleCouple)
 

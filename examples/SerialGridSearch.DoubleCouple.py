@@ -139,7 +139,7 @@ if __name__=='__main__':
 
     results = grid_search_mt(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+        [misfit_bw, misfit_sw], grid, verbose=True)
 
 
     best_mt = grid.get(results.argmin())

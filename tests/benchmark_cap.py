@@ -230,5 +230,5 @@ if __name__=='__main__':
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
 
-    print ''
+    print '\nSUCCESS\n'
 
