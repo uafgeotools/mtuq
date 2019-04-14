@@ -159,8 +159,7 @@ if __name__=='__main__':
     # Grid search integration test
     #
     # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
-    # except here we use a coarser grid, and at the end we assert that the test
-    # result equals the expected result
+    # except here we included mangitude and depth and use a coarser grid
     #
 """
 
@@ -670,7 +669,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
 
     results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, depths)
+        [misfit_bw, misfit_sw], grid, depths, verbose=False)
 
 """
 
@@ -772,6 +771,8 @@ WrapUp_TestGridSearch_DoubleCouple="""
             ):
             raise Exception(
                 "Grid search result differs from previous mtuq result")
+
+        print 'Finished\\n'
 """
 
 

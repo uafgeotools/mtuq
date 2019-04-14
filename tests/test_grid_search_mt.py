@@ -183,3 +183,5 @@ if __name__=='__main__':
             ):
             raise Exception(
                 "Grid search result differs from previous mtuq result")
+
+        print 'Finished\n'
