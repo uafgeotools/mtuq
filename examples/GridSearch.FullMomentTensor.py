@@ -6,7 +6,7 @@ import numpy as np
 from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
-from mtuq.grid import DoubleCoupleGridRandom
+from mtuq.grid import FullMomentTensorGridRandom
 from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
@@ -19,37 +19,33 @@ from mtuq.util import path_mtuq
 
 if __name__=='__main__':
     #
-    # THIS EXAMPLE ONLY WORKS ON CHINOOK.ALASKA.EDU
-    #
-
-    #
-    # CAP-style double-couple inversion example
-    # 
-
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors, using Green's functions and phase picks from a local
-    # FK database
-
+    # Full moment tensor inversion example
+    #   
+    # Carries out grid search over all moment tensor parameters except
+    # magnitude 
     #
     # USAGE
-    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
-    #
+    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
+    #   
 
 
-    path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/scak'
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
-    model=        'scak'
+    model=        'ak135'
 
+
+    #
+    # Body- and surface-wave data are processed separately and held separately 
+    # in memory
+    #
 
     process_bw = ProcessData(
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
@@ -61,8 +57,8 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens,
+        pick_type='from_taup_model',
+        taup_model=model,
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
@@ -70,6 +66,11 @@ if __name__=='__main__':
         cap_weight_file=path_weights,
         )
 
+
+    #
+    # We define misfit as a sum of indepedent body- and surface-wave 
+    # contributions
+    #
 
     misfit_bw = Misfit(
         time_shift_max=2.,
@@ -86,8 +87,8 @@ if __name__=='__main__':
     # Next we specify the source parameter grid
     #
 
-    grid = DoubleCoupleGridRandom(
-        npts=50000,
+    grid = FullMomentTensorGridRandom(
+        npts=1000000,
         magnitude=4.5)
 
     wavelet = Trapezoid(
@@ -118,8 +119,7 @@ if __name__=='__main__':
         data_sw = data.map(process_sw, stations, origins)
 
         print 'Reading Greens functions...\n'
-        db = open_db(path_greens, format='FK', model=model)
-        greens = db.get_greens_tensors(stations, origins)
+        greens = get_greens_tensors(stations, origins, model=model)
 
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)

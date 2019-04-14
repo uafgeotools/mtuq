@@ -11,7 +11,7 @@ class Dataset(list):
     """ Seismic data container
 
     A list of ObsPy streams in which each stream corresponds to a single
-    seismic station and all streams correspond to a single event.
+    seismic station
 
     .. note::
 
@@ -97,11 +97,10 @@ class Dataset(list):
         max_all = -np.inf
         for stream in self:
             for trace in stream:
-                weight = getattr(trace, 'weight', 1.)
-                if not weight:
+                if not getattr(trace, 'weight', 1.):
                     continue
                 if trace.data.max() > max_all:
-                    max_all = trace.data.max()
+                    max_all = abs(trace.data).max()
         return max_all
 
 

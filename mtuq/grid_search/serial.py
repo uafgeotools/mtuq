@@ -74,7 +74,7 @@ def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths, verb
     for _i, depth in enumerate(depths):
         for _j, mt in enumerate(grid):
 
-            if verbose and not ((_i*npts_inner+_j) % np.ceil(0.01*npts_outer)):
+            if verbose and not ((_i*npts_inner+_j) % np.ceil(0.1*npts_outer)):
                 print _message(_i*npts_inner+_j, npts_outer)
 
             for data, greens, misfit in zipped:

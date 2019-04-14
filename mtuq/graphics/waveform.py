@@ -24,12 +24,12 @@ def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
 
     plot_data_synthetics(filename, data[0], data[1], 
         synthetics[0], synthetics[1], total_misfit[0], total_misfit[1],
-        **kwargs)
+        mt=mt, **kwargs)
 
 
 def plot_data_synthetics(filename, data_bw, data_sw, 
         synthetics_bw, synthetics_sw, total_misfit_bw=1., total_misfit_sw=1.,
-        annotate=False, normalize='maximum_amplitude'):
+        annotate=True, mt=None, normalize='maximum_amplitude'):
     """ Creates CAP-style data/synthetics figure
     """
 
@@ -53,7 +53,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
 
 
     # dimensions of subplot array
-    nrow = count_nonempty([data_bw, data_sw])
+    nrow = _count_nonempty([data_bw, data_sw])
     ncol = 6
 
     # initialize pyplot figure
@@ -120,10 +120,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 pyplot.ylim(*ylim)
 
             if annotate:
-                time_shift = syn.time_shift
-                misfit = syn.misfit
-                misfit /= total_misfit_bw
-                channel_labels(time_shift, misfit)
+                trace_labels(dat, syn, total_misfit_bw)
 
 
         #
@@ -167,10 +164,8 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 pyplot.ylim(*ylim)
 
             if annotate:
-                time_shift = syn.time_shift
-                misfit = syn.misfit
-                misfit /= total_misfit_bw
-                channel_labels(time_shift, misfit)
+                trace_labels(dat, syn, total_misfit_sw)
+
 
         irow += 1
 
@@ -179,7 +174,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
 
 
 def subplot(dat, syn, label=None):
-    t1,t2,nt,dt = time_stats(dat)
+    t1,t2,nt,dt = _time_stats(dat)
 
     start = getattr(syn, 'start', 0)
     stop = getattr(syn, 'stop', len(syn.data))
@@ -194,46 +189,61 @@ def subplot(dat, syn, label=None):
     ax.plot(t, d, 'k')
     ax.plot(t, s[start:stop], 'r')
 
-    hide_axes(ax)
+    _hide_axes(ax)
 
 
 def station_labels(meta):
     ax = pyplot.gca()
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])
+    _hide_axes(ax)
 
     # display station name
     label = '.'.join([meta.network, meta.station])
-    pyplot.text(0.6,0.5, label, fontsize=8)
+    pyplot.text(0.6,0.45, label, fontsize=7)
 
     # display distance
     distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
-    pyplot.text(0.6,0.3,distance, fontsize=8)
+    pyplot.text(0.6,0.25,distance, fontsize=7)
 
     # display azimuth
     azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(0.6,0.1,azimuth, fontsize=8)
+    pyplot.text(0.6,0.05,azimuth, fontsize=7)
 
 
-def channel_labels(dat, syn, ylim, total_misfit=1.):
-    # CAP-style annotations
-    time_shift = getattr(syn, 'time_shift', 'None')
+def trace_labels(dat, syn, total_misfit=1.):
+    """ Adds CAP-style annotations below each trace
+    """
+    ax = pyplot.gca()
+    ylim = ax.get_ylim()
+
+    s = syn.data
+    d = dat.data
+
+    # display cross-correlation time shift
+    time_shift = getattr(syn, 'time_shift', np.nan)
     pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
 
-    misfit = getattr(dat, 'misfit', 'None')
-    sum_residuals /= total_misfit
-    pyplot.text(0.,(2/4.)*ylim[0], '%.1e' %sum_residuals, fontsize=6)
+    # display maximum cross-correlation coefficient
+    max_cc = np.correlate(s, d, 'valid').max()
+    Ns = np.dot(s,s)**0.5
+    Nd = np.dot(d,d)**0.5
+    max_cc /= (Ns*Nd)
+    pyplot.text(0.,(2/4.)*ylim[0], '%.2f' %max_cc, fontsize=6)
+
+    # display percent of total misfit
+    misfit = getattr(syn, 'misfit', np.nan)
+    misfit /= total_misfit
+    if misfit >= 0.1:
+        pyplot.text(0.,(3/4.)*ylim[0], '%.1f' %(100.*misfit), fontsize=6)
+    else:
+        pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %(100.*misfit), fontsize=6)
+
 
 
 
 ### utilities
 
 
-def time_stats(trace):
+def _time_stats(trace):
     # returns time scheme
     return (
         float(trace.stats.starttime),
@@ -248,14 +258,14 @@ def _set_components(greens, data):
     return greens
 
 
-def count_nonempty(data):
-    # counts number of stations with nonzero weights
+def _count_nonempty(datasets):
+    # counts number of nonempty streams in dataset
     count = 0
-    for streams in zip(*data):
+    for streams in zip(*datasets):
         for stream in streams:
             if len(stream) > 0:
                 count += 1
-                continue
+                break
     return count
 
 
@@ -265,7 +275,7 @@ def _max(dat, syn):
         abs(syn.max()))
 
 
-def hide_axes(ax):
+def _hide_axes(ax):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)

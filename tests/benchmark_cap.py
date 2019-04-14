@@ -186,10 +186,9 @@ if __name__=='__main__':
     data_bw = data.map(process_bw, stations, origins)
     data_sw = data.map(process_sw, stations, origins)
 
-    print 'Downloading Greens functions...\n'
+    print 'Reading Greens functions...\n'
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
-
 
     print 'Processing Greens functions...\n'
     greens.convolve(wavelet)
@@ -231,5 +230,5 @@ if __name__=='__main__':
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
 
-    print ''
+    print '\nSUCCESS\n'
 

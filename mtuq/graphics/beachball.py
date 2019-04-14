@@ -1,6 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
+from mtuq.graphics.waveform import _hide_axes
 from obspy.imaging.beachball import beach, beachball
 
 
@@ -53,7 +54,7 @@ def beachball_vs_depth(filename, mt_dict):
     ax.set_aspect("equal")
     ax.set_xlim((0, n+1))
     ax.set_ylim((-0.5, +0.5))
-    hide_axes(ax)
+    _hide_axes(ax)
 
     pyplot.savefig(filename)
     pyplot.close()

@@ -143,7 +143,7 @@ if __name__=='__main__':
     greens_sw = {}
 
     if rank==0:
-        print 'Downloading Greens functions...\n'
+        print 'Reading Greens functions...\n'
 
         for _i, depth in enumerate(depths):
             print '  Depth %d of %d' % (_i+1, len(depths))
@@ -156,6 +156,8 @@ if __name__=='__main__':
             greens.convolve(wavelet)
             greens_bw[depth] = greens.map(process_bw, stations, origins)
             greens_sw[depth] = greens.map(process_sw, stations, origins)
+
+        print ''
 
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
@@ -196,5 +198,3 @@ if __name__=='__main__':
         misfit_vs_depth(filename, best_misfit)
 
         print 'Finished\n'
-
-
