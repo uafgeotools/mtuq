@@ -265,7 +265,7 @@ def _count_nonempty(datasets):
         for stream in streams:
             if len(stream) > 0:
                 count += 1
-                continue
+                break
     return count
 
 
