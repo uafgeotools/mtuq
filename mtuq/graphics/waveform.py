@@ -235,7 +235,7 @@ def plot(dat, syn, label=None):
 
 
 def add_header(header_height, mt=None):
-    """ Adds CAP-style header
+    """ Adds CAP-style header to current figure
     """
     fig = pyplot.gcf()
     width, height = fig.get_size_inches()
@@ -278,7 +278,7 @@ def add_station_labels(meta):
 
 
 def add_trace_labels(dat, syn, total_misfit=1.):
-    """ Adds CAP-style annotations below each trace
+    """ Adds CAP-style annotations to current axes
     """
     ax = pyplot.gca()
     ymin = ax.get_ylim()[0]
