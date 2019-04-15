@@ -58,42 +58,48 @@ def plot_data_synthetics(filename, data_bw, data_sw,
     ncol = 5
     irow = 0
 
-    if header:
-        nrow += 1
-        irow += 1
-
-
     # figure dimensions in inches
     height = 1.4*nrow
-    width = 16
+    width = 16.
+
     margin_bottom = 0.25
     margin_top = 0.25
     margin_left = 0.25
     margin_right = 0.25
 
-    if header:
-        margin_top += 2.
-
     if station_labels:
         margin_left += 0.75
 
+    height += margin_bottom
+    height += margin_top
+    width += margin_left
+    width += margin_right
+
+    if header:
+        header_height = 2.
+        height += header_height
+    else:
+        header_height = 0.
 
     # initialize figure
-    pyplot.figure(figsize=(
-        width+margin_left+margin_right,
-        height+margin_bottom+margin_top))
+    fig = pyplot.figure(figsize=(width, height))
 
     pyplot.subplots_adjust(
         left=margin_left/width,
         right=1.-margin_right/width,
         bottom=margin_bottom/height,
-        top=1.-margin_top/height,
+        top=1.-(margin_top+header_height)/height,
         wspace=0.,
         hspace=0.,
         )
 
     if header:
-        pyplot.subplot(nrow, ncol, 1)
+        x0 = 0.
+        y0 = 1.-header_height/height
+        ax = fig.add_axes([x0, y0, 1., header_height/height])
+        ax.set_xlim([0., width])
+        ax.set_ylim([0., header_height])
+
         add_header(mt)
 
 
@@ -225,10 +231,9 @@ def subplot(dat, syn, label=None):
 
 def add_header(mt):
     from obspy.imaging.beachball import beach
-    beach = beach(mt, xy=(0.5, 0.5), width=1., facecolor='r')
+    beach = beach(mt, xy=(1., 0.625), width=1.25, linewidth=0.5, facecolor='gray')
 
     ax = pyplot.gca()
-    ax.set_aspect('equal')
     ax.add_collection(beach)
 
     _hide_axes(ax)
