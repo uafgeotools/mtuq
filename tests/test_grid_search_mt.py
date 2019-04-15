@@ -158,7 +158,8 @@ if __name__=='__main__':
             for _a, _b, _bool in zip(
                 a, b, np.isclose(a, b, atol=atol, rtol=rtol)):
 
-                print '%s:  %.e <= %.1e + %.1e * %.1e' %                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
+                print '%s:  %.e <= %.1e + %.1e * %.1e' %\
+                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
             print ''
 
             return np.all(
