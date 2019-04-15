@@ -56,6 +56,11 @@ def plot_data_synthetics(filename, data_bw, data_sw,
     # dimensions of subplot array
     nrow = _count_nonempty([data_bw, data_sw])
     ncol = 5
+    irow = 0
+
+    if header:
+        nrow += 1
+        irow += 1
 
 
     # figure dimensions in inches
@@ -67,7 +72,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
     margin_right = 0.25
 
     if header:
-        margin_top += 3.
+        margin_top += 2.
 
     if station_labels:
         margin_left += 0.75
@@ -87,12 +92,15 @@ def plot_data_synthetics(filename, data_bw, data_sw,
         hspace=0.,
         )
 
+    if header:
+        pyplot.subplot(nrow, ncol, 1)
+        add_header(mt)
+
 
     #
     # loop over stations
     #
 
-    irow = 0
     for _i in range(len(stations)):
 
         # skip empty stations
@@ -196,7 +204,6 @@ def plot_data_synthetics(filename, data_bw, data_sw,
     pyplot.savefig(filename)
 
 
-
 def subplot(dat, syn, label=None):
     t1,t2,nt,dt = _time_stats(dat)
 
@@ -212,6 +219,17 @@ def subplot(dat, syn, label=None):
     t = np.linspace(0,t2-t1,nt,dt)
     ax.plot(t, d, 'k')
     ax.plot(t, s[start:stop], 'r')
+
+    _hide_axes(ax)
+
+
+def add_header(mt):
+    from obspy.imaging.beachball import beach
+    beach = beach(mt, xy=(0.5, 0.5), width=1., facecolor='r')
+
+    ax = pyplot.gca()
+    ax.set_aspect('equal')
+    ax.add_collection(beach)
 
     _hide_axes(ax)
 
