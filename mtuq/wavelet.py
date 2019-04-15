@@ -114,6 +114,8 @@ class UserSupplied(Wavelet):
 #
 
 class Triangle(Wavelet):
+    """ Triangle with unit area, symmetric about t=0
+    """
     def __init__(self, half_duration=None):
         if half_duration:
             self.half_duration = half_duration
@@ -125,7 +127,7 @@ class Triangle(Wavelet):
         w = 1. - abs(t)/self.half_duration
         w = np.clip(w, 0., np.inf)
 
-        # area = (0.5)*(Wavelet)*(height)
+        # area = (0.5)*(base)*(height)
         area = (0.5)*(2.*self.half_duration)*(1.)
 
         # normalize by area
@@ -135,7 +137,7 @@ class Triangle(Wavelet):
 
 
 class Trapezoid(Wavelet):
-    """ Symmetric trapezoid
+    """ Trapezoid with unit area, symmetric about t=0
     """
     def __init__(self, rise_time=None, half_duration=None):
         if rise_time:
@@ -156,7 +158,6 @@ class Trapezoid(Wavelet):
         w = (self.half_duration - abs(t))/self.rise_time
         w = np.clip(w, 0., 1.)
 
-
         top = 2*(self.half_duration-self.rise_time)
         bottom = 2.*self.half_duration
         height = 1.
@@ -169,6 +170,8 @@ class Trapezoid(Wavelet):
 
 
 class Gaussian(Wavelet):
+    """ Gaussian with unit area
+    """
     def __init__(self, sigma=1., mu=0.):
         self.sigma = sigma
         self.mu = mu
