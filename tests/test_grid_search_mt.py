@@ -43,7 +43,7 @@ if __name__=='__main__':
     run_figures = (not args.no_figures)
 
 
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
@@ -158,7 +158,8 @@ if __name__=='__main__':
             for _a, _b, _bool in zip(
                 a, b, np.isclose(a, b, atol=atol, rtol=rtol)):
 
-                print '%s:  %.e <= %.1e + %.1e * %.1e' %                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
+                print '%s:  %.e <= %.1e + %.1e * %.1e' %\
+                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
             print ''
 
             return np.all(

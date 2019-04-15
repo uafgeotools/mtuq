@@ -64,7 +64,7 @@ def Trapezoid(magnitude=None):
 
 
 def cap_rupture_time(Mw):
-    rupture_time = np.ceil(
+    rupture_time = np.floor(
         10.**(0.5*Mw - 2.5) + 0.5)
 
     if rupture_time < 1.:

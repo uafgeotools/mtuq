@@ -244,13 +244,13 @@ Paths_BenchmarkCAP="""
     # the following directories correspond to the moment tensors in the list 
     # "grid" below
     paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/0')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/1')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/2')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/3')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/4')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/5')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/6')]
 
 """
 
@@ -273,7 +273,7 @@ Paths_Syngine="""
 
 
 Paths_FK="""
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
@@ -746,7 +746,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
             for _a, _b, _bool in zip(
                 a, b, np.isclose(a, b, atol=atol, rtol=rtol)):
 
-                print '%s:  %.e <= %.1e + %.1e * %.1e' %\
+                print '%s:  %.e <= %.1e + %.1e * %.1e' %\\
                     ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
             print ''
 
@@ -840,7 +840,8 @@ Main_BenchmarkCAP="""
 
         if run_figures:
             plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
-                cap_bw, cap_sw, mtuq_bw, mtuq_sw)
+                cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+                annotate=False)
 
         if run_checks:
             compare_cap_mtuq(
@@ -855,7 +856,8 @@ Main_BenchmarkCAP="""
             data_bw, data_sw, paths[0], name)
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
-            cap_bw, cap_sw, mtuq_bw, mtuq_sw, normalize=False)
+            cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+            annotate=False, normalize=False)
 
     print '\\nSUCCESS\\n'
 
@@ -1106,7 +1108,12 @@ if __name__=='__main__':
         file.write(Docstring_BenchmarkCAP)
         file.write(ArgparseDefinitions)
         file.write(Paths_BenchmarkCAP)
-        file.write(Paths_FK)
+        file.write(
+            replace(
+            Paths_FK,
+            'data/examples/20090407201255351/weights.dat',
+            'data/tests/benchmark_cap/20090407201255351/weights.dat',
+            ))
         file.write(
             replace(
             DataProcessingDefinitions,
