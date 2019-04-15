@@ -223,11 +223,15 @@ def trace_labels(dat, syn, total_misfit=1.):
     pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
 
     # display maximum cross-correlation coefficient
-    max_cc = np.correlate(s, d, 'valid').max()
     Ns = np.dot(s,s)**0.5
     Nd = np.dot(d,d)**0.5
-    max_cc /= (Ns*Nd)
-    pyplot.text(0.,(2/4.)*ylim[0], '%.2f' %max_cc, fontsize=6)
+    if Ns*Nd > 0.:
+        max_cc = np.correlate(s, d, 'valid').max()
+        max_cc /= (Ns*Nd)
+        pyplot.text(0.,(2/4.)*ylim[0], '%.2f' %max_cc, fontsize=6)
+    else:
+        max_cc = np.nan
+        pyplot.text(0.,(2/4.)*ylim[0], '%.2f' %max_cc, fontsize=6)
 
     # display percent of total misfit
     misfit = getattr(syn, 'misfit', np.nan)
