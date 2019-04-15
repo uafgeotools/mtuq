@@ -43,7 +43,7 @@ if __name__=='__main__':
     run_figures = (not args.no_figures)
 
 
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'

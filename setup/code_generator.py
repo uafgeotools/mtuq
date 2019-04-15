@@ -244,13 +244,13 @@ Paths_BenchmarkCAP="""
     # the following directories correspond to the moment tensors in the list 
     # "grid" below
     paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/0')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/1')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/2')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/3')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/4')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/5')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/6')]
 
 """
 
@@ -273,7 +273,7 @@ Paths_Syngine="""
 
 
 Paths_FK="""
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
     path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
@@ -1108,7 +1108,12 @@ if __name__=='__main__':
         file.write(Docstring_BenchmarkCAP)
         file.write(ArgparseDefinitions)
         file.write(Paths_BenchmarkCAP)
-        file.write(Paths_FK)
+        file.write(
+            replace(
+            Paths_FK,
+            'data/examples/20090407201255351/weights.dat',
+            'data/tests/benchmark_cap/20090407201255351/weights.dat',
+            ))
         file.write(
             replace(
             DataProcessingDefinitions,

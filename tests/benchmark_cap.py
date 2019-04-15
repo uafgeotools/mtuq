@@ -89,18 +89,18 @@ if __name__=='__main__':
     # the following directories correspond to the moment tensors in the list 
     # "grid" below
     paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/20090407201255351/6')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/0')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/1')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/2')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/3')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/4')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/5')]
+    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/6')]
 
 
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
+    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
     path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
-    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    path_weights= join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 
