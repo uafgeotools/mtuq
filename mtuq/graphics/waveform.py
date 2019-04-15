@@ -29,7 +29,8 @@ def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
 
 def plot_data_synthetics(filename, data_bw, data_sw, 
         synthetics_bw, synthetics_sw, total_misfit_bw=1., total_misfit_sw=1.,
-        annotate=True, mt=None, normalize='maximum_amplitude'):
+        annotate=True, header=False, station_labels=True, mt=None, 
+        normalize='maximum_amplitude'):
     """ Creates CAP-style data/synthetics figure
     """
 
@@ -54,11 +55,37 @@ def plot_data_synthetics(filename, data_bw, data_sw,
 
     # dimensions of subplot array
     nrow = _count_nonempty([data_bw, data_sw])
-    ncol = 6
+    ncol = 5
 
-    # initialize pyplot figure
-    figsize = (16, 1.4*nrow)
-    pyplot.figure(figsize=figsize)
+
+    # figure dimensions in inches
+    height = 1.4*nrow
+    width = 16
+    margin_bottom = 0.25
+    margin_top = 0.25
+    margin_left = 0.25
+    margin_right = 0.25
+
+    if header:
+        margin_top += 3.
+
+    if station_labels:
+        margin_left += 0.75
+
+
+    # initialize figure
+    pyplot.figure(figsize=(
+        width+margin_left+margin_right,
+        height+margin_bottom+margin_top))
+
+    pyplot.subplots_adjust(
+        left=margin_left/width,
+        right=1.-margin_right/width,
+        bottom=margin_bottom/height,
+        top=1.-margin_top/height,
+        wspace=0.,
+        hspace=0.,
+        )
 
 
     #
@@ -73,14 +100,11 @@ def plot_data_synthetics(filename, data_bw, data_sw,
             continue
 
         # add station labels
-        try:
+        if station_labels:
             meta = stations[_i]
             pyplot.subplot(nrow, ncol, ncol*irow+1)
-            station_labels(meta)
-        except:
-            meta = stream_dat[0].stats
-            pyplot.subplot(nrow, ncol, ncol*irow+1)
-            station_labels(meta)
+            add_station_labels(meta)
+
 
         #
         # plot body wave traces
@@ -102,10 +126,10 @@ def plot_data_synthetics(filename, data_bw, data_sw,
 
             # plot traces
             if component=='Z':
-                pyplot.subplot(nrow, ncol, ncol*irow+2)
+                pyplot.subplot(nrow, ncol, ncol*irow+1)
                 subplot(dat, syn)
             elif component=='R':
-                pyplot.subplot(nrow, ncol, ncol*irow+3)
+                pyplot.subplot(nrow, ncol, ncol*irow+2)
                 subplot(dat, syn)
             else:
                 continue
@@ -120,7 +144,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 pyplot.ylim(*ylim)
 
             if annotate:
-                trace_labels(dat, syn, total_misfit_bw)
+                add_trace_labels(dat, syn, total_misfit_bw)
 
 
         #
@@ -143,13 +167,13 @@ def plot_data_synthetics(filename, data_bw, data_sw,
 
             # plot traces
             if component=='Z':
-                pyplot.subplot(nrow, ncol, ncol*irow+4)
+                pyplot.subplot(nrow, ncol, ncol*irow+3)
                 subplot(dat, syn)
             elif component=='R':
-                pyplot.subplot(nrow, ncol, ncol*irow+5)
+                pyplot.subplot(nrow, ncol, ncol*irow+4)
                 subplot(dat, syn)
             elif component=='T':
-                pyplot.subplot(nrow, ncol, ncol*irow+6)
+                pyplot.subplot(nrow, ncol, ncol*irow+5)
                 subplot(dat, syn)
             else:
                 continue
@@ -164,7 +188,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 pyplot.ylim(*ylim)
 
             if annotate:
-                trace_labels(dat, syn, total_misfit_sw)
+                add_trace_labels(dat, syn, total_misfit_sw)
 
 
         irow += 1
@@ -192,35 +216,36 @@ def subplot(dat, syn, label=None):
     _hide_axes(ax)
 
 
-def station_labels(meta):
+def add_station_labels(meta):
     ax = pyplot.gca()
-    _hide_axes(ax)
 
     # display station name
     label = '.'.join([meta.network, meta.station])
-    pyplot.text(0.6,0.45, label, fontsize=7)
+    pyplot.text(-0.25,0.45, label, fontsize=7, transform=ax.transAxes)
 
     # display distance
     distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
-    pyplot.text(0.6,0.25,distance, fontsize=7)
+    pyplot.text(-0.25,0.30,distance, fontsize=7, transform=ax.transAxes)
 
     # display azimuth
     azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(0.6,0.05,azimuth, fontsize=7)
+    pyplot.text(-0.25,0.15,azimuth, fontsize=7, transform=ax.transAxes)
+
+    _hide_axes(ax)
 
 
-def trace_labels(dat, syn, total_misfit=1.):
+def add_trace_labels(dat, syn, total_misfit=1.):
     """ Adds CAP-style annotations below each trace
     """
     ax = pyplot.gca()
-    ylim = ax.get_ylim()
+    ymin = ax.get_ylim()[0]
 
     s = syn.data
     d = dat.data
 
     # display cross-correlation time shift
     time_shift = getattr(syn, 'time_shift', np.nan)
-    pyplot.text(0.,(1/4.)*ylim[0], '%.2f' %time_shift, fontsize=6)
+    pyplot.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=6)
 
     # display maximum cross-correlation coefficient
     Ns = np.dot(s,s)**0.5
@@ -228,18 +253,18 @@ def trace_labels(dat, syn, total_misfit=1.):
     if Ns*Nd > 0.:
         max_cc = np.correlate(s, d, 'valid').max()
         max_cc /= (Ns*Nd)
-        pyplot.text(0.,(2/4.)*ylim[0], '%.2f' %max_cc, fontsize=6)
+        pyplot.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=6)
     else:
         max_cc = np.nan
-        pyplot.text(0.,(2/4.)*ylim[0], '%.2f' %max_cc, fontsize=6)
+        pyplot.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=6)
 
     # display percent of total misfit
     misfit = getattr(syn, 'misfit', np.nan)
     misfit /= total_misfit
     if misfit >= 0.1:
-        pyplot.text(0.,(3/4.)*ylim[0], '%.1f' %(100.*misfit), fontsize=6)
+        pyplot.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=6)
     else:
-        pyplot.text(0.,(3/4.)*ylim[0], '%.2f' %(100.*misfit), fontsize=6)
+        pyplot.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=6)
 
 
 
@@ -286,7 +311,5 @@ def _hide_axes(ax):
     ax.spines['left'].set_visible(False)
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
-
-
 
 
