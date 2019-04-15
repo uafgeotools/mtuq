@@ -23,8 +23,7 @@ sessions.
 to the python code go into effect immediately without having to reinstall. 
 
 - If the installation procedure fails, there is possibly a conflict between
-newly-loaded and previously-loaded modules. Try `module purge` and then rerun
-`install.bash`.
+modules. Try `module purge` and then rerun `install.bash`.
 
 - Advanced users can obtain the same result as `install.bash` by following the
 more general instructions in `docs/`.
