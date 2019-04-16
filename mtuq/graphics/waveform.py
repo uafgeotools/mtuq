@@ -6,7 +6,7 @@ import warnings
 
 def plot_data_synthetics(filename, data_bw, data_sw, 
         synthetics_bw, synthetics_sw, total_misfit_bw=1., total_misfit_sw=1.,
-        annotate=True, header=False, station_labels=True, mt=None, 
+        header=False, station_labels=True, trace_labels=True, mt=None, 
         normalize='maximum_amplitude'):
     """ Creates CAP-style data/synthetics figure
     """
@@ -134,7 +134,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 ylim = [-2*max_amplitude_bw, +2*max_amplitude_bw]
                 pyplot.ylim(*ylim)
 
-            if annotate:
+            if trace_labels:
                 add_trace_labels(dat, syn, total_misfit_bw)
 
 
@@ -178,7 +178,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 ylim = [-max_amplitude_sw, +max_amplitude_sw]
                 pyplot.ylim(*ylim)
 
-            if annotate:
+            if trace_labels:
                 add_trace_labels(dat, syn, total_misfit_sw)
 
 
