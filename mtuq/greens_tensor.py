@@ -82,9 +82,9 @@ class GreensTensor(Stream):
         return that component.
         """
         # Combining this method with __init__ would result in an endless 
-        # recursion when the select method is called.  But more than that, the
-        # work done by initialize is different and much more expensive than
-        # __init__, so it makes sense to separate the two.
+        # recursion when the select method is called. More than that, the work
+        # done by initialize is different and more expensive than __init__, and
+        # it makes sense to separate them.
 
         raise NotImplementedError("Must be implemented by subclass")
 
