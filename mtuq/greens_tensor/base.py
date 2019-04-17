@@ -310,20 +310,66 @@ class GreensTensorList(list):
         return synthetics
 
 
-    def as_array(self):
+    def asarray(self):
         """ Returns time series from all Green's tensors in a single 
         multidimensional array
         """
+        if hasattr(self, '_array'):
+            return self._array
+
+        components = ['Z', 'R', 'T']
+
+        # array dimensions
+        nc = len(components)
+        nt = len(self[0][0])
+        ns = len(self)
+        nr = 6
+
+        if self[0].enable_force:
+            nr += 3
+
+        array = np.zeros((ns, nc, nr, nt))
+        for _i, greens_tensor in enumerate(self):
+            # fill in 3D array
+            greens_tensor.initialize(components)
+
+            # fill in 4D array
+            array[_i, :, :, :] = greens_tensor._array
+
+        self._array = array
+        return array
+
+
+    def get_synthetics_asarray(self, source):
+        """
+        Generates synthetics through a source-weighted linear combination
+        """
+        n1,n2,_,n3 = self.asarray().shape
+        s = np.zeros((n1,n2,n3))
+
+        if len(source)==6:
+            # moment tensor source
+            s += source[0]*self._array[:, :, 0, :]
+            s += source[1]*self._array[:, :, 1, :]
+            s += source[2]*self._array[:, :, 2, :]
+            s += source[3]*self._array[:, :, 3, :]
+            s += source[4]*self._array[:, :, 4, :]
+            s += source[5]*self._array[:, :, 5, :]
+            return s
+
+        elif len(source)==3:
+            # force source
+            s += source[0]*self._array[:, :, 6, :]
+            s += source[1]*self._array[:, :, 7, :]
+            s += source[2]*self._array[:, :, 8, :]
+            return s
+
+        else:
+            raise TypeError
+
+
+    def get_time_shift_asarray(self):
         raise NotImplementedError
-
-        #if self._ndarray:
-        #    return self._ndarray
-
-        #for greens_tensor in self:
-        #    pass
-
-        #self._ndarray = ndarray
-        #return ndarray
 
 
     # the next three methods can be used to apply signal processing or other
@@ -408,7 +454,5 @@ class GreensTensorList(list):
         Sorts in-place using the python built-in "sort"
         """
         self.sort(key=function, reverse=reverse)
-
-
 
 
