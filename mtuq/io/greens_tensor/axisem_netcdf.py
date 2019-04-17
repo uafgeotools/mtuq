@@ -72,24 +72,36 @@ class GreensTensor(GreensTensorBase):
             time_shift_max)
 
 
-    def _precompute(self):
+    def initialize(self, components):
         """
-        Precomputes time series used in source-weighted linear combinations
+        Computes numpy arrays used by get_synthetics
 
-        Based on formulas from Minson & Dreger 2008
+        The mathematical formulas below are based on Minson & Dreger 2008
         """
-        phi = np.deg2rad(self.azimuth)
+        self.components = components
 
-        # array dimensions
+        for component in components:
+            assert component in ['Z', 'R', 'T']
+
+
+        # allocate obspy stream used by get_synthetics
+        self.allocate_synthetics()
+
+        if not components:
+            return
+
+        # allocate numpy array used by get_synthetics
         nt = self[0].stats.npts
         nc = len(self.components)
         nr = 6
         if self.enable_force:
             nr += 3
+        self._array = np.zeros((nc, nr, nt))
 
-        G = np.zeros((nc, nr, nt))
-        self._tensor = G
 
+        # fill in the elements of the array
+        G = self._array
+        phi = np.deg2rad(self.azimuth)
         for _i, component in enumerate(self.components):
             if component=='Z':
                 ZSS = self.select(channel="ZSS")[0].data
@@ -97,7 +109,6 @@ class GreensTensor(GreensTensorBase):
                 ZDD = self.select(channel="ZDD")[0].data
                 ZEP = self.select(channel="ZEP")[0].data
                 ZDS *= -1
-
                 G[_i, 0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 G[_i, 1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 G[_i, 2, :] =  ZDD/3. + ZEP/3.
@@ -111,7 +122,6 @@ class GreensTensor(GreensTensorBase):
                 RDD = self.select(channel="RDD")[0].data
                 REP = self.select(channel="REP")[0].data
                 RDS *= -1
-
                 G[_i, 0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 G[_i, 1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 G[_i, 2, :] =  RDD/3. + REP/3.
@@ -123,7 +133,6 @@ class GreensTensor(GreensTensorBase):
                 TSS = self.select(channel="TSS")[0].data
                 TDS = self.select(channel="TDS")[0].data
                 TSS *= -1
-
                 G[_i, 0, :] = TSS/2. * np.sin(2*phi)
                 G[_i, 1, :] = -TSS/2. * np.sin(2*phi)
                 G[_i, 2, :] = 0.

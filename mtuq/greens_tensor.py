@@ -29,7 +29,6 @@ class GreensTensor(Stream):
             station=None, 
             origin=None,
             id=None, 
-            components=None,
             enable_force=False):
 
         for trace in traces:
@@ -37,6 +36,8 @@ class GreensTensor(Stream):
 
         assert check_time_sampling(traces), NotImplementedError(
             "Time sampling differs from trace to trace.")
+
+        super(GreensTensor, self).__init__(traces)
 
         if not isinstance(station, Station):
             raise TypeError
@@ -55,31 +56,61 @@ class GreensTensor(Stream):
         # event location and other metadata
         self.origin = origin
 
-        # what components are created when generating synthetics?
-        self.components = components
-
-        # enable synthetics from force sources?
-        self.enable_force = enable_force
-
         self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
             origin.latitude,
             origin.longitude,
             station.latitude,
             station.longitude)
 
-        super(GreensTensor, self).__init__(traces)
+        # enable force sources?
+        self.enable_force = enable_force
+
+
+    def initialize(self, components):
+        """
+        Computes arrays used by get_synthetics
+
+        This method must be called prior to using get_synthetics or
+        get_time_shift.
+
+        Computes numpy arrays used in source-weighted linear combinations
+        and allocates obspy stream used to hold the resulting synthetics. 
+
+        This method can be rerun if the components change. Suppose a particular
+        component of the recorded data is found to be corrupt. Then rerunning
+        initialize without that component will cause get_synthetics to no longer
+        return that component.
+        """
+        # Combining this method with __init__ would result in an endless 
+        # recursion when the select method is called.  But more than that, the
+        # work done by initialize is different and much more expensive than
+        # __init__, so it makes sense to separate the two.
+
+        raise NotImplementedError("Must be implemented by subclass")
+
+
+    def allocate_synthetics(self):
+        """
+        Allocates obspy stream used to hold synthetics
+
+        A single obspy stream is allocated by this method, and whenever
+        get_synthetics is called, the numeric trace data gets overwritten.
+        """
+        self._synthetics = Stream()
+        for channel in self.components:
+            stats = deepcopy(self.station)
+            stats.update({
+                'npts': self[0].stats.npts,
+                'channel': channel,
+                })
+            self._synthetics += Trace(np.zeros(stats.npts), stats)
+        self._synthetics.id = self.id
 
 
     def get_synthetics(self, source):
         """
         Generates synthetics through a source-weighted linear combination
         """
-        if not hasattr(self, '_synthetics'):
-            self._preallocate()
-
-        if not hasattr(self, '_tensor'):
-            self._precompute()
-
         for _i, component in enumerate(self.components):
             s = self._synthetics[_i].data
             s[:] = 0.
@@ -87,23 +118,57 @@ class GreensTensor(Stream):
             # we could use np.dot below, but speedup appears negligible
             if len(source)==6:
                 # moment tensor source
-                s += source[0]*self._tensor[_i, 0, :]
-                s += source[1]*self._tensor[_i, 1, :]
-                s += source[2]*self._tensor[_i, 2, :]
-                s += source[3]*self._tensor[_i, 3, :]
-                s += source[4]*self._tensor[_i, 4, :]
-                s += source[5]*self._tensor[_i, 5, :]
+                s += source[0]*self._array[_i, 0, :]
+                s += source[1]*self._array[_i, 1, :]
+                s += source[2]*self._array[_i, 2, :]
+                s += source[3]*self._array[_i, 3, :]
+                s += source[4]*self._array[_i, 4, :]
+                s += source[5]*self._array[_i, 5, :]
 
             elif len(source)==3:
                 # force source
-                s += source[0]*self._tensor[_i, 6, :]
-                s += source[1]*self._tensor[_i, 7, :]
-                s += source[2]*self._tensor[_i, 8, :]
+                s += source[0]*self._array[_i, 6, :]
+                s += source[1]*self._array[_i, 7, :]
+                s += source[2]*self._array[_i, 8, :]
 
             else:
                 raise TypeError
 
         return self._synthetics
+
+
+    def initialize_cc(self, data, time_shift_max):
+        """
+        Computes cross correlations between data and Green's functions used by
+        the get_time_shift method
+        """
+        if not hasattr(self, '_array'):
+            raise Exception
+        G = self._array
+        n1,n2,npts = G.shape
+
+        dt = self[0].stats.delta
+        npts_padding = int(time_shift_max/dt)
+
+        self._npts_padding = npts_padding
+        self._array_cc_sum = np.zeros(2*npts_padding+1)
+        self._array_cc_all = np.zeros((n1, n2, 2*npts_padding+1))
+
+        # compute cross-correlations
+        cc = self._array_cc_all
+        for _i1, component in enumerate(self.components):
+            d = data.select(component=component)[0].data
+
+            for _i2 in range(n2):
+                if (npts > 2000 or npts_padding > 200):
+                    # for long traces or long lag times, frequency-domain
+                    # implementation is usually faster
+                    cc[_i1, _i2, :] = fftconvolve(d, G[_i1, _i2, ::-1], 'valid')
+
+                else:
+                    # for short traces or short lag times, time-domain
+                    # implementation is usually faster
+                    cc[_i1, _i2, :] = np.correlate(d, G[_i1, _i2, :], 'valid')
 
 
     def get_time_shift(self, data, source, group, time_shift_max):
@@ -124,12 +189,12 @@ class GreensTensor(Stream):
         :param time_shift_max: Maximum allowable time-shift. Lag times greater 
             than this value are not computed in the cross-correlation.
         """
-        if not hasattr(self, '_cc_all'):
-            self._precompute_time_shifts(data, time_shift_max)
+        if not hasattr(self, '_array_cc_all'):
+            self.initialize_cc(data, time_shift_max)
 
         npts_padding = self._npts_padding
-        cc_all = self._cc_all
-        cc_sum = self._cc_sum
+        cc_all = self._array_cc_all
+        cc_sum = self._array_cc_sum
         cc_sum[:] = 0.
 
         for component in group:
@@ -168,10 +233,9 @@ class GreensTensor(Stream):
         
         """
         return self.__class__(function(self, *args, **kwargs),
-            station=self.station, 
-            origin=self.origin, 
-            id=self.id, 
-            components=self.components,
+            station=self.station,
+            origin=self.origin,
+            id=self.id,
             enable_force=self.enable_force)
 
 
@@ -185,62 +249,6 @@ class GreensTensor(Stream):
         """
         for trace in self:
             wavelet.convolve(trace)
-
-
-    def _preallocate(self):
-        """
-        Enables fast synthetics calculations through preallocation and
-        and memory reuse
-        """
-        self._synthetics = Stream()
-        for channel in self.components:
-            stats = deepcopy(self.station)
-            stats.update({
-                'npts': self[0].stats.npts,
-                'channel': channel,
-                })
-            self._synthetics += Trace(np.zeros(stats.npts), stats)
-        self._synthetics.id = self.id
-
-
-    def _precompute(self):
-        """
-        Enables fast synthetics calculations by precomputing time series used 
-        in source-weighted linear combination
-        """
-        raise NotImplementedError("Must be implemented by subclass")
-
-
-    def _precompute_time_shifts(self, data, time_shift_max):
-        """
-        Enables fast time-shift calculations by computing cross-correlations
-        between data and Green's functions
-        """
-        dt = self[0].stats.delta
-        npts_padding = int(time_shift_max/dt)
-
-        G = self._tensor
-        n1,n2,npts = G.shape
-
-        self._npts_padding = npts_padding
-        self._cc_sum = np.zeros(2*npts_padding+1)
-        self._cc_all = np.zeros((n1, n2, 2*npts_padding+1))
-
-        # compute cross-correlations
-        cc = self._cc_all
-        for _i1, component in enumerate(self.components):
-            d = data.select(component=component)[0].data
-
-            for _i2 in range(n2):
-                if (npts > 2000 or npts_padding > 200):
-                    # for long traces or long lag times, frequency-domain
-                    # implementation is usually faster
-                    cc[_i1, _i2, :] = fftconvolve(d, G[_i1, _i2, ::-1], 'valid')
-
-                else:
-                    # for short traces or short lag times, time-domain
-                    # implementation is usually faster
-                    cc[_i1, _i2, :] = np.correlate(d, G[_i1, _i2, :], 'valid')
 
 
     def select(self, *args, **kwargs):
@@ -257,7 +265,6 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
-            components=self.components,
             enable_force=self.enable_force)
 
 
@@ -301,6 +308,22 @@ class GreensTensorList(list):
         for greens_tensor in self:
             synthetics += [greens_tensor.get_synthetics(mt)]
         return synthetics
+
+
+    def as_array(self):
+        """ Returns time series from all Green's tensors in a single 
+        multidimensional array
+        """
+        raise NotImplementedError
+
+        #if self._ndarray:
+        #    return self._ndarray
+
+        #for greens_tensor in self:
+        #    pass
+
+        #self._ndarray = ndarray
+        #return ndarray
 
 
     # the next three methods can be used to apply signal processing or other
@@ -385,4 +408,7 @@ class GreensTensorList(list):
         Sorts in-place using the python built-in "sort"
         """
         self.sort(key=function, reverse=reverse)
+
+
+
 

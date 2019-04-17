@@ -58,23 +58,35 @@ class GreensTensor(GreensTensorBase):
             time_shift_max)
 
 
-    def _precompute(self):
+    def initialize(self, components):
         """
-        Computes rotated time series used in source-weighted linear combinations
+        Computes numpy arrays used by get_synthetics
  
-        The following expressions were obtained using CAP's mt_radiat utility as
+        The following formulas were derived using CAP's mt_radiat utility as
         a starting point
         """
-        phi = np.deg2rad(self.azimuth)
+        self.components = components
 
-        # array dimensions
+        for component in components:
+            assert component in ['Z', 'R', 'T']
+
+        # allocate obspy stream used by get_synthetics
+        self.allocate_synthetics()
+
+        if not components:
+            return
+
+        # allocate numpy array used by get_synthetics
         nt = self[0].stats.npts
         nc = len(self.components)
         nr = 6
+        if self.enable_force:
+            nr += 3
+        self._array = np.zeros((nc, nr, nt))
 
-        G = np.zeros((nc, nr, nt))
-        self._tensor = G
-
+        # fill in the elements of the array
+        G = self._array
+        phi = np.deg2rad(self.azimuth)
         for _i, component in enumerate(self.components):
             if component=='Z':
                 ZSS = self.select(channel="ZSS")[0].data
