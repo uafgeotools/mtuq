@@ -3,28 +3,14 @@ import obspy
 import numpy as np
 
 from obspy.core import Stream
-from mtuq.io.greens_tensor.axisem_netcdf import GreensTensor as GreensTensorBase
-from mtuq.io.greens_tensor.base import Client as ClientBase
+from mtuq.greens_tensor.syngine import GreensTensor 
+from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
 from mtuq.util.syngine import download_greens_tensor, download_force_response,\
      resolve_model,\
      GREENS_TENSOR_FILENAMES, SYNTHETICS_FILENAMES
 from mtuq.util import unzip
 
-
-class GreensTensor(GreensTensorBase):
-    """
-    Adds syngine capabilities to AxiSEM base class
-
-    Syngine is an webservice that provides Green's functions and synthetic
-    seismograms for download as compressed SAC files. 
-
-    Syngine uses precomputed AxiSEM databases under the hood, so Green's 
-    function conventions, moment tensor conventions, and so on are very similar to
-    AxiSEM, and it is not necessary to modify any of the machinery for 
-    generating synthetics.
-    """
-    pass
 
 
 class Client(ClientBase):

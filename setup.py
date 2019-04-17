@@ -22,9 +22,9 @@ ENTRY_POINTS = {
         'SAC = mtuq.io.readers.sac:read',
         ],
     'greens_tensor_clients': [
-        'AXISEM = mtuq.io.greens_tensor.axisem_netcdf:Client',
-        'FK = mtuq.io.greens_tensor.fk_sac:Client',
-        'SYNGINE = mtuq.io.greens_tensor.syngine:Client',
+        'AXISEM = mtuq.io.clients.axisem_netcdf:Client',
+        'FK = mtuq.io.clients.fk_sac:Client',
+        'SYNGINE = mtuq.io.clients.syngine:Client',
         ]
     }
 
