@@ -164,6 +164,22 @@ if __name__=='__main__':
 """
 
 
+Docstring_TestGraphics="""
+if __name__=='__main__':
+    #
+    # Tests data, synthetics and beachball plotting utilities
+    #
+    # Note that in the figures created by this script, the data and synthetics 
+    # are not expected to fit epsecially well; currently, the only requirement 
+    # is that the script runs without errors
+    #
+
+    import matplotlib
+    matplotlib.use('Agg', warn=False, force=True)
+    import matplotlib
+"""
+
+
 Docstring_BenchmarkCAP="""
 if __name__=='__main__':
     #
@@ -414,6 +430,15 @@ Grid_TestDoubleCoupleMagnitudeDepth="""
     wavelet = Trapezoid(
         magnitude=4.5)
 
+"""
+
+
+Grid_TestGraphics="""
+    mt = np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]) # explosion
+    mt *= 1.e16
+
+    wavelet = Trapezoid(
+        magnitude=4.5)
 """
 
 
@@ -674,6 +699,58 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
 """
 
 
+Main_TestGraphics="""
+
+    print 'Reading data...\\n'
+    data = read(path_data, format='sac',
+        event_id=event_name,
+        tags=['units:cm', 'type:velocity'])
+
+    data.sort_by_distance()
+
+    stations = data.get_stations()
+    origins = data.get_origins()
+
+
+    print 'Processing data...\\n'
+    data_bw = data.map(process_bw, stations, origins)
+    data_sw = data.map(process_sw, stations, origins)
+
+    print 'Reading Greens functions...\\n'
+    db = open_db(path_greens, format='FK', model=model)
+    greens = db.get_greens_tensors(stations, origins)
+
+    print 'Processing Greens functions...\\n'
+    greens.convolve(wavelet)
+    greens_bw = greens.map(process_bw, stations, origins)
+    greens_sw = greens.map(process_sw, stations, origins)
+
+
+    #
+    # Start generating figures
+    #
+
+    print 'Figure 1 of 3\\n'
+
+    plot_data_greens_mt('test_graphics1.png',
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], mt, header=False)
+
+    print 'Figure 2 of 3\\n'
+
+    plot_data_greens_mt('test_graphics2.png',
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [misfit_bw, misfit_sw], mt, header=True)
+
+    print 'Figure 3 of 3\\n'
+
+    plot_beachball('test_graphics3.png', mt)
+
+    print 'Finished\\n'
+"""
+
+
+
 WrapUp_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print 'Saving results...\\n'
@@ -841,7 +918,7 @@ Main_BenchmarkCAP="""
         if run_figures:
             plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-                annotate=False)
+                trace_labels=False)
 
         if run_checks:
             compare_cap_mtuq(
@@ -857,7 +934,7 @@ Main_BenchmarkCAP="""
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-            annotate=False, normalize=False)
+            trace_labels=False, normalize=False)
 
     print '\\nSUCCESS\\n'
 
@@ -1132,5 +1209,23 @@ if __name__=='__main__':
             ))
         file.write(Grid_BenchmarkCAP)
         file.write(Main_BenchmarkCAP)
+
+
+    with open('tests/test_graphics.py', 'w') as file:
+        file.write(Imports)
+        file.write(Docstring_TestGraphics)
+        file.write(Paths_FK)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(MisfitDefinitions)
+        file.write(Grid_TestGraphics)
+        file.write(Main_TestGraphics)
+
 
 

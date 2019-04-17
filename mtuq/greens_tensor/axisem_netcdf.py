@@ -1,17 +1,9 @@
 
-try:
-    import instaseis
-except:
-    pass
 import obspy
 import numpy as np
 
-from os.path import basename
-from mtuq import GreensTensor as GreensTensorBase
-from mtuq.io.greens_tensor.base import Client as ClientBase
+from mtuq.greens_tensor.base import GreensTensor as GreensTensorBase
 from mtuq.util.moment_tensor.basis import change_basis
-from mtuq.util.signal import resample
-from mtuq.util import m_to_deg
 
 
 
@@ -72,24 +64,36 @@ class GreensTensor(GreensTensorBase):
             time_shift_max)
 
 
-    def _precompute(self):
+    def initialize(self, components):
         """
-        Precomputes time series used in source-weighted linear combinations
+        Computes numpy arrays used by get_synthetics
 
-        Based on formulas from Minson & Dreger 2008
+        The mathematical formulas below are based on Minson & Dreger 2008
         """
-        phi = np.deg2rad(self.azimuth)
+        self.components = components
 
-        # array dimensions
+        for component in components:
+            assert component in ['Z', 'R', 'T']
+
+
+        # allocate obspy stream used by get_synthetics
+        self.allocate_synthetics()
+
+        if not components:
+            return
+
+        # allocate numpy array used by get_synthetics
         nt = self[0].stats.npts
         nc = len(self.components)
         nr = 6
         if self.enable_force:
             nr += 3
+        self._array = np.zeros((nc, nr, nt))
 
-        G = np.zeros((nc, nr, nt))
-        self._tensor = G
 
+        # fill in the elements of the array
+        G = self._array
+        phi = np.deg2rad(self.azimuth)
         for _i, component in enumerate(self.components):
             if component=='Z':
                 ZSS = self.select(channel="ZSS")[0].data
@@ -97,7 +101,6 @@ class GreensTensor(GreensTensorBase):
                 ZDD = self.select(channel="ZDD")[0].data
                 ZEP = self.select(channel="ZEP")[0].data
                 ZDS *= -1
-
                 G[_i, 0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 G[_i, 1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 G[_i, 2, :] =  ZDD/3. + ZEP/3.
@@ -111,7 +114,6 @@ class GreensTensor(GreensTensorBase):
                 RDD = self.select(channel="RDD")[0].data
                 REP = self.select(channel="REP")[0].data
                 RDS *= -1
-
                 G[_i, 0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 G[_i, 1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 G[_i, 2, :] =  RDD/3. + REP/3.
@@ -123,7 +125,6 @@ class GreensTensor(GreensTensorBase):
                 TSS = self.select(channel="TSS")[0].data
                 TDS = self.select(channel="TDS")[0].data
                 TSS *= -1
-
                 G[_i, 0, :] = TSS/2. * np.sin(2*phi)
                 G[_i, 1, :] = -TSS/2. * np.sin(2*phi)
                 G[_i, 2, :] = 0.
@@ -158,70 +159,5 @@ class GreensTensor(GreensTensorBase):
                 G[_i, 7, :] = T1
                 G[_i, 8, :] = T2
 
-
-
-class Client(ClientBase):
-    """ 
-    Interface to AxiSEM/Instaseis database
-
-    Generates GreenTensorLists via a two-step procedure
-
-    .. code:
-
-        db = mtuq.greens.open_db(path, format='instaseis')
-
-        greens_tensors = db.read(stations, origin)
-
-    In the first step, the user supplies the path or URL to an AxiSEM NetCDF
-    output file
-
-    In the second step, the user supplies a list of stations and the origin
-    location and time of an event. GreensTensors are then created for all the
-    corresponding station-event pairs.
-
-    """
-
-    def __init__(self, path_or_url='', kernelwidth=12):
-        if not path:
-            raise Exception
-        try:
-            db = instaseis.open_db(path)
-        except:
-            Exception
-        self.db = db
-        self.kernelwidth=12
-
-
-    def _get_greens_tensor(self, station=None, origin=None):
-        stream = self.db.get_greens_function(
-            epicentral_distance_in_degree=m_to_deg(station.distance_in_m),
-            source_depth_in_m=station.depth_in_m, 
-            origin_time=origin.time,
-            kind='displacement',
-            kernelwidth=self.kernelwidth,
-            definition=u'seiscomp')
-        stream.id = station.id
-
-        # what are the start and end times of the data?
-        t1_new = float(station.starttime)
-        t2_new = float(station.endtime)
-        dt_new = float(station.delta)
-
-        # what are the start and end times of the Green's function?
-        t1_old = float(origin.time)+float(trace.stats.starttime)
-        t2_old = float(origin.time)+float(trace.stats.endtime)
-        dt_old = float(trace.stats.delta)
-
-        for trace in stream:
-            # resample Green's functions
-            data_old = trace.data
-            data_new = resample(data_old, t1_old, t2_old, dt_old, 
-                                          t1_new, t2_new, dt_new)
-            trace.data = data_new
-            trace.stats.starttime = t1_new
-            trace.stats.delta = dt_new
-
-        return GreensTensor(traces=[trace for trace in stream], 
-            station=station, origin=origin)
 
 

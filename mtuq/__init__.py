@@ -4,7 +4,7 @@
 #
 
 from mtuq.dataset import Dataset, EventDataset
-from mtuq.greens_tensor import GreensTensor, GreensTensorList
+from mtuq.greens_tensor import GreensTensorList
 from mtuq.event import Origin, Force, MomentTensor
 from mtuq.station import Station
 
@@ -14,7 +14,7 @@ from mtuq.station import Station
 #
 
 from pkg_resources import iter_entry_points
-from mtuq.io.greens_tensor.syngine import get_greens_tensors
+from mtuq.io.clients.syngine import get_greens_tensors
 
 
 def _greens_tensor_clients():

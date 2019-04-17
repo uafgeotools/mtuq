@@ -13,6 +13,7 @@ FILENAMES="\
     ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py\
     ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple+Magnitude+Depth.py\
     ../tests/benchmark_cap.py\
+    ../tests/test_graphics.py\
     ../tests/test_grid_search_mt.py\
     ../tests/test_grid_search_mt_depth.py\
     "
