@@ -31,7 +31,7 @@ class Dataset(list):
 
         for _i, stream in enumerate(streams):
 
-            # collection location information
+            # collect location information
             (stream.preliminary_distance_in_m,
             stream.preliminary_azimuth, _) =\
                 gps2dist_azimuth(
@@ -92,7 +92,7 @@ class Dataset(list):
 
 
     def max(self):
-        """ Returns the maximum absolute amplitude of all traces
+        """ Returns maximum absolute amplitude over all traces
         """
         max_all = -np.inf
         for stream in self:
@@ -139,6 +139,50 @@ class Dataset(list):
         """ Returns preliminary origin location and time
         """
         return self.origins
+
+
+    def as_array(self):
+        """ Returns time series from all stations and components in a single 
+        multidimensional array
+        """
+        if hasattr(self, '_ndarray'):
+            return self._ndarray
+
+        # count number of nonempty streams
+        ns = 0
+        for stream in self:
+            #assert check_time_sampling(stream)
+            if len(stream)==0:
+                ns += 1
+        nt = self[0][0].stats.npts
+
+        # allocate array
+        ndarray = np.zeros((3, ns, nt))
+
+        # populate array
+        _i = 0
+        for stream in self:
+            if len(stream)==0:
+                continue
+            try:
+                trace = stream.select(component='Z')
+                ndarray[0, _i, :] = trace.data
+            except:
+                pass
+            try: 
+                trace = stream.select(component='R')
+                ndarray[1, _i, :] = trace.data
+            except:
+                pass
+            try: 
+                trace = stream.select(component='T')
+                ndarray[2, _i, :] = trace.data
+            except:
+                pass
+            _i += 1
+
+        self._ndarray = ndarray
+        return ndarray
 
 
     def add_tag(self, tag):
