@@ -1,16 +1,9 @@
 
-try:
-    import instaseis
-except:
-    pass
 import obspy
 import numpy as np
 
-from os.path import basename
 from mtuq.greens_tensor.base import GreensTensor as GreensTensorBase
 from mtuq.util.moment_tensor.basis import change_basis
-from mtuq.util.signal import resample
-from mtuq.util import m_to_deg
 
 
 

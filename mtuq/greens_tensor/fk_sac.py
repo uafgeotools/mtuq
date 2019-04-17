@@ -2,13 +2,8 @@
 import obspy
 import numpy as np
 
-from math import ceil
-from os.path import basename, exists
 from mtuq.greens_tensor.base import GreensTensor as GreensTensorBase
-from mtuq.util.signal import resample
 from mtuq.util.moment_tensor.basis import change_basis
-from obspy.core import Stream
-from obspy.geodetics import gps2dist_azimuth
 
 
 class GreensTensor(GreensTensorBase):
