@@ -1,7 +1,6 @@
 
 import numpy as np
 
-from collections import defaultdict
 from scipy.signal import fftconvolve
 from mtuq.util.math import isclose, list_intersect_with_indices
 
@@ -55,9 +54,6 @@ class Misfit(object):
         # should we include polarities in misfit?
         self.polarity_weight = polarity_weight
 
-        # keeps track of what components are available in each stream
-        self._components = defaultdict(list)
-
 
     def __call__(self, data, greens, mt):
         """ CAP-style misfit calculation
@@ -66,17 +62,17 @@ class Misfit(object):
 
         sum_misfit = 0.
         for _i, d in enumerate(data):
-            # what components are in stream d?
-            if _i not in self._components:
+            try:
+                components = greens[_i].components
+            except:
+                # what components are in stream d?
+                components = []
                 for trace in d:
-                    self._components[_i] += [trace.stats.channel[-1].upper()]
+                    components += [trace.stats.channel[-1].upper()]
+                greens[_i].initialize(components)
 
-            components = self._components[_i]
             if not components:
                 continue
-
-            if greens[_i].components == None:
-                greens[_i].components = components
 
             # generate synthetics
             s = greens[_i].get_synthetics(mt)

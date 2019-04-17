@@ -195,8 +195,8 @@ def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
     syntax
     """
     # generate synthetics
-    greens[0].map(_set_components, data[0])
-    greens[1].map(_set_components, data[1])
+    #greens[0].map(_set_components, data[0])
+    #greens[1].map(_set_components, data[1])
     synthetics = []
     synthetics += [greens[0].get_synthetics(mt)]
     synthetics += [greens[1].get_synthetics(mt)]
@@ -323,12 +323,6 @@ def _time_stats(trace):
         trace.stats.npts,
         trace.stats.delta,
         )
-
-
-def _set_components(greens, data):
-    # sets GreensTensor components attribute
-    greens.components = [trace.stats.channel[-1] for trace in data]
-    return greens
 
 
 def _count_nonempty(datasets):
