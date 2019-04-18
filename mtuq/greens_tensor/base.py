@@ -533,7 +533,7 @@ class GreensTensorList(BasicGreensTensorList):
         """
         array = self._array
         synthetics = self._synthetics
-        synthetics[:,:,:,:] = 0.
+        synthetics[:,:,:] = 0.
 
         if len(source)==6:
             # moment tensor source
