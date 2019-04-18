@@ -4,7 +4,7 @@
 #
 
 from mtuq.dataset import BasicDataset, Dataset, EventDataset
-from mtuq.greens_tensor import BasicGreensTensorList, GreensTensorList
+from mtuq.greens_tensor import BasicGreensTensorList
 from mtuq.event import Origin, Force, MomentTensor
 from mtuq.station import Station
 

@@ -1,5 +1,5 @@
 
-from mtuq.greens_tensor import GreensTensorList
+from mtuq.greens_tensor import BasicGreensTensorList
 from mtuq.util import iterable
 
 
@@ -44,7 +44,7 @@ class Client(object):
         for station, origin in zip(iterable(stations), iterable(origins)):
             greens_tensors += [self._get_greens_tensor(station, origin)]
 
-        return GreensTensorList(greens_tensors)
+        return BasicGreensTensorList(greens_tensors)
 
 
     def _get_greens_tensor(self, station=None, origin=None):
