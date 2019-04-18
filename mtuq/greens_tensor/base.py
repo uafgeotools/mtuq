@@ -134,7 +134,7 @@ class GreensTensor(Stream):
         nr = 6
         if self.enable_force:
             nr += 3
-        self._array = np.zeros((nc, nr, nt))
+        self._array = np.zeros((nc, nt, nr))
 
 
     def _compute_array(self):
@@ -166,18 +166,18 @@ class GreensTensor(Stream):
             # we could use np.dot below, but speedup appears negligible
             if len(source)==6:
                 # moment tensor source
-                s += source[0]*array[_i, 0, :]
-                s += source[1]*array[_i, 1, :]
-                s += source[2]*array[_i, 2, :]
-                s += source[3]*array[_i, 3, :]
-                s += source[4]*array[_i, 4, :]
-                s += source[5]*array[_i, 5, :]
+                s += source[0]*array[_i, :, 0]
+                s += source[1]*array[_i, :, 1]
+                s += source[2]*array[_i, :, 2]
+                s += source[3]*array[_i, :, 3]
+                s += source[4]*array[_i, :, 4]
+                s += source[5]*array[_i, :, 5]
 
             elif len(source)==3:
                 # force source
-                s += source[0]*array[_i, 6, :]
-                s += source[1]*array[_i, 7, :]
-                s += source[2]*array[_i, 8, :]
+                s += source[0]*array[_i, :, 6]
+                s += source[1]*array[_i, :, 7]
+                s += source[2]*array[_i, :, 8]
 
             else:
                 raise TypeError
@@ -198,7 +198,7 @@ class GreensTensor(Stream):
         npts_padding = int(time_shift_max/dt)
 
         self._array_cc_sum = np.zeros(2*npts_padding+1)
-        self._array_cc_all = np.zeros((nc, nr, 2*npts_padding+1))
+        self._array_cc_all = np.zeros((nc, 2*npts_padding+1, nr))
         return self._array_cc_all
 
 
@@ -213,7 +213,7 @@ class GreensTensor(Stream):
                 "initialize() must be called prior to computing time shifts")
 
         array_cc = self._allocate_array_cc(data, time_shift_max)
-        n1, n2, _ = array_cc.shape
+        n1, _, n2 = array_cc.shape
 
         dt = self[0].stats.delta
         npts = self[0].stats.npts
@@ -229,14 +229,14 @@ class GreensTensor(Stream):
                 if (npts > 2000 or npts_padding > 200):
                     # for long traces or long lag times, frequency-domain
                     # implementation is usually faster
-                    array_cc[_i1, _i2, :] =\
-                        fftconvolve(trace.data, array[_i1, _i2, ::-1], 'valid')
+                    array_cc[_i1, :, _i2] =\
+                        fftconvolve(trace.data, array[_i1, ::-1, _i2], 'valid')
 
                 else:
                     # for short traces or short lag times, time-domain
                     # implementation is usually faster
-                    array_cc[_i1, _i2, :] =\
-                        np.correlate(trace.data, array[_i1, _i2, :], 'valid')
+                    array_cc[_i1, :, _i2] =\
+                        np.correlate(trace.data, array[_i1, :, _i2], 'valid')
 
 
     def get_time_shift(self, data, source, group, time_shift_max):
@@ -269,16 +269,16 @@ class GreensTensor(Stream):
         for component in group:
             _i = self.components.index(component)
             if len(source)==6:
-                cc_sum += source[0] * cc_all[_i, 0, :]
-                cc_sum += source[1] * cc_all[_i, 1, :]
-                cc_sum += source[2] * cc_all[_i, 2, :]
-                cc_sum += source[3] * cc_all[_i, 3, :]
-                cc_sum += source[4] * cc_all[_i, 4, :]
-                cc_sum += source[5] * cc_all[_i, 5, :]
+                cc_sum += source[0] * cc_all[_i, :, 0]
+                cc_sum += source[1] * cc_all[_i, :, 1]
+                cc_sum += source[2] * cc_all[_i, :, 2]
+                cc_sum += source[3] * cc_all[_i, :, 3]
+                cc_sum += source[4] * cc_all[_i, :, 4]
+                cc_sum += source[5] * cc_all[_i, :, 5]
             elif len(source)==3:
-                cc_sum += source[0] * cc_all[_i, 6, :]
-                cc_sum += source[1] * cc_all[_i, 7, :]
-                cc_sum += source[2] * cc_all[_i, 8, :]
+                cc_sum += source[0] * cc_all[_i, :, 6]
+                cc_sum += source[1] * cc_all[_i, :, 7]
+                cc_sum += source[2] * cc_all[_i, :, 8]
 
         npts_padding = (len(cc_sum)-1)/2
         return cc_sum.argmax() - npts_padding
@@ -512,7 +512,7 @@ class GreensTensorList(BasicGreensTensorList):
             nr += 3
 
         # allocate arrays
-        self._array = np.zeros((ns, nc, nr, nt))
+        self._array = np.zeros((ns, nc, nt, nr))
         self._synthetics = np.zeros((ns, nc, nt))
 
 
@@ -537,19 +537,19 @@ class GreensTensorList(BasicGreensTensorList):
 
         if len(source)==6:
             # moment tensor source
-            synthetics += source[0] * array[:, :, 0, :]
-            synthetics += source[1] * array[:, :, 1, :]
-            synthetics += source[2] * array[:, :, 2, :]
-            synthetics += source[3] * array[:, :, 3, :]
-            synthetics += source[4] * array[:, :, 4, :]
-            synthetics += source[5] * array[:, :, 5, :]
+            synthetics += source[0] * array[:, :, :, 0]
+            synthetics += source[1] * array[:, :, :, 1]
+            synthetics += source[2] * array[:, :, :, 2]
+            synthetics += source[3] * array[:, :, :, 3]
+            synthetics += source[4] * array[:, :, :, 4]
+            synthetics += source[5] * array[:, :, :, 5]
             return synthetics
 
         elif len(source)==3:
             # force source
-            synthetics += source[0] * array[:, :, 6, :]
-            synthetics += source[1] * array[:, :, 7, :]
-            synthetics += source[2] * array[:, :, 8, :]
+            synthetics += source[0] * array[:, :, :, 6]
+            synthetics += source[1] * array[:, :, :, 7]
+            synthetics += source[2] * array[:, :, :, 8]
             return synthetics
 
         else:
@@ -605,17 +605,17 @@ class GreensTensorList(BasicGreensTensorList):
         cc_sum[:,:] = 0.
         for _i in [{'Z':0,'R':1,'T':2}[_c] for _c in components]:
             if len(source)==6:
-                cc_sum += source[0] * cc_all[:, _i, 0, :]
-                cc_sum += source[1] * cc_all[:, _i, 1, :]
-                cc_sum += source[2] * cc_all[:, _i, 2, :]
-                cc_sum += source[3] * cc_all[:, _i, 3, :]
-                cc_sum += source[4] * cc_all[:, _i, 4, :]
-                cc_sum += source[5] * cc_all[:, _i, 5, :]
+                cc_sum += source[0] * cc_all[:, _i, :, 0]
+                cc_sum += source[1] * cc_all[:, _i, :, 1]
+                cc_sum += source[2] * cc_all[:, _i, :, 2]
+                cc_sum += source[3] * cc_all[:, _i, :, 3]
+                cc_sum += source[4] * cc_all[:, _i, :, 4]
+                cc_sum += source[5] * cc_all[:, _i, :, 5]
 
             elif len(source)==3:
-                cc_sum += source[0] * cc_all[:, _i, 6, :]
-                cc_sum += source[1] * cc_all[:, _i, 7, :]
-                cc_sum += source[2] * cc_all[:, _i, 8, :]
+                cc_sum += source[0] * cc_all[:, _i, :, 6]
+                cc_sum += source[1] * cc_all[:, _i, :, 7]
+                cc_sum += source[2] * cc_all[:, _i, :, 8]
 
         else:
             raise TypeError

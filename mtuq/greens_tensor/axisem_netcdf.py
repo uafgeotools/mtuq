@@ -72,12 +72,12 @@ class GreensTensor(GreensTensorBase):
                 ZDD = self.select(channel="ZDD")[0].data
                 ZEP = self.select(channel="ZEP")[0].data
                 ZDS *= -1
-                array[_i, 0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
-                array[_i, 1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
-                array[_i, 2, :] =  ZDD/3. + ZEP/3.
-                array[_i, 3, :] =  ZSS * np.sin(2*phi)
-                array[_i, 4, :] =  ZDS * np.cos(phi)
-                array[_i, 5, :] =  ZDS * np.sin(phi)
+                array[_i, :, 0] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
+                array[_i, :, 1] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
+                array[_i, :, 2] =  ZDD/3. + ZEP/3.
+                array[_i, :, 3] =  ZSS * np.sin(2*phi)
+                array[_i, :, 4] =  ZDS * np.cos(phi)
+                array[_i, :, 5] =  ZDS * np.sin(phi)
 
             elif component=='R':
                 RSS = self.select(channel="RSS")[0].data
@@ -85,49 +85,49 @@ class GreensTensor(GreensTensorBase):
                 RDD = self.select(channel="RDD")[0].data
                 REP = self.select(channel="REP")[0].data
                 RDS *= -1
-                array[_i, 0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
-                array[_i, 1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
-                array[_i, 2, :] =  RDD/3. + REP/3.
-                array[_i, 3, :] =  RSS * np.sin(2*phi)
-                array[_i, 4, :] =  RDS * np.cos(phi)
-                array[_i, 5, :] =  RDS * np.sin(phi)
+                array[_i, :, 0] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
+                array[_i, :, 1] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
+                array[_i, :, 2] =  RDD/3. + REP/3.
+                array[_i, :, 3] =  RSS * np.sin(2*phi)
+                array[_i, :, 4] =  RDS * np.cos(phi)
+                array[_i, :, 5] =  RDS * np.sin(phi)
 
             elif component=='T':
                 TSS = self.select(channel="TSS")[0].data
                 TDS = self.select(channel="TDS")[0].data
                 TSS *= -1
-                array[_i, 0, :] = TSS/2. * np.sin(2*phi)
-                array[_i, 1, :] = -TSS/2. * np.sin(2*phi)
-                array[_i, 2, :] = 0.
-                array[_i, 3, :] = -TSS * np.cos(2*phi)
-                array[_i, 4, :] = TDS * np.sin(phi)
-                array[_i, 5, :] = -TDS * np.cos(phi)
+                array[_i, :, 0] = TSS/2. * np.sin(2*phi)
+                array[_i, :, 1] = -TSS/2. * np.sin(2*phi)
+                array[_i, :, 2] = 0.
+                array[_i, :, 3] = -TSS * np.cos(2*phi)
+                array[_i, :, 4] = TDS * np.sin(phi)
+                array[_i, :, 5] = -TDS * np.cos(phi)
 
             if component=='Z' and\
                 self.enable_force:
                 Z0 = self.select(channel="Z0")[0].data
                 Z1 = self.select(channel="Z1")[0].data
                 Z2 = self.select(channel="Z2")[0].data
-                array[_i, 6, :] = Z0
-                array[_i, 7, :] = Z1
-                array[_i, 8, :] = Z2
+                array[_i, :, 6] = Z0
+                array[_i, :, 7] = Z1
+                array[_i, :, 8] = Z2
 
             elif component=='R' and\
                 self.enable_force:
                 R0 = self.select(channel="R0")[0].data
                 R1 = self.select(channel="R1")[0].data
                 R2 = self.select(channel="Z2")[0].data
-                array[_i, 6, :] = R0
-                array[_i, 7, :] = R1
-                array[_i, 8, :] = R2
+                array[_i, :, 6] = R0
+                array[_i, :, 7] = R1
+                array[_i, :, 8] = R2
 
             elif component=='T' and\
                 self.enable_force:
                 T0 = self.select(channel="T0")[0].data
                 T1 = self.select(channel="T1")[0].data
                 T2 = self.select(channel="T2")[0].data
-                array[_i, 6, :] = T0
-                array[_i, 7, :] = T1
-                array[_i, 8, :] = T2
+                array[_i, :, 6] = T0
+                array[_i, :, 7] = T1
+                array[_i, :, 8] = T2
 
 
