@@ -181,7 +181,6 @@ def plot_data_synthetics(filename, data_bw, data_sw,
             if trace_labels:
                 add_trace_labels(dat, syn, total_misfit_sw)
 
-
         irow += 1
 
     pyplot.savefig(filename)
@@ -195,8 +194,6 @@ def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
     syntax
     """
     # generate synthetics
-    #greens[0].map(_set_components, data[0])
-    #greens[1].map(_set_components, data[1])
     synthetics = []
     synthetics += [greens[0].get_synthetics(mt)]
     synthetics += [greens[1].get_synthetics(mt)]
@@ -351,5 +348,6 @@ def _hide_axes(ax):
     ax.spines['left'].set_visible(False)
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
+
 
 

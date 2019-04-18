@@ -15,20 +15,21 @@ class Client(ClientBase):
     """ 
     Interface to FK database of Green's functions
 
-    Generates GreenTensorLists via a two-step procedure
-        1) db = mtuq.greens.open_db(path=path, model=model, format='FK')
-        2) greens_tensors = db.read(stations, origin)
 
-    In the first step, the user supplies the path to an FK directory tree and 
-    the name of the  layered Earth model that was used to generate Green's
-    tensors contained in the tree.
+    .. code:
+
+        db = mtuq.greens.open_db(path, model=model, format='FK')
+
+        greens_tensors = db.read(stations, origins)
+
+    In the first step, the user supplies the path to an FK directory tree
 
     In the second step, the user supplies a list of stations and the origin
-    location and time of an event. GreensTensors are then created for all the
-    corresponding station-event pairs.
+    locations and times. GreensTensors are then created for all the
+    corresponding station-origin pairs.
 
-    GreensTensorLists are created by reading precomputed Green's tensors from an
-    fk directory tree.  Such trees contain SAC files organized by model, event
+    GreensTensor objects are created by reading precomputed Green's tensors from
+    an FK directory tree.  Such trees contain SAC files organized by model, event
     depth, and event distance and are associated with the software package FK
     by Lupei Zhu.
 

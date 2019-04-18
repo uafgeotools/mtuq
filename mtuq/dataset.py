@@ -7,16 +7,21 @@ from obspy.geodetics import gps2dist_azimuth
 
 
 
-class Dataset(list):
-    """ Seismic data container
+class BasicDataset(list):
+    """ Basic seismic data container
 
     A list of ObsPy streams in which each stream corresponds to a single
     seismic station
 
-    .. note::
+    .. note:
 
-        Each supported file format has a corresponding reader that creates an
-        MTUQ Dataset (see ``mtuq.io.readers``).
+      MUTQ provides two different data containers.
+
+      -   `BasicDatasets` are more the more flexible container because they 
+           allow time discretization to vary from station to station.
+
+      -   `Datasets` are more the more efficient container because they provide
+           Numpy array machinery for fast numerical computations.
 
     """
     def __init__(self, streams=[], stations=[], origins=[],
@@ -53,7 +58,6 @@ class Dataset(list):
 
             # append stream to list
             self.append(stream)
-
 
         self.stations = stations
         self.origins = origins
@@ -141,50 +145,6 @@ class Dataset(list):
         return self.origins
 
 
-    def as_array(self):
-        """ Returns time series from all stations and components in a single 
-        multidimensional array
-        """
-        if hasattr(self, '_ndarray'):
-            return self._ndarray
-
-        # count number of nonempty streams
-        ns = 0
-        for stream in self:
-            #assert check_time_sampling(stream)
-            if len(stream)==0:
-                ns += 1
-        nt = self[0][0].stats.npts
-
-        # allocate array
-        ndarray = np.zeros((3, ns, nt))
-
-        # populate array
-        _i = 0
-        for stream in self:
-            if len(stream)==0:
-                continue
-            try:
-                trace = stream.select(component='Z')
-                ndarray[0, _i, :] = trace.data
-            except:
-                pass
-            try: 
-                trace = stream.select(component='R')
-                ndarray[1, _i, :] = trace.data
-            except:
-                pass
-            try: 
-                trace = stream.select(component='T')
-                ndarray[2, _i, :] = trace.data
-            except:
-                pass
-            _i += 1
-
-        self._ndarray = ndarray
-        return ndarray
-
-
     def add_tag(self, tag):
        """ Appends string to tags list
        
@@ -203,6 +163,91 @@ class Dataset(list):
        """
        for stream in self:
            stream.tags.remove(tag)
+
+
+class Dataset(BasicDataset):
+    """ Seismic data container
+
+    A list of ObsPy streams in which each stream corresponds to a single
+    seismic station
+
+    .. note::
+
+        Each supported file format has a corresponding reader that creates an
+        Dataset (see ``mtuq.io.readers``).
+
+    .. note:
+
+      MUTQ provides two different data containers.
+
+      -   `BasicDataset`s are the more flexible container because they allow
+          time discretization to vary from station to station.
+
+      -   `Datasets` are the more efficient container because they provide
+          Numpy array machinery for faster computations.
+
+    """
+    def __init__(self, *args, **kwargs):
+        super(Dataset, self).__init__(*args, **kwargs)
+        #self.check_time_sampling()
+
+
+    def check_time_sampling(self):
+        """ Checks that time discretization is the same for all stations
+        """
+        raise NotImplementedError
+
+
+    def get_array(self):
+        """ Returns time series from all stations and components in a single 
+        multidimensional array
+        """
+        if hasattr(self, '_ndarray'):
+            return self._ndarray
+
+        # count number of nonempty streams
+        ns = 0
+        for stream in self:
+            if len(stream)==0:
+                ns += 1
+        nt = self[0][0].stats.npts
+
+        # allocate array
+        ndarray = np.zeros((3, ns, nt))
+
+        # populate array
+        _i = 0
+        for stream in self:
+            if len(stream)==0:
+                continue
+            try:
+                trace = stream.select(component='Z')
+                ndarray[0, _i, :] = trace.data
+            except:
+                pass
+            try:
+                trace = stream.select(component='R')
+                ndarray[1, _i, :] = trace.data
+            except:
+                pass
+            try:
+                trace = stream.select(component='T')
+                ndarray[2, _i, :] = trace.data
+            except:
+                pass
+            _i += 1
+
+        self._ndarray = ndarray
+        return ndarray
+
+
+    def get_array(self):
+        """ Returns time series from all stations and components in a single 
+        multidimensional array
+        """
+        if hasattr(self, '_ndarray'):
+            return self._ndarray
+
 
 
 def EventDataset(streams=[], stations=[], origin=None,            

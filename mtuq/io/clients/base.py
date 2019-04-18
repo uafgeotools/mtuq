@@ -1,11 +1,24 @@
 
-import mtuq.greens_tensor
+from mtuq.greens_tensor import GreensTensorList
 from mtuq.util import iterable
 
 
 
 class Client(object):
     """ Abstract base class for database or web service clients
+
+    .. code:
+
+        db = mtuq.greens.open_db(path, format=format, **kwargs)
+
+        greens_tensors = db.read(stations, origin)
+
+    In the first step, the user supplies input arguments, which vary
+    depending on the subclass
+
+    In the second step, the user supplies a list of stations and the origin
+    locations and times. GreensTensors are then created for all the
+    corresponding station-origin pairs.
 
     Details regarding how the GreenTensors are actually created--whether
     they are downloaded on-the-fly or read from a pre-computed database--
@@ -27,12 +40,11 @@ class Client(object):
         :param origin: Event metadata dictionary
         :rtype: mtuq.greens_tensor.GreensTensorList
         """
-        greens_tensors = mtuq.greens_tensor.GreensTensorList()
-
+        greens_tensors = []
         for station, origin in zip(iterable(stations), iterable(origins)):
             greens_tensors += [self._get_greens_tensor(station, origin)]
 
-        return greens_tensors
+        return GreensTensorList(greens_tensors)
 
 
     def _get_greens_tensor(self, station=None, origin=None):

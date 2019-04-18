@@ -31,8 +31,8 @@ class Client(ClientBase):
     output file
 
     In the second step, the user supplies a list of stations and the origin
-    location and time of an event. GreensTensors are then created for all the
-    corresponding station-event pairs.
+    locations and times. GreensTensors are then created for all the
+    corresponding station-origin pairs.
 
     """
 
