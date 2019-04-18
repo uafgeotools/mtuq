@@ -512,8 +512,8 @@ class GreensTensorList(BasicGreensTensorList):
             nr += 3
 
         # allocate arrays
-        self._array = np.zeros((ns, nc, nr, nt))
-        self._synthetics = np.zeros((ns, nc, nt))
+        self._array = np.zeros((nc, ns, nr, nt))
+        self._synthetics = np.zeros((nc, ns, nt))
 
 
     def _compute_array(self):
@@ -524,7 +524,7 @@ class GreensTensorList(BasicGreensTensorList):
             greens_tensor.initialize()
 
             # fill in 4D array of GreensTensorList
-            self._array[_i, :, :, :] = greens_tensor._array
+            self._array[:, _i, :, :] = greens_tensor._array
 
 
     def get_synthetics_as_array(self, source):
@@ -571,7 +571,7 @@ class GreensTensorList(BasicGreensTensorList):
             nr += 3
 
         # allocate arrays
-        self._array_cc_all = np.zeros((ns, nc, nr, 2*npts+1))
+        self._array_cc_all = np.zeros((nc, ns, nr, 2*npts+1))
         self._array_cc_sum = np.zeros((ns, 2*npts+1))
 
 
