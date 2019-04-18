@@ -462,6 +462,27 @@ class BasicGreensTensorList(list):
 
 
 
+class GreensTensorList(BasicGreensTensorList):
+    """ Container for one or more GreensTensor objects
+
+    .. note:
+
+      MUTQ provides two different Green's tensor containers:
+
+      -   `BasicGreensTensorList` is the more flexible container because it
+           allows the time discretization to vary from one tensor to another.
+
+      -   `GreensTensorList` is the the more efficient container because 
+           it includes Numpy array machinery for fast computations.
+
+    """
+
+    def __init__(self, greens_tensors=[], id=None):
+        super(GreensTensorList, self).__init__(greens_tensors, id)
+
+        self._check_time_sampling()
+
+
     def initialize(self):
         """
         Prepares structures used by get_synthetics_as_array
