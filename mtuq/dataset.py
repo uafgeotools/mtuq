@@ -185,7 +185,7 @@ class maDataset(Dataset):
         pass
 
 
-    def as_array(self):
+    def get_array(self):
         """ Returns time series from all stations and components in a single 
         multidimensional array
         """
@@ -194,6 +194,10 @@ class maDataset(Dataset):
         except:
             self._allocate_array()
             return self._array
+
+
+    def get_array_mask(self):
+        raise NotImplementedError
 
 
     def _allocate_array(self):

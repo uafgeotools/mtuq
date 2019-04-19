@@ -486,6 +486,25 @@ class maGreensTensorList(GreensTensorList):
         #check_time_sampling([stream[0] for stream in self])
 
 
+    def get_array(self):
+        """ Returns time series from all stations and components in a single 
+        multidimensional array
+        """
+        try:
+            return self._array
+        except:
+            self._compute_array()
+            return self._array
+
+
+    def get_array_cc():
+        try:
+            return self._cc_all
+        except:
+            self._compute_cc()
+            return self._cc_all
+
+
     def _allocate_array(self):
         """ Allocates numpy array that can be used for efficient synthetics
         generation
@@ -501,17 +520,21 @@ class maGreensTensorList(GreensTensorList):
 
         self._array = np.zeros((nc, ns, nr, nt))
 
+        return self._array
+
 
     def _compute_array(self):
         """ Computes numpy array that can be used for efficient synthetics
         generation
         """
+        array = self._allocate_array()
+
         for _i, greens_tensor in enumerate(self):
             # fill in 3D array of GreensTensor
             greens_tensor.initialize()
 
             # fill in 4D array of GreensTensorList
-            self._array[:, _i, :, :] = greens_tensor._array
+            array[:, _i, :, :] = greens_tensor._array
 
 
     def _allocate_cc(self, npts):
@@ -529,8 +552,10 @@ class maGreensTensorList(GreensTensorList):
         if self[0].enable_force:
             nr += 3
 
-        # allocate arrays
+        # allocate array
         self._cc_all = np.zeros((nc, ns, nr, 2*npts+1))
+
+        return self._cc_all
 
 
     def _compute_cc(self, data, time_shift_max):
@@ -539,13 +564,13 @@ class maGreensTensorList(GreensTensorList):
         """
         # allocate numpy array
         dt = self[0][0].stats.delta
-        self._allocate_cc(time_shift_max/dt)
+        cc_all = self._allocate_cc(time_shift_max/dt)
 
         for _i, greens_tensor in enumerate(self):
             # fills 3D array of GreensTensor
             greens_tensor._compute_cc(data, time_shift_max)
 
             # fills 4D array of GreensTensorList
-            self._cc_all[_i, :, :, :] = greens_tensor._cc_all
+            cc_all[_i, :, :, :] = greens_tensor._cc_all
 
 
