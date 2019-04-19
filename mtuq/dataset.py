@@ -16,7 +16,7 @@ class Dataset(list):
     .. note::
 
         Each supported file format has a corresponding reader that creates an
-        MTUQ Dataset (see ``mtuq.io.readers``).
+        Dataset (see ``mtuq.io.readers``).
 
     """
     def __init__(self, streams=[], stations=[], origins=[],
@@ -53,7 +53,6 @@ class Dataset(list):
 
             # append stream to list
             self.append(stream)
-
 
         self.stations = stations
         self.origins = origins
@@ -141,50 +140,6 @@ class Dataset(list):
         return self.origins
 
 
-    def as_array(self):
-        """ Returns time series from all stations and components in a single 
-        multidimensional array
-        """
-        if hasattr(self, '_ndarray'):
-            return self._ndarray
-
-        # count number of nonempty streams
-        ns = 0
-        for stream in self:
-            #assert check_time_sampling(stream)
-            if len(stream)==0:
-                ns += 1
-        nt = self[0][0].stats.npts
-
-        # allocate array
-        ndarray = np.zeros((3, ns, nt))
-
-        # populate array
-        _i = 0
-        for stream in self:
-            if len(stream)==0:
-                continue
-            try:
-                trace = stream.select(component='Z')
-                ndarray[0, _i, :] = trace.data
-            except:
-                pass
-            try: 
-                trace = stream.select(component='R')
-                ndarray[1, _i, :] = trace.data
-            except:
-                pass
-            try: 
-                trace = stream.select(component='T')
-                ndarray[2, _i, :] = trace.data
-            except:
-                pass
-            _i += 1
-
-        self._ndarray = ndarray
-        return ndarray
-
-
     def add_tag(self, tag):
        """ Appends string to tags list
        
@@ -203,6 +158,81 @@ class Dataset(list):
        """
        for stream in self:
            stream.tags.remove(tag)
+
+
+class maDataset(Dataset):
+    """ Specialized Dataset subclass
+
+    Adds multidimensional array machinery that can be used for implementing 
+    functions that act on numpy arrays rather than obspy streams.
+
+    .. warning:
+
+        Unlike the parent class, this subclass requires all streams have the 
+        same time discretization.
+
+    """
+    def __init__(self, *args, **kwargs):
+        super(maDataset, self).__init__(*args, **kwargs)
+
+        # this method is not yet implemented
+        self._check_time_sampling()
+
+
+    def _check_time_sampling(self):
+        """ Checks that time discretization is the same for all stations
+        """
+        pass
+
+
+    def get_array(self):
+        """ Returns time series from all stations and components in a single 
+        multidimensional array
+        """
+        try:
+            return self._array
+        except:
+            self._allocate_array()
+            return self._array
+
+
+    def get_array_mask(self):
+        raise NotImplementedError
+
+
+    def _allocate_array(self):
+        # count number of nonempty streams
+        ns = 0
+        for stream in self:
+            if len(stream)==0:
+                ns += 1
+        nt = self[0][0].stats.npts
+
+        # allocate array
+        self._array = np.zeros((3, ns, nt))
+        array = self._array
+
+        _i = 0
+        for stream in self:
+            if len(stream)==0:
+                continue
+            try:
+                trace = stream.select(component='Z')
+                array[0, _i, :] = trace.data
+            except:
+                pass
+            try:
+                trace = stream.select(component='R')
+                array[1, _i, :] = trace.data
+            except:
+                pass
+            try:
+                trace = stream.select(component='T')
+                array[2, _i, :] = trace.data
+            except:
+                pass
+            _i += 1
+
 
 
 def EventDataset(streams=[], stations=[], origin=None,            
@@ -225,5 +255,5 @@ def EventDataset(streams=[], stations=[], origin=None,
     for _ in range(size):
         origins += [copy(origin)]
 
-    return Dataset(streams, stations, origins, id, tags)
+    return maDataset(streams, stations, origins, id, tags)
 

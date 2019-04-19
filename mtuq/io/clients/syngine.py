@@ -17,16 +17,24 @@ class Client(ClientBase):
     """ 
     Interface to syngine Green's function web service
 
-    Generates GreenTensorLists via a two-step procedure
-        1) db = mtuq.greens.open_db(model=model, format='syngine')
-        2) greens_tensors = db.read(stations, origin)
+    .. code:
 
-    In the first step, the user supplies one of the available Earth model's
+        db = mtuq.greens.open_db(url, format='syngine')
+
+        greens_tensors = db.read(stations, origin)
+
+    In the first step, the user supplies one of the available Earth models
     listed at http://ds.iris.edu/ds/products/syngine/#models
 
     In the second step, the user supplies a list of stations and the origin
-    location and time of an event. GreensTensors are then created for all the
-    corresponding station-event pairs.
+    locations and times. GreensTensors are then created for all the
+    corresponding station-origin pairs.
+
+    .. note:
+
+        Syngine is an webservice that provides Green's functions and synthetic
+        seismograms for download as compressed SAC files. 
+
     """
 
     def __init__(self, path_or_url=None, model=None, enable_force=False):

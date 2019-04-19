@@ -1,7 +1,6 @@
 
 import numpy as np
 import time
-from mtuq import Dataset, GreensTensorList
 from mtuq.util import timer
 
 try:
@@ -14,15 +13,6 @@ except:
 def grid_search_mt(data_list, greens_list, misfit_list, grid, verbose=True):
     """ Serial grid search over moment tensors
     """
-
-    # type checking
-    for data in data_list:
-        assert isinstance(data, Dataset), TypeError
-    for greens in greens_list:
-        assert isinstance(greens, GreensTensorList), TypeError
-    for misfit in misfit_list:
-        assert hasattr(misfit, '__call__'), TypeError
-
     # create iterator
     zipped = zip(data_list, greens_list, misfit_list)
 
@@ -47,15 +37,9 @@ def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths, verb
     """ Serial grid search over moment tensors and depths
     """
 
-    # type checking
-    for data in data_list:
-        assert isinstance(data, Dataset), TypeError
-
     for greens in greens_list:
         # Green's functions are depth dependent
         assert isinstance(greens, dict), TypeError
-        for depth, _greens in greens.items():
-            assert isinstance(_greens, GreensTensorList), TypeError
 
     for misfit in misfit_list:
         assert hasattr(misfit, '__call__'), TypeError
