@@ -16,8 +16,8 @@ class GreensTensor(GreensTensorBase):
 
     .. note:
 
-      AxiSEM Green's functions describe the impulse response of a horizontally-
-      layered medium.  Time series represent vertical, radial, and transverse
+      AxiSEM Green's functions describe the impulse response of a radially-
+      symmetric medium.  Time series represent vertical, radial, and transverse
       displacement in units of m*(N-m)^-1
 
       For the vertical and raidal components, there are four associated time 
@@ -37,7 +37,8 @@ class GreensTensor(GreensTensorBase):
 
     def get_synthetics(self, mt):
         """
-        Generates synthetics through a source-weighted linear combination
+        Generates synthetics through a linear combination of Green's tensor
+        times series weighted by source elements
         """
         return super(GreensTensor, self).get_synthetics(
             change_basis(mt, 1, 2))
@@ -45,8 +46,8 @@ class GreensTensor(GreensTensorBase):
 
     def get_time_shift(self, data, mt, group, time_shift_max):
         """ 
-        Finds optimal time-shift correction between synthetics and
-        user-supplied data
+        Finds optimal time shift between the given data and synthetics
+        generated from the given source
         """
         return super(GreensTensor, self).get_time_shift(
             data,

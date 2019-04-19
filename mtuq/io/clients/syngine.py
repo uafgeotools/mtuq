@@ -23,15 +23,18 @@ class Client(ClientBase):
 
         greens_tensors = db.read(stations, origin)
 
-    In the first step, the user supplies one of the available Earth model's
+    In the first step, the user supplies one of the available Earth models
     listed at http://ds.iris.edu/ds/products/syngine/#models
 
     In the second step, the user supplies a list of stations and the origin
     locations and times. GreensTensors are then created for all the
     corresponding station-origin pairs.
 
-    Syngine is an webservice that provides Green's functions and synthetic
-    seismograms for download as compressed SAC files. 
+    .. note:
+
+        Syngine is an webservice that provides Green's functions and synthetic
+        seismograms for download as compressed SAC files. 
+
     """
 
     def __init__(self, path_or_url=None, model=None, enable_force=False):

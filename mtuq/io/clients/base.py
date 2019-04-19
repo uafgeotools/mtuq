@@ -31,12 +31,10 @@ class Client(object):
         """ Reads Green's tensors from database
 
         Returns a ``GreensTensorList`` in which each element corresponds to the
-        given station and all elements correspond to the given origin
+        a station-origin pair from the given list
 
-        :type stations: list
-        :param stations: List of station metadata dictionaries
-        :type origin: obspy.core.event.Origin
-        :param origin: Event metadata dictionary
+        :param stations: List of station objects
+        :param origin: List of origin objects
         :rtype: mtuq.greens_tensor.GreensTensorList
         """
         iterator = zip(iterable(stations), iterable(origins))

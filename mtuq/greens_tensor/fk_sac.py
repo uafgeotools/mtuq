@@ -35,8 +35,8 @@ class GreensTensor(GreensTensorBase):
 
     def get_synthetics(self, mt):
         """
-        Generates synthetic seismograms for a given moment tensor, via a linear
-        combination of Green's functions
+        Generates synthetics through a linear combination of Green's tensor
+        times series weighted by source elements
         """
         return super(GreensTensor, self).get_synthetics(
             change_basis(mt, 1, 2))
@@ -44,8 +44,8 @@ class GreensTensor(GreensTensorBase):
 
     def get_time_shift(self, data, mt, group, time_shift_max):
         """ 
-        Finds optimal time-shift correction between synthetics and
-        user-supplied data
+        Finds optimal time shift between the given data and synthetics
+        generated from the given source
         """
         return super(GreensTensor, self).get_time_shift(
             data,

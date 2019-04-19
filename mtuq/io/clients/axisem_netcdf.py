@@ -19,8 +19,6 @@ class Client(ClientBase):
     """ 
     Interface to AxiSEM/Instaseis database
 
-    Generates GreenTensorLists via a two-step procedure
-
     .. code:
 
         db = mtuq.greens.open_db(path, format='instaseis')

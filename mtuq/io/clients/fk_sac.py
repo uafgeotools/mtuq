@@ -25,12 +25,14 @@ class Client(ClientBase):
 
     In the second step, the user supplies a list of stations and the origin
     locations and times. GreensTensors are then created for all the
-    corresponding station-origin pairs.
+    corresponding station-origin pairs. 
 
-    GreensTensor objects are created by reading precomputed Green's tensors from
-    an FK directory tree.  Such trees contain SAC files organized by model, event
-    depth, and event distance and are associated with the software package FK
-    by Lupei Zhu.
+    .. note:
+
+      GreensTensor objects are created by reading precomputed Green's tensors 
+      from an FK directory tree.  Such trees contain SAC files organized by model,
+      even depth, and event distance and are associated with the FK software 
+      package by Lupei Zhu.
 
     """
     def __init__(self, path_or_url=None, model=None):

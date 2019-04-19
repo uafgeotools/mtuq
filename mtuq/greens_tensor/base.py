@@ -247,8 +247,8 @@ class GreensTensor(Stream):
 
     def get_time_shift(self, data, source, group, time_shift_max):
         """ 
-        Finds optimal time-shift between the given data and synthetics
-        corresponding to the given source
+        Finds optimal time shift between the given data and synthetics
+        generated from the given source
 
         :type data: mtuq.Dataset
         :param data: Data to be cross-correlated with synthetics
