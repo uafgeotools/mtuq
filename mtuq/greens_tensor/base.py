@@ -21,7 +21,7 @@ class GreensTensor(Stream):
     .. note::
 
         Besides the methods described below, GreensTensor also includes
-        data processing methods inherited from ``obspy.Stream``.
+        data processing methods inherited from ``obspy.core.Stream``.
         For descriptions of inherited methods, see `ObsPy documentation
         <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
     """
@@ -86,8 +86,8 @@ class GreensTensor(Stream):
 
         # Another reason to separate the two methods is that combining them
         # would cause an endless recursion when select is called. This problem
-        # is not unique to mtuq, but common to any object that has
-        # ``obspy.core.Stream`` as a parent
+        # is not unique to mtuq, but common to all objects that inherit from
+        # ``obspy.core.Stream``
 
         # sets components attribute
         self._set_components(components)
@@ -466,8 +466,8 @@ class maGreensTensorList(GreensTensorList):
 
     .. warning:
 
-        Unlike its parent class, this subclass requires all tensors have the 
-        same time discretization.
+        Unlike the parent class ``GreensTensorList``, this subclass requires 
+        all tensors have the same time discretization.
     """
 
     def __init__(self, greens_tensors=[], id=None, mask=None):
