@@ -20,10 +20,10 @@ class GreensTensor(Stream):
 
     .. note::
 
-      Besides the methods described below, GreensTensor also includes
-      data processing methods inherited from ``obspy.Stream``.
-      For descriptions of inherited methods, see `ObsPy documentation
-      <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
+        Besides the methods described below, GreensTensor also includes
+        data processing methods inherited from ``obspy.Stream``.
+        For descriptions of inherited methods, see `ObsPy documentation
+        <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
     """
     def __init__(self, 
             traces=None, 
@@ -79,9 +79,15 @@ class GreensTensor(Stream):
         rerunning initialize without that component will cause get_synthetics
         to no longer return that component.
         """
-        # The work done by initialize is more expensive than that done by 
-        # __init__. Moreover, combining the two methods would result in an
-        # endless recursion when stream.select is called
+
+        # The idea is for __init__ to do only the inexpensive work of 
+        # instantiating a GreensTensor, and defer all the expensive work to 
+        # this method
+
+        # Another reason to separate the two methods is that combining them
+        # would cause an endless recursion when select is called. This problem
+        # is not unique to mtuq, but common to any object that has
+        # ``obspy.core.Stream`` as a parent
 
         # sets components attribute
         self._set_components(components)
@@ -141,8 +147,8 @@ class GreensTensor(Stream):
         """
         Computes numpy array used by get_synthetics
         """
-        # the formulas relating the Green's tensor time series to the linear
-        # combination array depend on the particular scheme being used, so
+        # the formulas relating the original time series to the linear
+        # combination array vary depending on the scheme being used, so
         # are deferred to the subclass
         raise NotImplementedError("Must be implemented by subclass.")
 
@@ -163,7 +169,7 @@ class GreensTensor(Stream):
             s = synthetics[_i].data
             s[:] = 0.
 
-            # we could use np.dot below, but speedup appears negligible
+            # we could use np.dot below, but it actually appears slower
             if len(source)==6:
                 # moment tensor source
                 s += source[0]*array[_i, 0, :]
@@ -185,7 +191,7 @@ class GreensTensor(Stream):
         return synthetics
 
 
-    def _allocate_array_cc(self, data, time_shift_max):
+    def _allocate_cc(self, data, time_shift_max):
         """
         Allocates numpy arrays used by get_time_shift
         """
@@ -197,12 +203,12 @@ class GreensTensor(Stream):
         dt = self[0].stats.delta
         npts_padding = int(time_shift_max/dt)
 
-        self._array_cc_sum = np.zeros(2*npts_padding+1)
-        self._array_cc_all = np.zeros((nc, nr, 2*npts_padding+1))
-        return self._array_cc_all
+        self._cc_sum = np.zeros(2*npts_padding+1)
+        self._cc_all = np.zeros((nc, nr, 2*npts_padding+1))
+        return self._cc_all
 
 
-    def _compute_array_cc(self, data, time_shift_max):
+    def _compute_cc(self, data, time_shift_max):
         """
         Computes numpy arrays used by get_time_shift
         """
@@ -212,8 +218,8 @@ class GreensTensor(Stream):
             raise Exception(
                 "initialize() must be called prior to computing time shifts")
 
-        array_cc = self._allocate_array_cc(data, time_shift_max)
-        n1, n2, _ = array_cc.shape
+        cc = self._allocate_cc(data, time_shift_max)
+        n1, n2, _ = cc.shape
 
         dt = self[0].stats.delta
         npts = self[0].stats.npts
@@ -229,13 +235,13 @@ class GreensTensor(Stream):
                 if (npts > 2000 or npts_padding > 200):
                     # for long traces or long lag times, frequency-domain
                     # implementation is usually faster
-                    array_cc[_i1, _i2, :] =\
+                    cc[_i1, _i2, :] =\
                         fftconvolve(trace.data, array[_i1, _i2, ::-1], 'valid')
 
                 else:
                     # for short traces or short lag times, time-domain
                     # implementation is usually faster
-                    array_cc[_i1, _i2, :] =\
+                    cc[_i1, _i2, :] =\
                         np.correlate(trace.data, array[_i1, _i2, :], 'valid')
 
 
@@ -258,12 +264,12 @@ class GreensTensor(Stream):
             than this value are not computed in the cross-correlation.
         """
         try:
-            cc_all = self._array_cc_all
-            cc_sum = self._array_cc_sum
+            cc_all = self._cc_all
+            cc_sum = self._cc_sum
         except:
-            self._compute_array_cc(data, time_shift_max)
-            cc_all = self._array_cc_all
-            cc_sum = self._array_cc_sum
+            self._compute_cc(data, time_shift_max)
+            cc_all = self._cc_all
+            cc_sum = self._cc_sum
 
         cc_sum[:] = 0.
         for component in group:
@@ -320,7 +326,7 @@ class GreensTensor(Stream):
         """
         # Inherited method "select" doesn't work because it tries to return a
         # a Stream rather than a GreensTensor. To fix it, we need to manually 
-        # convert to Stream, call select, then convert back to GreensTensor
+        # convert to a Stream, call select, then convert back
         stream = Stream([trace for trace in self]).select(*args, **kwargs)
         return self.__class__(
             [trace for trace in stream],
@@ -341,18 +347,8 @@ class GreensTensor(Stream):
 
 
 
-class BasicGreensTensorList(list):
+class GreensTensorList(list):
     """ Container for one or more GreensTensor objects
-
-    .. note:
-
-      MUTQ provides two different Green's tensor containers:
-
-      -   `BasicGreensTensorList` is the more flexible container because it
-           allows the time discretization to vary from one tensor to another.
-
-      -   `GreensTensorLists` is the the more efficient container because 
-           it includes Numpy array machinery for fast computations.
     """
 
     def __init__(self, greens_tensors=[], id=None):
@@ -462,45 +458,37 @@ class BasicGreensTensorList(list):
 
 
 
-class GreensTensorList(BasicGreensTensorList):
-    """ Container for one or more GreensTensor objects
+class maGreensTensorList(GreensTensorList):
+    """ Specialized GreensTensorList subclass
 
-    .. note:
+    Adds multidimensional array machinery that can be used for implementing 
+    functions that act on numpy arrays rather than obspy streams.
 
-      MUTQ provides two different Green's tensor containers:
+    .. warning:
 
-      -   `BasicGreensTensorList` is the more flexible container because it
-           allows the time discretization to vary from one tensor to another.
-
-      -   `GreensTensorList` is the the more efficient container because 
-           it includes Numpy array machinery for fast computations.
-
+        Unlike its parent class, this subclass requires all tensors have the 
+        same time discretization.
     """
 
-    def __init__(self, greens_tensors=[], id=None):
-        super(GreensTensorList, self).__init__(greens_tensors, id)
+    def __init__(self, greens_tensors=[], id=None, mask=None):
+        super(maGreensTensorList, self).__init__(greens_tensors, id)
+
+        # this attribute is not yet impelemented
+        self.mask = mask
 
         self._check_time_sampling()
-
-
-    def initialize(self):
-        """
-        Prepares structures used by get_synthetics_as_array
-        """
-        self._allocate_array()
-        self._compute_array()
-
 
 
     def _check_time_sampling(self):
         """ Checks that time discretization is the same for all tensors
         """
-        # not yet implemented
         pass
+        #check_time_sampling([stream[0] for stream in self])
 
 
     def _allocate_array(self):
-        """ Allocates numpy arrays used by get_synthetics_as_array
+        """ Allocates numpy array that can be used for efficient synthetics
+        generation
         """
         # array dimensions
         nc = 3
@@ -511,13 +499,12 @@ class GreensTensorList(BasicGreensTensorList):
         if self[0].enable_force:
             nr += 3
 
-        # allocate arrays
         self._array = np.zeros((nc, ns, nr, nt))
-        self._synthetics = np.zeros((nc, ns, nt))
 
 
     def _compute_array(self):
-        """ Computes numpy array used by get_synthetics_as_array
+        """ Computes numpy array that can be used for efficient synthetics
+        generation
         """
         for _i, greens_tensor in enumerate(self):
             # fill in 3D array of GreensTensor
@@ -527,37 +514,9 @@ class GreensTensorList(BasicGreensTensorList):
             self._array[:, _i, :, :] = greens_tensor._array
 
 
-    def get_synthetics_as_array(self, source):
-        """ Returns synthetics from all Green's tensors in a single
-        multidimensional array
-        """
-        array = self._array
-        synthetics = self._synthetics
-        synthetics[:,:,:] = 0.
-
-        if len(source)==6:
-            # moment tensor source
-            synthetics += source[0] * array[:, :, 0, :]
-            synthetics += source[1] * array[:, :, 1, :]
-            synthetics += source[2] * array[:, :, 2, :]
-            synthetics += source[3] * array[:, :, 3, :]
-            synthetics += source[4] * array[:, :, 4, :]
-            synthetics += source[5] * array[:, :, 5, :]
-            return synthetics
-
-        elif len(source)==3:
-            # force source
-            synthetics += source[0] * array[:, :, 6, :]
-            synthetics += source[1] * array[:, :, 7, :]
-            synthetics += source[2] * array[:, :, 8, :]
-            return synthetics
-
-        else:
-            raise TypeError
-
-
-    def _allocate_array_cc(self, npts):
-        """ Allocates numpy array used by get_time_shift_as_array
+    def _allocate_cc(self, npts):
+        """ Allocates numpy array that can be used for efficient time shift
+        calculations
         """
         self._npts_cc = npts
 
@@ -571,54 +530,22 @@ class GreensTensorList(BasicGreensTensorList):
             nr += 3
 
         # allocate arrays
-        self._array_cc_all = np.zeros((nc, ns, nr, 2*npts+1))
-        self._array_cc_sum = np.zeros((ns, 2*npts+1))
+        self._cc_all = np.zeros((nc, ns, nr, 2*npts+1))
 
 
-    def _compute_array_cc(self, data, time_shift_max):
-        """ Computes numpy array used by get_time_shift_as_array
+    def _compute_cc(self, data, time_shift_max):
+        """ Computes numpy array that can be used for efficient time shift
+        calculations
         """
         # allocate numpy array
         dt = self[0][0].stats.delta
-        self._allocate_array_cc(time_shift_max/dt)
+        self._allocate_cc(time_shift_max/dt)
 
         for _i, greens_tensor in enumerate(self):
             # fills 3D array of GreensTensor
-            greens_tensor._compute_array_cc(data, time_shift_max)
+            greens_tensor._compute_cc(data, time_shift_max)
 
             # fills 4D array of GreensTensorList
-            self._array_cc_all[_i, :, :, :] = greens_tensor._array_cc_all
+            self._cc_all[_i, :, :, :] = greens_tensor._cc_all
 
-
-    def get_time_shift_as_array(self, data, source, group, time_shift_max):
-        """ Returns time shifts from all Green's tensors in a single
-        multidimensional array
-        """
-        try:
-            cc_all = self._array_cc_all
-            cc_sum = self._array_cc_sum
-        except:
-            self._compute_array_cc(data, time_shift_max)
-            cc_all = self._array_cc_all
-            cc_sum = self._array_cc_sum
-
-        cc_sum[:,:] = 0.
-        for _i in [{'Z':0,'R':1,'T':2}[_c] for _c in components]:
-            if len(source)==6:
-                cc_sum += source[0] * cc_all[:, _i, 0, :]
-                cc_sum += source[1] * cc_all[:, _i, 1, :]
-                cc_sum += source[2] * cc_all[:, _i, 2, :]
-                cc_sum += source[3] * cc_all[:, _i, 3, :]
-                cc_sum += source[4] * cc_all[:, _i, 4, :]
-                cc_sum += source[5] * cc_all[:, _i, 5, :]
-
-            elif len(source)==3:
-                cc_sum += source[0] * cc_all[:, _i, 6, :]
-                cc_sum += source[1] * cc_all[:, _i, 7, :]
-                cc_sum += source[2] * cc_all[:, _i, 8, :]
-
-        else:
-            raise TypeError
-
-        return cc_sum.argmax(axis=-1) - npts_padding
 

@@ -1,5 +1,5 @@
 
-from mtuq.greens_tensor import BasicGreensTensorList
+from mtuq.greens_tensor import maGreensTensorList
 from mtuq.util import iterable
 
 
@@ -18,12 +18,11 @@ class Client(object):
 
     In the second step, the user supplies a list of stations and the origin
     locations and times. GreensTensors are then created for all the
-    corresponding station-origin pairs.
-
-    Details regarding how the GreenTensors are actually created--whether
-    they are downloaded on-the-fly or read from a pre-computed database--
-    are deferred to the subclass.
+    corresponding station-origin pairs. Details regarding how the GreenTensors 
+    are created--whether they are downloaded, read from disk, or computed 
+    on-the-fly--are deferred to the subclass.
     """
+
     def __init__(self, path_or_url='', **kwargs):
         raise NotImplementedError("Must be implemented by subclass")
 
@@ -40,11 +39,13 @@ class Client(object):
         :param origin: Event metadata dictionary
         :rtype: mtuq.greens_tensor.GreensTensorList
         """
+        iterator = zip(iterable(stations), iterable(origins))
+
         greens_tensors = []
-        for station, origin in zip(iterable(stations), iterable(origins)):
+        for station, origin in iterator:
             greens_tensors += [self._get_greens_tensor(station, origin)]
 
-        return BasicGreensTensorList(greens_tensors)
+        return maGreensTensorList(greens_tensors)
 
 
     def _get_greens_tensor(self, station=None, origin=None):

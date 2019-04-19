@@ -15,7 +15,6 @@ class Client(ClientBase):
     """ 
     Interface to FK database of Green's functions
 
-
     .. code:
 
         db = mtuq.greens.open_db(path, model=model, format='FK')

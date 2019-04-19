@@ -7,21 +7,16 @@ from obspy.geodetics import gps2dist_azimuth
 
 
 
-class BasicDataset(list):
-    """ Basic seismic data container
+class Dataset(list):
+    """ Seismic data container
 
     A list of ObsPy streams in which each stream corresponds to a single
     seismic station
 
-    .. note:
+    .. note::
 
-      MUTQ provides two different data containers.
-
-      -   `BasicDatasets` are more the more flexible container because they 
-           allow time discretization to vary from station to station.
-
-      -   `Datasets` are more the more efficient container because they provide
-           Numpy array machinery for fast numerical computations.
+        Each supported file format has a corresponding reader that creates an
+        Dataset (see ``mtuq.io.readers``).
 
     """
     def __init__(self, streams=[], stations=[], origins=[],
@@ -165,46 +160,43 @@ class BasicDataset(list):
            stream.tags.remove(tag)
 
 
-class Dataset(BasicDataset):
-    """ Seismic data container
+class maDataset(Dataset):
+    """ Specialized Dataset subclass
 
-    A list of ObsPy streams in which each stream corresponds to a single
-    seismic station
+    Adds multidimensional array machinery that can be used for implementing 
+    functions that act on numpy arrays rather than obspy streams.
 
-    .. note::
+    .. warning:
 
-        Each supported file format has a corresponding reader that creates an
-        Dataset (see ``mtuq.io.readers``).
-
-    .. note:
-
-      MUTQ provides two different data containers.
-
-      -   `BasicDataset`s are the more flexible container because they allow
-          time discretization to vary from station to station.
-
-      -   `Datasets` are the more efficient container because they provide
-          Numpy array machinery for faster computations.
+        Unlike the parent class, this subclass requires all streams have the 
+        same time discretization.
 
     """
     def __init__(self, *args, **kwargs):
-        super(Dataset, self).__init__(*args, **kwargs)
-        #self.check_time_sampling()
+        super(maDataset, self).__init__(*args, **kwargs)
+
+        # this method is not yet implemented
+        self._check_time_sampling()
 
 
-    def check_time_sampling(self):
+    def _check_time_sampling(self):
         """ Checks that time discretization is the same for all stations
         """
-        raise NotImplementedError
+        pass
 
 
-    def get_array(self):
+    def as_array(self):
         """ Returns time series from all stations and components in a single 
         multidimensional array
         """
-        if hasattr(self, '_ndarray'):
-            return self._ndarray
+        try:
+            return self._array
+        except:
+            self._allocate_array()
+            return self._array
 
+
+    def _allocate_array(self):
         # count number of nonempty streams
         ns = 0
         for stream in self:
@@ -213,40 +205,29 @@ class Dataset(BasicDataset):
         nt = self[0][0].stats.npts
 
         # allocate array
-        ndarray = np.zeros((3, ns, nt))
+        self._array = np.zeros((3, ns, nt))
+        array = self._array
 
-        # populate array
         _i = 0
         for stream in self:
             if len(stream)==0:
                 continue
             try:
                 trace = stream.select(component='Z')
-                ndarray[0, _i, :] = trace.data
+                array[0, _i, :] = trace.data
             except:
                 pass
             try:
                 trace = stream.select(component='R')
-                ndarray[1, _i, :] = trace.data
+                array[1, _i, :] = trace.data
             except:
                 pass
             try:
                 trace = stream.select(component='T')
-                ndarray[2, _i, :] = trace.data
+                array[2, _i, :] = trace.data
             except:
                 pass
             _i += 1
-
-        self._ndarray = ndarray
-        return ndarray
-
-
-    def get_array(self):
-        """ Returns time series from all stations and components in a single 
-        multidimensional array
-        """
-        if hasattr(self, '_ndarray'):
-            return self._ndarray
 
 
 
@@ -270,5 +251,5 @@ def EventDataset(streams=[], stations=[], origin=None,
     for _ in range(size):
         origins += [copy(origin)]
 
-    return Dataset(streams, stations, origins, id, tags)
+    return maDataset(streams, stations, origins, id, tags)
 

@@ -1,3 +1,3 @@
 
-from base import BasicGreensTensorList, GreensTensorList
+from base import GreensTensorList, maGreensTensorList
 
