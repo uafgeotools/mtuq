@@ -1,7 +1,7 @@
 
 import obspy
 import numpy as np
-from mtuq.io.greens_tensor import fk_sac, axisem_netcdf, syngine
+from mtuq.io.clients import fk_sac, axisem_netcdf, syngine
 
 from matplotlib import pyplot
 from os import getenv
@@ -80,10 +80,10 @@ if __name__=='__main__':
         'station': 'BIGB',
         'location': '',
         'id': 'YV.BIGB.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 15850.0907298,
-        'preliminary_azimuth': 345.527768889,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 61.245,
@@ -96,10 +96,10 @@ if __name__=='__main__':
         'station': 'ALPI',
         'location': '',
         'id': 'YV.ALPI.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 25741.2111914,
-        'preliminary_azimuth': 154.937206124,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 61.592,
@@ -112,10 +112,10 @@ if __name__=='__main__':
         'station': 'PMR',
         'location': '',
         'id': 'AT.PMR.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 36015.8231741,
-        'preliminary_azimuth': 64.4545662238,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 61.089,
@@ -128,10 +128,10 @@ if __name__=='__main__':
         'station': 'RC01',
         'location': '',
         'id': 'AK.RC01.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 40707.1235329,
-        'preliminary_azimuth': 179.711452236,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 61.864,
@@ -144,10 +144,10 @@ if __name__=='__main__':
         'station': 'KASH',
         'location': '',
         'id': 'YV.KASH.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 49029.7145289,
-        'preliminary_azimuth': 338.666195532,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.874,
@@ -160,10 +160,10 @@ if __name__=='__main__':
         'station': 'HOPE',
         'location': '',
         'id': 'YV.HOPE.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 65145.1360155,
-        'preliminary_azimuth': 173.050656466,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.805,
@@ -176,10 +176,10 @@ if __name__=='__main__':
         'station': 'TUPA',
         'location': '',
         'id': 'YV.TUPA.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 78342.8543629,
-        'preliminary_azimuth': 157.288772085,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 61.807,
@@ -192,10 +192,10 @@ if __name__=='__main__':
         'station': 'SAW',
         'location': '',
         'id': 'AK.SAW.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 84534.0195001,
-        'preliminary_azimuth': 61.6653748926,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.672,
@@ -208,10 +208,10 @@ if __name__=='__main__':
         'station': 'LSUM',
         'location': '',
         'id': 'YV.LSUM.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 88332.6378166,
-        'preliminary_azimuth': 170.67598173,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.735,
@@ -224,10 +224,10 @@ if __name__=='__main__':
         'station': 'MPEN',
         'location': '',
         'id': 'YV.MPEN.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 89500.1194601,
-        'preliminary_azimuth': 206.794148235,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.551,
@@ -240,10 +240,10 @@ if __name__=='__main__':
         'station': 'DEVL',
         'location': '',
         'id': 'YV.DEVL.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 100986.018723,
-        'preliminary_azimuth': 175.365654906,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.775,
@@ -256,10 +256,10 @@ if __name__=='__main__':
         'station': 'BLAK',
         'location': '',
         'id': 'YV.BLAK.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 104126.076067,
-        'preliminary_azimuth': 136.074440283,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.488,
@@ -272,10 +272,10 @@ if __name__=='__main__':
         'station': 'RUSS',
         'location': '',
         'id': 'YV.RUSS.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 108781.455802,
-        'preliminary_azimuth': 188.392980537,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.483,
@@ -288,10 +288,10 @@ if __name__=='__main__':
         'station': 'LSKI',
         'location': '',
         'id': 'YV.LSKI.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 114988.115602,
-        'preliminary_azimuth': 200.106720707,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.662,
@@ -304,10 +304,10 @@ if __name__=='__main__':
         'station': 'NSKI',
         'location': '',
         'id': 'YV.NSKI.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 121048.414873,
-        'preliminary_azimuth': 223.868000167,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.375,
@@ -320,10 +320,10 @@ if __name__=='__main__':
         'station': 'AVAL',
         'location': '',
         'id': 'YV.AVAL.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 122101.412556,
-        'preliminary_azimuth': 169.692916508,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.710,
@@ -336,10 +336,10 @@ if __name__=='__main__':
         'station': 'PERI',
         'location': '',
         'id': 'YV.PERI.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 127.296105568,
-        'preliminary_azimuth': 129.875238053,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.464,
@@ -352,10 +352,10 @@ if __name__=='__main__':
         'station': 'SOLD',
         'location': '',
         'id': 'YV.SOLD.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 132023.528432,
-        'preliminary_azimuth': 213.907196416,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 61.259,
@@ -368,10 +368,10 @@ if __name__=='__main__':
         'station': 'SPBG',
         'location': '',
         'id': 'AV.SPBG.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 142331.966923,
-        'preliminary_azimuth': 262.369826639,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.104,
@@ -384,10 +384,10 @@ if __name__=='__main__':
         'station': 'SWD',
         'location': '',
         'id': 'AK.SWD.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 151241.318202,
-        'preliminary_azimuth': 173.8727135,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.008,
@@ -400,10 +400,10 @@ if __name__=='__main__':
         'station': 'HEAD',
         'location': '',
         'id': 'YV.HEAD.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 162120.434579,
-        'preliminary_azimuth': 173.413686902,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 61.129,
@@ -416,10 +416,10 @@ if __name__=='__main__':
         'station': 'DIV',
         'location': '',
         'id': 'AK.DIV.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 215746.816221,
-        'preliminary_azimuth': 97.9180072487,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 63.450,
@@ -432,10 +432,10 @@ if __name__=='__main__':
         'station': 'TRF',
         'location': '',
         'id': 'AK.TRF.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 224239.111212,
-        'preliminary_azimuth': 353.014641671,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.549,
@@ -448,10 +448,10 @@ if __name__=='__main__':
         'station': 'EYAK',
         'location': '',
         'id': 'AK.EYAK.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 238379.702635,
-        'preliminary_azimuth': 113.279988085,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 62.970,
@@ -464,10 +464,10 @@ if __name__=='__main__':
         'station': 'PAX',
         'location': '',
         'id': 'AK.PAX.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 279134.053993,
-        'preliminary_azimuth': 50.8967398602,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),
         Station({
         'latitude': 60.968,
@@ -480,10 +480,10 @@ if __name__=='__main__':
         'station': 'BMR',
         'location': '',
         'id': 'AK.BMR.',
-        'preliminary_origin_time': origin_time,
-        'preliminary_event_depth_in_m': 33033.5998535,
-        'preliminary_distance_in_m': 281334.781059,
-        'preliminary_azimuth': 98.8479894406,
+        'preliminary_origin_time': origin.time,
+        'preliminary_event_depth_in_m': origin.depth_in_m,
+        'preliminary_event_latitude': origin.latitude,
+        'preliminary_event_longitude': origin.longitude,
         }),]
 
     nstations = len(stations)
@@ -494,7 +494,7 @@ if __name__=='__main__':
     # download Green's function databases
     #
 
-    path_greens_fk = join(path_mtuq(), 'data/tests/benchmark_cap_mtuq/greens/scak')
+    path_greens_fk = join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
     # once AK135 FK database become available we'll uncomment these lines
     #if not exists(path_greens_fk):
     #    wget()
@@ -534,12 +534,14 @@ if __name__=='__main__':
         processed_greens = {}
         processed_greens['body_waves'] = greens.map(process_bw, stations, origins)
         processed_greens['surface_waves'] = greens.map(process_sw, stations, origins)
+        [greens.initialize() for greens in processed_greens['body_waves']]
+        [greens.initialize() for greens in processed_greens['surface_waves']]
         return processed_greens
 
 
     if include_axisem:
         print "Reading AxiSEM Greens's functions..."
-        model = 'ak135f_2s'
+        model = 'ak135'
         client_axisem = axisem_netcdf.Client(path_greens_axisem)
         greens_axisem = client_axisem.get_greens_tensors(stations, origins)
         greens_axisem = process_data(greens_axisem)
@@ -555,8 +557,8 @@ if __name__=='__main__':
 
     if include_syngine:
         print "Downloading syngine Green's functions..."
-        model = 'ak135f_2s'
-        client_syngine = syngine.Client(model)
+        model = 'ak135'
+        client_syngine = syngine.Client(model=model)
         greens_syngine = client_syngine.get_greens_tensors(stations, origins)
         greens_syngine = process_data(greens_syngine)
 
