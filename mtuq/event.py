@@ -21,9 +21,11 @@ class Origin(obspy.core.AttribDict):
         }
 
     def __setitem__(self, key, value):
-        # enforce types
         if key in ['time']:
             value = UTCDateTime(value)
+
+        elif key in ['latitude', 'longitude', 'depth_in_m']:
+            value = float(value)
 
         super(Origin, self).__setitem__(key, value)
 
