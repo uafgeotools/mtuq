@@ -33,27 +33,6 @@ class GreensTensor(GreensTensorBase):
         self.tags += ['units:m']
 
 
-    def get_synthetics(self, mt):
-        """
-        Generates synthetics through a linear combination of Green's tensor
-        times series weighted by source elements
-        """
-        return super(GreensTensor, self).get_synthetics(
-            change_basis(mt, 1, 2))
-
-
-    def get_time_shift(self, data, mt, group, time_shift_max):
-        """ 
-        Finds optimal time shift between the given data and synthetics
-        generated from the given source
-        """
-        return super(GreensTensor, self).get_time_shift(
-            data,
-            change_basis(mt, 1, 2),
-            group,
-            time_shift_max)
-
-
     def _compute_array(self, components=['Z', 'R', 'T']):
         array = self._array
         phi = np.deg2rad(self.azimuth)
@@ -97,4 +76,24 @@ class GreensTensor(GreensTensorBase):
             else:
                 raise ValueError
 
+
+        self._permute_array()
+
+
+
+    def _permute_array(self):
+        """ Accounts for different basis conventions
+
+        The mathematical formulas above are based on the North-East-Down
+        convention, but mtuq/instaseis work in the Up-South-East convention
+        """
+        array = self._array
+        array_copy = self._array.copy()
+
+        array[:, 0, :] =  array_copy[:, 2, :]
+        array[:, 1, :] =  array_copy[:, 0, :]
+        array[:, 2, :] =  array_copy[:, 1, :]
+        array[:, 3, :] =  array_copy[:, 4, :]
+        array[:, 4, :] = -array_copy[:, 5, :]
+        array[:, 5, :] = -array_copy[:, 3, :]
 

@@ -1,56 +1,112 @@
 
-from obspy.core import Stats, UTCDateTime
+import obspy
+from obspy.core import UTCDateTime
+from obspy.core.util import AttribDict
 from obspy.geodetics import gps2dist_azimuth
 
 
-class Station(Stats):
+class Station(AttribDict):
     """ Station metadata object
 
-    Holds the following station metadata
+    Holds the following information
+    - latitude, longitude, depth, and elevation
     - network, station, and location codes
-    - preliminary event location and origin time estimates
-    - time discretization of traces recorded at station
 
-    At the beginning of an inversion, MTUQ requires initial estimates for
-    event location and depth. Attributes with the suffix "preliminary"
-    represent these estimates, which are usually based on IRIS catalog 
-
-    Time discretization attributes ``npts``, ``delta``, ``starttime``, and
-    ``endtime`` are inherited from the ObsPy base class. This works only because
-    we always check in ``mtuq.io.readers`` that all traces at a given station 
-    have the same time discretization.
+    Optionally, also includes 
+    - time discretization attributes, which can be useful if all traces recorded
+      at the given station have the same time sampling 
+    - preliminary origin time and location estimates
     """
 
-    readonly = [
-        'endtime',
-        'preliminary_distance_in_m',
-        'preliminary_azimuth',
-        'preliminary_backazimuth',
-        ]
+    _include_temporal = True
+    _include_origin = True
+
 
     defaults = {
-        'sampling_rate': 1.0,
-        'delta': 1.0,
-        'starttime': UTCDateTime(0),
-        'endtime': UTCDateTime(0),
-        'npts': 0,
-        'calib': 1.0,
+        'latitude': None,
+        'longitude': None,
+        'depth_in_m': None,
+        'elevation_in_m': None,
         'network': '',
         'station': '',
         'location': '',
         'channel': '',
-        'latitude': None,
-        'longitude': None,
-        'station_depth': 0.,
-        'station_elevation': 0.,
-        'preliminary_origin_time': None,
-        'preliminary_event_latitude': None,
-        'preliminary_event_longitude': None,
-        'preliminary_event_depth_in_m': None,
-        'preliminary_distance_in_m': None,
-        'preliminary_azimuth': None,
-        'preliminary_backazimuth': None,
         }
+
+    readonly = []
+
+    _default_keys = [
+        'latitude',
+        'longitude',
+        'depth_in_m',
+        'elevation_in_m',
+        'network',
+        'station',
+        'location',
+        'channel',
+        ]
+
+    _geographic_keys = [
+        'latitude',
+        'longitude',
+        ]
+
+
+    # optionally, add time discretization attributes
+    if _include_temporal:
+        defaults.update({
+            'sampling_rate': 1.0,
+            'delta': 1.0,
+            'starttime': UTCDateTime(0),
+            'endtime': UTCDateTime(0),
+            'npts': 0,
+            })
+
+        readonly.extend([
+            'endtime',
+            ])
+
+        _temporal_keys = [
+            'sampling_rate',
+            'delta',
+            'starttime',
+            'endtime',
+            'npts',
+            ]
+
+
+    # optionally, add preliminary origin attributes
+    if _include_origin:
+        defaults.update({
+            'preliminary_origin_time': None,
+            'preliminary_event_latitude': None,
+            'preliminary_event_longitude': None,
+            'preliminary_event_depth_in_m': None,
+            'preliminary_distance_in_m': None,
+            'preliminary_azimuth': None,
+            'preliminary_backazimuth': None,
+            })
+
+        readonly.extend([
+            'preliminary_distance_in_m',
+            'preliminary_azimuth',
+            'preliminary_backazimuth',
+            ])
+
+        _geographic_keys += [
+            'preliminary_event_latitude',
+            'preliminary_event_longitude',
+            ]
+
+        _origin_keys = [
+            'preliminary_origin_time',
+            'preliminary_event_latitude',
+            'preliminary_event_longitude',
+            'preliminary_event_depth_in_m',
+            'preliminary_distance_in_m',
+            'preliminary_azimuth',
+            'preliminary_backazimuth',
+            ]
 
 
     def __init__(self, *args, **kwargs):
@@ -58,31 +114,86 @@ class Station(Stats):
 
 
     def __setitem__(self, key, value):
-        # enforce types
-        if key in ['preliminary_origin_time']:
+        if self._include_temporal and key in self._temporal_keys:
+            self._set_temporal_item(key, value)
+
+        elif self._include_origin and key in self._origin_keys:
+            self._set_origin_item(key, value)
+
+        elif isinstance(value, dict):
+            super(Station, self).__setitem__(key, AttribDict(value))
+
+        else:
+            super(Station, self).__setitem__(key, value)
+
+        if self._include_origin and key in self._geographic_keys:
+            self._refresh()
+
+
+    def _set_temporal_item(self, key, value):
+        # adapted from obspy.core.trace.Stats
+
+        if key == 'npts':
+            value = int(value)
+
+        elif key == 'sampling_rate':
+            value = float(value)
+
+        elif key == 'starttime':
             value = UTCDateTime(value)
+
+        elif key == 'delta':
+            key = 'sampling_rate'
+            try:
+                value = 1.0 / float(value)
+            except ZeroDivisionError:
+                value = 0.
 
         super(Station, self).__setitem__(key, value)
 
-        # set readonly values
-        if not (self.latitude and self.longitude 
-            and self.preliminary_event_latitude
-            and self.preliminary_event_longitude):
-            return
+        try:
+            self.__dict__['delta'] = 1.0 / float(self.sampling_rate)
+        except ZeroDivisionError:
+            self.__dict__['delta'] = 0.
 
-        if key in ['latitude',
-                   'longitude',
-                   'preliminary_event_latitude', 
-                   'preliminary_event_longitude']:
+        if self.npts > 0:
+            self.__dict__['endtime'] = self.starttime +\
+                float(self.npts-1)*self.delta
+        else:
+            self.__dict__['endtime'] = self.starttime
 
-            distance_in_m, azimuth, backazimuth = gps2dist_azimuth(
-                self.preliminary_event_latitude,
-                self.preliminary_event_longitude,
-                self.latitude,
-                self.longitude)
 
-            self.__dict__['preliminary_distance_in_m'] = distance_in_m
-            self.__dict__['preliminary_azimuth'] = azimuth
-            self.__dict__['preliminary_backazimuth'] = backazimuth
+    def _set_origin_item(self, key, value):
+        if value==None:
+            pass
+
+        elif key in ['preliminary_origin_time']:
+            value = UTCDateTime(value)
+
+        elif key in [
+            'preliminary_event_latitude',
+            'preliminary_event_longitude',
+            'preliminary_event_depth_in_m',
+            ]:
+            value = float(value)
+
+        super(Station, self).__setitem__(key, value)
+
+
+    def _refresh(self):
+        for key in self._geographic_keys:
+            if self.__dict__[key]==None:
+                return
+
+        distance_in_m, azimuth, backazimuth = gps2dist_azimuth(
+            self.preliminary_event_latitude,
+            self.preliminary_event_longitude,
+            self.latitude,
+            self.longitude)
+
+        self.__dict__['preliminary_distance_in_m'] = distance_in_m
+        self.__dict__['preliminary_azimuth'] = azimuth
+        self.__dict__['preliminary_backazimuth'] = backazimuth
+
 
 
