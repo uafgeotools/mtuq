@@ -4,6 +4,7 @@ import numpy as np
 import warnings
 
 from copy import copy
+from obspy import Stream
 from obspy.geodetics import gps2dist_azimuth
 
 
@@ -28,30 +29,38 @@ class Dataset(list):
         for _i, stream in enumerate(streams):
             self.append(stream)
 
-            # create unique identifier
-            try:
-                stream.id = '.'.join([
-                    stream.station.network,
-                    stream.station.station,
-                    stream.station.location])
-            except:
-                stream.id = '.'.join([
-                    stream[0].stats.network,
-                    stream[0].stats.station,
-                    stream[0].stats.location])
+        for tag in copy(tags):
+            self.add_tag(tag)
 
-            if not hasattr(stream, 'tags'):
-                stream.tags = list()
 
-            # collect location information
-            if not hasattr(stream, 'station'):
-                warnings.warn("Stream lacks station metadata")
-                continue
+    def append(self, stream):
+        """ Appends stream to dataset
+        """
+        assert issubclass(type(stream), Stream)
 
-            if not hasattr(stream, 'preliminary_origin'):
-                warnings.warn("Stream lacks preliminary origin metadata")
-                continue
+        # create unique identifier
+        try:
+            stream.id = '.'.join([
+                stream.station.network,
+                stream.station.station,
+                stream.station.location])
+        except:
+            stream.id = '.'.join([
+                stream[0].stats.network,
+                stream[0].stats.station,
+                stream[0].stats.location])
 
+        if not hasattr(stream, 'tags'):
+            stream.tags = list()
+
+        # collect location information
+        if not hasattr(stream, 'station'):
+            warnings.warn("Stream lacks station metadata")
+
+        elif not hasattr(stream, 'preliminary_origin'):
+            warnings.warn("Stream lacks preliminary origin metadata")
+
+        else:
             (stream.preliminary_distance_in_m,
             stream.preliminary_azimuth, _) =\
                 gps2dist_azimuth(
@@ -60,10 +69,7 @@ class Dataset(list):
                     stream.station.latitude,
                     stream.station.longitude)
 
-        for tag in copy(tags):
-            self.add_tag(tag)
-
-
+        super(Dataset, self).append(stream)
 
 
     def apply(self, function, *args, **kwargs):
