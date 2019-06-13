@@ -1,6 +1,7 @@
 
 import obspy
 import numpy as np
+import warnings
 
 from copy import copy
 from obspy.geodetics import gps2dist_azimuth
@@ -19,44 +20,50 @@ class Dataset(list):
         Dataset (see ``mtuq.io.readers``).
 
     """
-    def __init__(self, streams=[], stations=[], origins=[],
-                 id=None, tags=[]):
+    def __init__(self, streams=[], id=None, tags=[]):
         """ Constructor
         """
-        if len(stations)!=len(streams):
-            raise Exception
-
-        if len(origins)!=len(streams):
-            raise Exception
+        self.id = id
 
         for _i, stream in enumerate(streams):
+            self.append(stream)
+
+            # create unique identifier
+            try:
+                stream.id = '.'.join([
+                    stream.station.network,
+                    stream.station.station,
+                    stream.station.location])
+            except:
+                stream.id = '.'.join([
+                    stream[0].stats.network,
+                    stream[0].stats.station,
+                    stream[0].stats.location])
+
+            if not hasattr(stream, 'tags'):
+                stream.tags = list()
 
             # collect location information
+            if not hasattr(stream, 'station'):
+                warnings.warn("Stream lacks station metadata")
+                continue
+
+            if not hasattr(stream, 'preliminary_origin'):
+                warnings.warn("Stream lacks preliminary origin metadata")
+                continue
+
             (stream.preliminary_distance_in_m,
             stream.preliminary_azimuth, _) =\
                 gps2dist_azimuth(
-                    origins[_i].latitude,
-                    origins[_i].longitude,
-                    stations[_i].latitude,
-                    stations[_i].longitude)
+                    stream.preliminary_origin.latitude,
+                    stream.preliminary_origin.longitude,
+                    stream.station.latitude,
+                    stream.station.longitude)
 
-            # create unique identifier
-            stream.id = '.'.join([
-                stations[_i].network,
-                stations[_i].station,
-                stations[_i].location])
+        for tag in copy(tags):
+            self.add_tag(tag)
 
-            # append tags to stream
-            if not hasattr(stream, 'tags'):
-                stream.tags = list()
-            stream.tags.extend(copy(tags))
 
-            # append stream to list
-            self.append(stream)
-
-        self.stations = stations
-        self.origins = origins
-        self.id = id
 
 
     def apply(self, function, *args, **kwargs):
@@ -70,7 +77,7 @@ class Dataset(list):
             processed += [function(stream, *args, **kwargs)]
 
         return self.__class__(
-            processed, self.stations, self.origins, id=self.id)
+            processed, id=self.id)
 
 
     def map(self, function, *sequences):
@@ -87,7 +94,7 @@ class Dataset(list):
             processed += [function(stream, *args)]
 
         return self.__class__(
-            processed, self.stations, self.origins, id=self.id)
+            processed, id=self.id)
 
 
     def max(self):
@@ -120,31 +127,32 @@ class Dataset(list):
     def sort_by_function(self, function, reverse=False):
         """ Sorts in-place by user-supplied function
         """
-        wrapped_function = lambda x: function(x[0])
-        _, self.stations, self.origins = zip(*sorted(zip(
-            [stream for stream in self], self.stations, self.origins),
-            key=wrapped_function, reverse=reverse))
-
         self.sort(key=function, reverse=reverse)
 
 
     def get_stations(self):
         """ Extracts station metadata from all streams in list
         """
-        return self.stations
+        stations = []
+        for stream in self:
+            stations += [stream.station]
+        return stations
 
 
     def get_origins(self):
         """ Returns preliminary origin location and time
         """
-        return self.origins
+        origins = []
+        for stream in self:
+            origins += [stream.preliminary_origin]
+        return origins
 
 
     def add_tag(self, tag):
        """ Appends string to tags list
        
        Tags can be used to support customized uses, such as storing metdata not
-       included in mtuq.Station
+       included in mtuq.origin
        """
        if type(tag) not in [str, unicode]:
            raise TypeError
@@ -234,26 +242,4 @@ class maDataset(Dataset):
             _i += 1
 
 
-
-def EventDataset(streams=[], stations=[], origin=None,            
-                 id=None, tags=[]):
-    """ Returns single-event seismic data container
-
-    Returns a Dataset object in which each stream corresponds to a single
-    station and all streams correspond to the same event
-
-    """
-    size = len(streams)
-
-    if len(stations)!=size:
-        raise Exception
-
-    if not origin:
-        raise Exception
-
-    origins = []
-    for _ in range(size):
-        origins += [copy(origin)]
-
-    return maDataset(streams, stations, origins, id, tags)
 

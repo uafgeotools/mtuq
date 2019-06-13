@@ -3,7 +3,7 @@
 # make central objects easily accessible
 #
 
-from mtuq.dataset import Dataset, maDataset, EventDataset
+from mtuq.dataset import Dataset, maDataset
 from mtuq.greens_tensor import GreensTensorList, maGreensTensorList
 from mtuq.event import Origin, Force, MomentTensor
 from mtuq.station import Station

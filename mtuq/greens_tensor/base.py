@@ -120,7 +120,10 @@ class GreensTensor(Stream):
         # a single obspy stream is allocated, then every time get_synthetics
         # is called, the stream gets overwritten
         self._synthetics = Stream()
+
         self._synthetics.id = self.id
+        self._synthetics.station = self.station
+        self._synthetics.origin = self.origin
 
         for component in self.components:
             # add stats object

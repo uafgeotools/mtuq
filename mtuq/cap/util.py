@@ -2,7 +2,6 @@
 
 import csv
 import numpy as np
-import warnings
 import obspy
 from copy import deepcopy
 from mtuq.wavelet import EarthquakeTrapezoid
