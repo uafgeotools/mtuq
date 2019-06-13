@@ -34,9 +34,9 @@ if __name__=='__main__':
     #key = 'body_waves'
     key = 'surface_waves'
 
-    include_axisem = False
+    include_axisem = True
     include_fk = True
-    include_syngine = True
+    include_syngine = False
 
     grid = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
@@ -500,7 +500,7 @@ if __name__=='__main__':
     #    wget()
     #    unpack(path_greens_fk)
 
-    #path_greens_axisem = ''
+    path_greens_axisem = '/home/rmodrak/packages/axisem/SOLVER/output-ak135f_scak-5s-nproc4'
     #if not exists(path_greens_axisem)
     #    wget()
     #    unpack(path_greens_fk)
@@ -570,37 +570,29 @@ if __name__=='__main__':
         pyplot.figure(figsize=(30, 6.))
 
         for _j, mt in enumerate(grid):
+            synthetics = []
+
             # get synthetics
             if include_axisem:
-                synthetics_axisem = greens_axisem[key].get_synthetics(mt)[_i]
+                synthetics += [greens_axisem[key].get_synthetics(mt)[_i]]
             if include_fk:
-                synthetics_fk = greens_fk[key].get_synthetics(mt)[_i]
+                synthetics += [greens_fk[key].get_synthetics(mt)[_i]]
             if include_syngine:
-                synthetics_syngine = greens_syngine[key].get_synthetics(mt)[_i]
+                synthetics += [greens_syngine[key].get_synthetics(mt)[_i]]
 
             # get time scheme
             t = np.linspace(
-                float(synthetics_syngine[0].stats.starttime),
-                float(synthetics_syngine[0].stats.endtime),
-                synthetics_syngine[0].stats.npts)
+                float(synthetics[0][0].stats.starttime),
+                float(synthetics[0][0].stats.endtime),
+                synthetics[0][0].stats.npts)
 
             for _k, component in enumerate(['Z', 'R', 'T']):
                 ax = pyplot.subplot(3, len(grid), len(grid)*_k + _j + 1)
 
-                if include_axisem:
-                    stream = synthetics_axisem.select(component=component)
+                for _l in range(len(synthetics)):
+                    stream = synthetics[_l].select(component=component)
                     d = stream[0].data
-                    pyplot.plot(t, d, color='blue', label='axisem')
-
-                if include_fk:
-                    stream = synthetics_fk.select(component=component)
-                    d = stream[0].data
-                    pyplot.plot(t, d, color='red', label='fk')
-
-                if include_syngine:
-                    stream = synthetics_syngine.select(component=component)
-                    d = stream[0].data
-                    pyplot.plot(t, d, color='black', label='syngine')
+                    pyplot.plot(t, d)
 
                 # hide axis labels
                 ax.spines['top'].set_visible(False)

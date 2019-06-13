@@ -12,6 +12,7 @@ from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.moment_tensor.basis import change_basis
 from mtuq.util.signal import resample
 from mtuq.util import m_to_deg
+from obspy.geodetics import gps2dist_azimuth
 
 
 
@@ -35,10 +36,10 @@ class Client(ClientBase):
     """
 
     def __init__(self, path_or_url='', kernelwidth=12):
-        if not path:
+        if not path_or_url:
             raise Exception
         try:
-            db = instaseis.open_db(path)
+            db = instaseis.open_db(path_or_url)
         except:
             Exception
         self.db = db
@@ -46,14 +47,23 @@ class Client(ClientBase):
 
 
     def _get_greens_tensor(self, station=None, origin=None):
+        """ 
+        Reads a Greens tensor from AxiSEM NetCDF database
+        """
+
+        distance_in_m, _, _ = gps2dist_azimuth(
+            origin.latitude,
+            origin.longitude,
+            station.latitude,
+            station.longitude)
+
         stream = self.db.get_greens_function(
-            epicentral_distance_in_degree=m_to_deg(station.distance_in_m),
-            source_depth_in_m=station.depth_in_m, 
+            epicentral_distance_in_degree=m_to_deg(distance_in_m),
+            source_depth_in_m=origin.depth_in_m, 
             origin_time=origin.time,
             kind='displacement',
             kernelwidth=self.kernelwidth,
             definition=u'seiscomp')
-        stream.id = station.id
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
@@ -61,8 +71,9 @@ class Client(ClientBase):
         dt_new = float(station.delta)
 
         # what are the start and end times of the Green's function?
-        t1_old = float(origin.time)+float(trace.stats.starttime)
-        t2_old = float(origin.time)+float(trace.stats.endtime)
+        trace = stream[0]
+        t1_old = float(trace.stats.starttime)
+        t2_old = float(trace.stats.endtime)
         dt_old = float(trace.stats.delta)
 
         for trace in stream:
