@@ -34,9 +34,7 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
     t2_new: desired end time for resampled data
     dt_new: desired time increment for resampled data
     """
-    if dt_old != dt_new:
-        raise NotImplementedError
-    dt = dt_new
+    dt = dt_old
 
     tmp1 = round(t1_old/dt)*dt
     tmp2 = round((t2_old-t1_old)/dt)*dt
@@ -73,7 +71,14 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
     elif t1_new <= t1_old <= t2_old <= t2_new:
         resampled_data[i1:i2] =  data[0:]
 
-    return resampled_data
+
+    if dt_old==dt_new:
+        return resampled_data
+    else:
+        t_old = np.arange(t1_new, t2_new+dt_old, dt_old)
+        t_new = np.arange(t1_new, t2_new+dt_new, dt_new)
+        return np.interp(t_new, t_old, resampled_data)
+
 
 
 def check_time_sampling(stream):
