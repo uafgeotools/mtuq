@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 import warnings
+from matplotlib.font_manager import FontProperties
 
 
 def plot_data_synthetics(filename, data_bw, data_sw, 
@@ -60,10 +61,11 @@ def plot_data_synthetics(filename, data_bw, data_sw,
 
     # optional CAP-style header
     if header:
-        header_height = 2.
+        header_height = 2.5
         height += header_height
         fig = pyplot.figure(figsize=(width, height))
-        add_header(header_height, mt)
+        event_name = filename.split('.')[0]
+        add_header(event_name, header, mt, header_height)
     else:
         header_height = 0.
         fig = pyplot.figure(figsize=(width, height))
@@ -230,22 +232,43 @@ def plot(dat, syn, label=None):
     _hide_axes(ax)
 
 
+class Header(dict):
+    def __init__(self, items, shape=np.array([])):
+        super(Header, self).__init__(items)
+        self.shape = shape
 
-def add_header(header_height, mt=None):
+
+def add_header(title=None, header=None, mt=None, height=None):
     """ Adds CAP-style header to current figure
     """
     fig = pyplot.gcf()
-    width, height = fig.get_size_inches()
+    width, figure_height = fig.get_size_inches()
 
     x0 = 0.
-    y0 = 1.-header_height/height
-    ax = fig.add_axes([x0, y0, 1., header_height/height])
+    y0 = 1.-height/figure_height
+    ax = fig.add_axes([x0, y0, 1., height/figure_height])
     ax.set_xlim([0., width])
-    ax.set_ylim([0., header_height])
+    ax.set_ylim([0., height])
+    ax = pyplot.gca()
+
+    if title:
+        _bold(title, 0.15, 0.7, ax, fontsize=16)
+
+    for _i, text in header.items():
+        ix = _i % header.shape[0]
+        iy = _i / header.shape[1]
+        px = float(ix) / header.shape[0]
+        py = 1. - float(iy) / header.shape[1]
+        px *= 0.4
+        px += 0.15
+        if title: 
+            py -= 0.05
+            py *= 0.5
+        _text(text, px, py, ax, fontsize=14)
 
     # add beachball
     from obspy.imaging.beachball import beach
-    beach = beach(mt, xy=(1., 0.625), width=1.25, linewidth=0.5, facecolor='gray')
+    beach = beach(mt, xy=(1., 1.), width=1.75, linewidth=0.5, facecolor='gray')
     ax = pyplot.gca()
     ax.add_collection(beach)
 
@@ -260,15 +283,15 @@ def add_station_labels(meta):
 
     # display station name
     label = '.'.join([meta.network, meta.station])
-    pyplot.text(-0.25,0.45, label, fontsize=7, transform=ax.transAxes)
+    pyplot.text(-0.25,0.45, label, fontsize=12, transform=ax.transAxes)
 
     # display distance
     distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
-    pyplot.text(-0.25,0.30,distance, fontsize=7, transform=ax.transAxes)
+    pyplot.text(-0.25,0.30, distance, fontsize=12, transform=ax.transAxes)
 
     # display azimuth
     azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(-0.25,0.15,azimuth, fontsize=7, transform=ax.transAxes)
+    pyplot.text(-0.25,0.15, azimuth, fontsize=12, transform=ax.transAxes)
 
     _hide_axes(ax)
 
@@ -285,7 +308,7 @@ def add_trace_labels(dat, syn, total_misfit=1.):
 
     # display cross-correlation time shift
     time_shift = getattr(syn, 'time_shift', np.nan)
-    pyplot.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=6)
+    pyplot.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=12)
 
     # display maximum cross-correlation coefficient
     Ns = np.dot(s,s)**0.5
@@ -293,18 +316,18 @@ def add_trace_labels(dat, syn, total_misfit=1.):
     if Ns*Nd > 0.:
         max_cc = np.correlate(s, d, 'valid').max()
         max_cc /= (Ns*Nd)
-        pyplot.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=6)
+        pyplot.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=12)
     else:
         max_cc = np.nan
-        pyplot.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=6)
+        pyplot.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=12)
 
     # display percent of total misfit
     misfit = getattr(syn, 'misfit', np.nan)
     misfit /= total_misfit
     if misfit >= 0.1:
-        pyplot.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=6)
+        pyplot.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=12)
     else:
-        pyplot.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=6)
+        pyplot.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=12)
 
 
 
@@ -350,4 +373,20 @@ def _hide_axes(ax):
     ax.get_yaxis().set_ticks([])
 
 
+def _text(text, x, y, ax, fontsize=12):
+    pyplot.text(x, y, text, fontsize=fontsize, transform=ax.transAxes)
+
+
+def _bold(text, x, y, ax, fontsize=12):
+    font = FontProperties()
+    font.set_weight('bold')
+    pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize, 
+        transform=ax.transAxes)
+
+
+def _italic(text, x, y, ax, fontsize=12):
+    font = FontProperties()
+    font.set_style('italic')
+    pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize,
+        transform=ax.transAxes)
 
