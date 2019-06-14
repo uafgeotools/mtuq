@@ -5,10 +5,19 @@ import warnings
 from matplotlib.font_manager import FontProperties
 
 
-def plot_data_synthetics(filename, data_bw, data_sw, 
-        synthetics_bw, synthetics_sw, total_misfit_bw=1., total_misfit_sw=1.,
-        header=False, station_labels=True, trace_labels=True, mt=None, 
-        normalize='maximum_amplitude'):
+def plot_data_synthetics(filename, 
+        data_bw, 
+        data_sw, 
+        synthetics_bw, 
+        synthetics_sw, 
+        total_misfit_bw=1., 
+        total_misfit_sw=1., 
+        normalize='maximum_amplitude',
+        mt=None,
+        title=None, 
+        header=None,
+        station_labels=True, 
+        trace_labels=True):
     """ Creates CAP-style data/synthetics figure
     """
 
@@ -60,12 +69,16 @@ def plot_data_synthetics(filename, data_bw, data_sw,
 
 
     # optional CAP-style header
+    if not title:
+        event_name = filename.split('.')[0]
+        title = event_name
+
     if header:
         header_height = 2.5
         height += header_height
         fig = pyplot.figure(figsize=(width, height))
-        event_name = filename.split('.')[0]
-        add_header(event_name, header, mt, header_height)
+        add_header(title, header, mt, header_height)
+
     else:
         header_height = 0.
         fig = pyplot.figure(figsize=(width, height))
@@ -128,7 +141,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 continue
 
             # normalize amplitudes
-            if normalize=='trace_by_trace':
+            if normalize=='trace_amplitude':
                 max_trace = _max(dat, syn)
                 ylim = [-2*max_trace, +2*max_trace]
                 pyplot.ylim(*ylim)
@@ -172,7 +185,7 @@ def plot_data_synthetics(filename, data_bw, data_sw,
                 continue
 
             # amplitude normalization
-            if normalize=='trace_by_trace':
+            if normalize=='trace_amplitude':
                 max_trace = _max(dat, syn)
                 ylim = [-max_trace, +max_trace]
                 pyplot.ylim(*ylim)

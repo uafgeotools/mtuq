@@ -79,8 +79,8 @@ def quick_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
             #6: 'norm: %s' % norm,
             8: 'b.w. bandpass: %.1f - %.1f s' % (bw_T_min, bw_T_max),
             10: 's.w. bandpass: %.1f - %.1f s' % (sw_T_min, sw_T_max),
-            12: 'b.w. window length: %.1f s' % bw_win_len,
-            14: 's.w. window length: %.1f s' % sw_win_len})
+            12: 'b.w. window: %.1f s' % bw_win_len,
+            14: 's.w. window: %.1f s' % sw_win_len})
 
 
 #
