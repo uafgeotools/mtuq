@@ -268,10 +268,10 @@ def add_header(title=None, header=None, mt=None, height=None):
         _bold(title, 0.15, 0.7, ax, fontsize=16)
 
     for _i, text in header.items():
-        ix = _i % header.shape[0]
+        ix = _i % header.shape[1]
         iy = _i / header.shape[1]
-        px = float(ix) / header.shape[0]
-        py = 1. - float(iy) / header.shape[1]
+        px = float(ix) / header.shape[1]
+        py = 1. - float(iy) / header.shape[0]
         px *= 0.4
         px += 0.15
         if title: 
