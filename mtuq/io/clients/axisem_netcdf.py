@@ -38,11 +38,7 @@ class Client(ClientBase):
     def __init__(self, path_or_url='', kernelwidth=12):
         if not path_or_url:
             raise Exception
-        try:
-            db = instaseis.open_db(path_or_url)
-        except:
-            Exception
-        self.db = db
+        self.db = instaseis.open_db(path_or_url)
         self.kernelwidth=12
 
 

@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import obspy
 from copy import deepcopy
+from mtuq.graphics.waveform import Header
 from mtuq.wavelet import EarthquakeTrapezoid
 
 
@@ -46,6 +47,41 @@ def remove_unused_stations(dataset, filename):
 
     for id in unused:
         dataset.remove(id)
+
+
+def quick_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
+    model, solver, mt, depth_in_m):
+
+    M0 = np.sqrt(0.5*np.sum(mt[0:3]**2.) + np.sum(mt[3:6]**2.))
+    Mw = (np.log10(M0) - 9.1)/1.5
+
+    order = misfit_bw.order
+    assert order==misfit_sw.order
+    norm = '$L%s$' % order
+
+    bw_T_min = process_bw.freq_max**-1
+    bw_T_max = process_bw.freq_min**-1
+    sw_T_min = process_sw.freq_max**-1
+    sw_T_max = process_sw.freq_min**-1
+
+    bw_win_len = process_bw.window_length
+    sw_win_len = process_sw.window_length
+
+    return Header(
+        shape=np.array([4,4]), 
+        items={
+            0: '$M_w$: %3.2f' % Mw,
+            1: 'depth: %.1f km' % (depth_in_m/1000.),
+            #2: 'CLVD: %.0f' % 0.,
+            #3: 'ISO: %.0f' % 0.,
+            4: 'model: %s' % model,
+            5: 'solver: %s' % solver,
+            #6: 'norm: %s' % norm,
+            8: 'b.w. bandpass: %.1f - %.1f s' % (bw_T_min, bw_T_max),
+            10: 's.w. bandpass: %.1f - %.1f s' % (sw_T_min, sw_T_max),
+            12: 'b.w. window: %.1f s' % bw_win_len,
+            14: 's.w. window: %.1f s' % sw_win_len})
+
 
 #
 # These rupture and rise time utilties can be used to generate source-time

@@ -10,7 +10,7 @@ from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists, join
 from mtuq.cap.util import taper, parse_weight_file
 from mtuq.util import AttribDict, warn, m_to_deg
-from mtuq.util.signal import cut
+from mtuq.util.signal import cut, get_arrival
  
 
 class ProcessData(object):
@@ -294,9 +294,17 @@ class ProcessData(object):
                 arrivals = self._taup.get_travel_times(
                     origin.depth_in_m/1000., 
                     distance_in_deg, 
-                    phase_list=['p', 's'])
-                picks.P = arrivals[0].time
-                picks.S = arrivals[1].time
+                    phase_list=['p', 's', 'P', 'S'])
+                try:
+                    picks.P = get_arrival(arrivals, 'p')
+                except:
+                    picks.P = get_arrival(arrivals, 'P')
+                try:
+                    picks.S = get_arrival(arrivals, 's')
+                except:
+                    picks.S = get_arrival(arrivals, 'S')
+
+
 
 
             elif self.pick_type=='from_fk_metadata':

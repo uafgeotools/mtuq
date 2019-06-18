@@ -10,7 +10,7 @@ from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import Trapezoid
+from mtuq.cap.util import quick_header, Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -160,6 +160,10 @@ if __name__=='__main__':
     results = comm.gather(results, root=0)
 
 
+    #
+    # Plot data and synthetics
+    #
+
     if comm.rank==0:
         print 'Saving results...\n'
 
@@ -167,9 +171,13 @@ if __name__=='__main__':
 
         best_mt = grid.get(results.argmin())
 
+        header = quick_header(event_name,
+            process_bw, process_sw, misfit_bw, misfit_sw,
+            model, 'syngine', best_mt, origins[0].depth_in_m)
+
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
-            [misfit_bw, misfit_sw], best_mt)
+            [misfit_bw, misfit_sw], best_mt, header=header)
 
         plot_beachball(event_name+'_beachball.png', best_mt)
 

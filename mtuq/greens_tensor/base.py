@@ -161,12 +161,15 @@ class GreensTensor(Stream):
         Generates synthetics through a linear combination of Green's tensor
         times series weighted by source elements
         """
-        try:
-            array = self._array
-            synthetics = self._synthetics
-        except:
-            raise Exception(
-               "initialize() must be called prior to generating synthetics")
+        if not hasattr(self, '_array'):
+            # Allocates arrays for components Z,R,T. In cases with incomplete or
+            # corrupt data, it can be substantially faster to call initialize()
+            # using only the components that are actually required
+            self.initialize(components=['Z','R','T'])
+
+        array = self._array
+        synthetics = self._synthetics
+
 
         for _i, component in enumerate(self.components):
             s = synthetics[_i].data
@@ -215,11 +218,14 @@ class GreensTensor(Stream):
         """
         Computes numpy arrays used by get_time_shift
         """
-        try:
-            array = self._array
-        except:
-            raise Exception(
-                "initialize() must be called prior to computing time shifts")
+        if not hasattr(self, '_array'):
+            # Allocates arrays for components Z,R,T. In cases with incomplete or
+            # corrupt data, it can be substantially faster to call initialize()
+            # using only the components that are actually required
+            self.initialize(components=['Z','R','T'])
+
+        array = self._array
+        synthetics = self._synthetics
 
         cc = self._allocate_cc(data, time_shift_max)
         n1, n2, _ = cc.shape

@@ -75,7 +75,7 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
     if dt_old==dt_new:
         return resampled_data
     else:
-        t_old = np.arange(t1_new, t2_new+dt_old, dt_old)
+        t_old = np.linspace(t1_new, t1_new+dt_old*(nt+1), nt+1)
         t_new = np.arange(t1_new, t2_new+dt_new, dt_new)
         return np.interp(t_new, t_old, resampled_data)
 
@@ -100,4 +100,17 @@ def check_time_sampling(stream):
         return False
 
     return True
+
+
+
+def get_arrival(arrivals, phase):
+    phases = []
+    for arrival in arrivals:
+        phases += [arrival.phase.name]
+
+    if phase not in phases:
+        raise Exception("Phase not found")
+
+    arrival = arrivals[phases.index(phase)]
+    return arrival.time
 
