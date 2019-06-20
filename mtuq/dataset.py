@@ -158,7 +158,7 @@ class Dataset(list):
        """ Appends string to tags list
        
        Tags can be used to support customized uses, such as storing metdata not
-       included in mtuq.origin
+       included in mtuq.Station
        """
        if type(tag) not in [str, unicode]:
            raise TypeError
@@ -177,8 +177,8 @@ class Dataset(list):
 class maDataset(Dataset):
     """ Specialized Dataset subclass
 
-    Adds multidimensional array machinery that can be used for implementing 
-    functions that act on numpy arrays rather than obspy streams.
+    Adds multidimensional array machinery that provides a much faster way of 
+    accessing numeric trace data
 
     .. warning:
 
