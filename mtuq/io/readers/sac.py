@@ -29,7 +29,6 @@ def read(filenames, event_id=None, tags=[]):
             trace.stats.network,
             trace.stats.station,
             trace.stats.location))
-
         if id not in data_sorted:
             data_sorted[id] = Stream(trace)
         else:
