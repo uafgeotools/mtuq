@@ -62,7 +62,7 @@ class Wavelet(object):
         return w
 
 
-    def convolve_array(self, y, dt, mode=1):
+    def _convolve_array(self, y, dt, mode=1):
         """ Convolves NumPy array with given wavelet
         """
         nt = len(y)
@@ -87,7 +87,7 @@ class Wavelet(object):
              dt = trace.stats.delta
          except:
              raise Exception
-         trace.data = self.convolve_array(y, dt)
+         trace.data = self._convolve_array(y, dt)
          return trace
 
 

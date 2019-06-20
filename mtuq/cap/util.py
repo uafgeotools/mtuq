@@ -86,7 +86,7 @@ def quick_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
 #
 # These rupture and rise time utilties can be used to generate source-time
 # functions which match those defined in the cap Perl wrapper.  For use in
-# conjunction with mtuq/util/wavelets.py:Trapezoid
+# conjunction with mtuq/util/wavelets.py:EarthquakeTrapezoid
 #
 
 def Trapezoid(magnitude=None):
