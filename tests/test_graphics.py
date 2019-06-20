@@ -107,7 +107,7 @@ if __name__=='__main__':
 
 
     #
-    # Start generating figures
+    # Generate figures
     #
 
     print 'Figure 1 of 3\n'

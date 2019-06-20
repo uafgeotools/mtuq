@@ -139,6 +139,8 @@ if __name__=='__main__':
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid, verbose=False)
 
+    best_mt = grid.get(results.argmin())
+
 
     best_mt = grid.get(results.argmin())
 

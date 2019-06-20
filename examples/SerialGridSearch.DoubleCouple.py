@@ -141,13 +141,14 @@ if __name__=='__main__':
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid, verbose=True)
 
-
     best_mt = grid.get(results.argmin())
 
 
     #
-    # Plot data and synthetics
+    # Saving grid search results
     #
+
+    print 'Saving results...\n'
 
     header = quick_header(event_name,
         process_bw, process_sw, misfit_bw, misfit_sw,
@@ -158,6 +159,8 @@ if __name__=='__main__':
         [misfit_bw, misfit_sw], best_mt, header=header)
 
     plot_beachball(event_name+'_beachball.png', best_mt)
+
+    grid.save(event_name+'.h5', {'misfit': results})
 
     print 'Finished\n'
 

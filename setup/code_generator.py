@@ -394,7 +394,6 @@ Grid_DoubleCoupleMagnitudeDepth="""
         magnitude=magnitudes)
 
     wavelet = Trapezoid(
-        magnitude=np.mean(magnitudes))
 
 """
 
@@ -526,6 +525,10 @@ Main_GridSearch_DoubleCouple="""
 
     results = comm.gather(results, root=0)
 
+    if comm.rank==0:
+        results = np.concatenate(results)
+        best_mt = grid.get(results.argmin())
+
 """
 
 
@@ -646,6 +649,8 @@ Main_SerialGridSearch_DoubleCouple="""
         [data_bw, data_sw], [greens_bw, greens_sw],
         [misfit_bw, misfit_sw], grid, verbose=True)
 
+    best_mt = grid.get(results.argmin())
+
 """
 
 
@@ -727,7 +732,7 @@ Main_TestGraphics="""
 
 
     #
-    # Start generating figures
+    # Generate figures
     #
 
     print 'Figure 1 of 3\\n'
@@ -753,15 +758,11 @@ Main_TestGraphics="""
 
 WrapUp_GridSearch_DoubleCouple="""
     #
-    # Plot data and synthetics
+    # Saving grid search results
     #
 
     if comm.rank==0:
-        print 'Saving results...\\n'
-
-        results = np.concatenate(results)
-
-        best_mt = grid.get(results.argmin())
+        print 'Savings results...\\n'
 
         header = quick_header(event_name,
             process_bw, process_sw, misfit_bw, misfit_sw,
@@ -773,12 +774,18 @@ WrapUp_GridSearch_DoubleCouple="""
 
         plot_beachball(event_name+'_beachball.png', best_mt)
 
+        grid.save(event_name+'.h5', {'misfit': results})
+
         print 'Finished\\n'
 
 """
 
 
 WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
+    #
+    # Saving grid search results
+    #
+
     if comm.rank==0:
         print 'Saving results...\\n'
 
@@ -799,12 +806,11 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 
 WrapUp_SerialGridSearch_DoubleCouple="""
-    best_mt = grid.get(results.argmin())
-
-
     #
-    # Plot data and synthetics
+    # Saving grid search results
     #
+
+    print 'Saving results...\\n'
 
     header = quick_header(event_name,
         process_bw, process_sw, misfit_bw, misfit_sw,
@@ -815,6 +821,8 @@ WrapUp_SerialGridSearch_DoubleCouple="""
         [misfit_bw, misfit_sw], best_mt, header=header)
 
     plot_beachball(event_name+'_beachball.png', best_mt)
+
+    grid.save(event_name+'.h5', {'misfit': results})
 
     print 'Finished\\n'
 
