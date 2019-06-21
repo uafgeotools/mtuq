@@ -64,11 +64,13 @@ if __name__=='__main__':
 
 
     misfit_bw = Misfit(
+        norm='L1',
         time_shift_max=2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
+        norm='L1',
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
@@ -107,7 +109,7 @@ if __name__=='__main__':
 
 
     #
-    # Start generating figures
+    # Generate figures
     #
 
     print 'Figure 1 of 3\n'

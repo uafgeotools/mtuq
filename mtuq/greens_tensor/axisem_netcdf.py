@@ -123,7 +123,8 @@ class GreensTensor(GreensTensorBase):
         convention, but mtuq/instaseis work in the Up-South-East convention
         """
         # We could get equivalent results by permuting the get_synthetics
-        # arguments every time it is called, but it faster to permute _array
+        # arguments every time it is called, but it is faster to permute the 
+        # underlying array
 
         array = self._array
         array_copy = self._array.copy()

@@ -19,13 +19,13 @@ class Misfit(object):
     In the first step, the user supplies a list of parameters, including
     the order of the norm applied to the residuals, whether or not to use
     polarity information, and various tuning parameters (see below for detailed
-    descriptions.) In the second step, the user supplies data, greens function,
+    descriptions). In the second step, the user supplies data, greens function,
     and source object. Synthetics are then generated and compared with data, and
     a corresponding misfit value returned.
     """
 
     def __init__(self,
-        norm_order=1,
+        norm='L1',
         polarity_weight=0.,
         time_shift_groups=['ZRT'],
         time_shift_max=0.,
@@ -43,7 +43,13 @@ class Misfit(object):
                 assert component in ['Z','R','T']
 
         # what norm should we apply to the residuals?
-        self.order = norm_order
+        if norm=='L1':
+            self.norm_order = 1
+        elif norm=='L2':
+            self.norm_order = 2
+        elif isinstance(norm, (int, float)):
+            assert norm > 0
+            self.norm_order = 1
 
         # maximum cross-correlation lag (seconds)
         self.time_shift_max = time_shift_max
@@ -58,7 +64,7 @@ class Misfit(object):
     def __call__(self, data, greens, mt):
         """ CAP-style misfit calculation
         """ 
-        p = self.order
+        p = self.norm_order
 
         sum_misfit = 0.
         for _i, d in enumerate(data):
@@ -129,5 +135,4 @@ class Misfit(object):
 
 
         return sum_misfit**(1./p)
-
 

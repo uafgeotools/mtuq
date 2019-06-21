@@ -73,11 +73,13 @@ if __name__=='__main__':
     #
 
     misfit_bw = Misfit(
+        norm='L1',
         time_shift_max=2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
+        norm='L1',
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
@@ -151,17 +153,17 @@ if __name__=='__main__':
 
     results = comm.gather(results, root=0)
 
+    if comm.rank==0:
+        results = np.concatenate(results)
+        best_mt = grid.get(results.argmin())
+
 
     #
-    # Plot data and synthetics
+    # Saving grid search results
     #
 
     if comm.rank==0:
-        print 'Saving results...\n'
-
-        results = np.concatenate(results)
-
-        best_mt = grid.get(results.argmin())
+        print 'Savings results...\n'
 
         header = quick_header(event_name,
             process_bw, process_sw, misfit_bw, misfit_sw,
@@ -172,6 +174,8 @@ if __name__=='__main__':
             [misfit_bw, misfit_sw], best_mt, header=header)
 
         plot_beachball(event_name+'_beachball.png', best_mt)
+
+        grid.save(event_name+'.h5', {'misfit': results})
 
         print 'Finished\n'
 

@@ -246,6 +246,20 @@ def plot(dat, syn, label=None):
 
 
 class Header(dict):
+    """ A dictionary-like object containing header text
+
+    Stores header text in a dictionary {position: text}, where position is an
+    integer and text is a string. (This syntax is inspired by 
+    matplotlib.pyplot.subplot.)
+
+    .. example:
+
+       Create a text header with one row and two columns:
+
+           Header({1: 'text of column1', 2: 'text of column2'}, shape=[1,2])
+
+
+    """
     def __init__(self, items, shape=np.array([])):
         super(Header, self).__init__(items)
         self.shape = shape

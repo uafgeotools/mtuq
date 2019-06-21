@@ -470,8 +470,8 @@ class GreensTensorList(list):
 class maGreensTensorList(GreensTensorList):
     """ Specialized GreensTensorList subclass
 
-    Adds multidimensional array machinery that can be used for implementing 
-    functions that act on numpy arrays rather than obspy streams.
+    Adds multidimensional array machinery that provides a much faster way of
+    accessing numeric trace data
 
     .. warning:
 

@@ -75,11 +75,13 @@ if __name__=='__main__':
 
 
     misfit_bw = Misfit(
+        norm='L1',
         time_shift_max=2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
+        norm='L1',
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
@@ -104,7 +106,6 @@ if __name__=='__main__':
         magnitude=magnitudes)
 
     wavelet = Trapezoid(
-        magnitude=np.mean(magnitudes))
 
 
     #
@@ -181,6 +182,10 @@ if __name__=='__main__':
         for depth in depths:
             results[depth] = np.concatenate(
                 [results_unsorted[iproc][depth] for iproc in range(nproc)])
+
+    #
+    # Saving grid search results
+    #
 
     if comm.rank==0:
         print 'Saving results...\n'

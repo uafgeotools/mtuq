@@ -112,7 +112,7 @@ class Grid(object):
         return subsets
 
 
-    def save(self, filename, dict):
+    def save(self, filename, items={}):
         """ Saves a set of values defined on grid
         """
         import h5py
@@ -120,7 +120,7 @@ class Grid(object):
             for key, val in zip(self.keys, self.vals):
                 hf.create_dataset(key, data=val)
 
-            for key, val in dict.iteritems():
+            for key, val in items.iteritems():
                 hf.create_dataset(key, data=val)
 
 
@@ -223,7 +223,7 @@ class UnstructuredGrid(object):
         return subsets
 
 
-    def save(self, filename, dict):
+    def save(self, filename, items={}):
         """ Saves a set of values defined on grid
         """
         import h5py
@@ -231,7 +231,7 @@ class UnstructuredGrid(object):
             for key, val in zip(self.keys, self.vals):
                 hf.create_dataset(key, data=val)
 
-            for key, val in dict.iteritems():
+            for key, val in items.iteritems():
                 hf.create_dataset(key, data=val)
 
 

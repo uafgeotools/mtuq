@@ -17,7 +17,7 @@ def grid_search_mt_depth(*args, **kwargs):
 
 
 def _mpi_wrapper(grid_search, data, greens, misfit, grid, *args, **kwargs):
-    """ Converts a serial grid search function to parallel
+    """ Parallelizes serial grid search function
 
     To carry out a grid search over multiple MPI processes, we decompose the
     grid into subsets and scatter using MPI. Each process then runs

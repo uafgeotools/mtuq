@@ -17,13 +17,12 @@ def grid_search_mt(data_list, greens_list, misfit_list, grid, verbose=True):
     zipped = zip(data_list, greens_list, misfit_list)
 
     # initialize results
-    npts = grid.size
-    results = np.zeros(npts)
+    results = np.zeros(grid.size)
 
     # carry out search
     for _i, mt in enumerate(grid):
-        if verbose and not(_i % np.ceil(0.1*npts)):
-            print _message(_i, npts)
+        if verbose and not(_i % np.ceil(0.1*grid.size)):
+            print _message(_i, grid.size)
 
         for data, greens, misfit in zipped:
             results[_i] += misfit(data, greens, mt)
