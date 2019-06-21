@@ -1200,7 +1200,7 @@ if __name__=='__main__':
         file.write(WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth)
 
 
-    with open('tests/benchmark_cap.py', 'w') as file:
+    with open('tests/benchmark_cap_vs_fk.py', 'w') as file:
         file.write(
             replace(
             Imports,
