@@ -338,9 +338,9 @@ def quick_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
     M0 = np.sqrt(0.5*np.sum(mt[0:3]**2.) + np.sum(mt[3:6]**2.))
     Mw = (np.log10(M0) - 9.1)/1.5
 
-    order = misfit_bw.order
-    assert order==misfit_sw.order
-    norm = '$L%s$' % order
+    norm_order = misfit_bw.norm_order
+    assert norm_order==misfit_sw.norm_order
+    norm = '$L%s$' % norm_order
 
     bw_T_min = process_bw.freq_max**-1
     bw_T_max = process_bw.freq_min**-1
