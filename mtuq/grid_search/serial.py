@@ -10,13 +10,9 @@ except:
 
 
 @timer
-def grid_search_mt(data_list, greens_list, misfit_list, grid, verbose=True):
+def grid_search_mt(data, greens, misfit, grid, verbose=True):
     """ Serial grid search over moment tensors
     """
-    # create iterator
-    zipped = zip(data_list, greens_list, misfit_list)
-
-    # initialize results
     results = np.zeros(grid.size)
 
     # carry out search
@@ -24,29 +20,19 @@ def grid_search_mt(data_list, greens_list, misfit_list, grid, verbose=True):
         if verbose and not(_i % np.ceil(0.1*grid.size)):
             print _message(_i, grid.size)
 
-        for data, greens, misfit in zipped:
-            results[_i] += misfit(data, greens, mt)
+        results[_i] = misfit(data, greens, mt)
 
     return results
 
 
 
 @timer
-def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths, verbose=True):
+def grid_search_mt_depth(data, greens, misfit, grid, depths, verbose=True):
     """ Serial grid search over moment tensors and depths
     """
+    assert isinstance(greens, dict), TypeError
+    assert hasattr(misfit, '__call__'), TypeError
 
-    for greens in greens_list:
-        # Green's functions are depth dependent
-        assert isinstance(greens, dict), TypeError
-
-    for misfit in misfit_list:
-        assert hasattr(misfit, '__call__'), TypeError
-
-    # create iterator
-    zipped = zip(data_list, greens_list, misfit_list)
-
-    # initialize results
     npts_inner = grid.size
     npts_outer = grid.size*len(depths)
     results = {}
@@ -60,8 +46,7 @@ def grid_search_mt_depth(data_list, greens_list, misfit_list, grid, depths, verb
             if verbose and not ((_i*npts_inner+_j) % np.ceil(0.1*npts_outer)):
                 print _message(_i*npts_inner+_j, npts_outer)
 
-            for data, greens, misfit in zipped:
-                results[depth][_j] += misfit(data, greens[depth], mt)
+            results[depth][_j] = misfit(data, greens[depth], mt)
 
     return results
 

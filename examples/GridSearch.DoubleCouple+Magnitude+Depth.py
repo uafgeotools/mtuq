@@ -184,7 +184,7 @@ if __name__=='__main__':
                 [results_unsorted[iproc][depth] for iproc in range(nproc)])
 
     #
-    # Saving grid search results
+    # Saving results
     #
 
     if comm.rank==0:

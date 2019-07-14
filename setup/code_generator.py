@@ -521,15 +521,20 @@ Main_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print 'Carrying out grid search...\\n'
 
-    results = grid_search_mt(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
+    results_bw = grid_search_mt(
+        data_bw, greens_bw, misfit_bw, grid)
 
-    results = comm.gather(results, root=0)
+    results_sw = grid_search_mt(
+        data_sw, greens_sw, misfit_sw, grid)
+
+    results_bw = comm.gather(results_bw, root=0)
+    results_sw = comm.gather(results_sw, root=0)
 
     if comm.rank==0:
-        results = np.concatenate(results)
-        best_mt = grid.get(results.argmin())
+        results_bw = np.concatenate(results_bw)
+        results_sw = np.concatenate(results_sw)
+
+        best_mt = grid.get((results_bw + results_sw).argmin())
 
 """
 
@@ -647,11 +652,14 @@ Main_SerialGridSearch_DoubleCouple="""
 
     print 'Carrying out grid search...\\n'
 
-    results = grid_search_mt(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, verbose=True)
+    results_bw = grid_search_mt(
+        data_bw, greens_bw, misfit_bw, grid)
 
-    best_mt = grid.get(results.argmin())
+    results_sw = grid_search_mt(
+        data_sw, greens_sw, misfit_sw, grid)
+
+    best_mt = grid.get((results_bw + results_sw).argmin())
+
 
 """
 
@@ -760,7 +768,7 @@ Main_TestGraphics="""
 
 WrapUp_GridSearch_DoubleCouple="""
     #
-    # Saving grid search results
+    # Saving results
     #
 
     if comm.rank==0:
@@ -785,7 +793,7 @@ WrapUp_GridSearch_DoubleCouple="""
 
 WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
-    # Saving grid search results
+    # Saving results
     #
 
     if comm.rank==0:
@@ -809,7 +817,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 WrapUp_SerialGridSearch_DoubleCouple="""
     #
-    # Saving grid search results
+    # Saving results
     #
 
     print 'Saving results...\\n'

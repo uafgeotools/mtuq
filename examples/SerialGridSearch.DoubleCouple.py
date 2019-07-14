@@ -139,15 +139,18 @@ if __name__=='__main__':
 
     print 'Carrying out grid search...\n'
 
-    results = grid_search_mt(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, verbose=True)
+    results_bw = grid_search_mt(
+        data_bw, greens_bw, misfit_bw, grid)
 
-    best_mt = grid.get(results.argmin())
+    results_sw = grid_search_mt(
+        data_sw, greens_sw, misfit_sw, grid)
+
+    best_mt = grid.get((results_bw + results_sw).argmin())
+
 
 
     #
-    # Saving grid search results
+    # Saving results
     #
 
     print 'Saving results...\n'
