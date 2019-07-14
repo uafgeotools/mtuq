@@ -145,10 +145,13 @@ if __name__=='__main__':
     #
 
     if comm.rank==0:
-        print 'Carrying out grid search...\n'
+        print 'Evaluating body wave misfit...\n'
 
     results_bw = grid_search_mt(
         data_bw, greens_bw, misfit_bw, grid)
+
+    if comm.rank==0:
+        print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search_mt(
         data_sw, greens_sw, misfit_sw, grid)

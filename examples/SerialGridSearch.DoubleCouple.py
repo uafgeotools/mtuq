@@ -137,13 +137,15 @@ if __name__=='__main__':
     # The main computational work starts nows
     #
 
-    print 'Carrying out grid search...\n'
+    print 'Evaluating body wave misfit...\n'
 
     results_bw = grid_search_mt(
-        data_bw, greens_bw, misfit_bw, grid)
+        data_bw, greens_bw, misfit_bw, grid, verbose=True)
+
+    print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search_mt(
-        data_sw, greens_sw, misfit_sw, grid)
+        data_sw, greens_sw, misfit_sw, grid, verbose=False)
 
     best_mt = grid.get((results_bw + results_sw).argmin())
 
