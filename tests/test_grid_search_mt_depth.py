@@ -9,7 +9,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search.serial import grid_search_mt_depth
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import quick_header, Trapezoid
+from mtuq.cap.util import generate_header, Trapezoid
 from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq

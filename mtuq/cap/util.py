@@ -331,9 +331,9 @@ def compare_cap_mtuq(cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_,
 # CAP-style graphics utilities
 #
 
-def quick_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
+def generate_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
     model, solver, mt, depth_in_m):
-    """ Creates dictionary-like object with CAP-style header text
+    """ Creates header object with CAP-style text
     """
     M0 = np.sqrt(0.5*np.sum(mt[0:3]**2.) + np.sum(mt[3:6]**2.))
     Mw = (np.log10(M0) - 9.1)/1.5
