@@ -2,7 +2,7 @@
 import numpy as np
 
 from copy import deepcopy
-from mtuq.event import Origin, equals
+from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
 from mtuq.util.signal import check_time_sampling
@@ -385,12 +385,35 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
-    def subset(self, origin):
-        subset = []
-        for tensor in self:
-            if equals(origin, tensor.origin):
-                subset += [tensor]
-        return self.__class__(subset)
+    def select(self, *args, **kwargs):
+        """ Selects GreensTensors that match the given criterion
+        """
+
+        if len(args)+len(kwargs)<1:
+            raise Exception("Too few selection critierion")
+
+        if len(args)+len(kwargs)>1:
+            raise Exception("Too many selection critierion")
+
+        if len(kwargs)==1:
+            key, val = kwargs.items()[0]
+
+        elif type(args[0])==Origin:
+            key, val = 'origin', args[0]
+
+        elif type(args[0])==Station:
+            key, val = 'station', args[0]
+
+        if key=='station':
+            selected = lambda tensor: tensor.station==val
+
+        elif key=='origin':
+            selected = lambda tensor: tensor.origin==val
+
+        else:
+            raise KeyError("Bad selection criterion: %s" % key)
+
+        return filter(selected, self)
 
 
     def get_synthetics(self, source, origin=None):
