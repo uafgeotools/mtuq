@@ -9,7 +9,7 @@ from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import quick_header, Trapezoid
+from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -91,21 +91,21 @@ if __name__=='__main__':
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origins = data.get_origins()
+    origin = data.get_preliminary_origins()[0]
 
 
     print 'Processing data...\n'
-    data_bw = data.map(process_bw, stations, origins)
-    data_sw = data.map(process_sw, stations, origins)
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
 
     print 'Reading Greens functions...\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins)
+    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw, stations, origins)
-    greens_sw = greens.map(process_sw, stations, origins)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
 
 
     #
@@ -114,15 +114,17 @@ if __name__=='__main__':
 
     print 'Figure 1 of 3\n'
 
-    plot_data_greens_mt('test_graphics1.png',
+    plot_data_greens_mt(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], mt, header=False)
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        mt, header=False)
 
     print 'Figure 2 of 3\n'
 
-    plot_data_greens_mt('test_graphics2.png',
+    plot_data_greens_mt(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], mt, header=True)
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        mt, header=False)
 
     print 'Figure 3 of 3\n'
 

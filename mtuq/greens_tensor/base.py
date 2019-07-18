@@ -2,7 +2,7 @@
 import numpy as np
 
 from copy import deepcopy
-from mtuq.event import Origin
+from mtuq.event import Origin, equals
 from mtuq.station import Station
 from mtuq.dataset import Dataset
 from mtuq.util.signal import check_time_sampling
@@ -360,24 +360,57 @@ class GreensTensorList(list):
     """ Container for one or more GreensTensor objects
     """
 
-    def __init__(self, greens_tensors=[], id=None):
-        # typically the id is the event name, event origin time, or some other
-        # attribute shared by all GreensTensors
+    def __init__(self, tensors=[], id=None):
+        # typically the id is the event name or origin time
         self.id = id
 
-        for greens_tensor in greens_tensors:
-            self += [greens_tensor]
+        self._origins = []
+
+        for tensor in tensors:
+            self.append(tensor)
 
 
-    def get_synthetics(self, mt):
+    def append(self, tensor):
+        """ Appends GreensTensor to list
+        """
+        if not hasattr(tensor, 'station'):
+            raise Exception("GreensTensor lacks station metadata")
+
+        elif not hasattr(tensor, 'origin'):
+            raise Exception("GreensTensor lacks origin metadata")
+
+        if tensor.origin not in self._origins:
+            self._origins.append(tensor.origin)
+
+        super(GreensTensorList, self).append(tensor)
+
+
+    def subset(self, origin):
+        subset = []
+        for tensor in self:
+            if equals(origin, tensor.origin):
+                subset += [tensor]
+        return self.__class__(subset)
+
+
+    def get_synthetics(self, source, origin=None):
         """ Generates synthetic seismograms by summing Green's functions 
         weighted by moment tensor elements
 
-        :param mt: Moment tensor to be used in linear combination
+        :param source: Source to be used in linear combination
+        :param origin: Use Green's functions corresponding to this origin 
         """
+        if origin==None:
+            assert len(self._origins)==1
+            origin = self._origins[0]
+
         synthetics = Dataset()
-        for greens_tensor in self:
-            synthetics += [greens_tensor.get_synthetics(mt)]
+        for tensor in self:
+            if tensor.origin == origin:
+                synthetics += [tensor.get_synthetics(source)]
+            else:
+                continue
+
         return synthetics
 
 
@@ -392,9 +425,9 @@ class GreensTensorList(list):
         :rtype: ``GreensTensorList``
         """
         processed = []
-        for greens_tensor in self:
+        for tensor in self:
             processed +=\
-                [greens_tensor.apply(function, *args, **kwargs)]
+                [tensor.apply(function, *args, **kwargs)]
         return self.__class__(processed)
 
 
@@ -405,10 +438,10 @@ class GreensTensorList(list):
         Similar to the behavior of the python built-in "map".
         """
         processed = []
-        for _i, greens_tensor in enumerate(self):
+        for _i, tensor in enumerate(self):
             args = [sequence[_i] for sequence in sequences]
             processed +=\
-                [greens_tensor.apply(function, *args)]
+                [tensor.apply(function, *args)]
         return self.__class__(processed)
 
 
@@ -416,11 +449,8 @@ class GreensTensorList(list):
         """ 
         Convolves all Green's tensors with given wavelet
         """
-        convolved = []
-        for greens_tensor in self:
-            convolved += [greens_tensor.convolve(wavelet)]
-        return self.__class__(convolved)
-
+        for tensor in self:
+            tensor.convolve(wavelet)
 
 
     def add_tag(self, tag):
@@ -432,15 +462,15 @@ class GreensTensorList(list):
        if type(tag) not in [str, unicode]:
            raise TypeError
 
-       for greens_tensor in self:
-           greens_tensor.tags.append(tag)
+       for tensor in self:
+           tensor.tags.append(tag)
 
 
     def remove_tag(self, tag):
        """ Removes string from tags list
        """
-       for greens_tensor in self:
-           greens_tensor.tags.remove(tag)
+       for tensor in self:
+           tensor.tags.remove(tag)
 
 
     def sort_by_distance(self, reverse=False):
@@ -479,8 +509,8 @@ class maGreensTensorList(GreensTensorList):
         all tensors have the same time discretization.
     """
 
-    def __init__(self, greens_tensors=[], id=None, mask=None):
-        super(maGreensTensorList, self).__init__(greens_tensors, id)
+    def __init__(self, tensors=[], id=None, mask=None):
+        super(maGreensTensorList, self).__init__(tensors, id)
 
         # this attribute is not yet impelemented
         self.mask = mask
@@ -538,12 +568,12 @@ class maGreensTensorList(GreensTensorList):
         """
         array = self._allocate_array()
 
-        for _i, greens_tensor in enumerate(self):
+        for _i, tensor in enumerate(self):
             # fill in 3D array of GreensTensor
-            greens_tensor.initialize()
+            tensor.initialize()
 
             # fill in 4D array of GreensTensorList
-            array[:, _i, :, :] = greens_tensor._array
+            array[:, _i, :, :] = tensor._array
 
 
     def _allocate_cc(self, npts):
@@ -575,11 +605,11 @@ class maGreensTensorList(GreensTensorList):
         dt = self[0][0].stats.delta
         cc_all = self._allocate_cc(time_shift_max/dt)
 
-        for _i, greens_tensor in enumerate(self):
+        for _i, tensor in enumerate(self):
             # fills 3D array of GreensTensor
-            greens_tensor._compute_cc(data, time_shift_max)
+            tensor._compute_cc(data, time_shift_max)
 
             # fills 4D array of GreensTensorList
-            cc_all[_i, :, :, :] = greens_tensor._cc_all
+            cc_all[_i, :, :, :] = tensor._cc_all
 
 

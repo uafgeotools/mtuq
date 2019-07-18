@@ -11,7 +11,7 @@ from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import quick_header, Trapezoid
+from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -93,7 +93,7 @@ if __name__=='__main__':
 """
 
 
-Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDeapth="""
+Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDepth="""
 if __name__=='__main__':
     #
     # THIS EXAMPLE ONLY WORKS ON CHINOOK.ALASKA.EDU
@@ -177,6 +177,34 @@ if __name__=='__main__':
     import matplotlib
     matplotlib.use('Agg', warn=False, force=True)
     import matplotlib
+"""
+
+
+Docstring_UtilExamples="""
+if True:
+    #
+    # Creates example data structures
+    #
+    # Rather than being executed as a script, this code is designed to be
+    # imported as a module, after which users can access the example data and
+    # functions listed under __all__
+    #
+    # Note that since I/O and data processing are involved in creating these
+    # example data, importing this module may take a few seconds longer than
+    # other modules
+    
+    __all__ = [
+        'process_bw'
+        'process_bw'
+        'misfit_bw',
+        'misfit_bw',
+        'data_bw',
+        'data_sw',
+        'greens_bw',
+        'greens_sw',
+        'stations',
+        'origin',
+        ]
 """
 
 
@@ -363,10 +391,13 @@ MisfitDefinitions="""
 
 Grid_DoubleCouple="""
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use the variable 
+    # name "source" for the mechanism of an event and "origin" for the 
+    # location of an event
+    #
     #
 
-    grid = DoubleCoupleGridRandom(
+    sources = DoubleCoupleGridRandom(
         npts=50000,
         magnitude=4.5)
 
@@ -378,7 +409,10 @@ Grid_DoubleCouple="""
 
 Grid_DoubleCoupleMagnitudeDepth="""
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use the variable 
+    # name "source" for the mechanism of an event and "origin" for the 
+    # location of an event
+    #
     #
 
     magnitudes = np.array(
@@ -391,7 +425,7 @@ Grid_DoubleCoupleMagnitudeDepth="""
         [25000, 30000, 35000, 40000,                    
          45000, 50000, 55000, 60000])         
 
-    grid = DoubleCoupleGridRegular(
+    sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
         magnitude=magnitudes)
 
@@ -402,10 +436,13 @@ Grid_DoubleCoupleMagnitudeDepth="""
 
 Grid_FullMomentTensor="""
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use the variable 
+    # name "source" for the mechanism of an event and "origin" for the 
+    # location of an event
+    #
     #
 
-    grid = FullMomentTensorGridRandom(
+    sources = FullMomentTensorGridRandom(
         npts=1000000,
         magnitude=4.5)
 
@@ -424,7 +461,7 @@ Grid_TestDoubleCoupleMagnitudeDepth="""
          # depth in meters
         [34000])
 
-    grid = DoubleCoupleGridRegular(
+    sources = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitude=[4.4, 4.5, 4.6])
 
@@ -448,7 +485,7 @@ Grid_BenchmarkCAP="""
     # Next we specify the source parameter grid
     #
 
-    grid = [
+    sources = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
        np.array([1., 0., 0., 0., 0., 0.]), # source 1 (on-diagonal)
@@ -461,7 +498,7 @@ Grid_BenchmarkCAP="""
 
     Mw = 4.5
     M0 = 10.**(1.5*Mw + 9.1) # units: N-m
-    for mt in grid:
+    for mt in sources:
         mt *= np.sqrt(2)*M0
 
     wavelet = Trapezoid(
@@ -488,19 +525,19 @@ Main_GridSearch_DoubleCouple="""
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origins = data.get_origins()
+        origin = data.get_preliminary_origins()[0]
 
         print 'Processing data...\\n'
-        data_bw = data.map(process_bw, stations, origins)
-        data_sw = data.map(process_sw, stations, origins)
+        data_bw = data.map(process_bw)
+        data_sw = data.map(process_sw)
 
         print 'Reading Greens functions...\\n'
-        greens = get_greens_tensors(stations, origins, model=model)
+        greens = get_greens_tensors(stations, origin, model=model)
 
         print 'Processing Greens functions...\\n'
         greens.convolve(wavelet)
-        greens_bw = greens.map(process_bw, stations, origins)
-        greens_sw = greens.map(process_sw, stations, origins)
+        greens_bw = greens.map(process_bw)
+        greens_sw = greens.map(process_sw)
 
     else:
         data_bw = None
@@ -519,17 +556,26 @@ Main_GridSearch_DoubleCouple="""
     #
 
     if comm.rank==0:
-        print 'Carrying out grid search...\\n'
+        print 'Evaluating body wave misfit...\\n'
 
-    results = grid_search_mt(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid)
-
-    results = comm.gather(results, root=0)
+    results_bw = grid_search_mt(
+        data_bw, greens_bw, misfit_bw, grid)
 
     if comm.rank==0:
-        results = np.concatenate(results)
-        best_mt = grid.get(results.argmin())
+        print 'Evaluating surface wave misfit...\\n'
+
+    results_sw = grid_search_mt(
+        data_sw, greens_sw, misfit_sw, grid)
+
+    results_bw = comm.gather(results_bw, root=0)
+    results_sw = comm.gather(results_sw, root=0)
+
+    if comm.rank==0:
+        results_bw = np.concatenate(results_bw)
+        results_sw = np.concatenate(results_sw)
+
+        best_misfit = (results_bw + results_sw).min()
+        best_source = sources.get((results_bw + results_sw).argmin())
 
 """
 
@@ -553,12 +599,22 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origins = data.get_origins()
+        origin = data.get_preliminary_origins()[0]
 
+        origins = []
+        for depth in depths:
+            origins += [deepcopy(origin)]
+            setattr(origins[-1], 'depth_in_m', depth)
 
-        print 'Processing data...\\n'
-        data_bw = data.map(process_bw, stations, origins)
-        data_sw = data.map(process_sw, stations, origins)
+        greens = get_greens_tensors(stations, origin, model=model)
+
+        greens.convolve(wavelet)
+        greens.map(process_bw)
+        greens.map(process_sw)
+
+       eprint 'Processing data...\\n'
+        data_bw = data.map(process_bw)
+        data_sw = data.map(process_sw)
 
     else:
         data_bw = None
@@ -566,27 +622,6 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
-
-    greens_bw = {}
-    greens_sw = {}
-
-    if rank==0:
-        print 'Reading Greens functions...\\n'
-
-        for _i, depth in enumerate(depths):
-            print '  Depth %d of %d' % (_i+1, len(depths))
-
-            origins = deepcopy(origins)
-            [setattr(origin, 'depth_in_m', depth) for origin in origins]
-
-            greens = get_greens_tensors(stations, origins, model=model)
-
-            greens.convolve(wavelet)
-            greens_bw[depth] = greens.map(process_bw, stations, origins)
-            greens_sw[depth] = greens.map(process_sw, stations, origins)
-
-        print ''
-
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
 
@@ -598,17 +633,19 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     if rank==0:
         print 'Carrying out grid search...\\n'
 
-    results = grid_search_mt_depth(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, depths)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, origins)
+
+    results_sw = grid_search(
+        data_sw, greens_sw, misfit_sw, sources, origins)
 
     # gathering results
-    results_unsorted = comm.gather(results, root=0)
+    results_bw = comm.gather(results_bw, root=0)
+    results_sw = comm.gather(results_sw, root=0)
+
     if rank==0:
-        results = {}
-        for depth in depths:
-            results[depth] = np.concatenate(
-                [results_unsorted[iproc][depth] for iproc in range(nproc)])
+        np.concatenate(results_bw)
+        np.concatenate(results_sw)
 """
 
 
@@ -625,33 +662,39 @@ Main_SerialGridSearch_DoubleCouple="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origins = data.get_origins()
+    origin = data.get_preliminary_origins()[0]
 
 
     print 'Processing data...\\n'
-    data_bw = data.map(process_bw, stations, origins)
-    data_sw = data.map(process_sw, stations, origins)
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
 
     print 'Reading Greens functions...\\n'
-    greens = get_greens_tensors(stations, origins, model=model)
+    greens = get_greens_tensors(stations, origin, model=model)
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw, stations, origins)
-    greens_sw = greens.map(process_sw, stations, origins)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
 
 
     #
     # The main computational work starts nows
     #
 
-    print 'Carrying out grid search...\\n'
+    print 'Evaluating body wave misfit...\\n'
 
-    results = grid_search_mt(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, verbose=True)
+    results_bw = grid_search_mt(
+        data_bw, greens_bw, misfit_bw, sources, verbose=True)
 
-    best_mt = grid.get(results.argmin())
+    print 'Evaluating surface wave misfit...\\n'
+
+    results_sw = grid_search_mt(
+        data_sw, greens_sw, misfit_sw, sources, verbose=True)
+
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
+
 
 """
 
@@ -669,28 +712,25 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origins = data.get_origins()
+    origin = data.get_preliminary_origins()[0]
 
+    origins = []
+    for depth in depths:
+        origins += [deepcopy(origin)]
+        setattr(origins[-1], 'depth_in_m', depth)
 
     print 'Processing data...\\n'
-    data_bw = data.map(process_bw, stations, origins)
-    data_sw = data.map(process_sw, stations, origins)
-
-    greens_bw = {}
-    greens_sw = {}
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
 
     print 'Reading Greens functions...\\n'
+    db = open_db(path_greens, format='FK', model=model)
+    greens = db.get_greens_tensors(stations, origins)
 
-    for _i, depth in enumerate(depths):
-        origins = deepcopy(origins)
-        [setattr(origin, 'depth_in_m', depth) for origin in origins]
-
-        db = open_db(path_greens, format='FK', model=model)
-        greens = db.get_greens_tensors(stations, origins)
-
-        greens.convolve(wavelet)
-        greens_bw[depth] = greens.map(process_bw, stations, origins)
-        greens_sw[depth] = greens.map(process_sw, stations, origins)
+    print 'Processing Greens functions...\\n'
+    greens.convolve(wavelet)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
 
 
     #
@@ -699,9 +739,12 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
 
     print 'Carrying out grid search...\\n'
 
-    results = grid_search_mt_depth(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, depths, verbose=False)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, origins)
+
+    results_sw = grid_search(
+        data_sw, greens_sw, misfit_sw, sources, origins)
+
 
 """
 
@@ -716,21 +759,21 @@ Main_TestGraphics="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origins = data.get_origins()
+    origin = data.get_preliminary_origins()[0]
 
 
     print 'Processing data...\\n'
-    data_bw = data.map(process_bw, stations, origins)
-    data_sw = data.map(process_sw, stations, origins)
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
 
     print 'Reading Greens functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins)
+    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw, stations, origins)
-    greens_sw = greens.map(process_sw, stations, origins)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
 
 
     #
@@ -739,15 +782,17 @@ Main_TestGraphics="""
 
     print 'Figure 1 of 3\\n'
 
-    plot_data_greens_mt('test_graphics1.png',
+    plot_data_greens_mt(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], mt, header=False)
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        mt, header=False)
 
     print 'Figure 2 of 3\\n'
 
-    plot_data_greens_mt('test_graphics2.png',
+    plot_data_greens_mt(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], mt, header=True)
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        mt, header=False)
 
     print 'Figure 3 of 3\\n'
 
@@ -760,23 +805,20 @@ Main_TestGraphics="""
 
 WrapUp_GridSearch_DoubleCouple="""
     #
-    # Saving grid search results
+    # Saving results
     #
 
     if comm.rank==0:
         print 'Savings results...\\n'
 
-        header = quick_header(event_name,
-            process_bw, process_sw, misfit_bw, misfit_sw,
-            model, 'syngine', best_mt, origins[0].depth_in_m)
-
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
-            [misfit_bw, misfit_sw], best_mt, header=header)
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_beachball(event_name+'_beachball.png', best_source)
 
-        grid.save(event_name+'.h5', {'misfit': results})
+        #grid.save(event_name+'.h5', {'misfit': results})
 
         print 'Finished\\n'
 
@@ -785,20 +827,17 @@ WrapUp_GridSearch_DoubleCouple="""
 
 WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
-    # Saving grid search results
+    # Saving results
     #
 
     if comm.rank==0:
         print 'Saving results...\\n'
 
-        best_misfit = {}
-        best_mt = {}
-        for depth in depths:
-            best_misfit[depth] = results[depth].min()
-            best_mt[depth] = grid.get(results[depth].argmin())
+        best_misfit = (results_bw + results_sw).min()
+        best_source = sources.get((results_bw + results_sw).argmin())
 
         filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_mt)
+        beachball_vs_depth(filename, best_source)
 
         filename = event_name+'_misfit_vs_depth.png'
         misfit_vs_depth(filename, best_misfit)
@@ -809,22 +848,19 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 WrapUp_SerialGridSearch_DoubleCouple="""
     #
-    # Saving grid search results
+    # Saving results
     #
 
     print 'Saving results...\\n'
 
-    header = quick_header(event_name,
-        process_bw, process_sw, misfit_bw, misfit_sw,
-        model, 'syngine', best_mt, origins[0].depth_in_m)
+    plot_data_greens_mt(event_name+'.png', 
+        [data_bw, data_sw], [greens_bw, greens_sw], 
+        [process_bw, process_sw], [misfit_bw, misfit_sw],
+        best_source)
 
-    plot_data_greens_mt(event_name+'.png',
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], best_mt, header=header)
+    plot_beachball(event_name+'_beachball.png', best_source)
 
-    plot_beachball(event_name+'_beachball.png', best_mt)
-
-    grid.save(event_name+'.h5', {'misfit': results})
+    #grid.save(event_name+'.h5', {'misfit': results})
 
     print 'Finished\\n'
 
@@ -832,14 +868,16 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCouple="""
-    best_mt = grid.get(results.argmin())
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
-            [misfit_bw, misfit_sw], best_mt)
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_beachball(event_name+'_beachball.png', best_source)
 
 
     if run_checks:
@@ -858,7 +896,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
         if not isclose(
-            best_mt,
+            best_source,
             np.array([
                 -1.92678437e+15,
                 -1.42813064e+00,
@@ -876,18 +914,15 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
-    best_misfit = {}
-    best_mt = {}
-    for depth in depths:
-        best_misfit[depth] = results[depth].min()
-        best_mt[depth] = grid.get(results[depth].argmin())
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
         filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_mt)
+        #beachball_vs_depth(filename, best_source)
 
         filename = event_name+'_misfit_vs_depth.png'
-        misfit_vs_depth(filename, best_misfit)
+        #misfit_vs_depth(filename, best_misfit)
 
     if run_checks:
         pass
@@ -910,31 +945,31 @@ Main_BenchmarkCAP="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origins = data.get_origins()
+    origin = data.get_preliminary_origins()[0]
 
 
     print 'Processing data...\\n'
-    data_bw = data.map(process_bw, stations, origins)
-    data_sw = data.map(process_sw, stations, origins)
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
 
     print 'Reading Greens functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins)
+    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw, stations, origins)
-    greens_sw = greens.map(process_sw, stations, origins)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
 
 
-    depth = int(origins[0].depth_in_m/1000.)+1
+    depth = int(origin.depth_in_m/1000.)+1
     name = '_'.join([model, str(depth), event_name])
 
 
     print 'Comparing waveforms...'
 
-    for _i, mt in enumerate(grid):
-        print '  %d of %d' % (_i+1, len(grid))
+    for _i, mt in enumerate(sources):
+        print '  %d of %d' % (_i+1, len(sources))
 
         cap_bw, cap_sw = get_synthetics_cap(
             data_bw, data_sw, paths[_i], name)
@@ -997,7 +1032,7 @@ if __name__=='__main__':
             replace(
             Imports,
             'grid_search_mt',
-            'grid_search_mt_depth',
+            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1061,7 +1096,7 @@ if __name__=='__main__':
         file.write(
             replace(
             Main_GridSearch_DoubleCouple,
-            'greens = get_greens_tensors\(stations, origins, model=model\)',
+            'greens = get_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n        '
            +'greens = db.get_greens_tensors(stations, origins)',
             ))
@@ -1076,13 +1111,13 @@ if __name__=='__main__':
             'syngine',
             'fk',
             'grid_search_mt',
-            'grid_search_mt_depth',
+            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
             'beachball_vs_depth, misfit_vs_depth',
             ))
-        file.write(Docstring_CapStyleGridSearch_DoubleCouple)
+        file.write(Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(
             replace(
             Paths_FK,
@@ -1102,7 +1137,7 @@ if __name__=='__main__':
         file.write(
             replace(
             Main_GridSearch_DoubleCoupleMagnitudeDepth,
-            'greens = get_greens_tensors\(stations, origins, model=model\)',
+            'greens = get_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n            '
            +'greens = db.get_greens_tensors(stations, origins)',
             ))
@@ -1161,9 +1196,9 @@ if __name__=='__main__':
         file.write(
             replace(
             Main_SerialGridSearch_DoubleCouple,
-            'greens = get_greens_tensors\(stations, origins, model=model\)',
+            'greens = get_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n    '
-           +'greens = db.get_greens_tensors(stations, origins)',
+           +'greens = db.get_greens_tensors(stations, origin)',
             'verbose=True',
             'verbose=False',
             ))
@@ -1177,7 +1212,7 @@ if __name__=='__main__':
             'grid_search.mpi',
             'grid_search.serial',
             'grid_search_mt',
-            'grid_search_mt_depth',
+            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1200,7 +1235,7 @@ if __name__=='__main__':
         file.write(WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth)
 
 
-    with open('tests/benchmark_cap_vs_fk.py', 'w') as file:
+    with open('tests/benchmark_cap_vs_mtuq.py', 'w') as file:
         file.write(
             replace(
             Imports,
@@ -1255,4 +1290,17 @@ if __name__=='__main__':
         file.write(Main_TestGraphics)
 
 
+    with open('mtuq/util/examples.py', 'w') as file:
+        file.write(Imports)
+        file.write(Docstring_UtilExamples)
+        file.write(Paths_FK)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(MisfitDefinitions)
 

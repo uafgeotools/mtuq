@@ -7,10 +7,10 @@ from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRegular
-from mtuq.grid_search.mpi import grid_search_mt_depth
+from mtuq.grid_search.mpi import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import quick_header, Trapezoid
+from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -26,14 +26,14 @@ if __name__=='__main__':
     # CAP-style double-couple inversion example
     # 
 
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors, using Green's functions and phase picks from a local
-    # FK database
+    #
+    # Carries out grid search over source orientation, magnitude, and depth
+    # using Green's functions and phase picks from a local FK database
+    #
 
     #
     # USAGE
-    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
+    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple+Magntidue+Depth.py
     #
 
 
@@ -85,7 +85,10 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use the variable 
+    # name "source" for the mechanism of an event and "origin" for the 
+    # location of an event
+    #
     #
 
     magnitudes = np.array(
@@ -98,7 +101,7 @@ if __name__=='__main__':
         [25000, 30000, 35000, 40000,                    
          45000, 50000, 55000, 60000])         
 
-    grid = DoubleCoupleGridRegular(
+    sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
         magnitude=magnitudes)
 
@@ -123,12 +126,23 @@ if __name__=='__main__':
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origins = data.get_origins()
+        origin = data.get_preliminary_origins()[0]
 
+        origins = []
+        for depth in depths:
+            origins += [deepcopy(origin)]
+            setattr(origins[-1], 'depth_in_m', depth)
 
-        print 'Processing data...\n'
-        data_bw = data.map(process_bw, stations, origins)
-        data_sw = data.map(process_sw, stations, origins)
+        db = open_db(path_greens, format='FK', model=model)
+            greens = db.get_greens_tensors(stations, origins)
+
+        greens.convolve(wavelet)
+        greens.map(process_bw)
+        greens.map(process_sw)
+
+       eprint 'Processing data...\n'
+        data_bw = data.map(process_bw)
+        data_sw = data.map(process_sw)
 
     else:
         data_bw = None
@@ -136,28 +150,6 @@ if __name__=='__main__':
 
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
-
-    greens_bw = {}
-    greens_sw = {}
-
-    if rank==0:
-        print 'Reading Greens functions...\n'
-
-        for _i, depth in enumerate(depths):
-            print '  Depth %d of %d' % (_i+1, len(depths))
-
-            origins = deepcopy(origins)
-            [setattr(origin, 'depth_in_m', depth) for origin in origins]
-
-            db = open_db(path_greens, format='FK', model=model)
-            greens = db.get_greens_tensors(stations, origins)
-
-            greens.convolve(wavelet)
-            greens_bw[depth] = greens.map(process_bw, stations, origins)
-            greens_sw[depth] = greens.map(process_sw, stations, origins)
-
-        print ''
-
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
 
@@ -169,33 +161,32 @@ if __name__=='__main__':
     if rank==0:
         print 'Carrying out grid search...\n'
 
-    results = grid_search_mt_depth(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, depths)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, origins)
+
+    results_sw = grid_search(
+        data_sw, greens_sw, misfit_sw, sources, origins)
 
     # gathering results
-    results_unsorted = comm.gather(results, root=0)
+    results_bw = comm.gather(results_bw, root=0)
+    results_sw = comm.gather(results_sw, root=0)
+
     if rank==0:
-        results = {}
-        for depth in depths:
-            results[depth] = np.concatenate(
-                [results_unsorted[iproc][depth] for iproc in range(nproc)])
+        np.concatenate(results_bw)
+        np.concatenate(results_sw)
 
     #
-    # Saving grid search results
+    # Saving results
     #
 
     if comm.rank==0:
         print 'Saving results...\n'
 
-        best_misfit = {}
-        best_mt = {}
-        for depth in depths:
-            best_misfit[depth] = results[depth].min()
-            best_mt[depth] = grid.get(results[depth].argmin())
+        best_misfit = (results_bw + results_sw).min()
+        best_source = sources.get((results_bw + results_sw).argmin())
 
         filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_mt)
+        beachball_vs_depth(filename, best_source)
 
         filename = event_name+'_misfit_vs_depth.png'
         misfit_vs_depth(filename, best_misfit)

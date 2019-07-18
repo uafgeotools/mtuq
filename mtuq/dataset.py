@@ -4,6 +4,7 @@ import numpy as np
 import warnings
 
 from copy import copy
+from mtuq.event import equals
 from obspy import Stream
 from obspy.geodetics import gps2dist_azimuth
 
@@ -25,12 +26,14 @@ class Dataset(list):
         """ Constructor
         """
         self.id = id
+        self._warnings = True
 
         for _i, stream in enumerate(streams):
             self.append(stream)
 
         for tag in copy(tags):
             self.add_tag(tag)
+
 
 
     def append(self, stream):
@@ -145,12 +148,23 @@ class Dataset(list):
         return stations
 
 
-    def get_origins(self):
+    def get_preliminary_origins(self):
         """ Returns preliminary origin location and time
         """
         origins = []
         for stream in self:
             origins += [stream.preliminary_origin]
+
+            if self._warnings:
+                if not equals(stream.preliminary_origin,
+                              self[0].preliminary_origin):
+                    warnings.warn(
+                        "There may be metadata problems--different streams in "
+                        "the Dataset correspond to different catalog events\n\n"
+                        "If different events are being intentionally combined "
+                        "in the same container, feel free to disable this "
+                        "warning by setting Dataset._warnings=False")
+
         return origins
 
 
@@ -246,6 +260,8 @@ class maDataset(Dataset):
             except:
                 pass
             _i += 1
+
+
 
 
 

@@ -9,7 +9,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search.serial import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import quick_header, Trapezoid
+from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -91,10 +91,13 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use the variable 
+    # name "source" for the mechanism of an event and "origin" for the 
+    # location of an event
+    #
     #
 
-    grid = DoubleCoupleGridRegular(
+    sources = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitude=4.5)
 
@@ -114,44 +117,52 @@ if __name__=='__main__':
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origins = data.get_origins()
+    origin = data.get_preliminary_origins()[0]
 
 
     print 'Processing data...\n'
-    data_bw = data.map(process_bw, stations, origins)
-    data_sw = data.map(process_sw, stations, origins)
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
 
     print 'Reading Greens functions...\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins)
+    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw, stations, origins)
-    greens_sw = greens.map(process_sw, stations, origins)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
 
 
     #
     # The main computational work starts nows
     #
 
-    print 'Carrying out grid search...\n'
+    print 'Evaluating body wave misfit...\n'
 
-    results = grid_search_mt(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, verbose=False)
+    results_bw = grid_search_mt(
+        data_bw, greens_bw, misfit_bw, sources, verbose=False)
 
-    best_mt = grid.get(results.argmin())
+    print 'Evaluating surface wave misfit...\n'
+
+    results_sw = grid_search_mt(
+        data_sw, greens_sw, misfit_sw, sources, verbose=False)
+
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
 
-    best_mt = grid.get(results.argmin())
+
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
-            [misfit_bw, misfit_sw], best_mt)
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_beachball(event_name+'_beachball.png', best_source)
 
 
     if run_checks:
@@ -170,7 +181,7 @@ if __name__=='__main__':
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
         if not isclose(
-            best_mt,
+            best_source,
             np.array([
                 -1.92678437e+15,
                 -1.42813064e+00,
