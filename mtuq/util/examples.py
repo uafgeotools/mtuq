@@ -87,3 +87,30 @@ if True:
         time_shift_groups=['ZR','T'],
         )
 
+
+    #
+    # The main I/O work starts now
+    #
+
+    #
+    data = read(path_data, format='sac',
+        event_id=event_name,
+        tags=['units:cm', 'type:velocity']) 
+
+    data.sort_by_distance()
+
+    stations = data.get_stations()
+    origin = data.get_preliminary_origins()[0]
+
+
+    #
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
+
+    #
+    greens = get_greens_tensors(stations, origin, model=model)
+
+    #
+    greens.convolve(wavelet)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)

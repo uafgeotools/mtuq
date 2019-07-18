@@ -649,7 +649,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 """
 
 
-Main_SerialGridSearch_DoubleCouple="""
+Main1_SerialGridSearch_DoubleCouple="""
     #
     # The main I/O work starts now
     #
@@ -676,8 +676,10 @@ Main_SerialGridSearch_DoubleCouple="""
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
+"""
 
 
+Main2_SerialGridSearch_DoubleCouple="""
     #
     # The main computational work starts nows
     #
@@ -1005,8 +1007,6 @@ Main_BenchmarkCAP="""
 
 if __name__=='__main__':
     import os
-    import re
-
     from mtuq.util import path_mtuq, replace
     os.chdir(path_mtuq())
 
@@ -1160,7 +1160,8 @@ if __name__=='__main__':
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
-        file.write(Main_SerialGridSearch_DoubleCouple)
+        file.write(Main1_SerialGridSearch_DoubleCouple)
+        file.write(Main2_SerialGridSearch_DoubleCouple)
         file.write(WrapUp_SerialGridSearch_DoubleCouple)
 
 
@@ -1195,10 +1196,14 @@ if __name__=='__main__':
             ))
         file.write(
             replace(
-            Main_SerialGridSearch_DoubleCouple,
+            Main1_SerialGridSearch_DoubleCouple,
             'greens = get_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n    '
            +'greens = db.get_greens_tensors(stations, origin)',
+            ))
+        file.write(
+            replace(
+            Main2_SerialGridSearch_DoubleCouple,
             'verbose=True',
             'verbose=False',
             ))
@@ -1303,4 +1308,11 @@ if __name__=='__main__':
             'fk_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
+        file.write(
+            replace(
+            Main1_SerialGridSearch_DoubleCouple,
+            'print.*',
+            '#',
+            ))
+
 

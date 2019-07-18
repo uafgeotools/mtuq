@@ -135,7 +135,6 @@ if __name__=='__main__':
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
 
-
     #
     # The main computational work starts nows
     #
