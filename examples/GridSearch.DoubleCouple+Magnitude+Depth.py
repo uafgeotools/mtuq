@@ -128,12 +128,12 @@ if __name__=='__main__':
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origins = data.get_origins()
+        origin = data.get_preliminary_origins()[0]
 
 
         print 'Processing data...\n'
-        data_bw = data.map(process_bw, stations, origins)
-        data_sw = data.map(process_sw, stations, origins)
+        data_bw = data.map(process_bw)
+        data_sw = data.map(process_sw)
 
     else:
         data_bw = None
@@ -154,11 +154,11 @@ if __name__=='__main__':
             origins = deepcopy(origins)
             [setattr(origin, 'depth_in_m', depth) for origin in origins]
 
-            greens = get_greens_tensors(stations, origins, model=model)
+            greens = get_greens_tensors(stations, origin, model=model)
 
             greens.convolve(wavelet)
-            greens_bw[depth] = greens.map(process_bw, stations, origins)
-            greens_sw[depth] = greens.map(process_sw, stations, origins)
+            greens_bw[depth] = greens.map(process_bw)
+            greens_sw[depth] = greens.map(process_sw)
 
         print ''
 
