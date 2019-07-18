@@ -148,7 +148,7 @@ if __name__=='__main__':
     print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search_mt(
-        data_sw, greens_sw, misfit_sw, sources, verbose=False)
+        data_sw, greens_sw, misfit_sw, sources, verbose=True)
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())

@@ -112,26 +112,23 @@ if __name__=='__main__':
     stations = data.get_stations()
     origin = data.get_preliminary_origins()[0]
 
+    origins = []
+    for depth in depths:
+        origins += [deepcopy(origin)]
+        setattr(origins[-1], 'depth_in_m', depth)
 
     print 'Processing data...\n'
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    greens_bw = {}
-    greens_sw = {}
-
     print 'Reading Greens functions...\n'
+    db = open_db(path_greens, format='FK', model=model)
+    greens = db.get_greens_tensors(stations, origins)
 
-    for _i, depth in enumerate(depths):
-        origins = deepcopy(origins)
-        [setattr(origin, 'depth_in_m', depth) for origin in origins]
-
-        db = open_db(path_greens, format='FK', model=model)
-        greens = db.get_greens_tensors(stations, origin)
-
-        greens.convolve(wavelet)
-        greens_bw[depth] = greens.map(process_bw)
-        greens_sw[depth] = greens.map(process_sw)
+    print 'Processing Greens functions...\n'
+    greens.convolve(wavelet)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
 
 
     #
@@ -140,23 +137,23 @@ if __name__=='__main__':
 
     print 'Carrying out grid search...\n'
 
-    results = grid_search(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], sources, origins, verbose=False)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, origins)
+
+    results_sw = grid_search(
+        data_sw, greens_sw, misfit_sw, sources, origins)
 
 
-    best_misfit = {}
-    best_source = {}
-    for depth in depths:
-        best_misfit[depth] = results[depth].min()
-        best_source[depth] = sources.get(results[depth].argmin())
+
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
         filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_source)
+        #beachball_vs_depth(filename, best_source)
 
         filename = event_name+'_misfit_vs_depth.png'
-        misfit_vs_depth(filename, best_misfit)
+        #misfit_vs_depth(filename, best_misfit)
 
     if run_checks:
         pass

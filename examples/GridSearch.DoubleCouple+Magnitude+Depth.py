@@ -133,9 +133,16 @@ if __name__=='__main__':
 
         origins = []
         for depth in depths:
-            origins += [setattr(deepcopy(origin), 'depth_in_m', depth]
+            origins += [deepcopy(origin)]
+            setattr(origins[-1], 'depth_in_m', depth)
 
-        print 'Processing data...\n'
+        greens = get_greens_tensors(stations, origin, model=model)
+
+        greens.convolve(wavelet)
+        greens.map(process_bw)
+        greens.map(process_sw)
+
+       eprint 'Processing data...\n'
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
@@ -145,21 +152,6 @@ if __name__=='__main__':
 
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
-
-    greens_bw = {}
-    greens_sw = {}
-
-    if rank==0:
-        print 'Reading Greens functions...\n'
-
-        greens = get_greens_tensors(stations, origin, model=model)
-
-        greens.convolve(wavelet)
-        greens.map(process_bw)
-        greens.map(process_sw)
-
-        print ''
-
     greens_bw = comm.bcast(greens_bw, root=0)
     greens_sw = comm.bcast(greens_sw, root=0)
 
@@ -171,17 +163,19 @@ if __name__=='__main__':
     if rank==0:
         print 'Carrying out grid search...\n'
 
-    results = grid_search(
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], sources, origins)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, origins)
+
+    results_sw = grid_search(
+        data_sw, greens_sw, misfit_sw, sources, origins)
 
     # gathering results
-    results_unsorted = comm.gather(results, root=0)
+    results_bw = comm.gather(results_bw, root=0)
+    results_sw = comm.gather(results_sw, root=0)
+
     if rank==0:
-        results = {}
-        for depth in depths:
-            results[depth] = np.concatenate(
-                [results_unsorted[iproc][depth] for iproc in range(nproc)])
+        np.concatenate(results_bw)
+        np.concatenate(results_sw)
 
     #
     # Saving results
@@ -190,11 +184,8 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Saving results...\n'
 
-        best_misfit = {}
-        best_source = {}
-        for depth in depths:
-            best_misfit[depth] = results[depth].min()
-            best_source[depth] = sources.get(results[depth].argmin())
+        best_misfit = (results_bw + results_sw).min()
+        best_source = sources.get((results_bw + results_sw).argmin())
 
         filename = event_name+'_beachball_vs_depth.png'
         beachball_vs_depth(filename, best_source)
