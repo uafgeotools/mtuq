@@ -2,7 +2,7 @@
 import numpy as np
 
 from copy import deepcopy
-from mtuq.event import Origin
+from mtuq.event import Origin, equals
 from mtuq.station import Station
 from mtuq.dataset import Dataset
 from mtuq.util.signal import check_time_sampling
@@ -385,6 +385,14 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
+    def subset(self, origin):
+        subset = []
+        for tensor in self:
+            if equals(origin, tensor.origin):
+                subset += [tensor]
+        return self.__class__(subset)
+
+
     def get_synthetics(self, source, origin=None):
         """ Generates synthetic seismograms by summing Green's functions 
         weighted by moment tensor elements
@@ -393,7 +401,7 @@ class GreensTensorList(list):
         :param origin: Use Green's functions corresponding to this origin 
         """
         if origin==None:
-            assert len(self._origins==None)
+            assert len(self._origins)==1
             origin = self._origins[0]
 
         synthetics = Dataset()

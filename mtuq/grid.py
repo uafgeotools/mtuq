@@ -124,6 +124,11 @@ class Grid(object):
                 hf.create_dataset(key, data=val)
 
 
+    def __len__(self):
+        return self.size
+
+
+
     # the next two methods make it possible to iterate over the grid
     def next(self): 
         if self.index < self.stop:
@@ -233,6 +238,10 @@ class UnstructuredGrid(object):
 
             for key, val in items.iteritems():
                 hf.create_dataset(key, data=val)
+
+
+    def __len__(self):
+        return self.size
 
 
     # the next two methods make it possible to iterate over the grid

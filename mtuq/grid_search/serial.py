@@ -11,7 +11,7 @@ except:
 
 @timer
 def grid_search_mt(data, greens, misfit, grid, verbose=True):
-    """ Serial grid search over moment tensors
+    """ Grid search over moment tensors
     """
     results = np.zeros(grid.size)
 
@@ -28,26 +28,27 @@ def grid_search_mt(data, greens, misfit, grid, verbose=True):
 
 @timer
 def grid_search(data, greens, misfit, sources, origins, verbose=True):
-    """ Serial grid search over mechanism and location parameters
+    """ Generalized grid search over source and origin parameters
     """
-    results = np.zeros((len(sources), len(origins)))
+    ni, nj = len(origins), len(sources)
+    results = np.zeros((ni, nj))
 
     # carry out search
     for _i, origin in enumerate(origins):
         for _j, mt in enumerate(sources):
 
-            if verbose and not ((_i*npts_inner+_j) % np.ceil(0.1*npts_outer)):
-                print _message(_i*npts_inner+_j, npts_outer)
+            if verbose and not ((_i*nj+_j) % np.ceil(0.1*ni*nj)):
+                print _message(_i,_j,ni,nj)
 
-            results[_i, _j] = misfit(data, greens.subset(origin), source)
+            results[_i, _j] = misfit(data, greens.subset(origin), mt)
 
     return results
 
 
 
-def _message(ii, nn):
+def _message(_i,_j,ni,nj):
     return (
             '  about %2d%% finished\n'
-            % np.ceil((100.*ii/nn))
+            % np.ceil((100.*(_i*nj+_j)/(ni*nj)))
            )
 

@@ -99,6 +99,15 @@ class CompositeSource(object):
 # utility functions
 #
 
+def equals(origin1, origin2):
+    for key in origin1:
+        if origin1[key] != origin2[key]:
+            print key
+            return False
+    else:
+        return True
+
+
 def _cast(array):
     try:
         return np.asarray(array)
