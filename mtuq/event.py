@@ -65,13 +65,13 @@ class MomentTensor(object):
            self._array, self.code, code)
 
 
-    def asvector():
+    def as_vector():
         """ Returns independent elements as 1D numpy array
         """
         return self._array
 
 
-    def asmatrix():
+    def as_matrix():
         """ Returns 2D symmetric numpy array
         """
         return np.array([m[0], m[3], m[4]],

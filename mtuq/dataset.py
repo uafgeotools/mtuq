@@ -211,7 +211,7 @@ class maDataset(Dataset):
         pass
 
 
-    def get_array(self):
+    def as_array(self):
         """ Returns time series from all stations and components in a single 
         multidimensional array
         """

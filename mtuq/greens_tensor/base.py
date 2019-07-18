@@ -535,9 +535,6 @@ class maGreensTensorList(GreensTensorList):
     def __init__(self, tensors=[], id=None, mask=None):
         super(maGreensTensorList, self).__init__(tensors, id)
 
-        # this attribute is not yet impelemented
-        self.mask = mask
-
         self._check_time_sampling()
 
 
@@ -548,23 +545,32 @@ class maGreensTensorList(GreensTensorList):
         #check_time_sampling([stream[0] for stream in self])
 
 
-    def get_array(self):
-        """ Returns time series from all stations and components in a single 
-        multidimensional array
+    def as_array(self):
+        """ Returns time series from all stations in a single multidimensional
+        array 
+
+        .. warning:
+
+            This method requires that all tensors have the same time 
+            discretization.
+
+        .. note:
+
+            Compared with iterating over obspy traces, this method provides a
+            a potentially faster way of accessing numeric trace data.
+
+        .. note:
+
+            This method is used to supply input arrays for the C extension
+            module `mtuq.grid_search._extensions`.
+
+
         """
         try:
             return self._array
         except:
             self._compute_array()
             return self._array
-
-
-    def get_array_cc():
-        try:
-            return self._cc_all
-        except:
-            self._compute_cc()
-            return self._cc_all
 
 
     def _allocate_array(self):
@@ -597,42 +603,5 @@ class maGreensTensorList(GreensTensorList):
 
             # fill in 4D array of GreensTensorList
             array[:, _i, :, :] = tensor._array
-
-
-    def _allocate_cc(self, npts):
-        """ Allocates numpy array that can be used for efficient time shift
-        calculations
-        """
-        self._npts_cc = npts
-
-        # array dimensions
-        nc = 3
-        nt = len(self[0][0])
-        ns = len(self)
-        nr = 6
-
-        if self[0].enable_force:
-            nr += 3
-
-        # allocate array
-        self._cc_all = np.zeros((nc, ns, nr, 2*npts+1))
-
-        return self._cc_all
-
-
-    def _compute_cc(self, data, time_shift_max):
-        """ Computes numpy array that can be used for efficient time shift
-        calculations
-        """
-        # allocate numpy array
-        dt = self[0][0].stats.delta
-        cc_all = self._allocate_cc(time_shift_max/dt)
-
-        for _i, tensor in enumerate(self):
-            # fills 3D array of GreensTensor
-            tensor._compute_cc(data, time_shift_max)
-
-            # fills 4D array of GreensTensorList
-            cc_all[_i, :, :, :] = tensor._cc_all
 
 
