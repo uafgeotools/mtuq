@@ -180,6 +180,34 @@ if __name__=='__main__':
 """
 
 
+Docstring_UtilExamples="""
+if True:
+    #
+    # Creates example data structures
+    #
+    # Rather than being executed as a script, this code is designed to be
+    # imported as a module, after which users can access the example data and
+    # functions listed under __all__
+    #
+    # Note that since I/O and data processing are involved in creating these
+    # example data, importing this module may take a few seconds longer than
+    # other modules
+    
+    __all__ = [
+        'process_bw'
+        'process_bw'
+        'misfit_bw',
+        'misfit_bw',
+        'data_bw',
+        'data_sw',
+        'greens_bw',
+        'greens_sw',
+        'stations',
+        'origins',
+        ]
+"""
+
+
 Docstring_BenchmarkCAP="""
 if __name__=='__main__':
     #
@@ -1268,4 +1296,17 @@ if __name__=='__main__':
         file.write(Main_TestGraphics)
 
 
+    with open('mtuq/util/examples.py', 'w') as file:
+        file.write(Imports)
+        file.write(Docstring_UtilExamples)
+        file.write(Paths_FK)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(MisfitDefinitions)
 
