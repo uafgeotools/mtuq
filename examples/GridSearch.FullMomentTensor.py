@@ -10,7 +10,7 @@ from mtuq.grid import FullMomentTensorGridRandom
 from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import generate_header, Trapezoid
+from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -165,7 +165,8 @@ if __name__=='__main__':
         results_bw = np.concatenate(results_bw)
         results_sw = np.concatenate(results_sw)
 
-        best_mt = grid.get((results_bw + results_sw).argmin())
+        best_misfit = (results_bw + results_sw).min()
+        best_source = sources.get((results_bw + results_sw).argmin())
 
 
     #
@@ -175,17 +176,14 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Savings results...\n'
 
-        header = generate_header(event_name,
-            process_bw, process_sw, misfit_bw, misfit_sw,
-            model, 'syngine', best_mt, origins[0].depth_in_m)
-
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
-            [misfit_bw, misfit_sw], best_mt, header=header)
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_beachball(event_name+'_beachball.png', best_source)
 
-        grid.save(event_name+'.h5', {'misfit': results})
+        #grid.save(event_name+'.h5', {'misfit': results})
 
         print 'Finished\n'
 

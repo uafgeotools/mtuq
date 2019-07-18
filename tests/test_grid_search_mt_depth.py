@@ -9,7 +9,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search.serial import grid_search_mt_depth
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import generate_header, Trapezoid
+from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -146,14 +146,14 @@ if __name__=='__main__':
 
 
     best_misfit = {}
-    best_mt = {}
+    best_source = {}
     for depth in depths:
         best_misfit[depth] = results[depth].min()
-        best_mt[depth] = grid.get(results[depth].argmin())
+        best_source[depth] = sources.get(results[depth].argmin())
 
     if run_figures:
         filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_mt)
+        beachball_vs_depth(filename, best_source)
 
         filename = event_name+'_misfit_vs_depth.png'
         misfit_vs_depth(filename, best_misfit)

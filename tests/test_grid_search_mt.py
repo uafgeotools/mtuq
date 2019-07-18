@@ -9,7 +9,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search.serial import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import generate_header, Trapezoid
+from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -147,18 +147,21 @@ if __name__=='__main__':
     results_sw = grid_search_mt(
         data_sw, greens_sw, misfit_sw, sources, verbose=False)
 
-    best_mt = grid.get((results_bw + results_sw).argmin())
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
 
 
-    best_mt = grid.get((results_bw + results_sw).argmin())
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
-            [misfit_bw, misfit_sw], best_mt)
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_beachball(event_name+'_beachball.png', best_source)
 
 
     if run_checks:
@@ -177,7 +180,7 @@ if __name__=='__main__':
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
         if not isclose(
-            best_mt,
+            best_source,
             np.array([
                 -1.92678437e+15,
                 -1.42813064e+00,

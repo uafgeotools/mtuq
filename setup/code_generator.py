@@ -11,7 +11,7 @@ from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search.mpi import grid_search_mt
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import generate_header, Trapezoid
+from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
 from mtuq.util import path_mtuq
@@ -571,7 +571,8 @@ Main_GridSearch_DoubleCouple="""
         results_bw = np.concatenate(results_bw)
         results_sw = np.concatenate(results_sw)
 
-        best_mt = grid.get((results_bw + results_sw).argmin())
+        best_misfit = (results_bw + results_sw).min()
+        best_source = sources.get((results_bw + results_sw).argmin())
 
 """
 
@@ -697,7 +698,8 @@ Main_SerialGridSearch_DoubleCouple="""
     results_sw = grid_search_mt(
         data_sw, greens_sw, misfit_sw, sources, verbose=False)
 
-    best_mt = grid.get((results_bw + results_sw).argmin())
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
 
 """
@@ -786,15 +788,17 @@ Main_TestGraphics="""
 
     print 'Figure 1 of 3\\n'
 
-    plot_data_greens_mt('test_graphics1.png',
+    plot_data_greens_mt(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], mt, header=False)
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        mt, header=False)
 
     print 'Figure 2 of 3\\n'
 
-    plot_data_greens_mt('test_graphics2.png',
+    plot_data_greens_mt(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], mt, header=True)
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        mt, header=False)
 
     print 'Figure 3 of 3\\n'
 
@@ -813,17 +817,14 @@ WrapUp_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print 'Savings results...\\n'
 
-        header = generate_header(event_name,
-            process_bw, process_sw, misfit_bw, misfit_sw,
-            model, 'syngine', best_mt, origins[0].depth_in_m)
-
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
-            [misfit_bw, misfit_sw], best_mt, header=header)
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_beachball(event_name+'_beachball.png', best_source)
 
-        grid.save(event_name+'.h5', {'misfit': results})
+        #grid.save(event_name+'.h5', {'misfit': results})
 
         print 'Finished\\n'
 
@@ -839,13 +840,13 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         print 'Saving results...\\n'
 
         best_misfit = {}
-        best_mt = {}
+        best_source = {}
         for depth in depths:
             best_misfit[depth] = results[depth].min()
-            best_mt[depth] = grid.get(results[depth].argmin())
+            best_source[depth] = sources.get(results[depth].argmin())
 
         filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_mt)
+        beachball_vs_depth(filename, best_source)
 
         filename = event_name+'_misfit_vs_depth.png'
         misfit_vs_depth(filename, best_misfit)
@@ -861,17 +862,14 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print 'Saving results...\\n'
 
-    header = generate_header(event_name,
-        process_bw, process_sw, misfit_bw, misfit_sw,
-        model, 'syngine', best_mt, origins[0].depth_in_m)
+    plot_data_greens_mt(event_name+'.png', 
+        [data_bw, data_sw], [greens_bw, greens_sw], 
+        [process_bw, process_sw], [misfit_bw, misfit_sw],
+        best_source)
 
-    plot_data_greens_mt(event_name+'.png',
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], best_mt, header=header)
+    plot_beachball(event_name+'_beachball.png', best_source)
 
-    plot_beachball(event_name+'_beachball.png', best_mt)
-
-    grid.save(event_name+'.h5', {'misfit': results})
+    #grid.save(event_name+'.h5', {'misfit': results})
 
     print 'Finished\\n'
 
@@ -879,14 +877,16 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCouple="""
-    best_mt = grid.get((results_bw + results_sw).argmin())
+    best_misfit = (results_bw + results_sw).min()
+    best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
-            [misfit_bw, misfit_sw], best_mt)
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_mt)
+        plot_beachball(event_name+'_beachball.png', best_source)
 
 
     if run_checks:
@@ -905,7 +905,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
         if not isclose(
-            best_mt,
+            best_source,
             np.array([
                 -1.92678437e+15,
                 -1.42813064e+00,
@@ -924,14 +924,14 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     best_misfit = {}
-    best_mt = {}
+    best_source = {}
     for depth in depths:
         best_misfit[depth] = results[depth].min()
-        best_mt[depth] = grid.get(results[depth].argmin())
+        best_source[depth] = sources.get(results[depth].argmin())
 
     if run_figures:
         filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_mt)
+        beachball_vs_depth(filename, best_source)
 
         filename = event_name+'_misfit_vs_depth.png'
         misfit_vs_depth(filename, best_misfit)
