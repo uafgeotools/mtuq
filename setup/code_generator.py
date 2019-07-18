@@ -609,10 +609,10 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         greens = get_greens_tensors(stations, origin, model=model)
 
         greens.convolve(wavelet)
-        greens.map(process_bw)
-        greens.map(process_sw)
+        greens_bw = greens.map(process_bw)
+        greens_sw = greens.map(process_sw)
 
-       eprint 'Processing data...\\n'
+        print 'Processing data...\\n'
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
@@ -644,8 +644,8 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     results_sw = comm.gather(results_sw, root=0)
 
     if rank==0:
-        np.concatenate(results_bw)
-        np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw)
+        results_sw = np.concatenate(results_sw)
 """
 
 
