@@ -88,7 +88,9 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use "source" for the
+    # mechanism of an event and "origin" for the location of an event
+    #
     #
 
     magnitudes = np.array(
@@ -101,7 +103,7 @@ if __name__=='__main__':
         [25000, 30000, 35000, 40000,                    
          45000, 50000, 55000, 60000])         
 
-    grid = DoubleCoupleGridRegular(
+    sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
         magnitude=magnitudes)
 
@@ -173,7 +175,7 @@ if __name__=='__main__':
 
     results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, depths)
+        [misfit_bw, misfit_sw], sources, depths)
 
     # gathering results
     results_unsorted = comm.gather(results, root=0)

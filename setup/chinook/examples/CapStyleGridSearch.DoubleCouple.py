@@ -85,10 +85,12 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use "source" for the
+    # mechanism of an event and "origin" for the location of an event
+    #
     #
 
-    grid = DoubleCoupleGridRandom(
+    sources = DoubleCoupleGridRandom(
         npts=50000,
         magnitude=4.5)
 

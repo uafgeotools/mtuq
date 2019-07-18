@@ -94,10 +94,12 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use "source" for the
+    # mechanism of an event and "origin" for the location of an event
+    #
     #
 
-    grid = DoubleCoupleGridRandom(
+    sources = DoubleCoupleGridRandom(
         npts=50000,
         magnitude=4.5)
 
@@ -140,12 +142,12 @@ if __name__=='__main__':
     print 'Evaluating body wave misfit...\n'
 
     results_bw = grid_search_mt(
-        data_bw, greens_bw, misfit_bw, grid, verbose=True)
+        data_bw, greens_bw, misfit_bw, sources, verbose=True)
 
     print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search_mt(
-        data_sw, greens_sw, misfit_sw, grid, verbose=False)
+        data_sw, greens_sw, misfit_sw, sources, verbose=False)
 
     best_mt = grid.get((results_bw + results_sw).argmin())
 

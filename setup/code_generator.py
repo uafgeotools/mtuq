@@ -391,10 +391,12 @@ MisfitDefinitions="""
 
 Grid_DoubleCouple="""
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use "source" for the
+    # mechanism of an event and "origin" for the location of an event
+    #
     #
 
-    grid = DoubleCoupleGridRandom(
+    sources = DoubleCoupleGridRandom(
         npts=50000,
         magnitude=4.5)
 
@@ -406,7 +408,9 @@ Grid_DoubleCouple="""
 
 Grid_DoubleCoupleMagnitudeDepth="""
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use "source" for the
+    # mechanism of an event and "origin" for the location of an event
+    #
     #
 
     magnitudes = np.array(
@@ -419,7 +423,7 @@ Grid_DoubleCoupleMagnitudeDepth="""
         [25000, 30000, 35000, 40000,                    
          45000, 50000, 55000, 60000])         
 
-    grid = DoubleCoupleGridRegular(
+    sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
         magnitude=magnitudes)
 
@@ -430,10 +434,12 @@ Grid_DoubleCoupleMagnitudeDepth="""
 
 Grid_FullMomentTensor="""
     #
-    # Next we specify the source parameter grid
+    # Next we specify the search grid. Following obspy, we use "source" for the
+    # mechanism of an event and "origin" for the location of an event
+    #
     #
 
-    grid = FullMomentTensorGridRandom(
+    sources = FullMomentTensorGridRandom(
         npts=1000000,
         magnitude=4.5)
 
@@ -452,7 +458,7 @@ Grid_TestDoubleCoupleMagnitudeDepth="""
          # depth in meters
         [34000])
 
-    grid = DoubleCoupleGridRegular(
+    sources = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitude=[4.4, 4.5, 4.6])
 
@@ -476,7 +482,7 @@ Grid_BenchmarkCAP="""
     # Next we specify the source parameter grid
     #
 
-    grid = [
+    sources = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
        np.array([1., 0., 0., 0., 0., 0.]), # source 1 (on-diagonal)
@@ -636,7 +642,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
     results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, depths)
+        [misfit_bw, misfit_sw], sources, depths)
 
     # gathering results
     results_unsorted = comm.gather(results, root=0)
@@ -684,12 +690,12 @@ Main_SerialGridSearch_DoubleCouple="""
     print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search_mt(
-        data_bw, greens_bw, misfit_bw, grid, verbose=True)
+        data_bw, greens_bw, misfit_bw, sources, verbose=True)
 
     print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search_mt(
-        data_sw, greens_sw, misfit_sw, grid, verbose=False)
+        data_sw, greens_sw, misfit_sw, sources, verbose=False)
 
     best_mt = grid.get((results_bw + results_sw).argmin())
 
@@ -742,7 +748,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
 
     results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, depths, verbose=False)
+        [misfit_bw, misfit_sw], sources, depths, verbose=False)
 
 """
 

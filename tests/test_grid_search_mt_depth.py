@@ -90,7 +90,7 @@ if __name__=='__main__':
          # depth in meters
         [34000])
 
-    grid = DoubleCoupleGridRegular(
+    sources = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitude=[4.4, 4.5, 4.6])
 
@@ -142,7 +142,7 @@ if __name__=='__main__':
 
     results = grid_search_mt_depth(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], grid, depths, verbose=False)
+        [misfit_bw, misfit_sw], sources, depths, verbose=False)
 
 
     best_misfit = {}
