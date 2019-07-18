@@ -4,7 +4,6 @@ import numpy as np
 import warnings
 
 from copy import copy
-from mtuq.event import equals
 from obspy import Stream
 from obspy.geodetics import gps2dist_azimuth
 
@@ -156,8 +155,7 @@ class Dataset(list):
             origins += [stream.preliminary_origin]
 
             if self._warnings:
-                if not equals(stream.preliminary_origin,
-                              self[0].preliminary_origin):
+                if stream.preliminary_origin!=self[0].preliminary_origin:
                     warnings.warn(
                         "There may be metadata problems--different streams in "
                         "the Dataset correspond to different catalog events\n\n"

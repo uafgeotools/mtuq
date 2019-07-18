@@ -30,6 +30,16 @@ class Origin(obspy.core.AttribDict):
         super(Origin, self).__setitem__(key, value)
 
 
+    def __eq__(self, origin):
+        if not isinstance(origin, Origin):
+            return False
+
+        for key in self.__dict__:
+            if origin[key]!=self.__dict__[key]:
+                return False
+        else:
+            return True
+
 
 class MomentTensor(object):
     """ Moment tensor source
