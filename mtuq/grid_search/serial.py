@@ -35,12 +35,12 @@ def grid_search(data, greens, misfit, sources, origins, verbose=True):
 
     # carry out search
     for _i, origin in enumerate(origins):
-        for _j, mt in enumerate(sources):
+        for _j, source in enumerate(sources):
 
             if verbose and not ((_i*nj+_j) % np.ceil(0.1*ni*nj)):
                 print _message(_i,_j,ni,nj)
 
-            results[_i, _j] = misfit(data, greens.subset(origin), mt)
+            results[_i, _j] = misfit(data, greens.subset(origin), source)
 
     return results
 
