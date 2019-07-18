@@ -6,7 +6,7 @@ from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRegular
-from mtuq.grid_search.serial import grid_search_mt_depth
+from mtuq.grid_search.serial import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -140,9 +140,9 @@ if __name__=='__main__':
 
     print 'Carrying out grid search...\n'
 
-    results = grid_search_mt_depth(
+    results = grid_search(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], sources, depths, verbose=False)
+        [misfit_bw, misfit_sw], sources, origins, verbose=False)
 
 
     best_misfit = {}

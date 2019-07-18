@@ -7,7 +7,7 @@ from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRegular
-from mtuq.grid_search.mpi import grid_search_mt_depth
+from mtuq.grid_search.mpi import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -128,6 +128,9 @@ if __name__=='__main__':
         stations = data.get_stations()
         origin = data.get_preliminary_origins()[0]
 
+        origins = []
+        for depth in depths:
+            origins += [setattr(deepcopy(origin), 'depth_in_m', depth]
 
         print 'Processing data...\n'
         data_bw = data.map(process_bw)
@@ -146,18 +149,12 @@ if __name__=='__main__':
     if rank==0:
         print 'Reading Greens functions...\n'
 
-        for _i, depth in enumerate(depths):
-            print '  Depth %d of %d' % (_i+1, len(depths))
-
-            origins = deepcopy(origins)
-            [setattr(origin, 'depth_in_m', depth) for origin in origins]
-
-            db = open_db(path_greens, format='FK', model=model)
+        db = open_db(path_greens, format='FK', model=model)
             greens = db.get_greens_tensors(stations, origins)
 
-            greens.convolve(wavelet)
-            greens_bw[depth] = greens.map(process_bw)
-            greens_sw[depth] = greens.map(process_sw)
+        greens.convolve(wavelet)
+        greens.map(process_bw)
+        greens.map(process_sw)
 
         print ''
 
@@ -172,9 +169,9 @@ if __name__=='__main__':
     if rank==0:
         print 'Carrying out grid search...\n'
 
-    results = grid_search_mt_depth(
+    results = grid_search(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], sources, depths)
+        [misfit_bw, misfit_sw], sources, origins)
 
     # gathering results
     results_unsorted = comm.gather(results, root=0)

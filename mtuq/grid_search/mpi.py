@@ -10,13 +10,13 @@ def grid_search_mt(*args, **kwargs):
 
 
 
-def grid_search_mt_depth(*args, **kwargs):
+def grid_search(*args, **kwargs):
     return _mpi_wrapper(
-        serial.grid_search_mt_depth, *args, **kwargs)
+        serial.grid_search, *args, **kwargs)
 
 
 
-def _mpi_wrapper(grid_search, data, greens, misfit, grid, *args, **kwargs):
+def _mpi_wrapper(grid_search, data, greens, misfit, sources, *args, **kwargs):
     """ Parallelizes serial grid search function
 
     To carry out a grid search over multiple MPI processes, we decompose the
@@ -30,7 +30,7 @@ def _mpi_wrapper(grid_search, data, greens, misfit, grid, *args, **kwargs):
     comm = MPI.COMM_WORLD
     iproc, nproc = comm.rank, comm.size
 
-    if not hasattr(grid, 'decompose'):
+    if not hasattr(sources, 'decompose'):
         raise TypeError
 
     if iproc == 0:

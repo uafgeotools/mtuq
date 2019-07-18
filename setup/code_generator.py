@@ -601,6 +601,9 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         stations = data.get_stations()
         origin = data.get_preliminary_origins()[0]
 
+        origins = []
+        for depth in depths:
+            origins += [setattr(deepcopy(origin), 'depth_in_m', depth]
 
         print 'Processing data...\\n'
         data_bw = data.map(process_bw)
@@ -619,17 +622,11 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     if rank==0:
         print 'Reading Greens functions...\\n'
 
-        for _i, depth in enumerate(depths):
-            print '  Depth %d of %d' % (_i+1, len(depths))
+        greens = get_greens_tensors(stations, origin, model=model)
 
-            origins = deepcopy(origins)
-            [setattr(origin, 'depth_in_m', depth) for origin in origins]
-
-            greens = get_greens_tensors(stations, origin, model=model)
-
-            greens.convolve(wavelet)
-            greens_bw[depth] = greens.map(process_bw)
-            greens_sw[depth] = greens.map(process_sw)
+        greens.convolve(wavelet)
+        greens.map(process_bw)
+        greens.map(process_sw)
 
         print ''
 
@@ -644,9 +641,9 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     if rank==0:
         print 'Carrying out grid search...\\n'
 
-    results = grid_search_mt_depth(
+    results = grid_search(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], sources, depths)
+        [misfit_bw, misfit_sw], sources, origins)
 
     # gathering results
     results_unsorted = comm.gather(results, root=0)
@@ -751,9 +748,9 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
 
     print 'Carrying out grid search...\\n'
 
-    results = grid_search_mt_depth(
+    results = grid_search(
         [data_bw, data_sw], [greens_bw, greens_sw],
-        [misfit_bw, misfit_sw], sources, depths, verbose=False)
+        [misfit_bw, misfit_sw], sources, origins, verbose=False)
 
 """
 
@@ -1047,7 +1044,7 @@ if __name__=='__main__':
             replace(
             Imports,
             'grid_search_mt',
-            'grid_search_mt_depth',
+            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1126,7 +1123,7 @@ if __name__=='__main__':
             'syngine',
             'fk',
             'grid_search_mt',
-            'grid_search_mt_depth',
+            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1227,7 +1224,7 @@ if __name__=='__main__':
             'grid_search.mpi',
             'grid_search.serial',
             'grid_search_mt',
-            'grid_search_mt_depth',
+            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',

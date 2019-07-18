@@ -61,7 +61,7 @@ class Misfit(object):
         self.polarity_weight = polarity_weight
 
 
-    def __call__(self, data, greens, mt):
+    def __call__(self, data, greens, mt, origin=None):
         """ CAP-style misfit calculation
         """ 
         p = self.norm_order
@@ -81,7 +81,7 @@ class Misfit(object):
                 continue
 
             # generate synthetics
-            s = greens[_i].get_synthetics(mt)
+            s = greens[_i].get_synthetics(mt, origin)
 
             # time sampling scheme
             npts = d[0].data.size

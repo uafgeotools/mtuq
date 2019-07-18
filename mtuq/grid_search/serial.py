@@ -27,26 +27,19 @@ def grid_search_mt(data, greens, misfit, grid, verbose=True):
 
 
 @timer
-def grid_search_mt_depth(data, greens, misfit, grid, depths, verbose=True):
-    """ Serial grid search over moment tensors and depths
+def grid_search(data, greens, misfit, sources, origins, verbose=True):
+    """ Serial grid search over mechanism and location parameters
     """
-    assert isinstance(greens, dict), TypeError
-    assert hasattr(misfit, '__call__'), TypeError
-
-    npts_inner = grid.size
-    npts_outer = grid.size*len(depths)
-    results = {}
-    for depth in depths:
-        results[depth] = np.zeros(npts_inner)
+    results = np.zeros((len(sources), len(origins)))
 
     # carry out search
-    for _i, depth in enumerate(depths):
-        for _j, mt in enumerate(grid):
+    for _i, origin in enumerate(origins):
+        for _j, mt in enumerate(sources):
 
             if verbose and not ((_i*npts_inner+_j) % np.ceil(0.1*npts_outer)):
                 print _message(_i*npts_inner+_j, npts_outer)
 
-            results[depth][_j] = misfit(data, greens[depth], mt)
+            results[_i, _j] = misfit(data, greens.subset(origin), source)
 
     return results
 

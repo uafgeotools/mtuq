@@ -155,7 +155,8 @@ class Dataset(list):
             origins += [stream.preliminary_origin]
 
             if self._warnings:
-                if stream.preliminary_origin == self[0].preliminary_origin:
+                if not _equals(stream.preliminary_origin,
+                              self[0].preliminary_origin):
                     warnings.warn(
                         "There may be metadata problems--different streams in "
                         "the Dataset correspond to different catalog events\n\n"
@@ -258,6 +259,16 @@ class maDataset(Dataset):
             except:
                 pass
             _i += 1
+
+
+def _equals(origin1, origin2):
+    for key in origin1:
+        if origin1[key] != origin2[key]:
+            print key
+            return False
+    else:
+        return True
+
 
 
 
