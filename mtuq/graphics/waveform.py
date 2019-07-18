@@ -10,6 +10,8 @@ def plot_data_synthetics(filename,
         data_sw, 
         synthetics_bw, 
         synthetics_sw, 
+        process_bw=None,
+        process_sw=None,
         total_misfit_bw=1., 
         total_misfit_sw=1., 
         normalize='maximum_amplitude',
@@ -18,6 +20,7 @@ def plot_data_synthetics(filename,
         header=None,
         station_labels=True, 
         trace_labels=True):
+
     """ Creates CAP-style data/synthetics figure
     """
 
@@ -72,6 +75,11 @@ def plot_data_synthetics(filename,
     if not title:
         event_name = filename.split('.')[0]
         title = event_name
+
+    if header==True:
+        header = generate_header(event_name,
+            process_bw, process_sw, misfit_bw, misfit_sw,
+            model, 'syngine', best_mt, origins[0].depth_in_m)
 
     if header:
         header_height = 2.5
@@ -202,7 +210,14 @@ def plot_data_synthetics(filename,
 
 
 
-def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
+def plot_data_greens_mt(filename, 
+        data, 
+        greens,  
+        process_data, 
+        misfit, 
+        mt,  
+        **kwargs):
+
     """ Creates CAP-style data/synthetics figure
 
     Similar to plot_data_synthetics, except provides different input argument
@@ -218,9 +233,13 @@ def plot_data_greens_mt(filename, data, greens, misfit, mt, **kwargs):
     total_misfit += [misfit[0](data[0], greens[0], mt)]
     total_misfit += [misfit[1](data[1], greens[1], mt)]
 
-    plot_data_synthetics(filename, data[0], data[1],
-        synthetics[0], synthetics[1], total_misfit[0], total_misfit[1],
-        mt=mt, **kwargs)
+    plot_data_synthetics(filename, 
+            data[0], data[1],
+            synthetics[0], synthetics[1], 
+            process_data[0], process_data[1],
+            total_misfit[0], total_misfit[1],
+            mt=mt,
+            **kwargs)
 
 
 
@@ -266,7 +285,7 @@ class Header(dict):
 
 
 def add_header(title=None, header=None, mt=None, height=None):
-    """ Adds CAP-style header to current figure
+    """ Adds header object to current figure
     """
     fig = pyplot.gcf()
     width, figure_height = fig.get_size_inches()
@@ -301,6 +320,40 @@ def add_header(title=None, header=None, mt=None, height=None):
 
     _hide_axes(ax)
 
+
+def generate_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
+    model, solver, mt, depth_in_m):
+    """ Creates header object with CAP-style text
+    """
+    M0 = np.sqrt(0.5*np.sum(mt[0:3]**2.) + np.sum(mt[3:6]**2.))
+    Mw = (np.log10(M0) - 9.1)/1.5
+
+    norm_order = misfit_bw.norm_order
+    assert norm_order==misfit_sw.norm_order
+    norm = '$L%s$' % norm_order
+
+    bw_T_min = process_bw.freq_max**-1
+    bw_T_max = process_bw.freq_min**-1
+    sw_T_min = process_sw.freq_max**-1
+    sw_T_max = process_sw.freq_min**-1
+
+    bw_win_len = process_bw.window_length
+    sw_win_len = process_sw.window_length
+
+    return Header(
+        shape=np.array([4,4]),
+        items={
+            0: '$M_w$: %3.2f' % Mw,
+            1: 'depth: %.1f km' % (depth_in_m/1000.),
+            #2: 'CLVD: %.0f' % 0.,
+            #3: 'ISO: %.0f' % 0.,
+            4: 'model: %s' % model,
+            5: 'solver: %s' % solver,
+            #6: 'norm: %s' % norm,
+            8: 'b.w. bandpass: %.1f - %.1f s' % (bw_T_min, bw_T_max),
+            10: 's.w. bandpass: %.1f - %.1f s' % (sw_T_min, sw_T_max),
+            12: 'b.w. window: %.1f s' % bw_win_len,
+            14: 's.w. window: %.1f s' % sw_win_len})
 
 
 def add_station_labels(meta):
@@ -416,4 +469,5 @@ def _italic(text, x, y, ax, fontsize=12):
     font.set_style('italic')
     pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize,
         transform=ax.transAxes)
+
 
