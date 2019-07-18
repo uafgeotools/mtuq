@@ -133,6 +133,7 @@ if __name__=='__main__':
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
 
+
     #
     # The main computational work starts nows
     #
@@ -149,7 +150,6 @@ if __name__=='__main__':
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())
-
 
 
     best_misfit = (results_bw + results_sw).min()

@@ -186,12 +186,13 @@ if True:
     # Creates example data structures
     #
     # Rather than being executed as a script, this code is designed to be
-    # imported as a module, after which users can access the example data and
-    # functions listed under __all__
+    # imported.  After importing this module, users can access the example data
+    # and functions listed in __all__
     #
-    # Note that since I/O and data processing are involved in creating these
-    # example data, importing this module may take a few seconds longer than
-    # other modules
+    # Note that some I/O and data processing are involved in creating the
+    # example data, so importing this module may take a few seconds longer than
+    # most other modules
+    #
     
     __all__ = [
         'process_bw'
@@ -676,6 +677,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
+
 """
 
 
@@ -696,7 +698,6 @@ Main2_SerialGridSearch_DoubleCouple="""
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())
-
 
 """
 
@@ -1312,7 +1313,7 @@ if __name__=='__main__':
             replace(
             Main1_SerialGridSearch_DoubleCouple,
             'print.*',
-            '#',
+            '',
             ))
 
 
