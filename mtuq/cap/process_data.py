@@ -192,7 +192,7 @@ class ProcessData(object):
 
 
 
-    def __call__(self, traces, station, origin, overwrite=False):
+    def __call__(self, traces, station=None, origin=None, overwrite=False):
         ''' 
         Carries out data processing operations on obspy streams
         MTUQ GreensTensors
@@ -200,6 +200,15 @@ class ProcessData(object):
         input traces: all availables traces for a given station
         type traces: obspy Stream or MTUQ GreensTensor
         '''
+        if station==None:
+            station = getattr(traces, 'station', None)
+
+        if origin==None:
+            origin = getattr(traces, 'origin', None)
+
+        if origin==None:
+            origin = getattr(traces, 'preliminary_origin', None)
+        
         # overwrite existing data?
         if overwrite:
             traces = traces
