@@ -141,7 +141,7 @@ if __name__=='__main__':
         data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, iterable(origin)s, origins, verbose=False)
+        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
 
 
 

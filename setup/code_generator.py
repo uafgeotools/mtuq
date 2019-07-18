@@ -638,7 +638,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data_bw, greens_bw, misfit_bw, sources, origins)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, iterable(origin)s, origins)
+        data_sw, greens_sw, misfit_sw, sources, origins)
 
     # gathering results
     results_bw = comm.gather(results_bw, root=0)
@@ -746,7 +746,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
         data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, iterable(origin)s, origins, verbose=False)
+        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
 
 
 """

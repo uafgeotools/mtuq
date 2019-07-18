@@ -167,7 +167,7 @@ if __name__=='__main__':
         data_bw, greens_bw, misfit_bw, sources, origins)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, iterable(origin)s, origins)
+        data_sw, greens_sw, misfit_sw, sources, origins)
 
     # gathering results
     results_bw = comm.gather(results_bw, root=0)
