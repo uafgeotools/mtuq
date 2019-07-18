@@ -93,7 +93,7 @@ if __name__=='__main__':
 """
 
 
-Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDeapth="""
+Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDepth="""
 if __name__=='__main__':
     #
     # THIS EXAMPLE ONLY WORKS ON CHINOOK.ALASKA.EDU
@@ -1095,7 +1095,7 @@ if __name__=='__main__':
             'plot_beachball',
             'beachball_vs_depth, misfit_vs_depth',
             ))
-        file.write(Docstring_CapStyleGridSearch_DoubleCouple)
+        file.write(Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(
             replace(
             Paths_FK,

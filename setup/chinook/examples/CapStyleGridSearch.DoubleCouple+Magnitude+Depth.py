@@ -26,14 +26,14 @@ if __name__=='__main__':
     # CAP-style double-couple inversion example
     # 
 
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors, using Green's functions and phase picks from a local
-    # FK database
+    #
+    # Carries out grid search over source orientation, magnitude, and depth
+    # using Green's functions and phase picks from a local FK database
+    #
 
     #
     # USAGE
-    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
+    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple+Magntidue+Depth.py
     #
 
 
