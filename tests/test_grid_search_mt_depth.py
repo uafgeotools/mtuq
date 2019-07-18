@@ -138,10 +138,10 @@ if __name__=='__main__':
     print 'Carrying out grid search...\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins)
+        data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins)
+        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
 
 
 
