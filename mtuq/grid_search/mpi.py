@@ -4,12 +4,6 @@ from mtuq.grid_search import serial
 
 
 
-def grid_search_mt(*args, **kwargs):
-    return _mpi_wrapper(
-        serial.grid_search_mt, *args, **kwargs)
-
-
-
 def grid_search(*args, **kwargs):
     return _mpi_wrapper(
         serial.grid_search, *args, **kwargs)
