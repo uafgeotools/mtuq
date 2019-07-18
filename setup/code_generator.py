@@ -392,10 +392,8 @@ MisfitDefinitions="""
 
 Grid_DoubleCouple="""
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     sources = DoubleCoupleGridRandom(
@@ -410,10 +408,8 @@ Grid_DoubleCouple="""
 
 Grid_DoubleCoupleMagnitudeDepth="""
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     magnitudes = np.array(
@@ -437,10 +433,8 @@ Grid_DoubleCoupleMagnitudeDepth="""
 
 Grid_FullMomentTensor="""
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     sources = FullMomentTensorGridRandom(
@@ -1291,7 +1285,12 @@ if __name__=='__main__':
 
 
     with open('mtuq/util/examples.py', 'w') as file:
-        file.write(Imports)
+        file.write(
+            replace(
+            Imports,
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+             ))
         file.write(Docstring_UtilExamples)
         file.write(Paths_FK)
         file.write(

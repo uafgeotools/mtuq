@@ -91,10 +91,8 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     sources = DoubleCoupleGridRegular(
