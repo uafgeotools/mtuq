@@ -27,6 +27,7 @@ failed = []
 excluded += ['mtuq.grid_search._extensions']
 excluded += ['mtuq.grid_search.mpic']
 excluded += ['mtuq.grid_search.serialc']
+excluded += ['mtuq.util.examples']
 
 
 def check_package(pkgname):
