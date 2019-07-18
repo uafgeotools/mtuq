@@ -38,7 +38,7 @@ if True:
         'greens_bw',
         'greens_sw',
         'stations',
-        'origins',
+        'origin',
         ]
 
     path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')

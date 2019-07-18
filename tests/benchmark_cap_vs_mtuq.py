@@ -149,7 +149,7 @@ if __name__=='__main__':
     # Next we specify the source parameter grid
     #
 
-    grid = [
+    sources = [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
        np.array([1., 0., 0., 0., 0., 0.]), # source 1 (on-diagonal)
@@ -162,7 +162,7 @@ if __name__=='__main__':
 
     Mw = 4.5
     M0 = 10.**(1.5*Mw + 9.1) # units: N-m
-    for mt in grid:
+    for mt in sources:
         mt *= np.sqrt(2)*M0
 
     wavelet = Trapezoid(
@@ -181,31 +181,31 @@ if __name__=='__main__':
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origins = data.get_origins()
+    origin = data.get_preliminary_origins()[0]
 
 
     print 'Processing data...\n'
-    data_bw = data.map(process_bw, stations, origins)
-    data_sw = data.map(process_sw, stations, origins)
+    data_bw = data.map(process_bw)
+    data_sw = data.map(process_sw)
 
     print 'Reading Greens functions...\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins)
+    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\n'
     greens.convolve(wavelet)
-    greens_bw = greens.map(process_bw, stations, origins)
-    greens_sw = greens.map(process_sw, stations, origins)
+    greens_bw = greens.map(process_bw)
+    greens_sw = greens.map(process_sw)
 
 
-    depth = int(origins[0].depth_in_m/1000.)+1
+    depth = int(origin.depth_in_m/1000.)+1
     name = '_'.join([model, str(depth), event_name])
 
 
     print 'Comparing waveforms...'
 
-    for _i, mt in enumerate(grid):
-        print '  %d of %d' % (_i+1, len(grid))
+    for _i, mt in enumerate(sources):
+        print '  %d of %d' % (_i+1, len(sources))
 
         cap_bw, cap_sw = get_synthetics_cap(
             data_bw, data_sw, paths[_i], name)

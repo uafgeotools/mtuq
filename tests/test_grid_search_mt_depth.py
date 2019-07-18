@@ -127,7 +127,7 @@ if __name__=='__main__':
         [setattr(origin, 'depth_in_m', depth) for origin in origins]
 
         db = open_db(path_greens, format='FK', model=model)
-        greens = db.get_greens_tensors(stations, origins)
+        greens = db.get_greens_tensors(stations, origin)
 
         greens.convolve(wavelet)
         greens_bw[depth] = greens.map(process_bw)

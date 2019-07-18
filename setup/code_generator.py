@@ -203,7 +203,7 @@ if True:
         'greens_bw',
         'greens_sw',
         'stations',
-        'origins',
+        'origin',
         ]
 """
 
@@ -495,7 +495,7 @@ Grid_BenchmarkCAP="""
 
     Mw = 4.5
     M0 = 10.**(1.5*Mw + 9.1) # units: N-m
-    for mt in grid:
+    for mt in sources:
         mt *= np.sqrt(2)*M0
 
     wavelet = Trapezoid(
@@ -735,7 +735,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
         [setattr(origin, 'depth_in_m', depth) for origin in origins]
 
         db = open_db(path_greens, format='FK', model=model)
-        greens = db.get_greens_tensors(stations, origins)
+        greens = db.get_greens_tensors(stations, origin)
 
         greens.convolve(wavelet)
         greens_bw[depth] = greens.map(process_bw)
@@ -774,7 +774,7 @@ Main_TestGraphics="""
 
     print 'Reading Greens functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins)
+    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
@@ -966,7 +966,7 @@ Main_BenchmarkCAP="""
 
     print 'Reading Greens functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
-    greens = db.get_greens_tensors(stations, origins)
+    greens = db.get_greens_tensors(stations, origin)
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
@@ -974,14 +974,14 @@ Main_BenchmarkCAP="""
     greens_sw = greens.map(process_sw)
 
 
-    depth = int(origins[0].depth_in_m/1000.)+1
+    depth = int(origin.depth_in_m/1000.)+1
     name = '_'.join([model, str(depth), event_name])
 
 
     print 'Comparing waveforms...'
 
-    for _i, mt in enumerate(grid):
-        print '  %d of %d' % (_i+1, len(grid))
+    for _i, mt in enumerate(sources):
+        print '  %d of %d' % (_i+1, len(sources))
 
         cap_bw, cap_sw = get_synthetics_cap(
             data_bw, data_sw, paths[_i], name)
@@ -1210,7 +1210,7 @@ if __name__=='__main__':
             Main_SerialGridSearch_DoubleCouple,
             'greens = get_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n    '
-           +'greens = db.get_greens_tensors(stations, origins)',
+           +'greens = db.get_greens_tensors(stations, origin)',
             'verbose=True',
             'verbose=False',
             ))
@@ -1247,7 +1247,7 @@ if __name__=='__main__':
         file.write(WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth)
 
 
-    with open('tests/benchmark_cap_vs_fk.py', 'w') as file:
+    with open('tests/benchmark_cap_vs_mtuq.py', 'w') as file:
         file.write(
             replace(
             Imports,
