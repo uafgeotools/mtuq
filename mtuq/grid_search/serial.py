@@ -38,7 +38,7 @@ def grid_search(data, greens, misfit, sources, origins, verbose=True):
         for _j, source in enumerate(sources):
 
             if verbose and not ((_i*nj+_j) % np.ceil(0.1*ni*nj)):
-                print _message(_i,_j,ni,nj)
+                print _message(_i*nj+_j, ni*nj)
 
             results[_i, _j] = misfit(data, greens.subset(origin), source)
 
@@ -46,9 +46,9 @@ def grid_search(data, greens, misfit, sources, origins, verbose=True):
 
 
 
-def _message(_i,_j,ni,nj):
+def _message(top,bot):
     return (
             '  about %2d%% finished\n'
-            % np.ceil((100.*(_i*nj+_j)/(ni*nj)))
+            % np.ceil((100.*top/bot))
            )
 
