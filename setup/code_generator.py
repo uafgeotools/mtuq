@@ -8,13 +8,13 @@ from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search_mt
+from mtuq.grid_search.mpi import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import path_mtuq
+from mtuq.util import iterable, path_mtuq
 
 
 """
@@ -559,13 +559,13 @@ Main_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print 'Evaluating body wave misfit...\\n'
 
-    results_bw = grid_search_mt(
-        data_bw, greens_bw, misfit_bw, grid)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
 
     if comm.rank==0:
         print 'Evaluating surface wave misfit...\\n'
 
-    results_sw = grid_search_mt(
+    results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, grid)
 
     results_bw = comm.gather(results_bw, root=0)
@@ -638,7 +638,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data_bw, greens_bw, misfit_bw, sources, origins)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins)
+        data_sw, greens_sw, misfit_sw, sources, iterable(origin)s, origins)
 
     # gathering results
     results_bw = comm.gather(results_bw, root=0)
@@ -688,13 +688,13 @@ Main2_SerialGridSearch_DoubleCouple="""
 
     print 'Evaluating body wave misfit...\\n'
 
-    results_bw = grid_search_mt(
-        data_bw, greens_bw, misfit_bw, sources, verbose=True)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
 
     print 'Evaluating surface wave misfit...\\n'
 
-    results_sw = grid_search_mt(
-        data_sw, greens_sw, misfit_sw, sources, verbose=True)
+    results_sw = grid_search(
+        data_sw, greens_sw, misfit_sw, sources, iterable(origin))
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())
@@ -746,7 +746,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
         data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
+        data_sw, greens_sw, misfit_sw, sources, iterable(origin)s, origins, verbose=False)
 
 
 """
@@ -1032,8 +1032,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search_mt',
-            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1111,8 +1109,6 @@ if __name__=='__main__':
             Imports,
             'syngine',
             'fk',
-            'grid_search_mt',
-            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1217,8 +1213,6 @@ if __name__=='__main__':
             Imports,
             'grid_search.mpi',
             'grid_search.serial',
-            'grid_search_mt',
-            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',

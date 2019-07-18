@@ -28,7 +28,7 @@ def grid_search_mt(data, greens, misfit, grid, verbose=True):
 
 @timer
 def grid_search(data, greens, misfit, sources, origins, verbose=True):
-    """ Generalized grid search over source and origin parameters
+    """ Grid search over source mechanism and location parameters
     """
     ni, nj = len(origins), len(sources)
     results = np.zeros((ni, nj))
