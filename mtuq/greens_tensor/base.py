@@ -530,30 +530,14 @@ class GreensTensorList(list):
         self.sort(key=function, reverse=reverse)
 
 
-
-class maGreensTensorList(GreensTensorList):
-    """ Specialized GreensTensorList subclass
-
-    Adds multidimensional array machinery that provides a much faster way of
-    accessing numeric trace data
-
-    .. warning:
-
-        Unlike the parent class ``GreensTensorList``, this subclass requires 
-        all tensors have the same time discretization.
-    """
-
-    def __init__(self, tensors=[], id=None, mask=None):
-        super(maGreensTensorList, self).__init__(tensors, id)
-
-        self._check_time_sampling()
-
-
+    #
+    # the remaining methods can be used to speed up trace data access when the
+    # time discretization is the same for all stations
+    #
     def _check_time_sampling(self):
         """ Checks that time discretization is the same for all tensors
         """
-        pass
-        #check_time_sampling([stream[0] for stream in self])
+        pass #check_time_sampling([stream[0] for stream in self])
 
 
     def as_array(self):

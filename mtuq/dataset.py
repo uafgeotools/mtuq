@@ -186,25 +186,10 @@ class Dataset(list):
            stream.tags.remove(tag)
 
 
-class maDataset(Dataset):
-    """ Specialized Dataset subclass
-
-    Adds multidimensional array machinery that provides a much faster way of 
-    accessing numeric trace data
-
-    .. warning:
-
-        Unlike the parent class, this subclass requires all streams have the 
-        same time discretization.
-
-    """
-    def __init__(self, *args, **kwargs):
-        super(maDataset, self).__init__(*args, **kwargs)
-
-        # this method is not yet implemented
-        self._check_time_sampling()
-
-
+    #
+    # the remaining methods can be used to speed up trace data access when the
+    # time discretization is the same for all stations
+    #
     def _check_time_sampling(self):
         """ Checks that time discretization is the same for all stations
         """
@@ -236,10 +221,6 @@ class maDataset(Dataset):
         except:
             self._allocate_array()
             return self._array
-
-
-    def get_array_mask(self):
-        raise NotImplementedError
 
 
     def _allocate_array(self):
