@@ -67,6 +67,18 @@ class GreensTensor(Stream):
         self.include_mt = include_mt
         self.include_force = include_force
 
+        # We require high-dimensional ndarrays to deal with practical 
+        # complexities such as time shifts. Even with careful attention to 
+        # index order, NumPy provides generally quite poor performance for 
+        # ndim>2. This motivates the following workarounds.
+        if include_mt and include_force:
+            self.get_synthetics = self._workaround1
+        elif include_mt:
+            self.get_synthetics = self._workaround2
+        elif include_force:
+            self.get_synthetics = self._workaround3
+
+
 
     def initialize(self, components=['Z', 'R', 'T']):
         """
@@ -165,41 +177,80 @@ class GreensTensor(Stream):
         """
         Generates synthetics through a linear combination of Green's tensor
         times series weighted by source elements
+
+        .. warning :
+            If some components are missing or assigned zero weight, it can be
+            much faster to call `initialize` manually prior to calling
+            `get_synthetics`. This creates the `_array` attribute and prevents
+            unnecessary computations.
+
         """
         if not hasattr(self, '_array'):
-            # Allocates arrays for components Z,R,T. In cases with incomplete or
-            # corrupt data, it can be substantially faster to call initialize()
-            # using only the components that are actually required
             self.initialize(components=['Z','R','T'])
 
         array = self._array
         synthetics = self._synthetics
 
+        for _i, component in enumerate(self.components):
+            # Even with careful attention to index order, np.dot is very slow.
+            # This motivates the workaround methods immediately below this one.
+            synthetics[_i].data = np.dot(source, array[_i, :, :])
+        return synthetics
+
+
+    def _workaround1(self, source):
+        if not hasattr(self, '_array'):
+            self.initialize(components=['Z','R','T'])
+        array = self._array
+        synthetics = self._synthetics
 
         for _i, component in enumerate(self.components):
             s = synthetics[_i].data
             s[:] = 0.
-
-            # we could use np.dot below, but it actually appears slower
-            if len(source)==6:
-                # moment tensor source
-                s += source[0]*array[_i, 0, :]
-                s += source[1]*array[_i, 1, :]
-                s += source[2]*array[_i, 2, :]
-                s += source[3]*array[_i, 3, :]
-                s += source[4]*array[_i, 4, :]
-                s += source[5]*array[_i, 5, :]
-
-            elif len(source)==3:
-                # force source
-                s += source[0]*array[_i, 6, :]
-                s += source[1]*array[_i, 7, :]
-                s += source[2]*array[_i, 8, :]
-
-            else:
-                raise TypeError
-
+            s += source[0]*array[_i, 0, :]
+            s += source[1]*array[_i, 1, :]
+            s += source[2]*array[_i, 2, :]
+            s += source[3]*array[_i, 3, :]
+            s += source[4]*array[_i, 4, :]
+            s += source[5]*array[_i, 5, :]
+            s += source[3]*array[_i, 6, :]
+            s += source[4]*array[_i, 7, :]
+            s += source[5]*array[_i, 8, :]
         return synthetics
+
+
+    def _workaround2(self, source):
+        if not hasattr(self, '_array'):
+            self.initialize(components=['Z','R','T'])
+        array = self._array
+        synthetics = self._synthetics
+
+        for _i, component in enumerate(self.components):
+            s = synthetics[_i].data
+            s[:] = 0.
+            s += source[0]*array[_i, 0, :]
+            s += source[1]*array[_i, 1, :]
+            s += source[2]*array[_i, 2, :]
+            s += source[3]*array[_i, 3, :]
+            s += source[4]*array[_i, 4, :]
+            s += source[5]*array[_i, 5, :]
+        return synthetics
+
+
+    def _workaround3(self, source):
+        if not hasattr(self, '_array'):
+            self.initialize(components=['Z','R','T'])
+        array = self._array
+        synthetics = self._synthetics
+
+        for _i, component in enumerate(self.components):
+            s = synthetics[_i].data
+            s[:] = 0.
+            s += source[0]*array[_i, 0, :]
+            s += source[1]*array[_i, 1, :]
+            s += source[2]*array[_i, 2, :]
+        return synthetics
+
 
 
     def _allocate_cc(self, data, time_shift_max):
@@ -228,9 +279,6 @@ class GreensTensor(Stream):
         Computes numpy arrays used by get_time_shift
         """
         if not hasattr(self, '_array'):
-            # Allocates arrays for components Z,R,T. In cases with incomplete or
-            # corrupt data, it can be substantially faster to call initialize()
-            # using only the components that are actually required
             self.initialize(components=['Z','R','T'])
 
         array = self._array
@@ -292,17 +340,7 @@ class GreensTensor(Stream):
         cc_sum[:] = 0.
         for component in group:
             _i = self.components.index(component)
-            if len(source)==6:
-                cc_sum += source[0] * cc_all[_i, 0, :]
-                cc_sum += source[1] * cc_all[_i, 1, :]
-                cc_sum += source[2] * cc_all[_i, 2, :]
-                cc_sum += source[3] * cc_all[_i, 3, :]
-                cc_sum += source[4] * cc_all[_i, 4, :]
-                cc_sum += source[5] * cc_all[_i, 5, :]
-            elif len(source)==3:
-                cc_sum += source[0] * cc_all[_i, 6, :]
-                cc_sum += source[1] * cc_all[_i, 7, :]
-                cc_sum += source[2] * cc_all[_i, 8, :]
+            cc_sum += np.dot(source, cc_all[_i, :, :])
 
         npts_padding = (len(cc_sum)-1)/2
         return cc_sum.argmax() - npts_padding
@@ -531,8 +569,8 @@ class GreensTensorList(list):
 
 
     #
-    # the remaining methods can be used to speed up trace data access when the
-    # time discretization is the same for all stations
+    # the remaining methods can be used to speed up trace data access in cases
+    # where the time discretization is the same for all traces
     #
     def _check_time_sampling(self):
         """ Checks that time discretization is the same for all tensors

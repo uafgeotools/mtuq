@@ -187,8 +187,8 @@ class Dataset(list):
 
 
     #
-    # the remaining methods can be used to speed up trace data access when the
-    # time discretization is the same for all stations
+    # the remaining methods can be used to speed up trace data access in cases
+    # where the time discretization is the same for all traces
     #
     def _check_time_sampling(self):
         """ Checks that time discretization is the same for all stations
