@@ -30,7 +30,8 @@ class GreensTensor(Stream):
             station=None, 
             origin=None,
             id=None, 
-            enable_force=False):
+            include_mt=True,
+            include_force=False):
 
         for trace in traces:
             assert isinstance(trace, Trace)
@@ -63,8 +64,8 @@ class GreensTensor(Stream):
             station.latitude,
             station.longitude)
 
-        # enable force sources?
-        self.enable_force = enable_force
+        self.include_mt = include_mt
+        self.include_force = include_force
 
 
     def initialize(self, components=['Z', 'R', 'T']):
@@ -140,9 +141,13 @@ class GreensTensor(Stream):
         """
         nt = self[0].stats.npts
         nc = len(self.components)
-        nr = 6
-        if self.enable_force:
+        nr = 0
+
+        if self.include_mt:
+            nr += 6
+        if self.include_force:
             nr += 3
+
         self._array = np.zeros((nc, nr, nt))
 
 
@@ -202,8 +207,12 @@ class GreensTensor(Stream):
         Allocates numpy arrays used by get_time_shift
         """
         nc = len(self.components)
-        nr = 6
-        if self.enable_force:
+        nr = 0
+
+        if self.include_mt:
+            nr += 6
+
+        if self.include_force:
             nr += 3
 
         dt = self[0].stats.delta
@@ -313,7 +322,8 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
-            enable_force=self.enable_force)
+            include_mt=self.include_mt,
+            include_force=self.include_force)
 
 
     def convolve(self, wavelet):
@@ -342,7 +352,8 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
-            enable_force=self.enable_force)
+            include_mt=self.include_mt,
+            include_force=self.include_force)
 
 
     def __add__(self, *args):
@@ -564,7 +575,6 @@ class maGreensTensorList(GreensTensorList):
             This method is used to supply input arrays for the C extension
             module `mtuq.grid_search._extensions`.
 
-
         """
         try:
             return self._array
@@ -581,9 +591,10 @@ class maGreensTensorList(GreensTensorList):
         nc = 3
         nt = len(self[0][0])
         ns = len(self)
-        nr = 6
-
-        if self[0].enable_force:
+        nr = 0
+        if self[0].include_mt:
+            nr += 6
+        if self[0].include_force:
             nr += 3
 
         self._array = np.zeros((nc, ns, nr, nt))

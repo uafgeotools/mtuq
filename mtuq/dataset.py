@@ -212,8 +212,24 @@ class maDataset(Dataset):
 
 
     def as_array(self):
-        """ Returns time series from all stations and components in a single 
-        multidimensional array
+        """ Returns time series from all stations in a single multidimensional
+        array 
+
+        .. warning:
+
+            This method requires that all tensors have the same time 
+            discretization.
+
+        .. note:
+
+            Compared with iterating over obspy traces, this method provides a
+            a potentially faster way of accessing numeric trace data.
+
+        .. note:
+
+            This method is used to supply input arrays for the C extension
+            module `mtuq.grid_search._extensions`.
+
         """
         try:
             return self._array

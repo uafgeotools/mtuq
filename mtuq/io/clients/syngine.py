@@ -37,7 +37,9 @@ class Client(ClientBase):
 
     """
 
-    def __init__(self, path_or_url=None, model=None, enable_force=False):
+    def __init__(self, path_or_url=None, model=None, 
+                 include_mt=True, include_force=False):
+
         if not path_or_url:
             path_or_url = 'http://service.iris.edu/irisws/syngine/1'
         self.url = path_or_url
@@ -46,9 +48,8 @@ class Client(ClientBase):
         # appends required period band suffix
         self.model = resolve_model(model)
 
-        # Moment tensor response will always be downloaded. Optionally, force
-        # response can be downloaded as well
-        self.enable_force = enable_force
+        self.include_mt = include_mt
+        self.include_force = include_force
 
 
     def _get_greens_tensor(self, station=None, origin=None):
@@ -61,10 +62,12 @@ class Client(ClientBase):
         # read data
         stream = Stream()
         stream.id = station.id
-        for filename in GREENS_TENSOR_FILENAMES:
-            stream += obspy.read(dirname+'/'+filename, format='sac')
 
-        if self.enable_force:
+        if self.include_mt:
+            for filename in GREENS_TENSOR_FILENAMES:
+                stream += obspy.read(dirname+'/'+filename, format='sac')
+
+        if self.include_force:
             filenames = download_force_response(
                 self.url, self.model, station, origin)
 
@@ -101,7 +104,8 @@ class Client(ClientBase):
             trace.stats.npts = len(data_new)
 
         return GreensTensor(traces=[trace for trace in stream], 
-            station=station, origin=origin, enable_force=self.enable_force)
+            station=station, origin=origin, include_mt=self.include_mt, 
+            include_force=self.include_force)
 
 
 
