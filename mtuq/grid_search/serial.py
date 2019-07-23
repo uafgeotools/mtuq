@@ -10,45 +10,29 @@ except:
 
 
 @timer
-def grid_search_mt(data, greens, misfit, grid, verbose=True):
-    """ Grid search over moment tensors
-    """
-    results = np.zeros(grid.size)
-
-    # carry out search
-    for _i, mt in enumerate(grid):
-        if verbose and not(_i % np.ceil(0.1*grid.size)):
-            print _message(_i, grid.size)
-
-        results[_i] = misfit(data, greens, mt)
-
-    return results
-
-
-
-@timer
 def grid_search(data, greens, misfit, sources, origins, verbose=True):
-    """ Generalized grid search over source and origin parameters
+    """ Grid search over source mechanism and location parameters
     """
     ni, nj = len(origins), len(sources)
     results = np.zeros((ni, nj))
 
-    # carry out search
     for _i, origin in enumerate(origins):
-        for _j, mt in enumerate(sources):
+        _greens = greens.select(origin)
 
-            if verbose and not ((_i*nj+_j) % np.ceil(0.1*ni*nj)):
-                print _message(_i,_j,ni,nj)
+        for _j, source in enumerate(sources):
+            results[_i, _j] = misfit(data, _greens, source)
 
-            results[_i, _j] = misfit(data, greens.subset(origin), mt)
+            if verbose: 
+                progress(_i,_j,ni,nj)
 
     return results
 
 
 
-def _message(_i,_j,ni,nj):
-    return (
-            '  about %2d%% finished\n'
-            % np.ceil((100.*(_i*nj+_j)/(ni*nj)))
-           )
+def progress(_i,_j,ni,nj):
+    if ((_i*nj+_j) % np.ceil(0.1*ni*nj)):
+        return
+    print\
+        '  about %2d%% finished\n'\
+        % np.ceil((100.*(_i*nj+_j)/(ni*nj)))
 

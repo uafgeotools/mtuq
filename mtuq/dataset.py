@@ -4,7 +4,6 @@ import numpy as np
 import warnings
 
 from copy import copy
-from mtuq.event import equals
 from obspy import Stream
 from obspy.geodetics import gps2dist_azimuth
 
@@ -156,8 +155,7 @@ class Dataset(list):
             origins += [stream.preliminary_origin]
 
             if self._warnings:
-                if not equals(stream.preliminary_origin,
-                              self[0].preliminary_origin):
+                if stream.preliminary_origin!=self[0].preliminary_origin:
                     warnings.warn(
                         "There may be metadata problems--different streams in "
                         "the Dataset correspond to different catalog events\n\n"
@@ -188,44 +186,41 @@ class Dataset(list):
            stream.tags.remove(tag)
 
 
-class maDataset(Dataset):
-    """ Specialized Dataset subclass
-
-    Adds multidimensional array machinery that provides a much faster way of 
-    accessing numeric trace data
-
-    .. warning:
-
-        Unlike the parent class, this subclass requires all streams have the 
-        same time discretization.
-
-    """
-    def __init__(self, *args, **kwargs):
-        super(maDataset, self).__init__(*args, **kwargs)
-
-        # this method is not yet implemented
-        self._check_time_sampling()
-
-
+    #
+    # the remaining methods can be used to speed up trace data access in cases
+    # where the time discretization is the same for all traces
+    #
     def _check_time_sampling(self):
         """ Checks that time discretization is the same for all stations
         """
         pass
 
 
-    def get_array(self):
-        """ Returns time series from all stations and components in a single 
-        multidimensional array
+    def as_array(self):
+        """ Returns time series from all stations in a single multidimensional
+        array 
+
+        .. warning:
+
+            This method requires that all tensors have the same time 
+            discretization.
+
+        .. note:
+
+            Compared with iterating over obspy traces, this method provides a
+            a potentially faster way of accessing numeric trace data.
+
+        .. note:
+
+            This method is used to supply input arrays for the C extension
+            module `mtuq.grid_search._extensions`.
+
         """
         try:
             return self._array
         except:
             self._allocate_array()
             return self._array
-
-
-    def get_array_mask(self):
-        raise NotImplementedError
 
 
     def _allocate_array(self):

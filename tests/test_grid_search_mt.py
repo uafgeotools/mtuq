@@ -6,13 +6,13 @@ from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRegular
-from mtuq.grid_search.serial import grid_search_mt
+from mtuq.grid_search.serial import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import path_mtuq
+from mtuq.util import iterable, path_mtuq
 
 
 
@@ -91,10 +91,8 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     sources = DoubleCoupleGridRegular(
@@ -140,17 +138,16 @@ if __name__=='__main__':
 
     print 'Evaluating body wave misfit...\n'
 
-    results_bw = grid_search_mt(
-        data_bw, greens_bw, misfit_bw, sources, verbose=False)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
 
     print 'Evaluating surface wave misfit...\n'
 
-    results_sw = grid_search_mt(
-        data_sw, greens_sw, misfit_sw, sources, verbose=False)
+    results_sw = grid_search(
+        data_sw, greens_sw, misfit_sw, sources, iterable(origin))
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())
-
 
 
     best_misfit = (results_bw + results_sw).min()

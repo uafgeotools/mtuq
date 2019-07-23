@@ -2,7 +2,7 @@
 import numpy as np
 
 from copy import deepcopy
-from mtuq.event import Origin, equals
+from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
 from mtuq.util.signal import check_time_sampling
@@ -30,7 +30,8 @@ class GreensTensor(Stream):
             station=None, 
             origin=None,
             id=None, 
-            enable_force=False):
+            include_mt=True,
+            include_force=False):
 
         for trace in traces:
             assert isinstance(trace, Trace)
@@ -63,8 +64,20 @@ class GreensTensor(Stream):
             station.latitude,
             station.longitude)
 
-        # enable force sources?
-        self.enable_force = enable_force
+        self.include_mt = include_mt
+        self.include_force = include_force
+
+        # We require high-dimensional ndarrays to deal with practical 
+        # complexities such as time shifts. Even with careful attention to 
+        # index order, NumPy provides generally quite poor performance for 
+        # ndim>2. This motivates the following workarounds.
+        if include_mt and include_force:
+            self.get_synthetics = self._workaround1
+        elif include_mt:
+            self.get_synthetics = self._workaround2
+        elif include_force:
+            self.get_synthetics = self._workaround3
+
 
 
     def initialize(self, components=['Z', 'R', 'T']):
@@ -140,9 +153,13 @@ class GreensTensor(Stream):
         """
         nt = self[0].stats.npts
         nc = len(self.components)
-        nr = 6
-        if self.enable_force:
+        nr = 0
+
+        if self.include_mt:
+            nr += 6
+        if self.include_force:
             nr += 3
+
         self._array = np.zeros((nc, nr, nt))
 
 
@@ -160,41 +177,80 @@ class GreensTensor(Stream):
         """
         Generates synthetics through a linear combination of Green's tensor
         times series weighted by source elements
+
+        .. warning :
+            If some components are missing or assigned zero weight, it can be
+            much faster to call `initialize` manually prior to calling
+            `get_synthetics`. This creates the `_array` attribute and prevents
+            unnecessary computations.
+
         """
         if not hasattr(self, '_array'):
-            # Allocates arrays for components Z,R,T. In cases with incomplete or
-            # corrupt data, it can be substantially faster to call initialize()
-            # using only the components that are actually required
             self.initialize(components=['Z','R','T'])
 
         array = self._array
         synthetics = self._synthetics
 
+        for _i, component in enumerate(self.components):
+            # Even with careful attention to index order, np.dot is very slow.
+            # This motivates the workaround methods immediately below this one.
+            synthetics[_i].data = np.dot(source, array[_i, :, :])
+        return synthetics
+
+
+    def _workaround1(self, source):
+        if not hasattr(self, '_array'):
+            self.initialize(components=['Z','R','T'])
+        array = self._array
+        synthetics = self._synthetics
 
         for _i, component in enumerate(self.components):
             s = synthetics[_i].data
             s[:] = 0.
-
-            # we could use np.dot below, but it actually appears slower
-            if len(source)==6:
-                # moment tensor source
-                s += source[0]*array[_i, 0, :]
-                s += source[1]*array[_i, 1, :]
-                s += source[2]*array[_i, 2, :]
-                s += source[3]*array[_i, 3, :]
-                s += source[4]*array[_i, 4, :]
-                s += source[5]*array[_i, 5, :]
-
-            elif len(source)==3:
-                # force source
-                s += source[0]*array[_i, 6, :]
-                s += source[1]*array[_i, 7, :]
-                s += source[2]*array[_i, 8, :]
-
-            else:
-                raise TypeError
-
+            s += source[0]*array[_i, 0, :]
+            s += source[1]*array[_i, 1, :]
+            s += source[2]*array[_i, 2, :]
+            s += source[3]*array[_i, 3, :]
+            s += source[4]*array[_i, 4, :]
+            s += source[5]*array[_i, 5, :]
+            s += source[3]*array[_i, 6, :]
+            s += source[4]*array[_i, 7, :]
+            s += source[5]*array[_i, 8, :]
         return synthetics
+
+
+    def _workaround2(self, source):
+        if not hasattr(self, '_array'):
+            self.initialize(components=['Z','R','T'])
+        array = self._array
+        synthetics = self._synthetics
+
+        for _i, component in enumerate(self.components):
+            s = synthetics[_i].data
+            s[:] = 0.
+            s += source[0]*array[_i, 0, :]
+            s += source[1]*array[_i, 1, :]
+            s += source[2]*array[_i, 2, :]
+            s += source[3]*array[_i, 3, :]
+            s += source[4]*array[_i, 4, :]
+            s += source[5]*array[_i, 5, :]
+        return synthetics
+
+
+    def _workaround3(self, source):
+        if not hasattr(self, '_array'):
+            self.initialize(components=['Z','R','T'])
+        array = self._array
+        synthetics = self._synthetics
+
+        for _i, component in enumerate(self.components):
+            s = synthetics[_i].data
+            s[:] = 0.
+            s += source[0]*array[_i, 0, :]
+            s += source[1]*array[_i, 1, :]
+            s += source[2]*array[_i, 2, :]
+        return synthetics
+
 
 
     def _allocate_cc(self, data, time_shift_max):
@@ -202,8 +258,12 @@ class GreensTensor(Stream):
         Allocates numpy arrays used by get_time_shift
         """
         nc = len(self.components)
-        nr = 6
-        if self.enable_force:
+        nr = 0
+
+        if self.include_mt:
+            nr += 6
+
+        if self.include_force:
             nr += 3
 
         dt = self[0].stats.delta
@@ -219,9 +279,6 @@ class GreensTensor(Stream):
         Computes numpy arrays used by get_time_shift
         """
         if not hasattr(self, '_array'):
-            # Allocates arrays for components Z,R,T. In cases with incomplete or
-            # corrupt data, it can be substantially faster to call initialize()
-            # using only the components that are actually required
             self.initialize(components=['Z','R','T'])
 
         array = self._array
@@ -283,17 +340,7 @@ class GreensTensor(Stream):
         cc_sum[:] = 0.
         for component in group:
             _i = self.components.index(component)
-            if len(source)==6:
-                cc_sum += source[0] * cc_all[_i, 0, :]
-                cc_sum += source[1] * cc_all[_i, 1, :]
-                cc_sum += source[2] * cc_all[_i, 2, :]
-                cc_sum += source[3] * cc_all[_i, 3, :]
-                cc_sum += source[4] * cc_all[_i, 4, :]
-                cc_sum += source[5] * cc_all[_i, 5, :]
-            elif len(source)==3:
-                cc_sum += source[0] * cc_all[_i, 6, :]
-                cc_sum += source[1] * cc_all[_i, 7, :]
-                cc_sum += source[2] * cc_all[_i, 8, :]
+            cc_sum += np.dot(source, cc_all[_i, :, :])
 
         npts_padding = (len(cc_sum)-1)/2
         return cc_sum.argmax() - npts_padding
@@ -313,7 +360,8 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
-            enable_force=self.enable_force)
+            include_mt=self.include_mt,
+            include_force=self.include_force)
 
 
     def convolve(self, wavelet):
@@ -342,7 +390,8 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
-            enable_force=self.enable_force)
+            include_mt=self.include_mt,
+            include_force=self.include_force)
 
 
     def __add__(self, *args):
@@ -385,12 +434,35 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
-    def subset(self, origin):
-        subset = []
-        for tensor in self:
-            if equals(origin, tensor.origin):
-                subset += [tensor]
-        return self.__class__(subset)
+    def select(self, *args, **kwargs):
+        """ Selects GreensTensors that match the given criterion
+        """
+
+        if len(args)+len(kwargs)<1:
+            raise Exception("Too few selection critierion")
+
+        if len(args)+len(kwargs)>1:
+            raise Exception("Too many selection critierion")
+
+        if len(kwargs)==1:
+            key, val = kwargs.items()[0]
+
+        elif type(args[0])==Origin:
+            key, val = 'origin', args[0]
+
+        elif type(args[0])==Station:
+            key, val = 'station', args[0]
+
+        if key=='station':
+            selected = lambda tensor: tensor.station==val
+
+        elif key=='origin':
+            selected = lambda tensor: tensor.origin==val
+
+        else:
+            raise KeyError("Bad selection criterion: %s" % key)
+
+        return filter(selected, self)
 
 
     def get_synthetics(self, source, origin=None):
@@ -496,52 +568,41 @@ class GreensTensorList(list):
         self.sort(key=function, reverse=reverse)
 
 
-
-class maGreensTensorList(GreensTensorList):
-    """ Specialized GreensTensorList subclass
-
-    Adds multidimensional array machinery that provides a much faster way of
-    accessing numeric trace data
-
-    .. warning:
-
-        Unlike the parent class ``GreensTensorList``, this subclass requires 
-        all tensors have the same time discretization.
-    """
-
-    def __init__(self, tensors=[], id=None, mask=None):
-        super(maGreensTensorList, self).__init__(tensors, id)
-
-        # this attribute is not yet impelemented
-        self.mask = mask
-
-        self._check_time_sampling()
-
-
+    #
+    # the remaining methods can be used to speed up trace data access in cases
+    # where the time discretization is the same for all traces
+    #
     def _check_time_sampling(self):
         """ Checks that time discretization is the same for all tensors
         """
-        pass
-        #check_time_sampling([stream[0] for stream in self])
+        pass #check_time_sampling([stream[0] for stream in self])
 
 
-    def get_array(self):
-        """ Returns time series from all stations and components in a single 
-        multidimensional array
+    def as_array(self):
+        """ Returns time series from all stations in a single multidimensional
+        array 
+
+        .. warning:
+
+            This method requires that all tensors have the same time 
+            discretization.
+
+        .. note:
+
+            Compared with iterating over obspy traces, this method provides a
+            a potentially faster way of accessing numeric trace data.
+
+        .. note:
+
+            This method is used to supply input arrays for the C extension
+            module `mtuq.grid_search._extensions`.
+
         """
         try:
             return self._array
         except:
             self._compute_array()
             return self._array
-
-
-    def get_array_cc():
-        try:
-            return self._cc_all
-        except:
-            self._compute_cc()
-            return self._cc_all
 
 
     def _allocate_array(self):
@@ -552,9 +613,10 @@ class maGreensTensorList(GreensTensorList):
         nc = 3
         nt = len(self[0][0])
         ns = len(self)
-        nr = 6
-
-        if self[0].enable_force:
+        nr = 0
+        if self[0].include_mt:
+            nr += 6
+        if self[0].include_force:
             nr += 3
 
         self._array = np.zeros((nc, ns, nr, nt))
@@ -574,42 +636,5 @@ class maGreensTensorList(GreensTensorList):
 
             # fill in 4D array of GreensTensorList
             array[:, _i, :, :] = tensor._array
-
-
-    def _allocate_cc(self, npts):
-        """ Allocates numpy array that can be used for efficient time shift
-        calculations
-        """
-        self._npts_cc = npts
-
-        # array dimensions
-        nc = 3
-        nt = len(self[0][0])
-        ns = len(self)
-        nr = 6
-
-        if self[0].enable_force:
-            nr += 3
-
-        # allocate array
-        self._cc_all = np.zeros((nc, ns, nr, 2*npts+1))
-
-        return self._cc_all
-
-
-    def _compute_cc(self, data, time_shift_max):
-        """ Computes numpy array that can be used for efficient time shift
-        calculations
-        """
-        # allocate numpy array
-        dt = self[0][0].stats.delta
-        cc_all = self._allocate_cc(time_shift_max/dt)
-
-        for _i, tensor in enumerate(self):
-            # fills 3D array of GreensTensor
-            tensor._compute_cc(data, time_shift_max)
-
-            # fills 4D array of GreensTensorList
-            cc_all[_i, :, :, :] = tensor._cc_all
 
 

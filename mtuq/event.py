@@ -30,6 +30,16 @@ class Origin(obspy.core.AttribDict):
         super(Origin, self).__setitem__(key, value)
 
 
+    def __eq__(self, origin):
+        if not isinstance(origin, Origin):
+            return False
+
+        for key in self.__dict__:
+            if origin[key]!=self.__dict__[key]:
+                return False
+        else:
+            return True
+
 
 class MomentTensor(object):
     """ Moment tensor source
@@ -44,7 +54,7 @@ class MomentTensor(object):
         self.code = _check(code)
 
 
-    def change_convention(code):
+    def change_convention(self, code):
         """ Changes basis convention by applying permuation
         """
         if not self.code:
@@ -55,18 +65,19 @@ class MomentTensor(object):
            self._array, self.code, code)
 
 
-    def asvector():
+    def as_vector(self):
         """ Returns independent elements as 1D numpy array
         """
         return self._array
 
 
-    def asmatrix():
+    def as_matrix(self):
         """ Returns 2D symmetric numpy array
         """
-        return np.array([m[0], m[3], m[4]],
-                        [m[3], m[1], m[5]],
-                        [m[4], m[5], m[2]])
+        array = self._array
+        return np.array([array[0], array[3], array[4]],
+                        [array[3], array[1], array[5]],
+                        [array[4], array[5], array[2]])
 
 
 class Force(object):
@@ -76,14 +87,14 @@ class Force(object):
         raise NotImplementedError
 
 
-    def change_convention():
+    def change_convention(self):
         if self.code==0:
             raise Exception
 
         self._arary = _change_convention_force(self._array, self.code, code)
 
 
-    def asvector():
+    def asvector(self):
         return self._array
 
 
@@ -98,15 +109,6 @@ class CompositeSource(object):
 #
 # utility functions
 #
-
-def equals(origin1, origin2):
-    for key in origin1:
-        if origin1[key] != origin2[key]:
-            print key
-            return False
-    else:
-        return True
-
 
 def _cast(array):
     try:

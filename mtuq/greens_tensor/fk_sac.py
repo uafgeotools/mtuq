@@ -33,60 +33,78 @@ class GreensTensor(GreensTensorBase):
         self.tags += ['units:m']
 
 
-    def _compute_array(self, components=['Z', 'R', 'T']):
+    def _compute_array(self):
+        """ Computes numpy arrays used by get_synthetics
+        """
+        if self.include_mt:
+            self._compute_array_mt()
+
+        if self.include_force:
+            self._compute_array_force()
+
+        self._permute_array()
+
+
+    def _compute_array_mt(self):
         array = self._array
         phi = np.deg2rad(self.azimuth)
+        _j = 0
 
-        # fill in the elements of the array
+        # the mathetical formulas here were obtained by reverse engineering
+        # FK/CAP
         for _i, component in enumerate(self.components):
             if component=='Z':
                 ZSS = self.select(channel="ZSS")[0].data
                 ZDS = self.select(channel="ZDS")[0].data
                 ZDD = self.select(channel="ZDD")[0].data
                 ZEP = self.select(channel="ZEP")[0].data
-                array[_i, 0, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
-                array[_i, 1, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
-                array[_i, 2, :] =  ZDD/3. + ZEP/3.
-                array[_i, 3, :] = -ZSS * np.sin(2*phi)
-                array[_i, 4, :] = -ZDS * np.cos(phi)
-                array[_i, 5, :] = -ZDS * np.sin(phi)
+                array[_i, _j+0, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
+                array[_i, _j+1, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
+                array[_i, _j+2, :] =  ZDD/3. + ZEP/3.
+                array[_i, _j+3, :] = -ZSS * np.sin(2*phi)
+                array[_i, _j+4, :] = -ZDS * np.cos(phi)
+                array[_i, _j+5, :] = -ZDS * np.sin(phi)
 
             elif component=='R':
                 RSS = self.select(channel="RSS")[0].data
                 RDS = self.select(channel="RDS")[0].data
                 RDD = self.select(channel="RDD")[0].data
                 REP = self.select(channel="REP")[0].data
-                array[_i, 0, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
-                array[_i, 1, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
-                array[_i, 2, :] =  RDD/3. + REP/3.
-                array[_i, 3, :] = -RSS * np.sin(2*phi)
-                array[_i, 4, :] = -RDS * np.cos(phi)
-                array[_i, 5, :] = -RDS * np.sin(phi)
+                array[_i, _j+0, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
+                array[_i, _j+1, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
+                array[_i, _j+2, :] =  RDD/3. + REP/3.
+                array[_i, _j+3, :] = -RSS * np.sin(2*phi)
+                array[_i, _j+4, :] = -RDS * np.cos(phi)
+                array[_i, _j+5, :] = -RDS * np.sin(phi)
 
             elif component=='T':
                 TSS = self.select(channel="TSS")[0].data
                 TDS = self.select(channel="TDS")[0].data
-                array[_i, 0, :] = -TSS/2. * np.sin(2*phi)
-                array[_i, 1, :] =  TSS/2. * np.sin(2*phi)
-                array[_i, 2, :] =  0.
-                array[_i, 3, :] =  TSS * np.cos(2*phi)
-                array[_i, 4, :] = -TDS * np.sin(phi)
-                array[_i, 5, :] =  TDS * np.cos(phi)
+                array[_i, _j+0, :] = -TSS/2. * np.sin(2*phi)
+                array[_i, _j+1, :] =  TSS/2. * np.sin(2*phi)
+                array[_i, _j+2, :] =  0.
+                array[_i, _j+3, :] =  TSS * np.cos(2*phi)
+                array[_i, _j+4, :] = -TDS * np.sin(phi)
+                array[_i, _j+5, :] =  TDS * np.cos(phi)
 
             else:
                 raise ValueError
 
 
-        self._permute_array()
+    def _compute_array_force(self):
+        raise NotImplementedError()
 
 
 
     def _permute_array(self):
         """ Accounts for different basis conventions
-
-        The mathematical formulas above are based on the North-East-Down
-        convention, but mtuq/instaseis work in the Up-South-East convention
         """
+        # The mathematical formulas above are based on the North-East-Down
+        # convention, but mtuq works in the Up-South-East convention.
+        # We could get equivalent results by permuting the get_synthetics
+        # arguments every time it is called, but it is faster to permute the 
+        # whole array once and for all
+
         array = self._array
         array_copy = self._array.copy()
 

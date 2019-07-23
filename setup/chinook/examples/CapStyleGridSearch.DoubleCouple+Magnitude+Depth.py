@@ -13,7 +13,7 @@ from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
 from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import path_mtuq
+from mtuq.util import iterable, path_mtuq
 
 
 
@@ -85,10 +85,8 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     magnitudes = np.array(
@@ -137,10 +135,10 @@ if __name__=='__main__':
             greens = db.get_greens_tensors(stations, origins)
 
         greens.convolve(wavelet)
-        greens.map(process_bw)
-        greens.map(process_sw)
+        greens_bw = greens.map(process_bw)
+        greens_sw = greens.map(process_sw)
 
-       eprint 'Processing data...\n'
+        print 'Processing data...\n'
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
@@ -172,8 +170,8 @@ if __name__=='__main__':
     results_sw = comm.gather(results_sw, root=0)
 
     if rank==0:
-        np.concatenate(results_bw)
-        np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw)
+        results_sw = np.concatenate(results_sw)
 
     #
     # Saving results

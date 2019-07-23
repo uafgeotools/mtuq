@@ -12,7 +12,7 @@ from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
 from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import path_mtuq
+from mtuq.util import iterable, path_mtuq
 
 
 
@@ -138,10 +138,10 @@ if __name__=='__main__':
     print 'Carrying out grid search...\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins)
+        data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins)
+        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
 
 
 

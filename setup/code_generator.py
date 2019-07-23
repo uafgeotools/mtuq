@@ -8,13 +8,13 @@ from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search_mt
+from mtuq.grid_search.mpi import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import path_mtuq
+from mtuq.util import iterable, path_mtuq
 
 
 """
@@ -186,12 +186,13 @@ if True:
     # Creates example data structures
     #
     # Rather than being executed as a script, this code is designed to be
-    # imported as a module, after which users can access the example data and
-    # functions listed under __all__
+    # imported.  After importing this module, users can access the example data
+    # and functions listed in __all__
     #
-    # Note that since I/O and data processing are involved in creating these
-    # example data, importing this module may take a few seconds longer than
-    # other modules
+    # Note that some I/O and data processing are involved in creating the
+    # example data, so importing this module may take a few seconds longer than
+    # most other modules
+    #
     
     __all__ = [
         'process_bw'
@@ -391,10 +392,8 @@ MisfitDefinitions="""
 
 Grid_DoubleCouple="""
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     sources = DoubleCoupleGridRandom(
@@ -409,10 +408,8 @@ Grid_DoubleCouple="""
 
 Grid_DoubleCoupleMagnitudeDepth="""
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     magnitudes = np.array(
@@ -436,10 +433,8 @@ Grid_DoubleCoupleMagnitudeDepth="""
 
 Grid_FullMomentTensor="""
     #
-    # Next we specify the search grid. Following obspy, we use the variable 
-    # name "source" for the mechanism of an event and "origin" for the 
-    # location of an event
-    #
+    # Following obspy, we use the variable name "source" for the mechanism of
+    # an event and "origin" for the location of an event
     #
 
     sources = FullMomentTensorGridRandom(
@@ -558,13 +553,13 @@ Main_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print 'Evaluating body wave misfit...\\n'
 
-    results_bw = grid_search_mt(
-        data_bw, greens_bw, misfit_bw, grid)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
 
     if comm.rank==0:
         print 'Evaluating surface wave misfit...\\n'
 
-    results_sw = grid_search_mt(
+    results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, grid)
 
     results_bw = comm.gather(results_bw, root=0)
@@ -609,10 +604,10 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         greens = get_greens_tensors(stations, origin, model=model)
 
         greens.convolve(wavelet)
-        greens.map(process_bw)
-        greens.map(process_sw)
+        greens_bw = greens.map(process_bw)
+        greens_sw = greens.map(process_sw)
 
-       eprint 'Processing data...\\n'
+        print 'Processing data...\\n'
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
@@ -644,12 +639,12 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     results_sw = comm.gather(results_sw, root=0)
 
     if rank==0:
-        np.concatenate(results_bw)
-        np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw)
+        results_sw = np.concatenate(results_sw)
 """
 
 
-Main_SerialGridSearch_DoubleCouple="""
+Main1_SerialGridSearch_DoubleCouple="""
     #
     # The main I/O work starts now
     #
@@ -677,24 +672,26 @@ Main_SerialGridSearch_DoubleCouple="""
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
 
+"""
 
+
+Main2_SerialGridSearch_DoubleCouple="""
     #
     # The main computational work starts nows
     #
 
     print 'Evaluating body wave misfit...\\n'
 
-    results_bw = grid_search_mt(
-        data_bw, greens_bw, misfit_bw, sources, verbose=True)
+    results_bw = grid_search(
+        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
 
     print 'Evaluating surface wave misfit...\\n'
 
-    results_sw = grid_search_mt(
-        data_sw, greens_sw, misfit_sw, sources, verbose=True)
+    results_sw = grid_search(
+        data_sw, greens_sw, misfit_sw, sources, iterable(origin))
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())
-
 
 """
 
@@ -740,10 +737,10 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     print 'Carrying out grid search...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins)
+        data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins)
+        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
 
 
 """
@@ -1005,8 +1002,6 @@ Main_BenchmarkCAP="""
 
 if __name__=='__main__':
     import os
-    import re
-
     from mtuq.util import path_mtuq, replace
     os.chdir(path_mtuq())
 
@@ -1031,8 +1026,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search_mt',
-            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1110,8 +1103,6 @@ if __name__=='__main__':
             Imports,
             'syngine',
             'fk',
-            'grid_search_mt',
-            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1160,7 +1151,8 @@ if __name__=='__main__':
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
-        file.write(Main_SerialGridSearch_DoubleCouple)
+        file.write(Main1_SerialGridSearch_DoubleCouple)
+        file.write(Main2_SerialGridSearch_DoubleCouple)
         file.write(WrapUp_SerialGridSearch_DoubleCouple)
 
 
@@ -1195,10 +1187,14 @@ if __name__=='__main__':
             ))
         file.write(
             replace(
-            Main_SerialGridSearch_DoubleCouple,
+            Main1_SerialGridSearch_DoubleCouple,
             'greens = get_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n    '
            +'greens = db.get_greens_tensors(stations, origin)',
+            ))
+        file.write(
+            replace(
+            Main2_SerialGridSearch_DoubleCouple,
             'verbose=True',
             'verbose=False',
             ))
@@ -1211,8 +1207,6 @@ if __name__=='__main__':
             Imports,
             'grid_search.mpi',
             'grid_search.serial',
-            'grid_search_mt',
-            'grid_search',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
@@ -1291,7 +1285,12 @@ if __name__=='__main__':
 
 
     with open('mtuq/util/examples.py', 'w') as file:
-        file.write(Imports)
+        file.write(
+            replace(
+            Imports,
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+             ))
         file.write(Docstring_UtilExamples)
         file.write(Paths_FK)
         file.write(
@@ -1303,4 +1302,11 @@ if __name__=='__main__':
             'fk_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
+        file.write(
+            replace(
+            Main1_SerialGridSearch_DoubleCouple,
+            'print.*',
+            '',
+            ))
+
 
