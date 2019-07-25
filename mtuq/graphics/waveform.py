@@ -203,13 +203,13 @@ def plot_data_synthetics(filename,
 
 
 
-def plot_data_greens_mt(filename, 
+def plot_data_greens(filename, 
         data, 
         greens,  
         process_data, 
         misfit, 
-        mt,
-        origins,
+        source,
+        origin,
         **kwargs):
 
     """ Creates CAP-style data/synthetics figure
@@ -220,25 +220,26 @@ def plot_data_greens_mt(filename,
     event_name = filename.split('.')[0]
 
     # generate synthetics
+    greens[0] = greens[0].select(origin)
+    greens[1] = greens[1].select(origin)
     synthetics = []
-    synthetics += [greens[0].get_synthetics(mt)]
-    synthetics += [greens[1].get_synthetics(mt)]
+    synthetics += [greens[0].get_synthetics(source)]
+    synthetics += [greens[1].get_synthetics(source)]
 
     # evaluate misfit
     total_misfit = []
-    total_misfit += [misfit[0](data[0], greens[0], mt)]
-    total_misfit += [misfit[1](data[1], greens[1], mt)]
+    total_misfit += [misfit[0](data[0], greens[0], source)]
+    total_misfit += [misfit[1](data[1], greens[1], source)]
 
     header = generate_header(event_name,
         process_data[0], process_data[1], misfit[0], misfit[1],
-        model, 'syngine', best_mt, origins[0].depth_in_m)
+        greens[0][0].model, 'syngine', source, origin.depth_in_m)
 
     plot_data_synthetics(filename, 
             data[0], data[1],
             synthetics[0], synthetics[1], 
-            process_data[0], process_data[1],
             total_misfit[0], total_misfit[1],
-            mt=mt,
+            mt=source,
             header=header,
             **kwargs)
 

@@ -11,7 +11,7 @@ from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
-from mtuq.graphics.waveform import plot_data_greens_mt
+from mtuq.graphics.waveform import plot_data_greens
 from mtuq.util import iterable, path_mtuq
 
 
@@ -114,17 +114,17 @@ if __name__=='__main__':
 
     print 'Figure 1 of 3\n'
 
-    plot_data_greens_mt(event_name+'.png',
+    plot_data_greens(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
         [process_bw, process_sw], [misfit_bw, misfit_sw], 
-        mt, origins, header=False)
+        mt, origin, header=False)
 
     print 'Figure 2 of 3\n'
 
-    plot_data_greens_mt(event_name+'.png',
+    plot_data_greens(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
         [process_bw, process_sw], [misfit_bw, misfit_sw], 
-        mt, origins, header=False)
+        mt, origin, header=False)
 
     print 'Figure 3 of 3\n'
 
