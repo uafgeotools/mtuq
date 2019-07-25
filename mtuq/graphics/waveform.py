@@ -10,8 +10,6 @@ def plot_data_synthetics(filename,
         data_sw, 
         synthetics_bw, 
         synthetics_sw, 
-        process_bw=None,
-        process_sw=None,
         total_misfit_bw=1., 
         total_misfit_sw=1., 
         normalize='maximum_amplitude',
@@ -75,11 +73,6 @@ def plot_data_synthetics(filename,
     if not title:
         event_name = filename.split('.')[0]
         title = event_name
-
-    if header==True:
-        header = generate_header(event_name,
-            process_bw, process_sw, misfit_bw, misfit_sw,
-            model, 'syngine', best_mt, origins[0].depth_in_m)
 
     if header:
         header_height = 2.5
@@ -215,7 +208,8 @@ def plot_data_greens_mt(filename,
         greens,  
         process_data, 
         misfit, 
-        mt,  
+        mt,
+        origins,
         **kwargs):
 
     """ Creates CAP-style data/synthetics figure
@@ -223,6 +217,8 @@ def plot_data_greens_mt(filename,
     Similar to plot_data_synthetics, except provides different input argument
     syntax
     """
+    event_name = filename.split('.')[0]
+
     # generate synthetics
     synthetics = []
     synthetics += [greens[0].get_synthetics(mt)]
@@ -233,12 +229,17 @@ def plot_data_greens_mt(filename,
     total_misfit += [misfit[0](data[0], greens[0], mt)]
     total_misfit += [misfit[1](data[1], greens[1], mt)]
 
+    header = generate_header(event_name,
+        process_data[0], process_data[1], misfit[0], misfit[1],
+        model, 'syngine', best_mt, origins[0].depth_in_m)
+
     plot_data_synthetics(filename, 
             data[0], data[1],
             synthetics[0], synthetics[1], 
             process_data[0], process_data[1],
             total_misfit[0], total_misfit[1],
             mt=mt,
+            header=header,
             **kwargs)
 
 
