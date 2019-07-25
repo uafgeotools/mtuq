@@ -37,12 +37,12 @@ class Client(object):
         :param origin: List of origin objects
         :rtype: mtuq.greens_tensor.GreensTensorList
         """
-        greens_tensors = []
+        tensors = []
         for origin in iterable(origins):
             for station in iterable(stations):
-                greens_tensors += [self._get_greens_tensor(station, origin)]
+                tensors += [self._get_greens_tensor(station, origin)]
 
-        return GreensTensorList(greens_tensors)
+        return GreensTensorList(tensors)
 
 
     def _get_greens_tensor(self, station=None, origin=None):
