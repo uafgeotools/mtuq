@@ -570,8 +570,8 @@ Main_GridSearch_DoubleCouple="""
     results_sw = comm.gather(results_sw, root=0)
 
     if comm.rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw, axis=1)
+        results_sw = np.concatenate(results_sw, axis=1)
 
         best_misfit = (results_bw + results_sw).min()
         best_source = sources.get((results_bw + results_sw).argmin())
@@ -643,8 +643,8 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     results_sw = comm.gather(results_sw, root=0)
 
     if rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw, axis=1)
+        results_sw = np.concatenate(results_sw, axis=1)
 """
 
 
