@@ -190,7 +190,7 @@ if __name__=='__main__':
         plot_data_greens_mt(event_name+'.png',
             [data_bw, data_sw], [greens_bw, greens_sw],
             [process_bw, process_sw], [misfit_bw, misfit_sw], 
-            best_source)
+            best_source, origins)
 
         plot_beachball(event_name+'_beachball.png', best_source)
 

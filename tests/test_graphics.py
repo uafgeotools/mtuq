@@ -117,14 +117,14 @@ if __name__=='__main__':
     plot_data_greens_mt(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
         [process_bw, process_sw], [misfit_bw, misfit_sw], 
-        mt, header=False)
+        mt, origins, header=False)
 
     print 'Figure 2 of 3\n'
 
     plot_data_greens_mt(event_name+'.png',
         [data_bw, data_sw], [greens_bw, greens_sw],
         [process_bw, process_sw], [misfit_bw, misfit_sw], 
-        mt, header=False)
+        mt, origins, header=False)
 
     print 'Figure 3 of 3\n'
 
