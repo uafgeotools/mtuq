@@ -138,11 +138,15 @@ if __name__=='__main__':
         greens_sw = greens.map(process_sw)
 
     else:
+        stations = None
+        origin = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+    stations = comm.bcast(stations, root=0)
+    origin = comm.bcast(origin, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -163,7 +167,7 @@ if __name__=='__main__':
         print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, grid)
+        data_sw, greens_sw, misfit_sw, sources, iterable(origin))
 
     results_bw = comm.gather(results_bw, root=0)
     results_sw = comm.gather(results_sw, root=0)

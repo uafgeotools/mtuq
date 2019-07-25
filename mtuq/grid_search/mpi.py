@@ -28,7 +28,8 @@ def _mpi_wrapper(grid_search, data, greens, misfit, sources, *args, **kwargs):
         raise TypeError
 
     if iproc == 0:
-        subset = grid.decompose(nproc)
+        subset = sources.decompose(nproc)
+
     else:
         subset = None
     subset = comm.scatter(subset, root=0)
