@@ -10,7 +10,7 @@ from mtuq.grid_search.serial import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
-from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
+from mtuq.graphics.beachball import misfit_vs_depth
 from mtuq.graphics.waveform import plot_data_greens
 from mtuq.util import iterable, path_mtuq
 
@@ -151,9 +151,6 @@ if __name__=='__main__':
     best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
-        filename = event_name+'_beachball_vs_depth.png'
-        #beachball_vs_depth(filename, best_source)
-
         filename = event_name+'_misfit_vs_depth.png'
         #misfit_vs_depth(filename, best_misfit)
 
