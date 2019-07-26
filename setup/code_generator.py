@@ -796,16 +796,14 @@ Main_TestGraphics="""
     print 'Figure 1 of 3\\n'
 
     plot_data_greens(event_name+'.png',
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [process_bw, process_sw], [misfit_bw, misfit_sw], 
-        mt, origin, header=False)
+        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+        misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print 'Figure 2 of 3\\n'
 
     plot_data_greens(event_name+'.png',
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [process_bw, process_sw], [misfit_bw, misfit_sw], 
-        mt, origin, header=False)
+        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+        misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print 'Figure 3 of 3\\n'
 
@@ -825,9 +823,8 @@ WrapUp_GridSearch_DoubleCouple="""
         print 'Savings results...\\n'
 
         plot_data_greens(event_name+'.png',
-            [data_bw, data_sw], [greens_bw, greens_sw],
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
-            best_source, origin)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source)
 
         plot_beachball(event_name+'_beachball.png', best_source)
 
@@ -867,9 +864,8 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     print 'Saving results...\\n'
 
     plot_data_greens(event_name+'.png', 
-        [data_bw, data_sw], [greens_bw, greens_sw], 
-        [process_bw, process_sw], [misfit_bw, misfit_sw],
-        best_source, origin)
+        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+        misfit_bw, misfit_sw, stations, origin, best_source)
 
     plot_beachball(event_name+'_beachball.png', best_source)
 
@@ -886,9 +882,8 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
     if run_figures:
         plot_data_greens(event_name+'.png',
-            [data_bw, data_sw], [greens_bw, greens_sw],
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
-            best_source, origin)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source)
 
         plot_beachball(event_name+'_beachball.png', best_source)
 

@@ -5,15 +5,20 @@ import warnings
 from mtuq.graphics.header import attach_header, generate_header
 
 
+#
+# functions that generate entire figures
+#
+
 def plot_data_synthetics(filename, 
-        data_bw, 
-        data_sw, 
-        synthetics_bw, 
-        synthetics_sw, 
+        data_bw,
+        data_sw,
+        synthetics_bw,
+        synthetics_sw,
+        stations,
+        mt=None,
         total_misfit_bw=1., 
         total_misfit_sw=1., 
         normalize='maximum_amplitude',
-        mt=None,
         title=None, 
         header=None,
         station_labels=True, 
@@ -22,34 +27,13 @@ def plot_data_synthetics(filename,
     """ Creates CAP-style data/synthetics figure
     """
 
-    # gather station metadata
-    stations = data_bw.get_stations()
-    assert stations == data_sw.get_stations()
-
-
-    # keep track of maximum amplitudes
-    max_amplitude_bw = 0.
-    if data_bw.max() > max_amplitude_bw:
-        max_amplitude_bw = data_bw.max()
-    if synthetics_bw.max() > max_amplitude_bw:
-        max_amplitude_bw = synthetics_bw.max()
-
-    max_amplitude_sw = 0.
-    if data_sw.max() > max_amplitude_sw:
-        max_amplitude_sw = data_sw.max()
-    if synthetics_sw.max() > max_amplitude_sw:
-        max_amplitude_sw = synthetics_sw.max()
-
-
-    #
-    # initialize figure
-    #
+    # how many stations have at least one traces?
+    nstations = _count([data_bw, data_sw])
 
     # dimensions of subplot array
-    nrow = _count_nonempty([data_bw, data_sw]) # number of nonempty stations
+    nrow = nstations
     ncol = 5
     irow = 0
-
 
     # figure dimensions in inches
     height = 1.4*nrow
@@ -68,13 +52,12 @@ def plot_data_synthetics(filename,
     width += margin_left
     width += margin_right
 
-
-    # optional CAP-style header
     if not title:
         event_name = filename.split('.')[0]
         title = event_name
 
     if header:
+        # attach optional CAP-style header
         header_height = 2.5
         height += header_height
         fig = pyplot.figure(figsize=(width, height))
@@ -94,6 +77,19 @@ def plot_data_synthetics(filename,
         wspace=0.,
         hspace=0.,
         )
+
+    # determine maximum amplitudes
+    max_amplitude_bw = 0.
+    if data_bw.max() > max_amplitude_bw:
+        max_amplitude_bw = data_bw.max()
+    if synthetics_bw.max() > max_amplitude_bw:
+        max_amplitude_bw = synthetics_bw.max()
+
+    max_amplitude_sw = 0.
+    if data_sw.max() > max_amplitude_sw:
+        max_amplitude_sw = data_sw.max()
+    if synthetics_sw.max() > max_amplitude_sw:
+        max_amplitude_sw = synthetics_sw.max()
 
 
     #
@@ -204,12 +200,17 @@ def plot_data_synthetics(filename,
 
 
 def plot_data_greens(filename, 
-        data, 
-        greens,  
-        process_data, 
-        misfit, 
-        source,
+        data_bw,
+        data_sw,
+        greens_bw,
+        greens_sw,
+        process_bw,
+        process_sw,
+        misfit_bw,
+        misfit_sw,
+        stations,
         origin,
+        mt,
         **kwargs):
 
     """ Creates CAP-style data/synthetics figure
@@ -219,31 +220,27 @@ def plot_data_greens(filename,
     """
     event_name = filename.split('.')[0]
 
-    # generate synthetics
-    greens[0] = greens[0].select(origin)
-    greens[1] = greens[1].select(origin)
-    synthetics = []
-    synthetics += [greens[0].get_synthetics(source)]
-    synthetics += [greens[1].get_synthetics(source)]
-
-    # evaluate misfit
-    total_misfit = []
-    total_misfit += [misfit[0](data[0], greens[0], source)]
-    total_misfit += [misfit[1](data[1], greens[1], source)]
+    greens_bw = greens_bw.select(origin)
+    greens_sw = greens_sw.select(origin)
+    synthetics_bw = greens_bw.get_synthetics(mt)
+    synthetics_sw = greens_sw.get_synthetics(mt)
+    total_misfit_bw = misfit_bw(data_bw, greens_bw, mt)
+    total_misfit_sw = misfit_sw(data_sw, greens_sw, mt)
 
     header = generate_header(event_name,
-        process_data[0], process_data[1], misfit[0], misfit[1],
-        greens[0][0].model, 'syngine', source, origin.depth_in_m)
+        process_bw, process_sw, misfit_bw, misfit_bw,
+        greens_bw[0].model, 'syngine', mt, origin.depth_in_m)
 
-    plot_data_synthetics(filename, 
-            data[0], data[1],
-            synthetics[0], synthetics[1], 
-            total_misfit[0], total_misfit[1],
-            mt=source,
-            header=header,
-            **kwargs)
+    plot_data_synthetics(filename,
+            data_bw, data_sw, synthetics_bw, synthetics_sw, stations,
+            total_misfit_bw=total_misfit_bw, total_misfit_sw=total_misfit_sw,
+            mt=mt, header=header, **kwargs)
 
 
+
+#
+# functions that act on individual axes
+#
 
 def plot(dat, syn, label=None):
     """ Plots data and synthetics time series on current axes
@@ -321,9 +318,9 @@ def add_trace_labels(dat, syn, total_misfit=1.):
 
 
 
-
-### utilities
-
+#
+# utility functions
+#
 
 def _time_stats(trace):
     # returns time scheme
@@ -335,7 +332,7 @@ def _time_stats(trace):
         )
 
 
-def _count_nonempty(datasets):
+def _count(datasets):
     # counts number of nonempty streams in dataset(s)
     count = 0
     for streams in zip(*datasets):

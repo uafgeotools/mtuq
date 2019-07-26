@@ -155,9 +155,8 @@ if __name__=='__main__':
 
     if run_figures:
         plot_data_greens(event_name+'.png',
-            [data_bw, data_sw], [greens_bw, greens_sw],
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
-            best_source, origin)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source)
 
         plot_beachball(event_name+'_beachball.png', best_source)
 

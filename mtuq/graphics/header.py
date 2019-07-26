@@ -83,19 +83,18 @@ def generate_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
     sw_win_len = process_sw.window_length
 
     return Header(
-        shape=np.array([4,4]),
+        shape=np.array([5,4]),
         items={
             0: '$M_w$: %3.2f' % Mw,
             1: 'depth: %.1f km' % (depth_in_m/1000.),
-            #2: 'CLVD: %.0f' % 0.,
-            #3: 'ISO: %.0f' % 0.,
+            2: 'CLVD: %.0f' % 0.,
+            3: 'ISO: %.0f' % 0.,
             4: 'model: %s' % model,
             5: 'solver: %s' % solver,
-            #6: 'norm: %s' % norm,
-            8: 'b.w. bandpass: %.1f - %.1f s' % (bw_T_min, bw_T_max),
-            10: 's.w. bandpass: %.1f - %.1f s' % (sw_T_min, sw_T_max),
-            12: 'b.w. window: %.1f s' % bw_win_len,
-            14: 's.w. window: %.1f s' % sw_win_len})
+            12: 'b.w. passband: %.1f - %.1f s' % (bw_T_min, bw_T_max),
+            14: 's.w. passband: %.1f - %.1f s' % (sw_T_min, sw_T_max),
+            16: 'b.w. window: %.1f s' % bw_win_len,
+            18: 's.w. window: %.1f s' % sw_win_len})
 
 
 
