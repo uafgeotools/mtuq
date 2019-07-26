@@ -427,6 +427,7 @@ Grid_DoubleCoupleMagnitudeDepth="""
         magnitude=magnitudes)
 
     wavelet = Trapezoid(
+        magnitude=4.5)
 
 """
 
@@ -605,7 +606,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             origins += [deepcopy(origin)]
             setattr(origins[-1], 'depth_in_m', depth)
 
-        greens = get_greens_tensors(stations, origin, model=model)
+        greens = get_greens_tensors(stations, origins, model=model)
 
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
@@ -616,9 +617,15 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data_sw = data.map(process_sw)
 
     else:
+        stations = None
+        origins = None
         data_bw = None
         data_sw = None
+        greens_bw = None
+        greens_sw = None
 
+    stations = comm.bcast(stations, root=0)
+    origins = comm.bcast(origins, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -630,10 +637,13 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
 
     if rank==0:
-        print 'Carrying out grid search...\\n'
+        print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, sources, origins)
+
+    if rank==0:
+        print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, sources, origins)
@@ -738,10 +748,12 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     # The main computational work starts now
     #
 
-    print 'Carrying out grid search...\\n'
+    print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
+
+    print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)

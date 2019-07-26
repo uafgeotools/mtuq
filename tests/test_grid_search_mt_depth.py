@@ -135,10 +135,12 @@ if __name__=='__main__':
     # The main computational work starts now
     #
 
-    print 'Carrying out grid search...\n'
+    print 'Evaluating body wave misfit...\n'
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
+
+    print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
