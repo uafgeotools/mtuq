@@ -14,7 +14,7 @@ from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens
-from mtuq.util import iterable, path_mtuq
+from mtuq.util import path_mtuq
 
 
 """
@@ -559,13 +559,13 @@ Main_GridSearch_DoubleCouple="""
         print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
+        data_bw, greens_bw, misfit_bw, origin, sources)
 
     if comm.rank==0:
         print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, iterable(origin))
+        data_sw, greens_sw, misfit_sw, origin, sources)
 
     results_bw = comm.gather(results_bw, root=0)
     results_sw = comm.gather(results_sw, root=0)
@@ -640,13 +640,13 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins)
+        data_bw, greens_bw, misfit_bw, origins, sources)
 
     if rank==0:
         print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins)
+        data_sw, greens_sw, misfit_sw, origins, sources)
 
     # gathering results
     results_bw = comm.gather(results_bw, root=0)
@@ -697,12 +697,12 @@ Main2_SerialGridSearch_DoubleCouple="""
     print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
+        data_bw, greens_bw, misfit_bw, origin, sources)
 
     print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, iterable(origin))
+        data_sw, greens_sw, misfit_sw, origin, sources)
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())
@@ -751,12 +751,12 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
+        data_bw, greens_bw, misfit_bw, origins, sources, verbose=False)
 
     print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
+        data_sw, greens_sw, misfit_sw, origins, sources, verbose=False)
 
 
 """
@@ -847,13 +847,13 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         print 'Saving results...\\n'
 
         filename = event_name+'_misfit_vs_depth.png'
-        misfit_vs_depth(filename, results_bw+results_sw, sources, origins)
+        misfit_vs_depth(filename, results_bw+results_sw, origins, sources)
 
         filename = event_name+'_bw_vs_depth.png'
-        misfit_vs_depth(filename, results_bw, sources, origins)
+        misfit_vs_depth(filename, results_bw, origins, sources)
 
         filename = event_name+'_sw_vs_depth.png'
-        misfit_vs_depth(filename, results_sw, sources, origins)
+        misfit_vs_depth(filename, results_sw, origins, sources)
 
         print 'Finished\\n'
 """

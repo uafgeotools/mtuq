@@ -12,7 +12,7 @@ from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_greens
-from mtuq.util import iterable, path_mtuq
+from mtuq.util import path_mtuq
 
 
 
@@ -139,12 +139,12 @@ if __name__=='__main__':
     print 'Evaluating body wave misfit...\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
+        data_bw, greens_bw, misfit_bw, origin, sources)
 
     print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, iterable(origin))
+        data_sw, greens_sw, misfit_sw, origin, sources)
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())

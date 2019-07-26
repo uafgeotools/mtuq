@@ -12,7 +12,7 @@ from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_synthetics
-from mtuq.util import iterable, path_mtuq
+from mtuq.util import path_mtuq
 
 
 

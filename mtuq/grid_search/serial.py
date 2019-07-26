@@ -1,27 +1,21 @@
 
 import numpy as np
 import time
-from mtuq.util import timer
-
-try:
-    import h5py
-except:
-    warn('Could not import h5py.')
+from mtuq.util import iterable, timer
 
 
 @timer
-def grid_search(data, greens, misfit, sources, origins, verbose=True):
+def grid_search(data, greens, misfit, origins, sources, verbose=True):
     """ Grid search over source mechanism and location parameters
     """
+    origins = iterable(origins)
     ni, nj = len(origins), len(sources)
     results = np.zeros((ni, nj))
 
     for _i, origin in enumerate(origins):
         _greens = greens.select(origin)
-
         for _j, source in enumerate(sources):
             results[_i, _j] = misfit(data, _greens, source)
-
             if verbose: 
                 progress(_i,_j,ni,nj)
 
