@@ -2,6 +2,7 @@
 import numpy as np
 from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
+from mtuq.event import MomentTensor
 
 
 

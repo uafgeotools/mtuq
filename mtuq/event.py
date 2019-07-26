@@ -42,7 +42,14 @@ class Origin(obspy.core.AttribDict):
 
 
 class MomentTensor(object):
-    """ Moment tensor source
+    """ Moment tensor object
+
+    .. note:
+        For heavy computations, it is sometimes faster to use plain 
+        NumPy arrays. It is easy to convert back and forth between
+        MomentTensor objects and NumPy arrays using the MomentTensor 
+        constructor and the as_vector and as_matrix methods.
+
     """
     def __init__(self, array=None, code="Unknown"):
         if not array:
@@ -78,6 +85,16 @@ class MomentTensor(object):
         return np.array([array[0], array[3], array[4]],
                         [array[3], array[1], array[5]],
                         [array[4], array[5], array[2]])
+
+
+    def moment(self):
+        M = self.as_matrix()
+        return (np.tensordot(M,M)/2.)**0.5
+
+
+    def magnitude(self):
+        # how to generalize for users who prefer slightly different formulas? 
+        return 2./3.*(np.log10(self.moment()) - 9.1)
 
 
 class Force(object):
