@@ -27,7 +27,7 @@ def plot_data_synthetics(filename,
     """ Creates CAP-style data/synthetics figure
     """
 
-    # how many stations have at least one traces?
+    # how many stations have at least one trace?
     nstations = _count([data_bw, data_sw])
 
     # dimensions of subplot array
@@ -53,8 +53,7 @@ def plot_data_synthetics(filename,
     width += margin_right
 
     if not title:
-        event_name = filename.split('.')[0]
-        title = event_name
+        title = filename.split('.')[0]
 
     if header:
         # attach optional CAP-style header

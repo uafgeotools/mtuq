@@ -57,7 +57,7 @@ def attach_header(title=None, header=None, mt=None, height=None):
 
     # add beachball
     from obspy.imaging.beachball import beach
-    beach = beach(mt, xy=(1., 1.), width=1.75, linewidth=0.5, facecolor=_light_gray)
+    beach = beach(mt, xy=(1.15, 1.), width=1.75, linewidth=0.5, facecolor=_light_gray)
     ax = pyplot.gca()
     ax.add_collection(beach)
 
@@ -88,8 +88,8 @@ def generate_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
         items={
             0: '$M_w$: %3.2f' % Mw,
             1: 'depth: %.1f km' % (depth_in_m/1000.),
-            2: 'CLVD: %.0f' % 0.,
-            3: 'ISO: %.0f' % 0.,
+            #2: 'CLVD: %.0f' % 0.,
+            #3: 'ISO: %.0f' % 0.,
             4: 'model: %s' % model,
             5: 'solver: %s' % solver,
             12: 'b.w. passband: %.1f - %.1f s' % (bw_T_min, bw_T_max),
@@ -99,8 +99,8 @@ def generate_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
 
 
 
-_dark_gray = [0.75, 0.75, 0.75]
-_light_gray = [0.25, 0.25, 0.25]
+_light_gray = [0.667, 0.667, 0.667]
+_dark_gray = [0.333, 0.333, 0.333]
 
 def _text(text, x, y, ax, fontsize=12):
     pyplot.text(x, y, text, fontsize=fontsize, transform=ax.transAxes)
