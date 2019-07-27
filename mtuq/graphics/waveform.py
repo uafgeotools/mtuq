@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 import warnings
-from mtuq.graphics.header import attach_header, generate_header
+from mtuq.graphics.header import OldStyleHeader
 
 
 #
@@ -37,26 +37,21 @@ def plot_data_synthetics(filename,
     # figure dimensions in inches
     height = 1.4*nrow
     width = 16.
-
     margin_bottom = 0.25
     margin_top = 0.25
     margin_left = 0.25
     margin_right = 0.25
-
     if station_labels:
         margin_left += 1.
-
     height += margin_bottom
     height += margin_top
     width += margin_left
     width += margin_right
-
     if header:
         header_height = 2.5
         height += header_height
     else:
         header_height = 0.
-
 
     # initialize figure
     fig, axes = pyplot.subplots(nrow, ncol, 
@@ -76,9 +71,7 @@ def plot_data_synthetics(filename,
 
     # optionally, attach CAP-style header
     if header:
-        title = filename.split('.')[0]
-        attach_header(title, header, mt, header_height)
-
+        header.write(header_height)
 
     # determine maximum amplitudes
     max_amplitude_bw = 0.
@@ -227,9 +220,9 @@ def plot_data_greens(filename,
     total_misfit_bw = misfit_bw(data_bw, greens_bw, mt)
     total_misfit_sw = misfit_sw(data_sw, greens_sw, mt)
 
-    header = generate_header(event_name,
+    header = OldStyleHeader(event_name,
         process_bw, process_sw, misfit_bw, misfit_bw,
-        greens_bw[0].model, 'syngine', mt, origin.depth_in_m)
+        greens_bw[0].model, 'syngine', mt, origin)
 
     plot_data_synthetics(filename,
             data_bw, data_sw, synthetics_bw, synthetics_sw, stations,
@@ -353,7 +346,7 @@ def _hide_axes(axes):
             col.get_yaxis().set_ticks([])
 
 
-def get_column_widths(width, data_bw, data_sw):
+def get_column_widths(data_bw, data_sw, width=1.):
     # creates argument used by pyplot.subplot
 
     for _i, stream in enumerate(data_bw):
@@ -373,6 +366,5 @@ def get_column_widths(width, data_bw, data_sw):
     len_sw *= width
 
     return\
-        [1,1,2.5,2.5,2.5]
-        #[len_bw, len_bw, len_sw, len_sw, len_sw]
+        [len_bw, len_bw, len_sw, len_sw, len_sw]
 
