@@ -985,7 +985,7 @@ Main_BenchmarkCAP="""
         if run_figures:
             plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-                trace_labels=False)
+                stations, trace_labels=False)
 
         if run_checks:
             compare_cap_mtuq(
@@ -1001,7 +1001,7 @@ Main_BenchmarkCAP="""
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-            trace_labels=False, normalize=False)
+            stations, trace_labels=False, normalize=False)
 
     print '\\nSUCCESS\\n'
 

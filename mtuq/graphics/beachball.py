@@ -1,3 +1,6 @@
+#
+# utilities for plotting
+#
 
 import numpy as np
 import matplotlib.pyplot as pyplot
@@ -15,8 +18,15 @@ def plot_beachball(filename, mt):
 
 
 def misfit_vs_depth(filename, results, origins, mt):
-    """ From grid search results, plots misfit versus depth
+    """ Plots misfit versus depth from grid search results
+
+    Creates a scatter plot in which the the placment of each marker shows the 
+    misfit of the best-fitting source for a given depth. 
+
+    Following SilwalTape2016, the marker itself shows the focal mechanism and
+    moment magnitude of the best-fitting source.
     """
+
     nn=len(origins)
     fig = pyplot.figure(figsize=(nn+1, 1))
     ax = pyplot.gca()
