@@ -14,14 +14,16 @@ def plot_beachball(filename, mt):
     pyplot.savefig(filename)
 
 
-def misfit_vs_depth(filename, misfit, origins, mt):
+def misfit_vs_depth(filename, results, origins, mt):
+    """ From grid search results, plots misfit versus depth
+    """
     nn=len(origins)
     fig = pyplot.figure(figsize=(nn+1, 1))
     ax = pyplot.gca()
 
     for _i, origin in enumerate(origins):
-        best_misfit = misfit[_i, :].min()
-        best_mt = sources.get(misfit[_i, :].argmin())
+        best_misfit = results[_i, :].min()
+        best_mt = sources.get(results[_i, :].argmin())
 
         # add beachball
         ax.add_collection(

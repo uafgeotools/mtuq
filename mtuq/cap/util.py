@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import obspy
 from copy import deepcopy
+from mtuq.event import MomentTensor
 from mtuq.wavelet import EarthquakeTrapezoid
 
 

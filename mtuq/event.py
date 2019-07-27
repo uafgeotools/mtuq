@@ -52,7 +52,7 @@ class MomentTensor(object):
 
     """
     def __init__(self, array=None, code="Unknown"):
-        if not array:
+        if array is None:
             raise Exception
         if len(array)!=6:
             raise Exception
@@ -82,9 +82,9 @@ class MomentTensor(object):
         """ Returns 2D symmetric numpy array
         """
         array = self._array
-        return np.array([array[0], array[3], array[4]],
-                        [array[3], array[1], array[5]],
-                        [array[4], array[5], array[2]])
+        return np.array([[array[0], array[3], array[4]],
+                         [array[3], array[1], array[5]],
+                         [array[4], array[5], array[2]]])
 
 
     def moment(self):
@@ -141,30 +141,13 @@ def _check(code):
         return int(code)
     elif code=="Unknown":
         return 0
-    elif code=="GCMT":
+    elif code=="USE":
         return 1
-    elif code=="AkiRichards":
+    elif code=="NED":
         return 2
-    elif code=="SteinWysession":
+    elif code=="NWU":
         return 3
     else:
         raise TypeError
 
-
-"""
-Basis Convention         Code
-======================== ===========================
-Unknown                  ``0``, ``"Unknown"``
-======================== ===========================
-Up-South-East            ``1``, ``"GCMT"``
-======================== ===========================
-North-East-Down          ``2``, ``"AkiRichards"``
-======================== ===========================
-North-West-Up            ``3``, ``"SteinWysession"``
-======================== ===========================
-East-North-Up            ``4`` 
-======================== ===========================
-South-East-Up            ``5``
-======================== ===========================
-"""
 
