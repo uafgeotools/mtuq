@@ -38,7 +38,6 @@ def attach_header(title=None, header=None, mt=None, height=None):
     ax = fig.add_axes([x0, y0, 1., height/figure_height])
     ax.set_xlim([0., width])
     ax.set_ylim([0., height])
-    ax = pyplot.gca()
 
     if title:
         _bold(title, 0.15, 0.7, ax, fontsize=16)
@@ -58,7 +57,6 @@ def attach_header(title=None, header=None, mt=None, height=None):
     # add beachball
     from obspy.imaging.beachball import beach
     beach = beach(mt, xy=(1.15, 1.), width=1.75, linewidth=0.5, facecolor=_light_gray)
-    ax = pyplot.gca()
     ax.add_collection(beach)
 
     _hide_axes(ax)
