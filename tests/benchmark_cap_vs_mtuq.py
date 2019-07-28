@@ -12,7 +12,7 @@ from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.waveform import plot_data_synthetics
-from mtuq.util import iterable, path_mtuq
+from mtuq.util import path_mtuq
 
 
 
@@ -216,7 +216,7 @@ if __name__=='__main__':
         if run_figures:
             plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-                trace_labels=False)
+                stations, trace_labels=False)
 
         if run_checks:
             compare_cap_mtuq(
@@ -232,7 +232,7 @@ if __name__=='__main__':
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-            trace_labels=False, normalize=False)
+            stations, trace_labels=False, normalize=False)
 
     print '\nSUCCESS\n'
 

@@ -42,10 +42,17 @@ class Origin(obspy.core.AttribDict):
 
 
 class MomentTensor(object):
-    """ Moment tensor source
+    """ Moment tensor object
+
+    .. note:
+        For heavy computations, it is sometimes faster to use plain 
+        NumPy arrays. It is easy to convert back and forth between
+        MomentTensor objects and NumPy arrays using the MomentTensor 
+        constructor and the as_vector and as_matrix methods.
+
     """
     def __init__(self, array=None, code="Unknown"):
-        if not array:
+        if array is None:
             raise Exception
         if len(array)!=6:
             raise Exception
@@ -75,9 +82,19 @@ class MomentTensor(object):
         """ Returns 2D symmetric numpy array
         """
         array = self._array
-        return np.array([array[0], array[3], array[4]],
-                        [array[3], array[1], array[5]],
-                        [array[4], array[5], array[2]])
+        return np.array([[array[0], array[3], array[4]],
+                         [array[3], array[1], array[5]],
+                         [array[4], array[5], array[2]]])
+
+
+    def moment(self):
+        M = self.as_matrix()
+        return (np.tensordot(M,M)/2.)**0.5
+
+
+    def magnitude(self):
+        # how to generalize for users who prefer slightly different formulas? 
+        return 2./3.*(np.log10(self.moment()) - 9.1)
 
 
 class Force(object):
@@ -124,30 +141,13 @@ def _check(code):
         return int(code)
     elif code=="Unknown":
         return 0
-    elif code=="GCMT":
+    elif code=="USE":
         return 1
-    elif code=="AkiRichards":
+    elif code=="NED":
         return 2
-    elif code=="SteinWysession":
+    elif code=="NWU":
         return 3
     else:
         raise TypeError
 
-
-"""
-Basis Convention         Code
-======================== ===========================
-Unknown                  ``0``, ``"Unknown"``
-======================== ===========================
-Up-South-East            ``1``, ``"GCMT"``
-======================== ===========================
-North-East-Down          ``2``, ``"AkiRichards"``
-======================== ===========================
-North-West-Up            ``3``, ``"SteinWysession"``
-======================== ===========================
-East-North-Up            ``4`` 
-======================== ===========================
-South-East-Up            ``5``
-======================== ===========================
-"""
 

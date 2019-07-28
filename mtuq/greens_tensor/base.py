@@ -30,6 +30,7 @@ class GreensTensor(Stream):
             station=None, 
             origin=None,
             id=None, 
+            model=None,
             include_mt=True,
             include_force=False):
 
@@ -64,6 +65,7 @@ class GreensTensor(Stream):
             station.latitude,
             station.longitude)
 
+        self.model = model
         self.include_mt = include_mt
         self.include_force = include_force
 
@@ -462,7 +464,7 @@ class GreensTensorList(list):
         else:
             raise KeyError("Bad selection criterion: %s" % key)
 
-        return filter(selected, self)
+        return self.__class__(tensors=filter(selected, self), id=self.id)
 
 
     def get_synthetics(self, source, origin=None):

@@ -10,9 +10,9 @@ from mtuq.grid_search.serial import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
-from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
-from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import iterable, path_mtuq
+from mtuq.graphics.beachball import misfit_vs_depth
+from mtuq.graphics.waveform import plot_data_greens
+from mtuq.util import path_mtuq
 
 
 
@@ -135,13 +135,15 @@ if __name__=='__main__':
     # The main computational work starts now
     #
 
-    print 'Carrying out grid search...\n'
+    print 'Evaluating body wave misfit...\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
+        data_bw, greens_bw, misfit_bw, origins, sources, verbose=False)
+
+    print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
+        data_sw, greens_sw, misfit_sw, origins, sources, verbose=False)
 
 
 
@@ -149,9 +151,6 @@ if __name__=='__main__':
     best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
-        filename = event_name+'_beachball_vs_depth.png'
-        #beachball_vs_depth(filename, best_source)
-
         filename = event_name+'_misfit_vs_depth.png'
         #misfit_vs_depth(filename, best_misfit)
 

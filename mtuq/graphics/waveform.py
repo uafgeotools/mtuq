@@ -3,33 +3,81 @@ import numpy as np
 import matplotlib.pyplot as pyplot
 import warnings
 from matplotlib.font_manager import FontProperties
+from mtuq.graphics.header import NewStyleHeader
 
+
+#
+# functions that generate entire figures
+#
 
 def plot_data_synthetics(filename, 
-        data_bw, 
-        data_sw, 
-        synthetics_bw, 
-        synthetics_sw, 
-        process_bw=None,
-        process_sw=None,
+        data_bw,
+        data_sw,
+        synthetics_bw,
+        synthetics_sw,
+        stations,
+        mt=None,
+        header=None,
         total_misfit_bw=1., 
         total_misfit_sw=1., 
         normalize='maximum_amplitude',
-        mt=None,
-        title=None, 
-        header=None,
         station_labels=True, 
         trace_labels=True):
 
     """ Creates CAP-style data/synthetics figure
     """
 
-    # gather station metadata
-    stations = data_bw.get_stations()
-    assert stations == data_sw.get_stations()
+    # how many stations have at least one trace?
+    nstations = _count([data_bw, data_sw])
 
+    # dimensions of subplot array
+    nrow = nstations
+    ncol = 5
+    _irow = 0
 
-    # keep track of maximum amplitudes
+    # figure dimensions in inches
+    height = 1.4*nrow
+    width = 15.
+    margin_bottom = 0.25
+    margin_top = 0.25
+    margin_left = 0.25
+    margin_right = 0.25
+
+    if header:
+        margin_top = 2.
+
+    if station_labels:
+        margin_left += 0.9
+
+    height += margin_bottom
+    height += margin_top
+    width += margin_left
+    width += margin_right
+
+    # initialize figure
+    fig, axes = pyplot.subplots(nrow, ncol, 
+        figsize=(width, height),
+        gridspec_kw=dict(width_ratios=[0.4,0.4,1.,1.,1.]))
+
+    pyplot.subplots_adjust(
+        left=margin_left/width,
+        right=1.-margin_right/width,
+        bottom=margin_bottom/height,
+        top=1.-(margin_top)/height,
+        wspace=0.,
+        hspace=0.,
+        )
+
+    _hide_axes(axes)
+    add_component_labels(axes)
+
+    if header:
+        # write CAP-style header
+        header_height = margin_top
+        header_offset = margin_left-int(bool(station_labels))*0.9
+        header.write(header_height, header_offset)
+
+    # determine maximum amplitudes
     max_amplitude_bw = 0.
     if data_bw.max() > max_amplitude_bw:
         max_amplitude_bw = data_bw.max()
@@ -41,66 +89,6 @@ def plot_data_synthetics(filename,
         max_amplitude_sw = data_sw.max()
     if synthetics_sw.max() > max_amplitude_sw:
         max_amplitude_sw = synthetics_sw.max()
-
-
-    #
-    # initialize figure
-    #
-
-    # dimensions of subplot array
-    nrow = _count_nonempty([data_bw, data_sw]) # number of nonempty stations
-    ncol = 5
-    irow = 0
-
-
-    # figure dimensions in inches
-    height = 1.4*nrow
-    width = 16.
-
-    margin_bottom = 0.25
-    margin_top = 0.25
-    margin_left = 0.25
-    margin_right = 0.25
-
-    if station_labels:
-        margin_left += 0.75
-
-    height += margin_bottom
-    height += margin_top
-    width += margin_left
-    width += margin_right
-
-
-    # optional CAP-style header
-    if not title:
-        event_name = filename.split('.')[0]
-        title = event_name
-
-    if header==True:
-        header = generate_header(event_name,
-            process_bw, process_sw, misfit_bw, misfit_sw,
-            model, 'syngine', best_mt, origins[0].depth_in_m)
-
-    if header:
-        header_height = 2.5
-        height += header_height
-        fig = pyplot.figure(figsize=(width, height))
-        add_header(title, header, mt, header_height)
-
-    else:
-        header_height = 0.
-        fig = pyplot.figure(figsize=(width, height))
-
-
-    # adjust subplot spacing
-    pyplot.subplots_adjust(
-        left=margin_left/width,
-        right=1.-margin_right/width,
-        bottom=margin_bottom/height,
-        top=1.-(margin_top+header_height)/height,
-        wspace=0.,
-        hspace=0.,
-        )
 
 
     #
@@ -116,8 +104,7 @@ def plot_data_synthetics(filename,
         # add station labels
         if station_labels:
             meta = stations[_i]
-            pyplot.subplot(nrow, ncol, ncol*irow+1)
-            add_station_labels(meta)
+            add_station_labels(axes[_irow, 0], meta)
 
 
         #
@@ -140,25 +127,25 @@ def plot_data_synthetics(filename,
 
             # plot traces
             if component=='Z':
-                pyplot.subplot(nrow, ncol, ncol*irow+1)
-                plot(dat, syn)
+                axis = axes[_irow][0]
             elif component=='R':
-                pyplot.subplot(nrow, ncol, ncol*irow+2)
-                plot(dat, syn)
+                axis = axes[_irow][1]
             else:
                 continue
+
+            plot(axis, dat, syn)
 
             # normalize amplitudes
             if normalize=='trace_amplitude':
                 max_trace = _max(dat, syn)
                 ylim = [-2*max_trace, +2*max_trace]
-                pyplot.ylim(*ylim)
+                axis.set_ylim(*ylim)
             elif normalize=='maximum_amplitude':
                 ylim = [-2*max_amplitude_bw, +2*max_amplitude_bw]
-                pyplot.ylim(*ylim)
+                axis.set_ylim(*ylim)
 
             if trace_labels:
-                add_trace_labels(dat, syn, total_misfit_bw)
+                add_trace_labels(axis, dat, syn, total_misfit_bw)
 
 
         #
@@ -181,41 +168,46 @@ def plot_data_synthetics(filename,
 
             # plot traces
             if component=='Z':
-                pyplot.subplot(nrow, ncol, ncol*irow+3)
-                plot(dat, syn)
+                axis = axes[_irow][2]
             elif component=='R':
-                pyplot.subplot(nrow, ncol, ncol*irow+4)
-                plot(dat, syn)
+                axis = axes[_irow][3]
             elif component=='T':
-                pyplot.subplot(nrow, ncol, ncol*irow+5)
-                plot(dat, syn)
+                axis = axes[_irow][4]
             else:
                 continue
+
+            plot(axis, dat, syn)
 
             # amplitude normalization
             if normalize=='trace_amplitude':
                 max_trace = _max(dat, syn)
                 ylim = [-max_trace, +max_trace]
-                pyplot.ylim(*ylim)
+                axis.set_ylim(*ylim)
             elif normalize=='maximum_amplitude':
                 ylim = [-max_amplitude_sw, +max_amplitude_sw]
-                pyplot.ylim(*ylim)
+                axis.set_ylim(*ylim)
 
             if trace_labels:
-                add_trace_labels(dat, syn, total_misfit_sw)
+                add_trace_labels(axis, dat, syn, total_misfit_sw)
 
-        irow += 1
+        _irow += 1
 
     pyplot.savefig(filename)
 
 
 
-def plot_data_greens_mt(filename, 
-        data, 
-        greens,  
-        process_data, 
-        misfit, 
-        mt,  
+def plot_data_greens(filename, 
+        data_bw,
+        data_sw,
+        greens_bw,
+        greens_sw,
+        process_bw,
+        process_sw,
+        misfit_bw,
+        misfit_sw,
+        stations,
+        origin,
+        mt,
         **kwargs):
 
     """ Creates CAP-style data/synthetics figure
@@ -223,27 +215,31 @@ def plot_data_greens_mt(filename,
     Similar to plot_data_synthetics, except provides different input argument
     syntax
     """
-    # generate synthetics
-    synthetics = []
-    synthetics += [greens[0].get_synthetics(mt)]
-    synthetics += [greens[1].get_synthetics(mt)]
+    event_name = filename.split('.')[0]
 
-    # evaluate misfit
-    total_misfit = []
-    total_misfit += [misfit[0](data[0], greens[0], mt)]
-    total_misfit += [misfit[1](data[1], greens[1], mt)]
+    greens_bw = greens_bw.select(origin)
+    greens_sw = greens_sw.select(origin)
+    synthetics_bw = greens_bw.get_synthetics(mt)
+    synthetics_sw = greens_sw.get_synthetics(mt)
+    total_misfit_bw = misfit_bw(data_bw, greens_bw, mt)
+    total_misfit_sw = misfit_sw(data_sw, greens_sw, mt)
 
-    plot_data_synthetics(filename, 
-            data[0], data[1],
-            synthetics[0], synthetics[1], 
-            process_data[0], process_data[1],
-            total_misfit[0], total_misfit[1],
-            mt=mt,
-            **kwargs)
+    header = NewStyleHeader(event_name,
+        process_bw, process_sw, misfit_bw, misfit_bw,
+        greens_bw[0].model, 'syngine', mt, origin)
+
+    plot_data_synthetics(filename,
+            data_bw, data_sw, synthetics_bw, synthetics_sw, stations,
+            total_misfit_bw=total_misfit_bw, total_misfit_sw=total_misfit_sw,
+            mt=mt, header=header, **kwargs)
 
 
 
-def plot(dat, syn, label=None):
+#
+# functions that act on individual axes
+#
+
+def plot(axis, dat, syn, label=None):
     """ Plots data and synthetics time series on current axes
     """
     t1,t2,nt,dt = _time_stats(dat)
@@ -255,140 +251,66 @@ def plot(dat, syn, label=None):
     d = dat.data
     s = syn.data
 
-    ax = pyplot.gca()
-
     t = np.linspace(0,t2-t1,nt,dt)
-    ax.plot(t, d, 'k')
-    ax.plot(t, s[start:stop], 'r')
-
-    _hide_axes(ax)
+    axis.plot(t, d, 'k')
+    axis.plot(t, s[start:stop], 'r')
 
 
-class Header(dict):
-    """ A dictionary-like object containing header text
-
-    Stores header text in a dictionary {position: text}, where position is an
-    integer and text is a string. (This syntax is inspired by 
-    matplotlib.pyplot.subplot.)
-
-    .. example:
-
-       Create a text header with one row and two columns:
-
-           Header({1: 'text of column1', 2: 'text of column2'}, shape=[1,2])
-
-
-    """
-    def __init__(self, items, shape=np.array([])):
-        super(Header, self).__init__(items)
-        self.shape = shape
-
-
-def add_header(title=None, header=None, mt=None, height=None):
-    """ Adds header object to current figure
-    """
-    fig = pyplot.gcf()
-    width, figure_height = fig.get_size_inches()
-
-    x0 = 0.
-    y0 = 1.-height/figure_height
-    ax = fig.add_axes([x0, y0, 1., height/figure_height])
-    ax.set_xlim([0., width])
-    ax.set_ylim([0., height])
-    ax = pyplot.gca()
-
-    if title:
-        _bold(title, 0.15, 0.7, ax, fontsize=16)
-
-    for _i, text in header.items():
-        ix = _i % header.shape[1]
-        iy = _i / header.shape[1]
-        px = float(ix) / header.shape[1]
-        py = 1. - float(iy) / header.shape[0]
-        px *= 0.4
-        px += 0.15
-        if title: 
-            py -= 0.05
-            py *= 0.5
-        _text(text, px, py, ax, fontsize=14)
-
-    # add beachball
-    from obspy.imaging.beachball import beach
-    beach = beach(mt, xy=(1., 1.), width=1.75, linewidth=0.5, facecolor='gray')
-    ax = pyplot.gca()
-    ax.add_collection(beach)
-
-    _hide_axes(ax)
-
-
-def generate_header(event_name, process_bw, process_sw, misfit_bw, misfit_sw,
-    model, solver, mt, depth_in_m):
-    """ Creates header object with CAP-style text
-    """
-    M0 = np.sqrt(0.5*np.sum(mt[0:3]**2.) + np.sum(mt[3:6]**2.))
-    Mw = (np.log10(M0) - 9.1)/1.5
-
-    norm_order = misfit_bw.norm_order
-    assert norm_order==misfit_sw.norm_order
-    norm = '$L%s$' % norm_order
-
-    bw_T_min = process_bw.freq_max**-1
-    bw_T_max = process_bw.freq_min**-1
-    sw_T_min = process_sw.freq_max**-1
-    sw_T_max = process_sw.freq_min**-1
-
-    bw_win_len = process_bw.window_length
-    sw_win_len = process_sw.window_length
-
-    return Header(
-        shape=np.array([4,4]),
-        items={
-            0: '$M_w$: %3.2f' % Mw,
-            1: 'depth: %.1f km' % (depth_in_m/1000.),
-            #2: 'CLVD: %.0f' % 0.,
-            #3: 'ISO: %.0f' % 0.,
-            4: 'model: %s' % model,
-            5: 'solver: %s' % solver,
-            #6: 'norm: %s' % norm,
-            8: 'b.w. bandpass: %.1f - %.1f s' % (bw_T_min, bw_T_max),
-            10: 's.w. bandpass: %.1f - %.1f s' % (sw_T_min, sw_T_max),
-            12: 'b.w. window: %.1f s' % bw_win_len,
-            14: 's.w. window: %.1f s' % sw_win_len})
-
-
-def add_station_labels(meta):
+def add_component_labels(axes):
     """ Displays station id, distance, and azimuth to the left of current axes
     """
-    ax = pyplot.gca()
+    font = FontProperties()
+    font.set_weight('bold')
 
+    ax = axes[0][0]
+    pyplot.text(0.,0.70, 'Z', fontproperties=font, fontsize=16, 
+        transform=ax.transAxes)
+
+    ax = axes[0][1]
+    pyplot.text(0.,0.70, 'R', fontproperties=font, fontsize=16, 
+        transform=ax.transAxes)
+
+    ax = axes[0][2]
+    pyplot.text(0.,0.70, 'Z', fontproperties=font, fontsize=16,
+        transform=ax.transAxes)
+
+    ax = axes[0][3]
+    pyplot.text(0.,0.70, 'R', fontproperties=font, fontsize=16,
+        transform=ax.transAxes)
+
+    ax = axes[0][4]
+    pyplot.text(0.,0.70, 'T', fontproperties=font, fontsize=16,
+        transform=ax.transAxes)
+
+
+def add_station_labels(ax, meta):
+    """ Displays station id, distance, and azimuth to the left of current axes
+    """
     # display station name
     label = '.'.join([meta.network, meta.station])
-    pyplot.text(-0.25,0.45, label, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-0.5,0.50, label, fontsize=12, transform=ax.transAxes)
 
     # display distance
     distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
-    pyplot.text(-0.25,0.30, distance, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-0.5,0.35, distance, fontsize=12, transform=ax.transAxes)
 
     # display azimuth
     azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(-0.25,0.15, azimuth, fontsize=12, transform=ax.transAxes)
-
-    _hide_axes(ax)
+    pyplot.text(-0.5,0.20, azimuth, fontsize=12, transform=ax.transAxes)
 
 
 
-def add_trace_labels(dat, syn, total_misfit=1.):
+def add_trace_labels(axis, dat, syn, total_misfit=1.):
     """ Adds CAP-style annotations to current axes
     """
-    ax = pyplot.gca()
-    ymin = ax.get_ylim()[0]
+    ymin = axis.get_ylim()[0]
 
     s = syn.data
     d = dat.data
 
     # display cross-correlation time shift
     time_shift = getattr(syn, 'time_shift', np.nan)
-    pyplot.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=12)
+    axis.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=12)
 
     # display maximum cross-correlation coefficient
     Ns = np.dot(s,s)**0.5
@@ -396,24 +318,24 @@ def add_trace_labels(dat, syn, total_misfit=1.):
     if Ns*Nd > 0.:
         max_cc = np.correlate(s, d, 'valid').max()
         max_cc /= (Ns*Nd)
-        pyplot.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=12)
+        axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=12)
     else:
         max_cc = np.nan
-        pyplot.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=12)
+        axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=12)
 
     # display percent of total misfit
     misfit = getattr(syn, 'misfit', np.nan)
     misfit /= total_misfit
     if misfit >= 0.1:
-        pyplot.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=12)
+        axis.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=12)
     else:
-        pyplot.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=12)
+        axis.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=12)
 
 
 
-
-### utilities
-
+#
+# utility functions
+#
 
 def _time_stats(trace):
     # returns time scheme
@@ -425,7 +347,7 @@ def _time_stats(trace):
         )
 
 
-def _count_nonempty(datasets):
+def _count(datasets):
     # counts number of nonempty streams in dataset(s)
     count = 0
     for streams in zip(*datasets):
@@ -443,31 +365,37 @@ def _max(dat, syn):
         abs(syn.max()))
 
 
-def _hide_axes(ax):
+def _hide_axes(axes):
     # hides axes lines, ticks, and labels
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])
+    for row in axes:
+        for col in row:
+            col.spines['top'].set_visible(False)
+            col.spines['right'].set_visible(False)
+            col.spines['bottom'].set_visible(False)
+            col.spines['left'].set_visible(False)
+            col.get_xaxis().set_ticks([])
+            col.get_yaxis().set_ticks([])
 
 
-def _text(text, x, y, ax, fontsize=12):
-    pyplot.text(x, y, text, fontsize=fontsize, transform=ax.transAxes)
+def get_column_widths(data_bw, data_sw, width=1.):
+    # creates argument used by pyplot.subplot
 
+    for _i, stream in enumerate(data_bw):
+        if len(stream) > 0:
+            break
+    for _j, stream in enumerate(data_sw):
+        if len(stream) > 0:
+            break
 
-def _bold(text, x, y, ax, fontsize=12):
-    font = FontProperties()
-    font.set_weight('bold')
-    pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize, 
-        transform=ax.transAxes)
+    stats_bw = data_bw[_i][0].stats
+    stats_sw = data_sw[_j][0].stats
+    len_bw = stats_bw.endtime-stats_bw.starttime
+    len_sw = stats_sw.endtime-stats_sw.starttime
 
+    width *= (2*len_bw+3*len_sw)**-1
+    len_bw *= width
+    len_sw *= width
 
-def _italic(text, x, y, ax, fontsize=12):
-    font = FontProperties()
-    font.set_style('italic')
-    pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize,
-        transform=ax.transAxes)
-
+    return\
+        [len_bw, len_bw, len_sw, len_sw, len_sw]
 

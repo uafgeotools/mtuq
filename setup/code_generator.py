@@ -13,8 +13,8 @@ from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
-from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import iterable, path_mtuq
+from mtuq.graphics.waveform import plot_data_greens
+from mtuq.util import path_mtuq
 
 
 """
@@ -427,6 +427,7 @@ Grid_DoubleCoupleMagnitudeDepth="""
         magnitude=magnitudes)
 
     wavelet = Trapezoid(
+        magnitude=4.5)
 
 """
 
@@ -535,11 +536,15 @@ Main_GridSearch_DoubleCouple="""
         greens_sw = greens.map(process_sw)
 
     else:
+        stations = None
+        origin = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+    stations = comm.bcast(stations, root=0)
+    origin = comm.bcast(origin, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -554,20 +559,20 @@ Main_GridSearch_DoubleCouple="""
         print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
+        data_bw, greens_bw, misfit_bw, origin, sources)
 
     if comm.rank==0:
         print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, grid)
+        data_sw, greens_sw, misfit_sw, origin, sources)
 
     results_bw = comm.gather(results_bw, root=0)
     results_sw = comm.gather(results_sw, root=0)
 
     if comm.rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw, axis=1)
+        results_sw = np.concatenate(results_sw, axis=1)
 
         best_misfit = (results_bw + results_sw).min()
         best_source = sources.get((results_bw + results_sw).argmin())
@@ -601,7 +606,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             origins += [deepcopy(origin)]
             setattr(origins[-1], 'depth_in_m', depth)
 
-        greens = get_greens_tensors(stations, origin, model=model)
+        greens = get_greens_tensors(stations, origins, model=model)
 
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
@@ -612,9 +617,15 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data_sw = data.map(process_sw)
 
     else:
+        stations = None
+        origins = None
         data_bw = None
         data_sw = None
+        greens_bw = None
+        greens_sw = None
 
+    stations = comm.bcast(stations, root=0)
+    origins = comm.bcast(origins, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -626,21 +637,24 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
 
     if rank==0:
-        print 'Carrying out grid search...\\n'
+        print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins)
+        data_bw, greens_bw, misfit_bw, origins, sources)
+
+    if rank==0:
+        print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins)
+        data_sw, greens_sw, misfit_sw, origins, sources)
 
     # gathering results
     results_bw = comm.gather(results_bw, root=0)
     results_sw = comm.gather(results_sw, root=0)
 
     if rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw, axis=1)
+        results_sw = np.concatenate(results_sw, axis=1)
 """
 
 
@@ -683,12 +697,12 @@ Main2_SerialGridSearch_DoubleCouple="""
     print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
+        data_bw, greens_bw, misfit_bw, origin, sources)
 
     print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, iterable(origin))
+        data_sw, greens_sw, misfit_sw, origin, sources)
 
     best_misfit = (results_bw + results_sw).min()
     best_source = sources.get((results_bw + results_sw).argmin())
@@ -734,13 +748,15 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     # The main computational work starts now
     #
 
-    print 'Carrying out grid search...\\n'
+    print 'Evaluating body wave misfit...\\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins, verbose=False)
+        data_bw, greens_bw, misfit_bw, origins, sources, verbose=False)
+
+    print 'Evaluating surface wave misfit...\\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins, verbose=False)
+        data_sw, greens_sw, misfit_sw, origins, sources, verbose=False)
 
 
 """
@@ -779,17 +795,15 @@ Main_TestGraphics="""
 
     print 'Figure 1 of 3\\n'
 
-    plot_data_greens_mt(event_name+'.png',
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [process_bw, process_sw], [misfit_bw, misfit_sw], 
-        mt, header=False)
+    plot_data_greens(event_name+'.png',
+        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+        misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print 'Figure 2 of 3\\n'
 
-    plot_data_greens_mt(event_name+'.png',
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [process_bw, process_sw], [misfit_bw, misfit_sw], 
-        mt, header=False)
+    plot_data_greens(event_name+'.png',
+        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+        misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print 'Figure 3 of 3\\n'
 
@@ -808,10 +822,9 @@ WrapUp_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print 'Savings results...\\n'
 
-        plot_data_greens_mt(event_name+'.png',
-            [data_bw, data_sw], [greens_bw, greens_sw],
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
-            best_source)
+        plot_data_greens(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source)
 
         plot_beachball(event_name+'_beachball.png', best_source)
 
@@ -830,14 +843,14 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     if comm.rank==0:
         print 'Saving results...\\n'
 
-        best_misfit = (results_bw + results_sw).min()
-        best_source = sources.get((results_bw + results_sw).argmin())
-
-        filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_source)
-
         filename = event_name+'_misfit_vs_depth.png'
-        misfit_vs_depth(filename, best_misfit)
+        misfit_vs_depth(filename, results_bw+results_sw, origins, sources)
+
+        filename = event_name+'_bw_vs_depth.png'
+        misfit_vs_depth(filename, results_bw, origins, sources)
+
+        filename = event_name+'_sw_vs_depth.png'
+        misfit_vs_depth(filename, results_sw, origins, sources)
 
         print 'Finished\\n'
 """
@@ -850,10 +863,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print 'Saving results...\\n'
 
-    plot_data_greens_mt(event_name+'.png', 
-        [data_bw, data_sw], [greens_bw, greens_sw], 
-        [process_bw, process_sw], [misfit_bw, misfit_sw],
-        best_source)
+    plot_data_greens(event_name+'.png', 
+        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+        misfit_bw, misfit_sw, stations, origin, best_source)
 
     plot_beachball(event_name+'_beachball.png', best_source)
 
@@ -869,10 +881,9 @@ WrapUp_TestGridSearch_DoubleCouple="""
     best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
-        plot_data_greens_mt(event_name+'.png',
-            [data_bw, data_sw], [greens_bw, greens_sw],
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
-            best_source)
+        plot_data_greens(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source)
 
         plot_beachball(event_name+'_beachball.png', best_source)
 
@@ -915,9 +926,6 @@ WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
-        filename = event_name+'_beachball_vs_depth.png'
-        #beachball_vs_depth(filename, best_source)
-
         filename = event_name+'_misfit_vs_depth.png'
         #misfit_vs_depth(filename, best_misfit)
 
@@ -977,7 +985,7 @@ Main_BenchmarkCAP="""
         if run_figures:
             plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-                trace_labels=False)
+                stations, trace_labels=False)
 
         if run_checks:
             compare_cap_mtuq(
@@ -993,7 +1001,7 @@ Main_BenchmarkCAP="""
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-            trace_labels=False, normalize=False)
+            stations, trace_labels=False, normalize=False)
 
     print '\\nSUCCESS\\n'
 
@@ -1029,7 +1037,7 @@ if __name__=='__main__':
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
-            'beachball_vs_depth, misfit_vs_depth',
+            'misfit_vs_depth',
             ))
         file.write(Docstring_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(PathsComments)
@@ -1106,7 +1114,7 @@ if __name__=='__main__':
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
-            'beachball_vs_depth, misfit_vs_depth',
+            'misfit_vs_depth',
             ))
         file.write(Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(
@@ -1210,7 +1218,7 @@ if __name__=='__main__':
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
-            'beachball_vs_depth, misfit_vs_depth',
+            'misfit_vs_depth',
             ))
         file.write(Docstring_TestGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(ArgparseDefinitions)
@@ -1235,7 +1243,7 @@ if __name__=='__main__':
             Imports,
             'syngine',
             'fk',
-            'plot_data_greens_mt',
+            'plot_data_greens',
             'plot_data_synthetics',
             ))
         file.write(Docstring_BenchmarkCAP)

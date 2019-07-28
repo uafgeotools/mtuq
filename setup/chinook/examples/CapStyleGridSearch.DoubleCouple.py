@@ -12,8 +12,8 @@ from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import plot_beachball
-from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import iterable, path_mtuq
+from mtuq.graphics.waveform import plot_data_greens
+from mtuq.util import path_mtuq
 
 
 
@@ -130,11 +130,15 @@ if __name__=='__main__':
         greens_sw = greens.map(process_sw)
 
     else:
+        stations = None
+        origin = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+    stations = comm.bcast(stations, root=0)
+    origin = comm.bcast(origin, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -149,20 +153,20 @@ if __name__=='__main__':
         print 'Evaluating body wave misfit...\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, iterable(origin))
+        data_bw, greens_bw, misfit_bw, origin, sources)
 
     if comm.rank==0:
         print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, grid)
+        data_sw, greens_sw, misfit_sw, origin, sources)
 
     results_bw = comm.gather(results_bw, root=0)
     results_sw = comm.gather(results_sw, root=0)
 
     if comm.rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw, axis=1)
+        results_sw = np.concatenate(results_sw, axis=1)
 
         best_misfit = (results_bw + results_sw).min()
         best_source = sources.get((results_bw + results_sw).argmin())
@@ -175,10 +179,9 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Savings results...\n'
 
-        plot_data_greens_mt(event_name+'.png',
-            [data_bw, data_sw], [greens_bw, greens_sw],
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
-            best_source)
+        plot_data_greens(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source)
 
         plot_beachball(event_name+'_beachball.png', best_source)
 

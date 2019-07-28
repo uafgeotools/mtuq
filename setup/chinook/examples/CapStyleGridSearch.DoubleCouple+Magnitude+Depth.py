@@ -11,9 +11,9 @@ from mtuq.grid_search.mpi import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
-from mtuq.graphics.beachball import beachball_vs_depth, misfit_vs_depth
-from mtuq.graphics.waveform import plot_data_greens_mt
-from mtuq.util import iterable, path_mtuq
+from mtuq.graphics.beachball import misfit_vs_depth
+from mtuq.graphics.waveform import plot_data_greens
+from mtuq.util import path_mtuq
 
 
 
@@ -104,6 +104,7 @@ if __name__=='__main__':
         magnitude=magnitudes)
 
     wavelet = Trapezoid(
+        magnitude=4.5)
 
 
     #
@@ -131,8 +132,7 @@ if __name__=='__main__':
             origins += [deepcopy(origin)]
             setattr(origins[-1], 'depth_in_m', depth)
 
-        db = open_db(path_greens, format='FK', model=model)
-            greens = db.get_greens_tensors(stations, origins)
+        greens = get_greens_tensors(stations, origins, model=model)
 
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
@@ -143,9 +143,15 @@ if __name__=='__main__':
         data_sw = data.map(process_sw)
 
     else:
+        stations = None
+        origins = None
         data_bw = None
         data_sw = None
+        greens_bw = None
+        greens_sw = None
 
+    stations = comm.bcast(stations, root=0)
+    origins = comm.bcast(origins, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -157,21 +163,24 @@ if __name__=='__main__':
     #
 
     if rank==0:
-        print 'Carrying out grid search...\n'
+        print 'Evaluating body wave misfit...\n'
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, sources, origins)
+        data_bw, greens_bw, misfit_bw, origins, sources)
+
+    if rank==0:
+        print 'Evaluating surface wave misfit...\n'
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, sources, origins)
+        data_sw, greens_sw, misfit_sw, origins, sources)
 
     # gathering results
     results_bw = comm.gather(results_bw, root=0)
     results_sw = comm.gather(results_sw, root=0)
 
     if rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
+        results_bw = np.concatenate(results_bw, axis=1)
+        results_sw = np.concatenate(results_sw, axis=1)
 
     #
     # Saving results
@@ -180,13 +189,13 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Saving results...\n'
 
-        best_misfit = (results_bw + results_sw).min()
-        best_source = sources.get((results_bw + results_sw).argmin())
-
-        filename = event_name+'_beachball_vs_depth.png'
-        beachball_vs_depth(filename, best_source)
-
         filename = event_name+'_misfit_vs_depth.png'
-        misfit_vs_depth(filename, best_misfit)
+        misfit_vs_depth(filename, results_bw+results_sw, origins, sources)
+
+        filename = event_name+'_bw_vs_depth.png'
+        misfit_vs_depth(filename, results_bw, origins, sources)
+
+        filename = event_name+'_sw_vs_depth.png'
+        misfit_vs_depth(filename, results_sw, origins, sources)
 
         print 'Finished\n'

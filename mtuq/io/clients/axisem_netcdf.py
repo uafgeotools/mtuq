@@ -35,11 +35,15 @@ class Client(ClientBase):
 
     """
 
-    def __init__(self, path_or_url='', kernelwidth=12):
+    def __init__(self, path_or_url='', model='', kernelwidth=12):
         if not path_or_url:
             raise Exception
         self.db = instaseis.open_db(path_or_url)
         self.kernelwidth=12
+
+        if not model:
+            model = path_or_url
+        self.model = model
 
 
     def _get_greens_tensor(self, station=None, origin=None):
@@ -82,6 +86,6 @@ class Client(ClientBase):
             trace.stats.delta = dt_new
 
         return GreensTensor(traces=[trace for trace in stream], 
-            station=station, origin=origin)
+            station=station, origin=origin, model=self.model)
 
 

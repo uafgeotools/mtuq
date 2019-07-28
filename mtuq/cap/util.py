@@ -4,7 +4,7 @@ import csv
 import numpy as np
 import obspy
 from copy import deepcopy
-from mtuq.graphics.waveform import Header
+from mtuq.event import MomentTensor
 from mtuq.wavelet import EarthquakeTrapezoid
 
 
@@ -232,9 +232,7 @@ def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt,
 
                 if apply_shifts:
                     if Mw==None:
-                        # what is the seismic moment of the given moment tensor?
-                        M0 = np.sqrt(0.5*np.sum(mt[0:3]**2.) + np.sum(mt[3:6]**2.))
-                        Mw = (np.log10(M0) - 9.1)/1.5
+                        Mw = MomentTensor(mt).magnitude()
 
                     apply_magnitude_dependent_shift(trace, Mw)
 
