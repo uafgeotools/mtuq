@@ -2,7 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 import warnings
-from mtuq.graphics.header import OldStyleHeader
+from matplotlib.font_manager import FontProperties
+from mtuq.graphics.header import NewStyleHeader
 
 
 #
@@ -36,22 +37,22 @@ def plot_data_synthetics(filename,
 
     # figure dimensions in inches
     height = 1.4*nrow
-    width = 16.
+    width = 15.
     margin_bottom = 0.25
     margin_top = 0.25
     margin_left = 0.25
     margin_right = 0.25
+
+    if header:
+        margin_top = 2.
+
     if station_labels:
-        margin_left += 1.
+        margin_left += 0.9
+
     height += margin_bottom
     height += margin_top
     width += margin_left
     width += margin_right
-    if header:
-        header_height = 2.5
-        height += header_height
-    else:
-        header_height = 0.
 
     # initialize figure
     fig, axes = pyplot.subplots(nrow, ncol, 
@@ -62,16 +63,19 @@ def plot_data_synthetics(filename,
         left=margin_left/width,
         right=1.-margin_right/width,
         bottom=margin_bottom/height,
-        top=1.-(margin_top+header_height)/height,
+        top=1.-(margin_top)/height,
         wspace=0.,
         hspace=0.,
         )
 
     _hide_axes(axes)
+    add_component_labels(axes)
 
-    # optionally, attach CAP-style header
     if header:
-        header.write(header_height)
+        # write CAP-style header
+        header_height = margin_top
+        header_offset = margin_left-int(bool(station_labels))*0.9
+        header.write(header_height, header_offset)
 
     # determine maximum amplitudes
     max_amplitude_bw = 0.
@@ -220,7 +224,7 @@ def plot_data_greens(filename,
     total_misfit_bw = misfit_bw(data_bw, greens_bw, mt)
     total_misfit_sw = misfit_sw(data_sw, greens_sw, mt)
 
-    header = OldStyleHeader(event_name,
+    header = NewStyleHeader(event_name,
         process_bw, process_sw, misfit_bw, misfit_bw,
         greens_bw[0].model, 'syngine', mt, origin)
 
@@ -252,20 +256,47 @@ def plot(axis, dat, syn, label=None):
     axis.plot(t, s[start:stop], 'r')
 
 
+def add_component_labels(axes):
+    """ Displays station id, distance, and azimuth to the left of current axes
+    """
+    font = FontProperties()
+    font.set_weight('bold')
+
+    ax = axes[0][0]
+    pyplot.text(0.,0.70, 'Z', fontproperties=font, fontsize=16, 
+        transform=ax.transAxes)
+
+    ax = axes[0][1]
+    pyplot.text(0.,0.70, 'R', fontproperties=font, fontsize=16, 
+        transform=ax.transAxes)
+
+    ax = axes[0][2]
+    pyplot.text(0.,0.70, 'Z', fontproperties=font, fontsize=16,
+        transform=ax.transAxes)
+
+    ax = axes[0][3]
+    pyplot.text(0.,0.70, 'R', fontproperties=font, fontsize=16,
+        transform=ax.transAxes)
+
+    ax = axes[0][4]
+    pyplot.text(0.,0.70, 'T', fontproperties=font, fontsize=16,
+        transform=ax.transAxes)
+
+
 def add_station_labels(ax, meta):
     """ Displays station id, distance, and azimuth to the left of current axes
     """
     # display station name
     label = '.'.join([meta.network, meta.station])
-    pyplot.text(-0.5,0.45, label, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-0.5,0.50, label, fontsize=12, transform=ax.transAxes)
 
     # display distance
     distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
-    pyplot.text(-0.5,0.30, distance, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-0.5,0.35, distance, fontsize=12, transform=ax.transAxes)
 
     # display azimuth
     azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(-0.5,0.15, azimuth, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-0.5,0.20, azimuth, fontsize=12, transform=ax.transAxes)
 
 
 
