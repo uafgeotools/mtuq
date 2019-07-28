@@ -39,25 +39,25 @@ class Header(object):
 
 
 class TextHeader(Header):
-    """ Stores header text in a dictionary {text: position}, where text is a 
-    str and position is a (x,y) tuple
+    """ Stores header text in a list [[text, position]], where text is a string
+    and position is a (x,y) tuple
     """
-    def __init__(self, dict):
+    def __init__(self, items):
         # validates dictionary
-        for text, p in dict.items():
+        for text, p in items:
             # assert type(text) in [str, unicode]
             # assert type(pos[0]) in [float]
             # assert type(pos[1]) in [float]
             pass
 
-        self.dict = dict
+        self.items = items
 
 
-    def write(self, axis):
-        for key, val in self.dict.items():
+    def write(self, ax):
+        for key, val in self.items:
             text = key
             xp, yp = val
-            _write_text(text, xp, yp)
+            _write_text(text, xp, yp, ax)
 
 
 
@@ -77,8 +77,8 @@ class OldStyleHeader(Header):
         self.magnitude = MomentTensor(mt).magnitude()
         self.depth_in_m = origin.depth_in_m
         self.depth_in_km = origin.depth_in_m/1000.
-        self.model = 'ak135f'
-        self.solver = 'syngine'
+        self.model = model
+        self.solver = solver
         self.norm = 'L%d' % misfit_bw.norm_order
 
         self.bw_T_min = process_bw.freq_max**-1

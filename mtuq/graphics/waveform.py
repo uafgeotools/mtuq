@@ -226,7 +226,7 @@ def plot_data_greens(filename,
 
     header = NewStyleHeader(event_name,
         process_bw, process_sw, misfit_bw, misfit_bw,
-        greens_bw[0].model, 'syngine', mt, origin)
+        greens_bw[0].model, greens_bw[0].solver, mt, origin)
 
     plot_data_synthetics(filename,
             data_bw, data_sw, synthetics_bw, synthetics_sw, stations,

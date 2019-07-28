@@ -31,6 +31,7 @@ class GreensTensor(Stream):
             origin=None,
             id=None, 
             model=None,
+            solver=None,
             include_mt=True,
             include_force=False):
 
@@ -66,6 +67,8 @@ class GreensTensor(Stream):
             station.longitude)
 
         self.model = model
+        self.solver = solver
+
         self.include_mt = include_mt
         self.include_force = include_force
 
@@ -362,6 +365,8 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
+            model=self.model,
+            solver=self.solver,
             include_mt=self.include_mt,
             include_force=self.include_force)
 
@@ -392,6 +397,8 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
+            model=self.model,
+            solver=self.solver,
             include_mt=self.include_mt,
             include_force=self.include_force)
 

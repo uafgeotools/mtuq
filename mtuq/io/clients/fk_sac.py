@@ -117,7 +117,7 @@ class Client(ClientBase):
             traces += [trace]
 
         return GreensTensor(traces=traces, station=station, origin=origin,
-             model=self.model)
+             model=self.model, solver='FK')
 
 
 
