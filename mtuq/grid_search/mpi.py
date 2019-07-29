@@ -40,8 +40,8 @@ def _mpi_wrapper(grid_search, data, greens, misfit, origins, sources, **kwargs):
     else:
         kwargs['verbose'] = False
 
-    return grid_search(
-        data, greens, misfit, origins, subset, *args, **kwargs)
+    return serial.grid_search(
+        data, greens, misfit, origins, subset, **kwargs)
 
 
 def _is_mpi_env():
