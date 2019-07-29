@@ -58,7 +58,7 @@ class GreensTensor(Stream):
         self.station = deepcopy(station)
 
         # event location and other metadata
-        self.origin = origin
+        self.origin = deepcopy(origin)
 
         self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
             origin.latitude,
@@ -107,26 +107,15 @@ class GreensTensor(Stream):
         # is not unique to mtuq, but common to all objects that inherit from
         # ``obspy.core.Stream``
 
-        # sets components attribute
-        self._set_components(components)
-
-        # allocates obspy stream used by get_synthetics
-        self._allocate_synthetics()
-
-        # allocates and computes numpy array used by get_synthetics
-        self._allocate_array()
-        self._compute_array()
-
-
-    def _set_components(self, components):
-        """
-        Checks input argument and sets component attribute
-        """
-        if components==None:
+        if components is None:
             components = []
         for component in components:
             assert component in ['Z', 'R', 'T']
         self.components = components
+
+        self._allocate_synthetics()
+        self._allocate_array()
+        self._compute_array()
 
 
     def _allocate_synthetics(self):
@@ -474,23 +463,16 @@ class GreensTensorList(list):
         return self.__class__(tensors=filter(selected, self), id=self.id)
 
 
-    def get_synthetics(self, source, origin=None):
+    def get_synthetics(self, source):
         """ Generates synthetic seismograms by summing Green's functions 
         weighted by moment tensor elements
 
         :param source: Source to be used in linear combination
         :param origin: Use Green's functions corresponding to this origin 
         """
-        if origin==None:
-            assert len(self._origins)==1
-            origin = self._origins[0]
-
         synthetics = Dataset()
         for tensor in self:
-            if tensor.origin == origin:
-                synthetics += [tensor.get_synthetics(source)]
-            else:
-                continue
+            synthetics += [tensor.get_synthetics(source)]
 
         return synthetics
 
