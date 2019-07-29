@@ -164,7 +164,7 @@ class Station(AttribDict):
 
 
     def _set_origin_item(self, key, value):
-        if value==None:
+        if value is None:
             pass
 
         elif key in ['preliminary_origin_time']:
@@ -182,7 +182,7 @@ class Station(AttribDict):
 
     def _refresh(self):
         for key in self._geographic_keys:
-            if self.__dict__[key]==None:
+            if self.__dict__[key] is None:
                 return
 
         distance_in_m, azimuth, backazimuth = gps2dist_azimuth(

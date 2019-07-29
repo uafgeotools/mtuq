@@ -42,7 +42,7 @@ class ProcessData(object):
         #
         # check filter parameters
         #
-        if filter_type==None:
+        if filter_type is None:
             warn('No filter_type selected.')
 
         elif filter_type == 'Bandpass':
@@ -90,7 +90,7 @@ class ProcessData(object):
         #
         # check pick parameters
         #
-        if pick_type==None:
+        if pick_type is None:
             raise Exception
 
         elif pick_type=='from_taup_model':
@@ -124,7 +124,7 @@ class ProcessData(object):
         #
         # check window parameters
         #
-        if window_type==None:
+        if window_type is None:
             warn('No window_type selected.')
 
         elif window_type == 'cap_bw':
@@ -149,7 +149,7 @@ class ProcessData(object):
         #
         # check weight parameters
         #
-        if weight_type==None:
+        if weight_type is None:
             pass
 
         elif weight_type == 'cap_bw':
@@ -200,13 +200,13 @@ class ProcessData(object):
         input traces: all availables traces for a given station
         type traces: obspy Stream or MTUQ GreensTensor
         '''
-        if station==None:
+        if station is None:
             station = getattr(traces, 'station', None)
 
-        if origin==None:
+        if origin is None:
             origin = getattr(traces, 'origin', None)
 
-        if origin==None:
+        if origin is None:
             origin = getattr(traces, 'preliminary_origin', None)
         
         # overwrite existing data?

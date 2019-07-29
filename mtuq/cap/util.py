@@ -56,7 +56,7 @@ def remove_unused_stations(dataset, filename):
 #
 
 def Trapezoid(magnitude=None):
-    if magnitude==None:
+    if magnitude is None:
         raise ValueError
 
     return EarthquakeTrapezoid(
@@ -231,7 +231,7 @@ def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt,
                 trace.data = dummy.select(component=component)[0].data
 
                 if apply_shifts:
-                    if Mw==None:
+                    if Mw is None:
                         Mw = MomentTensor(mt).magnitude()
 
                     apply_magnitude_dependent_shift(trace, Mw)
