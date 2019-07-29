@@ -104,7 +104,7 @@ class Client(ClientBase):
             trace.stats.npts = len(data_new)
 
         return GreensTensor(traces=[trace for trace in stream], 
-            station=station, origin=origin, model=self.model, 
+            station=station, origin=origin, model=self.model, solver='syngine',
             include_mt=self.include_mt, include_force=self.include_force)
 
 

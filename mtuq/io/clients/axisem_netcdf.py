@@ -86,6 +86,6 @@ class Client(ClientBase):
             trace.stats.delta = dt_new
 
         return GreensTensor(traces=[trace for trace in stream], 
-            station=station, origin=origin, model=self.model)
+            station=station, origin=origin, model=self.model, solver='AxiSEM')
 
 
