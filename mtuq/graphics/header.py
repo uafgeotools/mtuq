@@ -3,6 +3,8 @@ import numpy as np
 from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
+from mtuq.util.moment_tensor.tape2015 import cmt2tt
+from obspy.core import AttribDict
 
 
 class Header(object):
@@ -45,9 +47,9 @@ class TextHeader(Header):
     def __init__(self, items):
         # validates dictionary
         for text, p in items:
-            # assert type(text) in [str, unicode]
-            # assert type(pos[0]) in [float]
-            # assert type(pos[1]) in [float]
+            assert type(text) in [str, unicode]
+            assert 0. <= pos[0] <= 1.
+            assert 0. <= pos[1] <= 1.
             pass
 
         self.items = items
@@ -69,16 +71,22 @@ class OldStyleHeader(Header):
         model, solver, mt, origin):
 
         self.event_name = event_name
-        self.process_bw = process_bw
-        self.process_sw = process_sw
-        self.misfit_bw = process_bw
-        self.misfit_sw = process_sw
-        self.mt = mt
         self.magnitude = MomentTensor(mt).magnitude()
         self.depth_in_m = origin.depth_in_m
         self.depth_in_km = origin.depth_in_m/1000.
         self.model = model
         self.solver = solver
+
+        tt = AttribDict()
+        tt.gamma, tt.delta, tt.M0, tt.kappa, tt.theta, tt.sigma = cmt2tt(mt)
+
+        self.mt = mt
+        self.tt = tt
+
+        self.process_bw = process_bw
+        self.process_sw = process_sw
+        self.misfit_bw = process_bw
+        self.misfit_sw = process_sw
         self.norm = 'L%d' % misfit_bw.norm_order
 
         self.bw_T_min = process_bw.freq_max**-1
@@ -115,17 +123,18 @@ class OldStyleHeader(Header):
         px = 0.125
         py = 0.65
 
-        line = '%s  Model %s  Depth %d km' % (
+        line = 'Event %s  Model %s  Depth %d km' % (
             self.event_name, self.model, self.depth_in_km)
 
-        _write_bold(line, px, py, ax, fontsize=16)
+        _write_text(line, px, py, ax, fontsize=14)
 
         # write line #2
         px = 0.125
         py -= 0.175
 
         line = u'FM %d %d %d    $M_w$ %.1f   %s %d   %s %d   rms %.1e   VR %.1f' %\
-                (0, 0, 0, self.magnitude, u'\u03B3', 0, u'\u03B4', 0, 0, 0)
+                (self.tt.kappa, self.tt.sigma, self.tt.theta, self.magnitude, 
+                 u'\u03B3', self.tt.gamma, u'\u03B4', self.tt.delta, 0, 0)
 
         _write_text(line, px, py, ax, fontsize=14)
 
@@ -194,9 +203,10 @@ class NewStyleHeader(OldStyleHeader):
         px = 0.125
         py -= 0.175
 
-        #kappa \u03BA  sigma \u03C3  theta \u03B8  delta \u03B3  gamma \u03B4
-        line = '%d %d %d   %s %d   %s %d' %\
-                (0, 0, 0, u'\u03B3', 0, u'\u03B4', 0)
+        line = '%s %d   %s %d   %s %d   %s %d   %s %d' %\
+                (u'\u03BA', self.tt.kappa, u'\u03C3', self.tt.sigma, 
+                 u'\u03B8', self.tt.theta, u'\u03B3', self.tt.gamma, 
+                 u'\u03B4', self.tt.delta)
 
         _write_text(line, px, py, ax, fontsize=14)
 
