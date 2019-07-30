@@ -17,10 +17,16 @@ class Header(object):
         raise NotImplementedError("Must be implemented by subclass")
 
     def _get_axis(self, height, fig=None):
+        """ Creates a matplotlib axis object occupying
+        """
         if fig is None:
             fig = pyplot.gcf()
-
         width, figure_height = fig.get_size_inches()
+
+        assert height < figure_height, Exception(
+             "Header height exceeds entire figure height. Double check height "
+             "arguments and try again.")
+               
         x0 = 0.
         y0 = 1.-height/figure_height
 
@@ -132,6 +138,8 @@ class OldStyleHeader(Header):
         px = 0.125
         py -= 0.175
 
+        # WARNING: the order in which angles kappa, sigma, theta are stated is
+        # consistent between different software
         line = u'FM %d %d %d    $M_w$ %.1f   %s %d   %s %d   rms %.1e   VR %.1f' %\
                 (self.tt.kappa, self.tt.sigma, self.tt.theta, self.magnitude, 
                  u'\u03B3', self.tt.gamma, u'\u03B4', self.tt.delta, 0, 0)
