@@ -13,7 +13,7 @@ class Misfit(object):
 
     .. code::
 
-        function_handle = cap_misfit(**parameters)
+        function_handle = Misfit(**parameters)
         misfit = function_handle(data, greens, mt)
 
     In the first step, the user supplies a list of parameters, including
@@ -32,6 +32,11 @@ class Misfit(object):
         ):
         """ Checks misfit parameters
 
+        norm
+            L1
+            L2
+            hybrid
+
         time_shift_groups
             ['ZRT'] locks time-shift across all three components
             ['ZR','T'] locks vertical and radial components only
@@ -43,13 +48,14 @@ class Misfit(object):
                 assert component in ['Z','R','T']
 
         # what norm should we apply to the residuals?
-        if norm=='L1':
-            self.norm_order = 1
-        elif norm=='L2':
-            self.norm_order = 2
-        elif isinstance(norm, (int, float)):
-            assert norm > 0
-            self.norm_order = 1
+         if norm in ['hybrid', 'L1', 'L2']:
+            self.norm = norm
+
+         elif type(norm) in [int, float]:
+            self.norm = float(norm)
+
+         else:
+            raise ValueError("Bad keyword argument: norm")
 
         # maximum cross-correlation lag (seconds)
         self.time_shift_max = time_shift_max
@@ -121,9 +127,19 @@ class Misfit(object):
                     r = s[_j].data[start:stop] - d[_j].data
 
                     # sum the resulting residuals
-                    s[_j].misfit = np.sum(np.abs(r)**p)*dt
-                    sum_misfit += d[_j].weight * s[_j].misfit
+                    if self.norm in ['L1']:
+                        s[_j].misfit = np.sum(abs(r))*dt
 
+                    elif self.norm in ['L2']:
+                        s[_j].misfit = np.sum(r**2)*dt
+
+                    elif self.norm in ['hybrid']:
+                        s[_j].misfit = np.sqrt(np.sum(r**2)*dt)
+
+                    elif type(self.norm)==float:
+                        s[_j].misfit = np.sum(np.abs(r)**self.norm)*dt
+
+                    sum_misfit += d[_j].weight * s[_j].misfit
 
 
             #
@@ -134,5 +150,5 @@ class Misfit(object):
                 raise NotImplementedError
 
 
-        return sum_misfit**(1./p)
+        return sum_misfit
 
