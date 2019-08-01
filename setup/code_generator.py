@@ -1296,20 +1296,23 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
+            'mpi',
+            'serial',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
              ))
         file.write(Docstring_UtilExamples)
-        file.write(Paths_FK)
+        file.write(Paths_Syngine)
+        file.write(DataProcessingDefinitions)
+        file.write(MisfitDefinitions)
         file.write(
             replace(
-            DataProcessingDefinitions,
-            'pick_type=.*',
-            "pick_type='from_fk_metadata',",
-            'taup_model=.*,',
-            'fk_database=path_greens,',
+            Grid_DoubleCouple,
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+            'npts=.*',
+            'npts_per_axis=10,',
             ))
-        file.write(MisfitDefinitions)
         file.write(
             replace(
             Main1_SerialGridSearch_DoubleCouple,
