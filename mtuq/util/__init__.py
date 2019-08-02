@@ -44,7 +44,8 @@ def is_mpi_env():
 def iterable(arg):
     """ Simple list typecast
     """
-    if not isinstance(arg, (list, tuple)):
+    from mtuq.grid import Grid, UnstructuredGrid
+    if not isinstance(arg, (list, tuple, Grid, UnstructuredGrid)):
         return [arg]
     else:
         return arg

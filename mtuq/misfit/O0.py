@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from scipy.signal import fftconvolve
+from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 
 
@@ -104,17 +104,11 @@ class Misfit(object):
                 assert component in ['Z','R','T']
 
         # what norm should we apply to the residuals?
-         if norm in ['L1', 'L2']:
-            pass
-
-         elif type(norm) in [str, unicode]:
-            norm = norm.lower()
-            assert norm in ['hybrid']
-
-         elif type(norm) in [int, float]:
-            self.norm = float(norm)
-
-         else:
+        if norm in ['L1', 'L2']:
+            self.norm = norm
+        elif norm.lower()=='hybrid':
+            self.norm = norm.lower()
+        else:
             raise ValueError("Bad keyword argument: norm")
 
         # maximum cross-correlation lag (seconds)
@@ -127,88 +121,83 @@ class Misfit(object):
         self.polarity_weight = polarity_weight
 
 
-    def __call__(self, data, greens, mt):
+    def __call__(self, data, greens, sources):
         """ CAP-style misfit calculation
         """ 
-        p = self.norm_order
+        sources = iterable(sources)
+        results = np.zeros(len(sources))
 
-        sum_misfit = 0.
-        for _i, d in enumerate(data):
-            try:
-                components = greens[_i].components
-            except:
-                # what components are in stream d?
-                components = []
-                for trace in d:
-                    components += [trace.stats.channel[-1].upper()]
-                greens[_i].initialize(components)
+        # which components are present in the data?
+        for _j, d in enumerate(data):
+            components = []
+            for trace in d:
+                components += [trace.stats.channel[-1].upper()]
+            greens[_j].initialize(components)
 
-            if not components:
-                continue
+        #
+        # begin loop over sources
+        #
+        for _i, source in enumerate(sources):
+            for _j, d in enumerate(data):
 
-            # generate synthetics
-            s = greens[_i].get_synthetics(mt)
+                components = greens[_j].components
+                if not components:
+                    continue
 
-            # time sampling scheme
-            npts = d[0].data.size
-            dt = d[0].stats.delta
-            npts_padding = int(self.time_shift_max/dt)
+                # generate synthetics
+                s = greens[_j].get_synthetics(source)
 
-
-            #
-            # PART 1: CAP-style waveform-difference misfit calculation, with
-            #     time-shift corrections
-            #
-             
-            for group in self.time_shift_groups:
-                # Finds the time-shift between data and synthetics that yields
-                # the maximum cross-correlation value across all components in 
-                # in a given group, subject to time_shift_max constraint
-
-                # what components are in stream d?
-                group, indices = list_intersect_with_indices(components, group)
-
-                # what time-shift yields the maximum cross-correlation value?
-                offset = greens[_i].get_time_shift(d, mt, group, self.time_shift_max)
-                time_shift = offset*dt
-
-                # what start and stop indices will correctly shift synthetics 
-                # relative to data?
-                start = npts_padding-offset
-                stop = npts+npts_padding-offset
-
-                for _j in indices:
-                    s[_j].time_shift = time_shift
-                    s[_j].time_shift_group = group
-                    s[_j].start = start
-                    s[_j].stop = stop
-                    
-                    # substract data from shifted synthetics
-                    r = s[_j].data[start:stop] - d[_j].data
-
-                    # sum the resulting residuals
-                    if self.norm in ['L1']:
-                        s[_j].misfit = np.sum(abs(r))*dt
-
-                    elif self.norm in ['L2']:
-                        s[_j].misfit = np.sum(r**2)*dt
-
-                    elif self.norm in ['Hybrid', 'hybrid']:
-                        s[_j].misfit = np.sqrt(np.sum(r**2)*dt)
-
-                    elif type(self.norm)==float:
-                        s[_j].misfit = np.sum(np.abs(r)**self.norm)*dt
-
-                    sum_misfit += d[_j].weight * s[_j].misfit
+                # time sampling scheme
+                npts = d[0].data.size
+                dt = d[0].stats.delta
+                npts_padding = int(self.time_shift_max/dt)
 
 
-            #
-            # PART 2: CAP-style polarity calculation
-            #
+                #
+                # evaluate misfit for a given source, station pair
+                # 
+                for group in self.time_shift_groups:
+                    # Finds the time-shift between data and synthetics that 
+                    # yields the maximum cross-correlation value across all
+                    # components in a given group, subject to time_shift_max 
+                    # constraint
 
-            if self.polarity_weight > 0.:
-                raise NotImplementedError
+                    # what components are in stream d?
+                    group, indices = list_intersect_with_indices(
+                        components, group)
+
+                    # what time-shift yields the maximum cross-correlation?
+                    offset = greens[_j].get_time_shift(
+                        d, source, group, self.time_shift_max)
+
+                    time_shift = offset*dt
+
+                    # what start and stop indices will correctly shift 
+                    # synthetics relative to data?
+                    start = npts_padding-offset
+                    stop = npts+npts_padding-offset
+
+                    for _k in indices:
+                        s[_k].time_shift = time_shift
+                        s[_k].time_shift_group = group
+                        s[_k].start = start
+                        s[_k].stop = stop
+                        
+                        # substract data from shifted synthetics
+                        r = s[_k].data[start:stop] - d[_k].data
+
+                        # sum the resulting residuals
+                        if self.norm=='L1':
+                            s[_k].misfit = np.sum(abs(r))*dt
+
+                        elif self.norm=='L2':
+                            s[_k].misfit = np.sum(r**2)*dt
+
+                        elif self.norm=='hybrid':
+                            s[_k].misfit = np.sqrt(np.sum(r**2)*dt)
+
+                        results[_i]  += d[_k].weight * s[_k].misfit
 
 
-        return sum_misfit
+        return results
 

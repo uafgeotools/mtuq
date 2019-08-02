@@ -93,7 +93,7 @@ class OldStyleHeader(Header):
         self.process_sw = process_sw
         self.misfit_bw = process_bw
         self.misfit_sw = process_sw
-        self.norm = 'L%d' % misfit_bw.norm_order
+        self.norm = misfit_bw.norm
 
         self.bw_T_min = process_bw.freq_max**-1
         self.bw_T_max = process_bw.freq_min**-1
