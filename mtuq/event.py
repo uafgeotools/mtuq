@@ -8,9 +8,9 @@ class Origin(obspy.core.AttribDict):
     """ Origin metadata object
 
     Holds the following information
-        - hypocenter location
+        - hypocenter latitude and longitude
         - depth
-        - origin
+        - origin time
 
     """
     defaults = {
@@ -114,13 +114,6 @@ class Force(object):
     def asvector(self):
         return self._array
 
-
-
-class CompositeSource(object):
-   """ General combination of force or moment tensor objects
-   """
-   def __init__(self):
-       raise NotImplementedError
 
 
 #

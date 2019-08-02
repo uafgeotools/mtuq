@@ -9,18 +9,14 @@ class Station(AttribDict):
     """ Station metadata object
 
     Holds the following information
-    - latitude, longitude, depth, and elevation
+    - latitude and longitude
+    - depth and elevation
     - network, station, and location codes
 
     Optionally, also includes 
     - time discretization attributes, which can be useful if all traces recorded
       at the given station have the same time sampling 
-    - preliminary origin time and location estimates
     """
-
-    _include_temporal = True
-    _include_origin = True
-
 
     defaults = {
         'latitude': None,
@@ -34,26 +30,11 @@ class Station(AttribDict):
         }
 
     readonly = []
-
-    _default_keys = [
-        'latitude',
-        'longitude',
-        'depth_in_m',
-        'elevation_in_m',
-        'network',
-        'station',
-        'location',
-        'channel',
-        ]
-
-    _geographic_keys = [
-        'latitude',
-        'longitude',
-        ]
+    _refresh_keys = []
 
 
-    # optionally, add time discretization attributes
-    if _include_temporal:
+    if True:
+        # optional time discretization attributes
         defaults.update({
             'sampling_rate': 1.0,
             'delta': 1.0,
@@ -66,47 +47,13 @@ class Station(AttribDict):
             'endtime',
             ])
 
-        _temporal_keys = [
+        _refresh_keys.extend([
             'sampling_rate',
             'delta',
             'starttime',
             'endtime',
             'npts',
-            ]
-
-
-    # optionally, add preliminary origin attributes
-    if _include_origin:
-        defaults.update({
-            'preliminary_origin_time': None,
-            'preliminary_event_latitude': None,
-            'preliminary_event_longitude': None,
-            'preliminary_event_depth_in_m': None,
-            'preliminary_distance_in_m': None,
-            'preliminary_azimuth': None,
-            'preliminary_backazimuth': None,
-            })
-
-        readonly.extend([
-            'preliminary_distance_in_m',
-            'preliminary_azimuth',
-            'preliminary_backazimuth',
             ])
-
-        _geographic_keys += [
-            'preliminary_event_latitude',
-            'preliminary_event_longitude',
-            ]
-
-        _origin_keys = [
-            'preliminary_origin_time',
-            'preliminary_event_latitude',
-            'preliminary_event_longitude',
-            'preliminary_event_depth_in_m',
-            'preliminary_distance_in_m',
-            'preliminary_azimuth',
-            'preliminary_backazimuth',
-            ]
 
 
     def __init__(self, *args, **kwargs):
@@ -114,11 +61,8 @@ class Station(AttribDict):
 
 
     def __setitem__(self, key, value):
-        if self._include_temporal and key in self._temporal_keys:
-            self._set_temporal_item(key, value)
-
-        elif self._include_origin and key in self._origin_keys:
-            self._set_origin_item(key, value)
+        if key in self._refresh_keys:
+            self._refresh(key, value)
 
         elif isinstance(value, dict):
             super(Station, self).__setitem__(key, AttribDict(value))
@@ -126,11 +70,8 @@ class Station(AttribDict):
         else:
             super(Station, self).__setitem__(key, value)
 
-        if self._include_origin and key in self._geographic_keys:
-            self._refresh()
 
-
-    def _set_temporal_item(self, key, value):
+    def _refresh(self, key, value):
         # adapted from obspy.core.trace.Stats
 
         if key == 'npts':
@@ -161,39 +102,6 @@ class Station(AttribDict):
                 float(self.npts-1)*self.delta
         else:
             self.__dict__['endtime'] = self.starttime
-
-
-    def _set_origin_item(self, key, value):
-        if value is None:
-            pass
-
-        elif key in ['preliminary_origin_time']:
-            value = UTCDateTime(value)
-
-        elif key in [
-            'preliminary_event_latitude',
-            'preliminary_event_longitude',
-            'preliminary_event_depth_in_m',
-            ]:
-            value = float(value)
-
-        super(Station, self).__setitem__(key, value)
-
-
-    def _refresh(self):
-        for key in self._geographic_keys:
-            if self.__dict__[key] is None:
-                return
-
-        distance_in_m, azimuth, backazimuth = gps2dist_azimuth(
-            self.preliminary_event_latitude,
-            self.preliminary_event_longitude,
-            self.latitude,
-            self.longitude)
-
-        self.__dict__['preliminary_distance_in_m'] = distance_in_m
-        self.__dict__['preliminary_azimuth'] = azimuth
-        self.__dict__['preliminary_backazimuth'] = backazimuth
 
 
 
