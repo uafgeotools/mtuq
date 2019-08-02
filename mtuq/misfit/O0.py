@@ -8,7 +8,7 @@ from mtuq.util.signal import get_components
 
 
 class Misfit(object):
-    """ Non-optimized Pure Python misfit function
+    """ Data misfit function (non-optimized Python implementation)
 
     Evaluates misfit between data and synthetics using time shifts followed by
     waveform differences. This approach, due to ZhaoHelmberger1994 and 
@@ -108,7 +108,7 @@ class Misfit(object):
         assert norm in ['L1', 'L2', 'hybrid'],\
             ValueError("Bad input argument")
 
-        assert time_shift_max > 0.,\
+        assert time_shift_max >= 0.,\
             ValueError("Bad input argument")
 
         for group in time_shift_groups:
@@ -201,3 +201,6 @@ class Misfit(object):
 
         return results
 
+
+    def _get_time_shift(self, synthetics, data, group):
+        raise NotImplementedError
