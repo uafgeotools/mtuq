@@ -8,9 +8,9 @@ from copy import deepcopy
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists, join
-from mtuq.util import AttribDict, warn, m_to_deg
+from mtuq.util import AttribDict, warn
 from mtuq.util.cap import taper, parse_weight_file
-from mtuq.util.signal import cut, get_arrival
+from mtuq.util.signal import cut, get_arrival, m_to_deg
  
 
 class ProcessData(object):
@@ -215,7 +215,6 @@ class ProcessData(object):
         else:
             traces = deepcopy(traces)
 
-        # unique station identifier
         if not hasattr(traces, 'id'):
             raise Exception('Missing station identifier')
         id = traces.id
@@ -312,8 +311,6 @@ class ProcessData(object):
                     picks.S = get_arrival(arrivals, 's')
                 except:
                     picks.S = get_arrival(arrivals, 'S')
-
-
 
 
             elif self.pick_type=='from_fk_metadata':

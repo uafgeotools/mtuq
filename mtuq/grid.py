@@ -401,11 +401,6 @@ def ForceGridRandom(magnitude=None, npts=50000):
 
 
 
-def OriginGrid():
-    raise NotImplementedError
-
-
-
 def spherical_to_Cartesian(dict):
     r = dict.r
     theta = dict.theta

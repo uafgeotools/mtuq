@@ -3,7 +3,9 @@ import numpy as np
 
 from os.path import exists
 from obspy.core import Stream, Trace
-from mtuq.util import m_to_deg, path_mtuq, unzip, url2uuid, urlopen_with_retry
+from obspy.geodetics import gps2dist_azimuth
+from mtuq.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
+from mtuq.util.signal import get_distance_in_m, get_distance_in_deg
 
 
 GREENS_TENSOR_FILENAMES = [
@@ -57,11 +59,7 @@ def resolve_model(name):
 def download_greens_tensor(url, model, station, origin):
     """ Downloads Green's functions through syngine URL interface
     """
-    if hasattr(station, 'distance_in_m'):
-        distance_in_deg = m_to_deg(station.distance_in_m)
-    else:
-        distance_in_deg = m_to_deg(station.preliminary_distance_in_m)
-
+    distance_in_deg = get_distance_in_deg(station, origin)
 
     url = (url+'/'+'query'
          +'?model='+model

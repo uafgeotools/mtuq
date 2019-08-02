@@ -2,8 +2,11 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 import warnings
+
 from matplotlib.font_manager import FontProperties
 from mtuq.graphics.header import NewStyleHeader
+from obspy.geodetics import gps2dist_azimuth
+
 
 
 #
@@ -16,7 +19,7 @@ def plot_data_synthetics(filename,
         synthetics_bw,
         synthetics_sw,
         stations,
-        mt=None,
+        origin,
         header=None,
         total_misfit_bw=1., 
         total_misfit_sw=1., 
@@ -103,8 +106,7 @@ def plot_data_synthetics(filename,
 
         # add station labels
         if station_labels:
-            meta = stations[_i]
-            add_station_labels(axes[_irow, 0], meta)
+            add_station_labels(axes[_irow, 0], stations[_i], origin)
 
 
         #
@@ -207,7 +209,7 @@ def plot_data_greens(filename,
         misfit_sw,
         stations,
         origin,
-        mt,
+        source,
         **kwargs):
 
     """ Creates CAP-style data/synthetics figure
@@ -219,19 +221,19 @@ def plot_data_greens(filename,
 
     greens_bw = greens_bw.select(origin)
     greens_sw = greens_sw.select(origin)
-    synthetics_bw = greens_bw.get_synthetics(mt)
-    synthetics_sw = greens_sw.get_synthetics(mt)
-    total_misfit_bw = misfit_bw(data_bw, greens_bw, mt, set_attributes=True)
-    total_misfit_sw = misfit_sw(data_sw, greens_sw, mt, set_attributes=True)
+    synthetics_bw = greens_bw.get_synthetics(source)
+    synthetics_sw = greens_sw.get_synthetics(source)
+    total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
+    total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
 
     header = NewStyleHeader(event_name,
         process_bw, process_sw, misfit_bw, misfit_bw,
-        greens_bw[0].model, greens_bw[0].solver, mt, origin)
+        greens_bw[0].model, greens_bw[0].solver, source, origin)
 
     plot_data_synthetics(filename,
-            data_bw, data_sw, synthetics_bw, synthetics_sw, stations,
+            data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
             total_misfit_bw=total_misfit_bw, total_misfit_sw=total_misfit_sw,
-            mt=mt, header=header, **kwargs)
+            header=header, **kwargs)
 
 
 
@@ -283,19 +285,25 @@ def add_component_labels(axes):
         transform=ax.transAxes)
 
 
-def add_station_labels(ax, meta):
+def add_station_labels(ax, station, origin):
     """ Displays station id, distance, and azimuth to the left of current axes
     """
+    distance_in_m, azimuth, _ = gps2dist_azimuth(
+        origin.latitude,
+        origin.longitude,
+        station.latitude,
+        station.longitude)
+
     # display station name
-    label = '.'.join([meta.network, meta.station])
+    label = '.'.join([station.network, station.station])
     pyplot.text(-0.5,0.50, label, fontsize=12, transform=ax.transAxes)
 
     # display distance
-    distance = '%d km' % round(meta.preliminary_distance_in_m/1000.)
+    distance = '%d km' % round(distance_in_m/1000.)
     pyplot.text(-0.5,0.35, distance, fontsize=12, transform=ax.transAxes)
 
     # display azimuth
-    azimuth =  '%d%s' % (round(meta.preliminary_azimuth), u'\N{DEGREE SIGN}')
+    azimuth =  '%d%s' % (round(azimuth), u'\N{DEGREE SIGN}')
     pyplot.text(-0.5,0.20, azimuth, fontsize=12, transform=ax.transAxes)
 
 
