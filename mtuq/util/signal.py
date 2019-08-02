@@ -114,3 +114,10 @@ def get_arrival(arrivals, phase):
     arrival = arrivals[phases.index(phase)]
     return arrival.time
 
+
+
+def get_components(stream):
+    components = []
+    for trace in stream:
+        components += [trace.stats.channel[-1].upper()]
+    return components

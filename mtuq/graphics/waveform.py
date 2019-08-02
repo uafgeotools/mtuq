@@ -221,8 +221,8 @@ def plot_data_greens(filename,
     greens_sw = greens_sw.select(origin)
     synthetics_bw = greens_bw.get_synthetics(mt)
     synthetics_sw = greens_sw.get_synthetics(mt)
-    total_misfit_bw = misfit_bw(data_bw, greens_bw, mt)
-    total_misfit_sw = misfit_sw(data_sw, greens_sw, mt)
+    total_misfit_bw = misfit_bw(data_bw, greens_bw, mt, set_attributes=True)
+    total_misfit_sw = misfit_sw(data_sw, greens_sw, mt, set_attributes=True)
 
     header = NewStyleHeader(event_name,
         process_bw, process_sw, misfit_bw, misfit_bw,

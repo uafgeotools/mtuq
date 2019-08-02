@@ -3,6 +3,7 @@ import numpy as np
 
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
+from mtuq.util.signal import get_components
 
 
 
@@ -73,22 +74,20 @@ class Misfit(object):
 
     def __init__(self,
         norm='hybrid',
-        polarity_weight=0.,
         time_shift_groups=['ZRT'],
         time_shift_max=0.,
-        optimization=1,
         ):
         """ Checks misfit parameters
 
         norm
             L2: conventional waveform difference
-                \Sigma \int (s - d)^2
+                `\int (s - d)^2`
 
-            L1: more most robust against outliers but slower to compute
-                \Sigma \int |s - d|
+            L1: robust against outliers but slower than L2
+                `\int |s - d|`
 
-            hybrid: robust like L1 but fast like L2
-                \Sigma \sqrt{ \int (s - d)^2}
+            hybrid: robust like L1 and fast like L2
+                `\sqrt{ \int (s - d)^2 }`
 
 
         time_shift_groups
@@ -98,41 +97,40 @@ class Misfit(object):
 
             ['Z','R','T']: allows time shifts to vary freely between components
 
+
+        time_shift_max
+            maximum allowed cross-correlation lag (seconds)
+
         """
+        if norm.lower()=='hybrid':
+            self.norm = norm.lower()
+
+        assert norm in ['L1', 'L2', 'hybrid'],\
+            ValueError("Bad input argument")
+
+        assert time_shift_max > 0.,\
+            ValueError("Bad input argument")
+
         for group in time_shift_groups:
             for component in group:
-                assert component in ['Z','R','T']
+                assert component in ['Z','R','T'],\
+                    ValueError("Bad input argument")
 
-        # what norm should we apply to the residuals?
-        if norm in ['L1', 'L2']:
-            self.norm = norm
-        elif norm.lower()=='hybrid':
-            self.norm = norm.lower()
-        else:
-            raise ValueError("Bad keyword argument: norm")
-
-        # maximum cross-correlation lag (seconds)
+        self.norm = norm
         self.time_shift_max = time_shift_max
-
-        # should we allow time shifts to vary from component to component?
         self.time_shift_groups = time_shift_groups
 
-        # should we include polarities in misfit?
-        self.polarity_weight = polarity_weight
 
-
-    def __call__(self, data, greens, sources):
+    def __call__(self, data, greens, sources, set_attributes=False):
         """ CAP-style misfit calculation
         """ 
         sources = iterable(sources)
         results = np.zeros(len(sources))
 
-        # which components are present in the data?
+        # initialize Green's function machinery
         for _j, d in enumerate(data):
-            components = []
-            for trace in d:
-                components += [trace.stats.channel[-1].upper()]
-            greens[_j].initialize(components)
+            if not hasattr(greens[_j], 'components'):
+                greens[_j].initialize(get_components(d))
 
         #
         # begin loop over sources
@@ -178,26 +176,28 @@ class Misfit(object):
                     stop = npts+npts_padding-offset
 
                     for _k in indices:
-                        s[_k].time_shift = time_shift
-                        s[_k].time_shift_group = group
-                        s[_k].start = start
-                        s[_k].stop = stop
-                        
                         # substract data from shifted synthetics
                         r = s[_k].data[start:stop] - d[_k].data
 
                         # sum the resulting residuals
                         if self.norm=='L1':
-                            s[_k].misfit = np.sum(abs(r))*dt
+                            misfit = np.sum(abs(r))*dt
 
                         elif self.norm=='L2':
-                            s[_k].misfit = np.sum(r**2)*dt
+                            misfit = np.sum(r**2)*dt
 
                         elif self.norm=='hybrid':
-                            s[_k].misfit = np.sqrt(np.sum(r**2)*dt)
+                            misfit = np.sqrt(np.sum(r**2)*dt)
 
-                        results[_i]  += d[_k].weight * s[_k].misfit
+                        results[_i] += d[_k].weight * misfit
 
+                        if set_attributes:
+                            d[_k].misfit = misfit
+                            d[_k].time_shift = -time_shift
+                            s[_k].misfit = misfit
+                            s[_k].time_shift = +time_shift
+                            s[_k].start = start
+                            s[_k].stop = stop
 
         return results
 
