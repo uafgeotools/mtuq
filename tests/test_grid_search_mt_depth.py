@@ -7,12 +7,12 @@ from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
-from mtuq.cap.misfit import Misfit
-from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import Trapezoid
 from mtuq.graphics.beachball import misfit_vs_depth
 from mtuq.graphics.waveform import plot_data_greens
+from mtuq.misfit import Misfit
+from mtuq.process_data import ProcessData
 from mtuq.util import path_mtuq
+from mtuq.util.cap import Trapezoid
 
 
 

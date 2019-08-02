@@ -8,8 +8,8 @@ from copy import deepcopy
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists, join
-from mtuq.cap.util import taper, parse_weight_file
 from mtuq.util import AttribDict, warn, m_to_deg
+from mtuq.util.cap import taper, parse_weight_file
 from mtuq.util.signal import cut, get_arrival
  
 

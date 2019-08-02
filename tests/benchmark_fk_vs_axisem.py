@@ -5,12 +5,12 @@ import numpy as np
 
 from os.path import join
 from mtuq import open_db
-from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import Trapezoid
-from mtuq.graphics.waveform import plot_data_synthetics, Header
-from mtuq.util import path_mtuq
+from mtuq.graphics.waveform import plot_data_synthetics
+from mtuq.process_data import ProcessData
 from mtuq.event import Origin
 from mtuq.station import Station
+from mtuq.util import path_mtuq
+from mtuq.util.cap import Trapezoid
 from obspy import UTCDateTime
 from socket import gethostname
 
