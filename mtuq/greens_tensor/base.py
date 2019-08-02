@@ -106,7 +106,6 @@ class GreensTensor(Stream):
         # would cause an endless recursion when select is called. This problem
         # is not unique to mtuq, but common to all objects that inherit from
         # ``obspy.core.Stream``
-
         if components is None:
             components = []
         for component in components:
@@ -411,8 +410,6 @@ class GreensTensorList(list):
         # typically the id is the event name or origin time
         self.id = id
 
-        self._origins = []
-
         for tensor in tensors:
             self.append(tensor)
 
@@ -426,9 +423,6 @@ class GreensTensorList(list):
         elif not hasattr(tensor, 'origin'):
             raise Exception("GreensTensor lacks origin metadata")
 
-        if tensor.origin not in self._origins:
-            self._origins.append(tensor.origin)
-
         super(GreensTensorList, self).append(tensor)
 
 
@@ -437,10 +431,10 @@ class GreensTensorList(list):
         """
 
         if len(args)+len(kwargs)<1:
-            raise Exception("Too few selection critierion")
+            raise Exception("Too few selection criteria")
 
         if len(args)+len(kwargs)>1:
-            raise Exception("Too many selection critierion")
+            raise Exception("Too many selection criteria")
 
         if len(kwargs)==1:
             key, val = kwargs.items()[0]
@@ -472,8 +466,7 @@ class GreensTensorList(list):
         """
         synthetics = Dataset()
         for tensor in self:
-            synthetics += [tensor.get_synthetics(source)]
-
+            synthetics.append(tensor.get_synthetics(source))
         return synthetics
 
 
