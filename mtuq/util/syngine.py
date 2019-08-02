@@ -4,7 +4,7 @@ import numpy as np
 from os.path import exists
 from obspy.core import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
-from mtuq.util import path_mtuq, unzip, url2uuid, urlopen_with_retry
+from mtuq.util import fullpath, unzip, url2uuid, urlopen_with_retry
 from mtuq.util.signal import get_distance_in_m, get_distance_in_deg
 
 
@@ -70,8 +70,7 @@ def download_greens_tensor(url, model, station, origin):
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
 
-    filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
-         +str(url2uuid(url)))
+    filename = fullpath('data/greens_tensor/syngine/cache/', str(url2uuid(url)))
     if exists(filename):
         return filename
     elif exists(filename+'.zip'):
@@ -111,8 +110,7 @@ def download_synthetics(url, model, station, origin, source):
     else:
         raise TypeError
 
-    filename = (path_mtuq()+'/'+'data/greens_tensor/syngine/cache/'
-         +str(url2uuid(url)))
+    filename = fullpath('data/greens_tensor/syngine/cache/', str(url2uuid(url)))
     if exists(filename):
         return filename
     elif exists(filename+'.zip'):

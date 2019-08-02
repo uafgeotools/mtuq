@@ -104,11 +104,17 @@ def timer_mpi(func):
     return timed_func
 
 
-def path_mtuq():
-    """ Returns MTUQ root directory
+def basepath():
+    """ MTUQ base directory
     """
     import mtuq
     return abspath(join(mtuq.__path__[0], '..'))
+
+
+def fullpath(*args):
+    """ Prepends MTUQ base diretory to given path
+    """
+    return join(basepath(), *args)
 
 
 def timer(func):
