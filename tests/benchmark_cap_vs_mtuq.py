@@ -133,13 +133,11 @@ if __name__=='__main__':
 
 
     misfit_bw = Misfit(
-        norm='L1',
         time_shift_max=0.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
-        norm='L1',
         time_shift_max=0.,
         time_shift_groups=['ZR','T'],
         )
