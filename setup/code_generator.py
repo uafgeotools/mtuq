@@ -8,7 +8,7 @@ from copy import deepcopy
 from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search
+from mtuq.grid_search import grid_search
 from mtuq.cap.misfit import Misfit
 from mtuq.cap.process_data import ProcessData
 from mtuq.cap.util import Trapezoid
@@ -1145,12 +1145,7 @@ if __name__=='__main__':
 
     with open('examples/SerialGridSearch.DoubleCouple.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
-        file.write(
-            replace(
-            Imports,
-            'grid_search.mpi',
-            'grid_search.serial',
-            ))
+        file.write(Imports)
         file.write(Docstring_SerialGridSearch_DoubleCouple)
         file.write(PathsComments)
         file.write(Paths_Syngine)
@@ -1168,8 +1163,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search.mpi',
-            'grid_search.serial',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             ))
@@ -1213,8 +1206,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'grid_search.mpi',
-            'grid_search.serial',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
             'plot_beachball',
