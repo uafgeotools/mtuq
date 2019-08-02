@@ -3,13 +3,12 @@
 import os
 import numpy as np
 
-from os.path import join
 from mtuq import open_db
 from mtuq.graphics.waveform import plot_data_synthetics
 from mtuq.process_data import ProcessData
 from mtuq.event import Origin
 from mtuq.station import Station
-from mtuq.util import path_mtuq
+from mtuq.util import fullpath
 from mtuq.util.cap import Trapezoid
 from obspy import UTCDateTime
 from socket import gethostname
@@ -22,8 +21,8 @@ if __name__=='__main__':
     #
 
     path_greens_axisem= '/home/rmodrak/data/ak135f_scak-2s'
-    path_greens_fk    = join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak_all')
-    path_weights      = join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/weights.dat')
+    path_greens_fk    = fullpath('data/tests/benchmark_cap/greens/scak_all')
+    path_weights      = fullpath('data/tests/benchmark_cap/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 

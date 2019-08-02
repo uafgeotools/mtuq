@@ -5,15 +5,13 @@ import os
 import numpy as np
 
 from copy import deepcopy
-from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search import grid_search
-from mtuq.graphics.beachball import plot_beachball
-from mtuq.graphics.waveform import plot_data_greens
+from mtuq.grid_search.mpi import grid_search
+from mtuq.graphics import plot_data_greens, plot_beachball
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import path_mtuq
+from mtuq.util import fullpath
 from mtuq.util.cap import Trapezoid
 
 
@@ -289,13 +287,13 @@ Paths_BenchmarkCAP="""
     # the following directories correspond to the moment tensors in the list 
     # "grid" below
     paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/6')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/0')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/1')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/2')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/3')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/4')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/5')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/6')]
 
 """
 
@@ -309,8 +307,8 @@ PathsComments="""
 
 
 Paths_Syngine="""
-    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
-    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
+    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'ak135'
 
@@ -318,9 +316,9 @@ Paths_Syngine="""
 
 
 Paths_FK="""
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
-    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
-    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    path_greens=  fullpath('data/tests/benchmark_cap/greens/scak')
+    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
+    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 
@@ -519,7 +517,7 @@ Main_GridSearch_DoubleCouple="""
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origin = data.get_preliminary_origins()[0]
+        origin = data.get_origins()[0]
 
         print 'Processing data...\\n'
         data_bw = data.map(process_bw)
@@ -597,7 +595,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origin = data.get_preliminary_origins()[0]
+        origin = data.get_origins()[0]
 
         origins = []
         for depth in depths:
@@ -669,7 +667,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_preliminary_origins()[0]
+    origin = data.get_origins()[0]
 
 
     print 'Processing data...\\n'
@@ -721,7 +719,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_preliminary_origins()[0]
+    origin = data.get_origins()[0]
 
     origins = []
     for depth in depths:
@@ -770,7 +768,7 @@ Main_TestGraphics="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_preliminary_origins()[0]
+    origin = data.get_origins()[0]
 
 
     print 'Processing data...\\n'
@@ -948,7 +946,7 @@ Main_BenchmarkCAP="""
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_preliminary_origins()[0]
+    origin = data.get_origins()[0]
 
 
     print 'Processing data...\\n'
@@ -966,7 +964,7 @@ Main_BenchmarkCAP="""
 
 
     depth = int(origin.depth_in_m/1000.)+1
-    name = '_'.join([model, str(depth), event_name])
+    name = '_'.os.path.join([model, str(depth), event_name])
 
 
     print 'Comparing waveforms...'
@@ -1008,8 +1006,8 @@ Main_BenchmarkCAP="""
 
 if __name__=='__main__':
     import os
-    from mtuq.util import path_mtuq, replace
-    os.chdir(path_mtuq())
+    from mtuq.util import basepath, replace
+    os.chdir(basepath())
 
 
     with open('examples/GridSearch.DoubleCouple.py', 'w') as file:
@@ -1285,8 +1283,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'mpi',
-            'serial',
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
              ))

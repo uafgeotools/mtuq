@@ -10,9 +10,7 @@ from os.path import basename
 from mtuq.greens_tensor.axisem_netcdf import GreensTensor
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.moment_tensor.basis import change_basis
-from mtuq.util.signal import resample
-from mtuq.util import m_to_deg
-from obspy.geodetics import gps2dist_azimuth
+from mtuq.util.signal import get_distance_in_deg, resample
 
 
 
@@ -50,15 +48,10 @@ class Client(ClientBase):
         """ 
         Reads a Greens tensor from AxiSEM NetCDF database
         """
-
-        distance_in_m, _, _ = gps2dist_azimuth(
-            origin.latitude,
-            origin.longitude,
-            station.latitude,
-            station.longitude)
+        distance_in_deg = get_distance_in_deg(station, origin)
 
         stream = self.db.get_greens_function(
-            epicentral_distance_in_degree=m_to_deg(distance_in_m),
+            epicentral_distance_in_degree=distance_in_deg,
             source_depth_in_m=origin.depth_in_m, 
             origin_time=origin.time,
             kind='displacement',

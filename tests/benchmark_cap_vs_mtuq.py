@@ -3,15 +3,13 @@ import os
 import numpy as np
 
 from copy import deepcopy
-from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search import grid_search
-from mtuq.graphics.beachball import plot_beachball
-from mtuq.graphics.waveform import plot_data_synthetics
+from mtuq.grid_search.mpi import grid_search
+from mtuq.graphics import plot_data_synthetics, plot_beachball
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import path_mtuq
+from mtuq.util import fullpath
 from mtuq.util.cap import Trapezoid
 
 
@@ -89,18 +87,18 @@ if __name__=='__main__':
     # the following directories correspond to the moment tensors in the list 
     # "grid" below
     paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/6')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/0')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/1')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/2')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/3')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/4')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/5')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/6')]
 
 
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
-    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
-    path_weights= join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/weights.dat')
+    path_greens=  fullpath('data/tests/benchmark_cap/greens/scak')
+    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
+    path_weights= fullpath('data/tests/benchmark_cap/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 
@@ -179,7 +177,7 @@ if __name__=='__main__':
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_preliminary_origins()[0]
+    origin = data.get_origins()[0]
 
 
     print 'Processing data...\n'
@@ -197,7 +195,7 @@ if __name__=='__main__':
 
 
     depth = int(origin.depth_in_m/1000.)+1
-    name = '_'.join([model, str(depth), event_name])
+    name = '_'.os.path.join([model, str(depth), event_name])
 
 
     print 'Comparing waveforms...'

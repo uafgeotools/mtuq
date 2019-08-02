@@ -1,6 +1,7 @@
 
 import numpy as np
 import time
+from mtuq.grid_search import serial
 from mtuq.util import iterable, timer
 
 

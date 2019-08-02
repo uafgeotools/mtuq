@@ -4,15 +4,13 @@ import os
 import numpy as np
 
 from copy import deepcopy
-from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search import grid_search
-from mtuq.graphics.beachball import plot_beachball
-from mtuq.graphics.waveform import plot_data_greens
+from mtuq.grid_search.mpi import grid_search
+from mtuq.graphics import plot_data_greens, plot_beachball
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import path_mtuq
+from mtuq.util import fullpath
 from mtuq.util.cap import Trapezoid
 
 
@@ -37,8 +35,8 @@ if __name__=='__main__':
     # Mw~4 Alaska earthquake
     #
 
-    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
-    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
+    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'ak135'
 
@@ -121,7 +119,7 @@ if __name__=='__main__':
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origin = data.get_preliminary_origins()[0]
+        origin = data.get_origins()[0]
 
         print 'Processing data...\n'
         data_bw = data.map(process_bw)

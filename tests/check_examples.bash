@@ -14,9 +14,10 @@ FILENAMES="\
     ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple+Magnitude+Depth.py\
     ../tests/benchmark_cap_vs_mtuq.py\
     ../tests/test_graphics.py\
-    ../tests/test_grid_search_mt.py\
     ../tests/test_grid_search_mt_depth.py\
     "
+#    ../tests/test_grid_search_mt.py\
+
 
 # navigate to mtuq/tests
 cd $(dirname ${BASH_SOURCE[0]})
