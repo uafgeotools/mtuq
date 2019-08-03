@@ -87,7 +87,7 @@ class Dataset(list):
     def map(self, function, *sequences):
         """ Maps function to all streams in the dataset
 
-        Applies a function to each Stream. If one or more optional sequences 
+        Applies a function to each stream. If one or more optional sequences 
         are given, the function is called with an argument list consisting of
         corresponding items of each sequence. Similar to the Python built-in
         ``map``.
@@ -151,6 +151,7 @@ class Dataset(list):
 
         For Datasets created using ``mtuq.io.readers``, preliminary event
         metadata (e.g. catalog information) is used to define the Origins.
+
         For Datasets created using ``get_synthetics`` methods, solver/
         IO client input is used to define the Origins
         """
