@@ -51,6 +51,11 @@ class GreensTensor(Stream):
         if not isinstance(origin, Origin):
             raise TypeError
 
+        if components==None:
+            components = []
+        for component in components:
+            assert component in ['Z', 'R', 'T']
+
         # the main work of the constructor starts now
         if id:
             self.id = id
@@ -71,6 +76,9 @@ class GreensTensor(Stream):
         self.include_force = include_force
         self.components = components
 
+        self._preallocate()
+        self._precompute()
+
 
     def reset_components(self, components):
         """
@@ -79,12 +87,19 @@ class GreensTensor(Stream):
         Suppose the vertical or radial components of the recorded data are
         found to be good but the transerve component is found to be bad.
         ``reset_components(['Z', 'R'])`` will cause ``get_synthetics`` to only
-        return the desired components, avoiding unnecessary computations
+        return the former two components, avoiding unnecessary computations
         """
+        if components==None:
+            components = []
+
+        for component in components:
+            assert component in ['Z', 'R', 'T']
+
         if components==self.components:
             return
 
         self.components = components
+
         self._preallocate()
         self._precompute()
 
@@ -319,43 +334,15 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
-    def select(self, *args, **kwargs):
-        """ Selects GreensTensors that match the given criterion
+    def select(self, origin):
+        """ Selects GreensTensors that match the given origin
         """
-
-        if len(args)+len(kwargs)<1:
-            raise Exception("Too few selection criteria")
-
-        if len(args)+len(kwargs)>1:
-            raise Exception("Too many selection criteria")
-
-        if len(kwargs)==1:
-            key, val = kwargs.items()[0]
-
-        elif type(args[0])==Origin:
-            key, val = 'origin', args[0]
-
-        elif type(args[0])==Station:
-            key, val = 'station', args[0]
-
-        if key=='station':
-            selected = lambda tensor: tensor.station==val
-
-        elif key=='origin':
-            selected = lambda tensor: tensor.origin==val
-
-        else:
-            raise KeyError("Bad selection criterion: %s" % key)
-
-        return self.__class__(tensors=filter(selected, self), id=self.id)
+        return self.__class__(id=self.id, tensors=filter(
+            lambda tensor: tensor.origin==origin, self))
 
 
     def get_synthetics(self, source):
-        """ Generates synthetic seismograms by summing Green's functions 
-        weighted by moment tensor elements
-
-        :param source: Source to be used in linear combination
-        :param origin: Use Green's functions corresponding to this origin 
+        """ Generates synthetic by linear combination of Green's functions 
         """
         synthetics = Dataset()
         for tensor in self:
