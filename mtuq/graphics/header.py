@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
-from mtuq.util.moment_tensor.tape2015 import cmt2tt
+from mtuq.util.moment_tensor.TapeTape2015 import from_mij
 from obspy.core import AttribDict
 
 
@@ -84,7 +84,7 @@ class OldStyleHeader(Header):
         self.solver = solver
 
         tt = AttribDict()
-        tt.gamma, tt.delta, tt.M0, tt.kappa, tt.theta, tt.sigma = cmt2tt(mt)
+        tt.gamma, tt.delta, tt.M0, tt.kappa, tt.theta, tt.sigma = from_mij(mt)
 
         self.mt = mt
         self.tt = tt

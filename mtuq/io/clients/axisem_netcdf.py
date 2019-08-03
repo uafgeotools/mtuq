@@ -9,7 +9,6 @@ import numpy as np
 from os.path import basename
 from mtuq.greens_tensor.axisem_netcdf import GreensTensor
 from mtuq.io.clients.base import Client as ClientBase
-from mtuq.util.moment_tensor.basis import change_basis
 from mtuq.util.signal import get_distance_in_deg, resample
 
 
