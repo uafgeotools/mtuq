@@ -4,8 +4,7 @@
 import unittest
 import numpy as np
 
-from mtuq.util.moment_tensor.tape2015 import cmt2tt, cmt2tt15, tt2cmt, tt152cmt
-from mtuq.util.moment_tensor.basis import change_basis
+from mtuq.util.moment_tensor import TapeTape2012, TapeTape2015, basis
 from mtuq.util.math import PI, DEG
 
 
@@ -25,8 +24,8 @@ class TestMomentTensor(unittest.TestCase):
             ])
 
         # convert to 2012 parameters and back
-        gamma, delta, M0, kappa, theta, sigma = cmt2tt(M1)
-        M2 = tt2cmt(gamma, delta, M0, kappa, theta, sigma)
+        gamma, delta, M0, kappa, theta, sigma = TapeTape2012.from_mij(M1)
+        M2 = TapeTape2012.to_mij(gamma, delta, M0, kappa, theta, sigma)
 
         e = np.linalg.norm(M1-M2)
         if e > EPSVAL:
@@ -45,8 +44,8 @@ class TestMomentTensor(unittest.TestCase):
             ])
 
         # convert to 2015 parameters and back
-        rho, v, w, kappa, sigma, h = cmt2tt15(M1)
-        M2 = tt152cmt(rho, v, w, kappa, sigma, h)
+        rho, v, w, kappa, sigma, h = TapeTape2015.from_mij(M1)
+        M2 = TapeTape2015.to_mij(rho, v, w, kappa, sigma, h)
 
         e = np.linalg.norm(M1-M2)
         if e > EPSVAL:
@@ -78,10 +77,10 @@ class TestMomentTensor(unittest.TestCase):
         #M[5] += np.random.normal(0., 1.e-6)
 
         M1 = M
-        gamma, delta, M0, kappa, theta, sigma = cmt2tt(M1)
+        gamma, delta, M0, kappa, theta, sigma = TapeTape2012.from_mij(M1)
         assert abs(delta - 90.) < 1.e-3
 
-        M2 = tt2cmt(gamma, delta, M0, kappa, theta, sigma)
+        M2 = TapeTape2012.to_mij(gamma, delta, M0, kappa, theta, sigma)
         e = np.linalg.norm(M1-M2)
         if e > 1.e-3:
             print '||M1 - M2|| = %e' % e
@@ -104,8 +103,8 @@ class TestMomentTensor(unittest.TestCase):
         #M[5] += np.random.normal(0., 1.e-6)
 
         M1 = M
-        rho, v, w, kappa, sigma, h = cmt2tt15(M1)
-        M2 = tt152cmt(rho, v, w, kappa, sigma, h)
+        rho, v, w, kappa, sigma, h = TapeTape2015.from_mij(M1)
+        M2 = TapeTape2015.to_mij(rho, v, w, kappa, sigma, h)
         e = np.linalg.norm(M1-M2)
         if e > 1.e-3:
             print '||M1 - M2|| = %e' % e
@@ -138,10 +137,10 @@ class TestMomentTensor(unittest.TestCase):
         # w is like lune latitude delta, whereas u is like lune colatitude beta
         w = 3.*PI/8. - u
 
-        mt = tt152cmt(rho, v, w, kappa, sigma, h)
+        mt = TapeTape2015.to_mij(rho, v, w, kappa, sigma, h)
 
         # convert from up-south-east to north-west-up
-        mt = change_basis(mt, 1, 3)
+        mt = basis.change(mt, 1, 3)
 
         e = np.linalg.norm(mt-mt0)
         if e > 1.e-3:
