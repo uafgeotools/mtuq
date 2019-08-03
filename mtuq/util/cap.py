@@ -223,7 +223,7 @@ def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt,
             components = []
             for trace in synthetics[i]:
                 components += [trace.meta.channel[-1]]
-            greens[i].initialize(components)
+            greens[i].reset_components(components)
             dummy = greens[i].get_synthetics(mt)
             for trace in synthetics[i]:
                 trace.weight = 1.
