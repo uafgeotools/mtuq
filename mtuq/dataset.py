@@ -135,7 +135,10 @@ class Dataset(list):
 
 
     def get_stations(self):
-        """ Extracts station metadata from all streams in list
+        """ Returns station attribute of each stream
+
+        For Datasets created using ``mtuq.io.readers``, SAC headers or
+        other file metadata are used to populate the Station attributes
         """
         stations = []
         for stream in self:
@@ -144,10 +147,12 @@ class Dataset(list):
 
 
     def get_origins(self):
-        """ Returns origin location and time
+        """ Returns origin attribute of each stream
 
-        The origin attribute can be used to hold preliminary origin information
-        (e.g. catalog event locations)
+        For Datasets created using ``mtuq.io.readers``, preliminary event
+        metadata (e.g. catalog information) is used to define the Origins.
+        For Datasets created using ``get_synthetics`` methods, solver/
+        IO client input is used to define the Origins
         """
         origins = []
         for stream in self:
@@ -158,7 +163,7 @@ class Dataset(list):
                     warnings.warn(
                         "Different streams in the Dataset correpond to "
                         "different events.\n\n"
-                        "If this is expected, feel free to disable this warning "
+                        "This may be intentional. Feel free to disable this "
                         "warning by setting Dataset._warnings=False")
 
         return origins

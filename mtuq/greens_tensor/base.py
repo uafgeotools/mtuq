@@ -139,7 +139,7 @@ class GreensTensor(Stream):
 
     def _precompute(self):
         """
-        Computes numpy array used by get_synthetics
+        Precomputes numpy array used by get_synthetics
         """
         # the formulas relating the original time series to the linear
         # combination array vary depending on the scheme being used, so
