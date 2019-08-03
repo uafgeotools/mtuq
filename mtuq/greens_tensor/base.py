@@ -1,7 +1,6 @@
 
 import numpy as np
 
-from copy import deepcopy
 from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
@@ -68,8 +67,8 @@ class GreensTensor(Stream):
             station.latitude,
             station.longitude)
 
-        self.station = deepcopy(station)
-        self.origin = deepcopy(origin)
+        self.station = station.copy()
+        self.origin = origin.copy()
         self.model = model
         self.solver = solver
         self.include_mt = include_mt
@@ -132,7 +131,7 @@ class GreensTensor(Stream):
             self._synthetics.remove(trace)
         for component in self.components:
             # add stats object
-            stats = deepcopy(self.station)
+            stats = station.copy()
             stats.update({'npts': nt, 'channel': component})
              # add trace object
             self._synthetics += Trace(np.zeros(nt), stats)
