@@ -11,6 +11,6 @@ def grid_search(data, greens, misfit, origins, sources, verbose=True):
     results = []
     for origin in iterable(origins):
         results += [misfit(data, greens.select(origin), sources)]
-    return np.concatenate(results)
+    return np.concatenate(results, axis=1)
 
 

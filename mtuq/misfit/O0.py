@@ -125,7 +125,7 @@ class Misfit(object):
         """ CAP-style misfit calculation
         """ 
         sources = iterable(sources)
-        results = np.zeros(len(sources))
+        results = np.zeros((len(sources), 1))
 
         # initialize Green's function machinery
         for _j, d in enumerate(data):

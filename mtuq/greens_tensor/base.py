@@ -124,7 +124,7 @@ class GreensTensor(Stream):
         npts = self[0].stats.npts
 
         # a single obspy stream is allocated, then every time get_synthetics
-        # is called, the stream gets overwritten
+        # is called, the numeric trace data get overwritten
         self._synthetics = Stream()
 
         self._synthetics.id = self.id
