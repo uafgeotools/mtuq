@@ -129,8 +129,7 @@ class Misfit(object):
 
         # reset_components Green's function machinery
         for _j, d in enumerate(data):
-            if not hasattr(greens[_j], 'components'):
-                greens[_j].reset_components(get_components(d))
+            greens[_j].reset_components(get_components(d))
 
         #
         # begin loop over sources

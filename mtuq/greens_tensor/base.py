@@ -32,6 +32,7 @@ class GreensTensor(Stream):
             id=None, 
             model=None,
             solver=None,
+            components=[],
             include_mt=True,
             include_force=False):
 
@@ -68,9 +69,10 @@ class GreensTensor(Stream):
         self.solver = solver
         self.include_mt = include_mt
         self.include_force = include_force
+        self.components = components
 
 
-    def reset_components(self, components=['Z', 'R', 'T']):
+    def reset_components(self, components):
         """
         Resets components returned by get_synthetics
 
@@ -79,57 +81,48 @@ class GreensTensor(Stream):
         ``reset_components(['Z', 'R'])`` will cause ``get_synthetics`` to only
         return the desired components, avoiding unnecessary computations
         """
-        if components is None:
-            components = []
-        for component in components:
-            assert component in ['Z', 'R', 'T']
+        if components==self.components:
+            return
+
         self.components = components
-
-        self._allocate_synthetics()
-        self._allocate_array()
-        self._compute_array()
+        self._preallocate()
+        self._precompute()
 
 
-    def _allocate_synthetics(self):
+    def _preallocate(self):
         """
-        Allocates obspy stream used by get_synthetics
+        Preallocates structures used by get_synthetics
+
+        Every time get_synthetics is called, the numeric trace data gets
+        overwritten. Every time reset_components is called, entire traces get
+        overwritten.  The reference to the stream itself never changes.
         """
-        npts = self[0].stats.npts
-
-        # a single obspy stream is allocated, then every time get_synthetics
-        # is called, the numeric trace data get overwritten
-        self._synthetics = Stream()
-
-        self._synthetics.id = self.id
-        self._synthetics.station = self.station
-        self._synthetics.origin = self.origin
-
-        for component in self.components:
-            # add stats object
-            stats = deepcopy(self.station)
-            stats.update({'npts': npts, 'channel': component})
-
-             # add trace object
-            self._synthetics += Trace(np.zeros(stats.npts), stats)
-
-
-    def _allocate_array(self):
-        """
-        Allocates numpy array used by get_synthetics
-        """
-        nt = self[0].stats.npts
+        # allocate array to hold linear combination time series
+        nt = len(self[0].data)
         nc = len(self.components)
         nr = 0
-
         if self.include_mt:
             nr += 6
         if self.include_force:
-            nr += 3
-
+            nr+= 3
         self._array = np.zeros((nc, nr, nt))
 
+        # allocate obspy structures to hold synthetics
+        if not hasattr(self, '_synthetics'):
+            self._synthetics = Stream()
+            self._synthetics.station = self.station
+            self._synthetics.origin = self.origin
+        for trace in self._synthetics:
+            self._synthetics.remove(trace)
+        for component in self.components:
+            # add stats object
+            stats = deepcopy(self.station)
+            stats.update({'npts': nt, 'channel': component})
+             # add trace object
+            self._synthetics += Trace(np.zeros(nt), stats)
 
-    def _compute_array(self):
+
+    def _precompute(self):
         """
         Computes numpy array used by get_synthetics
         """
