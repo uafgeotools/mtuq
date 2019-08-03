@@ -1279,7 +1279,7 @@ if __name__=='__main__':
         file.write(Main_TestGraphics)
 
 
-    with open('mtuq/util/examples.py', 'w') as file:
+    with open('mtuq/util/example_data.py', 'w') as file:
         file.write(
             replace(
             Imports,
