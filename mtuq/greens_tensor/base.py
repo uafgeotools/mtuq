@@ -58,7 +58,7 @@ class GreensTensor(Stream):
         self.station = deepcopy(station)
 
         # event location and other metadata
-        self.origin = origin
+        self.origin = deepcopy(origin)
 
         self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
             origin.latitude,
@@ -106,27 +106,15 @@ class GreensTensor(Stream):
         # would cause an endless recursion when select is called. This problem
         # is not unique to mtuq, but common to all objects that inherit from
         # ``obspy.core.Stream``
-
-        # sets components attribute
-        self._set_components(components)
-
-        # allocates obspy stream used by get_synthetics
-        self._allocate_synthetics()
-
-        # allocates and computes numpy array used by get_synthetics
-        self._allocate_array()
-        self._compute_array()
-
-
-    def _set_components(self, components):
-        """
-        Checks input argument and sets component attribute
-        """
-        if components==None:
+        if components is None:
             components = []
         for component in components:
             assert component in ['Z', 'R', 'T']
         self.components = components
+
+        self._allocate_synthetics()
+        self._allocate_array()
+        self._compute_array()
 
 
     def _allocate_synthetics(self):
@@ -136,7 +124,7 @@ class GreensTensor(Stream):
         npts = self[0].stats.npts
 
         # a single obspy stream is allocated, then every time get_synthetics
-        # is called, the stream gets overwritten
+        # is called, the numeric trace data get overwritten
         self._synthetics = Stream()
 
         self._synthetics.id = self.id
@@ -422,8 +410,6 @@ class GreensTensorList(list):
         # typically the id is the event name or origin time
         self.id = id
 
-        self._origins = []
-
         for tensor in tensors:
             self.append(tensor)
 
@@ -437,9 +423,6 @@ class GreensTensorList(list):
         elif not hasattr(tensor, 'origin'):
             raise Exception("GreensTensor lacks origin metadata")
 
-        if tensor.origin not in self._origins:
-            self._origins.append(tensor.origin)
-
         super(GreensTensorList, self).append(tensor)
 
 
@@ -448,10 +431,10 @@ class GreensTensorList(list):
         """
 
         if len(args)+len(kwargs)<1:
-            raise Exception("Too few selection critierion")
+            raise Exception("Too few selection criteria")
 
         if len(args)+len(kwargs)>1:
-            raise Exception("Too many selection critierion")
+            raise Exception("Too many selection criteria")
 
         if len(kwargs)==1:
             key, val = kwargs.items()[0]
@@ -474,24 +457,16 @@ class GreensTensorList(list):
         return self.__class__(tensors=filter(selected, self), id=self.id)
 
 
-    def get_synthetics(self, source, origin=None):
+    def get_synthetics(self, source):
         """ Generates synthetic seismograms by summing Green's functions 
         weighted by moment tensor elements
 
         :param source: Source to be used in linear combination
         :param origin: Use Green's functions corresponding to this origin 
         """
-        if origin==None:
-            assert len(self._origins)==1
-            origin = self._origins[0]
-
         synthetics = Dataset()
         for tensor in self:
-            if tensor.origin == origin:
-                synthetics += [tensor.get_synthetics(source)]
-            else:
-                continue
-
+            synthetics.append(tensor.get_synthetics(source))
         return synthetics
 
 

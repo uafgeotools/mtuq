@@ -1,6 +1,8 @@
 
 import numpy as np
 from mtuq.util.math import isclose
+from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
+
 
 def cut(trace, t1, t2):
     """ 
@@ -113,4 +115,32 @@ def get_arrival(arrivals, phase):
 
     arrival = arrivals[phases.index(phase)]
     return arrival.time
+
+
+
+def get_components(stream):
+    components = []
+    for trace in stream:
+        components += [trace.stats.channel[-1].upper()]
+    return components
+
+
+def get_distance_in_m(station, origin):
+    distance_in_m, _, _ = gps2dist_azimuth(
+        origin.latitude,
+        origin.longitude,
+        station.latitude,
+        station.longitude)
+    return distance_in_m
+
+
+def get_distance_in_deg(station, origin):
+    return m_to_deg(
+        get_distance_in_m(station, origin))
+
+
+def m_to_deg(distance_in_m):
+    return kilometers2degrees(distance_in_m/1000., radius=6371.)
+
+
 

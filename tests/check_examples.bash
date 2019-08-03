@@ -18,6 +18,7 @@ FILENAMES="\
     ../tests/test_grid_search_mt_depth.py\
     "
 
+
 # navigate to mtuq/tests
 cd $(dirname ${BASH_SOURCE[0]})
 

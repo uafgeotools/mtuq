@@ -44,7 +44,8 @@ def is_mpi_env():
 def iterable(arg):
     """ Simple list typecast
     """
-    if not isinstance(arg, (list, tuple)):
+    from mtuq.grid import Grid, UnstructuredGrid
+    if not isinstance(arg, (list, tuple, Grid, UnstructuredGrid)):
         return [arg]
     else:
         return arg
@@ -103,11 +104,17 @@ def timer_mpi(func):
     return timed_func
 
 
-def path_mtuq():
-    """ Returns MTUQ root directory
+def basepath():
+    """ MTUQ base directory
     """
     import mtuq
     return abspath(join(mtuq.__path__[0], '..'))
+
+
+def fullpath(*args):
+    """ Prepends MTUQ base diretory to given path
+    """
+    return join(basepath(), *args)
 
 
 def timer(func):
@@ -164,13 +171,4 @@ def url2uuid(url):
     name = url
     return uuid.uuid5(namespace, name)
 
-
-def m_to_deg(distance_in_m):
-    from obspy.geodetics import kilometers2degrees
-    return kilometers2degrees(distance_in_m/1000., radius=6371.)
-
-
-def km_to_deg(distance_in_km):
-    from obspy.geodetics import kilometers2degrees
-    return kilometers2degrees(distance_in_km, radius=6371.)
 

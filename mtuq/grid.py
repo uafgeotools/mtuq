@@ -1,13 +1,12 @@
 
 
 import numpy as np
-import warnings
 
 from numpy import pi as PI
 from numpy.random import uniform as random
-from mtuq.util import AttribDict, asarray, warn
-from mtuq.util.moment_tensor import tape2015
+from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
+from mtuq.util.moment_tensor.TapeTape2015 import to_mij
 
 
 
@@ -286,7 +285,7 @@ def FullMomentTensorGridRandom(magnitude=None, npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=TapeTape2015_to_UpSouthEast)
+        callback=to_mij)
 
 
 def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
@@ -315,7 +314,7 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=TapeTape2015_to_UpSouthEast)
+        callback=to_mij)
 
 
 def DoubleCoupleGridRandom(magnitude=None, npts=50000):
@@ -342,7 +341,7 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=TapeTape2015_to_UpSouthEast)
+        callback=to_mij)
 
 
 def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
@@ -369,7 +368,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=TapeTape2015_to_UpSouthEast)
+        callback=to_mij)
 
 
 def ForceGridRegular(magnitude=None, npts=25):
@@ -401,11 +400,6 @@ def ForceGridRandom(magnitude=None, npts=50000):
 
 
 
-def OriginGrid():
-    raise NotImplementedError
-
-
-
 def spherical_to_Cartesian(dict):
     r = dict.r
     theta = dict.theta
@@ -416,15 +410,6 @@ def spherical_to_Cartesian(dict):
     z = r*np.cos(theta)
 
     return np.array([x, y, z])
-
-
-def TapeTape2015_to_UpSouthEast(*args, **kwargs):
-    """ Converts from Tape2015 parameterization in which several of the above
-    grids are defined to up-south-east parameterization used elsewhere in the 
-    code
-    """
-    from mtuq.util.moment_tensor.tape2015 import tt152cmt
-    return tt152cmt(*args, **kwargs)
 
 
 def _check_magnitude(M):

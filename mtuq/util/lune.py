@@ -1,144 +1,9 @@
-#!/usr/bin/env python
 
-EPSVAL = 1e-6
 VERBOSE = 0
 
 
 import numpy as np
-
-from mtuq.util.moment_tensor.basis import change_basis
-from mtuq.util.math import PI, DEG, eig, fangle_signed, rotmat, rotmat_gen, wrap360
-
-
-
-def cmt2tt(M):
-    """
-    Converts up-south-east moment tensor to 2012 parameters
-
-    input: M: moment tensor with shape [6]
-              must be in up-south-east (GCMT) convention
-
-    output: gamma, delta, M0, kappa, theta, sigma
-    """
-    # diagonalize
-    lam, U, = eig(_mat(_change_basis(M)), sort_type=1)
-    gamma, delta, M0, = lam2lune(lam)
-
-    # require det(U) = 1
-    U = _fixdet(U)
-
-    Y = rotmat(45,1)
-    V = np.dot(U, Y)
-
-    S = V[:,0] # slip vector
-    N = V[:,2] # fault normal
-
-    # fix roundoff
-    N = _round0(N); S = _round0(S)
-    N = _round1(N); S = _round1(S)
-
-    # find the angles corresponding to the bounding region shown in
-    # TT2012, Figs.16,B1
-    theta, sigma, kappa, _ = frame2angles(N,S)
-
-    return (
-        gamma,
-        delta,
-        M0,
-        kappa,
-        theta,
-        sigma)
-
-
-def cmt2tt15(M):
-    """
-    Converts up-south-east moment tensor to 2015 parameters
-
-    input: M: moment tensor with shape [6]
-              must be in up-south-east (GCMT) convention
-
-    output: kappa, sigma, M0, v, w, h
-    """
-    gamma, delta, M0, kappa, theta, sigma = cmt2tt(M)
-    rho = np.sqrt(2.)*M0
-    v, w = lune2rect(gamma, delta)
-    h = np.cos(theta/DEG)
-
-    return (
-        rho,
-        v,
-        w,
-        kappa,
-        sigma,
-        h)
-
-
-def tt2cmt(*args):
-    """
-    Converts 2012 parameters to up-south-east moment tensor
-
-    input: gamma, delta, M0, kappa, theta, sigma
-
-    output: M: moment tensor with shape [6]
-               in up-south-east (GCMT) convention
-    """
-    try:
-        gamma, delta, M0, kappa, theta, sigma = args
-    except:
-        gamma, delta, M0, kappa, theta, sigma =\
-             args[0].gamma, args[0].delta, args[0].M0,\
-             args[0].kappa, args[0].theta, args[0].sigma
-
-    lam = lune2lam(gamma, delta, M0)
-
-    # TT2012, p.485
-    phi = -kappa
-
-    north = np.array([-1, 0, 0])
-    zenith = np.array([0, 0, 1])
-
-    K = np.dot(rotmat(phi, 2), north)
-    N = np.dot(rotmat_gen(K, theta), zenith)
-    S = np.dot(rotmat_gen(N, sigma), K)
-
-    # TT2012, eq.28
-    Y = rotmat(-45,1)
-
-    V = np.column_stack([S, np.cross(N,S), N])
-    U = np.dot(V, Y)
-    M = np.dot(np.dot(
-            U, 
-            np.diag(lam)),
-            U.T)
-
-    # convert from south-east-up to up-south-east convention
-    # (note: U is still in south-east-up)
-    M = change_basis(_vec(M), 5, 1)
-
-    return M
-
-
-def tt152cmt(*args):
-    """
-    Converts 2015 parameters to up-south-east moment tensor
-
-    input: kappa, sigma, M0, v, w, h
-
-    output: M: moment tensor with shape [6]
-               in up-south-east (GCMT) convention
-    """
-    try:
-        rho, v, w, kappa, sigma, h = args
-    except:
-        rho, v, w, kappa, sigma, h =\
-            args[0].rho, args[0].v, args[0].w,\
-            args[0].kappa, args[0].sigma, args[0].h
-
-    theta = np.arccos(h)*DEG
-    M0 = rho/np.sqrt(2)
-    gamma, delta = rect2lune(v, w)
-    M = tt2cmt(gamma, delta, M0, kappa, theta, sigma)
-    return M
+from mtuq.util.math import PI, DEG, eig, fangle_signed, wrap360
 
 
 
@@ -329,7 +194,7 @@ def faultvec2angles(S,N):
     return (theta,sigma,kappa,K,)
 
 
-def frame2angles(N,S):
+def frame2angles(N,S, thresh=1.e-6):
     """
      There are four combinations of N and S that represent a double couple
      moment tensor, as shown in Figure 15 of TT2012.
@@ -355,8 +220,8 @@ def frame2angles(N,S):
     K = np.array([K1, K2, K3, K4])
 
     # which combination lies within the bounding region?
-    btheta = (theta <= 90.+EPSVAL)
-    bsigma = (abs(sigma) <= 90.+EPSVAL)
+    btheta = (theta <= 90.+thresh)
+    bsigma = (abs(sigma) <= 90.+thresh)
     bb = np.logical_and(btheta, bsigma)
     ii = np.where(bb)[0]
     nn = len(ii)
@@ -381,7 +246,7 @@ def frame2angles(N,S):
     return (theta[jj], sigma[jj], kappa[jj], K[jj],)
 
 
-def _pick(idx,theta,sigma,kappa):
+def _pick(idx,theta,sigma,kappa, thresh=1.e-6):
     """
     Choose between two moment tensor orientations based on Fig.B1 of TT2012
 
@@ -391,68 +256,22 @@ def _pick(idx,theta,sigma,kappa):
     theta_,sigma_,kappa_ = theta[i_],sigma[i_],kappa[i_] 
 
     # these choices are based on the strike angle
-    if abs(theta_ - 90) < EPSVAL:
+    if abs(theta_ - 90) < thresh:
         return np.where(kappa[idx] < 180)[0]
-    elif abs(sigma_ - 90) < EPSVAL:
+    elif abs(sigma_ - 90) < thresh:
         return np.where(kappa[idx] < 180)[0]
-    elif abs(sigma_ + 90) < EPSVAL:
+    elif abs(sigma_ + 90) < thresh:
         return np.where(kappa[idx] < 180)[0]
     else:
         raise Exception
 
 
-def _fixdet(U):
+def fixdet(U):
     if np.linalg.det(U) < 0:
         if VERBOSE > 0:
             print('det(U) < 0: flipping sign of 2nd column')
         U[:,1] *= -1
 
     return U
-
-
-
-### utilities
-
-
-def _round0(X):
-    # round elements near 0
-    X[abs(X/max(abs(X))) < EPSVAL] = 0
-    return X
-
-
-def _round1(X):
-    # round elements near +/-1
-    X[abs(X - 1) < EPSVAL] = -1
-    X[abs(X + 1) < EPSVAL] =  1
-    return X
-
-
-def _change_basis(M):
-    """ Converts from up-south-east to
-        south-east-up convention
-    """
-    return change_basis(M, i1=1, i2=5)
-
-
-
-def _mat(m):
-    """ Converts from vector to
-        matrix representation
-    """
-    return np.array(([[m[0], m[3], m[4]],
-                      [m[3], m[1], m[5]],
-                      [m[4], m[5], m[2]]]))
-
-
-def _vec(M):
-    """ Converts from matrix to
-        vector representation
-    """
-    return np.array([M[0,0], 
-                     M[1,1],
-                     M[2,2],
-                     M[0,1],
-                     M[0,2],
-                     M[1,2]])
 
 

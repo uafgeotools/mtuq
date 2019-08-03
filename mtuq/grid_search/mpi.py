@@ -1,47 +1,39 @@
 
+import numpy as np
 import time
 from mtuq.grid_search import serial
+from mtuq.util import iterable, timer
 
 
+def grid_search(data, greens, misfit, origins, sources, **kwargs):
+    """ Evaluates misfit over origin and source grids (MPI implementation)
 
-def grid_search(*args, **kwargs):
-    return _mpi_wrapper(
-        serial.grid_search, *args, **kwargs)
+    If invoked from an MPI environment, the grid is divided evenly between
+    processes.
 
-
-
-def _mpi_wrapper(grid_search, data, greens, misfit, origins, sources, **kwargs):
-    """ Parallelizes serial grid search function
-
-    To carry out a grid search over multiple MPI processes, we decompose the
-    grid into subsets and scatter using MPI. Each process then runs
-    grid_search_serial on it assigned subset
+    If not invoked from an MPI environment, this function reduces to 
+    serial.grid_search
     """
-    if not _is_mpi_env():
-        raise EnvironmentError
+    if _is_mpi_env():
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        iproc, nproc = comm.rank, comm.size
 
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    iproc, nproc = comm.rank, comm.size
+        # To carry out a grid search over multiple processes, we decompose the
+        # the grid into subsets and scatter. Each process then runs
+        # serial.grid_search on it assigned subset
+        if iproc == 0:
+            sources = sources.decompose(nproc)
+        sources = comm.scatter(sources, root=0)
 
-    if not hasattr(sources, 'decompose'):
-        raise TypeError
-
-    if iproc == 0:
-        subset = sources.decompose(nproc)
-
-    else:
-        subset = None
-    subset = comm.scatter(subset, root=0)
-
-    if iproc == 0:
-        if 'verbose' not in kwargs:
-            kwargs['verbose'] = True
-    else:
-        kwargs['verbose'] = False
+        # Now we adjust keyword arguments
+        if iproc == 0:
+            kwargs.setdefault('verbose', True)
+        else:
+            kwargs['verbose'] = False
 
     return serial.grid_search(
-        data, greens, misfit, origins, subset, **kwargs)
+        data, greens, misfit, origins, sources, **kwargs)
 
 
 def _is_mpi_env():
@@ -59,7 +51,5 @@ def _is_mpi_env():
         return True
     else:
         return False
-
-
 
 

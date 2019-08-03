@@ -42,7 +42,8 @@ def read(filenames, event_id=None, tags=[]):
     preliminary_origin = _get_origin(streams[0], event_id)
     for stream in streams:
         assert preliminary_origin==_get_origin(stream, event_id)
-        stream.preliminary_origin = preliminary_origin
+        stream.origin = preliminary_origin
+    tags += ['origin_type:preliminary']
 
     # collect station metadata
     for stream in streams:
@@ -126,20 +127,6 @@ def _get_station(stream, origin):
             'station_depth_in_m': sac_headers.stdp})
     except:
         pass
-
-    try:
-        station.update({
-            'preliminary_event_latitude': origin.latitude,
-            'preliminary_event_longitude': origin.longitude,
-            'preliminary_event_depth_in_m': origin.depth_in_m})
-    except:
-        print("Could not determine event location.")
-
-    try:
-        station.update({
-            'preliminary_origin_time': origin.time})
-    except:
-        print("Could not determine origin time.")
 
     return station
 

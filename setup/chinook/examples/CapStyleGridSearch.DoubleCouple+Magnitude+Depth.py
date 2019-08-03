@@ -4,16 +4,14 @@ import os
 import numpy as np
 
 from copy import deepcopy
-from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search.mpi import grid_search
-from mtuq.cap.misfit import Misfit
-from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import Trapezoid
-from mtuq.graphics.beachball import misfit_vs_depth
-from mtuq.graphics.waveform import plot_data_greens
-from mtuq.util import path_mtuq
+from mtuq.graphics import plot_data_greens, misfit_vs_depth
+from mtuq.misfit import Misfit
+from mtuq.process_data import ProcessData
+from mtuq.util import fullpath
+from mtuq.util.cap import Trapezoid
 
 
 
@@ -38,8 +36,8 @@ if __name__=='__main__':
 
 
     path_greens= '/import/c1/ERTHQUAK/ERTHQUAK/FK_synthetics/scak'
-    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
-    path_weights= join(path_mtuq(), 'data/examples/20090407201255351/weights.dat')
+    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
+    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 
@@ -72,13 +70,11 @@ if __name__=='__main__':
 
 
     misfit_bw = Misfit(
-        norm='L1',
         time_shift_max=2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
-        norm='L1',
         time_shift_max=10.,
         time_shift_groups=['ZR','T'],
         )
@@ -125,7 +121,7 @@ if __name__=='__main__':
         data.sort_by_distance()
 
         stations = data.get_stations()
-        origin = data.get_preliminary_origins()[0]
+        origin = data.get_origins()[0]
 
         origins = []
         for depth in depths:
@@ -179,8 +175,8 @@ if __name__=='__main__':
     results_sw = comm.gather(results_sw, root=0)
 
     if rank==0:
-        results_bw = np.concatenate(results_bw, axis=1)
-        results_sw = np.concatenate(results_sw, axis=1)
+        results_bw = np.concatenate(results_bw)
+        results_sw = np.concatenate(results_sw)
 
     #
     # Saving results

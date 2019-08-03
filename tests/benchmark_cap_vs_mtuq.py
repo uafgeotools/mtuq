@@ -3,16 +3,14 @@ import os
 import numpy as np
 
 from copy import deepcopy
-from os.path import join
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search.mpi import grid_search
-from mtuq.cap.misfit import Misfit
-from mtuq.cap.process_data import ProcessData
-from mtuq.cap.util import Trapezoid
-from mtuq.graphics.beachball import plot_beachball
-from mtuq.graphics.waveform import plot_data_synthetics
-from mtuq.util import path_mtuq
+from mtuq.graphics import plot_data_synthetics, plot_beachball
+from mtuq.misfit import Misfit
+from mtuq.process_data import ProcessData
+from mtuq.util import fullpath
+from mtuq.util.cap import Trapezoid
 
 
 
@@ -81,7 +79,7 @@ if __name__=='__main__':
     run_figures = (not args.no_figures)
 
 
-    from mtuq.cap.util import\
+    from mtuq.util.cap import\
         get_synthetics_cap, get_synthetics_mtuq,\
         get_data_cap, compare_cap_mtuq
 
@@ -89,18 +87,18 @@ if __name__=='__main__':
     # the following directories correspond to the moment tensors in the list 
     # "grid" below
     paths = []
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/0')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/1')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/2')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/3')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/4')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/5')]
-    paths += [join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/6')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/0')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/1')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/2')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/3')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/4')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/5')]
+    paths += [fullpath('data/tests/benchmark_cap/20090407201255351/6')]
 
 
-    path_greens=  join(path_mtuq(), 'data/tests/benchmark_cap/greens/scak')
-    path_data=    join(path_mtuq(), 'data/examples/20090407201255351/*.[zrt]')
-    path_weights= join(path_mtuq(), 'data/tests/benchmark_cap/20090407201255351/weights.dat')
+    path_greens=  fullpath('data/tests/benchmark_cap/greens/scak')
+    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
+    path_weights= fullpath('data/tests/benchmark_cap/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 
@@ -133,13 +131,11 @@ if __name__=='__main__':
 
 
     misfit_bw = Misfit(
-        norm='L1',
         time_shift_max=0.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
-        norm='L1',
         time_shift_max=0.,
         time_shift_groups=['ZR','T'],
         )
@@ -181,7 +177,7 @@ if __name__=='__main__':
     data.sort_by_distance()
 
     stations = data.get_stations()
-    origin = data.get_preliminary_origins()[0]
+    origin = data.get_origins()[0]
 
 
     print 'Processing data...\n'
@@ -216,7 +212,7 @@ if __name__=='__main__':
         if run_figures:
             plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-                stations, trace_labels=False)
+                stations, origin, trace_labels=False)
 
         if run_checks:
             compare_cap_mtuq(
@@ -232,7 +228,7 @@ if __name__=='__main__':
 
         plot_data_synthetics('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-            stations, trace_labels=False, normalize=False)
+            stations, origin, trace_labels=False, normalize=False)
 
     print '\nSUCCESS\n'
 

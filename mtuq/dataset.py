@@ -25,7 +25,6 @@ class Dataset(list):
         """ Constructor
         """
         self.id = id
-        self._warnings = True
 
         for _i, stream in enumerate(streams):
             self.append(stream)
@@ -38,7 +37,8 @@ class Dataset(list):
     def append(self, stream):
         """ Appends stream to dataset
         """
-        assert issubclass(type(stream), Stream)
+        assert issubclass(type(stream), Stream),\
+            ValueError("Only Streams can be appended to a Dataset")
 
         # create unique identifier
         try:
@@ -55,19 +55,15 @@ class Dataset(list):
         if not hasattr(stream, 'tags'):
             stream.tags = list()
 
-        # collect location information
         if not hasattr(stream, 'station'):
             warnings.warn("Stream lacks station metadata")
-
-        elif not hasattr(stream, 'preliminary_origin'):
-            warnings.warn("Stream lacks preliminary origin metadata")
-
+        elif not hasattr(stream, 'origin'):
+            warnings.warn("Stream lacks origin metadata")
         else:
-            (stream.preliminary_distance_in_m,
-            stream.preliminary_azimuth, _) =\
+            (stream.distance_in_m, stream.azimuth, _) =\
                 gps2dist_azimuth(
-                    stream.preliminary_origin.latitude,
-                    stream.preliminary_origin.longitude,
+                    stream.origin.latitude,
+                    stream.origin.longitude,
                     stream.station.latitude,
                     stream.station.longitude)
 
@@ -121,14 +117,14 @@ class Dataset(list):
     def sort_by_distance(self, reverse=False):
         """ Sorts in-place by hypocentral distance
         """
-        self.sort_by_function(lambda data: data.preliminary_distance_in_m,
+        self.sort_by_function(lambda data: data.distance_in_m,
             reverse=reverse)
 
 
     def sort_by_azimuth(self, reverse=False):
         """ Sorts in-place by source-receiver azimuth
         """
-        self.sort_by_function(lambda data: data.preliminary_azimuth,
+        self.sort_by_function(lambda data: data.azimuth,
             reverse=reverse)
 
 
@@ -147,20 +143,22 @@ class Dataset(list):
         return stations
 
 
-    def get_preliminary_origins(self):
-        """ Returns preliminary origin location and time
+    def get_origins(self):
+        """ Returns origin location and time
+
+        The origin attribute can be used to hold preliminary origin information
+        (e.g. catalog event locations)
         """
         origins = []
         for stream in self:
-            origins += [stream.preliminary_origin]
+            origins += [stream.origin]
 
-            if self._warnings:
-                if stream.preliminary_origin!=self[0].preliminary_origin:
+            if getattr(self, '_warnings', True):
+                if stream.origin!=self[0].origin:
                     warnings.warn(
-                        "There may be metadata problems--different streams in "
-                        "the Dataset correspond to different catalog events\n\n"
-                        "If different events are being intentionally combined "
-                        "in the same container, feel free to disable this "
+                        "Different streams in the Dataset correpond to "
+                        "different events.\n\n"
+                        "If this is expected, feel free to disable this warning "
                         "warning by setting Dataset._warnings=False")
 
         return origins
@@ -255,8 +253,6 @@ class Dataset(list):
             except:
                 pass
             _i += 1
-
-
 
 
 

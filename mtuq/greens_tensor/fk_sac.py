@@ -3,7 +3,6 @@ import obspy
 import numpy as np
 
 from mtuq.greens_tensor.base import GreensTensor as GreensTensorBase
-from mtuq.util.moment_tensor.basis import change_basis
 
 
 class GreensTensor(GreensTensorBase):
