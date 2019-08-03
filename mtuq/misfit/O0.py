@@ -127,10 +127,10 @@ class Misfit(object):
         sources = iterable(sources)
         results = np.zeros((len(sources), 1))
 
-        # initialize Green's function machinery
+        # reset_components Green's function machinery
         for _j, d in enumerate(data):
             if not hasattr(greens[_j], 'components'):
-                greens[_j].initialize(get_components(d))
+                greens[_j].reset_components(get_components(d))
 
         #
         # begin loop over sources

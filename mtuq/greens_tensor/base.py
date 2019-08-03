@@ -35,6 +35,7 @@ class GreensTensor(Stream):
             include_mt=True,
             include_force=False):
 
+        # argument checking starts now
         for trace in traces:
             assert isinstance(trace, Trace)
 
@@ -49,16 +50,11 @@ class GreensTensor(Stream):
         if not isinstance(origin, Origin):
             raise TypeError
 
+        # the main work of the constructor starts now
         if id:
             self.id = id
         else:
             self.id = station.id
-
-        # station location and other metdata
-        self.station = deepcopy(station)
-
-        # event location and other metadata
-        self.origin = deepcopy(origin)
 
         self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
             origin.latitude,
@@ -66,35 +62,23 @@ class GreensTensor(Stream):
             station.latitude,
             station.longitude)
 
+        self.station = deepcopy(station)
+        self.origin = deepcopy(origin)
         self.model = model
         self.solver = solver
-
         self.include_mt = include_mt
         self.include_force = include_force
 
 
-
-    def initialize(self, components=['Z', 'R', 'T']):
+    def reset_components(self, components=['Z', 'R', 'T']):
         """
-        Prepares structures used by get_synthetics
+        Resets components returned by get_synthetics
 
-        Allocates and computes numpy array used by get_synthetics and
-        allocates obspy stream to hold the resulting synthetic data
-
-        This method can be rerun if the components change. For example if a
-        particular component of the recorded data is found to be corrupt, 
-        rerunning initialize without that component will cause get_synthetics
-        to no longer return that component.
+        Suppose the vertical or radial components of the recorded data are
+        found to be good but the transerve component is found to be bad.
+        ``reset_components(['Z', 'R'])`` will cause ``get_synthetics`` to only
+        return the desired components, avoiding unnecessary computations
         """
-
-        # The idea is for __init__ to do only the inexpensive work of 
-        # instantiating a GreensTensor, and defer all the expensive work to 
-        # this method
-
-        # Another reason to separate the two methods is that combining them
-        # would cause an endless recursion when select is called. This problem
-        # is not unique to mtuq, but common to all objects that inherit from
-        # ``obspy.core.Stream``
         if components is None:
             components = []
         for component in components:
@@ -199,7 +183,7 @@ class GreensTensor(Stream):
         Computes numpy arrays used by get_time_shift
         """
         if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
+            self.reset_components(components=['Z','R','T'])
 
         array = self._array
         synthetics = self._synthetics
@@ -532,7 +516,7 @@ class GreensTensorList(list):
 
         for _i, tensor in enumerate(self):
             # fill in 3D array of GreensTensor
-            tensor.initialize()
+            tensor.reset_components()
 
             # fill in 4D array of GreensTensorList
             array[:, _i, :, :] = tensor._array
