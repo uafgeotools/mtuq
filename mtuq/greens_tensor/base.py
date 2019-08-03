@@ -371,24 +371,13 @@ class GreensTensor(Stream):
             wavelet.convolve(trace)
 
 
-    def select(self, *args, **kwargs):
+    def select(self, component=None, channel=None):
         """
-        Return new GreensTensor with only those traces that match the supplied
+        Return Stream with only those traces that match the supplied
         metadata criteria
         """
-        # Inherited method "select" doesn't work because it tries to return a
-        # a Stream rather than a GreensTensor. To fix it, we need to manually 
-        # convert to a Stream, call select, then convert back
-        stream = Stream([trace for trace in self]).select(*args, **kwargs)
-        return self.__class__(
-            [trace for trace in stream],
-            station=self.station,
-            origin=self.origin,
-            id=self.id,
-            model=self.model,
-            solver=self.solver,
-            include_mt=self.include_mt,
-            include_force=self.include_force)
+        return Stream([trace for trace in self]).select(
+            component=component, channel=channel)
 
 
     def __add__(self, *args):
