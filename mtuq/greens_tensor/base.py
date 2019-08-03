@@ -72,17 +72,6 @@ class GreensTensor(Stream):
         self.include_mt = include_mt
         self.include_force = include_force
 
-        # We require high-dimensional ndarrays to deal with practical 
-        # complexities such as time shifts. Even with careful attention to 
-        # index order, NumPy provides generally quite poor performance for 
-        # ndim>2. This motivates the following workarounds.
-        if include_mt and include_force:
-            self.get_synthetics = self._workaround1
-        elif include_mt:
-            self.get_synthetics = self._workaround2
-        elif include_force:
-            self.get_synthetics = self._workaround3
-
 
 
     def initialize(self, components=['Z', 'R', 'T']):
@@ -169,81 +158,19 @@ class GreensTensor(Stream):
     def get_synthetics(self, source):
         """
         Generates synthetics through a linear combination of Green's tensor
-        times series weighted by source elements
-
-        .. warning :
-            If some components are missing or assigned zero weight, it can be
-            much faster to call `initialize` manually prior to calling
-            `get_synthetics`. This creates the `_array` attribute and prevents
-            unnecessary computations.
-
+        times series
         """
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-
         array = self._array
         synthetics = self._synthetics
 
         for _i, component in enumerate(self.components):
             # Even with careful attention to index order, np.dot is very slow.
-            # This motivates the workaround methods immediately below this one.
-            synthetics[_i].data = np.dot(source, array[_i, :, :])
+            # For some reason the following is faster
+            data = synthetics[_i].data
+            data[:] = 0.
+            for _j in range(len(source)):
+                data += source[_j]*array[_i, _j, :]
         return synthetics
-
-
-    def _workaround1(self, source):
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-        array = self._array
-        synthetics = self._synthetics
-
-        for _i, component in enumerate(self.components):
-            s = synthetics[_i].data
-            s[:] = 0.
-            s += source[0]*array[_i, 0, :]
-            s += source[1]*array[_i, 1, :]
-            s += source[2]*array[_i, 2, :]
-            s += source[3]*array[_i, 3, :]
-            s += source[4]*array[_i, 4, :]
-            s += source[5]*array[_i, 5, :]
-            s += source[3]*array[_i, 6, :]
-            s += source[4]*array[_i, 7, :]
-            s += source[5]*array[_i, 8, :]
-        return synthetics
-
-
-    def _workaround2(self, source):
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-        array = self._array
-        synthetics = self._synthetics
-
-        for _i, component in enumerate(self.components):
-            s = synthetics[_i].data
-            s[:] = 0.
-            s += source[0]*array[_i, 0, :]
-            s += source[1]*array[_i, 1, :]
-            s += source[2]*array[_i, 2, :]
-            s += source[3]*array[_i, 3, :]
-            s += source[4]*array[_i, 4, :]
-            s += source[5]*array[_i, 5, :]
-        return synthetics
-
-
-    def _workaround3(self, source):
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-        array = self._array
-        synthetics = self._synthetics
-
-        for _i, component in enumerate(self.components):
-            s = synthetics[_i].data
-            s[:] = 0.
-            s += source[0]*array[_i, 0, :]
-            s += source[1]*array[_i, 1, :]
-            s += source[2]*array[_i, 2, :]
-        return synthetics
-
 
 
     def _allocate_cc(self, data, time_shift_max):
