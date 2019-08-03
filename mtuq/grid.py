@@ -285,7 +285,7 @@ def FullMomentTensorGridRandom(magnitude=None, npts=50000):
         'kappa': random(*kappa),
         'sigma': random(*sigma),
         'h': random(*h)},
-        callback=TapeTape2015_to_UpSouthEast)
+        callback=to_mij)
 
 
 def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
@@ -314,7 +314,7 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
         'kappa': regular(*kappa),
         'sigma': regular(*sigma),
         'h': regular(*h)},
-        callback=TapeTape2015_to_UpSouthEast)
+        callback=to_mij)
 
 
 def DoubleCoupleGridRandom(magnitude=None, npts=50000):
