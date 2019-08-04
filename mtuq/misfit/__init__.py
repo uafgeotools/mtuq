@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from mtuq.misfit import O0
+from mtuq.misfit import O0, O1
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
@@ -73,7 +73,7 @@ class Misfit(object):
     def __init__(self,
         norm='hybrid',
         time_shift_groups=['ZRT'],
-        time_shift_max=0.,
+        time_shift_max=1.,
         ):
         """ Checks misfit parameters
 

@@ -70,15 +70,15 @@ def misfit(
                     components, group)
 
                 # what time-shift yields the maximum cross-correlation?
-                offset = greens[_j].get_time_shift(
+                npts_shift = greens[_j].get_time_shift(
                     d, source, group, time_shift_max)
 
-                time_shift = offset*dt
+                time_shift = npts_shift*dt
 
                 # what start and stop indices will correctly shift 
                 # synthetics relative to data?
-                start = npts_padding-offset
-                stop = npts+npts_padding-offset
+                start = npts_padding-npts_shift
+                stop = npts+npts_padding-npts_shift
 
                 for _k in indices:
                     # substract data from shifted synthetics
