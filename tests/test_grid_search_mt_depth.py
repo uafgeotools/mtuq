@@ -2,7 +2,6 @@
 import os
 import numpy as np
 
-from copy import deepcopy
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search.mpi import grid_search
@@ -110,7 +109,7 @@ if __name__=='__main__':
 
     origins = []
     for depth in depths:
-        origins += [deepcopy(origin)]
+        origins += [origin.copy()]
         setattr(origins[-1], 'depth_in_m', depth)
 
     print 'Processing data...\n'

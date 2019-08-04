@@ -3,7 +3,6 @@
 import os
 import numpy as np
 
-from copy import deepcopy
 from mtuq import read, get_greens_tensors, open_db
 from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search.mpi import grid_search
