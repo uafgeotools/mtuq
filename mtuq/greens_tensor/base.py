@@ -341,49 +341,23 @@ class GreensTensorList(list):
         self.sort(key=function, reverse=reverse)
 
 
-    #
-    # the remaining methods can be used to speed up trace data access in cases
-    # where the time discretization is the same for all traces
-    #
-    def _check_time_sampling(self):
-        """ Checks that time discretization is the same for all tensors
-        """
-        pass #check_time_sampling([stream[0] for stream in self])
-
-
-    def as_array(self):
+    def as_array(self, components=['Z', 'R', 'T']):
         """ Returns time series from all stations in a single multidimensional
         array 
 
+        Compared with iterating over streams and traces, provides a potentially
+        faster way of accessing numeric trace data
+
         .. warning:
 
-            This method requires that all tensors have the same time 
-            discretization.
-
-        .. note:
-
-            Compared with iterating over obspy traces, this method provides a
-            a potentially faster way of accessing numeric trace data.
-
-        .. note:
-
-            This method is used to supply input arrays for the C extension
-            module `mtuq.grid_search._extensions`.
+            Requires that all tensors have the same time discretization
+            (or else an error is raised)
 
         """
-        try:
-            return self._array
-        except:
-            self._compute_array()
-            return self._array
+        #check_time_sampling([stream[0] for stream in self])
 
-
-    def _allocate_array(self):
-        """ Allocates numpy array that can be used for efficient synthetics
-        generation
-        """
         # array dimensions
-        nc = 3
+        nc = len(components)
         nt = len(self[0][0])
         ns = len(self)
         nr = 0
@@ -392,22 +366,11 @@ class GreensTensorList(list):
         if self[0].include_force:
             nr += 3
 
-        self._array = np.zeros((nc, ns, nr, nt))
-
-        return self._array
-
-
-    def _compute_array(self):
-        """ Computes numpy array that can be used for efficient synthetics
-        generation
-        """
-        array = self._allocate_array()
-
+        array = np.zeros((nc,nr,ns,nt))
         for _i, tensor in enumerate(self):
-            # fill in 3D array of GreensTensor
-            tensor.reset_components()
-
-            # fill in 4D array of GreensTensorList
-            array[:, _i, :, :] = tensor._array
+            tensor.reset_components(components)
+            # fill in array
+            array[:, :, _i, :] = tensor._array
+        return array
 
 

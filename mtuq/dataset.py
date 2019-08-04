@@ -200,34 +200,19 @@ class Dataset(list):
         pass
 
 
-    def as_array(self):
-        """ Returns time series from all stations in a single multidimensional
-        array 
+    def as_array(self, components=['Z','R','T']):
+        """
+        Compared with iterating over streams and traces, provides a potentially
+        faster way of accessing numeric trace data
 
         .. warning:
 
-            This method requires that all tensors have the same time 
-            discretization.
-
-        .. note:
-
-            Compared with iterating over obspy traces, this method provides a
-            a potentially faster way of accessing numeric trace data.
-
-        .. note:
-
-            This method is used to supply input arrays for the C extension
-            module `mtuq.grid_search._extensions`.
+            Requires that all tensors have the same time discretization
+            (or else an error is raised)
 
         """
-        try:
-            return self._array
-        except:
-            self._allocate_array()
-            return self._array
+        nc = len(components)
 
-
-    def _allocate_array(self):
         # count number of nonempty streams
         ns = 0
         for stream in self:
@@ -236,29 +221,26 @@ class Dataset(list):
         nt = self[0][0].stats.npts
 
         # allocate array
-        self._array = np.zeros((3, ns, nt))
-        array = self._array
+        array = np.zeros((3, ns, nt))
 
         _i = 0
-        for stream in self:
-            if len(stream)==0:
-                continue
-            try:
-                trace = stream.select(component='Z')
-                array[0, _i, :] = trace.data
-            except:
-                pass
-            try:
-                trace = stream.select(component='R')
-                array[1, _i, :] = trace.data
-            except:
-                pass
-            try:
-                trace = stream.select(component='T')
-                array[2, _i, :] = trace.data
-            except:
-                pass
-            _i += 1
-
-
+        for _i, stream in enumerate(self):
+            if 'Z' in components:
+                try:
+                    trace = stream.select(component='Z')[0]
+                    array[0, _i, :] = trace.data
+                except:
+                    pass
+            if 'R' in components:
+                try:
+                    trace = stream.select(component='R')[0]
+                    array[1, _i, :] = trace.data
+                except:
+                    pass
+            if 'T' in components:
+                try:
+                    trace = stream.select(component='T')[0]
+                    array[2, _i, :] = trace.data
+                except:
+                    pass
 
