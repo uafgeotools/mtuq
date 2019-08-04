@@ -149,7 +149,7 @@ def _dot3(corr, icomp, npts_shift, source):
     raise NotImplementedError
 
 
-def _get_time_shift(corr, corr_sum, source, components):
+def _get_time_shift(corr, corr_sum, source, indices):
     """ 
     Finds optimal time shift between the given data and synthetics
     generated from the given source
@@ -158,10 +158,10 @@ def _get_time_shift(corr, corr_sum, source, components):
     ngf = corr.shape[1]
 
     corr_sum[:] = 0.
-    for component in components:
-        _i = components.index(component)
-        for _j in range(len(source)):
-            corr_sum += source[_j] * corr[_i, _j, :]
+    for _i in indices:
+        corr_sum += np.dot(source, corr[_i, :, :])
+        #for _j in range(len(source)):
+        #    corr_sum += source[_j] * corr[_i, _j, :]
 
     return corr_sum.argmax() - npts_padding
 
@@ -208,9 +208,9 @@ def misfit(
     if norm in ['L1', 'L2', 'hybrid']:
         data_greens = _corr_nd1_nd2(data, greens, time_shift_max)
 
-    if norm in ['L2', 'hybrid']:
-        data_data = _autocorr_nd1(data, time_shift_max)
-        greens_greens = _autocorr_nd2(greens, time_shift_max)
+    #if norm in ['L2', 'hybrid']:
+    #    data_data = _autocorr_nd1(data, time_shift_max)
+    #    greens_greens = _autocorr_nd2(greens, time_shift_max)
 
     #
     # begin iterating over sources
@@ -222,12 +222,12 @@ def misfit(
             if not components:
                 continue
 
-            if norm in ['L2', 'hybrid']:
-                d2 = data_data[_j]
-                G2 = greens_greens[_j]
-                dG = data_greens[_j]
+            #if norm in ['L2', 'hybrid']:
+            #    d2 = data_data[_j]
+            #    G2 = greens_greens[_j]
+            #    dG = data_greens[_j]
 
-            elif norm in ['L1']:
+            elif norm in ['L1', 'L2', 'hybrid']:#['L1']:
                 s = greens[_j].get_synthetics(source)
 
             # time sampling scheme
@@ -243,14 +243,11 @@ def misfit(
                 # yields the maximum cross-correlation value across all
                 # components in a given group, subject to time_shift_max 
                 # constraint
-                group, indices = list_intersect_with_indices(
+                _, indices = list_intersect_with_indices(
                     components, group)
 
-                #npts_shift = _get_time_shift(
-                #    data_greens[_j], corr_sum[_j], source, group)
-
-                npts_shift = greens[_j].get_time_shift(
-                    d, source, group, time_shift_max)
+                npts_shift = _get_time_shift(
+                    data_greens[_j], corr_sum[_j], source, indices)
 
                 time_shift = npts_shift*dt
 
@@ -266,15 +263,18 @@ def misfit(
                         misfit = np.sum(abs(r))*dt
 
                     elif norm=='L2':
+                        r = s[_k].data[start:stop] - d[_k].data
+                        misfit = np.sum(r**2)*dt
                         # using ||s - d||^2 = s^2 + d^2 - 2sd
-                        misfit = d2 + _dot3(G2, source, _k, npts_shift) -\
-                                 2.*_dot2(dG, source, _k, npts_shift)
-
+                        #misfit = d2 + _dot3(G2, source, _k, npts_shift) -\
+                        #         2.*_dot2(dG, source, _k, npts_shift)
 
                     elif norm=='hybrid':
+                        r = s[_k].data[start:stop] - d[_k].data
+                        misfit = (np.sum(r**2)*dt)**0.5
                         # using ||s - d||^2 = s^2 + d^2 - 2sd
-                        misfit = (d2 + _dot3(G2, source, _k, npts_shift) -\
-                                 2.*_dot2(dG, source, _k, npts_shift))**0.5
+                        #misfit = (d2 + _dot3(G2, source, _k, npts_shift) -\
+                        #         2.*_dot2(dG, source, _k, npts_shift))**0.5
 
                     results[_i] += d[_k].weight * misfit
 

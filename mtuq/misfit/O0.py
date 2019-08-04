@@ -11,7 +11,7 @@ from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
 
 
-def _get_time_shift(self, synthetics, data, group):
+def _get_time_shift(synthetics, data, group):
     raise NotImplementedError
 
 
