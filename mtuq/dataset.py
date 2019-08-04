@@ -22,7 +22,7 @@ class Dataset(list):
 
     """
     def __init__(self, streams=[], id=None, tags=[]):
-        """ Constructor
+        """ Constructor method
         """
         self.id = id
 

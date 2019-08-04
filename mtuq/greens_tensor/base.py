@@ -34,6 +34,8 @@ class GreensTensor(Stream):
             components=[],
             include_mt=True,
             include_force=False):
+        """ Constructor method
+        """
 
         # argument checking starts now
         for trace in traces:
@@ -61,12 +63,6 @@ class GreensTensor(Stream):
         else:
             self.id = station.id
 
-        self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
-            origin.latitude,
-            origin.longitude,
-            station.latitude,
-            station.longitude)
-
         self.station = station.copy()
         self.origin = origin.copy()
         self.model = model
@@ -74,6 +70,12 @@ class GreensTensor(Stream):
         self.include_mt = include_mt
         self.include_force = include_force
         self.components = components
+
+        self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
+            origin.latitude,
+            origin.longitude,
+            station.latitude,
+            station.longitude)
 
         self._preallocate()
         self._precompute()
@@ -89,14 +91,14 @@ class GreensTensor(Stream):
         return the first two components, avoiding unnecessary computation of
         the third
         """
-        if components==None:
+        if components==self.components:
+            return
+
+        elif components==None:
             components = []
 
         for component in components:
             assert component in ['Z', 'R', 'T']
-
-        if components==self.components:
-            return
 
         self.components = components
 
@@ -131,7 +133,7 @@ class GreensTensor(Stream):
             self._synthetics.remove(trace)
         for component in self.components:
             # add stats object
-            stats = station.copy()
+            stats = self.station.copy()
             stats.update({'npts': nt, 'channel': component})
              # add trace object
             self._synthetics += Trace(np.zeros(nt), stats)
