@@ -42,9 +42,9 @@ class Misfit(object):
         for managing this complexity.  Python object-oriented programming makes 
         it possible to offer three different implementations:
 
-        - a readable Pure Python version (`mtuq.misfit.O0.Misfit`)
+        - a readable pure Python version (`mtuq.misfit.O0.Misfit`)
 
-        - an optimized Pure Python version (`mtuq.misfit.O1.Misfit`)
+        - an optimized pure Python version (`mtuq.misfit.O1.Misfit`)
 
         - an optimized Python/C++ version (`mtuq.misfit.O2`.Misfit)
 
