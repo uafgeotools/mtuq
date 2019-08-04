@@ -160,8 +160,6 @@ def _get_time_shift(corr, corr_sum, source, indices):
     corr_sum[:] = 0.
     for _i in indices:
         corr_sum += np.dot(source, corr[_i, :, :])
-        #for _j in range(len(source)):
-        #    corr_sum += source[_j] * corr[_i, _j, :]
 
     return corr_sum.argmax() - npts_padding
 

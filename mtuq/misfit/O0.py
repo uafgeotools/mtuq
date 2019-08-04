@@ -11,11 +11,6 @@ from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
 
 
-def _get_time_shift(synthetics, data, group):
-    raise NotImplementedError
-
-
-
 def misfit(
     data,
     greens,
@@ -55,6 +50,8 @@ def misfit(
             dt = d[0].stats.delta
             npts_padding = int(time_shift_max/dt)
 
+            corr_sum = np.zeros(2*npts_padding+1)
+
 
             #
             # evaluate misfit for all components at given station
@@ -64,15 +61,13 @@ def misfit(
                 # yields the maximum cross-correlation value across all
                 # components in a given group, subject to time_shift_max 
                 # constraint
-
-                # what components are in stream d?
-                group, indices = list_intersect_with_indices(
+                _, indices = list_intersect_with_indices(
                     components, group)
 
-                # what time-shift yields the maximum cross-correlation?
-                npts_shift = greens[_j].get_time_shift(
-                    d, source, group, time_shift_max)
+                for _k in indices:
+                    corr_sum += np.correlate(d[_k].data, s[_k].data, 'valid')
 
+                npts_shift = corr_sum.argmax()-npts_padding
                 time_shift = npts_shift*dt
 
                 # what start and stop indices will correctly shift 
