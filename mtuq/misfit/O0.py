@@ -23,12 +23,12 @@ def misfit(
     """
     Data misfit function (non-optimized Python implementation)
 
-    See ``mtuq.misfit.Misfit`` for usage information
+    See ``mtuq/misfit/__init__.py`` for more information
     """
     sources = iterable(sources)
     results = np.zeros((len(sources), 1))
 
-    # reset_components Green's function machinery
+    # initialize Green's function machinery
     for _j, d in enumerate(data):
         greens[_j].reset_components(get_components(d))
 

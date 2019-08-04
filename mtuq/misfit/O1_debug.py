@@ -143,10 +143,10 @@ def _get_L2_norm(greens_greens, data_data, data_greens, source, i1, i2):
     # calculates d^2
     misfit += data_data[i1]
 
-    # calculates s^2 using a linear combination of Green's function
+    # calculates s^2 using a linear combination of Greens' function
     misfit += np.dot(np.dot(greens_greens[i1, :, :, i2], source), source)
 
-    # calculates sd using a linear combination of Green's function
+    # calculates sd using a linear combination of Greens' function
     misfit -= 2*np.dot(data_greens[i1, :, i2], source)
 
     return misfit
@@ -222,12 +222,12 @@ def misfit(
             if not components:
                 continue
 
-            #if norm in ['L2', 'hybrid']:
-            #    d2 = data_data[_j]
-            #    G2 = greens_greens[_j]
-            #    dG = data_greens[_j]
+            if norm in ['L2', 'hybrid']:
+                d2 = data_data[_j]
+                G2 = greens_greens[_j]
+                dG = data_greens[_j]
 
-            if True:#norm in ['L1']:
+            if norm in ['L1']:
                 s = greens[_j].get_synthetics(source)
 
             if debug:
@@ -268,28 +268,22 @@ def misfit(
                         misfit = np.sum(abs(r))*dt
 
                     elif norm=='L2':
-                        r = s[_k].data[start:stop] - d[_k].data
-                        misfit = np.sum(r**2.)*dt
+                        misfit = _get_L2_norm(
+                            greens_greens[_j], data_data[_j], data_greens[_j],
+                            source, _k, npts_shift+npts_padding)
 
-                        #misfit = _get_L2_norm(
-                        #    greens_greens[_j], data_data[_j], data_greens[_j],
-                        #    source, _k, npts_shift+npts_padding)
-
-                        #if debug:
-                        #    r = s[_k].data[start:stop] - d[_k].data
-                        #    assert isclose(misfit, np.sum(r**2)*dt)
+                        if debug:
+                            r = s[_k].data[start:stop] - d[_k].data
+                            assert isclose(misfit, np.sum(r**2)*dt)
 
                     elif norm=='hybrid':
-                        r = s[_k].data[start:stop] - d[_k].data
-                        misfit = (np.sum(r**2.)*dt)**0.5
+                        misfit = _get_L2_norm(
+                            greens_greens[_j], data_data[_j], data_greens[_j],
+                            source, _k, npts_shift+npts_padding)**0.5
 
-                        #misfit = _get_L2_norm(
-                        #    greens_greens[_j], data_data[_j], data_greens[_j],
-                        #    source, _k, npts_shift+npts_padding)**0.5
-
-                        #if debug:
-                        #    r = s[_k].data[start:stop] - d[_k].data
-                        #    assert isclose(misfit, (np.sum(r**2)*dt)**0.5)
+                        if debug:
+                            r = s[_k].data[start:stop] - d[_k].data
+                            assert isclose(misfit, (np.sum(r**2)*dt)**0.5)
 
                     results[_i] += d[_k].weight * misfit
 

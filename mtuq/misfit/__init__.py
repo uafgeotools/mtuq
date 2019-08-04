@@ -123,7 +123,7 @@ class Misfit(object):
     def __call__(self, data, greens, sources, optimization_level=1, 
         set_attributes=False):
 
-        if optimization_level==0:
+        if optimization_level==0 or set_attributes:
             return O0.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
                 self.time_shift_max, set_attributes, self.verbose)
