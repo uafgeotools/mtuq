@@ -169,7 +169,6 @@ if __name__=='__main__':
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origins, sources)
 
-    # gathering results
     results_bw = comm.gather(results_bw, root=0)
     results_sw = comm.gather(results_sw, root=0)
 
@@ -184,13 +183,10 @@ if __name__=='__main__':
     if comm.rank==0:
         print 'Saving results...\n'
 
-        filename = event_name+'_misfit_vs_depth.png'
-        misfit_vs_depth(filename, results_bw+results_sw, origins, sources)
+        misfit_vs_depth(event_name+'_bw_misfit.png',
+            data_bw, misfit_bw, origins, sources, results_bw)
 
-        filename = event_name+'_bw_vs_depth.png'
-        misfit_vs_depth(filename, results_bw, origins, sources)
-
-        filename = event_name+'_sw_vs_depth.png'
-        misfit_vs_depth(filename, results_sw, origins, sources)
+        misfit_vs_depth(event_name+'_sw_misfit.png',
+            data_sw, misfit_sw, origins, sources, results_sw)
 
         print 'Finished\n'
