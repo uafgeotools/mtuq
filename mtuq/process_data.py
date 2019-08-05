@@ -7,7 +7,7 @@ from collections import defaultdict
 from copy import deepcopy
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
-from os.path import basename, exists, join
+from os.path import basename, exists
 from mtuq.util import AttribDict, warn
 from mtuq.util.cap import taper, parse_weight_file
 from mtuq.util.signal import cut, get_arrival, m_to_deg

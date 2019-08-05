@@ -1,8 +1,5 @@
 
-import numpy as np
-import time
 from mtuq.grid_search import serial
-from mtuq.util import iterable, timer
 
 
 def grid_search(data, greens, misfit, origins, sources, **kwargs):

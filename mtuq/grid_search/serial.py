@@ -1,6 +1,5 @@
 
 import numpy as np
-import time
 from mtuq.util import iterable, timer
 
 
