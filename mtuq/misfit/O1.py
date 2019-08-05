@@ -100,11 +100,6 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
             if not components:
                 continue
 
-            if norm in ['L2', 'hybrid']:
-                d2 = data_data[_j]
-                G2 = greens_greens[_j]
-                dG = data_greens[_j]
-
             if norm in ['L1']:
                 s = greens[_j].get_synthetics(source)
 

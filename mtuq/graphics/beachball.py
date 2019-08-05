@@ -5,7 +5,6 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 from mtuq.event import MomentTensor
-from mtuq.graphics.waveform import _hide_axes
 from obspy.imaging.beachball import beach, beachball
 
 
@@ -17,7 +16,7 @@ def plot_beachball(filename, mt):
     pyplot.savefig(filename)
 
 
-def misfit_vs_depth(filename, results, origins, mt):
+def misfit_vs_depth(filename, results, origins, sources):
     """ Plots misfit versus depth from grid search results
 
     Creates a scatter plot in which the the placment of each marker shows the 
@@ -58,9 +57,21 @@ def misfit_vs_depth(filename, results, origins, mt):
     ax.set_aspect("equal")
     ax.set_xlim((0, nn+1))
     ax.set_ylim((-0.5, +0.5))
-    _hide_axes(ax)
+    _hide_axis(ax)
 
     pyplot.savefig(filename)
     pyplot.close()
+
+
+
+def _hide_axis(ax):
+    # hides axes lines, ticks, and labels
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
+
 
 
