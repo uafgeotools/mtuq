@@ -649,6 +649,14 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     if rank==0:
         results_bw = np.concatenate(results_bw)
         results_sw = np.concatenate(results_sw)
+        results = results_bw + results_sw
+
+        best_misfit = (results).min()
+
+        _i, _j = np.unravel_index(np.argmin(results), results.shape)
+        best_source = sources.get(_i)
+        best_origin = origins[_j]
+
 """
 
 
@@ -837,10 +845,14 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     if comm.rank==0:
         print 'Saving results...\\n'
 
-        misfit_vs_depth(event_name+'_bw_misfit.png',
+        plot_data_greens(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, best_origin, best_source)
+
+        misfit_vs_depth(event_name+'_misfit_vs_depth_bw.png',
             data_bw, misfit_bw, origins, sources, results_bw)
 
-        misfit_vs_depth(event_name+'_sw_misfit.png',
+        misfit_vs_depth(event_name+'_misfit_vs_depth_sw.png',
             data_sw, misfit_sw, origins, sources, results_sw)
 
         print 'Finished\\n'
