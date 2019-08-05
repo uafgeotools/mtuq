@@ -1,5 +1,5 @@
 """
-Data misfit module (optimized Python version)
+Data misfit module (optimized pure Python version)
 
 See ``mtuq/misfit/__init__.py`` for more information
 """
@@ -12,62 +12,11 @@ from mtuq.util.signal import get_components, get_time_sampling
 from scipy.signal import fftconvolve
 
 
-def get_L2_norm(greens_greens, data_data, data_greens, source, i1, i2):
-    """
-    Calculates L2 norm of data and shifted synthetics using
-    ||s - d||^2 = s^2 + d^2 - 2sd
-    """
-    misfit = 0
-
-    misfit += data_data[i1]
-
-    misfit += np.dot(np.dot(greens_greens[i1, i2, :, :], source), source)
-
-    misfit -= 2*np.dot(data_greens[i1, :, i2], source)
-
-    return misfit
-
-
-def debug_L2_norm(data, synthetics, greens_greens, data_data, data_greens, 
-    source, i1, i2):
-    """
-    Calculates error in the righthand-side terms of
-    ||s - d||^2 = s^2 + d^2 - 2sd
-    """
-    dd = np.sum(data**2)
-    print 'error dd:',\
-        (dd - data_data[i1])/dd
-
-    ss = np.sum(synthetics**2)
-    print 'error ss:',\
-        (ss - np.dot(np.dot(greens_greens[i1, i2, :, :], source), source))/ss
-
-    sd = np.sum(synthetics*data)
-    print 'error sd:',\
-        (sd - np.dot(data_greens[i1, :, i2], source))/sd
-
-    print ''
-
-
-def get_time_shift(corr, corr_sum, source, indices):
-    """ 
-    Finds optimal time shift between the given data and synthetics
-    generated from the given source
-    """
-    npts_padding = (len(corr_sum)-1)/2
-    ngf = corr.shape[1]
-
-    corr_sum[:] = 0.
-    for _i in indices:
-        corr_sum += np.dot(source, corr[_i, :, :])
-
-    return corr_sum.argmax() - npts_padding
-
 
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max, 
     set_attributes=False,verbose=0):
     """
-    Data misfit function (optimized Python version)
+    Data misfit function (optimized pure Python version)
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
@@ -112,10 +61,9 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
             # evaluate misfit for all components at given station
             # 
             for group in time_shift_groups:
-                # Finds the time-shift between data and synthetics that 
-                # yields the maximum cross-correlation value across all
-                # components in a given group, subject to time_shift_max 
-                # constraint
+                # Finds the time-shift between data and synthetics that yields
+                # the maximum cross-correlation value across all comonents in a
+                # given group, subject to time_shift_max constraint
                 _, indices = list_intersect_with_indices(
                     components, group)
 
@@ -124,8 +72,8 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
 
                 time_shift = npts_shift*dt
 
-                # what start and stop indices will correctly shift 
-                # synthetics relative to data?
+                # what start and stop indices will correctly shift synthetics
+                # relative to data?
                 start = npts_padding - npts_shift
                 stop = npts+npts_padding - npts_shift
 
@@ -150,4 +98,60 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                     results[_i] += d[_k].weight * misfit
 
     return results
+
+
+def get_L2_norm(greens_greens, data_data, data_greens, source, i1, i2):
+    """
+    Calculates L2 norm of data and shifted synthetics using
+    ||s - d||^2 = s^2 + d^2 - 2sd
+    """
+    misfit = 0
+
+    # calculate d^2 
+    misfit += data_data[i1]
+
+    # calculate s^2 
+    misfit += np.dot(np.dot(greens_greens[i1, i2, :, :], source), source)
+
+    # calculate sd 
+    misfit -= 2*np.dot(data_greens[i1, :, i2], source)
+
+    return misfit
+
+
+def debug_L2_norm(data, synthetics, greens_greens, data_data, data_greens,
+    source, i1, i2):
+    """
+    Calculates error in the righthand-side terms of
+    ||s - d||^2 = s^2 + d^2 - 2sd
+    """
+    dd = np.sum(data**2)
+    print 'error dd:',\
+        (dd - data_data[i1])/dd
+
+    ss = np.sum(synthetics**2)
+    print 'error ss:',\
+        (ss - np.dot(np.dot(greens_greens[i1, i2, :, :], source), source))/ss
+
+    sd = np.sum(synthetics*data)
+    print 'error sd:',\
+        (sd - np.dot(data_greens[i1, :, i2], source))/sd
+
+    print ''
+
+
+def get_time_shift(corr, corr_sum, source, indices):
+    """ 
+    Finds optimal time shift between the given data and synthetics
+    generated from the given source
+    """
+    npts_padding = (len(corr_sum)-1)/2
+    ngf = corr.shape[1]
+
+    corr_sum[:] = 0.
+    for _i in indices:
+        corr_sum += np.dot(source, corr[_i, :, :])
+
+    return corr_sum.argmax() - npts_padding
+
 
