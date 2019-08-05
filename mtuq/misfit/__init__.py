@@ -131,10 +131,9 @@ class Misfit(object):
         if optimization_level==1:
             return O1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max, set_attributes, self.verbose)
+                self.time_shift_max, self.verbose)
 
         if optimization_level==2:
             raise NotImplementedError
 
 
-            

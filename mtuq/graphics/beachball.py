@@ -44,7 +44,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
                 norm += np.sum(trace.data**2)**0.5
     results /= norm
 
-    # what are the minimum result for each depth?
+    # what is the minimum result for each depth?
     indices = results.argmin(axis=0)
     results = results.min(axis=0)
 

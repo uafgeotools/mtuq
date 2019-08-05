@@ -14,7 +14,7 @@ from scipy.signal import fftconvolve
 
 
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max, 
-    set_attributes=False,verbose=0):
+    verbose=0):
     """
     Data misfit function (optimized pure Python version)
 
@@ -49,7 +49,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
             if not components:
                 continue
 
-            if norm in ['L1']:
+            if norm=='L1':
                 s = greens[_j].get_synthetics(source)
 
             # time sampling scheme

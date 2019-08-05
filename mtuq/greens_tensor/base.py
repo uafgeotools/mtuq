@@ -85,11 +85,11 @@ class GreensTensor(Stream):
         """
         Resets components returned by get_synthetics
 
-        Suppose the vertical or radial components of the recorded data are
-        found to be good but the transerve component is found to be bad.
+        Suppose the vertical and radial components of the recorded data are
+        good but the transerve component is found to be bad.  Calling
         ``reset_components(['Z', 'R'])`` will cause ``get_synthetics`` to only
-        return the first two components, avoiding unnecessary computation of
-        the third
+        return the two good components, avoiding unnecessary computation of
+        the bad component
         """
         if components==self.components:
             return
