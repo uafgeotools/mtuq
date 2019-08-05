@@ -50,7 +50,7 @@ def _corr_nd1_nd2(data, greens, time_shift_max):
 
             for _j in range(ngf):
                 corr[_i, _j, :] =\
-                    _corr(trace.data, array[_i, _j, :])
+                    _corr(array[_i, _j, :], trace.data)
 
         corr_all += [corr]
 
@@ -79,7 +79,7 @@ def _autocorr_nd1(data, time_shift_max):
 
 
 def _autocorr_nd2(greens, time_shift_max):
-    # correlates 2D data structures
+    # autocorrelates 2D data structures
     corr_all = []
 
     for g in greens:
@@ -90,6 +90,8 @@ def _autocorr_nd2(greens, time_shift_max):
 
         npts, dt = _get_time_sampling(g)
         npts_padding = int(time_shift_max/dt)
+
+        ones = np.pad(np.ones(npts-2*npts_padding), 2*npts_padding, 'constant')
 
         # array that holds Green's functions
         array = g._array
@@ -104,13 +106,12 @@ def _autocorr_nd2(greens, time_shift_max):
                 for _j2 in range(ngf):
 
                     if _j1<=_j2:
-                        # calculate upper triangular elements
+                        # calculate upper elements
                         corr[_i, _j1, _j2, :] = _corr(
-                            array[_i, _j1, :]*array[_i, _j2, :],
-                            np.pad(np.ones(npts), npts_padding, 'constant'))
-
+                            array[_i, _j1, :]*array[_i, _j2, :], ones)
+                            
                     else:
-                        # fill in lower trianglular elements by symmetry
+                        # fill in lower elements by symmetry
                         corr[_i, _j1, _j2, :] = corr[_i, _j2, _j1, :]
 
         corr_all += [corr]
@@ -143,13 +144,33 @@ def _get_L2_norm(greens_greens, data_data, data_greens, source, i1, i2):
     # calculates d^2
     misfit += data_data[i1]
 
-    # calculates s^2 using a linear combination of Green's function
+    # calculates s^2 using a linear combination of Greens' function
     misfit += np.dot(np.dot(greens_greens[i1, :, :, i2], source), source)
+    #misfit += np.dot(source, np.dot(source, greens_greens[i1, :, :, i2]))
 
-    # calculates sd using a linear combination of Green's function
+    # calculates sd using a linear combination of Greens' function
     misfit -= 2*np.dot(data_greens[i1, :, i2], source)
 
     return misfit
+
+
+def _debug_L2_norm(data, synthetics, greens_greens, data_data, data_greens, 
+    source, i1, i2):
+    dd = np.sum(data**2)
+    print 'error dd:',\
+        (dd - data_data[i1])/dd
+
+    # calculates s^2 using a linear combination of Greens' function
+    ss = np.sum(synthetics**2)
+    print 'error ss:',\
+        (ss - np.dot(source, np.dot(source, greens_greens[i1, :, :, i2])))/ss
+
+    # calculates sd using a linear combination of Greens' function
+    sd = np.sum(synthetics*data)
+    print 'error sd:',\
+        (sd - np.dot(data_greens[i1, :, i2], source))/sd
+
+    print ''
 
 
 def _get_time_shift(corr, corr_sum, source, indices):
@@ -186,8 +207,7 @@ def misfit(
     time_shift_groups,
     time_shift_max,
     set_attributes=False,
-    verbose=0,
-    debug=0):
+    verbose=0):
     """
     Data misfit function (optimized Python version)
 
@@ -203,7 +223,7 @@ def misfit(
         greens[_j].reset_components(get_components(d))
 
     #
-    # cross-correlations are a major part of the computational work
+    # cross-correlations are a major part of the numerical work
     #
     corr_sum = _corr_init(data, time_shift_max)
     data_greens = _corr_nd1_nd2(data, greens, time_shift_max)
@@ -222,15 +242,12 @@ def misfit(
             if not components:
                 continue
 
-            #if norm in ['L2', 'hybrid']:
-            #    d2 = data_data[_j]
-            #    G2 = greens_greens[_j]
-            #    dG = data_greens[_j]
+            if norm in ['L2', 'hybrid']:
+                d2 = data_data[_j]
+                G2 = greens_greens[_j]
+                dG = data_greens[_j]
 
-            if True:#norm in ['L1']:
-                s = greens[_j].get_synthetics(source)
-
-            if debug:
+            if norm in ['L1']:
                 s = greens[_j].get_synthetics(source)
 
             # time sampling scheme
@@ -265,31 +282,17 @@ def misfit(
                     # sum the resulting residuals
                     if norm=='L1':
                         r = s[_k].data[start:stop] - d[_k].data
-                        misfit = np.sum(abs(r))*dt
+                        misfit = dt*np.sum(abs(r))
 
                     elif norm=='L2':
-                        r = s[_k].data[start:stop] - d[_k].data
-                        misfit = np.sum(r**2.)*dt
-
-                        #misfit = _get_L2_norm(
-                        #    greens_greens[_j], data_data[_j], data_greens[_j],
-                        #    source, _k, npts_shift+npts_padding)
-
-                        #if debug:
-                        #    r = s[_k].data[start:stop] - d[_k].data
-                        #    assert isclose(misfit, np.sum(r**2)*dt)
+                        misfit = dt*_get_L2_norm(
+                            greens_greens[_j], data_data[_j], data_greens[_j],
+                            source, _k, npts_shift+npts_padding)
 
                     elif norm=='hybrid':
-                        r = s[_k].data[start:stop] - d[_k].data
-                        misfit = (np.sum(r**2.)*dt)**0.5
-
-                        #misfit = _get_L2_norm(
-                        #    greens_greens[_j], data_data[_j], data_greens[_j],
-                        #    source, _k, npts_shift+npts_padding)**0.5
-
-                        #if debug:
-                        #    r = s[_k].data[start:stop] - d[_k].data
-                        #    assert isclose(misfit, (np.sum(r**2)*dt)**0.5)
+                        misfit = dt*_get_L2_norm(
+                            greens_greens[_j], data_data[_j], data_greens[_j],
+                            source, _k, npts_shift+npts_padding)**0.5
 
                     results[_i] += d[_k].weight * misfit
 
