@@ -34,19 +34,19 @@ class GreensTensor(GreensTensorBase):
         self.tags += ['units:m']
 
 
-    def _compute_array(self):
+    def _precompute(self):
         """ Computes numpy arrays used by get_synthetics
         """
         if self.include_mt:
-            self._compute_array_mt()
+            self._precompute_mt()
 
         if self.include_force:
-            self._compute_array_force()
+            self._precompute_force()
 
         self._permute_array()
 
 
-    def _compute_array_mt(self):
+    def _precompute_mt(self):
         array = self._array
         phi = np.deg2rad(self.azimuth)
         _j = 0
@@ -91,7 +91,7 @@ class GreensTensor(GreensTensorBase):
                 array[_i, _j+5, :] = -TDS * np.cos(phi)
 
 
-    def _compute_array_force(self):
+    def _precompute_force(self):
         array = self._array
         phi = np.deg2rad(self.azimuth)
         _j = 0

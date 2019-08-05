@@ -22,7 +22,7 @@ class Dataset(list):
 
     """
     def __init__(self, streams=[], id=None, tags=[]):
-        """ Constructor
+        """ Constructor method
         """
         self.id = id
 
@@ -87,7 +87,7 @@ class Dataset(list):
     def map(self, function, *sequences):
         """ Maps function to all streams in the dataset
 
-        Applies a function to each Stream. If one or more optional sequences 
+        Applies a function to each stream. If one or more optional sequences 
         are given, the function is called with an argument list consisting of
         corresponding items of each sequence. Similar to the Python built-in
         ``map``.
@@ -135,7 +135,10 @@ class Dataset(list):
 
 
     def get_stations(self):
-        """ Extracts station metadata from all streams in list
+        """ Returns station attribute of each stream
+
+        For Datasets created using ``mtuq.io.readers``, SAC headers or
+        other file metadata are used to populate the Station attributes
         """
         stations = []
         for stream in self:
@@ -144,10 +147,13 @@ class Dataset(list):
 
 
     def get_origins(self):
-        """ Returns origin location and time
+        """ Returns origin attribute of each stream
 
-        The origin attribute can be used to hold preliminary origin information
-        (e.g. catalog event locations)
+        For Datasets created using ``mtuq.io.readers``, preliminary event
+        metadata (e.g. catalog information) is used to define the Origins.
+
+        For Datasets created using ``get_synthetics`` methods, solver/
+        IO client input is used to define the Origins
         """
         origins = []
         for stream in self:
@@ -158,7 +164,7 @@ class Dataset(list):
                     warnings.warn(
                         "Different streams in the Dataset correpond to "
                         "different events.\n\n"
-                        "If this is expected, feel free to disable this warning "
+                        "This may be intentional. Feel free to disable this "
                         "warning by setting Dataset._warnings=False")
 
         return origins
@@ -194,34 +200,19 @@ class Dataset(list):
         pass
 
 
-    def as_array(self):
-        """ Returns time series from all stations in a single multidimensional
-        array 
+    def as_array(self, components=['Z','R','T']):
+        """
+        Compared with iterating over streams and traces, provides a potentially
+        faster way of accessing numeric trace data
 
         .. warning:
 
-            This method requires that all tensors have the same time 
-            discretization.
-
-        .. note:
-
-            Compared with iterating over obspy traces, this method provides a
-            a potentially faster way of accessing numeric trace data.
-
-        .. note:
-
-            This method is used to supply input arrays for the C extension
-            module `mtuq.grid_search._extensions`.
+            Requires that all tensors have the same time discretization
+            (or else an error is raised)
 
         """
-        try:
-            return self._array
-        except:
-            self._allocate_array()
-            return self._array
+        nc = len(components)
 
-
-    def _allocate_array(self):
         # count number of nonempty streams
         ns = 0
         for stream in self:
@@ -230,29 +221,26 @@ class Dataset(list):
         nt = self[0][0].stats.npts
 
         # allocate array
-        self._array = np.zeros((3, ns, nt))
-        array = self._array
+        array = np.zeros((3, ns, nt))
 
         _i = 0
-        for stream in self:
-            if len(stream)==0:
-                continue
-            try:
-                trace = stream.select(component='Z')
-                array[0, _i, :] = trace.data
-            except:
-                pass
-            try:
-                trace = stream.select(component='R')
-                array[1, _i, :] = trace.data
-            except:
-                pass
-            try:
-                trace = stream.select(component='T')
-                array[2, _i, :] = trace.data
-            except:
-                pass
-            _i += 1
-
-
+        for _i, stream in enumerate(self):
+            if 'Z' in components:
+                try:
+                    trace = stream.select(component='Z')[0]
+                    array[0, _i, :] = trace.data
+                except:
+                    pass
+            if 'R' in components:
+                try:
+                    trace = stream.select(component='R')[0]
+                    array[1, _i, :] = trace.data
+                except:
+                    pass
+            if 'T' in components:
+                try:
+                    trace = stream.select(component='T')[0]
+                    array[2, _i, :] = trace.data
+                except:
+                    pass
 

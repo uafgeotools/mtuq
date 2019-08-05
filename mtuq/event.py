@@ -21,7 +21,10 @@ class Origin(obspy.core.AttribDict):
         }
 
     def __setitem__(self, key, value):
-        if key in ['time']:
+        if value is None:
+            pass
+
+        elif key in ['time']:
             value = UTCDateTime(value)
 
         elif key in ['latitude', 'longitude', 'depth_in_m']:
@@ -30,12 +33,14 @@ class Origin(obspy.core.AttribDict):
         super(Origin, self).__setitem__(key, value)
 
 
-    def __eq__(self, origin):
-        if not isinstance(origin, Origin):
+    def __eq__(self, other):
+        if not isinstance(other, Origin):
             return False
 
         for key in self.__dict__:
-            if origin[key]!=self.__dict__[key]:
+            if not hasattr(other, key):
+                return False
+            elif other[key]!=self.__dict__[key]:
                 return False
         else:
             return True

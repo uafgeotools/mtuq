@@ -180,7 +180,7 @@ def plot_data_synthetics(filename,
 
             plot(axis, dat, syn)
 
-            # amplitude normalization
+            # normalize amplitude
             if normalize=='trace_amplitude':
                 max_trace = _max(dat, syn)
                 ylim = [-max_trace, +max_trace]
@@ -231,9 +231,9 @@ def plot_data_greens(filename,
         greens_bw[0].model, greens_bw[0].solver, source, origin)
 
     plot_data_synthetics(filename,
-            data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
-            total_misfit_bw=total_misfit_bw, total_misfit_sw=total_misfit_sw,
-            header=header, **kwargs)
+        data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
+        total_misfit_bw=total_misfit_bw, total_misfit_sw=total_misfit_sw,
+        header=header, **kwargs)
 
 
 

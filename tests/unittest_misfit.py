@@ -10,7 +10,7 @@ from mtuq.util import AttribDict
 from mtuq.util.wavelets import Gaussian
 
  
-class test_misfit_cap(unittest.TestCase):
+class test_misfit(unittest.TestCase):
     def test_time_shift1(self):
         """ Checks that time-shift corrections are working properly
         """

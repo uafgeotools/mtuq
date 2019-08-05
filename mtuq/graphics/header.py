@@ -138,8 +138,8 @@ class OldStyleHeader(Header):
         px = 0.125
         py -= 0.175
 
-        # WARNING: the order in which angles kappa, sigma, theta are stated is
-        # consistent between different software
+        # WARNING: there are lots of inconsistencies between sources in the 
+        # order angles are stated
         line = u'FM %d %d %d    $M_w$ %.1f   %s %d   %s %d   rms %.1e   VR %.1f' %\
                 (self.tt.kappa, self.tt.sigma, self.tt.theta, self.magnitude, 
                  u'\u03B3', self.tt.gamma, u'\u03B4', self.tt.delta, 0, 0)

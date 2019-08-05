@@ -1,7 +1,6 @@
 
 import numpy as np
 
-from copy import deepcopy
 from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
@@ -32,9 +31,13 @@ class GreensTensor(Stream):
             id=None, 
             model=None,
             solver=None,
+            components=[],
             include_mt=True,
             include_force=False):
+        """ Constructor method
+        """
 
+        # argument checking starts now
         for trace in traces:
             assert isinstance(trace, Trace)
 
@@ -49,16 +52,24 @@ class GreensTensor(Stream):
         if not isinstance(origin, Origin):
             raise TypeError
 
+        if components==None:
+            components = []
+        for component in components:
+            assert component in ['Z', 'R', 'T']
+
+        # the main work of the constructor starts now
         if id:
             self.id = id
         else:
             self.id = station.id
 
-        # station location and other metdata
-        self.station = deepcopy(station)
-
-        # event location and other metadata
-        self.origin = deepcopy(origin)
+        self.station = station.copy()
+        self.origin = origin.copy()
+        self.model = model
+        self.solver = solver
+        self.include_mt = include_mt
+        self.include_force = include_force
+        self.components = components
 
         self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
             origin.latitude,
@@ -66,99 +77,71 @@ class GreensTensor(Stream):
             station.latitude,
             station.longitude)
 
-        self.model = model
-        self.solver = solver
-
-        self.include_mt = include_mt
-        self.include_force = include_force
-
-        # We require high-dimensional ndarrays to deal with practical 
-        # complexities such as time shifts. Even with careful attention to 
-        # index order, NumPy provides generally quite poor performance for 
-        # ndim>2. This motivates the following workarounds.
-        if include_mt and include_force:
-            self.get_synthetics = self._workaround1
-        elif include_mt:
-            self.get_synthetics = self._workaround2
-        elif include_force:
-            self.get_synthetics = self._workaround3
+        self._preallocate()
+        self._precompute()
 
 
-
-    def initialize(self, components=['Z', 'R', 'T']):
+    def reset_components(self, components):
         """
-        Prepares structures used by get_synthetics
+        Resets components returned by get_synthetics
 
-        Allocates and computes numpy array used by get_synthetics and
-        allocates obspy stream to hold the resulting synthetic data
-
-        This method can be rerun if the components change. For example if a
-        particular component of the recorded data is found to be corrupt, 
-        rerunning initialize without that component will cause get_synthetics
-        to no longer return that component.
+        Suppose the vertical or radial components of the recorded data are
+        found to be good but the transerve component is found to be bad.
+        ``reset_components(['Z', 'R'])`` will cause ``get_synthetics`` to only
+        return the first two components, avoiding unnecessary computation of
+        the third
         """
+        if components==self.components:
+            return
 
-        # The idea is for __init__ to do only the inexpensive work of 
-        # instantiating a GreensTensor, and defer all the expensive work to 
-        # this method
-
-        # Another reason to separate the two methods is that combining them
-        # would cause an endless recursion when select is called. This problem
-        # is not unique to mtuq, but common to all objects that inherit from
-        # ``obspy.core.Stream``
-        if components is None:
+        elif components==None:
             components = []
+
         for component in components:
             assert component in ['Z', 'R', 'T']
+
         self.components = components
 
-        self._allocate_synthetics()
-        self._allocate_array()
-        self._compute_array()
+        self._preallocate()
+        self._precompute()
 
 
-    def _allocate_synthetics(self):
+    def _preallocate(self):
         """
-        Allocates obspy stream used by get_synthetics
+        Preallocates structures used by get_synthetics
+
+        Every time get_synthetics is called, the numeric trace data gets
+        overwritten. Every time reset_components is called, entire traces get
+        overwritten.  The reference to the stream itself never changes.
         """
-        npts = self[0].stats.npts
-
-        # a single obspy stream is allocated, then every time get_synthetics
-        # is called, the numeric trace data get overwritten
-        self._synthetics = Stream()
-
-        self._synthetics.id = self.id
-        self._synthetics.station = self.station
-        self._synthetics.origin = self.origin
-
-        for component in self.components:
-            # add stats object
-            stats = deepcopy(self.station)
-            stats.update({'npts': npts, 'channel': component})
-
-             # add trace object
-            self._synthetics += Trace(np.zeros(stats.npts), stats)
-
-
-    def _allocate_array(self):
-        """
-        Allocates numpy array used by get_synthetics
-        """
-        nt = self[0].stats.npts
+        # allocate array to hold linear combination time series
+        nt = len(self[0].data)
         nc = len(self.components)
         nr = 0
-
         if self.include_mt:
             nr += 6
         if self.include_force:
-            nr += 3
-
+            nr+= 3
         self._array = np.zeros((nc, nr, nt))
 
+        # allocate obspy structures to hold synthetics
+        if not hasattr(self, '_synthetics'):
+            self._synthetics = Stream()
+            self._synthetics.station = self.station
+            self._synthetics.origin = self.origin
+        for trace in self._synthetics:
+            self._synthetics.remove(trace)
+        for component in self.components:
+            # add stats object
+            stats = self.station.copy()
+            stats.update({'npts': nt, 'channel': component})
+             # add trace object
+            self._synthetics += Trace(np.zeros(nt), stats)
 
-    def _compute_array(self):
+
+    def _precompute(self):
         """
-        Computes numpy array used by get_synthetics
+        Precomputes numpy array used by get_synthetics
         """
         # the formulas relating the original time series to the linear
         # combination array vary depending on the scheme being used, so
@@ -169,174 +152,19 @@ class GreensTensor(Stream):
     def get_synthetics(self, source):
         """
         Generates synthetics through a linear combination of Green's tensor
-        times series weighted by source elements
-
-        .. warning :
-            If some components are missing or assigned zero weight, it can be
-            much faster to call `initialize` manually prior to calling
-            `get_synthetics`. This creates the `_array` attribute and prevents
-            unnecessary computations.
-
+        times series
         """
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-
         array = self._array
         synthetics = self._synthetics
 
         for _i, component in enumerate(self.components):
             # Even with careful attention to index order, np.dot is very slow.
-            # This motivates the workaround methods immediately below this one.
-            synthetics[_i].data = np.dot(source, array[_i, :, :])
+            # For some reason the following is faster
+            data = synthetics[_i].data
+            data[:] = 0.
+            for _j in range(len(source)):
+                data += source[_j]*array[_i, _j, :]
         return synthetics
-
-
-    def _workaround1(self, source):
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-        array = self._array
-        synthetics = self._synthetics
-
-        for _i, component in enumerate(self.components):
-            s = synthetics[_i].data
-            s[:] = 0.
-            s += source[0]*array[_i, 0, :]
-            s += source[1]*array[_i, 1, :]
-            s += source[2]*array[_i, 2, :]
-            s += source[3]*array[_i, 3, :]
-            s += source[4]*array[_i, 4, :]
-            s += source[5]*array[_i, 5, :]
-            s += source[3]*array[_i, 6, :]
-            s += source[4]*array[_i, 7, :]
-            s += source[5]*array[_i, 8, :]
-        return synthetics
-
-
-    def _workaround2(self, source):
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-        array = self._array
-        synthetics = self._synthetics
-
-        for _i, component in enumerate(self.components):
-            s = synthetics[_i].data
-            s[:] = 0.
-            s += source[0]*array[_i, 0, :]
-            s += source[1]*array[_i, 1, :]
-            s += source[2]*array[_i, 2, :]
-            s += source[3]*array[_i, 3, :]
-            s += source[4]*array[_i, 4, :]
-            s += source[5]*array[_i, 5, :]
-        return synthetics
-
-
-    def _workaround3(self, source):
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-        array = self._array
-        synthetics = self._synthetics
-
-        for _i, component in enumerate(self.components):
-            s = synthetics[_i].data
-            s[:] = 0.
-            s += source[0]*array[_i, 0, :]
-            s += source[1]*array[_i, 1, :]
-            s += source[2]*array[_i, 2, :]
-        return synthetics
-
-
-
-    def _allocate_cc(self, data, time_shift_max):
-        """
-        Allocates numpy arrays used by get_time_shift
-        """
-        nc = len(self.components)
-        nr = 0
-
-        if self.include_mt:
-            nr += 6
-
-        if self.include_force:
-            nr += 3
-
-        dt = self[0].stats.delta
-        npts_padding = int(time_shift_max/dt)
-
-        self._cc_sum = np.zeros(2*npts_padding+1)
-        self._cc_all = np.zeros((nc, nr, 2*npts_padding+1))
-        return self._cc_all
-
-
-    def _compute_cc(self, data, time_shift_max):
-        """
-        Computes numpy arrays used by get_time_shift
-        """
-        if not hasattr(self, '_array'):
-            self.initialize(components=['Z','R','T'])
-
-        array = self._array
-        synthetics = self._synthetics
-
-        cc = self._allocate_cc(data, time_shift_max)
-        n1, n2, _ = cc.shape
-
-        dt = self[0].stats.delta
-        npts = self[0].stats.npts
-        npts_padding = time_shift_max/dt
-
-        for _i1, component in enumerate(self.components):
-            if component in [trace.stats.channel[-1].upper() for trace in data]:
-                trace = data.select(component=component)[0]
-            else:
-                continue
-
-            for _i2 in range(n2):
-                if (npts > 2000 or npts_padding > 200):
-                    # for long traces or long lag times, frequency-domain
-                    # implementation is usually faster
-                    cc[_i1, _i2, :] =\
-                        fftconvolve(trace.data, array[_i1, _i2, ::-1], 'valid')
-
-                else:
-                    # for short traces or short lag times, time-domain
-                    # implementation is usually faster
-                    cc[_i1, _i2, :] =\
-                        np.correlate(trace.data, array[_i1, _i2, :], 'valid')
-
-
-    def get_time_shift(self, data, source, group, time_shift_max):
-        """ 
-        Finds optimal time shift between the given data and synthetics
-        generated from the given source
-
-        :type data: mtuq.Dataset
-        :param data: Data to be cross-correlated with synthetics
-        :type mt: mtuq.MomentTensor
-        :param mt: Moment tensor used to generate synthetics
-        :type group: str
-        :param group: Which components to consider when computing optimal time-
-            shift, e.g. ``"Z"``, ``"R"``, ``"T"``, ``"ZR"``, ``"ZRT"``. If 
-            multiple characters are given, then time-shift will be fixed across
-            multiple components.
-        :type time_shift_max: float
-        :param time_shift_max: Maximum allowable time-shift. Lag times greater 
-            than this value are not computed in the cross-correlation.
-        """
-        try:
-            cc_all = self._cc_all
-            cc_sum = self._cc_sum
-        except:
-            self._compute_cc(data, time_shift_max)
-            cc_all = self._cc_all
-            cc_sum = self._cc_sum
-
-        cc_sum[:] = 0.
-        for component in group:
-            _i = self.components.index(component)
-            cc_sum += np.dot(source, cc_all[_i, :, :])
-
-        npts_padding = (len(cc_sum)-1)/2
-        return cc_sum.argmax() - npts_padding
 
 
     def apply(self, function, *args, **kwargs):
@@ -371,24 +199,13 @@ class GreensTensor(Stream):
             wavelet.convolve(trace)
 
 
-    def select(self, *args, **kwargs):
+    def select(self, component=None, channel=None):
         """
-        Return new GreensTensor with only those traces that match the supplied
+        Return Stream with only those traces that match the supplied
         metadata criteria
         """
-        # Inherited method "select" doesn't work because it tries to return a
-        # a Stream rather than a GreensTensor. To fix it, we need to manually 
-        # convert to a Stream, call select, then convert back
-        stream = Stream([trace for trace in self]).select(*args, **kwargs)
-        return self.__class__(
-            [trace for trace in stream],
-            station=self.station,
-            origin=self.origin,
-            id=self.id,
-            model=self.model,
-            solver=self.solver,
-            include_mt=self.include_mt,
-            include_force=self.include_force)
+        return Stream([trace for trace in self]).select(
+            component=component, channel=channel)
 
 
     def __add__(self, *args):
@@ -426,43 +243,15 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
-    def select(self, *args, **kwargs):
-        """ Selects GreensTensors that match the given criterion
+    def select(self, origin):
+        """ Selects GreensTensors that match the given origin
         """
-
-        if len(args)+len(kwargs)<1:
-            raise Exception("Too few selection criteria")
-
-        if len(args)+len(kwargs)>1:
-            raise Exception("Too many selection criteria")
-
-        if len(kwargs)==1:
-            key, val = kwargs.items()[0]
-
-        elif type(args[0])==Origin:
-            key, val = 'origin', args[0]
-
-        elif type(args[0])==Station:
-            key, val = 'station', args[0]
-
-        if key=='station':
-            selected = lambda tensor: tensor.station==val
-
-        elif key=='origin':
-            selected = lambda tensor: tensor.origin==val
-
-        else:
-            raise KeyError("Bad selection criterion: %s" % key)
-
-        return self.__class__(tensors=filter(selected, self), id=self.id)
+        return self.__class__(id=self.id, tensors=filter(
+            lambda tensor: tensor.origin==origin, self))
 
 
     def get_synthetics(self, source):
-        """ Generates synthetic seismograms by summing Green's functions 
-        weighted by moment tensor elements
-
-        :param source: Source to be used in linear combination
-        :param origin: Use Green's functions corresponding to this origin 
+        """ Generates synthetic by linear combination of Green's functions 
         """
         synthetics = Dataset()
         for tensor in self:
@@ -552,49 +341,23 @@ class GreensTensorList(list):
         self.sort(key=function, reverse=reverse)
 
 
-    #
-    # the remaining methods can be used to speed up trace data access in cases
-    # where the time discretization is the same for all traces
-    #
-    def _check_time_sampling(self):
-        """ Checks that time discretization is the same for all tensors
-        """
-        pass #check_time_sampling([stream[0] for stream in self])
-
-
-    def as_array(self):
+    def as_array(self, components=['Z', 'R', 'T']):
         """ Returns time series from all stations in a single multidimensional
         array 
 
+        Compared with iterating over streams and traces, provides a potentially
+        faster way of accessing numeric trace data
+
         .. warning:
 
-            This method requires that all tensors have the same time 
-            discretization.
-
-        .. note:
-
-            Compared with iterating over obspy traces, this method provides a
-            a potentially faster way of accessing numeric trace data.
-
-        .. note:
-
-            This method is used to supply input arrays for the C extension
-            module `mtuq.grid_search._extensions`.
+            Requires that all tensors have the same time discretization
+            (or else an error is raised)
 
         """
-        try:
-            return self._array
-        except:
-            self._compute_array()
-            return self._array
+        #check_time_sampling([stream[0] for stream in self])
 
-
-    def _allocate_array(self):
-        """ Allocates numpy array that can be used for efficient synthetics
-        generation
-        """
         # array dimensions
-        nc = 3
+        nc = len(components)
         nt = len(self[0][0])
         ns = len(self)
         nr = 0
@@ -603,22 +366,11 @@ class GreensTensorList(list):
         if self[0].include_force:
             nr += 3
 
-        self._array = np.zeros((nc, ns, nr, nt))
-
-        return self._array
-
-
-    def _compute_array(self):
-        """ Computes numpy array that can be used for efficient synthetics
-        generation
-        """
-        array = self._allocate_array()
-
+        array = np.zeros((nc,nr,ns,nt))
         for _i, tensor in enumerate(self):
-            # fill in 3D array of GreensTensor
-            tensor.initialize()
-
-            # fill in 4D array of GreensTensorList
-            array[:, _i, :, :] = tensor._array
+            tensor.reset_components(components)
+            # fill in array
+            array[:, :, _i, :] = tensor._array
+        return array
 
 
