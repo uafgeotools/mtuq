@@ -7,165 +7,41 @@ See ``mtuq/misfit/__init__.py`` for more information
 import numpy as np
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
-from mtuq.util.signal import get_components
+from mtuq.util.signal import autocorr_nd1, autocorr_nd2, corr_nd1_nd2, corr_init
+from mtuq.util.signal import get_components, get_time_sampling
 from scipy.signal import fftconvolve
 
 
-def _corr(v1, v2):
-    # fast cross-correlation of unpadded array v1 and padded array v2
-    n1, n2 = len(v1), len(v2)
-
-    if n1>2000 or n2-n1>200:
-        # for long traces, frequency-domain implementation is usually faster
-        return fftconvolve(v1, v2[::-1], 'valid')
-    else:
-        # for short traces, time-domain implementation is usually faster
-        return np.correlate(v1, v2, 'valid')
-
-
-def _corr_nd1_nd2(data, greens, time_shift_max):
-    # correlates 1D and 2D data structures
-    corr_all = []
-
-    for d, g in zip(data, greens):
-
-        ncomp = len(g.components)
-        if ncomp==0:
-            corr_all += [[]]
-            continue
-
-        npts, dt = _get_time_sampling(d)
-        npts_padding = int(time_shift_max/dt)
-
-        # array that holds Green's functions
-        array = g._array
-        ngf = array.shape[1]
-
-        # array that will hold correlations
-        corr = np.zeros((ncomp, ngf, 2*npts_padding+1))
-
-        # the main work starts now
-        for _i, component in enumerate(g.components):
-            trace = d.select(component=component)[0]
-
-            for _j in range(ngf):
-                corr[_i, _j, :] =\
-                    _corr(array[_i, _j, :], trace.data)
-
-        corr_all += [corr]
-
-    return corr_all
-
-
-def _autocorr_nd1(data, time_shift_max):
-    # autocorrelates 1D data strucutres (reduces to dot product)
-    corr_all = []
-
-    for d in data:
-        ncomp = len(d)
-        if ncomp==0:
-            corr_all += [[]]
-            continue
-
-        corr = np.zeros(ncomp)
-
-        # the main work starts now
-        for _i1, trace in enumerate(d):
-            corr[_i1] = np.dot(trace.data, trace.data)
-
-        corr_all += [corr]
-
-    return corr_all
-
-
-def _autocorr_nd2(greens, time_shift_max):
-    # autocorrelates 2D data structures
-    corr_all = []
-
-    for g in greens:
-        ncomp = len(g.components)
-        if ncomp==0:
-            corr_all += [[]]
-            continue
-
-        npts, dt = _get_time_sampling(g)
-        npts_padding = int(time_shift_max/dt)
-
-        ones = np.pad(np.ones(npts-2*npts_padding), 2*npts_padding, 'constant')
-
-        # array that holds Green's functions
-        array = g._array
-        ngf = array.shape[1]
-
-        # array that will hold correlations
-        corr = np.zeros((ncomp, ngf, ngf, 2*npts_padding+1))
-
-        # the main work starts now
-        for _i in range(ncomp):
-            for _j1 in range(ngf):
-                for _j2 in range(ngf):
-
-                    if _j1<=_j2:
-                        # calculate upper elements
-                        corr[_i, _j1, _j2, :] = _corr(
-                            array[_i, _j1, :]*array[_i, _j2, :], ones)
-                            
-                    else:
-                        # fill in lower elements by symmetry
-                        corr[_i, _j1, _j2, :] = corr[_i, _j2, _j1, :]
-
-        corr_all += [corr]
-
-    return corr_all
-
-
-def _corr_init(data, time_shift_max):
-    # allocates arrays to hold correlations
-    corr_all = []
-
-    for d in data:
-        ncomp = len(d)
-        if ncomp==0:
-            corr_all += [[]]
-            continue
-
-        npts, dt = _get_time_sampling(d)
-        npts_padding = int(time_shift_max/dt)
-
-        corr_all += [np.zeros(2*npts_padding+1)]
-
-    return corr_all
-
-
-def _get_L2_norm(greens_greens, data_data, data_greens, source, i1, i2):
-    # calculates L2 norm using ||s - d||^2 = s^2 + d^2 - 2sd
+def get_L2_norm(greens_greens, data_data, data_greens, source, i1, i2):
+    """
+    Calculates L2 norm of data and shifted synthetics using
+    ||s - d||^2 = s^2 + d^2 - 2sd
+    """
     misfit = 0
 
-    # calculates d^2
     misfit += data_data[i1]
 
-    # calculates s^2 using a linear combination of Greens' function
-    misfit += np.dot(np.dot(greens_greens[i1, :, :, i2], source), source)
-    #misfit += np.dot(source, np.dot(source, greens_greens[i1, :, :, i2]))
+    misfit += np.dot(np.dot(greens_greens[i1, i2, :, :], source), source)
 
-    # calculates sd using a linear combination of Greens' function
     misfit -= 2*np.dot(data_greens[i1, :, i2], source)
 
     return misfit
 
 
-def _debug_L2_norm(data, synthetics, greens_greens, data_data, data_greens, 
+def debug_L2_norm(data, synthetics, greens_greens, data_data, data_greens, 
     source, i1, i2):
+    """
+    Calculates error in the righthand-side terms of
+    ||s - d||^2 = s^2 + d^2 - 2sd
+    """
     dd = np.sum(data**2)
     print 'error dd:',\
         (dd - data_data[i1])/dd
 
-    # calculates s^2 using a linear combination of Greens' function
     ss = np.sum(synthetics**2)
     print 'error ss:',\
-        (ss - np.dot(source, np.dot(source, greens_greens[i1, :, :, i2])))/ss
+        (ss - np.dot(np.dot(greens_greens[i1, i2, :, :], source), source))/ss
 
-    # calculates sd using a linear combination of Greens' function
     sd = np.sum(synthetics*data)
     print 'error sd:',\
         (sd - np.dot(data_greens[i1, :, i2], source))/sd
@@ -173,7 +49,7 @@ def _debug_L2_norm(data, synthetics, greens_greens, data_data, data_greens,
     print ''
 
 
-def _get_time_shift(corr, corr_sum, source, indices):
+def get_time_shift(corr, corr_sum, source, indices):
     """ 
     Finds optimal time shift between the given data and synthetics
     generated from the given source
@@ -188,26 +64,8 @@ def _get_time_shift(corr, corr_sum, source, indices):
     return corr_sum.argmax() - npts_padding
 
 
-def _get_time_sampling(stream):
-    if len(stream) > 0:
-        npts = stream[0].data.size
-        dt = stream[0].stats.delta
-    else:
-        npts = None
-        dt = None
-    return npts, dt
-
-
-
-def misfit(
-    data,
-    greens,
-    sources,
-    norm,
-    time_shift_groups,
-    time_shift_max,
-    set_attributes=False,
-    verbose=0):
+def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max, 
+    set_attributes=False,verbose=0):
     """
     Data misfit function (optimized Python version)
 
@@ -225,12 +83,12 @@ def misfit(
     #
     # cross-correlations are a major part of the numerical work
     #
-    corr_sum = _corr_init(data, time_shift_max)
-    data_greens = _corr_nd1_nd2(data, greens, time_shift_max)
+    corr_sum = corr_init(data, time_shift_max)
+    data_greens = corr_nd1_nd2(data, greens, time_shift_max)
 
     if norm in ['L2', 'hybrid']:
-        data_data = _autocorr_nd1(data, time_shift_max)
-        greens_greens = _autocorr_nd2(greens, time_shift_max)
+        data_data = autocorr_nd1(data, time_shift_max)
+        greens_greens = autocorr_nd2(greens, time_shift_max)
 
     #
     # begin iterating over sources
@@ -251,7 +109,7 @@ def misfit(
                 s = greens[_j].get_synthetics(source)
 
             # time sampling scheme
-            npts, dt = _get_time_sampling(d)
+            npts, dt = get_time_sampling(d)
             npts_padding = int(time_shift_max/dt)
 
 
@@ -266,7 +124,7 @@ def misfit(
                 _, indices = list_intersect_with_indices(
                     components, group)
 
-                npts_shift = _get_time_shift(
+                npts_shift = get_time_shift(
                     data_greens[_j], corr_sum[_j], source, indices)
 
                 time_shift = npts_shift*dt
@@ -285,12 +143,12 @@ def misfit(
                         misfit = dt*np.sum(abs(r))
 
                     elif norm=='L2':
-                        misfit = dt*_get_L2_norm(
+                        misfit = dt * get_L2_norm(
                             greens_greens[_j], data_data[_j], data_greens[_j],
                             source, _k, npts_shift+npts_padding)
 
                     elif norm=='hybrid':
-                        misfit = dt*_get_L2_norm(
+                        misfit = dt * get_L2_norm(
                             greens_greens[_j], data_data[_j], data_greens[_j],
                             source, _k, npts_shift+npts_padding)**0.5
 

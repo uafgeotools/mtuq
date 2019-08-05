@@ -11,15 +11,8 @@ from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
 
 
-def misfit(
-    data,
-    greens,
-    sources, 
-    norm,
-    time_shift_groups, 
-    time_shift_max,
-    set_attributes=False, 
-    verbose=0):
+def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
+    set_attributes=False,verbose=0):
     """
     Data misfit function (non-optimized Python implementation)
 
@@ -50,7 +43,8 @@ def misfit(
             dt = d[0].stats.delta
             npts_padding = int(time_shift_max/dt)
 
-            corr_sum = np.zeros(2*npts_padding+1)
+            # array to hold cross correlations
+            corr = np.zeros(2*npts_padding+1)
 
 
             #
@@ -65,9 +59,9 @@ def misfit(
                     components, group)
 
                 for _k in indices:
-                    corr_sum += np.correlate(d[_k].data, s[_k].data, 'valid')
+                    corr += np.correlate(d[_k].data, s[_k].data, 'valid')
 
-                npts_shift = corr_sum.argmax()-npts_padding
+                npts_shift = corr.argmax()-npts_padding
                 time_shift = npts_shift*dt
 
                 # what start and stop indices will correctly shift 
