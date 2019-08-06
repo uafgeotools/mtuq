@@ -1,5 +1,5 @@
 """
-Data misfit module (non-optimized version)
+Data misfit module (non-optimized pure Python version)
 
 See ``mtuq/misfit/__init__.py`` for more information
 """
@@ -14,7 +14,7 @@ from mtuq.util.signal import get_components
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
     set_attributes=False,verbose=0):
     """
-    Data misfit function (non-optimized version)
+    Data misfit function (non-optimized pure Python version)
 
     See ``mtuq/misfit/__init__.py`` for more information
     """

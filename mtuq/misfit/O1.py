@@ -1,5 +1,5 @@
 """
-Data misfit module (optimized pure Python version)
+Data misfit module (fast pure Python version)
 
 See ``mtuq/misfit/__init__.py`` for more information
 """
@@ -16,7 +16,7 @@ from scipy.signal import fftconvolve
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max, 
     verbose=0):
     """
-    Data misfit function (optimized pure Python version)
+    Data misfit function (fast pure Python version)
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
