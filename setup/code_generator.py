@@ -562,13 +562,7 @@ Main_GridSearch_DoubleCouple="""
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, sources)
 
-    results_bw = comm.gather(results_bw, root=0)
-    results_sw = comm.gather(results_sw, root=0)
-
     if comm.rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
-
         best_misfit = (results_bw + results_sw).min()
         best_source = sources.get((results_bw + results_sw).argmin())
 
@@ -643,14 +637,8 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origins, sources)
 
-    results_bw = comm.gather(results_bw, root=0)
-    results_sw = comm.gather(results_sw, root=0)
-
     if rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
         results = results_bw + results_sw
-
         best_misfit = (results).min()
 
         _i, _j = np.unravel_index(np.argmin(results), results.shape)
