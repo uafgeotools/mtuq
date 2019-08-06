@@ -11,19 +11,7 @@ from mtuq.util.moment_tensor.TapeTape2015 import to_mij
 
 
 class Grid(object):
-    """ Structured grid
-
-    Allows iterating over all values of a rectangular structured grid while 
-    storing only values along the axes
-
-    :param: dict: dictionary containing names of axes and corresponding lists
-       of values along axes
-    :param: start: when iterating over the grid, start at this element
-    :param: stop: when iterating over the grid, stop at this element
-    :param: callback: optional function applied to each grid point
-       through a callback to the ``get`` method. Can be used to carry out a
-       linear coordinate transformation or a more general reparameterization
-
+    """ A grid defined by values along axes
 
     .. rubric:: Examples
 
@@ -43,7 +31,7 @@ class Grid(object):
                     'longitude': np.linspace(-180., 180., 2*N)})
 
 
-    .. rubric:: Iterating over grids
+    .. rubric:: Iterating on grids
 
     The order of iteration over a grid is determined by the order of keys in
     the dictionary input argument.
@@ -53,6 +41,14 @@ class Grid(object):
 
     """
     def __init__(self, dict, start=0, stop=None, callback=None):
+        #:param: dict: dictionary containing names of axes and corresponding lists
+        #   of values along axes
+        #:param: start: when iterating over the grid, start at this element
+        #:param: stop: when iterating over the grid, stop at this element
+        #:param: callback: optional function applied to each grid point
+        #   through a callback to the ``get`` method. Can be used to carry out a
+        #   linear coordinate transformation or a more general reparameterization
+
 
         # list of parameter names
         self.keys = dict.keys()
@@ -146,17 +142,9 @@ class Grid(object):
 
 
 class UnstructuredGrid(object):
-    """ Unstructured grid
+    """ Grid defined by a set of irregularly-spaced coordinate points
 
-    param dict: dictionary containing the complete set of coordinate values for
-       each parameter
-    :param: start: when iterating over the grid, start at this element
-    :param: stop: when iterating over the grid, stop at this element
-    :param: callback: optional function applied to each grid point
-       through a callback to the ``get`` method. Can be used to carry out a
-       linear coordinate transformation or a more general reparameterization
-
-    .. rubric:: Examples
+    .. rubric:: Example
 
    Unstructured grid consisting of N randomly-chosen points within the unit 
    square:
@@ -168,6 +156,14 @@ class UnstructuredGrid(object):
 
     """
     def __init__(self, dict, start=0, stop=None, callback=None):
+        #:param dict: dictionary containing the complete set of coordinate
+        #   values for each parameter
+        #:param: start: when iterating over the grid, start at this element
+        #:param: stop: when iterating over the grid, stop at this element
+        #:param: callback: optional function applied to each grid point
+        #   through a callback to the ``get`` method. Can be used to carry out a
+        #   linear coordinate transformation or a more general 
+        #   reparameterization
 
         # list of parameter names
         self.keys = dict.keys()

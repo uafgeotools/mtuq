@@ -73,7 +73,7 @@ class Dataset(list):
     def apply(self, function, *args, **kwargs):
         """ Applies function to all streams in the dataset
 
-        Applies a function to each Stream, similar to the Python built-in
+        Applies a function to each stream, similar to the Python built-in
         ``apply``.
         """
         processed = []
@@ -151,7 +151,6 @@ class Dataset(list):
 
         For Datasets created using ``mtuq.io.readers``, preliminary event
         metadata (e.g. catalog information) is used to define the Origins.
-
         For Datasets created using ``get_synthetics`` methods, solver/
         IO client input is used to define the Origins
         """
@@ -171,10 +170,10 @@ class Dataset(list):
 
 
     def add_tag(self, tag):
-       """ Appends string to tags list
+       """ Appends string to tags
        
        Tags can be used to support customized uses, such as storing metdata not
-       included in mtuq.Station
+       included in ``Station`` or ``Origin`` objects
        """
        if type(tag) not in [str, unicode]:
            raise TypeError
@@ -195,17 +194,18 @@ class Dataset(list):
     # where the time discretization is the same for all traces
     #
     def _check_time_sampling(self):
-        """ Checks that time discretization is the same for all stations
+        """ Checks if time discretization is the same for all traces
         """
         pass
 
 
     def as_array(self, components=['Z','R','T']):
-        """
+        """ Returns all numeric trace data in a single NumPy array
+
         Compared with iterating over streams and traces, provides a potentially
         faster way of accessing numeric trace data
 
-        .. warning:
+        .. warning::
 
             Requires that all tensors have the same time discretization
             (or else an error is raised)

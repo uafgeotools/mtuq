@@ -26,8 +26,8 @@ class Wavelet(object):
             def evaluate(self, t):
                 return ((2*np.pi)**0.5)**(-1.)*np.exp(-0.5*(t)**2.)
 
-    Having defined ``SimpleGaussian``, we can evaluate it on a chosen set, say
-    on the interval [-5, +5]:
+    We can now evaluate ``SimpleGaussian`` on any given set, say on the 
+    interval [-5, +5]:
 
     .. code::
 

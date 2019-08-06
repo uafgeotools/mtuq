@@ -83,7 +83,7 @@ class GreensTensor(Stream):
 
     def reset_components(self, components):
         """
-        Resets components returned by get_synthetics
+        Resets components returned by ``get_synthetics``
 
         Suppose the vertical and radial components of the recorded data are
         good but the transerve component is found to be bad.  Calling
@@ -108,11 +108,11 @@ class GreensTensor(Stream):
 
     def _preallocate(self):
         """
-        Preallocates structures used by get_synthetics
+        Preallocates structures used by ``get_synthetics``
 
-        Every time get_synthetics is called, the numeric trace data gets
-        overwritten. Every time reset_components is called, entire traces get
-        overwritten.  The reference to the stream itself never changes.
+        Every time ``get_synthetics`` is called, the numeric trace data gets
+        overwritten. Every time ``reset_components`` is called, the traces
+        themselves get overwritten.  The stream itself never gets overwritten.
         """
         # allocate array to hold linear combination time series
         nt = len(self[0].data)
@@ -141,7 +141,7 @@ class GreensTensor(Stream):
 
     def _precompute(self):
         """
-        Precomputes numpy array used by get_synthetics
+        Precomputes numpy array used by ``get_synthetics``
         """
         # the formulas relating the original time series to the linear
         # combination array vary depending on the scheme being used, so
@@ -151,8 +151,7 @@ class GreensTensor(Stream):
 
     def get_synthetics(self, source):
         """
-        Generates synthetics through a linear combination of Green's tensor
-        times series
+        Generates synthetics through a linear combination of time series
         """
         array = self._array
         synthetics = self._synthetics
@@ -189,7 +188,7 @@ class GreensTensor(Stream):
 
     def convolve(self, wavelet):
         """
-        Convolves source wavelet with all time series
+        Convolves ``wavelet`` with all time series
 
         :type wavelet: mtuq.util.wavelets.Wavelet
         :param wavelet: Source wavelet or source-time function to be used in
@@ -201,7 +200,7 @@ class GreensTensor(Stream):
 
     def select(self, component=None, channel=None):
         """
-        Return Stream with only those traces that match the supplied
+        Return stream with only those traces that match the supplied
         metadata criteria
         """
         return Stream([trace for trace in self]).select(

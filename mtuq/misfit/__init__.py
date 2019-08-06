@@ -14,59 +14,60 @@ class Misfit(object):
     Evaluates misfit between data and synthetics using time shifts followed by
     waveform differences. This approach, due to ZhaoHelmberger1994 and 
     ZhuHelmberger1996, has become widely used in regional seismology.  See 
-    `docs/` and references therein for a more thorough mathematical description.
+    `docs/` and references therein for a more information.
 
-    .. Usage:
+    .. rubric:: Usage
 
-        Evaluating misfit is a two-step procedure:
+    Evaluating misfit is a two-step procedure:
 
-        .. code::
-            function_handle = Misfit(**parameters)
-            array = function_handle(data, greens, sources)
+    .. code::
 
-        In the first step, the user supplies parameters such as the type of
-        norm to apply the residuals (see `__init__` method for detailed 
-        parameter descriptions). 
+        function_handle = Misfit(**parameters)
+        array = function_handle(data, greens, sources)
 
-        In the second step, the user supplies data, Green's functions, and 
-        sources (see `__call__` method  for detailed input argument 
-        descriptions). Synthetics are then generated and compared with data, 
-        and a numpy array is returned with the same length as ``sources``.
+    In the first step, the user supplies parameters such as the type of
+    norm to apply the residuals (see `__init__` method for detailed 
+    parameter descriptions). 
 
-
-    .. Optimization Levels:
-
-        Misfit evaluation is the most complex and computationally expensive 
-        task performed by this software package. Compared with
-        ZhuHelmberger1996's original C software, Python offers major advantages
-        for managing this complexity.  Python object-oriented programming makes 
-        it possible to offer three different implementations:
-
-        - a readable pure Python version (`mtuq.misfit.O0.Misfit`)
-
-        - an optimized pure Python version (`mtuq.misfit.O1.Misfit`)
-
-        - an optimized Python/C++ version (`mtuq.misfit.O2`.Misfit)
+    In the second step, the user supplies data, Green's functions, and 
+    sources (see `__call__` method  for detailed input argument 
+    descriptions). Synthetics are then generated and compared with data, 
+    and a numpy array is returned with the same length as `sources`.
 
 
-        While providing the same input argument syntax, these three versions
-        differ significantly in terms of performance:
+    .. rubric:: Optimization Levels
 
-        - O0 provides a reference for understanding what the code is actually
-          doing and for checking the correctness of the optimized O1 and O2 
-          results.
+    Misfit evaluation is the most complex and computationally expensive 
+    task performed by this software package. Compared with
+    ZhuHelmberger1996's original C software, Python offers major advantages
+    for managing this complexity.  Python object-oriented programming makes 
+    it possible to offer three different implementations:
 
-        - O1 is an optimized pure Python implementation which provides 
-          significant computational savings when `len(sources)` > 100. This
-          version is the closest to ZhuHelmberger1996's original C software.
+    - a readable pure Python version (``mtuq.misfit.O0.Misfit``)
 
-        - O2 is an optimized Python/C++ implementation, in which a Python 
-          wrapper is used to combine obspy Traces into multidimensional arrays.
-          These arrays are passed to a C++ extension module, which does the
-          main computational work. This version requires that all obspy Traces
-          have the same time discretization, which is not a requirement in the
-          other two versions.
-          
+    - a fast pure Python version (``mtuq.misfit.O1.Misfit``)
+
+    - a very fast Python/C++ version (``mtuq.misfit.O2.Misfit``)
+
+
+    While providing the same input argument syntax, these three versions
+    differ significantly in terms of performance:
+
+    - O0 provides a reference for understanding what the code is actually
+      doing and for checking the correctness of the optimized O1 and O2 
+      results.
+
+    - O1 is an optimized pure Python implementation which provides 
+      significant computational savings when `len(sources)` > 100. This
+      version is the closest to ZhuHelmberger1996's original C software.
+
+    - O2 is an optimized Python/C++ implementation, in which a Python 
+      wrapper is used to combine obspy Traces into multidimensional arrays.
+      These arrays are passed to a C++ extension module, which does the
+      main computational work. This version requires that all obspy Traces
+      have the same time discretization, which is not a requirement in the
+      other two versions.
+      
 
     """
 
