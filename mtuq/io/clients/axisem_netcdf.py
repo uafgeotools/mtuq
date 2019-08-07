@@ -45,7 +45,7 @@ class Client(ClientBase):
 
     def _get_greens_tensor(self, station=None, origin=None):
         """ 
-        Reads a Greens tensor from AxiSEM NetCDF database
+        Reads Greens tensor from AxiSEM NetCDF database
         """
         distance_in_deg = get_distance_in_deg(station, origin)
 
@@ -77,7 +77,12 @@ class Client(ClientBase):
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
 
-        return GreensTensor(traces=[trace for trace in stream], 
-            station=station, origin=origin, model=self.model, solver='AxiSEM')
+        tags = [
+            'model:%s' % self.model,
+            'solver:%s' % 'syngine',
+             ]
+
+        return GreensTensor(traces=[trace for trace in stream],
+            station=station, origin=origin, tags=tags)
 
 

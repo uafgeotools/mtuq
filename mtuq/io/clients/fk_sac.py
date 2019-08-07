@@ -116,8 +116,13 @@ class Client(ClientBase):
 
             traces += [trace]
 
-        return GreensTensor(traces=traces, station=station, origin=origin,
-             model=self.model, solver='FK')
+        tags = [
+            'model:%s' % self.model,
+            'solver:%s' % 'syngine',
+             ]
+
+        return GreensTensor(traces=[trace for trace in stream], 
+            station=station, origin=origin, tags=tags)
 
 
 

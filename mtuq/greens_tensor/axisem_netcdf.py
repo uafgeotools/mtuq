@@ -28,10 +28,16 @@ class GreensTensor(GreensTensorBase):
     def __init__(self, *args, **kwargs):
         super(GreensTensor, self).__init__(*args, **kwargs)
 
-        self.tags = []
-        self.tags += ['type:greens']
-        self.tags += ['type:displacement']
-        self.tags += ['units:m']
+        if 'type:greens' not in self.tags:
+            self.tags += ['type:greens']
+
+        if 'type:displacement' not in self.tags:
+            self.tags += ['type:displacement']
+
+        if 'units:m' not in self.tags:
+            self.tags += ['units:m']
+
+
 
 
     def _precompute(self):

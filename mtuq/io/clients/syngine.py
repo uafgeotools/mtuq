@@ -103,8 +103,17 @@ class Client(ClientBase):
             trace.stats.delta = dt_new
             trace.stats.npts = len(data_new)
 
+        tags = [
+            'model:%s' % self.model,
+            'solver:%s' % 'syngine',
+             ]
+
+        return GreensTensor(traces=[trace for trace in stream],
+            station=station, origin=origin, tags=tags)
+
+
         return GreensTensor(traces=[trace for trace in stream], 
-            station=station, origin=origin, model=self.model, solver='syngine',
+            station=station, origin=origin, tags=tags,
             include_mt=self.include_mt, include_force=self.include_force)
 
 

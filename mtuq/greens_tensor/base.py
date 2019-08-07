@@ -1,6 +1,7 @@
 
 import numpy as np
 
+from copy import copy
 from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
@@ -29,8 +30,7 @@ class GreensTensor(Stream):
             station=None, 
             origin=None,
             id=None, 
-            model=None,
-            solver=None,
+            tags=[],
             components=[],
             include_mt=True,
             include_force=False):
@@ -65,8 +65,7 @@ class GreensTensor(Stream):
 
         self.station = station.copy()
         self.origin = origin.copy()
-        self.model = model
-        self.solver = solver
+        self.tags = tags
         self.include_mt = include_mt
         self.include_force = include_force
         self.components = components
@@ -180,8 +179,7 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
-            model=self.model,
-            solver=self.solver,
+            tags=self.tags,
             include_mt=self.include_mt,
             include_force=self.include_force)
 
@@ -222,12 +220,15 @@ class GreensTensorList(list):
     """ Container for one or more GreensTensor objects
     """
 
-    def __init__(self, tensors=[], id=None):
+    def __init__(self, tensors=[], id=None, tags=[]):
         # typically the id is the event name or origin time
         self.id = id
 
         for tensor in tensors:
             self.append(tensor)
+
+        for tag in copy(tags):
+            self.add_tag(tag)
 
 
     def append(self, tensor):
