@@ -10,3 +10,7 @@ __pycache__/
 
 .DS_Store
 *.swp
+
+docs/_build
+docs_library/generated
+

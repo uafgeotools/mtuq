@@ -5,17 +5,6 @@
 .. autoclass:: {{ objname }}
   :show-inheritance:
 
-  {% block attributes %}
-  {% if attributes %}
-  .. rubric:: Attributes
-
-  .. autosummary::
-  {% for item in attributes %}
-     ~{{ name }}.{{ item }}
-  {%- endfor %}
-  {% endif %}
-  {% endblock %}
-
   {% block methods %}
   {% if all_methods %}
 
