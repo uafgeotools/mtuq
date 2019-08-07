@@ -7,6 +7,7 @@ from mtuq.dataset import Dataset
 from mtuq.greens_tensor.base import GreensTensor, GreensTensorList
 from mtuq.event import Origin, Force, MomentTensor
 from mtuq.station import Station
+from mtuq.wavelet import Wavelet
 
 
 #
@@ -14,7 +15,7 @@ from mtuq.station import Station
 #
 
 from pkg_resources import iter_entry_points
-from mtuq.io.clients.syngine import get_greens_tensors
+from mtuq.io.clients.syngine import download_greens_tensors
 
 
 def _greens_tensor_clients():
@@ -25,10 +26,20 @@ def _greens_tensor_clients():
 
 
 def open_db(path_or_url='', format='', **kwargs):
-    """ Opens databse containing Green's functions
+    """ Opens database containing Green's functions
 
-    Once opened, ``GreensTensor`` objects can be generated using the
-    ``get_greens_tensor`` method of the database.
+    Returns an client that can then be used to generate ``GreensTensor``,
+    as in the following example
+
+    .. rubric:: Example
+
+    .. code::
+
+        db = open_db('axisem_database.nc', format='AxiSEM')
+
+        greens = db.get_greens_tensors(stations, origin)
+
+        
     """
     format = format.upper()
     return _greens_tensor_clients()[format](path_or_url=path_or_url, **kwargs)
@@ -42,13 +53,12 @@ def _readers():
 
 
 def read(path='', format='', **kwargs):
-    """ Reads waveform files into an MTUQ Databse
+    """ Reads waveform files from disk
 
-    The read() function parses multiple waveforms corresponding to a single 
-    seismic event. 
-
-    It returns an Dataset object, a list-like container in which each item
-    corresponds to a station and all items correspond to a single event.
+    Reads files from specified path or url, parses waveform data based on the
+    specified file format, and returns an ``mtuq.Dataset``, a list-like 
+    container which each element is an ObsPy stream corresponding to a single 
+    station 
     """
     format = format.upper()
     return _readers()[format](path, **kwargs)

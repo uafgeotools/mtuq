@@ -32,6 +32,9 @@ class ProcessData(object):
     In the first step, the user supplies a set of filtering, phase-picking,
     windowing, and weighting parameters.  In the second step, an obspy stream
     is given as input and a processed stream returned as output.
+
+    See `mtuq/examples/` for a more detailed illustration of how everything
+    works in practice.
     """
 
     def __init__(self,

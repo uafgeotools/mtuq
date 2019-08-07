@@ -207,3 +207,22 @@ def change(M, i1=None, i2=None):
 
     return Mout
 
+
+
+def _check(code):
+    if code in [0, 1, 2, 3, 4 ,5]:
+        return code
+    elif code in [0., 1., 2., 3., 4., 5.]:
+        return int(code)
+    elif code=="Unknown":
+        return 0
+    elif code=="USE":
+        return 1
+    elif code=="NED":
+        return 2
+    elif code=="NWU":
+        return 3
+    else:
+        raise TypeError
+
+

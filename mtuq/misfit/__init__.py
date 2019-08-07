@@ -25,21 +25,20 @@ class Misfit(object):
         function_handle = Misfit(**parameters)
         array = function_handle(data, greens, sources)
 
-    In the first step, the user supplies parameters, described below.
+    In the first step, the user supplies parameters such as the type of norm
+    (open the code and see the ``__init__`` for detailed argument descriptions).
 
-    In the second step, the user supplies data, Green's functions, and 
-    sources (see `evaluate` method  for detailed input argument 
-    descriptions). Synthetics are then generated and compared with data, 
-    and a numpy array is returned with the same length as `sources`.
+    In the second step, the user supplies data, Green's functions, and sources
+    (open the code and see the ``__call__`` method for detailed input argument 
+    descriptions). Synthetics are then generated and compared with data, and a
+    NumPy array is returned with the same length as `sources`.
 
 
     .. rubric:: Optimization Levels
 
-    Misfit evaluation is the most complex and computationally expensive 
-    task performed by this software package. Compared with
-    ZhuHelmberger1996's original C software, Python offers major advantages
-    for managing this complexity.  Python object-oriented programming makes 
-    it possible to offer three different implementations:
+    Misfit evaluation is the most complex and computationally expensive task
+    performed by this software package. Python object-oriented programming
+    makes it possible to offer three different implementations:
 
     - a readable pure Python version (``mtuq.misfit.O0.Misfit``)
 
@@ -48,8 +47,8 @@ class Misfit(object):
     - a very fast Python/C++ version (``mtuq.misfit.O2.Misfit``)
 
 
-    While providing the same input argument syntax, these three versions
-    differ significantly in terms of performance:
+    While exactly the same in terms of input argument syntax, these three 
+    versions differ in terms of performance:
 
     - ``O0`` provides a reference for understanding what the code is doing and 
       for checking the correctness of the `O1` and `O2` implementations
