@@ -1,5 +1,5 @@
 """
-Data misfit module (non-optimized version)
+Data misfit module (non-optimized pure Python version)
 
 See ``mtuq/misfit/__init__.py`` for more information
 """
@@ -14,14 +14,16 @@ from mtuq.util.signal import get_components
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
     set_attributes=False,verbose=0):
     """
-    Data misfit function (non-optimized Python implementation)
+    Data misfit function (non-optimized pure Python version)
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
     sources = iterable(sources)
     results = np.zeros((len(sources), 1))
 
+    #
     # initialize Green's function machinery
+    #
     for _j, d in enumerate(data):
         greens[_j].reset_components(get_components(d))
 
@@ -51,10 +53,9 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
             # evaluate misfit for all components at given station
             # 
             for group in time_shift_groups:
-                # Finds the time-shift between data and synthetics that 
-                # yields the maximum cross-correlation value across all
-                # components in a given group, subject to time_shift_max 
-                # constraint
+                # Finds the time-shift between data and synthetics that yields
+                # the maximum cross-correlation value across all comonents in a
+                # given group, subject to time_shift_max constraint
                 _, indices = list_intersect_with_indices(
                     components, group)
 
@@ -64,8 +65,8 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                 npts_shift = corr.argmax()-npts_padding
                 time_shift = npts_shift*dt
 
-                # what start and stop indices will correctly shift 
-                # synthetics relative to data?
+                # what start and stop indices will correctly shift synthetics
+                # relative to data?
                 start = npts_padding-npts_shift
                 stop = npts+npts_padding-npts_shift
 

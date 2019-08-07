@@ -4,10 +4,10 @@ Imports="""
 import os
 import numpy as np
 
-from mtuq import read, get_greens_tensors, open_db
-from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search
+from mtuq import read, open_db, download_greens_tensors
 from mtuq.graphics import plot_data_greens, plot_beachball
+from mtuq.grid import DoubleCoupleGridRandom
+from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
@@ -523,7 +523,7 @@ Main_GridSearch_DoubleCouple="""
         data_sw = data.map(process_sw)
 
         print 'Reading Greens functions...\\n'
-        greens = get_greens_tensors(stations, origin, model=model)
+        greens = download_greens_tensors(stations, origin, model=model)
 
         print 'Processing Greens functions...\\n'
         greens.convolve(wavelet)
@@ -562,13 +562,7 @@ Main_GridSearch_DoubleCouple="""
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, sources)
 
-    results_bw = comm.gather(results_bw, root=0)
-    results_sw = comm.gather(results_sw, root=0)
-
     if comm.rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
-
         best_misfit = (results_bw + results_sw).min()
         best_source = sources.get((results_bw + results_sw).argmin())
 
@@ -601,7 +595,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             origins += [origin.copy()]
             setattr(origins[-1], 'depth_in_m', depth)
 
-        greens = get_greens_tensors(stations, origins, model=model)
+        greens = download_greens_tensors(stations, origins, model=model)
 
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
@@ -643,13 +637,14 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origins, sources)
 
-    # gathering results
-    results_bw = comm.gather(results_bw, root=0)
-    results_sw = comm.gather(results_sw, root=0)
-
     if rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
+        results = results_bw + results_sw
+        best_misfit = (results).min()
+
+        _i, _j = np.unravel_index(np.argmin(results), results.shape)
+        best_source = sources.get(_i)
+        best_origin = origins[_j]
+
 """
 
 
@@ -674,7 +669,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     data_sw = data.map(process_sw)
 
     print 'Reading Greens functions...\\n'
-    greens = get_greens_tensors(stations, origin, model=model)
+    greens = download_greens_tensors(stations, origin, model=model)
 
     print 'Processing Greens functions...\\n'
     greens.convolve(wavelet)
@@ -838,14 +833,15 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     if comm.rank==0:
         print 'Saving results...\\n'
 
-        filename = event_name+'_misfit_vs_depth.png'
-        misfit_vs_depth(filename, results_bw+results_sw, origins, sources)
+        plot_data_greens(event_name+'.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, best_origin, best_source)
 
-        filename = event_name+'_bw_vs_depth.png'
-        misfit_vs_depth(filename, results_bw, origins, sources)
+        misfit_vs_depth(event_name+'_misfit_vs_depth_bw.png',
+            data_bw, misfit_bw, origins, sources, results_bw)
 
-        filename = event_name+'_sw_vs_depth.png'
-        misfit_vs_depth(filename, results_sw, origins, sources)
+        misfit_vs_depth(event_name+'_misfit_vs_depth_sw.png',
+            data_sw, misfit_sw, origins, sources, results_sw)
 
         print 'Finished\\n'
 """
@@ -1092,7 +1088,7 @@ if __name__=='__main__':
         file.write(
             replace(
             Main_GridSearch_DoubleCouple,
-            'greens = get_greens_tensors\(stations, origin, model=model\)',
+            'greens = download_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n        '
            +'greens = db.get_greens_tensors(stations, origins)',
             ))
@@ -1131,7 +1127,7 @@ if __name__=='__main__':
         file.write(
             replace(
             Main_GridSearch_DoubleCoupleMagnitudeDepth,
-            'greens = get_greens_tensors\(stations, origin, model=model\)',
+            'greens = download_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n            '
            +'greens = db.get_greens_tensors(stations, origins)',
             ))
@@ -1184,7 +1180,7 @@ if __name__=='__main__':
         file.write(
             replace(
             Main1_SerialGridSearch_DoubleCouple,
-            'greens = get_greens_tensors\(stations, origin, model=model\)',
+            'greens = download_greens_tensors\(stations, origin, model=model\)',
             'db = open_db(path_greens, format=\'FK\', model=model)\n    '
            +'greens = db.get_greens_tensors(stations, origin)',
             ))

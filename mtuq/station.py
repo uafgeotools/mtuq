@@ -6,14 +6,18 @@ from obspy.geodetics import gps2dist_azimuth
 
 
 class Station(AttribDict):
-    """ Station metadata object
+    """Station metadata object
 
     Holds the following information
+
     - latitude and longitude
+
     - depth and elevation
+
     - network, station, and location codes
 
     Optionally, also includes 
+
     - time discretization attributes, which can be useful if all traces recorded
       at the given station have the same time sampling 
     """

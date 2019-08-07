@@ -2,10 +2,10 @@
 import os
 import numpy as np
 
-from mtuq import read, get_greens_tensors, open_db
-from mtuq.grid import DoubleCoupleGridRegular
-from mtuq.grid_search.mpi import grid_search
+from mtuq import read, open_db, download_greens_tensors
 from mtuq.graphics import plot_data_greens, plot_beachball
+from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath

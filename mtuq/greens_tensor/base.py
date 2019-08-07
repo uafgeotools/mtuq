@@ -1,6 +1,7 @@
 
 import numpy as np
 
+from copy import copy
 from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
@@ -29,8 +30,7 @@ class GreensTensor(Stream):
             station=None, 
             origin=None,
             id=None, 
-            model=None,
-            solver=None,
+            tags=[],
             components=[],
             include_mt=True,
             include_force=False):
@@ -65,8 +65,7 @@ class GreensTensor(Stream):
 
         self.station = station.copy()
         self.origin = origin.copy()
-        self.model = model
-        self.solver = solver
+        self.tags = tags
         self.include_mt = include_mt
         self.include_force = include_force
         self.components = components
@@ -83,13 +82,13 @@ class GreensTensor(Stream):
 
     def reset_components(self, components):
         """
-        Resets components returned by get_synthetics
+        Resets components returned by ``get_synthetics``
 
-        Suppose the vertical or radial components of the recorded data are
-        found to be good but the transerve component is found to be bad.
+        Suppose the vertical and radial components of the recorded data are
+        good but the transerve component is found to be bad.  Calling
         ``reset_components(['Z', 'R'])`` will cause ``get_synthetics`` to only
-        return the first two components, avoiding unnecessary computation of
-        the third
+        return the two good components, avoiding unnecessary computation of
+        the bad component
         """
         if components==self.components:
             return
@@ -108,11 +107,11 @@ class GreensTensor(Stream):
 
     def _preallocate(self):
         """
-        Preallocates structures used by get_synthetics
+        Preallocates structures used by ``get_synthetics``
 
-        Every time get_synthetics is called, the numeric trace data gets
-        overwritten. Every time reset_components is called, entire traces get
-        overwritten.  The reference to the stream itself never changes.
+        Every time ``get_synthetics`` is called, the numeric trace data gets
+        overwritten. Every time ``reset_components`` is called, the traces
+        themselves get overwritten.  The stream itself never gets overwritten.
         """
         # allocate array to hold linear combination time series
         nt = len(self[0].data)
@@ -141,7 +140,7 @@ class GreensTensor(Stream):
 
     def _precompute(self):
         """
-        Precomputes numpy array used by get_synthetics
+        Precomputes numpy array used by ``get_synthetics``
         """
         # the formulas relating the original time series to the linear
         # combination array vary depending on the scheme being used, so
@@ -151,8 +150,7 @@ class GreensTensor(Stream):
 
     def get_synthetics(self, source):
         """
-        Generates synthetics through a linear combination of Green's tensor
-        times series
+        Generates synthetics through a linear combination of time series
         """
         array = self._array
         synthetics = self._synthetics
@@ -181,15 +179,14 @@ class GreensTensor(Stream):
             station=self.station,
             origin=self.origin,
             id=self.id,
-            model=self.model,
-            solver=self.solver,
+            tags=self.tags,
             include_mt=self.include_mt,
             include_force=self.include_force)
 
 
     def convolve(self, wavelet):
         """
-        Convolves source wavelet with all time series
+        Convolves given wavelet with all time series
 
         :type wavelet: mtuq.util.wavelets.Wavelet
         :param wavelet: Source wavelet or source-time function to be used in
@@ -201,7 +198,7 @@ class GreensTensor(Stream):
 
     def select(self, component=None, channel=None):
         """
-        Return Stream with only those traces that match the supplied
+        Return stream with only those traces that match the supplied
         metadata criteria
         """
         return Stream([trace for trace in self]).select(
@@ -223,12 +220,15 @@ class GreensTensorList(list):
     """ Container for one or more GreensTensor objects
     """
 
-    def __init__(self, tensors=[], id=None):
+    def __init__(self, tensors=[], id=None, tags=[]):
         # typically the id is the event name or origin time
         self.id = id
 
         for tensor in tensors:
             self.append(tensor)
+
+        for tag in copy(tags):
+            self.add_tag(tag)
 
 
     def append(self, tensor):
@@ -308,14 +308,16 @@ class GreensTensorList(list):
            raise TypeError
 
        for tensor in self:
-           tensor.tags.append(tag)
+           if tag not in tensor.tags:
+               tensor.tags.append(tag)
 
 
     def remove_tag(self, tag):
        """ Removes string from tags list
        """
        for tensor in self:
-           tensor.tags.remove(tag)
+           if tag in tensor.tags:
+               tensor.tags.remove(tag)
 
 
     def sort_by_distance(self, reverse=False):

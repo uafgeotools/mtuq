@@ -7,10 +7,10 @@ Library Reference
    MTUQ is still in under development.  This documentation is incomplete and describes planned rather than current functionality.
 
 
-.. rubric:: Data structures
+.. rubric:: Seismic data structures
 
 =================================================================================================  =================================================================================================
-`mtuq.Dataset <generated/mtuq.Dataset.html>`_                                                       Seismic data container
+`mtuq.Dataset <generated/mtuq.Dataset.html>`_                                                       Container for observed or synthetic seismic data
 `mtuq.GreenTensor <generated/mtuq.GreensTensor.html>`_                                              Green's tensor object
 `mtuq.GreenTensorList <generated/mtuq.GreensTensorList.html>`_                                      Container for Green's tensor objects
 =================================================================================================  =================================================================================================
@@ -19,56 +19,75 @@ Library Reference
 .. rubric:: Station and event structures
 
 =================================================================================================  =================================================================================================
-`mtuq.Station <generated/mtuq.station.Station.html>`_                                               Station metdata object
-`mtuq.Origin <generated/mtuq.event.Origin.html>`_                                                   Origin metdata object
+`mtuq.Station <generated/mtuq.Station.html>`_                                                       Station metdata object
+`mtuq.Origin <generated/mtuq.Origin.html>`_                                                         Origin metdata object
 `mtuq.Wavelet <generated/mtuq.wavelet.Wavelet.html>`_                                               Source wavelet or source-time function object
-`mtuq.Force <generated/mtuq.event.Force.html>`_                                                     Force source
-`mtuq.MomentTensor <generated/mtuq.event.MomentTensor.html>`_                                       Moment tensor source
+`mtuq.Force <generated/mtuq.Force.html>`_                                                           Force source
+`mtuq.MomentTensor <generated/mtuq.MomentTensor.html>`_                                             Moment tensor source
 =================================================================================================  =================================================================================================
 
 
-.. rubric:: Data acquisition functions
+.. rubric:: Data I/O functions
 
 =================================================================================================  =================================================================================================
-`mtuq.get_greens_tensors <generated/mtuq.get_greens_tensors.html>`_                                 Downloads Green's tensors from syngine
-`mtuq.get_waveforms <generated/mtuq.get_waveforms.html>`_                                           Downloads seismic data from IRIS
+`mtuq.download_greens_tensors <generated/mtuq.download_greens_tensors.html>`_                       Downloads Green's tensors from syngine
 `mtuq.open_db <generated/mtuq.open_db.html>`_                                                       Opens Green's tensor database from disk
 `mtuq.read <generated/mtuq.read.html>`_                                                             Reads seismic data from disk
 =================================================================================================  =================================================================================================
 
 
 
-.. rubric:: CAP-style functions
+.. rubric:: Data processing and inversion functions
 
 =================================================================================================  =================================================================================================
-`mtuq.cap.process_data.ProcessData <generated/mtuq.cap.process_data.ProcessData.html>`_             Data processing function
-`mtuq.cap.misfit.Misfit <generated/mtuq.cap.misfit.Misfit.html>`_                                   Misfit function
+`mtuq.process_data.ProcessData <generated/mtuq.process_data.ProcessData.html>`_                     Data processing function
+`mtuq.misfit.Misfit <generated/mtuq.misfit.Misfit.html>`_                                           Misfit function
+`mtuq.grid_search.grid_serach <generated/mtuq.grid_search.grid_search.html>`_                       Grid search wrapper
 =================================================================================================  =================================================================================================
 
 
-.. rubric:: Grid classes and utilities
+.. rubric:: Grid classes
 
 =================================================================================================  =================================================================================================
-`mtuq.grid.Grid <generated/mtuq.grid.Grid.html>`_                                                   Structured grid
-`mtuq.grid.UnstructuredGrid <generated/mtuq.grid.UnstructuredGrid.html>`_                           Fully-unstructured grid
+`mtuq.grid.FullMomentTensorGridRandom <generated/mtuq.grid.MomentTensorGridRandom.html>`_           Grid with randomly-drawn full moment tensors
+`mtuq.grid.FullMomentTensorGridRegular <generated/mtuq.grid.MomentTensorGridRegular.html>`_         Grid with uniformly-spaced full moment tensors
 `mtuq.grid.DoubleCoupleGridRandom <generated/mtuq.grid.DoubleCoupleGridRandom.html>`_               Grid with randomly-drawn double couples
 `mtuq.grid.DoubleCoupleGridRegular <generated/mtuq.grid.DoubleCouleGridRegular.html>`_              Grid with uniformly-spaced double couples
-`mtuq.grid.MomentTensorGridRandom <generated/mtuq.grid.MomentTensorGridRandom.html>`_               Grid with randomly-drawn moment tensors
-`mtuq.grid.MomentTensorGridRegular <generated/mtuq.grid.MomentTensorGridRegular.html>`_             Grid with uniformly-spaced moment tensors
-`mtuq.grid.OriginGrid <generated/mtuq.grid.OriginGrid.html>`_                                       Grid with uniformly-spaced origins
-`mtuq.grid.cross <generated/mtuq.grid.cross.html>`_                                                 Cartesian product utility
 =================================================================================================  =================================================================================================
+
+
+.. rubric:: Grid base classes
+.. note::
+   These base classes can be used for specialized uses cases not covered by any of the above grids
+
+=================================================================================================  =================================================================================================
+`mtuq.grid.Grid <generated/mtuq.grid.Grid.html>`_                                                   Grid defined by values on axes
+`mtuq.grid.UnstructuredGrid <generated/mtuq.grid.UnstructuredGrid.html>`_                           Grid defined by lists of coordinates points
+=================================================================================================  =================================================================================================
+
 
 
 .. rubric:: Database and web service clients
 
 .. note::
-    These classes provide low-level database and web service access.  Normally it is easier to use high-level functions ``mtuq.get_greens_tensors`` or ``mtuq.open_db`` instead.
+    These classes provide low-level database and web service access.  Normally it is easier to use high-level functions ``mtuq.download_greens_tensors`` or ``mtuq.open_db`` instead.
 
 =================================================================================================  ================================================================================================= 
-`mtuq.greens.axisem_netcdf.Client <generated/mtuq.greens.axisem_netcdf.html>`_                      AxiSEM NetCDF database client (based on Instaseis)
-`mtuq.greens.fk_sac.Client <generated/mtuq.greens.fk.Client.html>`_                                 FK database client
-`mtuq.greens.syngine.Client <generated/mtuq.greens.syngine.Client.html>`_                           Syngine web service client
+`mtuq.io.clients.axisem_netcdf.Client <generated/mtuq.io.clients.axisem_netcdf.Client.html>`_       AxiSEM NetCDF database client (based on instaseis)
+`mtuq.io.clients.fk_sac.Client <generated/mtuq.io.clients.fk_sac.Client.html>`_                     FK database client
+`mtuq.io.clients.syngine.Client <generated/mtuq.io.clients.syngine.Client.html>`_                   Syngine web service client
 =================================================================================================  ================================================================================================= 
 
+
+
+.. rubric::  Low-level misfit modules
+
+.. note::
+    Misfit evaluation is the most computationally intensive task performed by this package, and the only task that has been heavily optimized.  These classes provide low-level access to optimized and non-optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misft``.
+
+=================================================================================================  =================================================================================================
+`mtuq.misfit.O0.misft <generated/mtuq.misfit.O0.html>`_                                             Easy-to-read pure Python implementation
+`mtuq.misfit.O1.misfit <generated/mtuq.misfit.O1.html>`_                                            Fast pure Python implementation
+`mtuq.misfit.O2.misfit <generated/mtuq.misfit.O2.html>`_                                            Fast Python/C implementation
+=================================================================================================  =================================================================================================
 

@@ -9,14 +9,23 @@ autogen
    mtuq.Dataset
    mtuq.GreensTensor
    mtuq.GreensTensorList
-   mtuq.event.Origin
-   mtuq.station.Station
+   mtuq.Origin
+   mtuq.Station
    mtuq.grid.Grid
    mtuq.grid.UnstructuredGrid
+   mtuq.grid_search.grid_search
+   mtuq.Force
+   mtuq.MomentTensor
    mtuq.wavelet.Wavelet
-   mtuq.cap.process_data.ProcessData
-   mtuq.cap.misfit.Misfit
+   mtuq.process_data.ProcessData
+   mtuq.misfit.Misfit
+   mtuq.download_greens_tensors
    mtuq.open_db
    mtuq.read
-   
+   mtuq.io.clients.axisem_netcdf.Client
+   mtuq.io.clients.fk_sac.Client
+   mtuq.io.clients.syngine.Client
+   mtuq.misfit.O0
+   mtuq.misfit.O1
+   mtuq.misfit.O2
    

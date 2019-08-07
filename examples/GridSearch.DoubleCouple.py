@@ -3,10 +3,10 @@
 import os
 import numpy as np
 
-from mtuq import read, get_greens_tensors, open_db
-from mtuq.grid import DoubleCoupleGridRandom
-from mtuq.grid_search.mpi import grid_search
+from mtuq import read, open_db, download_greens_tensors
 from mtuq.graphics import plot_data_greens, plot_beachball
+from mtuq.grid import DoubleCoupleGridRandom
+from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
@@ -125,7 +125,7 @@ if __name__=='__main__':
         data_sw = data.map(process_sw)
 
         print 'Reading Greens functions...\n'
-        greens = get_greens_tensors(stations, origin, model=model)
+        greens = download_greens_tensors(stations, origin, model=model)
 
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)
@@ -164,13 +164,7 @@ if __name__=='__main__':
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, sources)
 
-    results_bw = comm.gather(results_bw, root=0)
-    results_sw = comm.gather(results_sw, root=0)
-
     if comm.rank==0:
-        results_bw = np.concatenate(results_bw)
-        results_sw = np.concatenate(results_sw)
-
         best_misfit = (results_bw + results_sw).min()
         best_source = sources.get((results_bw + results_sw).argmin())
 

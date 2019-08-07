@@ -7,14 +7,16 @@ from collections import defaultdict
 from copy import deepcopy
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
-from os.path import basename, exists, join
+from os.path import basename, exists
 from mtuq.util import AttribDict, warn
 from mtuq.util.cap import taper, parse_weight_file
 from mtuq.util.signal import cut, get_arrival, m_to_deg
  
 
 class ProcessData(object):
-    """ CAP-style data processing function
+    """ Performs filtering, windowing and other operations on seismic data
+
+    .. rubric :: Usage
 
     Processing data is a two-step procedure:
 
@@ -30,6 +32,9 @@ class ProcessData(object):
     In the first step, the user supplies a set of filtering, phase-picking,
     windowing, and weighting parameters.  In the second step, an obspy stream
     is given as input and a processed stream returned as output.
+
+    See `mtuq/examples/` for a more detailed illustration of how everything
+    works in practice.
     """
 
     def __init__(self,

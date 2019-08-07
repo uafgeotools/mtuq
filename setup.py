@@ -63,6 +63,7 @@ setup(
     python_requires='~=2.7',
     install_requires=[
         "numpy", "scipy", "obspy", "h5py", "retry",
-        "flake8>=3.0", "pytest", "nose"
+        "flake8>=3.0", "pytest", "nose",
+        "sphinx", "sphinx-bootstrap-theme"
     ]
 )

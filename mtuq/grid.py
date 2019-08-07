@@ -11,23 +11,12 @@ from mtuq.util.moment_tensor.TapeTape2015 import to_mij
 
 
 class Grid(object):
-    """ Structured grid
-
-    Allows iterating over all values of a rectangular structured grid while 
-    storing only values along the axes
-
-    :param: dict: dictionary containing names of axes and corresponding lists
-       of values along axes
-    :param: start: when iterating over the grid, start at this element
-    :param: stop: when iterating over the grid, stop at this element
-    :param: callback: optional function applied to each grid point
-       through a callback to the ``get`` method. Can be used to carry out a
-       linear coordinate transformation or a more general reparameterization
-
+    """
+    A regularly-spaced grid defined by values along axes
 
     .. rubric:: Examples
 
-    To cover the unit square with a N-by-N rectangular grid:
+    To cover the unit square with an `N`-by-`N` rectangular grid:
 
     .. code ::
 
@@ -35,7 +24,7 @@ class Grid(object):
                     'y': np.linpsace(0., 1., N)})
 
 
-    To parameterize the surface of the Earth with an N-by-2N Mercator grid:
+    To parameterize the surface of the Earth with an `N`-by-`2N` Mercator grid:
 
     .. code::          
 
@@ -43,16 +32,22 @@ class Grid(object):
                     'longitude': np.linspace(-180., 180., 2*N)})
 
 
-    .. rubric:: Iterating over grids
+    .. rubric:: Iterating on grids
 
     The order of iteration over a grid is determined by the order of keys in
-    the dictionary input argument.
-
-    In the unit square example above, ``"x"`` is the fast axis and 
-    y"`` is the slow axis.
+    the dictionary input argument. In the unit square example above, ``'x'`` is
+    the fast axis and ``'y'`` is the slow axis.
 
     """
     def __init__(self, dict, start=0, stop=None, callback=None):
+        #:param: dict: dictionary containing names of axes and corresponding lists
+        #   of values along axes
+        #:param: start: when iterating over the grid, start at this element
+        #:param: stop: when iterating over the grid, stop at this element
+        #:param: callback: optional function applied to each grid point
+        #   through a callback to the ``get`` method. Can be used to carry out a
+        #   linear coordinate transformation or a more general reparameterization
+
 
         # list of parameter names
         self.keys = dict.keys()
@@ -83,7 +78,7 @@ class Grid(object):
 
  
     def get(self, i):
-        """ Returns i-th point of grid
+        """ Returns `i-th` point of grid
         """
         p = AttribDict()
         for key, val in zip(self.keys, self.vals):
@@ -96,8 +91,8 @@ class Grid(object):
             return p
 
 
-    def decompose(self, nproc):
-        """ Decomposes grid for parallel processing
+    def partition(self, nproc):
+        """ Partitions grid for parallel processing
         """
         if self.start!=0:
             raise Exception
@@ -130,6 +125,14 @@ class Grid(object):
 
     # the next two methods make it possible to iterate over the grid
     def next(self): 
+        """ Advances iteration index
+
+        .. warning::
+
+           This method is no longer required in Python3 and will be removed in
+           the near future.
+           
+        """
         if self.index < self.stop:
            # get the i-th point in grid
            p = self.get(self.index)
@@ -146,28 +149,30 @@ class Grid(object):
 
 
 class UnstructuredGrid(object):
-    """ Unstructured grid
+    """ 
+    A grid defined by a complete list of individual coordinate points, which can 
+    be irregularly spaced
 
-    param dict: dictionary containing the complete set of coordinate values for
-       each parameter
-    :param: start: when iterating over the grid, start at this element
-    :param: stop: when iterating over the grid, stop at this element
-    :param: callback: optional function applied to each grid point
-       through a callback to the ``get`` method. Can be used to carry out a
-       linear coordinate transformation or a more general reparameterization
+    .. rubric:: Example
 
-    .. rubric:: Examples
+    Unstructured grid consisting of `N` randomly-chosen points within the unit 
+    square:
 
-   Unstructured grid consisting of N randomly-chosen points within the unit 
-   square:
-
-   .. code ::
+    .. code ::
 
       grid = UnstructuredGrid({'x': np.random.rand(N),
                                'y': np.random.rand(N)})
 
     """
     def __init__(self, dict, start=0, stop=None, callback=None):
+        #:param dict: dictionary containing the complete set of coordinate
+        #   values for each parameter
+        #:param: start: when iterating over the grid, start at this element
+        #:param: stop: when iterating over the grid, stop at this element
+        #:param: callback: optional function applied to each grid point
+        #   through a callback to the ``get`` method. Can be used to carry out a
+        #   linear coordinate transformation or a more general 
+        #   reparameterization
 
         # list of parameter names
         self.keys = dict.keys()
@@ -200,7 +205,7 @@ class UnstructuredGrid(object):
 
 
     def get(self, i):
-        """ Returns i-th point of grid
+        """ Returns `i-th` point of grid
         """
         i -= self.start
         p = AttribDict()
@@ -213,8 +218,8 @@ class UnstructuredGrid(object):
             return p
 
 
-    def decompose(self, nproc):
-        """ Decomposes grid for parallel processing
+    def partition(self, nproc):
+        """ Partitions grid for parallel processing
         """
         subsets = []
         for iproc in range(nproc):
@@ -245,6 +250,14 @@ class UnstructuredGrid(object):
 
     # the next two methods make it possible to iterate over the grid
     def next(self): 
+        """ Advances iteration index
+
+        .. warning::
+
+           This method is no longer required in Python3 and will be removed in
+           the near future.
+           
+        """
         if self.index < self.stop:
            # get the i-th point in grid
            p = self.get(self.index)

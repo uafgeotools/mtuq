@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
+from mtuq.graphics.beachball import gray
 from mtuq.util.moment_tensor.TapeTape2015 import from_mij
 from obspy.core import AttribDict
 
@@ -115,7 +116,7 @@ class OldStyleHeader(Header):
 
         ax.add_collection(
             beach(self.mt, xy=(xp, yp), width=diameter,
-            linewidth=0.5, facecolor=_light_gray))
+            linewidth=0.5, facecolor=gray))
 
 
 
@@ -241,7 +242,4 @@ def _write_italic(text, x, y, ax, fontsize=12):
     pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize,
         transform=ax.transAxes)
 
-
-_light_gray = [0.667, 0.667, 0.667]
-_dark_gray = [0.333, 0.333, 0.333]
 
