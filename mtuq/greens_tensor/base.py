@@ -308,14 +308,16 @@ class GreensTensorList(list):
            raise TypeError
 
        for tensor in self:
-           tensor.tags.append(tag)
+           if tag not in tensor.tags:
+               tensor.tags.append(tag)
 
 
     def remove_tag(self, tag):
        """ Removes string from tags list
        """
        for tensor in self:
-           tensor.tags.remove(tag)
+           if tag in tensor.tags:
+               tensor.tags.remove(tag)
 
 
     def sort_by_distance(self, reverse=False):

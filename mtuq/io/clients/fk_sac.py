@@ -121,7 +121,7 @@ class Client(ClientBase):
             'solver:%s' % 'syngine',
              ]
 
-        return GreensTensor(traces=[trace for trace in stream], 
+        return GreensTensor(traces=[trace for trace in traces], 
             station=station, origin=origin, tags=tags)
 
 

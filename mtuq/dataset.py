@@ -179,14 +179,16 @@ class Dataset(list):
            raise TypeError
 
        for stream in self:
-           stream.tags.append(tag)
+           if tag not in stream.tags:
+               stream.tags.append(tag)
 
 
     def remove_tag(self, tag):
        """ Removes string from tags list
        """
        for stream in self:
-           stream.tags.remove(tag)
+           if tag in stream.tags:
+               stream.tags.remove(tag)
 
 
     #
