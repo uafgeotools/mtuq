@@ -12,5 +12,5 @@ __pycache__/
 *.swp
 
 docs/_build
-docs_library/generated
+docs/library/generated
 
