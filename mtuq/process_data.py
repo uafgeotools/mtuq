@@ -14,7 +14,9 @@ from mtuq.util.signal import cut, get_arrival, m_to_deg
  
 
 class ProcessData(object):
-    """ CAP-style data processing function
+    """ Performs filtering, windowing and other operations on seismic data
+
+    .. rubric :: Usage
 
     Processing data is a two-step procedure:
 
