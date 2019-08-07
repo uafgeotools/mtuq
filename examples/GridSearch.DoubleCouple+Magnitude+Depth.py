@@ -3,10 +3,10 @@
 import os
 import numpy as np
 
-from mtuq import read, get_greens_tensors, open_db
-from mtuq.grid import DoubleCoupleGridRegular
-from mtuq.grid_search.mpi import grid_search
+from mtuq import read, open_db, download_greens_tensors
 from mtuq.graphics import plot_data_greens, misfit_vs_depth
+from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
@@ -130,7 +130,7 @@ if __name__=='__main__':
             origins += [origin.copy()]
             setattr(origins[-1], 'depth_in_m', depth)
 
-        greens = get_greens_tensors(stations, origins, model=model)
+        greens = download_greens_tensors(stations, origins, model=model)
 
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
