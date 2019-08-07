@@ -51,7 +51,6 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
     # optional further normalization
     results = transform1(results)
     #results = transform2(results)
-
     yrange = results.max() - results.min()
 
     for _i, origin in enumerate(origins):
@@ -63,7 +62,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
         pyplot.plot(xp, yp)
 
         # add beachball
-        marker = beach(source, xy=(xp, yp), width=20., axes=ax)
+        marker = beach(source, xy=(xp, yp), width=20., linewidth=0.5, axes=ax)
         ax.add_collection(marker)
 
         # add magnitude label
@@ -100,4 +99,6 @@ def transform1(v):
 def transform2(v):
     return np.log((1. - v.min())/(1. - v))
 
+
+gray = [0.667, 0.667, 0.667]
 

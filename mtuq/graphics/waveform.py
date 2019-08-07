@@ -218,6 +218,8 @@ def plot_data_greens(filename,
     syntax
     """
     event_name = filename.split('.')[0]
+    model = _get_tag(greens_bw[0].tags, 'model')
+    solver = _get_tag(greens_bw[0].tags, 'solver')
 
     greens_bw = greens_bw.select(origin)
     greens_sw = greens_sw.select(origin)
@@ -231,7 +233,7 @@ def plot_data_greens(filename,
 
     header = NewStyleHeader(event_name,
         process_bw, process_sw, misfit_bw, misfit_bw,
-        greens_bw[0].model, greens_bw[0].solver, source, origin)
+        model, solver, source, origin)
 
     plot_data_synthetics(filename,
         data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
@@ -409,4 +411,13 @@ def get_column_widths(data_bw, data_sw, width=1.):
 
     return\
         [len_bw, len_bw, len_sw, len_sw, len_sw]
+
+
+def _get_tag(tags, pattern):
+    for tag in tags:
+        parts = tag.split(':')
+        if parts[0]==pattern:
+            return parts[1]
+    else:
+        return None
 
