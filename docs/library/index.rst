@@ -83,7 +83,7 @@ Library Reference
 .. rubric::  Low-level misfit modules
 
 .. note::
-    Misfit evaluation is the most computationally intensive task performed by this package, and the only task that has been heavily optimized.  These classes provide low-level access to optimized and non-optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misft``.
+    Misfit evaluation is the most computationally intensive task performed by this package, and the only task that has been heavily optimized.  These classes provide low-level access to non-optimized and optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misft``.
 
 =================================================================================================  =================================================================================================
 `mtuq.misfit.O0.misft <generated/mtuq.misfit.O0.html>`_                                             Easy-to-read pure Python implementation

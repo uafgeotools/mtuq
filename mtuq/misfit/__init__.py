@@ -26,10 +26,11 @@ class Misfit(object):
         array = function_handle(data, greens, sources)
 
     In the first step, the user supplies parameters such as the type of norm
-    (open the code and see the ``__init__`` for detailed argument descriptions).
+    (see the ``__init__`` method in the source code for detailed argument 
+    descriptions).
 
     In the second step, the user supplies data, Green's functions, and sources
-    (open the code and see the ``__call__`` method for detailed input argument 
+    (see the ``__call__`` method in the source code for detailed input argument 
     descriptions). Synthetics are then generated and compared with data, and a
     NumPy array is returned with the same length as `sources`.
 
