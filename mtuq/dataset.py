@@ -17,7 +17,7 @@ class Dataset(list):
 
     .. note::
 
-        Each supported file format has a corresponding reader that creates an
+        Each supported file format has a corresponding reader that creates a 
         Dataset (see ``mtuq.io.readers``).
 
     """

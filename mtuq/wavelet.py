@@ -6,27 +6,25 @@ from scipy import signal
 
 
 class Wavelet(object):
-    """ Source wavelet base class
+    """ Source wavelet/source-time function base class
 
-    By inheriting from this class and implementing the ``evaluate`` method,
-    almost any type of source wavelet or source-time function can be defined.
-
-    (Most commonly an analytical expression will be used to define the wavelet,
-    but a user-supplied time series or on-the-fly numerical procedure can also
-    be used.)
+    Most easily an analytical expression can be used to define the wavelet, but
+    a user-supplied time series or on-the-fly numerical procedure can also be
+    used.  By inheriting from this class and implementing the ``evaluate`` 
+    method, all of these differents types of wavelets can be defined.
 
     .. rubric:: Example
 
-    By inheriting from the base class ``Wavelet``, we can implement a Gaussian
-    wavelet with unit standard deviation:
+    By inheriting from ``mtuq.Wavelet``, we can implement a Gaussian function
+    with unit standard deviation:
     
     .. code::
 
-        class SimpleGaussian(Wavelet):
+        class UnitGaussian(Wavelet):
             def evaluate(self, t):
                 return ((2*np.pi)**0.5)**(-1.)*np.exp(-0.5*(t)**2.)
 
-    We can now evaluate ``SimpleGaussian`` on any given set, say on the 
+    We can now evaluate ``UnitGaussian`` on any given set, say on the 
     interval [-5, +5]:
 
     .. code::
