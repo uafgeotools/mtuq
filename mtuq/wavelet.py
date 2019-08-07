@@ -41,8 +41,25 @@ class Wavelet(object):
        convolved_trace = SimpleGaussian.convolve(trace)
 
     """
+    def evaluate(self, t):
+        """ Evaluates wavelet at chosen points
+        """
+        raise NotImplementedError("Must be implemented by subclass")
 
-    def evaluate_on_interval(self, half_duration=None, nt=100):
+
+    def convolve(self, trace):
+         """ Convolves ObsPy trace with given wavelet
+         """
+         try:
+             y = trace.data
+             dt = trace.stats.delta
+         except:
+             raise Exception
+         trace.data = self._convolve_array(y, dt)
+         return trace
+
+
+    def _evaluate_on_interval(self, half_duration=None, nt=100):
         """ Evaluates wavelet on an interval about  zero
         """
         if not half_duration:
@@ -65,7 +82,7 @@ class Wavelet(object):
         """
         nt = len(y)
         half_duration = (nt-1)*dt/2.
-        w = self.evaluate_on_interval(half_duration, nt)
+        w = self._evaluate_on_interval(half_duration, nt)
         w *= dt
 
         if mode==1:
@@ -76,23 +93,6 @@ class Wavelet(object):
             # time-domain implementation
             return np.convolve(y, w, mode='same')
 
-
-    def convolve(self, trace):
-         """ Convolves ObsPy trace with given wavelet
-         """
-         try:
-             y = trace.data
-             dt = trace.stats.delta
-         except:
-             raise Exception
-         trace.data = self._convolve_array(y, dt)
-         return trace
-
-
-    def evaluate(self, t):
-        """ Evaluates wavelet at chosen points
-        """
-        raise NotImplementedError("Must be implemented by subclass")
 
 
 #
