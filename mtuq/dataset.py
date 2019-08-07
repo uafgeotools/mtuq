@@ -35,7 +35,7 @@ class Dataset(list):
 
 
     def append(self, stream):
-        """ Appends stream to dataset
+        """ Appends stream to Dataset
         """
         assert issubclass(type(stream), Stream),\
             ValueError("Only Streams can be appended to a Dataset")
@@ -71,7 +71,7 @@ class Dataset(list):
 
 
     def apply(self, function, *args, **kwargs):
-        """ Applies function to all streams in the dataset
+        """ Applies function to all streams
 
         Applies a function to each stream, similar to the Python built-in
         ``apply``.
@@ -85,7 +85,7 @@ class Dataset(list):
 
 
     def map(self, function, *sequences):
-        """ Maps function to all streams in the dataset
+        """ Maps function to all streams
 
         Applies a function to each stream. If one or more optional sequences 
         are given, the function is called with an argument list consisting of
@@ -135,7 +135,7 @@ class Dataset(list):
 
 
     def get_stations(self):
-        """ Returns station attribute of each stream
+        """ Returns station metadata from all streams
 
         For Datasets created using ``mtuq.io.readers``, SAC headers or
         other file metadata are used to populate the Station attributes
@@ -147,12 +147,15 @@ class Dataset(list):
 
 
     def get_origins(self):
-        """ Returns origin attribute of each stream
+        """ Returns origin metadata from all streams
 
-        For Datasets created using ``mtuq.io.readers``, preliminary event
-        metadata (e.g. catalog information) is used to define the Origins.
-        For Datasets created using ``get_synthetics`` methods, solver/
-        IO client input is used to define the Origins
+        What do these metadata represent?
+
+        - For Datasets created using ``mtuq.io.readers.sac``, origin metadata
+        represent catalog locations and origin times read from SAC headers
+
+        - For Datasets created using ``GreensTensor.get_synthetics``, origin
+        metadata are directly copied from the GreensTensor
         """
         origins = []
         for stream in self:
@@ -202,7 +205,7 @@ class Dataset(list):
 
 
     def as_array(self, components=['Z','R','T']):
-        """ Returns all numeric trace data in a single NumPy array
+        """ Returns numeric trace data from all streams in a single NumPy array
 
         Compared with iterating over streams and traces, provides a potentially
         faster way of accessing numeric trace data

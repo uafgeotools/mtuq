@@ -56,9 +56,8 @@ def read(path='', format='', **kwargs):
     """ Reads waveform files from disk
 
     Reads files from specified path or url, parses waveform data based on the
-    specified file format, and returns an ``mtuq.Dataset``, a list-like 
-    container which each element is an ObsPy stream corresponding to a single 
-    station 
+    specified file format, and returns an ``mtuq.Dataset``, a container in
+    which each element is an ObsPy stream corresponding to a single station
     """
     format = format.upper()
     return _readers()[format](path, **kwargs)
