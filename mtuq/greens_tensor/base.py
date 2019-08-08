@@ -208,7 +208,7 @@ class GreensTensorList(list):
             self.append(tensor)
 
         for tag in copy(tags):
-            self.add_tag(tag)
+            self.tag_add(tag)
 
 
     def append(self, tensor):
@@ -278,7 +278,7 @@ class GreensTensorList(list):
             tensor.convolve(wavelet)
 
 
-    def add_tag(self, tag):
+    def tag_add(self, tag):
        """ Appends string to tags list
        
        Tags can be used to support customized uses, such as storing metdata not
@@ -292,7 +292,7 @@ class GreensTensorList(list):
                tensor.tags.append(tag)
 
 
-    def remove_tag(self, tag):
+    def tag_remove(self, tag):
        """ Removes string from tags list
        """
        for tensor in self:

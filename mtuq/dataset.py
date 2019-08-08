@@ -30,7 +30,7 @@ class Dataset(list):
             self.append(stream)
 
         for tag in copy(tags):
-            self.add_tag(tag)
+            self.tag_add(tag)
 
 
 
@@ -173,8 +173,8 @@ class Dataset(list):
         return origins
 
 
-    def add_tag(self, tag):
-       """ Appends string to tags
+    def tag_add(self, tag):
+       """ Appends string to tags list
        
        Tags can be used to support customized uses, such as storing metdata not
        included in ``Station`` or ``Origin`` objects
@@ -187,7 +187,7 @@ class Dataset(list):
                stream.tags.append(tag)
 
 
-    def remove_tag(self, tag):
+    def tag_remove(self, tag):
        """ Removes string from tags list
        """
        for stream in self:
