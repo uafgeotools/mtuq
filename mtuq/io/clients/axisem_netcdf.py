@@ -55,7 +55,7 @@ class Client(ClientBase):
         :param stations: List of ``mtuq.Station`` objects
         :param origins: List of ``mtuq.Origin`` objects
         """
-        super(Client, self).get_greens_tensors(stations, origins)
+        return super(Client, self).get_greens_tensors(stations, origins)
 
 
     def _get_greens_tensor(self, station=None, origin=None):
