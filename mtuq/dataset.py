@@ -82,8 +82,8 @@ class Dataset(list):
             on the behavior of the given function, that the elements of the
             original list are modified in the process.
 
-            To control this behavior, ``mtuq.process_data.ProcessData`
-            has `overwrite` input argument, which is `False` by default.
+            To control this behavior, ``mtuq.process_data.ProcessData`` has an
+            `overwrite` input argument, which is `False` by default.
 
         """
         processed = []
@@ -108,8 +108,8 @@ class Dataset(list):
             on the behavior of the given function, that the elements of the
             original list are modified in the process.
 
-            To control this behavior, ``mtuq.process_data.ProcessData`
-            has `overwrite` input argument, which is `False` by default.
+            To control this behavior, ``mtuq.process_data.ProcessData`` has an
+            `overwrite` input argument, which is `False` by default.
 
         """
         processed = []

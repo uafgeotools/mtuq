@@ -250,10 +250,10 @@ class GreensTensorList(list):
 
             Although ``map`` returns a new GreensTensorList, it is possible,
             depending on the behavior of the given function, that the elements 
-            of the original list are modified in the process.
+            of the original list are overwritten in the process.
 
-            To control this behavior, ``mtuq.process_data.ProcessData`
-            has `overwrite` input argument, which is `False` by default.
+            To control this behavior, ``mtuq.process_data.ProcessData`` has an
+            `overwrite` input argument, which is `False` by default.
 
         """
         processed = []
@@ -268,16 +268,16 @@ class GreensTensorList(list):
 
         If one or more optional sequences are given, the function is called
         with an argument list consisting of the corresponding item of each 
-        sequence, similar to the behavior of the python built-in ``map``
+        sequence, similar to the behavior of the python built-in ``map``.
 
         .. warning ::
 
             Although ``map`` returns a new GreensTensorList, it is possible,
             depending on the behavior of the given function, that the elements 
-            of the original list are modified in the process.
+            of the original list are overwritten in the process.
 
-            To control this behavior, ``mtuq.process_data.ProcessData`
-            has `overwrite` input argument, which is `False` by default.
+            To control this behavior, ``mtuq.process_data.ProcessData`` has an
+            `overwrite` input argument, which is `False` by default.
 
         """
         processed = []
