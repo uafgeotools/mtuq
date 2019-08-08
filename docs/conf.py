@@ -2,10 +2,11 @@ import sys, os
 sys.path.insert(0, os.path.abspath('.'))
 
 
-extensions = ['sphinx.ext.intersphinx',
-              'sphinx.ext.autodoc',
-              'sphinx.ext.autosummary',
-]
+extensions = [
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    ]
 
 
 # basic options

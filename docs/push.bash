@@ -6,7 +6,8 @@ rm -rf _build
 rm -rf library/generated/*
 make html
 
-cd _build
+cd _build/html
+touch .nojekyll
 git init
 git remote add origin git@github.com:uafseismo/mtuq.git
 git checkout -b gh-pages
