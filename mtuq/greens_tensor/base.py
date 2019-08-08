@@ -165,32 +165,12 @@ class GreensTensor(Stream):
         return synthetics
 
 
-    def apply(self, function, *args, **kwargs):
-        """ 
-        Applies a function to all time series
-
-        :type function: func
-        :param function: Any function that acts on an obspy ``Stream``
-        :rtype: Always returns a new ``GreensTensor``. (Never operates in-place
-           on the existing one.)
-        
-        """
-        return self.__class__(function(self, *args, **kwargs),
-            station=self.station,
-            origin=self.origin,
-            id=self.id,
-            tags=self.tags,
-            include_mt=self.include_mt,
-            include_force=self.include_force)
-
-
     def convolve(self, wavelet):
         """
         Convolves given wavelet with all time series
 
         :type wavelet: mtuq.util.wavelets.Wavelet
-        :param wavelet: Source wavelet or source-time function to be used in
-            convolution
+        :param wavelet: Source wavelet to be convolved
         """
         for trace in self:
             wavelet.convolve(trace)
@@ -272,7 +252,7 @@ class GreensTensorList(list):
         processed = []
         for tensor in self:
             processed +=\
-                [tensor.apply(function, *args, **kwargs)]
+                [function(tensor, *args, **kwargs)]
         return self.__class__(processed)
 
 
@@ -286,7 +266,7 @@ class GreensTensorList(list):
         for _i, tensor in enumerate(self):
             args = [sequence[_i] for sequence in sequences]
             processed +=\
-                [tensor.apply(function, *args)]
+                [function(tensor, *args)]
         return self.__class__(processed)
 
 

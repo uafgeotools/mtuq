@@ -152,10 +152,11 @@ class Dataset(list):
         What do these metadata represent?
 
         - For Datasets created using ``mtuq.io.readers.sac``, origin metadata
-        represent catalog locations and origin times read from SAC headers
+          represent catalog information read from SAC headers
 
         - For Datasets created using ``GreensTensor.get_synthetics``, origin
-        metadata are directly copied from the GreensTensor
+          metadata are inherited from the GreensTensor
+
         """
         origins = []
         for stream in self:
@@ -205,7 +206,7 @@ class Dataset(list):
 
 
     def as_array(self, components=['Z','R','T']):
-        """ Returns numeric trace data from all streams in a single NumPy array
+        """ Collects numeric trace data from all streams as a single NumPy array
 
         Compared with iterating over streams and traces, provides a potentially
         faster way of accessing numeric trace data
