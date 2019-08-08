@@ -242,12 +242,19 @@ class GreensTensorList(list):
     # the next three methods can be used to apply signal processing or other
     # operations to all time series in all GreensTensors
     def apply(self, function, *args, **kwargs):
-        """ Returns the result of applying a function to each GreensTensor in
-        the list. Similar to the Python built-in "apply".
+        """ Applies a function to each GreensTensor in the list
+ 
+        Similar to the Python built-in ``apply``.  
 
-        :type function: func
-        :param function: Function that acts on obspy an ``Stream``
-        :rtype: ``GreensTensorList``
+        .. warning ::
+
+            Although ``map`` returns a new GreensTensorList, it is possible,
+            depending on the behavior of the given function, that the elements 
+            of the original list are modified in the process.
+
+            To control this behavior, ``mtuq.process_data.ProcessData`
+            has `overwrite` input argument, which is `False` by default.
+
         """
         processed = []
         for tensor in self:
@@ -257,10 +264,21 @@ class GreensTensorList(list):
 
 
     def map(self, function, *sequences):
-        """ Applies a function in-pace to each GreensTensor in the list. If one
-        or more optional sequences are given, the function is called with an 
-        argument list consisting of the corresponding item of each sequence. 
-        Similar to the behavior of the python built-in "map".
+        """ Maps a function to each GreensTensor in the list
+
+        If one or more optional sequences are given, the function is called
+        with an argument list consisting of the corresponding item of each 
+        sequence, similar to the behavior of the python built-in ``map``
+
+        .. warning ::
+
+            Although ``map`` returns a new GreensTensorList, it is possible,
+            depending on the behavior of the given function, that the elements 
+            of the original list are modified in the process.
+
+            To control this behavior, ``mtuq.process_data.ProcessData`
+            has `overwrite` input argument, which is `False` by default.
+
         """
         processed = []
         for _i, tensor in enumerate(self):
@@ -282,7 +300,7 @@ class GreensTensorList(list):
        """ Appends string to tags list
        
        Tags can be used to support customized uses, such as storing metdata not
-       included in mtuq.Station
+       included in ``mtuq.Station``
        """
        if type(tag) not in [str, unicode]:
            raise TypeError

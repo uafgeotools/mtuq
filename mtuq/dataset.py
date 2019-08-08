@@ -75,6 +75,16 @@ class Dataset(list):
 
         Applies a function to each stream, similar to the Python built-in
         ``apply``.
+
+        .. warning ::
+
+            Although ``map`` returns a new Dataset, it is possible, depending
+            on the behavior of the given function, that the elements of the
+            original list are modified in the process.
+
+            To control this behavior, ``mtuq.process_data.ProcessData`
+            has `overwrite` input argument, which is `False` by default.
+
         """
         processed = []
         for stream in self:
@@ -91,6 +101,16 @@ class Dataset(list):
         are given, the function is called with an argument list consisting of
         corresponding items of each sequence. Similar to the Python built-in
         ``map``.
+
+        .. warning ::
+
+            Although ``map`` returns a new Dataset, it is possible, depending
+            on the behavior of the given function, that the elements of the
+            original list are modified in the process.
+
+            To control this behavior, ``mtuq.process_data.ProcessData`
+            has `overwrite` input argument, which is `False` by default.
+
         """
         processed = []
         for _i, stream in enumerate(self):
