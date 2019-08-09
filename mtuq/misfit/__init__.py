@@ -2,7 +2,7 @@
 import numpy as np
 import warnings
 
-from mtuq.misfit import O0, O1
+from mtuq.misfit import O0, O1, O2
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
@@ -141,7 +141,7 @@ class Misfit(object):
         self.verbose = 0
 
 
-    def __call__(self, data, greens, sources, optimization_level=1, 
+    def __call__(self, data, greens, sources, optimization_level=2, 
         set_attributes=False):
         """ Evaluates misfit on given data
         """
@@ -157,5 +157,8 @@ class Misfit(object):
                 self.time_shift_max, self.verbose)
 
         if optimization_level==2:
-            raise NotImplementedError
+            return O2.misfit(
+                data, greens, sources, self.norm, self.time_shift_groups,
+                self.time_shift_max, self.verbose)
+
 

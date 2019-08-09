@@ -376,11 +376,11 @@ class GreensTensorList(list):
         if self[0].include_force:
             nr += 3
 
-        array = np.zeros((nc,nr,ns,nt))
+        array = np.zeros((nc,ns,nr,nt))
         for _i, tensor in enumerate(self):
             tensor.reset_components(components)
             # fill in array
-            array[:, :, _i, :] = tensor._array
+            array[:, _i, :, :] = tensor._array
         return array
 
 

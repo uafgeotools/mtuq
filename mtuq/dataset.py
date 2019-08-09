@@ -255,35 +255,20 @@ class Dataset(list):
 
         """
         nc = len(components)
-
-        # count number of nonempty streams
         ns = 0
         for stream in self:
             if len(stream)==0:
                 ns += 1
-        nt = self[0][0].stats.npts
+        nt = len(self[0][0].data)
+        array = np.zeros((nc, ns, nt))
 
-        # allocate array
-        array = np.zeros((3, ns, nt))
-
-        _i = 0
-        for _i, stream in enumerate(self):
-            if 'Z' in components:
+        for _i, component in enumerate(components):
+            for _j, stream in enumerate(self):
                 try:
-                    trace = stream.select(component='Z')[0]
+                    trace = stream.select(component=component)[0]
                     array[0, _i, :] = trace.data
                 except:
                     pass
-            if 'R' in components:
-                try:
-                    trace = stream.select(component='R')[0]
-                    array[1, _i, :] = trace.data
-                except:
-                    pass
-            if 'T' in components:
-                try:
-                    trace = stream.select(component='T')[0]
-                    array[2, _i, :] = trace.data
-                except:
-                    pass
+
+        return array
 
