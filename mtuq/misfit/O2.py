@@ -20,7 +20,6 @@ def misfit(data, greens, sources, norm, groups, time_shift_max,
     # get time sampling
     Npts, dt = get_time_sampling(data[0])
     Ngroups = len(groups)
-
     Npad2 = int(time_shift_max/dt)
     #Npad1 = int(time_shift_min/dt)
     Npts_padding = Npad2
@@ -30,25 +29,24 @@ def misfit(data, greens, sources, norm, groups, time_shift_max,
     components = _get_components(data)
     groups = _get_groups(groups, components)
     mask = _get_mask(data, components)
-
-    # data arrays
     data = data.as_array(components)
-    greens = _get_greens(greens, stations, components, Npts+2*Npts_padding)
+    greens = _get_greens(greens, stations, components)
     sources = _as_array(sources)
 
-    # cross-correlation arrays
+    # precompute cross-correlations
     data_data = _autocorr_nd1(data)
     greens_greens = _autocorr_nd2(greens, padding)
-    data_Greens = corr_nd1_nd2(data, greens, padding)
+    data_greens = _corr_nd1_nd2(data, greens, padding)
 
     return ext2.misfit(
        data, greens, sources, data_data, data_greens, greens_greens,
        mask, groups, Npad1, Npad2, norm)
 
 
-def _get_greens(greens, stations, components, Npts):
+def _get_greens(greens, stations, components):
     Ncomponents = len(components)
     Nstations = len(stations)
+    Npts = len(greens[0][0])
 
     Ngreens = 0
     if greens[0].include_mt:
@@ -63,9 +61,10 @@ def _get_greens(greens, stations, components, Npts):
         Npts,
         ))
 
-    for _i, tensor in enumerate(greens):
-        if tensor.station not in stations:
-            continue
+    for _i, station in enumerate(stations):
+        tensor = greens.select(station=station)[0]
+
+        # populate array elements
         tensor.reset_components(components)
 
         # fill in array
@@ -147,7 +146,7 @@ def _as_array(sources):
 # optimized cross-correlation functions
 #
 
-def _corr_nd1_nd2(data, greens, Npts_padding):
+def _corr_nd1_nd2(data, greens, padding):
     # correlates 1D and 2D data structures
     Ncomponents = greens.shape[0]
     Nstations = greens.shape[1]
@@ -157,7 +156,7 @@ def _corr_nd1_nd2(data, greens, Npts_padding):
         Ncomponents,
         Nstations,
         Ngreens,
-        Npts_padding[1]-Npts_padding[0],
+        padding[1]-padding[0]+1,
         ))
 
     for _i in range(Ncomponents):
@@ -197,12 +196,14 @@ def _autocorr_nd2(greens, padding):
     Npts = greens.shape[3]
 
     ones = np.pad(np.ones(Npts), 
-        (padding[0], padding[1]), 'constant')
+        (-padding[0], padding[1]), 'constant')
+
+    print ones.shape
 
     corr = np.zeros((
         Ncomponents, 
         Nstations,
-        padding[1]-padding[0], 
+        padding[1]-padding[0]+1, 
         Ngreens, 
         Ngreens,
         ))
@@ -214,12 +215,12 @@ def _autocorr_nd2(greens, padding):
 
                     if _k1<=_k2:
                         # calculate upper elements
-                        corr[_i, :, _j1, _j2] = correlate(
+                        corr[_i, _j, :, _k1, _k2] = correlate(
                             greens[_i, _j, _k1, :]*greens[_i, _j, _k2, :], ones)
 
                     else:
                         # fill in lower elements by symmetry
-                        corr[_i, :, _j1, _j2] = corr[_i, :, _j2, _j1]
+                        corr[_i, :, _k1, _k2] = corr[_i, :, _k2, _k1]
 
     return corr
 
