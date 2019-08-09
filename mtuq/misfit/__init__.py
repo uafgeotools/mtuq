@@ -1,5 +1,6 @@
 
 import numpy as np
+import warnings
 
 from mtuq.misfit import O0, O1
 from mtuq.util import iterable
@@ -29,26 +30,26 @@ class Misfit(object):
     (see below for detailed argument descriptions).
 
     In the second step, the user supplies data, Green's functions, and sources.
-    Synthetics are then generated and compared with data, and a NumPy array is
-    returned with the same length as `sources`.
+    Synthetics are then generated and compared with data, and an array of 
+    misfit values is returned of the same length as `sources`.
 
 
 
     .. rubric :: Parameters
 
-    ``norm``
+    ``norm`` (`str`)
 
     - ``'L2'``: conventional L2 norm
       r1**2 + r1**2 + ... 
 
-    - ``'L1'``: conventional L1 norm, robust against outliers 
+    - ``'L1'``: conventional L1 norm
       \|r1\| + \|r2\| + ...
 
-    - ``'hybrid'``: hybrid L1-L2 norm, fast and robust
+    - ``'hybrid'``: hybrid L1-L2 norm
       (r11**2 + r12**2 + ...)**0.5 + (r21**2 + r22**2 + ...)**0.5 + ...
 
 
-    ``time_shift_groups``
+    ``time_shift_groups`` (`list`)
 
     - ``['ZRT']``: forces all three components to have the same time shift
 
@@ -58,9 +59,9 @@ class Misfit(object):
     - ``['Z','R','T']``: allows time shifts of all three components to vary
       independently
 
-    ``time_shift_min``: minimum allowable time shift (s)
+    ``time_shift_min`` (`float`): minimum allowable time shift (s)
 
-    ``time_shift_max``: maximum allowable time shift (s)
+    ``time_shift_max`` (`float`): maximum allowable time shift (s)
 
 
 
@@ -114,11 +115,6 @@ class Misfit(object):
         # hybrid norm
         # (r11**2 + r12**2 + ...)**0.5 + (r21**2 + r22**2 + ...)**0.5 + ...
 
-        if norm=='':
-            warnings.warn(
-                "Consider using norm='hybrid', which is must faster than "
-                "norm='L1' but still robust against outliers.")
-
         if norm.lower()=='hybrid':
             norm = 'hybrid'
 
@@ -127,6 +123,11 @@ class Misfit(object):
 
         assert time_shift_max >= 0.,\
             ValueError("Bad input argument")
+
+        if norm=='L1':
+            warnings.warn(
+                "Consider using norm='hybrid', which is much faster than "
+                "norm='L1' but still robust against outliers.")
 
         for group in time_shift_groups:
             for component in group:
