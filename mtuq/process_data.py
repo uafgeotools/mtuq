@@ -2,6 +2,7 @@
 import csv
 import obspy
 import numpy as np
+import warnings
 
 from collections import defaultdict
 from copy import deepcopy
@@ -303,11 +304,14 @@ class ProcessData(object):
             picks = self._picks[id]
 
             if self.pick_type=='from_taup_model':
-                distance_in_deg = m_to_deg(distance_in_m)
-                arrivals = self._taup.get_travel_times(
-                    origin.depth_in_m/1000., 
-                    distance_in_deg, 
-                    phase_list=['p', 's', 'P', 'S'])
+                with warnings.catch_warnings():
+                    # supress obspy warning that gets raised even when taup is 
+                    # used correctly (someone should submit an obspy fix)
+                    warnings.filterwarnings('ignore')
+                    arrivals = self._taup.get_travel_times(
+                        origin.depth_in_m/1000., 
+                        m_to_deg(distance_in_m), 
+                        phase_list=['p', 's', 'P', 'S'])
                 try:
                     picks.P = get_arrival(arrivals, 'p')
                 except:
