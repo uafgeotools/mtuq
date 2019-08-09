@@ -150,8 +150,8 @@ class Grid(object):
 
 class UnstructuredGrid(object):
     """ 
-    A grid defined by a complete list of individual coordinate points, which can 
-    be irregularly spaced
+    A grid defined by a list of individual coordinate points, which can be
+    irregularly spaced
 
     .. rubric:: Example
 

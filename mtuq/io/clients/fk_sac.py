@@ -12,27 +12,30 @@ from obspy.geodetics import gps2dist_azimuth
 
 
 class Client(ClientBase):
-    """ 
-    Interface to FK database of Green's functions
+    """  FK databaset client
 
-    .. code:
+    .. rubric:: Usage
 
-        db = mtuq.greens.open_db(path, model=model, format='FK')
+    To instantiate a database client, supply a path or url:
 
-        greens_tensors = db.read(stations, origins)
+    .. code::
 
-    In the first step, the user supplies the path to an FK directory tree
+        from mtuq.io.clients.fk_sac import Client
+        db = Client(path_or_url)
 
-    In the second step, the user supplies a list of stations and the origin
-    locations and times. GreensTensors are then created for all the
-    corresponding station-origin pairs. 
+    Then the database client can be used to generate GreensTensors:
 
-    .. note:
+    .. code::
 
-      GreensTensor objects are created by reading precomputed Green's tensors 
-      from an FK directory tree.  Such trees contain SAC files organized by model,
-      even depth, and event distance and are associated with the FK software 
-      package by Lupei Zhu.
+        greens_tensors = db.get_greens_tensors(stations, origin)
+
+
+    .. note::
+
+      GreensTensor are obtained by reading precomputed time series from an 
+      FK directory tree.  Such trees contain SAC files organized by model, 
+      event depth, and event distance, as used by the `ZhuHelmberger1996`
+      software package.
 
     """
     def __init__(self, path_or_url=None, model=None):
@@ -52,11 +55,19 @@ class Client(ClientBase):
         self.model = model
 
 
-    def _get_greens_tensor(self, station=None, origin=None):
-        """ 
-        Reads a Greens tensor from a directory tree organized by model, event
-        depth, and event distance
+    def get_greens_tensors(self, stations=[], origins=[]):
+        """ Reads Green's tensors from database
+
+        Returns a ``GreensTensorList`` in which each element corresponds to a
+        (station, origin) pair from the given lists
+
+        :param stations: List of ``mtuq.Station`` objects
+        :param origins: List of ``mtuq.Origin`` objects
         """
+        return super(Client, self).get_greens_tensors(stations, origins)
+
+
+    def _get_greens_tensor(self, station=None, origin=None):
         traces = []
 
         distance_in_m, _, _ = gps2dist_azimuth(

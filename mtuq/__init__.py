@@ -28,15 +28,14 @@ def _greens_tensor_clients():
 def open_db(path_or_url='', format='', **kwargs):
     """ Opens database containing Green's functions
 
-    Returns an client that can then be used to generate ``GreensTensor``,
-    as in the following example
+    Returns a client that can then be used to generate ``GreensTensor`` 
+    objects, as in the following example
 
     .. rubric:: Example
 
     .. code::
 
         db = open_db('axisem_database.nc', format='AxiSEM')
-
         greens = db.get_greens_tensors(stations, origin)
 
         
@@ -56,9 +55,8 @@ def read(path='', format='', **kwargs):
     """ Reads waveform files from disk
 
     Reads files from specified path or url, parses waveform data based on the
-    specified file format, and returns an ``mtuq.Dataset``, a list-like 
-    container which each element is an ObsPy stream corresponding to a single 
-    station 
+    specified file format, and returns an ``mtuq.Dataset``, a container in
+    which each element is an ObsPy stream corresponding to a single station
     """
     format = format.upper()
     return _readers()[format](path, **kwargs)

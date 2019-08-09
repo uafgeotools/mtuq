@@ -30,12 +30,12 @@ class Dataset(list):
             self.append(stream)
 
         for tag in copy(tags):
-            self.add_tag(tag)
+            self.tag_add(tag)
 
 
 
     def append(self, stream):
-        """ Appends stream to dataset
+        """ Appends stream to Dataset
         """
         assert issubclass(type(stream), Stream),\
             ValueError("Only Streams can be appended to a Dataset")
@@ -70,11 +70,38 @@ class Dataset(list):
         super(Dataset, self).append(stream)
 
 
+    def select(self, origin=None, station=None):
+        """ Selects streams that match the given station or origin
+        """
+        if origin and station:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.station==station and
+                               tensor.origin==origin, self))
+
+        elif station:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.station==station, self))
+
+        elif origin:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.origin==origin, self))
+
+
     def apply(self, function, *args, **kwargs):
-        """ Applies function to all streams in the dataset
+        """ Applies function to all streams
 
         Applies a function to each stream, similar to the Python built-in
         ``apply``.
+
+        .. warning ::
+
+            Although ``map`` returns a new Dataset, it is possible, depending
+            on the behavior of the given function, that the elements of the
+            original list are modified in the process.
+
+            To control this behavior, ``mtuq.process_data.ProcessData`` has an
+            `overwrite` input argument, which is `False` by default.
+
         """
         processed = []
         for stream in self:
@@ -85,12 +112,22 @@ class Dataset(list):
 
 
     def map(self, function, *sequences):
-        """ Maps function to all streams in the dataset
+        """ Maps function to all streams
 
         Applies a function to each stream. If one or more optional sequences 
         are given, the function is called with an argument list consisting of
         corresponding items of each sequence. Similar to the Python built-in
         ``map``.
+
+        .. warning ::
+
+            Although ``map`` returns a new Dataset, it is possible, depending
+            on the behavior of the given function, that the elements of the
+            original list are modified in the process.
+
+            To control this behavior, ``mtuq.process_data.ProcessData`` has an
+            `overwrite` input argument, which is `False` by default.
+
         """
         processed = []
         for _i, stream in enumerate(self):
@@ -135,7 +172,7 @@ class Dataset(list):
 
 
     def get_stations(self):
-        """ Returns station attribute of each stream
+        """ Returns station metadata from all streams
 
         For Datasets created using ``mtuq.io.readers``, SAC headers or
         other file metadata are used to populate the Station attributes
@@ -147,12 +184,16 @@ class Dataset(list):
 
 
     def get_origins(self):
-        """ Returns origin attribute of each stream
+        """ Returns origin metadata from all streams
 
-        For Datasets created using ``mtuq.io.readers``, preliminary event
-        metadata (e.g. catalog information) is used to define the Origins.
-        For Datasets created using ``get_synthetics`` methods, solver/
-        IO client input is used to define the Origins
+        What do these metadata represent?
+
+        - For Datasets created using ``mtuq.io.readers.sac``, origin metadata
+          represent catalog information read from SAC headers
+
+        - For Datasets created using ``GreensTensor.get_synthetics``, origin
+          metadata are inherited from the GreensTensor
+
         """
         origins = []
         for stream in self:
@@ -169,8 +210,8 @@ class Dataset(list):
         return origins
 
 
-    def add_tag(self, tag):
-       """ Appends string to tags
+    def tag_add(self, tag):
+       """ Appends string to tags list
        
        Tags can be used to support customized uses, such as storing metdata not
        included in ``Station`` or ``Origin`` objects
@@ -183,7 +224,7 @@ class Dataset(list):
                stream.tags.append(tag)
 
 
-    def remove_tag(self, tag):
+    def tag_remove(self, tag):
        """ Removes string from tags list
        """
        for stream in self:
@@ -202,7 +243,7 @@ class Dataset(list):
 
 
     def as_array(self, components=['Z','R','T']):
-        """ Returns all numeric trace data in a single NumPy array
+        """ Collects numeric trace data from all streams as a single NumPy array
 
         Compared with iterating over streams and traces, provides a potentially
         faster way of accessing numeric trace data
@@ -214,35 +255,20 @@ class Dataset(list):
 
         """
         nc = len(components)
-
-        # count number of nonempty streams
         ns = 0
         for stream in self:
-            if len(stream)==0:
+            if len(stream)!=0:
                 ns += 1
-        nt = self[0][0].stats.npts
+        nt = len(self[0][0].data)
+        array = np.zeros((nc, ns, nt))
 
-        # allocate array
-        array = np.zeros((3, ns, nt))
+        for _i, component in enumerate(components):
+            for _j, stream in enumerate(self):
+                try:
+                    trace = stream.select(component=component)[0]
+                    array[_i, _j, :] = trace.data
+                except:
+                    pass
 
-        _i = 0
-        for _i, stream in enumerate(self):
-            if 'Z' in components:
-                try:
-                    trace = stream.select(component='Z')[0]
-                    array[0, _i, :] = trace.data
-                except:
-                    pass
-            if 'R' in components:
-                try:
-                    trace = stream.select(component='R')[0]
-                    array[1, _i, :] = trace.data
-                except:
-                    pass
-            if 'T' in components:
-                try:
-                    trace = stream.select(component='T')[0]
-                    array[2, _i, :] = trace.data
-                except:
-                    pass
+        return array
 

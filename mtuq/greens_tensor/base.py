@@ -165,32 +165,12 @@ class GreensTensor(Stream):
         return synthetics
 
 
-    def apply(self, function, *args, **kwargs):
-        """ 
-        Applies a function to all time series
-
-        :type function: func
-        :param function: Any function that acts on an obspy ``Stream``
-        :rtype: Always returns a new ``GreensTensor``. (Never operates in-place
-           on the existing one.)
-        
-        """
-        return self.__class__(function(self, *args, **kwargs),
-            station=self.station,
-            origin=self.origin,
-            id=self.id,
-            tags=self.tags,
-            include_mt=self.include_mt,
-            include_force=self.include_force)
-
-
     def convolve(self, wavelet):
         """
         Convolves given wavelet with all time series
 
         :type wavelet: mtuq.util.wavelets.Wavelet
-        :param wavelet: Source wavelet or source-time function to be used in
-            convolution
+        :param wavelet: Source wavelet to be convolved
         """
         for trace in self:
             wavelet.convolve(trace)
@@ -198,21 +178,20 @@ class GreensTensor(Stream):
 
     def select(self, component=None, channel=None):
         """
-        Return stream with only those traces that match the supplied
-        metadata criteria
+        Selects only those traces that match the supplied metadata criteria
         """
         return Stream([trace for trace in self]).select(
             component=component, channel=channel)
 
 
     def __add__(self, *args):
-        raise Exception("It doesn't make sense to add time series to "
-           " a GreensTensor")
+        raise Exception("Adding time series to an existing GreensTensor is "
+           " not currently supported")
 
 
     def __iadd__(self, *args):
-        raise Exception("It doesn't make sense to add time series to "
-           " a GreensTensor")
+        raise Exception("Adding time series to an existing GreensTensor is "
+           " not currently supported")
 
 
 
@@ -228,7 +207,7 @@ class GreensTensorList(list):
             self.append(tensor)
 
         for tag in copy(tags):
-            self.add_tag(tag)
+            self.tag_add(tag)
 
 
     def append(self, tensor):
@@ -243,11 +222,22 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
-    def select(self, origin):
-        """ Selects GreensTensors that match the given origin
+    def select(self, origin=None, station=None):
+        """ Selects GreensTensors that match the given station or origin
         """
-        return self.__class__(id=self.id, tensors=filter(
-            lambda tensor: tensor.origin==origin, self))
+        if origin and station:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.station==station and 
+                               tensor.origin==origin, self))
+
+        elif station:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.station==station, self))
+
+        elif origin:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.origin==origin, self))
+
 
 
     def get_synthetics(self, source):
@@ -262,31 +252,49 @@ class GreensTensorList(list):
     # the next three methods can be used to apply signal processing or other
     # operations to all time series in all GreensTensors
     def apply(self, function, *args, **kwargs):
-        """ Returns the result of applying a function to each GreensTensor in
-        the list. Similar to the Python built-in "apply".
+        """ Applies a function to each GreensTensor in the list
+ 
+        Similar to the Python built-in ``apply``.  
 
-        :type function: func
-        :param function: Function that acts on obspy an ``Stream``
-        :rtype: ``GreensTensorList``
+        .. warning ::
+
+            Although ``map`` returns a new GreensTensorList, it is possible,
+            depending on the behavior of the given function, that the elements 
+            of the original list are overwritten in the process.
+
+            To control this behavior, ``mtuq.process_data.ProcessData`` has an
+            `overwrite` input argument, which is `False` by default.
+
         """
         processed = []
         for tensor in self:
             processed +=\
-                [tensor.apply(function, *args, **kwargs)]
+                [function(tensor, *args, **kwargs)]
         return self.__class__(processed)
 
 
     def map(self, function, *sequences):
-        """ Applies a function in-pace to each GreensTensor in the list. If one
-        or more optional sequences are given, the function is called with an 
-        argument list consisting of the corresponding item of each sequence. 
-        Similar to the behavior of the python built-in "map".
+        """ Maps a function to each GreensTensor in the list
+
+        If one or more optional sequences are given, the function is called
+        with an argument list consisting of the corresponding item of each 
+        sequence, similar to the behavior of the python built-in ``map``.
+
+        .. warning ::
+
+            Although ``map`` returns a new GreensTensorList, it is possible,
+            depending on the behavior of the given function, that the elements 
+            of the original list are overwritten in the process.
+
+            To control this behavior, ``mtuq.process_data.ProcessData`` has an
+            `overwrite` input argument, which is `False` by default.
+
         """
         processed = []
         for _i, tensor in enumerate(self):
             args = [sequence[_i] for sequence in sequences]
             processed +=\
-                [tensor.apply(function, *args)]
+                [function(tensor, *args)]
         return self.__class__(processed)
 
 
@@ -298,11 +306,11 @@ class GreensTensorList(list):
             tensor.convolve(wavelet)
 
 
-    def add_tag(self, tag):
+    def tag_add(self, tag):
        """ Appends string to tags list
        
        Tags can be used to support customized uses, such as storing metdata not
-       included in mtuq.Station
+       included in ``mtuq.Station``
        """
        if type(tag) not in [str, unicode]:
            raise TypeError
@@ -312,7 +320,7 @@ class GreensTensorList(list):
                tensor.tags.append(tag)
 
 
-    def remove_tag(self, tag):
+    def tag_remove(self, tag):
        """ Removes string from tags list
        """
        for tensor in self:
@@ -368,11 +376,11 @@ class GreensTensorList(list):
         if self[0].include_force:
             nr += 3
 
-        array = np.zeros((nc,nr,ns,nt))
+        array = np.zeros((nc,ns,nr,nt))
         for _i, tensor in enumerate(self):
             tensor.reset_components(components)
             # fill in array
-            array[:, :, _i, :] = tensor._array
+            array[:, _i, :, :] = tensor._array
         return array
 
 

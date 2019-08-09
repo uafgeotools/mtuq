@@ -10,22 +10,20 @@ def grid_search(data, greens, misfit, origins, sources,
     """ Evaluates misfit over origin and source grids
 
     If invoked from an MPI environment, the grid is partitioned between
-    processes and each process runs grid_search_serial. Otherwise, reduces to
-    ``grid_search_serial``
+    processes and each process runs ``grid_search_serial`` on its given
+    partition. If not invoked from an MPI environment, this function simply 
+    reduces to ``grid_search_serial``.
     """
     if _is_mpi_env():
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         iproc, nproc = comm.rank, comm.size
 
-        # To carry out a grid search over multiple processes, partition the
-        # grid into subsets and scatter. Each process then runs
-        # grid_search_serial on it assigned subset
+        # partition grid and scatter across processes
         if iproc == 0:
             sources = sources.partition(nproc)
         sources = comm.scatter(sources, root=0)
 
-        # Now adjust keyword arguments
         if iproc != 0:
             verbose = False
 
@@ -33,9 +31,10 @@ def grid_search(data, greens, misfit, origins, sources,
         data, greens, misfit, origins, sources, verbose)
 
     if allgather and _is_mpi_env():
-        # Distribute the results to all processes
+        # all processes share results
         return np.concatenate(comm.allgather(results))
     else:
+        # each process just returns its own results
         return results
 
 

@@ -11,7 +11,4 @@ Processing data
 
 Misfit evaluation
 
-Iterating over data categories
-
-Grid search examples
 

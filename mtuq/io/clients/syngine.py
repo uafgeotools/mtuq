@@ -14,23 +14,27 @@ from mtuq.util import unzip
 
 
 class Client(ClientBase):
-    """ 
-    Interface to syngine Green's function web service
+    """ Syngine web service client
+        
+    .. rubric:: Usage
 
-    .. code:
+    To instantiate a syngine client, supply the name of an Earth model from one
+    one of the available Earth models listed at 
+    http://ds.iris.edu/ds/products/syngine/#models
+        
+    .. code::
 
-        db = mtuq.greens.open_db(url, format='syngine')
+        from mtuq.io.clients.syngine import Client
+        db = Client(model=model)
 
-        greens_tensors = db.read(stations, origin)
+    Then the client can be used to download GreensTensors:
 
-    In the first step, the user supplies one of the available Earth models
-    listed at http://ds.iris.edu/ds/products/syngine/#models
+    .. code::
+        
+        greens_tensors = db.get_greens_tensors(stations, origin)
+            
 
-    In the second step, the user supplies a list of stations and the origin
-    locations and times. GreensTensors are then created for all the
-    corresponding station-origin pairs.
-
-    .. note:
+    .. note::
 
         Syngine is an webservice that provides Green's functions and synthetic
         seismograms for download as compressed SAC files. 
@@ -50,6 +54,18 @@ class Client(ClientBase):
 
         self.include_mt = include_mt
         self.include_force = include_force
+
+
+    def get_greens_tensors(self, stations=[], origins=[]):
+        """ Downloads Green's tensors
+
+        Returns a ``GreensTensorList`` in which each element corresponds to a
+        (station, origin) pair from the given lists
+
+        :param stations: List of ``mtuq.Station`` objects
+        :param origins: List of ``mtuq.Origin`` objects
+        """
+        return super(Client, self).get_greens_tensors(stations, origins)
 
 
     def _get_greens_tensor(self, station=None, origin=None):
@@ -118,10 +134,10 @@ class Client(ClientBase):
 
 
 
-def download_greens_tensors(stations=[], origins=[], **kwargs):
+def download_greens_tensors(stations=[], origins=[], model='', **kwargs):
     """ Downloads Green's tensor for given stations and origins
     """
-    client = Client(**kwargs)
+    client = Client(model=model, **kwargs)
     return client.get_greens_tensors(stations, origins)
 
 

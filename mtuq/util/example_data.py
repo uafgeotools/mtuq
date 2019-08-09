@@ -116,7 +116,7 @@ if True:
     data_sw = data.map(process_sw)
 
     
-    greens = download_greens_tensors(stations, origin, model=model)
+    greens = download_greens_tensors(stations, origin, model)
 
     
     greens.convolve(wavelet)

@@ -11,6 +11,10 @@ autogen
    mtuq.GreensTensorList
    mtuq.Origin
    mtuq.Station
+   mtuq.grid.DoubleCoupleGridRandom
+   mtuq.grid.DoubleCoupleGridRegular
+   mtuq.grid.FullMomentTensorGridRandom
+   mtuq.grid.FullMomentTensorGridRegular
    mtuq.grid.Grid
    mtuq.grid.UnstructuredGrid
    mtuq.grid_search.grid_search

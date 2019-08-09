@@ -11,15 +11,13 @@ class Station(AttribDict):
     Holds the following information
 
     - latitude and longitude
-
     - depth and elevation
-
     - network, station, and location codes
 
     Optionally, also includes 
 
-    - time discretization attributes, which can be useful if all traces recorded
-      at the given station have the same time sampling 
+    - time discretization attributes, which can be meaningful if all traces at
+      a given station have the same time sampling 
     """
 
     defaults = {

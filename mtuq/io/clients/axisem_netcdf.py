@@ -15,20 +15,23 @@ from mtuq.util.signal import get_distance_in_deg, resample
 
 class Client(ClientBase):
     """ 
-    Interface to AxiSEM/Instaseis database
+    AxiSEM NetCDF database client (based on instaseis)
 
-    .. code:
 
-        db = mtuq.greens.open_db(path, format='instaseis')
+    .. rubric:: Usage
 
-        greens_tensors = db.read(stations, origin)
+    To instantiate a database client, supply a path or url:
 
-    In the first step, the user supplies the path or URL to an AxiSEM NetCDF
-    output file
+    .. code::
 
-    In the second step, the user supplies a list of stations and the origin
-    locations and times. GreensTensors are then created for all the
-    corresponding station-origin pairs.
+        from mtuq.io.clients.axisem_netcdf import Client
+        db = Client(path_or_url)
+
+    Then the database client can be used to generate GreensTensors:
+
+    .. code::
+
+        greens_tensors = db.get_greens_tensors(stations, origin)
 
     """
 
@@ -43,10 +46,19 @@ class Client(ClientBase):
         self.model = model
 
 
-    def _get_greens_tensor(self, station=None, origin=None):
-        """ 
-        Reads Greens tensor from AxiSEM NetCDF database
+    def get_greens_tensors(self, stations=[], origins=[]):
+        """ Reads Green's tensors from database
+
+        Returns a ``GreensTensorList`` in which each element corresponds to a
+        (station, origin) pair from the given lists
+
+        :param stations: List of ``mtuq.Station`` objects
+        :param origins: List of ``mtuq.Origin`` objects
         """
+        return super(Client, self).get_greens_tensors(stations, origins)
+
+
+    def _get_greens_tensor(self, station=None, origin=None):
         distance_in_deg = get_distance_in_deg(station, origin)
 
         stream = self.db.get_greens_function(

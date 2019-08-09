@@ -127,7 +127,7 @@ if __name__=='__main__':
             origins += [origin.copy()]
             setattr(origins[-1], 'depth_in_m', depth)
 
-        greens = download_greens_tensors(stations, origins, model=model)
+        greens = download_greens_tensors(stations, origins, model)
 
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
