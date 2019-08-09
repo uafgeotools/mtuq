@@ -178,21 +178,20 @@ class GreensTensor(Stream):
 
     def select(self, component=None, channel=None):
         """
-        Return stream with only those traces that match the supplied
-        metadata criteria
+        Selects only those traces that match the supplied metadata criteria
         """
         return Stream([trace for trace in self]).select(
             component=component, channel=channel)
 
 
     def __add__(self, *args):
-        raise Exception("It doesn't make sense to add time series to "
-           " a GreensTensor")
+        raise Exception("Adding time series to an existing GreensTensor is "
+           " not currently supported")
 
 
     def __iadd__(self, *args):
-        raise Exception("It doesn't make sense to add time series to "
-           " a GreensTensor")
+        raise Exception("Adding time series to an existing GreensTensor is "
+           " not currently supported")
 
 
 
