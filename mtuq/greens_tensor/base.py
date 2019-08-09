@@ -223,11 +223,22 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
-    def select(self, origin):
-        """ Selects GreensTensors that match the given origin
+    def select(self, origin=None, station=None):
+        """ Selects GreensTensors that match the given station or origin
         """
-        return self.__class__(id=self.id, tensors=filter(
-            lambda tensor: tensor.origin==origin, self))
+        if origin and station:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.station==station and 
+                               tensor.origin==origin, self))
+
+        elif station:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.station==station, self))
+
+        elif origin:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.origin==origin, self))
+
 
 
     def get_synthetics(self, source):

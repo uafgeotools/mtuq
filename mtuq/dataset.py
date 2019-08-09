@@ -70,6 +70,23 @@ class Dataset(list):
         super(Dataset, self).append(stream)
 
 
+    def select(self, origin=None, station=None):
+        """ Selects streams that match the given station or origin
+        """
+        if origin and station:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.station==station and
+                               tensor.origin==origin, self))
+
+        elif station:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.station==station, self))
+
+        elif origin:
+            return self.__class__(id=self.id, tensors=filter(
+                lambda tensor: tensor.origin==origin, self))
+
+
     def apply(self, function, *args, **kwargs):
         """ Applies function to all streams
 
