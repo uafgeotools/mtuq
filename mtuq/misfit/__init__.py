@@ -39,14 +39,14 @@ class Misfit(object):
 
     ``norm`` (`str`)
 
-    - ``'L2'``: conventional L2 norm
-      r1**2 + r1**2 + ... 
+    - ``'L2'``: conventional L2 norm (fast)
+    ..  r1**2 + r1**2 + ...
 
-    - ``'L1'``: conventional L1 norm
-      \|r1\| + \|r2\| + ...
+    - ``'L1'``: conventional L1 norm (slow)
+    ..  \|r1\| + \|r2\| + ...
 
-    - ``'hybrid'``: hybrid L1-L2 norm
-      (r11**2 + r12**2 + ...)**0.5 + (r21**2 + r22**2 + ...)**0.5 + ...
+    - ``'hybrid'``: hybrid L1-L2 norm (much faster than L1 but still robust)
+    ..  (r11**2 + r12**2 + ...)**0.5 + (r21**2 + r22**2 + ...)**0.5 + ...
 
 
     ``time_shift_groups`` (`list`)

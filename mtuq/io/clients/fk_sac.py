@@ -62,7 +62,7 @@ class Client(ClientBase):
         (station, origin) pair from the given lists
 
         :param stations: List of ``mtuq.Station`` objects
-        :param origin:s List of ``mtuq.Origin`` objects
+        :param origins: List of ``mtuq.Origin`` objects
         """
         return super(Client, self).get_greens_tensors(stations, origins)
 
