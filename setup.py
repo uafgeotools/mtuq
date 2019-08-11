@@ -1,6 +1,7 @@
 from __future__ import print_function
 import sys
-from setuptools import setup, find_packages
+import numpy
+from setuptools import find_packages, setup, Extension
 from setuptools.command.test import test as test_command
 
 
@@ -65,5 +66,13 @@ setup(
         "numpy", "scipy", "obspy", "h5py", "retry",
         "flake8>=3.0", "pytest", "nose",
         "sphinx", "sphinx-bootstrap-theme"
-    ]
+    ],
+    ext_modules = [
+        Extension(
+            'mtuq.misfit.ext1', ['mtuq/misfit/ext1.c'],
+            include_dirs=[numpy.get_include()],
+            extra_compile_args=["-Ofast", "-march=native"]),
+    ],
 )
+
+
