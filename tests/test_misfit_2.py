@@ -55,7 +55,7 @@ if __name__=='__main__':
         fk_database=path_greens,
         window_type='cap_bw',
         window_length=15.,
-        padding_length=0.,
+        padding_length=2.,
         weight_type='cap_bw',
         cap_weight_file=path_weights,
         )
@@ -68,7 +68,7 @@ if __name__=='__main__':
         fk_database=path_greens,
         window_type='cap_sw',
         window_length=150.,
-        padding_length=0.,
+        padding_length=10.,
         weight_type='cap_sw',
         cap_weight_file=path_weights,
         )
@@ -76,13 +76,13 @@ if __name__=='__main__':
 
     misfit_bw = Misfit(
         norm='L2',
-        time_shift_max=0.,
+        time_shift_max=2.,
         time_shift_groups=['Z','R'],
         )
 
     misfit_sw = Misfit(
         norm='L2',
-        time_shift_max=0.,
+        time_shift_max=10.,
         time_shift_groups=['Z','R','T'],
         )
 
