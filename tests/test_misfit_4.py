@@ -42,7 +42,7 @@ if __name__=='__main__':
 
     path_greens=  fullpath('data/tests/benchmark_cap/greens/scak')
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
-    path_weights= fullpath('data/examples/20090407201255351/weights_all.dat')
+    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'scak'
 

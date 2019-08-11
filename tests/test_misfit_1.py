@@ -93,7 +93,7 @@ if __name__=='__main__':
     #
 
     sources = DoubleCoupleGridRegular(
-        npts_per_axis=1,
+        npts_per_axis=5,
         magnitude=4.5)
 
     wavelet = Trapezoid(
@@ -144,10 +144,9 @@ if __name__=='__main__':
     results_bw_2 = misfit_bw(
         data_bw, greens_bw, sources, optimization_level=2)
 
-    print '\n\n\n'
-    print results_bw_0.min()
-    print results_bw_1.min()
-    print results_bw_2.min()
+    print '\n %e\n %e\n %e\n\n' %\
+       (results_bw_0.min(), results_bw_1.min(), results_bw_2.min())
+
 
     print 'Evaluating surface wave misfit...\n'
 
@@ -161,8 +160,6 @@ if __name__=='__main__':
         data_sw, greens_sw, sources, optimization_level=2)
 
 
-    print '\n\n\n'
-    print results_sw_0.min()
-    print results_sw_1.min()
-    print results_sw_2.min()
+    print '\n %e\n %e\n %e\n\n' %\
+       (results_sw_0.min(), results_sw_1.min(), results_sw_2.min())
 
