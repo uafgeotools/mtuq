@@ -39,7 +39,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
 
     return ext1.misfit(
        data, greens, sources, data_data, greens_data, greens_greens,
-       dt, padding[0], padding[1], 2)
+       dt, padding[0], padding[1], verbose)
 
     #return ext1.misfit(
     #   data, greens, sources, data_data, greens_data, greens_greens,

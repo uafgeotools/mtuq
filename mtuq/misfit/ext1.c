@@ -186,11 +186,11 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
         if (1==1) {
             // L2 norm
-            norm_sum += norm_tmp*dt;
+            norm_sum += dt * norm_tmp;
         }
         else if (1==0) {
             // hybrid L1-L2 norm
-            norm_sum += pow(norm_tmp*dt, 0.5);
+            norm_sum += dt * pow(norm_tmp, 0.5);
         }
 
       }
