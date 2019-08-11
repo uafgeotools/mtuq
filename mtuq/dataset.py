@@ -260,10 +260,10 @@ class Dataset(list):
             if len(stream)!=0:
                 ns += 1
         nt = len(self[0][0].data)
-        array = np.zeros((nc, ns, nt))
+        array = np.zeros((ns, nc, nt))
 
-        for _i, component in enumerate(components):
-            for _j, stream in enumerate(self):
+        for _i, stream in enumerate(self):
+            for _j, component in enumerate(components):
                 try:
                     trace = stream.select(component=component)[0]
                     array[_i, _j, :] = trace.data

@@ -82,7 +82,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                         misfit = np.sum(r**2)*dt
 
                     elif norm=='hybrid':
-                        misfit = np.sqrt(np.sum(r**2)*dt)
+                        misfit = np.sqrt(np.sum(r**2))*dt
 
                     results[_i] += d[_k].weight * misfit
 

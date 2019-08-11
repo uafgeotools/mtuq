@@ -32,7 +32,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
     # cross-correlations are a major part of the numerical work
     #
     _corr_sum = _corr_init(data, time_shift_max)
-    data_greens = _corr_1_2(data, greens, time_shift_max)
+    greens_data = _corr_1_2(data, greens, time_shift_max)
 
     if norm in ['L2', 'hybrid']:
         data_data = _autocorr_1(data, time_shift_max)
@@ -48,7 +48,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
             if not components:
                 continue
 
-            if norm=='L1':
+            if True:#norm=='L1':
                 s = greens[_j].get_synthetics(source)
 
             # time sampling scheme
@@ -67,11 +67,11 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                     components, group)
 
                 npts_shift = get_time_shift(
-                    data_greens[_j], _corr_sum[_j], source, indices)
+                    greens_data[_j], _corr_sum[_j], source, indices)
 
                 time_shift = npts_shift*dt
 
-                # what start and stop indices will _correctly shift synthetics
+                # what start and stop indices will correctly shift synthetics
                 # relative to data?
                 start = npts_padding - npts_shift
                 stop = npts+npts_padding - npts_shift
@@ -86,12 +86,17 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
 
                     elif norm=='L2':
                         misfit = dt * get_L2_norm(
-                            greens_greens[_j], data_data[_j], data_greens[_j],
+                            greens_greens[_j], data_data[_j], greens_data[_j],
                             source, _k, npts_shift+npts_padding)
+
+                        #debug_L2_norm(
+                        #    d[_k].data, s[_k].data,
+                        #    greens_greens[_j], data_data[_j], greens_data[_j],
+                        #    source, _k, npts_shift+npts_padding)
 
                     elif norm=='hybrid':
                         misfit = dt * get_L2_norm(
-                            greens_greens[_j], data_data[_j], data_greens[_j],
+                            greens_greens[_j], data_data[_j], greens_data[_j],
                             source, _k, npts_shift+npts_padding)**0.5
 
                     results[_i] += d[_k].weight * misfit
@@ -99,7 +104,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
     return results
 
 
-def get_L2_norm(greens_greens, data_data, data_greens, source, i1, i2):
+def get_L2_norm(greens_greens, data_data, greens_data, source, i1, i2):
     """
     Calculates L2 norm of data and shifted synthetics using
     ||s - d||^2 = s^2 + d^2 - 2sd
@@ -113,28 +118,31 @@ def get_L2_norm(greens_greens, data_data, data_greens, source, i1, i2):
     misfit += np.dot(np.dot(greens_greens[i1, i2, :, :], source), source)
 
     # calculate sd 
-    misfit -= 2*np.dot(data_greens[i1, :, i2], source)
+    misfit -= 2*np.dot(greens_data[i1, :, i2], source)
 
     return misfit
 
 
-def debug_L2_norm(data, synthetics, greens_greens, data_data, data_greens,
+def debug_L2_norm(data, synthetics, greens_greens, data_data, greens_data,
     source, i1, i2):
     """
     Calculates error in the righthand-side terms of
     ||s - d||^2 = s^2 + d^2 - 2sd
     """
     dd = np.sum(data**2)
-    print 'error dd:',\
-        (dd - data_data[i1])/dd
+    #print 'error dd:',\
+    #    (dd - data_data[i1])/dd
+    print 'dd:',dd
 
     ss = np.sum(synthetics**2)
-    print 'error ss:',\
-        (ss - np.dot(np.dot(greens_greens[i1, i2, :, :], source), source))/ss
+    #print 'error ss:',\
+    #    (ss - np.dot(np.dot(greens_greens[i1, i2, :, :], source), source))/ss
+    print 'ss:',ss
 
     sd = np.sum(synthetics*data)
-    print 'error sd:',\
-        (sd - np.dot(data_greens[i1, :, i2], source))/sd
+    #print 'error sd:',\
+    #    (sd - np.dot(greens_data[i1, :, i2], source))/sd
+    print 'sd:',sd
 
     print ''
 
