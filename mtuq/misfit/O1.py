@@ -61,8 +61,8 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
             # 
             for group in time_shift_groups:
                 # Finds the time-shift between data and synthetics that yields
-                # the maximum cross-correlation value across all comonents in a
-                # given group, subject to time_shift_max constraint
+                # the maximum cross-correlation value across all components in 
+                # a given group, subject to time_shift_max constraint
                 _, indices = list_intersect_with_indices(
                     components, group)
 
