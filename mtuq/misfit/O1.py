@@ -48,7 +48,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
             if not components:
                 continue
 
-            if True:#norm=='L1':
+            if norm=='L1':
                 s = greens[_j].get_synthetics(source)
 
             # time sampling scheme
@@ -88,11 +88,6 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                         misfit = dt * get_L2_norm(
                             greens_greens[_j], data_data[_j], greens_data[_j],
                             source, _k, npts_shift+npts_padding)
-
-                        #debug_L2_norm(
-                        #    d[_k].data, s[_k].data,
-                        #    greens_greens[_j], data_data[_j], greens_data[_j],
-                        #    source, _k, npts_shift+npts_padding)
 
                     elif norm=='hybrid':
                         misfit = dt * get_L2_norm(
