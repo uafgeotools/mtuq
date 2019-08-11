@@ -351,36 +351,3 @@ class GreensTensorList(list):
         self.sort(key=function, reverse=reverse)
 
 
-    def as_array(self, components=['Z', 'R', 'T']):
-        """ Returns time series from all stations in a single multidimensional
-        array 
-
-        Compared with iterating over streams and traces, provides a potentially
-        faster way of accessing numeric trace data
-
-        .. warning:
-
-            Requires that all tensors have the same time discretization
-            (or else an error is raised)
-
-        """
-        #check_time_sampling([stream[0] for stream in self])
-
-        # array dimensions
-        nc = len(components)
-        nt = len(self[0][0])
-        ns = len(self)
-        nr = 0
-        if self[0].include_mt:
-            nr += 6
-        if self[0].include_force:
-            nr += 3
-
-        array = np.zeros((nc,ns,nr,nt))
-        for _i, tensor in enumerate(self):
-            tensor.reset_components(components)
-            # fill in array
-            array[:, _i, :, :] = tensor._array
-        return array
-
-

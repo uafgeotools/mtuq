@@ -74,17 +74,17 @@ class Dataset(list):
         """ Selects streams that match the given station or origin
         """
         if origin and station:
-            return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.station==station and
-                               tensor.origin==origin, self))
+            return self.__class__(id=self.id, streams=filter(
+                lambda stream: stream.station==station and
+                               stream.origin==origin, self))
 
         elif station:
-            return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.station==station, self))
+            return self.__class__(id=self.id, streams=filter(
+                lambda stream: stream.station==station, self))
 
         elif origin:
-            return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.origin==origin, self))
+            return self.__class__(id=self.id, streams=filter(
+                lambda stream: stream.origin==origin, self))
 
 
     def apply(self, function, *args, **kwargs):
@@ -192,7 +192,7 @@ class Dataset(list):
           represent catalog information read from SAC headers
 
         - For Datasets created using ``GreensTensor.get_synthetics``, origin
-          metadata are inherited from the GreensTensor
+          metadata are inherited from the Greensstream
 
         """
         origins = []
@@ -231,44 +231,4 @@ class Dataset(list):
            if tag in stream.tags:
                stream.tags.remove(tag)
 
-
-    #
-    # the remaining methods can be used to speed up trace data access in cases
-    # where the time discretization is the same for all traces
-    #
-    def _check_time_sampling(self):
-        """ Checks if time discretization is the same for all traces
-        """
-        pass
-
-
-    def as_array(self, components=['Z','R','T']):
-        """ Collects numeric trace data from all streams as a single NumPy array
-
-        Compared with iterating over streams and traces, provides a potentially
-        faster way of accessing numeric trace data
-
-        .. warning::
-
-            Requires that all tensors have the same time discretization
-            (or else an error is raised)
-
-        """
-        nc = len(components)
-        ns = 0
-        for stream in self:
-            if len(stream)!=0:
-                ns += 1
-        nt = len(self[0][0].data)
-        array = np.zeros((ns, nc, nt))
-
-        for _i, stream in enumerate(self):
-            for _j, component in enumerate(components):
-                try:
-                    trace = stream.select(component=component)[0]
-                    array[_i, _j, :] = trace.data
-                except:
-                    pass
-
-        return array
 
