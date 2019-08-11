@@ -69,7 +69,7 @@ setup(
     ],
     ext_modules = [
         Extension(
-            'mtuq.misfit.ext1', ['mtuq/misfit/ext1.c'],
+            'mtuq.misfit.ext', ['mtuq/misfit/ext.c'],
             include_dirs=[numpy.get_include()],
             extra_compile_args=["-Ofast", "-march=native"]),
     ],
