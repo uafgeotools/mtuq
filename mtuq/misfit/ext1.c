@@ -23,44 +23,51 @@ PyMODINIT_FUNC initext1(void) {
 //
 // array access macros
 //
-#define data(i0,i1,i2) (*(npy_float64*)((PyArray_DATA(data) +                \
-                                (i0) * PyArray_STRIDES(data)[0] +            \
-                                (i1) * PyArray_STRIDES(data)[1] +            \
-                                (i2) * PyArray_STRIDES(data)[2] )))
+#define data(i0,i1,i2)\
+    (*(npy_float64*)((PyArray_DATA(data)+\
+    (i0) * PyArray_STRIDES(data)[0]+\
+    (i1) * PyArray_STRIDES(data)[1]+\
+    (i2) * PyArray_STRIDES(data)[2])))
 
-#define greens(i0,i1,i2,i3) (*(npy_float64*)((PyArray_DATA(greens) +         \
-                                (i0) * PyArray_STRIDES(greens)[0] +          \
-                                (i1) * PyArray_STRIDES(greens)[1] +          \
-                                (i2) * PyArray_STRIDES(greens)[2] +          \
-                                (i3) * PyArray_STRIDES(greens)[3] )))
+#define greens(i0,i1,i2,i3)\
+    (*(npy_float64*)((PyArray_DATA(greens)+\
+    (i0) * PyArray_STRIDES(greens)[0]+\
+    (i1) * PyArray_STRIDES(greens)[1]+\
+    (i2) * PyArray_STRIDES(greens)[2]+\
+    (i3) * PyArray_STRIDES(greens)[3])))
 
-#define data_data(i0,i1) (*(npy_float64*)((PyArray_DATA(data_data) +          \
-                                (i0) * PyArray_STRIDES(data_data)[0] +        \
-                                (i1) * PyArray_STRIDES(data_data)[1] )))
+#define data_data(i0,i1)\
+    (*(npy_float64*)((PyArray_DATA(data_data)+\
+    (i0) * PyArray_STRIDES(data_data)[0]+\
+    (i1) * PyArray_STRIDES(data_data)[1])))
 
-#define greens_data(i0,i1,i2,i3) (*(npy_float64*)((PyArray_DATA(greens_data) +\
-                                (i0) * PyArray_STRIDES(greens_data)[0] +      \
-                                (i1) * PyArray_STRIDES(greens_data)[1] +      \
-                                (i2) * PyArray_STRIDES(greens_data)[2] +      \
-                                (i3) * PyArray_STRIDES(greens_data)[3] )))
+#define greens_data(i0,i1,i2,i3)\
+    (*(npy_float64*)((PyArray_DATA(greens_data)+\
+    (i0) * PyArray_STRIDES(greens_data)[0]+\
+    (i1) * PyArray_STRIDES(greens_data)[1]+\
+    (i2) * PyArray_STRIDES(greens_data)[2]+\
+    (i3) * PyArray_STRIDES(greens_data)[3])))
 
-#define greens_greens(i0,i1,i2,i3,i4) (*(npy_float64*)((PyArray_DATA(greens_greens) + \
-                                (i0) * PyArray_STRIDES(greens_greens)[0] +   \
-                                (i1) * PyArray_STRIDES(greens_greens)[1] +   \
-                                (i2) * PyArray_STRIDES(greens_greens)[2] +   \
-                                (i3) * PyArray_STRIDES(greens_greens)[3] +   \
-                                (i4) * PyArray_STRIDES(greens_greens)[4] )))
+#define greens_greens(i0,i1,i2,i3,i4)\
+    (*(npy_float64*)((PyArray_DATA(greens_greens) + \
+    (i0) * PyArray_STRIDES(greens_greens)[0]+\
+    (i1) * PyArray_STRIDES(greens_greens)[1]+\
+    (i2) * PyArray_STRIDES(greens_greens)[2]+\
+    (i3) * PyArray_STRIDES(greens_greens)[3]+\
+    (i4) * PyArray_STRIDES(greens_greens)[4])))
 
-#define sources(i0,i1) (*(npy_float64*)((PyArray_DATA(sources) +             \
-                                (i0) * PyArray_STRIDES(sources)[0] +         \
-                                (i1) * PyArray_STRIDES(sources)[1] )))
+#define sources(i0,i1)\
+    (*(npy_float64*)((PyArray_DATA(sources)+\
+    (i0) * PyArray_STRIDES(sources)[0]+\
+    (i1) * PyArray_STRIDES(sources)[1])))
 
+#define cc(i0)\
+    (*(npy_float64*)((PyArray_DATA(cc)+\
+    (i0) * PyArray_STRIDES(cc)[0])))
 
-#define cc(i0) (*(npy_float64*)((PyArray_DATA(cc) +                      \
-                                (i0) * PyArray_STRIDES(cc)[0] )))
-
-#define results(i0) (*(npy_float64*)((PyArray_DATA(results) +                \
-                                (i0) * PyArray_STRIDES(results)[0] )))
+#define results(i0)\
+    (*(npy_float64*)((PyArray_DATA(results)+\
+    (i0) * PyArray_STRIDES(results)[0])))
 
 
 //
