@@ -7,7 +7,7 @@ See ``mtuq/misfit/__init__.py`` for more information
 import numpy as np
 from mtuq.misfit.O1 import correlate
 from mtuq.util.signal import get_components, get_time_sampling
-from mtuq.misfit import ext1
+from mtuq.misfit import ext
 
 
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
@@ -17,7 +17,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
-    _, dt = get_time_sampling(data[0])
+    nt, dt = get_time_sampling(data[0])
     padding = _get_padding(time_shift_max, dt)
 
     stations = _get_stations(data)
@@ -25,10 +25,10 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
 
     # boolean arrays
     groups = _get_groups(time_shift_groups, components)
-    mask = _get_mask(data, components)
+    mask = _get_mask(data, stations, components)
 
     # data arrays
-    data = data.as_array(components)
+    data = _get_data(data, stations, components, nt)
     greens = _get_greens(greens, stations, components)
     sources = _as_array(sources)
 
@@ -37,13 +37,9 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
     greens_greens = _autocorr_nd2(greens, padding)
     greens_data = _corr_nd1_nd2(data, greens, padding)
 
-    return ext1.misfit(
-       data, greens, sources, data_data, greens_data, greens_greens,
-       dt, padding[0], padding[1], verbose)
-
-    #return ext1.misfit(
-    #   data, greens, sources, data_data, greens_data, greens_greens,
-    #   mask, groups, padding[0], padding[1], norm)
+    return ext.misfit(
+       data_data, greens_data, greens_greens,
+       sources, groups, mask, dt, padding[0], padding[1], 2)
 
 
 def _get_padding(time_shift_max, dt):
@@ -81,6 +77,35 @@ def _get_greens(greens, stations, components):
     return array
 
 
+def _get_data(data, stations, components, nt):
+    """ Collects numeric trace data from all streams as a single NumPy array
+
+    Compared with iterating over streams and traces, provides a potentially
+    faster way of accessing numeric trace data
+
+    .. warning::
+
+        Requires that all streams have the same time discretization
+        (or else an error is raised)
+
+    """
+    ns = len(stations)
+    nc = len(components)
+    array = np.zeros((ns, nc, nt))
+
+    for _i, station in enumerate(stations):
+        stream = data.select(station=station)[0]
+        for _j, component in enumerate(components):
+            try:
+                trace = stream.select(component=component)[0]
+            except:
+                continue
+            array[_i, _j, :] = trace.data
+
+    return array
+
+
+
 def _get_components(data):
     components = list()
     for stream in data:
@@ -98,22 +123,22 @@ def _get_components(data):
     return components_sorted
 
 
-def _get_mask(data, components):
+def _get_mask(data, stations, components):
     Ncomponents = len(components)
-    Nstations = len(data)
+    Nstations = len(stations)
 
     mask = np.ones((
-        Ncomponents, 
         Nstations,
+        Ncomponents, 
         ))
 
-    for _j in range(Nstations):
-        for _i, component in enumerate(components):
+    for _i, station in enumerate(stations):
+        for _j, component in enumerate(components):
 
-            stream = data[_j].select(component=component)
+            stream = data.select(station=station)[0]
+            stream = stream.select(component=component)
 
-            if len(stream)==0 or\
-               np.all(np.isclose(stream[0].data, 0.)):
+            if len(stream)==0:
                 mask[_i, _j] = 0.
 
     return mask
