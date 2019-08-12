@@ -94,17 +94,16 @@ def _get_greens(greens, stations, components):
 
 
 def _get_data(data, stations, components, nt):
-    """ Collects numeric trace data from all streams as a single NumPy array
+    #Collects numeric trace data from all streams as a single NumPy array
 
-    Compared with iterating over streams and traces, provides a potentially
-    faster way of accessing numeric trace data
+    #Compared with iterating over streams and traces, provides a potentially
+    #faster way of accessing numeric trace data
 
-    .. warning::
+    #.. warning::
 
-        Requires that all streams have the same time discretization
-        (or else an error is raised)
+    #    Requires that all streams have the same time discretization
+    #    (or else an error is raised)
 
-    """
     ns = len(stations)
     nc = len(components)
     array = np.zeros((ns, nc, nt))
@@ -187,7 +186,7 @@ def _get_groups(groups, components):
 
 
 def _as_array(sources):
-    Ngreens = len(sources.get(0))
+    Ngreens = len(sources.get(sources.start))
     Nsources = len(sources)
 
     array = np.zeros((
