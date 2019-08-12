@@ -69,8 +69,11 @@ PyMODINIT_FUNC initc_ext_L2(void) {
 
 
 //
-// misfit function
 //
+// L2 misfit function
+//
+//
+
 static PyObject *misfit(PyObject *self, PyObject *args) {
 
   PyArrayObject *data_data, *greens_data, *greens_greens;
@@ -147,8 +150,8 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
         /*
 
         Finds the shift between data and synthetics that yields the maximum
-        cross-correlation value across all components in the given group,
-        subject to the (time_shift_min, time_shift_max) constraint
+        cross-correlation value across all components in the given component 
+        group, subject to the (time_shift_min, time_shift_max) constraint
 
         */
 
@@ -158,7 +161,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
         for (ic=0; ic<NC; ic++) {
 
-          // Skip components not in the group being considered
+          // Skip components not in the component group being considered
           if (((int) groups(igrp,ic))==0) {
             continue;
            }
@@ -194,7 +197,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
         /*
 
         Calculates L2 norm of difference between data and synthetics
-        for all components in the given group
+        for all components in the given component group
 
         Rather than computing (s - d) directly for all time samples, we use a
         computational shortcut based on
@@ -205,7 +208,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
         for (ic=0; ic<NC; ic++) {
           L2_tmp = 0.;
 
-          // Skip components not in the current group being considered
+          // Skip components not in the component group being considered
           if (((int) groups(igrp,ic))==0) {
             continue;
           } 
