@@ -28,7 +28,7 @@ def grid_search(data, greens, misfit, origins, sources,
             verbose = False
 
     results = grid_search_serial(
-        data, greens, misfit, origins, sources, verbose)
+        data, greens, misfit, origins, sources, verbose=verbose)
 
     if allgather and _is_mpi_env():
         # all processes share results

@@ -65,39 +65,14 @@ def timer(func):
     """ Decorator for measuring execution time; prints elapsed time to
         standard output
     """
-    if is_mpi_env():
-        return func
-
     def timed_func(*args, **kwargs):
         start_time = time.time()
 
         output = func(*args, **kwargs)
 
-        _elapsed_time = time.time() - start_time
-        print '  Elapsed time (s): %f\n' % _elapsed_time
-
-        return output
-
-    return timed_func
-
-
-
-def timer_mpi(func):
-    """ Decorator for measuring execution time in mpi environment
-    """
-    def timed_func(*args, **kwargs):
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
-
-        if comm.rank==0:
-            start_time = time.time()
-
-        output = func(*args, **kwargs)
-        comm.barrier()
-
-        if comm.rank==0:
+        if kwargs.get('verbose', True):
             _elapsed_time = time.time() - start_time
-            print '  Elapsed time: %f\n' % _elapsed_time
+            print '  Elapsed time (s): %f\n' % _elapsed_time
 
         return output
 
