@@ -7,15 +7,15 @@
 // function declaration
 static PyObject *misfit(PyObject *self, PyObject *args); 
 
-// noilerplate methods list
+// boilerplate methods list
 static PyMethodDef methods[] = {
   { "misfit", misfit, METH_VARARGS, "Doc string."},
-  { NULL, NULL, 0, NULL } /* Sentinel */
+  { NULL, NULL, 0, NULL }
 };
 
 // boilerplate module initialization
-PyMODINIT_FUNC initext(void) {
-  (void) Py_InitModule("ext", methods);
+PyMODINIT_FUNC initc_ext_L2(void) {
+  (void) Py_InitModule("c_ext_L2", methods);
   import_array();
 }
 
@@ -36,7 +36,7 @@ PyMODINIT_FUNC initext(void) {
     (i3) * PyArray_STRIDES(greens_data)[3])))
 
 #define greens_greens(i0,i1,i2,i3,i4)\
-    (*(npy_float64*)((PyArray_DATA(greens_greens) + \
+    (*(npy_float64*)((PyArray_DATA(greens_greens)+\
     (i0) * PyArray_STRIDES(greens_greens)[0]+\
     (i1) * PyArray_STRIDES(greens_greens)[1]+\
     (i2) * PyArray_STRIDES(greens_greens)[2]+\
@@ -75,6 +75,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
   PyArrayObject *data_data, *greens_data, *greens_greens;
   PyArrayObject *sources, *groups, *mask;
+  int hybrid_norm;
   npy_float64 dt;
   int NPAD1, NPAD2;
   int verbose;
@@ -83,18 +84,19 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   int isrc,ista,ic,ig,igrp;
 
   int it, itmax, itpad, j1, j2, NPAD;
-  npy_float64 norm_sum, norm_tmp, cc_max;
+  npy_float64 L2_sum, L2_tmp, cc_max;
   int nd;
 
 
   // parse arguments
-  if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!diii",
+  if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!idiii",
                         &PyArray_Type, &data_data,
                         &PyArray_Type, &greens_data,
                         &PyArray_Type, &greens_greens,
                         &PyArray_Type, &sources,
                         &PyArray_Type, &groups,
                         &PyArray_Type, &mask,
+                        &hybrid_norm,
                         &dt,
                         &NPAD1,
                         &NPAD2,
@@ -111,6 +113,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   NPAD = (int) NPAD1+NPAD2+1;
 
   if (verbose>1) {
+    printf(" number of groups:  %d\n", NGRP);
     printf(" number of sources:  %d\n", NSRC);
     printf(" number of stations:  %d\n", NSTA);
     printf(" number of components:  %d\n", NC);
@@ -129,34 +132,52 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
 
   //
-  // begin iterating over sources
+  //
+  // Begin iterating over sources
+  //
   //
 
   for(isrc=0; isrc<NSRC; ++isrc) {
 
-    norm_sum = (npy_float64) 0.;
+    L2_sum = (npy_float64) 0.;
 
     for (ista=0; ista<NSTA; ista++) {
-      for (ic=0; ic<NC; ic++) {
+      for (igrp=0; igrp<NGRP; igrp++) {
 
-        if (((int) mask(ista,ic))==0) {
-            if (verbose>1) {
-              if (isrc==0) {
-                printf(" skipping trace: %d %d\n", ista, ic);
-              }
-            }
-            continue;
-         }
+        /*
 
-        //
-        // calculate npts_shift
-        //
+        Finds the shift between data and synthetics that yields the maximum
+        cross-correlation value across all components in the given group,
+        subject to the (time_shift_min, time_shift_max) constraint
+
+        */
+
         for (it=0; it<NPAD; it++) {
           cc(it) = (npy_float64) 0.;
         }
-        for (ig=0; ig<NG; ig++) {
-          for (it=0; it<NPAD; it++) {
-              cc(it) += greens_data(ista,ic,ig,it) * sources(isrc,ig);
+
+        for (ic=0; ic<NC; ic++) {
+
+          // Skip components not in the group being considered
+          if (((int) groups(igrp,ic))==0) {
+            continue;
+           }
+
+          // Skip traces that have been assigned zero weight
+          if (((int) mask(ista,ic))==0) {
+              if (verbose>1) {
+                if (isrc==0) {
+                  printf(" skipping trace: %d %d\n", ista, ic);
+                }
+              }
+              continue;
+           }
+
+          // Sum cross-correlations of all components being considered
+          for (ig=0; ig<NG; ig++) {
+            for (it=0; it<NPAD; it++) {
+                cc(it) += greens_data(ista,ic,ig,it) * sources(isrc,ig);
+            }
           }
         }
         cc_max = -NPY_INFINITY;
@@ -169,39 +190,60 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
         }
         itpad = itmax;
 
-        //
-        // calculate L2 norm using ||s - d||^2 = s^2 + d^2 - 2sd
-        //
-        norm_tmp = 0.;
 
-        // ss
-        for (j1=0; j1<NG; j1++) {
-          for (j2=0; j2<NG; j2++) {
-            norm_tmp += sources(isrc, j1) * sources(isrc, j2) *
-                greens_greens(ista,ic,itpad,j1,j2);
+        /*
+
+        Calculates L2 norm of difference between data and synthetics
+        for all components in the given group
+
+        Rather than computing (s - d) directly for all time samples, we use a
+        computational shortcut based on
+
+        ||s - d||^2 = s^2 + d^2 - 2sd
+
+        */
+        for (ic=0; ic<NC; ic++) {
+          L2_tmp = 0.;
+
+          // Skip components not in the current group being considered
+          if (((int) groups(igrp,ic))==0) {
+            continue;
+          } 
+
+          // Skip traces that have been assigned zero weight
+          if (((int) mask(ista,ic))==0) {
+              continue;
           }
-        }
 
-        // dd
-        norm_tmp += data_data(ista,ic);
+          // calculate s^2
+          for (j1=0; j1<NG; j1++) {
+            for (j2=0; j2<NG; j2++) {
+              L2_tmp += sources(isrc, j1) * sources(isrc, j2) *
+                  greens_greens(ista,ic,itpad,j1,j2);
+            }
+          }
 
-        // sd
-        for (ig=0; ig<NG; ig++) {
-          norm_tmp -= 2.*greens_data(ista,ic,ig,itpad) * sources(isrc, ig); 
-        }
+          // calculate d^2
+          L2_tmp += data_data(ista,ic);
 
-        if (1==1) {
-            // L2 norm
-            norm_sum += dt * norm_tmp;
-        }
-        else if (1==0) {
-            // hybrid L1-L2 norm
-            norm_sum += dt * pow(norm_tmp, 0.5);
+          // calculate sd
+          for (ig=0; ig<NG; ig++) {
+            L2_tmp -= 2.*greens_data(ista,ic,ig,itpad) * sources(isrc, ig); 
+          }
+
+          if (hybrid_norm==0) {
+              // L2 norm
+              L2_sum += dt * L2_tmp;
+          }
+          else {
+              // hybrid L1-L2 norm
+              L2_sum += dt * pow(L2_tmp, 0.5);
+          }
         }
 
       }
     }
-    results(isrc) = norm_sum;
+    results(isrc) = L2_sum;
   }
 
   return results;

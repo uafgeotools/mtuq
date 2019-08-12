@@ -138,7 +138,6 @@ class Misfit(object):
         self.time_shift_min = time_shift_min
         self.time_shift_max = time_shift_max
         self.time_shift_groups = time_shift_groups
-        self.verbose = 0
 
 
     def __call__(self, data, greens, sources, optimization_level=1, 
@@ -149,16 +148,16 @@ class Misfit(object):
         if optimization_level==0 or set_attributes:
             return O0.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max, set_attributes, self.verbose)
+                self.time_shift_max, set_attributes)
 
         if optimization_level==1:
             return O1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max, self.verbose)
+                self.time_shift_max)
 
         if optimization_level==2:
             return O2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
-                self.time_shift_max, self.verbose)
+                self.time_shift_max)
 
 

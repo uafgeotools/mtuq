@@ -5,13 +5,14 @@ See ``mtuq/misfit/__init__.py`` for more information
 """
 
 import numpy as np
+import time
 from mtuq.misfit.O1 import correlate
 from mtuq.util.signal import get_components, get_time_sampling
-from mtuq.misfit import ext
+from mtuq.misfit import c_ext_L2
 
 
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
-    verbose=0):
+    verbose=1):
     """
     Data misfit function (fast Python/C version)
 
@@ -37,9 +38,24 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
     greens_greens = _autocorr_nd2(greens, padding)
     greens_data = _corr_nd1_nd2(data, greens, padding)
 
-    return ext.misfit(
-       data_data, greens_data, greens_greens,
-       sources, groups, mask, dt, padding[0], padding[1], 2)
+    if norm=='hybrid':
+        hybrid_norm = 1
+    else:
+        hybrid_norm = 0
+
+    start_time = time.time()
+
+    if norm in ['L2', 'hybrid']:
+        results = c_ext_L2.misfit(
+           data_data, greens_data, greens_greens, sources, groups, mask,
+           hybrid_norm, dt, padding[0], padding[1], verbose)
+
+    else:
+        raise NotImplementedError
+
+    print '  Elapsed time (C extension) (s): %f' % (time.time() - start_time)
+
+    return results
 
 
 def _get_padding(time_shift_max, dt):
@@ -164,7 +180,8 @@ def _get_groups(groups, components):
 
     for _i, group in enumerate(groups):
         for _j, component in enumerate(components):
-            array[_i, _j] = 1
+            if component in group:
+                array[_i, _j] = 1
 
     return array
 
