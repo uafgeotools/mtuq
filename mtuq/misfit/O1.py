@@ -77,6 +77,7 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                 stop = npts+npts_padding - npts_shift
 
                 for _k in indices:
+
                     misfit = 0.
 
                     # sum the resulting residuals
@@ -148,7 +149,6 @@ def get_time_shift(corr, corr_sum, source, indices):
     generated from the given source
     """
     npts_padding = (len(corr_sum)-1)/2
-    ngf = corr.shape[1]
 
     corr_sum[:] = 0.
     for _i in indices:

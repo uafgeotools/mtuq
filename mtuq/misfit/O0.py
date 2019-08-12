@@ -59,18 +59,20 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                 _, indices = list_intersect_with_indices(
                     components, group)
 
+                corr[:] = 0.
                 for _k in indices:
-                    corr += np.correlate(d[_k].data, s[_k].data, 'valid')
+                    corr += np.correlate(s[_k].data, d[_k].data, 'valid')
 
-                npts_shift = corr.argmax()-npts_padding
+                npts_shift = corr.argmax() - npts_padding
                 time_shift = npts_shift*dt
 
                 # what start and stop indices will correctly shift synthetics
                 # relative to data?
-                start = npts_padding-npts_shift
-                stop = npts+npts_padding-npts_shift
+                start = npts_padding + npts_shift
+                stop = start + npts
 
                 for _k in indices:
+
                     # substract data from shifted synthetics
                     r = s[_k].data[start:stop] - d[_k].data
 
