@@ -2,7 +2,7 @@
 import numpy as np
 import warnings
 
-from mtuq.misfit import O0, O1, O2
+from mtuq.misfit import simple, fast1, fast2
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
@@ -71,29 +71,29 @@ class Misfit(object):
     performed by this software package. Python object-oriented programming
     makes it possible to offer three different implementations:
 
-    - a readable pure Python version (``mtuq.misfit.O0.Misfit``)
+    - a readable pure Python version (``mtuq.misfit.simple``)
 
-    - a fast pure Python version (``mtuq.misfit.O1.Misfit``)
+    - a fast pure Python version (``mtuq.misfit.fast1``)
 
-    - a very fast Python/C++ version (``mtuq.misfit.O2.Misfit``)
+    - a very fast Python/C++ version (``mtuq.misfit.fast2``)
 
 
     While exactly the same in terms of input argument syntax, these three 
     versions differ in terms of performance:
 
-    - ``O0`` provides a reference for understanding what the code is doing and 
-      for checking the correctness of the `O1` and `O2` implementations
+    - ``simple`` provides a reference for understanding what the code is doing
+      and for checking the correctness of the fast implementations
 
-    - ``O1`` is an optimized pure Python implementation which provides 
+    - ``fast1`` is an optimized pure Python implementation which provides 
       significant computational savings when `len(sources)` > 100. This
       version is the closest to `ZhuHelmberger1996`'s original C software.
 
-    - ``O2`` is an optimized Python/C++ implementation, in which a Python 
+    - ``fast2`` is an optimized Python/C++ implementation, in which a Python 
       wrapper is used to combine obspy Traces into multidimensional arrays.
       These arrays are passed to a C++ extension module, which does the
-      main computational work. This version requires that all obspy Traces
-      have the same time discretization, which is not a requirement in the
-      other two versions.
+      main computational work. Unlike the other two versions, this 
+      implementation requires that all obspy Traces have the same time
+      discretization
       
 
     """
@@ -146,17 +146,17 @@ class Misfit(object):
         """
 
         if optimization_level==0 or set_attributes:
-            return O0.misfit(
+            return simple.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
                 self.time_shift_max, set_attributes)
 
         if optimization_level==1:
-            return O1.misfit(
+            return fast1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
                 self.time_shift_max)
 
         if optimization_level==2:
-            return O2.misfit(
+            return fast2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
                 self.time_shift_max)
 

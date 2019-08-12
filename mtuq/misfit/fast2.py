@@ -6,7 +6,7 @@ See ``mtuq/misfit/__init__.py`` for more information
 
 import numpy as np
 import time
-from mtuq.misfit.O1 import correlate
+from mtuq.misfit.fast1 import correlate
 from mtuq.util.signal import get_components, get_time_sampling
 from mtuq.misfit import c_ext_L2
 
@@ -34,9 +34,9 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
     sources = _as_array(sources)
 
     # correlation arrays
-    data_data = _autocorr_nd1(data)
-    greens_greens = _autocorr_nd2(greens, padding)
-    greens_data = _corr_nd1_nd2(data, greens, padding)
+    data_data = _autocorr_1(data)
+    greens_greens = _autocorr_2(greens, padding)
+    greens_data = _corr_1_2(data, greens, padding)
 
     if norm=='hybrid':
         hybrid_norm = 1
@@ -205,7 +205,7 @@ def _as_array(sources):
 # optimized cross-correlation functions
 #
 
-def _corr_nd1_nd2(data, greens, padding):
+def _corr_1_2(data, greens, padding):
     # correlates 1D and 2D data structures
     Ncomponents = greens.shape[1]
     Nstations = greens.shape[0]
@@ -228,7 +228,7 @@ def _corr_nd1_nd2(data, greens, padding):
     return corr
 
 
-def _autocorr_nd1(data):
+def _autocorr_1(data):
     # autocorrelates 1D data strucutres (reduces to dot product)
     Ncomponents = data.shape[1]
     Nstations = data.shape[0]
@@ -246,7 +246,7 @@ def _autocorr_nd1(data):
     return corr
 
 
-def _autocorr_nd2(greens, padding):
+def _autocorr_2(greens, padding):
     # autocorrelates 2D data structures
 
     Ncomponents = greens.shape[1]
