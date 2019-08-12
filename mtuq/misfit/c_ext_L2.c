@@ -53,10 +53,10 @@ PyMODINIT_FUNC initc_ext_L2(void) {
     (i0) * PyArray_STRIDES(groups)[0]+\
     (i1) * PyArray_STRIDES(groups)[1])))
 
-#define mask(i0,i1)\
-    (*(npy_float64*)((PyArray_DATA(mask)+\
-    (i0) * PyArray_STRIDES(mask)[0]+\
-    (i1) * PyArray_STRIDES(mask)[1])))
+#define weights(i0,i1)\
+    (*(npy_float64*)((PyArray_DATA(weights)+\
+    (i0) * PyArray_STRIDES(weights)[0]+\
+    (i1) * PyArray_STRIDES(weights)[1])))
 
 #define results(i0)\
     (*(npy_float64*)((PyArray_DATA(results)+\
@@ -77,7 +77,7 @@ PyMODINIT_FUNC initc_ext_L2(void) {
 static PyObject *misfit(PyObject *self, PyObject *args) {
 
   PyArrayObject *data_data, *greens_data, *greens_greens;
-  PyArrayObject *sources, *groups, *mask;
+  PyArrayObject *sources, *groups, *weights;
   int hybrid_norm;
   npy_float64 dt;
   int NPAD1, NPAD2;
@@ -98,7 +98,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
                         &PyArray_Type, &greens_greens,
                         &PyArray_Type, &sources,
                         &PyArray_Type, &groups,
-                        &PyArray_Type, &mask,
+                        &PyArray_Type, &weights,
                         &hybrid_norm,
                         &dt,
                         &NPAD1,
@@ -108,8 +108,8 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   }
 
   NSRC = (int) PyArray_SHAPE(sources)[0];
-  NSTA = (int) PyArray_SHAPE(mask)[0];
-  NC = (int) PyArray_SHAPE(mask)[1];
+  NSTA = (int) PyArray_SHAPE(weights)[0];
+  NC = (int) PyArray_SHAPE(weights)[1];
   NG = (int) PyArray_SHAPE(sources)[1];
   NGRP = (int) PyArray_SHAPE(groups)[0];
 
@@ -167,7 +167,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
            }
 
           // Skip traces that have been assigned zero weight
-          if (((int) mask(ista,ic))==0) {
+          if (((int) weights(ista,ic))==0) {
               if (verbose>1) {
                 if (isrc==0) {
                   printf(" skipping trace: %d %d\n", ista, ic);
@@ -199,7 +199,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
         Calculates L2 norm of difference between data and synthetics
         for all components in the given component group
 
-        Rather than computing (s - d) directly for all time samples, we use a
+        Rather than storing (s - d) directly for all time samples, we use a
         computational shortcut based on
 
         ||s - d||^2 = s^2 + d^2 - 2sd
@@ -214,7 +214,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
           } 
 
           // Skip traces that have been assigned zero weight
-          if (((int) mask(ista,ic))==0) {
+          if (((int) weights(ista,ic))==0) {
               continue;
           }
 
@@ -236,11 +236,11 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
           if (hybrid_norm==0) {
               // L2 norm
-              L2_sum += dt * L2_tmp;
+              L2_sum += dt * weights(ista,ic) * L2_tmp;
           }
           else {
               // hybrid L1-L2 norm
-              L2_sum += dt * pow(L2_tmp, 0.5);
+              L2_sum += dt * weights(ista,ic) * pow(L2_tmp, 0.5);
           }
         }
 
