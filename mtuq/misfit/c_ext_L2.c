@@ -76,19 +76,23 @@ PyMODINIT_FUNC initc_ext_L2(void) {
 
 static PyObject *misfit(PyObject *self, PyObject *args) {
 
+   // cross-correlation input arrays
   PyArrayObject *data_data, *greens_data, *greens_greens;
+
+  // other input arrays
   PyArrayObject *sources, *groups, *weights;
+
+  // scalar input arguments
   int hybrid_norm;
   npy_float64 dt;
   int NPAD1, NPAD2;
   int verbose;
 
-  int NSRC,NSTA,NC,NG,NGRP;
-  int isrc,ista,ic,ig,igrp;
+  int NSRC, NSTA, NC, NG, NGRP;
+  int isrc, ista, ic, ig, igrp;
 
-  int it, itmax, itpad, j1, j2, NPAD;
-  npy_float64 L2_sum, L2_tmp, cc_max;
-  int nd;
+  int cc_argmax, it, itpad, j1, j2, nd, NPAD;
+  npy_float64 cc_max, L2_sum, L2_tmp;
 
 
   // parse arguments
@@ -116,11 +120,11 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   NPAD = (int) NPAD1+NPAD2+1;
 
   if (verbose>1) {
-    printf(" number of groups:  %d\n", NGRP);
     printf(" number of sources:  %d\n", NSRC);
     printf(" number of stations:  %d\n", NSTA);
     printf(" number of components:  %d\n", NC);
     printf(" number of Green's functions:  %d\n\n", NG);
+    printf(" number of component groups:  %d\n", NGRP);
   }
 
 
@@ -135,9 +139,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
 
   //
-  //
   // Begin iterating over sources
-  //
   //
 
   for(isrc=0; isrc<NSRC; ++isrc) {
@@ -184,14 +186,14 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
           }
         }
         cc_max = -NPY_INFINITY;
-        itmax = 0;
+        cc_argmax = 0;
         for (it=0; it<NPAD; it++) {
           if (cc(it) > cc_max) {
             cc_max = cc(it);
-            itmax = it;
+            cc_argmax= it;
           }
         }
-        itpad = itmax;
+        itpad = cc_argmax;
 
 
         /*
@@ -247,8 +249,8 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
       }
     }
     results(isrc) = L2_sum;
-  }
 
+  }
   return results;
 
 }
