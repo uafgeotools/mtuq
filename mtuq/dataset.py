@@ -192,7 +192,7 @@ class Dataset(list):
           represent catalog information read from SAC headers
 
         - For Datasets created using ``GreensTensor.get_synthetics``, origin
-          metadata are inherited from the Greensstream
+          metadata are inherited from the GreensTensor
 
         """
         origins = []

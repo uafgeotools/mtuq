@@ -16,13 +16,13 @@ Install MTUQ:
 
 .. note::
 
-    If you prefer a location other than ``$HOME/packages``, then modify the following accordinly.
+    If you prefer a location other than ``$HOME``, then change the first line accordingly.
 
 
 .. code::
 
+   cd $HOME
    conda activate mtuq_env
-   cd $HOME/packages
    git clone https://github.com/uafseismo/mtuq.git
    cd mtuq
    pip install -e .
