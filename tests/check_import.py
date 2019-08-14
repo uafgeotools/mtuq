@@ -24,7 +24,7 @@ succeeded = []
 excluded = []
 failed = []
 
-excluded += ['mtuq.util.example_data']
+excluded += ['mtuq.util.gallery']
 
 
 def check_package(pkgname):
