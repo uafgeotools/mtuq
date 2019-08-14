@@ -14,10 +14,11 @@ fi
 
 # navigate to mtuq/setup/chinook
 cd $(dirname ${BASH_SOURCE[0]})
+SRC="$PWD"
+ENV="$PWD/install/mtuq"
 
 
-DIR="$PWD/install/mtuq"
-if [[ -d $DIR ]];
+if [[ -d $ENV ]];
 then
     echo ""
     echo "Error: Virtual environment already exists"
@@ -31,16 +32,16 @@ module load lang/Python/2.7.12-pic-intel-2016b
 
 
 # create virutal environment
-mkdir -p $DIR
-virtualenv "$DIR"
-source "${DIR}/bin/activate"
+mkdir -p $ENV
+virtualenv "$ENV"
+source "$ENV/bin/activate"
 pip --no-cache-dir install mpi4py
 pip --no-cache-dir install numpy
 pip --no-cache-dir install obspy instaseis
 
 
 # install mtuq in editable mode
-cd ../..
+cd $SRC
 pip --no-cache-dir install -e .
 
 

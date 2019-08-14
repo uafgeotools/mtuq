@@ -9,8 +9,8 @@ Clone mtuq in a directory of your choice:
 
 Then run the installation script:
 
-    > cd mtuq/setup/chinook
-    > bash install.bash
+    > cd mtuq
+    > bash setup/chinook/install.bash
 
 
 NOTES 
