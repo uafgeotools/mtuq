@@ -46,7 +46,7 @@ class Client(ClientBase):
         self.model = model
 
 
-    def get_greens_tensors(self, stations=[], origins=[]):
+    def get_greens_tensors(self, stations=[], origins=[], verbose=False):
         """ Reads Green's tensors from database
 
         Returns a ``GreensTensorList`` in which each element corresponds to a
@@ -55,7 +55,7 @@ class Client(ClientBase):
         :param stations: List of ``mtuq.Station`` objects
         :param origins: List of ``mtuq.Origin`` objects
         """
-        return super(Client, self).get_greens_tensors(stations, origins)
+        return super(Client, self).get_greens_tensors(stations, origins, verbose)
 
 
     def _get_greens_tensor(self, station=None, origin=None):
