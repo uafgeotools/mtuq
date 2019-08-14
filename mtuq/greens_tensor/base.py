@@ -84,11 +84,10 @@ class GreensTensor(Stream):
         """
         Resets components returned by ``get_synthetics``
 
-        Suppose the vertical and radial components of the recorded data are
-        good but the transerve component is found to be bad.  Calling
-        ``reset_components(['Z', 'R'])`` will cause ``get_synthetics`` to only
-        return the two good components, avoiding unnecessary computation of
-        the bad component
+        Suppose the transerve component at a certain station is found to be
+        bad. Calling ``reset_components(['Z', 'R'])`` would cause 
+        ``get_synthetics`` to only return the vertical and radial components,
+        not the transverse component, avoiding unnecessary computations.
         """
         if components==self.components:
             return
@@ -252,18 +251,19 @@ class GreensTensorList(list):
     # the next three methods can be used to apply signal processing or other
     # operations to all time series in all GreensTensors
     def apply(self, function, *args, **kwargs):
-        """ Applies a function to each GreensTensor in the list
+        """ Applies function to all GreensTensors
  
-        Similar to the Python built-in ``apply``.  
+        Applies a function to each GreensTensor in the list, identical to the 
+        Python built-in ``apply``.  
 
         .. warning ::
 
             Although ``map`` returns a new GreensTensorList, it is possible,
             depending on the behavior of the given function, that the elements 
-            of the original list are overwritten in the process.
+            of the original list are overwritten.
 
-            To control this behavior, ``mtuq.process_data.ProcessData`` has an
-            `overwrite` input argument, which is `False` by default.
+            See also ``mtuq.process_data.ProcessData``, which has an
+            `overwrite` keyword argument that is `False` by default.
 
         """
         processed = []
@@ -274,20 +274,21 @@ class GreensTensorList(list):
 
 
     def map(self, function, *sequences):
-        """ Maps a function to each GreensTensor in the list
+        """ Maps function to all GreensTensors
 
-        If one or more optional sequences are given, the function is called
-        with an argument list consisting of the corresponding item of each 
-        sequence, similar to the behavior of the python built-in ``map``.
+        Maps a function to each GreensTensor in the list. If one or more 
+        optional sequences are given, the function is called with an argument 
+        list consisting of the corresponding item of each sequence, identical 
+        to the Python built-in ``map``.
 
         .. warning ::
 
             Although ``map`` returns a new GreensTensorList, it is possible,
             depending on the behavior of the given function, that the elements 
-            of the original list are overwritten in the process.
+            of the original list are overwritten.
 
-            To control this behavior, ``mtuq.process_data.ProcessData`` has an
-            `overwrite` input argument, which is `False` by default.
+            See also ``mtuq.process_data.ProcessData``, which has an
+            `overwrite` keyword argument that is `False` by default.
 
         """
         processed = []
