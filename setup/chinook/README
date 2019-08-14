@@ -58,7 +58,7 @@ The serial example can be invoked directly:
 
 The parallel examples must be invoked using an sbatch wrapper, e.g.:
 
-    > sbatch submit.bash CapStyleGridSearch.DoubleCouple.py
+    > sbatch submit.bash GridSearch.DoubleCouple.py
 
 
 NOTES
