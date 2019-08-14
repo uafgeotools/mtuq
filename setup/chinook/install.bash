@@ -14,7 +14,7 @@ fi
 
 # navigate to mtuq/setup/chinook
 cd $(dirname ${BASH_SOURCE[0]})
-SRC="$PWD"
+SRC="$PWD/../.."
 ENV="$PWD/install/mtuq"
 
 
