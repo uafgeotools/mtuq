@@ -117,7 +117,7 @@ if __name__=='__main__':
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Greens functions...\n'
+    print 'Reading Green''s functions...\n'
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 

@@ -67,7 +67,7 @@ if __name__=='__main__':
 """
 
 
-Docstring_CapStyleGridSearch_DoubleCouple="""
+Docstring_ChinookGridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
     # THIS EXAMPLE ONLY WORKS ON CHINOOK.ALASKA.EDU
@@ -84,13 +84,13 @@ if __name__=='__main__':
 
     #
     # USAGE
-    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
+    #   mpirun -n <NPROC> python ChinookGridSearch.DoubleCouple.py
     #
 
 """
 
 
-Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDepth="""
+Docstring_ChinookGridSearch_DoubleCoupleMagnitudeDepth="""
 if __name__=='__main__':
     #
     # THIS EXAMPLE ONLY WORKS ON CHINOOK.ALASKA.EDU
@@ -107,7 +107,7 @@ if __name__=='__main__':
 
     #
     # USAGE
-    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple+Magntidue+Depth.py
+    #   mpirun -n <NPROC> python ChinookGridSearch.DoubleCouple+Magntidue+Depth.py
     #
 
 """
@@ -177,7 +177,7 @@ if __name__=='__main__':
 """
 
 
-Docstring_UtilExamples="""
+Docstring_Gallery="""
 if True:
     #
     # Creates example data structures
@@ -310,6 +310,16 @@ Paths_Syngine="""
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
     model=        'ak135'
+
+"""
+
+
+Paths_AxiSEM="""
+    path_greens= '/home/rmodrak/data/ak135f_scak-2s'
+    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
+    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
+    event_name=   '20090407201255351'
+    model=        'ak135f_scak-2s'
 
 """
 
@@ -522,7 +532,7 @@ Main_GridSearch_DoubleCouple="""
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
-        print 'Reading Greens functions...\\n'
+        print 'Reading Green''s functions...\\n'
         greens = download_greens_tensors(stations, origin, model)
 
         print 'Processing Greens functions...\\n'
@@ -587,6 +597,11 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         data.sort_by_distance()
 
+        print 'Processing data...\\n'
+        data_bw = data.map(process_bw)
+        data_sw = data.map(process_sw)
+
+
         stations = data.get_stations()
         origin = data.get_origins()[0]
 
@@ -595,15 +610,13 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             origins += [origin.copy()]
             setattr(origins[-1], 'depth_in_m', depth)
 
+        print 'Reading Green''s functions...\\n'
         greens = download_greens_tensors(stations, origins, model)
 
+        print 'Processing Green''s functions...\\n'
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
-
-        print 'Processing data...\\n'
-        data_bw = data.map(process_bw)
-        data_sw = data.map(process_sw)
 
     else:
         stations = None
@@ -668,7 +681,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Greens functions...\\n'
+    print 'Reading Green''s functions...\\n'
     greens = download_greens_tensors(stations, origin, model)
 
     print 'Processing Greens functions...\\n'
@@ -724,7 +737,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Greens functions...\\n'
+    print 'Reading Green''s functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
 
@@ -769,7 +782,7 @@ Main_TestGraphics="""
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Greens functions...\\n'
+    print 'Reading Green''s functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
@@ -948,7 +961,7 @@ Main_BenchmarkCAP="""
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Greens functions...\\n'
+    print 'Reading Green''s functions...\\n'
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
@@ -1060,7 +1073,7 @@ if __name__=='__main__':
         file.write(WrapUp_GridSearch_DoubleCouple)
 
 
-    with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py', 'w') as file:
+    with open('setup/chinook/examples/GridSearch.DoubleCouple.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
@@ -1068,20 +1081,13 @@ if __name__=='__main__':
             'syngine',
             'fk',
             ))
-        file.write(Docstring_CapStyleGridSearch_DoubleCouple)
-        file.write(
-            replace(
-            Paths_FK,
-           r"path_greens=.*",
-           r"path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/scak'",
-            ))
+        file.write(Docstring_ChinookGridSearch_DoubleCouple)
+        file.write(Paths_AxiSEM)
         file.write(
             replace(
             DataProcessingDefinitions,
-            'pick_type=.*',
-            "pick_type='from_fk_metadata',",
             'taup_model=.*,',
-            'fk_database=path_greens,',
+            'taup_model=\'ak135\',',
             ))
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCouple)
@@ -1089,13 +1095,13 @@ if __name__=='__main__':
             replace(
             Main_GridSearch_DoubleCouple,
             'greens = download_greens_tensors\(stations, origin, model\)',
-            'db = open_db(path_greens, format=\'FK\', model=model)\n        '
-           +'greens = db.get_greens_tensors(stations, origins)',
+            'db = open_db(path_greens, format=\'AxiSEM\', model=model)\n        '
+           +'greens = db.get_greens_tensors(stations, origin)',
             ))
         file.write(WrapUp_GridSearch_DoubleCouple)
 
 
-    with open('setup/chinook/examples/CapStyleGridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
+    with open('setup/chinook/examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
@@ -1107,29 +1113,22 @@ if __name__=='__main__':
             'plot_beachball',
             'misfit_vs_depth',
             ))
-        file.write(Docstring_CapStyleGridSearch_DoubleCoupleMagnitudeDepth)
-        file.write(
-            replace(
-            Paths_FK,
-           r"path_greens=.*",
-           r"path_greens= '/import/c1/ERTHQUAK/ERTHQUAK/FK_synthetics/scak'",
-            ))
+        file.write(Docstring_ChinookGridSearch_DoubleCoupleMagnitudeDepth)
+        file.write(Paths_AxiSEM)
         file.write(
             replace(
             DataProcessingDefinitions,
-            'pick_type=.*',
-            "pick_type='from_fk_metadata',",
             'taup_model=.*,',
-            'fk_database=path_greens,',
+            'taup_model=\'ak135\',',
             ))
         file.write(MisfitDefinitions)
         file.write(Grid_DoubleCoupleMagnitudeDepth)
         file.write(
             replace(
             Main_GridSearch_DoubleCoupleMagnitudeDepth,
-            'greens = download_greens_tensors\(stations, origin, model\)',
-            'db = open_db(path_greens, format=\'FK\', model=model)\n            '
-           +'greens = db.get_greens_tensors(stations, origins)',
+            'greens = download_greens_tensors\(stations, origins, model\)',
+            'db = open_db(path_greens, format=\'AxiSEM\', model=model)\n        '
+           +'greens = db.get_greens_tensors(stations, origins, verbose=True)',
             ))
         file.write(WrapUp_GridSearch_DoubleCoupleMagnitudeDepth)
 
@@ -1274,14 +1273,14 @@ if __name__=='__main__':
         file.write(Main_TestGraphics)
 
 
-    with open('mtuq/util/example_data.py', 'w') as file:
+    with open('mtuq/util/gallery.py', 'w') as file:
         file.write(
             replace(
             Imports,
             'DoubleCoupleGridRandom',
             'DoubleCoupleGridRegular',
              ))
-        file.write(Docstring_UtilExamples)
+        file.write(Docstring_Gallery)
         file.write(Paths_Syngine)
         file.write(DataProcessingDefinitions)
         file.write(MisfitDefinitions)
