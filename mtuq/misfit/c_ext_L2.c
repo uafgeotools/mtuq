@@ -53,10 +53,10 @@ PyMODINIT_FUNC initc_ext_L2(void) {
     (i0) * PyArray_STRIDES(groups)[0]+\
     (i1) * PyArray_STRIDES(groups)[1])))
 
-#define mask(i0,i1)\
-    (*(npy_float64*)((PyArray_DATA(mask)+\
-    (i0) * PyArray_STRIDES(mask)[0]+\
-    (i1) * PyArray_STRIDES(mask)[1])))
+#define weights(i0,i1)\
+    (*(npy_float64*)((PyArray_DATA(weights)+\
+    (i0) * PyArray_STRIDES(weights)[0]+\
+    (i1) * PyArray_STRIDES(weights)[1])))
 
 #define results(i0)\
     (*(npy_float64*)((PyArray_DATA(results)+\
@@ -69,23 +69,30 @@ PyMODINIT_FUNC initc_ext_L2(void) {
 
 
 //
-// misfit function
 //
+// L2 misfit function
+//
+//
+
 static PyObject *misfit(PyObject *self, PyObject *args) {
 
+   // cross-correlation input arrays
   PyArrayObject *data_data, *greens_data, *greens_greens;
-  PyArrayObject *sources, *groups, *mask;
+
+  // other input arrays
+  PyArrayObject *sources, *groups, *weights;
+
+  // scalar input arguments
   int hybrid_norm;
   npy_float64 dt;
   int NPAD1, NPAD2;
   int verbose;
 
-  int NSRC,NSTA,NC,NG,NGRP;
-  int isrc,ista,ic,ig,igrp;
+  int NSRC, NSTA, NC, NG, NGRP;
+  int isrc, ista, ic, ig, igrp;
 
-  int it, itmax, itpad, j1, j2, NPAD;
-  npy_float64 L2_sum, L2_tmp, cc_max;
-  int nd;
+  int cc_argmax, it, itpad, j1, j2, nd, NPAD;
+  npy_float64 cc_max, L2_sum, L2_tmp;
 
 
   // parse arguments
@@ -95,7 +102,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
                         &PyArray_Type, &greens_greens,
                         &PyArray_Type, &sources,
                         &PyArray_Type, &groups,
-                        &PyArray_Type, &mask,
+                        &PyArray_Type, &weights,
                         &hybrid_norm,
                         &dt,
                         &NPAD1,
@@ -105,19 +112,19 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   }
 
   NSRC = (int) PyArray_SHAPE(sources)[0];
-  NSTA = (int) PyArray_SHAPE(mask)[0];
-  NC = (int) PyArray_SHAPE(mask)[1];
+  NSTA = (int) PyArray_SHAPE(weights)[0];
+  NC = (int) PyArray_SHAPE(weights)[1];
   NG = (int) PyArray_SHAPE(sources)[1];
   NGRP = (int) PyArray_SHAPE(groups)[0];
 
   NPAD = (int) NPAD1+NPAD2+1;
 
   if (verbose>1) {
-    printf(" number of groups:  %d\n", NGRP);
     printf(" number of sources:  %d\n", NSRC);
     printf(" number of stations:  %d\n", NSTA);
     printf(" number of components:  %d\n", NC);
     printf(" number of Green's functions:  %d\n\n", NG);
+    printf(" number of component groups:  %d\n", NGRP);
   }
 
 
@@ -132,9 +139,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
 
   //
-  //
   // Begin iterating over sources
-  //
   //
 
   for(isrc=0; isrc<NSRC; ++isrc) {
@@ -147,8 +152,8 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
         /*
 
         Finds the shift between data and synthetics that yields the maximum
-        cross-correlation value across all components in the given group,
-        subject to the (time_shift_min, time_shift_max) constraint
+        cross-correlation value across all components in the given component 
+        group, subject to the (time_shift_min, time_shift_max) constraint
 
         */
 
@@ -158,13 +163,13 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
         for (ic=0; ic<NC; ic++) {
 
-          // Skip components not in the group being considered
+          // Skip components not in the component group being considered
           if (((int) groups(igrp,ic))==0) {
             continue;
            }
 
           // Skip traces that have been assigned zero weight
-          if (((int) mask(ista,ic))==0) {
+          if (((int) weights(ista,ic))==0) {
               if (verbose>1) {
                 if (isrc==0) {
                   printf(" skipping trace: %d %d\n", ista, ic);
@@ -181,22 +186,22 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
           }
         }
         cc_max = -NPY_INFINITY;
-        itmax = 0;
+        cc_argmax = 0;
         for (it=0; it<NPAD; it++) {
           if (cc(it) > cc_max) {
             cc_max = cc(it);
-            itmax = it;
+            cc_argmax= it;
           }
         }
-        itpad = itmax;
+        itpad = cc_argmax;
 
 
         /*
 
         Calculates L2 norm of difference between data and synthetics
-        for all components in the given group
+        for all components in the given component group
 
-        Rather than computing (s - d) directly for all time samples, we use a
+        Rather than storing (s - d) directly for all time samples, we use a
         computational shortcut based on
 
         ||s - d||^2 = s^2 + d^2 - 2sd
@@ -205,13 +210,13 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
         for (ic=0; ic<NC; ic++) {
           L2_tmp = 0.;
 
-          // Skip components not in the current group being considered
+          // Skip components not in the component group being considered
           if (((int) groups(igrp,ic))==0) {
             continue;
           } 
 
           // Skip traces that have been assigned zero weight
-          if (((int) mask(ista,ic))==0) {
+          if (((int) weights(ista,ic))==0) {
               continue;
           }
 
@@ -233,19 +238,19 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
           if (hybrid_norm==0) {
               // L2 norm
-              L2_sum += dt * L2_tmp;
+              L2_sum += dt * weights(ista,ic) * L2_tmp;
           }
           else {
               // hybrid L1-L2 norm
-              L2_sum += dt * pow(L2_tmp, 0.5);
+              L2_sum += dt * weights(ista,ic) * pow(L2_tmp, 0.5);
           }
         }
 
       }
     }
     results(isrc) = L2_sum;
-  }
 
+  }
   return results;
 
 }

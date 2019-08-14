@@ -16,7 +16,7 @@ class Client(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-    def get_greens_tensors(self, stations=[], origins=[]):
+    def get_greens_tensors(self, stations=[], origins=[], verbose=False):
         """ Reads Green's tensors from database
 
         Returns a ``GreensTensorList`` in which each element corresponds to the
@@ -25,9 +25,21 @@ class Client(object):
         :param stations: List of ``mtuq.Station`` objects
         :param origins: List of ``mtuq.Origin`` objects
         """
+        origins = iterable(origins)
+        stations = iterable(stations)
+        ni = len(origins)
+        nj = len(stations)
+
         tensors = []
-        for origin in iterable(origins):
-            for station in iterable(stations):
+        for _i, origin in enumerate(origins):
+            if verbose:
+                print "  reading %d of %d" % (_i+1, ni)
+                print "  origin latitude: %.1f" % origin.latitude
+                print "  origin longitude: %.1f" % origin.longitude
+                print "  origin depth (km): %d" % int(origin.depth_in_m/1000.)
+                print ""
+
+            for _j, station in enumerate(stations):
                 tensors += [self._get_greens_tensor(station, origin)]
 
         return GreensTensorList(tensors)

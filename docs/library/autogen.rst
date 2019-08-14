@@ -29,7 +29,7 @@ autogen
    mtuq.io.clients.axisem_netcdf.Client
    mtuq.io.clients.fk_sac.Client
    mtuq.io.clients.syngine.Client
-   mtuq.misfit.O0
-   mtuq.misfit.O1
-   mtuq.misfit.O2
+   mtuq.misfit.simple
+   mtuq.misfit.fast1
+   mtuq.misfit.fast2
    

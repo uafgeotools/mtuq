@@ -30,23 +30,23 @@ if __name__=='__main__':
 
     #
     # USAGE
-    #   mpirun -n <NPROC> python CapStyleGridSearch.DoubleCouple.py
+    #   mpirun -n <NPROC> python ChinookGridSearch.DoubleCouple.py
     #
 
 
-    path_greens= '/import/c1/ERTHQUAK/rmodrak/wf/FK_synthetics/scak'
+    path_greens= '/home/rmodrak/data/ak135f_scak-2s'
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_name=   '20090407201255351'
-    model=        'scak'
+    model=        'ak135f_scak-2s'
 
 
     process_bw = ProcessData(
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens,
+        pick_type='from_taup_model',
+        taup_model='ak135',
         window_type='cap_bw',
         window_length=15.,
         padding_length=2.,
@@ -58,8 +58,8 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens,
+        pick_type='from_taup_model',
+        taup_model='ak135',
         window_type='cap_sw',
         window_length=150.,
         padding_length=10.,
@@ -115,9 +115,9 @@ if __name__=='__main__':
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
-        print 'Reading Greens functions...\n'
-        db = open_db(path_greens, format='FK', model=model)
-        greens = db.get_greens_tensors(stations, origins)
+        print 'Reading Green''s functions...\n'
+        db = open_db(path_greens, format='AxiSEM', model=model)
+        greens = db.get_greens_tensors(stations, origin)
 
         print 'Processing Greens functions...\n'
         greens.convolve(wavelet)

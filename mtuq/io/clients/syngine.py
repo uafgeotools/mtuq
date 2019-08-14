@@ -56,7 +56,7 @@ class Client(ClientBase):
         self.include_force = include_force
 
 
-    def get_greens_tensors(self, stations=[], origins=[]):
+    def get_greens_tensors(self, stations=[], origins=[], verbose=False):
         """ Downloads Green's tensors
 
         Returns a ``GreensTensorList`` in which each element corresponds to a
@@ -65,7 +65,7 @@ class Client(ClientBase):
         :param stations: List of ``mtuq.Station`` objects
         :param origins: List of ``mtuq.Origin`` objects
         """
-        return super(Client, self).get_greens_tensors(stations, origins)
+        return super(Client, self).get_greens_tensors(stations, origins, verbose)
 
 
     def _get_greens_tensor(self, station=None, origin=None):

@@ -1,5 +1,5 @@
 
-Installing mtuq on chinook
+Installing MTUQ on chinook
 --------------------------
 
 Clone mtuq in a directory of your choice:
@@ -30,7 +30,7 @@ more general instructions in `docs/`.
 
 
 
-Activating the mtuq virtual environment
+Activating the MTUQ virtual environment
 ---------------------------------------
 
 At the beginning of a session, users must activate the virtual environment:
@@ -58,7 +58,7 @@ The serial example can be invoked directly:
 
 The parallel examples must be invoked using an sbatch wrapper, e.g.:
 
-    > sbatch submit.bash CapStyleGridSearch.DoubleCouple.py
+    > sbatch submit.bash GridSearch.DoubleCouple.py
 
 
 NOTES
@@ -66,7 +66,7 @@ NOTES
 - The above examples reproduce results from Silwal2016.
 
 - Recorded seismic data from the main Silwal2016 test case are included in the
-mtuq repository, so it is not necessary to redownload them.
+MTUQ repository, so it is not necessary to redownload them.
 
 - The serial example uses the syngine webservice to obtain AxiSEM Green's
 functions.  The parallel example uses a local chinook databaset to obtain
@@ -78,7 +78,7 @@ Modifying the examples
 ----------------------
 
 To obtain moment tensor estimates for events other than the main Silwal2016 
-event, users can download waveforms using uafseismo/pysep and modify the mtuq
+event, users can download waveforms using uafseismo/pysep and modify the MTUQ
 examples as follows:
 
 - Change `path_data` to the pysep download directory

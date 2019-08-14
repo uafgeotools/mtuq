@@ -122,6 +122,11 @@ if __name__=='__main__':
 
         data.sort_by_distance()
 
+        print 'Processing data...\n'
+        data_bw = data.map(process_bw)
+        data_sw = data.map(process_sw)
+
+
         stations = data.get_stations()
         origin = data.get_origins()[0]
 
@@ -130,15 +135,13 @@ if __name__=='__main__':
             origins += [origin.copy()]
             setattr(origins[-1], 'depth_in_m', depth)
 
+        print 'Reading Green''s functions...\n'
         greens = download_greens_tensors(stations, origins, model)
 
+        print 'Processing Green''s functions...\n'
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
-
-        print 'Processing data...\n'
-        data_bw = data.map(process_bw)
-        data_sw = data.map(process_sw)
 
     else:
         stations = None

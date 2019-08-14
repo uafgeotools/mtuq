@@ -63,15 +63,15 @@ setup(
     entry_points=ENTRY_POINTS,
     python_requires='~=2.7',
     install_requires=[
-        "numpy", "scipy", "obspy", "h5py", "retry",
-        "flake8>=3.0", "pytest", "nose",
+        "numpy", "scipy", "obspy", 
+        "h5py", "retry", "flake8>=3.0", "pytest", "nose",
         "sphinx", "sphinx-bootstrap-theme"
     ],
     ext_modules = [
         Extension(
             'mtuq.misfit.c_ext_L2', ['mtuq/misfit/c_ext_L2.c'],
             include_dirs=[numpy.get_include()],
-            extra_compile_args=["-Ofast", "-march=native"]),
+            extra_compile_args=["-O3", "-march=native"]),
     ],
 )
 

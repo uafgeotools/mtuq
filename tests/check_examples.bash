@@ -10,8 +10,8 @@ FILENAMES="\
     ../examples/GridSearch.DoubleCouple+Magnitude+Depth.py\
     ../examples/GridSearch.FullMomentTensor.py\
     ../examples/SerialGridSearch.DoubleCouple.py\
-    ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple.py\
-    ../setup/chinook/examples/CapStyleGridSearch.DoubleCouple+Magnitude+Depth.py\
+    ../setup/chinook/examples/GridSearch.DoubleCouple.py\
+    ../setup/chinook/examples/GridSearch.DoubleCouple+Magnitude+Depth.py\
     ../tests/benchmark_cap_vs_mtuq.py\
     ../tests/test_graphics.py\
     ../tests/test_grid_search_mt.py\

@@ -34,8 +34,9 @@ module load lang/Python/2.7.12-pic-intel-2016b
 mkdir -p $DIR
 virtualenv "$DIR"
 source "${DIR}/bin/activate"
-pip --no-cache-dir install numpy
 pip --no-cache-dir install mpi4py
+pip --no-cache-dir install numpy
+pip --no-cache-dir install obspy instaseis
 
 
 # install mtuq in editable mode
