@@ -149,3 +149,19 @@ class Force(object):
 
 
 
+class CompositeSource(object):
+    def __init__(self, sources):
+        """ Constructor method
+        """
+        arrays = []
+        size = 0
+        for source in sources:
+            assert type(source) in [MomentTensor, Force]
+            arrays += [source.as_array()]
+            size += arrays[-1].size
+
+        self.sources = sources
+        self.size = size
+        self._array = np.concatenate(arrays)
+
+
