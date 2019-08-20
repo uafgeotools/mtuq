@@ -6,7 +6,9 @@ from numpy import pi as PI
 from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.moment_tensor.TapeTape2015 import to_mij
+#from mtuq.util.moment_tensor.TapeTape2015 import to_mij
+from mtuq.util.moment_tensor import to_mij
+
 
 
 
@@ -39,7 +41,7 @@ class Grid(object):
     the fast axis and ``'y'`` is the slow axis.
 
     """
-    def __init__(self, dict, start=0, stop=None, callback=None):
+    def __init__(self, items, start=0, stop=None, callback=None):
         #:param: dict: dictionary containing names of axes and corresponding lists
         #   of values along axes
         #:param: start: when iterating over the grid, start at this element
@@ -47,13 +49,13 @@ class Grid(object):
         #:param: callback: optional function applied to each grid point
         #   through a callback to the ``get`` method. Can be used to carry out a
         #   linear coordinate transformation or a more general reparameterization
-
+        self.items = items
 
         # list of parameter names
-        self.keys = dict.keys()
+        self.keys = [item[0] for item in items]
         
         # corresponding list of axis arrays
-        self.vals = dict.values()
+        self.vals = [item[1] for item in items]
 
         # what is the length along each axis?
         shape = []
@@ -77,7 +79,7 @@ class Grid(object):
         self.callback = callback
 
  
-    def get(self, i):
+    def get_as_dict(self, i):
         """ Returns `i-th` point of grid
         """
         p = AttribDict()
@@ -89,6 +91,24 @@ class Grid(object):
             return self.callback(p)
         else:
             return p
+
+
+    def get(self, i):
+        """ Returns `i-th` point of grid
+        """
+        vals = self.vals
+        array = np.zeros(self.ndim)
+
+        for _k in range(self.ndim):
+            print self.keys[_k]
+            val = vals[_k]
+            array[_k] = val[i%len(val)]
+            i/=len(val)
+
+        if self.callback:
+            return self.callback(*array)
+        else:
+            return array
 
 
     def partition(self, nproc):
@@ -164,7 +184,7 @@ class UnstructuredGrid(object):
                                'y': np.random.rand(N)})
 
     """
-    def __init__(self, dict, start=0, stop=None, callback=None):
+    def __init__(self, items, start=0, stop=None, callback=None):
         #:param dict: dictionary containing the complete set of coordinate
         #   values for each parameter
         #:param: start: when iterating over the grid, start at this element
@@ -173,12 +193,13 @@ class UnstructuredGrid(object):
         #   through a callback to the ``get`` method. Can be used to carry out a
         #   linear coordinate transformation or a more general 
         #   reparameterization
+        self.items = items
 
         # list of parameter names
-        self.keys = dict.keys()
+        self.keys = [item[0] for item in items]
 
-        # corresponding list of coordinate arrays
-        self.vals = dict.values()
+        # corresponding list of axis arrays
+        self.vals = [item[1] for item in items]
 
         # there is no shape attribute because it is an unstructured grid,
         # however, ndim and size are still well defined
@@ -204,7 +225,7 @@ class UnstructuredGrid(object):
         self.callback = callback
 
 
-    def get(self, i):
+    def get_as_dict(self, i):
         """ Returns `i-th` point of grid
         """
         i -= self.start
@@ -216,6 +237,22 @@ class UnstructuredGrid(object):
             return self.callback(p)
         else:
             return p
+
+
+    def get(self, i):
+        """ Returns `i-th` point of grid
+        """
+        i -= self.start
+        vals = self.vals
+        array = np.zeros(self.ndim)
+
+        for _k in range(self.ndim):
+            array[_k] = vals[_k][i]
+
+        if self.callback:
+            return self.callback(*array)
+        else:
+            return array
 
 
     def partition(self, nproc):
@@ -291,13 +328,13 @@ def FullMomentTensorGridRandom(magnitude=None, npts=50000):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho[_i, :] = M0*np.sqrt(2.)
 
-    return UnstructuredGrid({
-        'rho': rho.flatten(),
-        'v': random(*v),
-        'w': random(*w),
-        'kappa': random(*kappa),
-        'sigma': random(*sigma),
-        'h': random(*h)},
+    return UnstructuredGrid((
+        ('rho', rho.flatten()),
+        ('v', random(*v)),
+        ('w', random(*w)),
+        ('kappa', random(*kappa)),
+        ('sigma', random(*sigma)),
+        ('h', random(*h))),
         callback=to_mij)
 
 
@@ -320,13 +357,13 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho += [M0/np.sqrt(2)]
 
-    return Grid({
-        'rho': asarray(rho),
-        'v': regular(*v),
-        'w': regular(*w),
-        'kappa': regular(*kappa),
-        'sigma': regular(*sigma),
-        'h': regular(*h)},
+    return Grid((
+        ('rho', asarray(rho)),
+        ('v', regular(*v)),
+        ('w', regular(*w)),
+        ('kappa', regular(*kappa)),
+        ('sigma', regular(*sigma)),
+        ('h', regular(*h))),
         callback=to_mij)
 
 
@@ -347,13 +384,13 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho[_i, :] = M0*np.sqrt(2.)
 
-    return UnstructuredGrid({
-        'rho': rho.flatten(),
-        'v': np.zeros(N),
-        'w': np.zeros(N),
-        'kappa': random(*kappa),
-        'sigma': random(*sigma),
-        'h': random(*h)},
+    return UnstructuredGrid((
+        ('rho', rho.flatten()),
+        ('v', np.zeros(N)),
+        ('w', np.zeros(N)),
+        ('kappa', random(*kappa)),
+        ('sigma', random(*sigma)),
+        ('h', random(*h))),
         callback=to_mij)
 
 
@@ -374,13 +411,13 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho += [M0/np.sqrt(2)]
 
-    return Grid({
-        'rho': asarray(rho),
-        'v': asarray(0.),
-        'w': asarray(0.),
-        'kappa': regular(*kappa),
-        'sigma': regular(*sigma),
-        'h': regular(*h)},
+    return Grid((
+        ('rho', asarray(rho)),
+        ('v', asarray(0.)),
+        ('w', asarray(0.)),
+        ('kappa', regular(*kappa)),
+        ('sigma', regular(*sigma)),
+        ('h', regular(*h))),
         callback=to_mij)
 
 
