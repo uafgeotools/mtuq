@@ -140,7 +140,7 @@ class Misfit(object):
         self.time_shift_groups = time_shift_groups
 
 
-    def __call__(self, data, greens, sources, optimization_level=1, 
+    def __call__(self, data, greens, sources, optimization_level=2, 
         set_attributes=False):
         """ Evaluates misfit on given data
         """
