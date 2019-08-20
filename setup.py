@@ -71,7 +71,7 @@ setup(
         Extension(
             'mtuq.misfit.c_ext_L2', ['mtuq/misfit/c_ext_L2.c'],
             include_dirs=[numpy.get_include()],
-            extra_compile_args=["-O3", "-march=native"]),
+            extra_compile_args=["-Ofast", "-march=native"]),
     ],
 )
 
