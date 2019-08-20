@@ -4,7 +4,7 @@ from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
 from mtuq.graphics.beachball import gray
-from mtuq.util.moment_tensor.TapeTape2015 import from_mij
+#from mtuq.util.moment_tensor.TapeTape2015 import from_mij
 from obspy.core import AttribDict
 
 
@@ -46,7 +46,6 @@ class Header(object):
         return ax
 
 
-
 class TextHeader(Header):
     """ Stores header text in a list [[text, position]], where text is a string
     and position is a (x,y) tuple
@@ -85,7 +84,9 @@ class OldStyleHeader(Header):
         self.solver = solver
 
         tt = AttribDict()
-        tt.gamma, tt.delta, tt.M0, tt.kappa, tt.theta, tt.sigma = from_mij(mt)
+        #tt.gamma, tt.delta, tt.M0, tt.kappa, tt.theta, tt.sigma = from_mij(mt)
+        tt.gamma, tt.delta, tt.M0, tt.kappa, tt.theta, tt.sigma =\
+            0., 0., 0., 0., 0., 0.
 
         self.mt = mt
         self.tt = tt
