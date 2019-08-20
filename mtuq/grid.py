@@ -100,7 +100,6 @@ class Grid(object):
         array = np.zeros(self.ndim)
 
         for _k in range(self.ndim):
-            print self.keys[_k]
             val = vals[_k]
             array[_k] = val[i%len(val)]
             i/=len(val)
