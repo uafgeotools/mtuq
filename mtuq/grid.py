@@ -208,7 +208,7 @@ class UnstructuredGrid(object):
         """
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
-            array[_i, :] = self.get(_i)
+            array[_i, :] = self.get(_i+self.start)
         return array
 
 
