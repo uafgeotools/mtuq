@@ -141,7 +141,7 @@ class Misfit(object):
 
 
     def __call__(self, data, greens, sources, verbose=0, 
-        optimization_level=1, set_attributes=False):
+        optimization_level=2, set_attributes=False):
         """ Evaluates misfit on given data
         """
 
