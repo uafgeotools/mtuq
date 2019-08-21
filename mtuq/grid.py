@@ -22,16 +22,16 @@ class Grid(object):
 
     .. code ::
 
-       grid = Grid({'x': np.linspace(0., 1., N),
-                    'y': np.linpsace(0., 1., N)})
+       grid = Grid(('x': np.linspace(0., 1., N)),
+                   ('y': np.linpsace(0., 1., N)))
 
 
     To parameterize the surface of the Earth with an `N`-by-`2N` Mercator grid:
 
     .. code::          
 
-       grid = Grid({'latitude': np.linspace(-90., 90., N),
-                    'longitude': np.linspace(-180., 180., 2*N)})
+       grid = Grid(('latitude': np.linspace(-90., 90., N)),
+                   ('longitude': np.linspace(-180., 180., 2*N)))
 
 
     .. rubric:: Iterating on grids
@@ -42,13 +42,6 @@ class Grid(object):
 
     """
     def __init__(self, items, start=0, stop=None, callback=None):
-        #:param: dict: dictionary containing names of axes and corresponding lists
-        #   of values along axes
-        #:param: start: when iterating over the grid, start at this element
-        #:param: stop: when iterating over the grid, stop at this element
-        #:param: callback: optional function applied to each grid point
-        #   through a callback to the ``get`` method. Can be used to carry out a
-        #   linear coordinate transformation or a more general reparameterization
         self.items = items
 
         # list of parameter names
@@ -120,8 +113,7 @@ class Grid(object):
         for iproc in range(nproc):
             start=iproc*self.size/nproc
             stop=(iproc+1)*self.size/nproc
-            items = zip(self.keys, self.vals)
-            subsets += [Grid(dict(items), start, stop, callback=self.callback)]
+            subsets += [Grid(self.items, start, stop, callback=self.callback)]
         return subsets
 
 
@@ -179,19 +171,11 @@ class UnstructuredGrid(object):
 
     .. code ::
 
-      grid = UnstructuredGrid({'x': np.random.rand(N),
-                               'y': np.random.rand(N)})
+      grid = UnstructuredGrid((('x': np.random.rand(N)),
+                               ('y': np.random.rand(N)))
 
     """
     def __init__(self, items, start=0, stop=None, callback=None):
-        #:param dict: dictionary containing the complete set of coordinate
-        #   values for each parameter
-        #:param: start: when iterating over the grid, start at this element
-        #:param: stop: when iterating over the grid, stop at this element
-        #:param: callback: optional function applied to each grid point
-        #   through a callback to the ``get`` method. Can be used to carry out a
-        #   linear coordinate transformation or a more general 
-        #   reparameterization
         self.items = items
 
         # list of parameter names
@@ -261,10 +245,10 @@ class UnstructuredGrid(object):
         for iproc in range(nproc):
             start=iproc*self.size/nproc
             stop=(iproc+1)*self.size/nproc
-            dict = {}
-            for key, val in zip(self.keys, self.vals):
-                dict[key] = val[start:stop]
-            subsets += [UnstructuredGrid(dict, start, stop, callback=self.callback)]
+            items = []
+            for key, val in self.items:
+                items += [[key, val[start:stop]]]
+            subsets += [UnstructuredGrid(items, start, stop, callback=self.callback)]
         return subsets
 
 

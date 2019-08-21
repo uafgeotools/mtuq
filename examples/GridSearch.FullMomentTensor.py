@@ -86,7 +86,7 @@ if __name__=='__main__':
     #
 
     sources = FullMomentTensorGridRandom(
-        npts=1000000,
+        npts=10000000,
         magnitude=4.5)
 
     wavelet = Trapezoid(
