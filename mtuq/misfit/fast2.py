@@ -12,7 +12,7 @@ from mtuq.misfit import c_ext_L2
 
 
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
-    verbose=1):
+    verbose=0):
     """
     Data misfit function (fast Python/C version)
 

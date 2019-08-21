@@ -140,24 +140,24 @@ class Misfit(object):
         self.time_shift_groups = time_shift_groups
 
 
-    def __call__(self, data, greens, sources, optimization_level=2, 
-        set_attributes=False):
+    def __call__(self, data, greens, sources, verbose=0, 
+        optimization_level=2, set_attributes=False):
         """ Evaluates misfit on given data
         """
 
         if optimization_level==0 or set_attributes:
             return simple.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max, set_attributes)
+                self.time_shift_max, verbose, set_attributes)
 
         if optimization_level==1:
             return fast1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max)
+                self.time_shift_max, verbose)
 
         if optimization_level==2:
             return fast2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
-                self.time_shift_max)
+                self.time_shift_max, verbose)
 
 
