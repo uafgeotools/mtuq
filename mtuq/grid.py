@@ -7,7 +7,7 @@ from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
 #from mtuq.util.moment_tensor.TapeTape2015 import to_mij
-from mtuq.util.lune import to_mij
+from mtuq.util.lune import to_mij, spherical_to_Cartesian
 
 
 
@@ -72,18 +72,13 @@ class Grid(object):
         self.callback = callback
 
  
-    def get_as_dict(self, i):
+    def as_array(self):
         """ Returns `i-th` point of grid
         """
-        p = AttribDict()
-        for key, val in zip(self.keys, self.vals):
-            p[key] = val[i%len(val)]
-            i/=len(val)
-
-        if self.callback:
-            return self.callback(p)
-        else:
-            return p
+        array = np.zeros((self.size, self.ndim))
+        for _i in range(self.size):
+            array[_i, :] = self.get(_i)
+        return array
 
 
     def get(self, i):
@@ -208,18 +203,13 @@ class UnstructuredGrid(object):
         self.callback = callback
 
 
-    def get_as_dict(self, i):
+    def as_array(self):
         """ Returns `i-th` point of grid
         """
-        i -= self.start
-        p = AttribDict()
-        for key, val in zip(self.keys, self.vals):
-            p[key] = val[i]
-
-        if self.callback:
-            return self.callback(p)
-        else:
-            return p
+        array = np.zeros((self.size, self.ndim))
+        for _i in range(self.size):
+            array[_i, :] = self.get(_i)
+        return array
 
 
     def get(self, i):
@@ -292,7 +282,7 @@ class UnstructuredGrid(object):
         return self
 
 
-def FullMomentTensorGridRandom(magnitude=None, npts=50000):
+def FullMomentTensorGridRandom(magnitude=None, npts=50000, callback=to_mij):
     """ Full moment tensor grid with randomly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -318,10 +308,10 @@ def FullMomentTensorGridRandom(magnitude=None, npts=50000):
         ('kappa', random(*kappa)),
         ('sigma', random(*sigma)),
         ('h', random(*h))),
-        callback=to_mij)
+        callback=callback)
 
 
-def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
+def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
     """ Full moment tensor grid with regularly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -347,10 +337,10 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
         ('kappa', regular(*kappa)),
         ('sigma', regular(*sigma)),
         ('h', regular(*h))),
-        callback=to_mij)
+        callback=callback)
 
 
-def DoubleCoupleGridRandom(magnitude=None, npts=50000):
+def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
     """ Double-couple moment tensor grid with randomly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -374,10 +364,10 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000):
         ('kappa', random(*kappa)),
         ('sigma', random(*sigma)),
         ('h', random(*h))),
-        callback=to_mij)
+        callback=callback)
 
 
-def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
+def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
     """ Double-couple moment tensor grid with regularly-spaced values
     """ 
     magnitude, count = _check_magnitude(magnitude)
@@ -401,7 +391,8 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
         ('kappa', regular(*kappa)),
         ('sigma', regular(*sigma)),
         ('h', regular(*h))),
-        callback=to_mij)
+        callback=callback)
+
 
 
 def ForceGridRegular(magnitude=None, npts=25):
@@ -410,7 +401,7 @@ def ForceGridRegular(magnitude=None, npts=25):
     raise NotImplementedError
 
 
-def ForceGridRandom(magnitude=None, npts=50000):
+def ForceGridRandom(magnitude=None, npts=50000, callback=spherical_to_Cartesian):
     """ Full moment tensor grid with randomly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -429,20 +420,7 @@ def ForceGridRandom(magnitude=None, npts=50000):
         'r': r.flatten(),
         'theta': random(*theta),
         'phi': random(*phi)},
-        callback=spherical_to_Cartesian)
-
-
-
-def spherical_to_Cartesian(dict):
-    r = dict.r
-    theta = dict.theta
-    phi = dict.phi
-
-    x = r*np.sin(theta)*cos(phi)
-    y = r*np.sin(theta)*cos(phi)
-    z = r*np.cos(theta)
-
-    return np.array([x, y, z])
+        callback=callback)
 
 
 def _check_magnitude(M):
