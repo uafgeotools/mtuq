@@ -16,6 +16,7 @@ FILENAMES="\
     ../tests/test_graphics.py\
     ../tests/test_grid_search_mt.py\
     ../tests/test_grid_search_mt_depth.py\
+    ../tests/test_misfit.py\
     "
 
 
