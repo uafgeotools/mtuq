@@ -67,7 +67,7 @@ class Client(ClientBase):
             origin_time=origin.time,
             kind='displacement',
             kernelwidth=self.kernelwidth,
-            definition=u'seiscomp')
+            definition='seiscomp')
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)

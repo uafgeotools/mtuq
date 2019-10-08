@@ -54,8 +54,8 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
         raise NotImplementedError
 
     if verbose:
-      print '  Elapsed time (C extension) (s): %f' % \
-          (time.time() - start_time)
+      print('  Elapsed time (C extension) (s): %f' % \
+          (time.time() - start_time))
 
     return results
 

@@ -8,7 +8,7 @@ import time
 import numpy as np
 import obspy
 import re
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import uuid
 import warnings
 import zipfile
@@ -72,7 +72,7 @@ def timer(func):
 
         if kwargs.get('verbose', True):
             _elapsed_time = time.time() - start_time
-            print '  Elapsed time (s): %f\n' % _elapsed_time
+            print('  Elapsed time (s): %f\n' % _elapsed_time)
 
         return output
 
@@ -100,7 +100,7 @@ def timer(func):
             start_time = time.time()
             output = func(*args, **kwargs)
             elapsed_time = time.time() - start_time
-            print '  Elapsed time (s): %f\n' % elapsed_time
+            print('  Elapsed time (s): %f\n' % elapsed_time)
             return output
         else:
             return func(*args, **kwargs)
@@ -135,7 +135,7 @@ def warn(*args, **kwargs):
 
 @retry(Exception, tries=4, delay=2, backoff=2)
 def urlopen_with_retry(url, filename):
-    download = urllib.URLopener()
+    download = urllib.request.URLopener()
     download.retrieve(url, filename)
 
 

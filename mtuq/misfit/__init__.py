@@ -2,7 +2,7 @@
 import numpy as np
 import warnings
 
-from mtuq.misfit import simple, fast1, fast2
+from mtuq.misfit import simple, fast1#, fast2
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
@@ -141,7 +141,7 @@ class Misfit(object):
 
 
     def __call__(self, data, greens, sources, verbose=0, 
-        optimization_level=2, set_attributes=False):
+        optimization_level=1, set_attributes=False):
         """ Evaluates misfit on given data
         """
 

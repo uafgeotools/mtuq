@@ -115,14 +115,14 @@ if __name__=='__main__':
     nproc = comm.Get_size()
 
     if rank==0:
-        print 'Reading data...\n'
+        print('Reading data...\n')
         data = read(path_data, format='sac', 
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
 
         data.sort_by_distance()
 
-        print 'Processing data...\n'
+        print('Processing data...\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
@@ -135,10 +135,10 @@ if __name__=='__main__':
             origins += [origin.copy()]
             setattr(origins[-1], 'depth_in_m', depth)
 
-        print 'Reading Green''s functions...\n'
+        print('Reading Green''s functions...\n')
         greens = download_greens_tensors(stations, origins, model)
 
-        print 'Processing Green''s functions...\n'
+        print('Processing Green''s functions...\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
@@ -164,13 +164,13 @@ if __name__=='__main__':
     #
 
     if rank==0:
-        print 'Evaluating body wave misfit...\n'
+        print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origins, sources)
 
     if rank==0:
-        print 'Evaluating surface wave misfit...\n'
+        print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origins, sources)
@@ -189,7 +189,7 @@ if __name__=='__main__':
     #
 
     if comm.rank==0:
-        print 'Saving results...\n'
+        print('Saving results...\n')
 
         plot_data_greens(event_name+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
@@ -201,4 +201,4 @@ if __name__=='__main__':
         misfit_vs_depth(event_name+'_misfit_vs_depth_sw.png',
             data_sw, misfit_sw, origins, sources, results_sw)
 
-        print 'Finished\n'
+        print('Finished\n')

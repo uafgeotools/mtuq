@@ -76,7 +76,7 @@ def download_greens_tensor(url, model, station, origin):
     elif exists(filename+'.zip'):
         return filename
     else:
-        print ' Downloading Green''s functions for station %s' % station.station
+        print(' Downloading Green''s functions for station %s' % station.station)
         urlopen_with_retry(url, filename+'.zip')
         return filename
 
@@ -116,7 +116,7 @@ def download_synthetics(url, model, station, origin, source):
     elif exists(filename+'.zip'):
         return filename
     else:
-        print ' Downloading waveforms for station %s' % station.station
+        print(' Downloading waveforms for station %s' % station.station)
         urlopen_with_retry(url, filename+'.zip')
         return filename+'.zip'
 

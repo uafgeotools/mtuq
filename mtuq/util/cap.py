@@ -289,12 +289,12 @@ def compare_cap_mtuq(cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_,
                 e = np.linalg.norm((bw1.data-bw2.data)*dt, norm)
                 e *= dt/maxval
                 if e > bw_tol:
-                    print ((
+                    print(((
                         "Discrepancy between CAP and MTUQ synthetics\n"+
                         "  category:  body waves\n"+
                         "  error:     %e\n"+
                         "  threshold: %e\n") %
-                        (e, bw_tol))
+                        (e, bw_tol)))
 
                     count += 1
 
@@ -309,13 +309,13 @@ def compare_cap_mtuq(cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_,
                 e = np.linalg.norm((sw1.data-sw2.data)*dt, norm)
                 e *= dt/maxval 
                 if e > sw_tol:
-                    print ((
+                    print(((
                         "Discrepancy between CAP and MTUQ synthetics\n"+
                         "  category:  surface waves\n"+
                         "  id:        %s\n"+
                         "  error:     %e\n"+
                         "  threshold: %e\n") %
-                        (sw1.id, e, sw_tol))
+                        (sw1.id, e, sw_tol)))
 
                     count += 1
 

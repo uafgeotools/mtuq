@@ -128,19 +128,19 @@ def debug_L2_norm(data, synthetics, greens_greens, data_data, greens_data,
     dd = np.sum(data**2)
     #print 'error dd:',\
     #    (dd - data_data[i1])/dd
-    print 'dd:',dd
+    print('dd:',dd)
 
     ss = np.sum(synthetics**2)
     #print 'error ss:',\
     #    (ss - np.dot(np.dot(greens_greens[i1, i2, :, :], source), source))/ss
-    print 'ss:',ss
+    print('ss:',ss)
 
     sd = np.sum(synthetics*data)
     #print 'error sd:',\
     #    (sd - np.dot(greens_data[i1, :, i2], source))/sd
-    print 'sd:',sd
+    print('sd:',sd)
 
-    print ''
+    print('')
 
 
 def get_time_shift(corr, corr_sum, source, indices):
