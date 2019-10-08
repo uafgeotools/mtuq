@@ -71,7 +71,7 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Physics",
@@ -80,7 +80,7 @@ setup(
         "seismology"
     ],
     entry_points=ENTRY_POINTS,
-    python_requires='~=2.7',
+    python_requires='~=3.5',
     install_requires=[
         "numpy", "scipy", "obspy==1.1.0", 
         "h5py", "retry", "flake8>=3.0", "pytest", "nose",
