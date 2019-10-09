@@ -2,6 +2,7 @@
 
 import numpy as np
 
+from builtins import object
 from numpy import pi as PI
 from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
