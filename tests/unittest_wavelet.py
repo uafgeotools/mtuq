@@ -17,7 +17,7 @@ def _is_close(a, b):
     if abs(a-b) < EPSVAL:
         return True
     else:
-        print 'Error:', abs(a-b)
+        print('Error:', abs(a-b))
         return False
 
 

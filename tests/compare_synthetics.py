@@ -540,7 +540,7 @@ if __name__=='__main__':
 
 
     if include_axisem:
-        print "Reading AxiSEM Greens's functions..."
+        print("Reading AxiSEM Greens's functions...")
         model = 'ak135'
         client_axisem = axisem_netcdf.Client(path_greens_axisem)
         greens_axisem = client_axisem.get_greens_tensors(stations, origins)
@@ -548,7 +548,7 @@ if __name__=='__main__':
 
 
     if include_fk:
-        print "Reading FK Greens's functions..."
+        print("Reading FK Greens's functions...")
         model = 'scak'
         client_fk = fk_sac.Client(path_greens_fk)
         greens_fk = client_fk.get_greens_tensors(stations, origins)
@@ -556,16 +556,16 @@ if __name__=='__main__':
 
 
     if include_syngine:
-        print "Downloading syngine Green's functions..."
+        print("Downloading syngine Green's functions...")
         model = 'ak135'
         client_syngine = syngine.Client(model=model)
         greens_syngine = client_syngine.get_greens_tensors(stations, origins)
         greens_syngine = process_data(greens_syngine)
 
 
-    print "Plotting synthetics..."
+    print("Plotting synthetics...")
     for _i, station in enumerate(stations):
-        print ' station %d of %d\n' % (_i+1, len(stations))
+        print(' station %d of %d\n' % (_i+1, len(stations)))
         # new figure object
         pyplot.figure(figsize=(30, 6.))
 

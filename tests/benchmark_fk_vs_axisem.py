@@ -254,7 +254,7 @@ if __name__=='__main__':
     greens_fk_sw = greens_fk.map(process_sw, stations, origins)
 
     for _i, mt in enumerate(grid):
-        print '%d of %d' % (_i+1, len(grid))
+        print('%d of %d' % (_i+1, len(grid)))
 
         fk_bw = greens_fk_bw.get_synthetics(mt)
         fk_sw = greens_fk_sw.get_synthetics(mt)

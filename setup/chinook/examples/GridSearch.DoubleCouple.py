@@ -101,7 +101,7 @@ if __name__=='__main__':
     #
 
     if comm.rank==0:
-        print 'Reading data...\n'
+        print('Reading data...\n')
         data = read(path_data, format='sac', 
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
@@ -111,15 +111,15 @@ if __name__=='__main__':
         stations = data.get_stations()
         origin = data.get_origins()[0]
 
-        print 'Processing data...\n'
+        print('Processing data...\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
-        print 'Reading Green''s functions...\n'
+        print('Reading Green''s functions...\n')
         db = open_db(path_greens, format='AxiSEM', model=model)
         greens = db.get_greens_tensors(stations, origin)
 
-        print 'Processing Greens functions...\n'
+        print('Processing Greens functions...\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
@@ -145,13 +145,13 @@ if __name__=='__main__':
     #
 
     if comm.rank==0:
-        print 'Evaluating body wave misfit...\n'
+        print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origin, sources)
 
     if comm.rank==0:
-        print 'Evaluating surface wave misfit...\n'
+        print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, sources)
@@ -166,7 +166,7 @@ if __name__=='__main__':
     #
 
     if comm.rank==0:
-        print 'Savings results...\n'
+        print('Savings results...\n')
 
         plot_data_greens(event_name+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
@@ -176,5 +176,5 @@ if __name__=='__main__':
 
         #grid.save(event_name+'.h5', {'misfit': results})
 
-        print 'Finished\n'
+        print('Finished\n')
 

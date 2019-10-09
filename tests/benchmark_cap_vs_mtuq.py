@@ -168,7 +168,7 @@ if __name__=='__main__':
     # The benchmark starts now
     #
 
-    print 'Reading data...\n'
+    print('Reading data...\n')
     data = read(path_data, format='sac', 
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
@@ -179,15 +179,15 @@ if __name__=='__main__':
     origin = data.get_origins()[0]
 
 
-    print 'Processing data...\n'
+    print('Processing data...\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Green''s functions...\n'
+    print('Reading Green''s functions...\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
-    print 'Processing Greens functions...\n'
+    print('Processing Greens functions...\n')
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
@@ -197,10 +197,10 @@ if __name__=='__main__':
     name = '_'.join([model, str(depth), event_name])
 
 
-    print 'Comparing waveforms...'
+    print('Comparing waveforms...')
 
     for _i, mt in enumerate(sources):
-        print '  %d of %d' % (_i+1, len(sources))
+        print('  %d of %d' % (_i+1, len(sources)))
 
         cap_bw, cap_sw = get_synthetics_cap(
             data_bw, data_sw, paths[_i], name)
@@ -229,5 +229,5 @@ if __name__=='__main__':
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
             stations, origin, trace_labels=False, normalize=False)
 
-    print '\nSUCCESS\n'
+    print('\nSUCCESS\n')
 
