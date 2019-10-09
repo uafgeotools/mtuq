@@ -8,10 +8,15 @@ import time
 import numpy as np
 import obspy
 import re
-import urllib.request, urllib.parse, urllib.error
 import uuid
 import warnings
 import zipfile
+
+
+try:
+    from urllib import URLopener
+except ImportError:
+    from urllib.request import URLopener
 
 
 class AttribDict(obspy.core.util.attribdict.AttribDict):
@@ -135,8 +140,8 @@ def warn(*args, **kwargs):
 
 @retry(Exception, tries=4, delay=2, backoff=2)
 def urlopen_with_retry(url, filename):
-    download = urllib.request.URLopener()
-    download.retrieve(url, filename)
+    opener = URLopener()
+    opener.retrieve(url, filename)
 
 
 def url2uuid(url):
