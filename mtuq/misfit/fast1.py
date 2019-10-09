@@ -86,14 +86,16 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                         misfit = dt*np.sum(abs(r))
 
                     elif norm=='L2':
+                        #TODO: WHY ARE ARGUMENTS NOT INT TO BEGIN WITH?
                         misfit = dt * get_L2_norm(
                             greens_greens[_j], data_data[_j], greens_data[_j],
-                            source, _k, npts_shift+npts_padding)
+                            source, int(_k), int(npts_shift+npts_padding))
 
                     elif norm=='hybrid':
+                        #TODO: WHY ARE ARGUMENTS NOT INT TO BEGIN WITH?
                         misfit = dt * get_L2_norm(
                             greens_greens[_j], data_data[_j], greens_data[_j],
-                            source, _k, npts_shift+npts_padding)**0.5
+                            source, int(_k), int(npts_shift+npts_padding))**0.5
 
                     results[_i] += d[_k].weight * misfit
 
