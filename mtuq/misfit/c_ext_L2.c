@@ -4,6 +4,7 @@
 #include <numpy/npy_math.h>
 #include <math.h>
 
+
 //
 // array access macros
 //
@@ -78,11 +79,6 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   int cc_argmax, it, itpad, j1, j2, nd, NPAD;
   npy_float64 cc_max, L2_sum, L2_tmp;
 
-  if (1==1) {
-    printf("Made it here-1.\n");
-  }
-
-
 
   // parse arguments
   if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!idiii",
@@ -100,10 +96,6 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
     return NULL;
   }
 
-  if (1==1) {
-    printf("Made it here-2.\n");
-  }
-
 
   NSRC = (int) PyArray_SHAPE(sources)[0];
   NSTA = (int) PyArray_SHAPE(weights)[0];
@@ -113,7 +105,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
   NPAD = (int) NPAD1+NPAD2+1;
 
-  if (1==1) {
+  if (verbose>1) {
     printf(" number of sources:  %d\n", NSRC);
     printf(" number of stations:  %d\n", NSTA);
     printf(" number of components:  %d\n", NC);
@@ -261,23 +253,25 @@ static PyMethodDef methods[] = {
 
 
 #if PY_MAJOR_VERSION >= 3
-static struct PyModuleDef moduledef = {
+static struct PyModuleDef misfit_module = {
   PyModuleDef_HEAD_INIT,
   "c_ext_L2",
   "Misfit function (fast C implementation)",
   -1,                  /* m_size */
   methods,             /* m_methods */
-};
+  };
 #endif
 
 
 #if PY_MAJOR_VERSION >= 3
 PyMODINIT_FUNC PyInit_c_ext_L2(void) {
-    Py_Initialize();
-    return PyModule_Create(&moduledef);
-}
+  Py_Initialize();
+  import_array();
+  return PyModule_Create(&misfit_module);
+  }
 #else
 PyMODINIT_FUNC initc_ext_L2(void) {
   (void) Py_InitModule("c_ext_L2", methods);
   import_array();
+  }
 #endif
