@@ -94,7 +94,7 @@ if __name__=='__main__':
     # The main I/O work starts now
     #
 
-    print 'Reading data...\n'
+    print('Reading data...\n')
     data = read(path_data, format='sac',
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
@@ -105,15 +105,15 @@ if __name__=='__main__':
     origin = data.get_origins()[0]
 
 
-    print 'Processing data...\n'
+    print('Processing data...\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Green''s functions...\n'
+    print('Reading Green''s functions...\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
-    print 'Processing Greens functions...\n'
+    print('Processing Greens functions...\n')
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
@@ -123,7 +123,7 @@ if __name__=='__main__':
     # The main computational work starts nows
     #
 
-    print 'Evaluating body wave misfit...\n'
+    print('Evaluating body wave misfit...\n')
 
     results_0 = misfit_bw(
         data_bw, greens_bw, sources, optimization_level=0)
@@ -134,13 +134,13 @@ if __name__=='__main__':
     results_2 = misfit_bw(
         data_bw, greens_bw, sources, optimization_level=2)
 
-    print results_0.max()
-    print results_1.max()
-    print results_2.max()
-    print ''
+    print(results_0.max())
+    print(results_1.max())
+    print(results_2.max())
+    print('')
 
 
-    print 'Evaluating surface wave misfit...\n'
+    print('Evaluating surface wave misfit...\n')
 
     results_0 = misfit_sw(
         data_sw, greens_sw, sources, optimization_level=0)
@@ -151,8 +151,8 @@ if __name__=='__main__':
     results_2 = misfit_sw(
         data_sw, greens_sw, sources, optimization_level=2)
 
-    print results_0.max()
-    print results_1.max()
-    print results_2.max()
-    print ''
+    print(results_0.max())
+    print(results_1.max())
+    print(results_2.max())
+    print('')
 

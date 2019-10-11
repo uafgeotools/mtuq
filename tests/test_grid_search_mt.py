@@ -102,7 +102,7 @@ if __name__=='__main__':
     # The main I/O work starts now
     #
 
-    print 'Reading data...\n'
+    print('Reading data...\n')
     data = read(path_data, format='sac',
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
@@ -113,15 +113,15 @@ if __name__=='__main__':
     origin = data.get_origins()[0]
 
 
-    print 'Processing data...\n'
+    print('Processing data...\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Green''s functions...\n'
+    print('Reading Green''s functions...\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
-    print 'Processing Greens functions...\n'
+    print('Processing Greens functions...\n')
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
@@ -131,12 +131,12 @@ if __name__=='__main__':
     # The main computational work starts nows
     #
 
-    print 'Evaluating body wave misfit...\n'
+    print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origin, sources)
 
-    print 'Evaluating surface wave misfit...\n'
+    print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, sources)
@@ -164,9 +164,9 @@ if __name__=='__main__':
             for _a, _b, _bool in zip(
                 a, b, np.isclose(a, b, atol=atol, rtol=rtol)):
 
-                print '%s:  %.e <= %.1e + %.1e * %.1e' %\
-                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
-            print ''
+                print('%s:  %.e <= %.1e + %.1e * %.1e' %\
+                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b)))
+            print('')
 
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
@@ -185,4 +185,4 @@ if __name__=='__main__':
             raise Exception(
                 "Grid search result differs from previous mtuq result")
 
-        print 'SUCCESS\n'
+        print('SUCCESS\n')

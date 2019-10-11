@@ -86,14 +86,16 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
                         misfit = dt*np.sum(abs(r))
 
                     elif norm=='L2':
+                        #TODO: WHY ARE ARGUMENTS NOT INT TO BEGIN WITH?
                         misfit = dt * get_L2_norm(
                             greens_greens[_j], data_data[_j], greens_data[_j],
-                            source, _k, npts_shift+npts_padding)
+                            source, int(_k), int(npts_shift+npts_padding))
 
                     elif norm=='hybrid':
+                        #TODO: WHY ARE ARGUMENTS NOT INT TO BEGIN WITH?
                         misfit = dt * get_L2_norm(
                             greens_greens[_j], data_data[_j], greens_data[_j],
-                            source, _k, npts_shift+npts_padding)**0.5
+                            source, int(_k), int(npts_shift+npts_padding))**0.5
 
                     results[_i] += d[_k].weight * misfit
 
@@ -128,19 +130,19 @@ def debug_L2_norm(data, synthetics, greens_greens, data_data, greens_data,
     dd = np.sum(data**2)
     #print 'error dd:',\
     #    (dd - data_data[i1])/dd
-    print 'dd:',dd
+    print('dd:',dd)
 
     ss = np.sum(synthetics**2)
     #print 'error ss:',\
     #    (ss - np.dot(np.dot(greens_greens[i1, i2, :, :], source), source))/ss
-    print 'ss:',ss
+    print('ss:',ss)
 
     sd = np.sum(synthetics*data)
     #print 'error sd:',\
     #    (sd - np.dot(greens_data[i1, :, i2], source))/sd
-    print 'sd:',sd
+    print('sd:',sd)
 
-    print ''
+    print('')
 
 
 def get_time_shift(corr, corr_sum, source, indices):

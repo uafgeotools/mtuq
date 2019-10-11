@@ -236,15 +236,17 @@ class GaborWavelet(Wavelet):
 #
 
 def _is_symmetric(w):
-    npts = len(w)
+    npts = int(len(w))
 
     if np.remainder(npts, 2) == 0:
+        half = int(npts/2)
         # even number of points
-        return _is_close(w[:npts/2], w[npts/2:])
+        return _is_close(w[half-1::-1], w[half:])
 
     else:
         # odd number of points
-        return _is_close(w[:(npts-1)/2], w[(npts+1)/2:])
+        half = int((npts-1)/2)
+        return _is_close(w[half::-1], w[half:])
 
 
 def _is_close(w1, w2):

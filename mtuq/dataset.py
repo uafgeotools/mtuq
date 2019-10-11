@@ -220,7 +220,7 @@ class Dataset(list):
        Tags can be used to support customized uses, such as storing metdata not
        included in ``Station`` or ``Origin`` objects
        """
-       if type(tag) not in [str, unicode]:
+       if type(tag)!=str:
            raise TypeError
 
        for stream in self:

@@ -2,6 +2,7 @@
 
 import numpy as np
 
+from builtins import object
 from numpy import pi as PI
 from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
@@ -89,7 +90,7 @@ class Grid(object):
 
         for _k in range(self.ndim):
             val = vals[_k]
-            array[_k] = val[i%len(val)]
+            array[_k] = val[int(i%len(val))]
             i/=len(val)
 
         if self.callback:
@@ -130,14 +131,8 @@ class Grid(object):
 
 
     # the next two methods make it possible to iterate over the grid
-    def next(self): 
+    def __next__(self): 
         """ Advances iteration index
-
-        .. warning::
-
-           This method is no longer required in Python3 and will be removed in
-           the near future.
-           
         """
         if self.index < self.stop:
            # get the i-th point in grid
@@ -259,14 +254,8 @@ class UnstructuredGrid(object):
 
 
     # the next two methods make it possible to iterate over the grid
-    def next(self): 
+    def __next__(self): 
         """ Advances iteration index
-
-        .. warning::
-
-           This method is no longer required in Python3 and will be removed in
-           the near future.
-           
         """
         if self.index < self.stop:
            # get the i-th point in grid

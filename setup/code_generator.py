@@ -527,7 +527,7 @@ Main_GridSearch_DoubleCouple="""
     #
 
     if comm.rank==0:
-        print 'Reading data...\\n'
+        print('Reading data...\\n')
         data = read(path_data, format='sac', 
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
@@ -537,14 +537,14 @@ Main_GridSearch_DoubleCouple="""
         stations = data.get_stations()
         origin = data.get_origins()[0]
 
-        print 'Processing data...\\n'
+        print('Processing data...\\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
-        print 'Reading Green''s functions...\\n'
+        print('Reading Green''s functions...\\n')
         greens = download_greens_tensors(stations, origin, model)
 
-        print 'Processing Greens functions...\\n'
+        print('Processing Greens functions...\\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
@@ -570,13 +570,13 @@ Main_GridSearch_DoubleCouple="""
     #
 
     if comm.rank==0:
-        print 'Evaluating body wave misfit...\\n'
+        print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origin, sources)
 
     if comm.rank==0:
-        print 'Evaluating surface wave misfit...\\n'
+        print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, sources)
@@ -599,14 +599,14 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     nproc = comm.Get_size()
 
     if rank==0:
-        print 'Reading data...\\n'
+        print('Reading data...\\n')
         data = read(path_data, format='sac', 
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
 
         data.sort_by_distance()
 
-        print 'Processing data...\\n'
+        print('Processing data...\\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
@@ -619,10 +619,10 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             origins += [origin.copy()]
             setattr(origins[-1], 'depth_in_m', depth)
 
-        print 'Reading Green''s functions...\\n'
+        print('Reading Green''s functions...\\n')
         greens = download_greens_tensors(stations, origins, model)
 
-        print 'Processing Green''s functions...\\n'
+        print('Processing Green''s functions...\\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
@@ -648,13 +648,13 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
 
     if rank==0:
-        print 'Evaluating body wave misfit...\\n'
+        print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origins, sources)
 
     if rank==0:
-        print 'Evaluating surface wave misfit...\\n'
+        print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origins, sources)
@@ -675,7 +675,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     # The main I/O work starts now
     #
 
-    print 'Reading data...\\n'
+    print('Reading data...\\n')
     data = read(path_data, format='sac',
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
@@ -686,14 +686,14 @@ Main1_SerialGridSearch_DoubleCouple="""
     origin = data.get_origins()[0]
 
 
-    print 'Processing data...\\n'
+    print('Processing data...\\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Green''s functions...\\n'
+    print('Reading Green''s functions...\\n')
     greens = download_greens_tensors(stations, origin, model)
 
-    print 'Processing Greens functions...\\n'
+    print('Processing Greens functions...\\n')
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
@@ -706,12 +706,12 @@ Main2_SerialGridSearch_DoubleCouple="""
     # The main computational work starts nows
     #
 
-    print 'Evaluating body wave misfit...\\n'
+    print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origin, sources)
 
-    print 'Evaluating surface wave misfit...\\n'
+    print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, sources)
@@ -727,7 +727,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     # The main I/O work starts now
     #
 
-    print 'Reading data...\\n'
+    print('Reading data...\\n')
     data = read(path_data, format='sac', 
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
@@ -742,15 +742,15 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
         origins += [origin.copy()]
         setattr(origins[-1], 'depth_in_m', depth)
 
-    print 'Processing data...\\n'
+    print('Processing data...\\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Green''s functions...\\n'
+    print('Reading Green''s functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
 
-    print 'Processing Greens functions...\\n'
+    print('Processing Greens functions...\\n')
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
@@ -760,12 +760,12 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     # The main computational work starts now
     #
 
-    print 'Evaluating body wave misfit...\\n'
+    print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origins, sources, verbose=False)
 
-    print 'Evaluating surface wave misfit...\\n'
+    print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origins, sources, verbose=False)
@@ -776,7 +776,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
 
 Main_TestGraphics="""
 
-    print 'Reading data...\\n'
+    print('Reading data...\\n')
     data = read(path_data, format='sac',
         event_id=event_name,
         tags=['units:cm', 'type:velocity'])
@@ -787,15 +787,15 @@ Main_TestGraphics="""
     origin = data.get_origins()[0]
 
 
-    print 'Processing data...\\n'
+    print('Processing data...\\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Green''s functions...\\n'
+    print('Reading Green''s functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
-    print 'Processing Greens functions...\\n'
+    print('Processing Greens functions...\\n')
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
@@ -805,23 +805,23 @@ Main_TestGraphics="""
     # Generate figures
     #
 
-    print 'Figure 1 of 3\\n'
+    print('Figure 1 of 3\\n')
 
     plot_data_greens(event_name+'.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
-    print 'Figure 2 of 3\\n'
+    print('Figure 2 of 3\\n')
 
     plot_data_greens(event_name+'.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
-    print 'Figure 3 of 3\\n'
+    print('Figure 3 of 3\\n')
 
     plot_beachball('test_graphics3.png', mt)
 
-    print 'Finished\\n'
+    print('Finished\\n')
 """
 
 
@@ -831,7 +831,7 @@ Main_TestMisfit="""
     # The main computational work starts nows
     #
 
-    print 'Evaluating body wave misfit...\\n'
+    print('Evaluating body wave misfit...\\n')
 
     results_0 = misfit_bw(
         data_bw, greens_bw, sources, optimization_level=0)
@@ -842,13 +842,13 @@ Main_TestMisfit="""
     results_2 = misfit_bw(
         data_bw, greens_bw, sources, optimization_level=2)
 
-    print results_0.max()
-    print results_1.max()
-    print results_2.max()
-    print ''
+    print(results_0.max())
+    print(results_1.max())
+    print(results_2.max())
+    print('')
 
 
-    print 'Evaluating surface wave misfit...\\n'
+    print('Evaluating surface wave misfit...\\n')
 
     results_0 = misfit_sw(
         data_sw, greens_sw, sources, optimization_level=0)
@@ -859,10 +859,10 @@ Main_TestMisfit="""
     results_2 = misfit_sw(
         data_sw, greens_sw, sources, optimization_level=2)
 
-    print results_0.max()
-    print results_1.max()
-    print results_2.max()
-    print ''
+    print(results_0.max())
+    print(results_1.max())
+    print(results_2.max())
+    print('')
 
 """
 
@@ -874,7 +874,7 @@ WrapUp_GridSearch_DoubleCouple="""
     #
 
     if comm.rank==0:
-        print 'Savings results...\\n'
+        print('Savings results...\\n')
 
         plot_data_greens(event_name+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
@@ -884,7 +884,7 @@ WrapUp_GridSearch_DoubleCouple="""
 
         #grid.save(event_name+'.h5', {'misfit': results})
 
-        print 'Finished\\n'
+        print('Finished\\n')
 
 """
 
@@ -895,7 +895,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
 
     if comm.rank==0:
-        print 'Saving results...\\n'
+        print('Saving results...\\n')
 
         plot_data_greens(event_name+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
@@ -907,7 +907,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         misfit_vs_depth(event_name+'_misfit_vs_depth_sw.png',
             data_sw, misfit_sw, origins, sources, results_sw)
 
-        print 'Finished\\n'
+        print('Finished\\n')
 """
 
 
@@ -916,7 +916,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     # Saving results
     #
 
-    print 'Saving results...\\n'
+    print('Saving results...\\n')
 
     plot_data_greens(event_name+'.png', 
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
@@ -926,7 +926,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     #grid.save(event_name+'.h5', {'misfit': results})
 
-    print 'Finished\\n'
+    print('Finished\\n')
 
 """
 
@@ -951,9 +951,9 @@ WrapUp_TestGridSearch_DoubleCouple="""
             for _a, _b, _bool in zip(
                 a, b, np.isclose(a, b, atol=atol, rtol=rtol)):
 
-                print '%s:  %.e <= %.1e + %.1e * %.1e' %\\
-                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b))
-            print ''
+                print('%s:  %.e <= %.1e + %.1e * %.1e' %\\
+                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b)))
+            print('')
 
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
@@ -972,7 +972,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
             raise Exception(
                 "Grid search result differs from previous mtuq result")
 
-        print 'SUCCESS\\n'
+        print('SUCCESS\\n')
 """
 
 
@@ -987,7 +987,7 @@ WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     if run_checks:
         pass
 
-    print 'SUCCESS\\n'
+    print('SUCCESS\\n')
 
 """
 
@@ -997,7 +997,7 @@ Main_BenchmarkCAP="""
     # The benchmark starts now
     #
 
-    print 'Reading data...\\n'
+    print('Reading data...\\n')
     data = read(path_data, format='sac', 
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
@@ -1008,15 +1008,15 @@ Main_BenchmarkCAP="""
     origin = data.get_origins()[0]
 
 
-    print 'Processing data...\\n'
+    print('Processing data...\\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Green''s functions...\\n'
+    print('Reading Green''s functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
-    print 'Processing Greens functions...\\n'
+    print('Processing Greens functions...\\n')
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
@@ -1026,10 +1026,10 @@ Main_BenchmarkCAP="""
     name = '_'.join([model, str(depth), event_name])
 
 
-    print 'Comparing waveforms...'
+    print('Comparing waveforms...')
 
     for _i, mt in enumerate(sources):
-        print '  %d of %d' % (_i+1, len(sources))
+        print('  %d of %d' % (_i+1, len(sources)))
 
         cap_bw, cap_sw = get_synthetics_cap(
             data_bw, data_sw, paths[_i], name)
@@ -1058,7 +1058,7 @@ Main_BenchmarkCAP="""
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
             stations, origin, trace_labels=False, normalize=False)
 
-    print '\\nSUCCESS\\n'
+    print('\\nSUCCESS\\n')
 
 """
 

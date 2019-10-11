@@ -78,7 +78,7 @@ if __name__=='__main__':
         magnitude=4.5)
 
 
-    print 'Reading data...\n'
+    print('Reading data...\n')
     data = read(path_data, format='sac',
         event_id=event_name,
         tags=['units:cm', 'type:velocity'])
@@ -89,15 +89,15 @@ if __name__=='__main__':
     origin = data.get_origins()[0]
 
 
-    print 'Processing data...\n'
+    print('Processing data...\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print 'Reading Green''s functions...\n'
+    print('Reading Green''s functions...\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
-    print 'Processing Greens functions...\n'
+    print('Processing Greens functions...\n')
     greens.convolve(wavelet)
     greens_bw = greens.map(process_bw)
     greens_sw = greens.map(process_sw)
@@ -107,20 +107,20 @@ if __name__=='__main__':
     # Generate figures
     #
 
-    print 'Figure 1 of 3\n'
+    print('Figure 1 of 3\n')
 
     plot_data_greens(event_name+'.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
-    print 'Figure 2 of 3\n'
+    print('Figure 2 of 3\n')
 
     plot_data_greens(event_name+'.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
-    print 'Figure 3 of 3\n'
+    print('Figure 3 of 3\n')
 
     plot_beachball('test_graphics3.png', mt)
 
-    print 'Finished\n'
+    print('Finished\n')

@@ -4,21 +4,6 @@
 #include <numpy/npy_math.h>
 #include <math.h>
 
-// function declaration
-static PyObject *misfit(PyObject *self, PyObject *args); 
-
-// boilerplate methods list
-static PyMethodDef methods[] = {
-  { "misfit", misfit, METH_VARARGS, "Doc string."},
-  { NULL, NULL, 0, NULL }
-};
-
-// boilerplate module initialization
-PyMODINIT_FUNC initc_ext_L2(void) {
-  (void) Py_InitModule("c_ext_L2", methods);
-  import_array();
-}
-
 
 //
 // array access macros
@@ -110,6 +95,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
                         &verbose)) {
     return NULL;
   }
+
 
   NSRC = (int) PyArray_SHAPE(sources)[0];
   NSTA = (int) PyArray_SHAPE(weights)[0];
@@ -255,3 +241,37 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
 }
 
+
+//
+// Boilerplate 
+//
+
+static PyMethodDef methods[] = {
+    { "misfit", misfit, METH_VARARGS, "Misfit function (fast C implementation)."},
+    { NULL, NULL, 0, NULL }
+  };
+
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef misfit_module = {
+  PyModuleDef_HEAD_INIT,
+  "c_ext_L2",
+  "Misfit function (fast C implementation)",
+  -1,                  /* m_size */
+  methods,             /* m_methods */
+  };
+#endif
+
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_c_ext_L2(void) {
+  Py_Initialize();
+  import_array();
+  return PyModule_Create(&misfit_module);
+  }
+#else
+PyMODINIT_FUNC initc_ext_L2(void) {
+  (void) Py_InitModule("c_ext_L2", methods);
+  import_array();
+  }
+#endif
