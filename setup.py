@@ -82,7 +82,7 @@ setup(
     entry_points=ENTRY_POINTS,
     python_requires='~=3.5',
     install_requires=[
-        "numpy", "scipy", "obspy==1.1.0", 
+        "numpy", "scipy", "obspy", 
         "h5py", "retry", "flake8>=3.0", "pytest", "nose",
         "sphinx", "sphinx-bootstrap-theme"
     ],
