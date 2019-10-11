@@ -177,6 +177,15 @@ if __name__=='__main__':
 """
 
 
+
+Docstring_TestMisfit="""
+if __name__=='__main__':
+    #
+    # Tests misfit functions
+    #
+"""
+
+
 Docstring_Gallery="""
 if True:
     #
@@ -817,6 +826,48 @@ Main_TestGraphics="""
 
 
 
+Main_TestMisfit="""
+    #
+    # The main computational work starts nows
+    #
+
+    print 'Evaluating body wave misfit...\\n'
+
+    results_0 = misfit_bw(
+        data_bw, greens_bw, sources, optimization_level=0)
+
+    results_1 = misfit_bw(
+        data_bw, greens_bw, sources, optimization_level=1)
+
+    results_2 = misfit_bw(
+        data_bw, greens_bw, sources, optimization_level=2)
+
+    print results_0.max()
+    print results_1.max()
+    print results_2.max()
+    print ''
+
+
+    print 'Evaluating surface wave misfit...\\n'
+
+    results_0 = misfit_sw(
+        data_sw, greens_sw, sources, optimization_level=0)
+
+    results_1 = misfit_sw(
+        data_sw, greens_sw, sources, optimization_level=1)
+
+    results_2 = misfit_sw(
+        data_sw, greens_sw, sources, optimization_level=2)
+
+    print results_0.max()
+    print results_1.max()
+    print results_2.max()
+    print ''
+
+"""
+
+
+
 WrapUp_GridSearch_DoubleCouple="""
     #
     # Saving results
@@ -1216,6 +1267,43 @@ if __name__=='__main__':
         file.write(Grid_TestDoubleCoupleMagnitudeDepth)
         file.write(Main_TestGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth)
+
+
+    with open('tests/test_misfit.py', 'w') as file:
+        file.write(
+            replace(
+            Imports,
+            'DoubleCoupleGridRandom',
+            'DoubleCoupleGridRegular',
+            ))
+        file.write(Docstring_TestGridSearch_DoubleCoupleMagnitudeDepth)
+        file.write(ArgparseDefinitions)
+        file.write(Paths_FK)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'pick_type=.*',
+            "pick_type='from_fk_metadata',",
+            'taup_model=.*,',
+            'fk_database=path_greens,',
+            ))
+        file.write(MisfitDefinitions)
+        file.write(
+            replace(
+            Grid_DoubleCouple,
+            'Random',
+            'Regular',
+            'npts=.*,',
+            'npts_per_axis=5,',
+            ))
+        file.write(
+            replace(
+            Main1_SerialGridSearch_DoubleCouple,
+            'greens = download_greens_tensors\(stations, origin, model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n    '
+           +'greens = db.get_greens_tensors(stations, origin)',
+            ))
+        file.write(Main_TestMisfit)
 
 
     with open('tests/benchmark_cap_vs_mtuq.py', 'w') as file:

@@ -12,7 +12,7 @@ from mtuq.misfit import c_ext_L2
 
 
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
-    verbose=1):
+    verbose=0):
     """
     Data misfit function (fast Python/C version)
 
@@ -48,12 +48,14 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
     if norm in ['L2', 'hybrid']:
         results = c_ext_L2.misfit(
            data_data, greens_data, greens_greens, sources, groups, mask,
-           hybrid_norm, dt, padding[0], padding[1], verbose)
+           hybrid_norm, dt, padding[0], padding[1], int(verbose))
 
     else:
         raise NotImplementedError
 
-    print '  Elapsed time (C extension) (s): %f' % (time.time() - start_time)
+    if verbose:
+      print '  Elapsed time (C extension) (s): %f' % \
+          (time.time() - start_time)
 
     return results
 
@@ -197,6 +199,17 @@ def _as_array(sources):
     for _i, source in enumerate(sources):
         array[_i, :] = source
 
+    return array
+
+
+def _as_array(sources):
+    from mtuq.util.lune import to_mij
+    callback = sources.callback
+    sources.callback = None
+    array = sources.as_array()
+    array = np.ascontiguousarray(to_mij(
+        array[:,0], array[:,1], array[:,2], array[:,3], array[:,4], array[:,5]))
+    sources.callback = callback
     return array
 
 

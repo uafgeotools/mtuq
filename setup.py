@@ -1,8 +1,29 @@
 from __future__ import print_function
+import argparse
+import os
 import sys
 import numpy
 from setuptools import find_packages, setup, Extension
 from setuptools.command.test import test as test_command
+
+
+def get_compile_args():
+    compiler = ''
+    compile_args = []
+
+    try:
+        compiler = os.environ["CC"]
+    except KeyError:
+        pass
+
+    if compiler.endswith("icc"):
+        compile_args += ['-fast']
+        compile_args += ['-march=native']
+    else:
+        compile_args += ['-Ofast']
+        compile_args += ['-march=native']
+
+    return compile_args
 
 
 class PyTest(test_command):
@@ -39,8 +60,6 @@ setup(
     author_email="rmodrak@uaf.edu",
     url="https://github.com/uafseismo/mtuq",
     packages=find_packages(),
-    tests_require=['pytest'],
-    cmdclass={'test': PyTest},
     zip_safe=False,
     classifiers=[
         # complete classifier list:
@@ -63,7 +82,7 @@ setup(
     entry_points=ENTRY_POINTS,
     python_requires='~=2.7',
     install_requires=[
-        "numpy", "scipy", "obspy", 
+        "numpy", "scipy", "obspy==1.1.0", 
         "h5py", "retry", "flake8>=3.0", "pytest", "nose",
         "sphinx", "sphinx-bootstrap-theme"
     ],
@@ -71,8 +90,7 @@ setup(
         Extension(
             'mtuq.misfit.c_ext_L2', ['mtuq/misfit/c_ext_L2.c'],
             include_dirs=[numpy.get_include()],
-            extra_compile_args=["-O3", "-march=native"]),
+            extra_compile_args=get_compile_args()),
     ],
 )
-
 

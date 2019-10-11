@@ -41,6 +41,7 @@ fi
 
 # load system modules
 module load lang/Python/2.7.12-pic-intel-2016b
+export CC=icc
 
 
 # activate virutal environment

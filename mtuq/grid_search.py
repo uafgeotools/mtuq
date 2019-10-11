@@ -47,7 +47,7 @@ def grid_search_serial(data, greens, misfit, origins, sources,
     """
     results = []
     for origin in iterable(origins):
-        results += [misfit(data, greens.select(origin), sources)]
+        results += [misfit(data, greens.select(origin), sources, verbose)]
     return np.concatenate(results, axis=1)
 
 

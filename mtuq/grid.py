@@ -6,7 +6,9 @@ from numpy import pi as PI
 from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.moment_tensor.TapeTape2015 import to_mij
+#from mtuq.util.moment_tensor.TapeTape2015 import to_mij
+from mtuq.util.lune import to_mij, spherical_to_Cartesian
+
 
 
 
@@ -20,16 +22,16 @@ class Grid(object):
 
     .. code ::
 
-       grid = Grid({'x': np.linspace(0., 1., N),
-                    'y': np.linpsace(0., 1., N)})
+       grid = Grid(('x': np.linspace(0., 1., N)),
+                   ('y': np.linpsace(0., 1., N)))
 
 
     To parameterize the surface of the Earth with an `N`-by-`2N` Mercator grid:
 
     .. code::          
 
-       grid = Grid({'latitude': np.linspace(-90., 90., N),
-                    'longitude': np.linspace(-180., 180., 2*N)})
+       grid = Grid(('latitude': np.linspace(-90., 90., N)),
+                   ('longitude': np.linspace(-180., 180., 2*N)))
 
 
     .. rubric:: Iterating on grids
@@ -39,21 +41,14 @@ class Grid(object):
     the fast axis and ``'y'`` is the slow axis.
 
     """
-    def __init__(self, dict, start=0, stop=None, callback=None):
-        #:param: dict: dictionary containing names of axes and corresponding lists
-        #   of values along axes
-        #:param: start: when iterating over the grid, start at this element
-        #:param: stop: when iterating over the grid, stop at this element
-        #:param: callback: optional function applied to each grid point
-        #   through a callback to the ``get`` method. Can be used to carry out a
-        #   linear coordinate transformation or a more general reparameterization
-
+    def __init__(self, items, start=0, stop=None, callback=None):
+        self.items = items
 
         # list of parameter names
-        self.keys = dict.keys()
+        self.keys = [item[0] for item in items]
         
         # corresponding list of axis arrays
-        self.vals = dict.values()
+        self.vals = [item[1] for item in items]
 
         # what is the length along each axis?
         shape = []
@@ -77,18 +72,30 @@ class Grid(object):
         self.callback = callback
 
  
+    def as_array(self):
+        """ Returns `i-th` point of grid
+        """
+        array = np.zeros((self.size, self.ndim))
+        for _i in range(self.size):
+            array[_i, :] = self.get(_i)
+        return array
+
+
     def get(self, i):
         """ Returns `i-th` point of grid
         """
-        p = AttribDict()
-        for key, val in zip(self.keys, self.vals):
-            p[key] = val[i%len(val)]
+        vals = self.vals
+        array = np.zeros(self.ndim)
+
+        for _k in range(self.ndim):
+            val = vals[_k]
+            array[_k] = val[i%len(val)]
             i/=len(val)
 
         if self.callback:
-            return self.callback(p)
+            return self.callback(*array)
         else:
-            return p
+            return array
 
 
     def partition(self, nproc):
@@ -101,8 +108,7 @@ class Grid(object):
         for iproc in range(nproc):
             start=iproc*self.size/nproc
             stop=(iproc+1)*self.size/nproc
-            items = zip(self.keys, self.vals)
-            subsets += [Grid(dict(items), start, stop, callback=self.callback)]
+            subsets += [Grid(self.items, start, stop, callback=self.callback)]
         return subsets
 
 
@@ -160,25 +166,18 @@ class UnstructuredGrid(object):
 
     .. code ::
 
-      grid = UnstructuredGrid({'x': np.random.rand(N),
-                               'y': np.random.rand(N)})
+      grid = UnstructuredGrid((('x': np.random.rand(N)),
+                               ('y': np.random.rand(N)))
 
     """
-    def __init__(self, dict, start=0, stop=None, callback=None):
-        #:param dict: dictionary containing the complete set of coordinate
-        #   values for each parameter
-        #:param: start: when iterating over the grid, start at this element
-        #:param: stop: when iterating over the grid, stop at this element
-        #:param: callback: optional function applied to each grid point
-        #   through a callback to the ``get`` method. Can be used to carry out a
-        #   linear coordinate transformation or a more general 
-        #   reparameterization
+    def __init__(self, items, start=0, stop=None, callback=None):
+        self.items = items
 
         # list of parameter names
-        self.keys = dict.keys()
+        self.keys = [item[0] for item in items]
 
-        # corresponding list of coordinate arrays
-        self.vals = dict.values()
+        # corresponding list of axis arrays
+        self.vals = [item[1] for item in items]
 
         # there is no shape attribute because it is an unstructured grid,
         # however, ndim and size are still well defined
@@ -204,18 +203,29 @@ class UnstructuredGrid(object):
         self.callback = callback
 
 
+    def as_array(self):
+        """ Returns `i-th` point of grid
+        """
+        array = np.zeros((self.size, self.ndim))
+        for _i in range(self.size):
+            array[_i, :] = self.get(_i+self.start)
+        return array
+
+
     def get(self, i):
         """ Returns `i-th` point of grid
         """
         i -= self.start
-        p = AttribDict()
-        for key, val in zip(self.keys, self.vals):
-            p[key] = val[i]
+        vals = self.vals
+        array = np.zeros(self.ndim)
+
+        for _k in range(self.ndim):
+            array[_k] = vals[_k][i]
 
         if self.callback:
-            return self.callback(p)
+            return self.callback(*array)
         else:
-            return p
+            return array
 
 
     def partition(self, nproc):
@@ -225,10 +235,10 @@ class UnstructuredGrid(object):
         for iproc in range(nproc):
             start=iproc*self.size/nproc
             stop=(iproc+1)*self.size/nproc
-            dict = {}
-            for key, val in zip(self.keys, self.vals):
-                dict[key] = val[start:stop]
-            subsets += [UnstructuredGrid(dict, start, stop, callback=self.callback)]
+            items = []
+            for key, val in self.items:
+                items += [[key, val[start:stop]]]
+            subsets += [UnstructuredGrid(items, start, stop, callback=self.callback)]
         return subsets
 
 
@@ -272,7 +282,7 @@ class UnstructuredGrid(object):
         return self
 
 
-def FullMomentTensorGridRandom(magnitude=None, npts=50000):
+def FullMomentTensorGridRandom(magnitude=None, npts=50000, callback=to_mij):
     """ Full moment tensor grid with randomly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -291,17 +301,17 @@ def FullMomentTensorGridRandom(magnitude=None, npts=50000):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho[_i, :] = M0*np.sqrt(2.)
 
-    return UnstructuredGrid({
-        'rho': rho.flatten(),
-        'v': random(*v),
-        'w': random(*w),
-        'kappa': random(*kappa),
-        'sigma': random(*sigma),
-        'h': random(*h)},
-        callback=to_mij)
+    return UnstructuredGrid((
+        ('rho', rho.flatten()),
+        ('v', random(*v)),
+        ('w', random(*w)),
+        ('kappa', random(*kappa)),
+        ('sigma', random(*sigma)),
+        ('h', random(*h))),
+        callback=callback)
 
 
-def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
+def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
     """ Full moment tensor grid with regularly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -320,17 +330,17 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho += [M0/np.sqrt(2)]
 
-    return Grid({
-        'rho': asarray(rho),
-        'v': regular(*v),
-        'w': regular(*w),
-        'kappa': regular(*kappa),
-        'sigma': regular(*sigma),
-        'h': regular(*h)},
-        callback=to_mij)
+    return Grid((
+        ('rho', asarray(rho)),
+        ('v', regular(*v)),
+        ('w', regular(*w)),
+        ('kappa', regular(*kappa)),
+        ('sigma', regular(*sigma)),
+        ('h', regular(*h))),
+        callback=callback)
 
 
-def DoubleCoupleGridRandom(magnitude=None, npts=50000):
+def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
     """ Double-couple moment tensor grid with randomly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -347,17 +357,17 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho[_i, :] = M0*np.sqrt(2.)
 
-    return UnstructuredGrid({
-        'rho': rho.flatten(),
-        'v': np.zeros(N),
-        'w': np.zeros(N),
-        'kappa': random(*kappa),
-        'sigma': random(*sigma),
-        'h': random(*h)},
-        callback=to_mij)
+    return UnstructuredGrid((
+        ('rho', rho.flatten()),
+        ('v', np.zeros(N)),
+        ('w', np.zeros(N)),
+        ('kappa', random(*kappa)),
+        ('sigma', random(*sigma)),
+        ('h', random(*h))),
+        callback=callback)
 
 
-def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
+def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
     """ Double-couple moment tensor grid with regularly-spaced values
     """ 
     magnitude, count = _check_magnitude(magnitude)
@@ -374,14 +384,15 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho += [M0/np.sqrt(2)]
 
-    return Grid({
-        'rho': asarray(rho),
-        'v': asarray(0.),
-        'w': asarray(0.),
-        'kappa': regular(*kappa),
-        'sigma': regular(*sigma),
-        'h': regular(*h)},
-        callback=to_mij)
+    return Grid((
+        ('rho', asarray(rho)),
+        ('v', asarray(0.)),
+        ('w', asarray(0.)),
+        ('kappa', regular(*kappa)),
+        ('sigma', regular(*sigma)),
+        ('h', regular(*h))),
+        callback=callback)
+
 
 
 def ForceGridRegular(magnitude=None, npts=25):
@@ -390,7 +401,7 @@ def ForceGridRegular(magnitude=None, npts=25):
     raise NotImplementedError
 
 
-def ForceGridRandom(magnitude=None, npts=50000):
+def ForceGridRandom(magnitude=None, npts=50000, callback=spherical_to_Cartesian):
     """ Full moment tensor grid with randomly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -409,20 +420,7 @@ def ForceGridRandom(magnitude=None, npts=50000):
         'r': r.flatten(),
         'theta': random(*theta),
         'phi': random(*phi)},
-        callback=spherical_to_Cartesian)
-
-
-
-def spherical_to_Cartesian(dict):
-    r = dict.r
-    theta = dict.theta
-    phi = dict.phi
-
-    x = r*np.sin(theta)*cos(phi)
-    y = r*np.sin(theta)*cos(phi)
-    z = r*np.cos(theta)
-
-    return np.array([x, y, z])
+        callback=callback)
 
 
 def _check_magnitude(M):

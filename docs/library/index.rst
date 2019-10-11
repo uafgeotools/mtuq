@@ -42,7 +42,7 @@ Library Reference
 =================================================================================================  =================================================================================================
 `mtuq.process_data.ProcessData <generated/mtuq.process_data.ProcessData.html>`_                     Data processing function
 `mtuq.misfit.Misfit <generated/mtuq.misfit.Misfit.html>`_                                           Misfit function
-`mtuq.grid_search.grid_serach <generated/mtuq.grid_search.grid_search.html>`_                       Grid search wrapper
+`mtuq.grid_search.grid_search <generated/mtuq.grid_search.grid_search.html>`_                       Grid search wrapper
 =================================================================================================  =================================================================================================
 
 
@@ -83,10 +83,10 @@ Library Reference
 .. rubric::  Low-level misfit modules
 
 .. note::
-    Misfit evaluation is the most computationally intensive task performed by this package, and the only task that has been heavily optimized.  These classes provide low-level access to non-optimized and optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misft``.
+    Misfit evaluation is the most computationally intensive task performed by this package, and the only task that has been heavily optimized.  These classes provide low-level access to non-optimized and optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misfit``.
 
 =================================================================================================  =================================================================================================
-`mtuq.misfit.simple.misft <generated/mtuq.misfit.simple.html>`_                                     Easy-to-read pure Python implementation
+`mtuq.misfit.simple.misfit <generated/mtuq.misfit.simple.html>`_                                    Easy-to-read pure Python implementation
 `mtuq.misfit.fast1.misfit <generated/mtuq.misfit.fast1.html>`_                                      Fast pure Python implementation
 `mtuq.misfit.fast2.misfit <generated/mtuq.misfit.fast2.html>`_                                      Fast Python/C implementation
 =================================================================================================  =================================================================================================

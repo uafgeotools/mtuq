@@ -26,7 +26,7 @@ class Dataset(list):
         """
         self.id = id
 
-        for _i, stream in enumerate(streams):
+        for stream in streams:
             self.append(stream)
 
         for tag in copy(tags):
@@ -86,21 +86,25 @@ class Dataset(list):
             return self.__class__(id=self.id, streams=filter(
                 lambda stream: stream.origin==origin, self))
 
+        else:
+            raise Exception(
+                "No selection criteria given for Dataset.select")
+
 
     def apply(self, function, *args, **kwargs):
         """ Applies function to all streams
 
-        Applies a function to each stream, similar to the Python built-in
-        ``apply``.
+        Applies a function to each stream in the Dataset, identical to the 
+        Python built-in ``apply``.
 
         .. warning ::
 
             Although ``map`` returns a new Dataset, it is possible, depending
-            on the behavior of the given function, that the elements of the
-            original list are modified in the process.
+            on the behavior of the given function, that the streams or traces
+            of the original Dataset are overwitten.
 
-            To control this behavior, ``mtuq.process_data.ProcessData`` has an
-            `overwrite` input argument, which is `False` by default.
+            See also ``mtuq.process_data.ProcessData``, which has an
+            `overwrite` keyword argument that is `False` by default.
 
         """
         processed = []
@@ -114,19 +118,19 @@ class Dataset(list):
     def map(self, function, *sequences):
         """ Maps function to all streams
 
-        Applies a function to each stream. If one or more optional sequences 
-        are given, the function is called with an argument list consisting of
-        corresponding items of each sequence. Similar to the Python built-in
-        ``map``.
+        Maps a function to each stream in the Dataset. If one or more optional
+        sequences are given, the function is called with an argument list 
+        consisting of corresponding items of each sequence, identical to the 
+        Python built-in ``map``.
 
         .. warning ::
 
             Although ``map`` returns a new Dataset, it is possible, depending
-            on the behavior of the given function, that the elements of the
-            original list are modified in the process.
+            on the behavior of the given function, that the streams or traces
+            of the original Dataset are overwitten.
 
-            To control this behavior, ``mtuq.process_data.ProcessData`` has an
-            `overwrite` input argument, which is `False` by default.
+            See also ``mtuq.process_data.ProcessData``, which has an
+            `overwrite` keyword argument that is `False` by default.
 
         """
         processed = []

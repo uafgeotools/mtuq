@@ -12,7 +12,7 @@ from mtuq.util.signal import get_components
 
 
 def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
-    set_attributes=False,verbose=0):
+    verbose=0, set_attributes=False):
     """
     Data misfit function (non-optimized pure Python version)
 
