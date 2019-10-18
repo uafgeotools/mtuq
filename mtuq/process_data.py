@@ -101,7 +101,7 @@ class ProcessData(object):
 
         elif pick_type=='from_taup_model':
             assert 'taup_model' in parameters
-            self._taup_model = parameters["taup_model"]
+            self.taup_model = parameters["taup_model"]
             self._taup = taup.TauPyModel(model=parameters["taup_model"])
 
         elif pick_type=='from_fk_metadata':
@@ -133,10 +133,10 @@ class ProcessData(object):
         if window_type is None:
             warn('No window_type selected.')
 
-        elif window_type == 'cap_bw':
+        elif window_type == 'body_wave':
             assert 'window_length' in parameters
 
-        elif window_type == 'cap_sw':
+        elif window_type == 'surface_wave':
             assert 'window_length' in parameters
 
         else:
@@ -158,7 +158,7 @@ class ProcessData(object):
         if weight_type is None:
             pass
 
-        elif weight_type == 'cap_bw':
+        elif weight_type == 'body_wave':
             assert 'cap_weight_file' in parameters
             assert exists(parameters['cap_weight_file'])
             self.weights = parse_weight_file(parameters['cap_weight_file'])
@@ -174,7 +174,7 @@ class ProcessData(object):
                 self.scaling_distance = 1.e5
 
 
-        elif weight_type == 'cap_sw':
+        elif weight_type == 'surface_wave':
             assert 'cap_weight_file' in parameters
             assert exists(parameters['cap_weight_file'])
             self.weights = parse_weight_file(parameters['cap_weight_file'])
@@ -370,7 +370,7 @@ class ProcessData(object):
             origin_time = float(origin.time)
             picks = self._picks[id]
 
-            if self.window_type == 'cap_bw':
+            if self.window_type == 'body_wave':
                 # reproduces CAP body wave window
                 t1 = picks.P - 0.4*self.window_length
                 t2 = t1 + self.window_length
@@ -378,7 +378,7 @@ class ProcessData(object):
                 t2 += origin_time
                 self._windows[id] = [t1, t2]
 
-            elif self.window_type == 'cap_sw':
+            elif self.window_type == 'surface_wave':
                 # reproduces CAP surface wave window
                 t3 = picks.S - 0.3*self.window_length
                 t4 = t3 + self.window_length
@@ -438,8 +438,8 @@ class ProcessData(object):
                 trace.weight = 1.
 
 
-        elif self.weight_type == 'cap_bw':
-            # applies CAP body wave weighting
+        elif self.weight_type == 'body_wave':
+            # applies CAP-style body wave weighting
             for trace in traces:
                 if 'type:greens' in tags:
                     break
@@ -469,8 +469,8 @@ class ProcessData(object):
                 trace.data *= 1.
 
 
-        elif self.weight_type == 'cap_sw':
-            # applies CAP surface wave weighting
+        elif self.weight_type == 'surface_wave':
+            # applies CAP-style surface wave weighting
             for trace in traces:
                 if 'type:greens' in tags:
                     break
