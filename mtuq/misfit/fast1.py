@@ -84,6 +84,10 @@ def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
 
 
 class Helper(object):
+    """ 
+    Stores data and Green's functions for a given station and provides very
+    efficient numerical implementation of L2 norm
+    """
 
     def get_L2_norm(self, source, index, it):
         """
