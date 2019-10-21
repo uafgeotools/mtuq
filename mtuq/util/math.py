@@ -1,9 +1,6 @@
 
 import numpy as np
-
-PI = np.pi
-DEG = 180./PI
-INF = np.inf
+from scipy.signal import fftconvolve
 
 
 def list_intersect(a, b):
@@ -32,4 +29,22 @@ def open_interval(x1,x2,nx):
 
 def closed_interval(x1,x2,nx):
     return np.linspace(x1,x2,nx)
+
+
+def correlate(v1, v2):
+    """ Fast cross-correlation function
+
+    Correlates unpadded array v1 and padded array v2, producing result of 
+    shape ``len(v2) - len(v1)``
+    """
+    n1, n2 = len(v1), len(v2)
+
+    if n1>2000 or n2-n1>200:
+        # for long traces, frequency-domain implementation is usually faster
+        return fftconvolve(v1, v2[::-1], 'valid')
+    else:
+        # for short traces, time-domain implementation is usually faster
+        return np.correlate(v1, v2, 'valid')
+
+
 

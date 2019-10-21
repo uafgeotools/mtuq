@@ -43,10 +43,10 @@ if __name__=='__main__':
         freq_max= 0.333,
         pick_type='from_taup_model',
         taup_model=model,
-        window_type='cap_bw',
+        window_type='body_wave',
         window_length=15.,
         padding_length=2.,
-        weight_type='cap_bw',
+        weight_type='body_wave',
         cap_weight_file=path_weights,
         )
 
@@ -56,10 +56,10 @@ if __name__=='__main__':
         freq_max=0.0625,
         pick_type='from_taup_model',
         taup_model=model,
-        window_type='cap_sw',
+        window_type='surface_wave',
         window_length=150.,
         padding_length=10.,
-        weight_type='cap_sw',
+        weight_type='surface_wave',
         cap_weight_file=path_weights,
         )
 

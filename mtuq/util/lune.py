@@ -1,6 +1,7 @@
 
 import numpy as np
 
+
 kR3 = np.sqrt(3.0)
 k2R6 = 2.0 * np.sqrt(6.)
 k2R3 = 2.0 * np.sqrt(3.)
@@ -12,10 +13,15 @@ u0 = 0.75*beta0 - 0.5*np.sin(2.*beta0) + 0.0625*np.sin(4.*beta0)
 
 
 def to_mij(rho, v, w, kappa, sigma, h):
-
+    """ Converts from lune parameters to mij
+    """
     m0 = rho/np.sqrt(2.)
+
     gamma = (1./3.)*np.arcsin(3.*v)
-    beta = np.interp(3.*np.pi/8. - w, u0, beta0)/deg2rad
+    beta = np.interp(3.*np.pi/8. - w, u0, beta0)
+    gamma /= deg2rad
+    beta /= deg2rad
+
     delta = 90. - beta
     theta = np.arccos(h)/deg2rad
 
@@ -64,12 +70,9 @@ def to_mij(rho, v, w, kappa, sigma, h):
         return np.array([mt0, mt1, mt2, mt3, mt4, mt5])
 
 
-
-def spherical_to_Cartesian(dict):
-    r = dict.r
-    theta = dict.theta
-    phi = dict.phi
-
+def spherical_to_Cartesian(r, theta, phi):
+    """ Converts from spherical to Cartesian coordinates
+    """
     x = r*np.sin(theta)*cos(phi)
     y = r*np.sin(theta)*cos(phi)
     z = r*np.cos(theta)

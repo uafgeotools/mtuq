@@ -516,7 +516,7 @@ if __name__=='__main__':
         freq_max= 0.333,
         pick_type='from_fk_metadata',
         fk_database=path_greens_fk,
-        window_type='cap_bw',
+        window_type='body_wave',
         window_length=30.,
         )
 
@@ -526,7 +526,7 @@ if __name__=='__main__':
         freq_max=0.0625,
         pick_type='from_fk_metadata',
         fk_database=path_greens_fk,
-        window_type='cap_sw',
+        window_type='surface_wave',
         window_length=150.,
         )
 
