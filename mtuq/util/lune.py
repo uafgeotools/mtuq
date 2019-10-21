@@ -16,8 +16,12 @@ def to_mij(rho, v, w, kappa, sigma, h):
     """ Converts from lune parameters to mij
     """
     m0 = rho/np.sqrt(2.)
+
     gamma = (1./3.)*np.arcsin(3.*v)
-    beta = np.interp(3.*np.pi/8. - w, u0, beta0)/deg2rad
+    beta = np.interp(3.*np.pi/8. - w, u0, beta0)
+    gamma /= deg2rad
+    beta /= deg2rad
+
     delta = 90. - beta
     theta = np.arccos(h)/deg2rad
 
