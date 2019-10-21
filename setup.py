@@ -57,8 +57,7 @@ setup(
     license='BSD2',
     description="moment tensor (mt) uncertainty quantification (uq)",
     author="Ryan Modrak",
-    author_email="rmodrak@uaf.edu",
-    url="https://github.com/uafseismo/mtuq",
+    url="https://github.com/uafgeotools/mtuq",
     packages=find_packages(),
     zip_safe=False,
     classifiers=[
