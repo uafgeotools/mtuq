@@ -213,10 +213,12 @@ class NewStyleHeader(OldStyleHeader):
         px = 0.125
         py -= 0.175
 
-        line = '%s %d   %s %d   %s %d   %s %d   %s %d' %\
-                (u'\u03BA', self.tt.kappa, u'\u03C3', self.tt.sigma, 
-                 u'\u03B8', self.tt.theta, u'\u03B3', self.tt.gamma, 
-                 u'\u03B4', self.tt.delta)
+        #line = '%s %d   %s %d   %s %d   %s %d   %s %d' %\
+        #        (u'\u03BA', self.tt.kappa, u'\u03C3', self.tt.sigma, 
+        #         u'\u03B8', self.tt.theta, u'\u03B3', self.tt.gamma, 
+        #         u'\u03B4', self.tt.delta)
+
+        line = '$M_{ij}$ = [%.2e %.2e %.2e %.2e %.2e %.2e]' % tuple(self.mt)
 
         _write_text(line, px, py, ax, fontsize=14)
 
