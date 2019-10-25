@@ -11,8 +11,8 @@ from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
 
 
-def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max,
-    verbose=0, set_attributes=False):
+def misfit(data, greens, sources, norm, time_shift_groups,
+    time_shift_min, time_shift_max, verbose=0, set_attributes=False):
     """
     Data misfit function (non-optimized pure Python version)
 

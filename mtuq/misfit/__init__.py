@@ -103,6 +103,7 @@ class Misfit(object):
         time_shift_groups=['ZRT'],
         time_shift_min=0.,
         time_shift_max=0.,
+        data_processing_parameters=None,
         ):
         """ Function handle constructor
         """
@@ -119,10 +120,10 @@ class Misfit(object):
             norm = 'hybrid'
 
         assert norm in ['L1', 'L2', 'hybrid'],\
-            ValueError("Bad input argument")
+            ValueError("Bad input argument: norm")
 
         assert time_shift_max >= 0.,\
-            ValueError("Bad input argument")
+            ValueError("Bad input argument: time_shift_max")
 
         if norm=='L1':
             warnings.warn(
@@ -148,16 +149,17 @@ class Misfit(object):
         if optimization_level==0 or set_attributes:
             return simple.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max, verbose, set_attributes)
+                self.time_shift_min, self.time_shift_max, verbose, 
+                set_attributes)
 
         if optimization_level==1:
             return fast1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max, verbose)
+                self.time_shift_min, self.time_shift_max, verbose)
 
         if optimization_level==2:
             return fast2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
-                self.time_shift_max, verbose)
+                self.time_shift_min, self.time_shift_max, verbose)
 
 

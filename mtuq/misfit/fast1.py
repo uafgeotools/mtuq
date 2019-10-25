@@ -11,8 +11,8 @@ from mtuq.util.signal import get_components, get_time_sampling
 
 
 
-def misfit(data, greens, sources, norm, time_shift_groups, time_shift_max, 
-    verbose=0):
+def misfit(data, greens, sources, norm, time_shift_groups,
+    time_shift_min, time_shift_max, verbose=0):
     """
     Data misfit function (fast pure Python version)
 
