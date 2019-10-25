@@ -218,9 +218,9 @@ class NewStyleHeader(OldStyleHeader):
         #         u'\u03B8', self.tt.theta, u'\u03B3', self.tt.gamma, 
         #         u'\u03B4', self.tt.delta)
 
-        line = '$M_{ij}$ = [%.2e %.2e %.2e %.2e %.2e %.2e]' % tuple(self.mt)
+        line = '$M_{ij}$ = [%.2e  %.2e  %.2e  %.2e  %.2e  %.2e]' % tuple(self.mt)
 
-        _write_text(line, px, py, ax, fontsize=14)
+        _write_text(line, px, py, ax, fontsize=12)
 
 
 
@@ -232,9 +232,9 @@ def _write_text(text, x, y, ax, fontsize=12):
     pyplot.text(x, y, text, fontsize=fontsize, transform=ax.transAxes)
 
 
-def _write_bold(text, x, y, ax, fontsize=12):
+def _write_bold(text, x, y, ax, fontsize=14):
     font = FontProperties()
-    font.set_weight('bold')
+    #font.set_weight('bold')
     pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize,
         transform=ax.transAxes)
 

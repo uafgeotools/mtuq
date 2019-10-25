@@ -357,26 +357,24 @@ DataProcessingDefinitions="""
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_taup_model',
+        pick_type='taup',
         taup_model=model,
         window_type='body_wave',
         window_length=15.,
         padding_length=2.,
-        weight_type='body_wave',
-        cap_weight_file=path_weights,
+        capuaf_file=path_weights,
         )
 
     process_sw = ProcessData(
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_taup_model',
+        pick_type='taup',
         taup_model=model,
         window_type='surface_wave',
         window_length=150.,
         padding_length=10.,
-        weight_type='surface_wave',
-        cap_weight_file=path_weights,
+        capuaf_file=path_weights,
         )
 
 """
@@ -1214,9 +1212,9 @@ if __name__=='__main__':
             replace(
             DataProcessingDefinitions,
             'pick_type=.*',
-            "pick_type='from_fk_metadata',",
+            "pick_type='FK_metadata',",
             'taup_model=.*,',
-            'fk_database=path_greens,',
+            'FK_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
         file.write(
@@ -1259,9 +1257,9 @@ if __name__=='__main__':
             replace(
             DataProcessingDefinitions,
             'pick_type=.*',
-            "pick_type='from_fk_metadata',",
+            "pick_type='FK_metadata',",
             'taup_model=.*,',
-            'fk_database=path_greens,',
+            'FK_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
         file.write(Grid_TestDoubleCoupleMagnitudeDepth)
@@ -1283,9 +1281,9 @@ if __name__=='__main__':
             replace(
             DataProcessingDefinitions,
             'pick_type=.*',
-            "pick_type='from_fk_metadata',",
+            "pick_type='FK_metadata',",
             'taup_model=.*,',
-            'fk_database=path_greens,',
+            'FK_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
         file.write(
@@ -1330,9 +1328,9 @@ if __name__=='__main__':
             'padding_length=.*',
             'padding_length=0,',
             'pick_type=.*',
-            "pick_type='from_fk_metadata',",
+            "pick_type='FK_metadata',",
             'taup_model=.*,',
-            'fk_database=path_greens,',
+            'FK_database=path_greens,',
             ))
         file.write(
             replace(
@@ -1352,9 +1350,9 @@ if __name__=='__main__':
             replace(
             DataProcessingDefinitions,
             'pick_type=.*',
-            "pick_type='from_fk_metadata',",
+            "pick_type='FK_metadata',",
             'taup_model=.*,',
-            'fk_database=path_greens,',
+            'FK_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
         file.write(Grid_TestGraphics)
