@@ -105,6 +105,29 @@ def check_time_sampling(stream):
     return True
 
 
+def check_padding(dataset, time_shift_min, time_shift_max):
+    for stream in dataset:
+        npts, dt = get_time_sampling(stream)
+
+        for trace in stream:
+            padding_left = getattr(trace, 'padding_left', 0)
+            padding_right = getattr(trace, 'padding_right', 0)
+
+            if (time_shift_min!=0 or time_shift_max!=0) and\
+               padding_left==0 and padding_right==0:
+
+                padding_left = int(-time_shift_min/dt)
+                padding_right = int(+time_shift_max/dt)
+                padding = (padding_left, padding_right)
+                np.pad(trace.data, padding, mode='constant')
+
+                setattr(trace, 'padding_left', padding_left)
+                setattr(trace, 'padding_right', padding_right)
+
+            else:
+                assert padding_left == int(-time_shift_min/dt)
+                assert padding_right == int(+time_shift_max/dt)
+
 
 def get_arrival(arrivals, phase):
     phases = []

@@ -42,7 +42,8 @@ class ProcessData(object):
          window_type=None,
          pick_type=None,
          window_length=None,
-         padding_length=None,
+         padding_left=0,
+         padding_right=0,
          taup_model=None,
          FK_database=None,
          FK_model=None,
@@ -69,7 +70,8 @@ class ProcessData(object):
         self.window_type = window_type.lower()
         self.pick_type = pick_type
         self.window_length = window_length
-        self.padding_length = padding_length
+        self.padding_left = padding_left
+        self.padding_right = padding_right
         self.taup_model = taup_model
         self.FK_database = FK_database
         self.FK_model = FK_model
@@ -144,11 +146,16 @@ class ProcessData(object):
         if self.window_length is None:
              raise ValueError('Bad parameter: window_length')
 
-        if self.padding_length is None:
-             self.padding_length = 0.
+        if self.padding_left is None:
+             self.padding_left = 0.
+
+        if self.padding_right is None:
+             self.padding_right = 0.
 
         assert self.window_length > 0
-        assert self.padding_length >= 0.
+
+        assert self.padding_left >= 0.
+        assert self.padding_right >= 0.
 
 
         #
@@ -381,28 +388,34 @@ class ProcessData(object):
         #
         # part 3b: apply statics
         # 
+        if 'type:greens' in tags:
+            for trace in traces:
+                component = trace.stats.channel[-1].upper()
+                key = self.window_type +'_'+ component
 
-        for trace in traces:
-            component = trace.stats.channel[-1].upper()
-            key = self.window_type +'_'+ component
-
-            try:
-                offset = self._statics[id][key]
-                starttime += offset
-                endtime += offset
-            except:
-                pass
+                try:
+                    offset = self._statics[id][key]
+                    starttime += offset
+                    endtime += offset
+                except:
+                    pass
 
 
         #
         # part 3c: apply padding
         # 
 
-        # using a longer window for Green's functions than for data allows
-        # for more accurate time-shift corrections
+        # using a longer window for Green's functions than for data allows for
+        # more accurate time-shift corrections (otherwise, traces will later be
+        # padded with zeros)
+
         if 'type:greens' in tags:
-            starttime -= self.padding_length
-            endtime += self.padding_length
+            starttime -= self.padding_left
+            endtime += self.padding_right
+
+            for trace in traces:
+                setattr(trace, 'padding_left', int(self.padding_left/dt))
+                setattr(trace, 'padding_right', int(self.padding_right/dt))
 
 
         #
@@ -411,8 +424,6 @@ class ProcessData(object):
         for trace in traces:
             # cuts trace and adjusts metadata
             cut(trace, starttime, endtime)
-
-        for trace in traces:
             taper(trace.data)
 
 
@@ -430,7 +441,6 @@ class ProcessData(object):
         #
         if 'type:greens' in tags:
             pass
-
 
         elif self.apply_weights:
             for trace in traces:

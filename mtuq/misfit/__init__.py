@@ -5,7 +5,7 @@ import warnings
 from mtuq.misfit import simple, fast1, fast2
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
-from mtuq.util.signal import get_components
+from mtuq.util.signal import check_padding, get_components
 
 
 
@@ -103,7 +103,6 @@ class Misfit(object):
         time_shift_groups=['ZRT'],
         time_shift_min=0.,
         time_shift_max=0.,
-        data_processing_parameters=None,
         ):
         """ Function handle constructor
         """
@@ -145,6 +144,9 @@ class Misfit(object):
         optimization_level=2, set_attributes=False):
         """ Evaluates misfit on given data
         """
+
+        # check input arguments
+        check_padding(greens, self.time_shift_min, self.time_shift_max)
 
         if optimization_level==0 or set_attributes:
             return simple.misfit(
