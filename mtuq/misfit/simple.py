@@ -43,11 +43,13 @@ def misfit(data, greens, sources, norm, time_shift_groups,
             # time sampling scheme
             npts = d[0].data.size
             dt = d[0].stats.delta
-            npts_padding = int(time_shift_max/dt)
+
+            padding_left = int(-time_shift_min/dt)
+            padding_right = int(+time_shift_max/dt)
+            npts_padding = padding_left + padding_right
 
             # array to hold cross correlations
-            corr = np.zeros(2*npts_padding+1)
-
+            corr = np.zeros(npts_padding+1)
 
             #
             # evaluate misfit for all components at given station
@@ -63,12 +65,12 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                 for _k in indices:
                     corr += np.correlate(s[_k].data, d[_k].data, 'valid')
 
-                npts_shift = corr.argmax() - npts_padding
+                npts_shift = corr.argmax() - padding_left
                 time_shift = npts_shift*dt
 
                 # what start and stop indices will correctly shift synthetics
                 # relative to data?
-                start = npts_padding + npts_shift
+                start = padding_left + npts_shift
                 stop = start + npts
 
                 for _k in indices:

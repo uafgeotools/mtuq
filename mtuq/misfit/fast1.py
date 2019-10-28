@@ -27,7 +27,8 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     #
     for _j, d in enumerate(data):
         greens[_j].reset_components(get_components(d))
-        helpers += [Helper(data[_j], greens[_j], norm, time_shift_max)]
+        helpers += [Helper(data[_j], greens[_j], norm, 
+                           time_shift_min, time_shift_max)]
 
     #
     # begin iterating over sources
@@ -41,7 +42,8 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
             # time sampling scheme
             npts, dt = get_time_sampling(d)
-            npts_padding = int(time_shift_max/dt)
+            padding_left = int(-time_shift_min/dt)
+            padding_right = int(+time_shift_max/dt)
 
 
             #
@@ -59,8 +61,8 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
                 # what start and stop indices will correctly shift synthetics
                 # relative to data?
-                start = npts_padding - npts_shift
-                stop = npts+npts_padding - npts_shift
+                start = padding_left - npts_shift
+                stop = npts + padding_left - npts_shift
 
                 for _k in indices:
                     misfit = 0.
@@ -71,11 +73,11 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
                     elif norm=='L2':
                         misfit = dt * helpers[_j].get_L2_norm(
-                            source, int(_k), int(npts_shift+npts_padding))
+                            source, int(_k), int(npts_shift+padding_left))
 
                     elif norm=='hybrid':
                         misfit = dt * helpers[_j].get_L2_norm(
-                            source, int(_k), int(npts_shift+npts_padding))**0.5
+                            source, int(_k), int(npts_shift+padding_left))**0.5
 
                     results[_i] += d[_k].weight * misfit
 
@@ -158,16 +160,16 @@ class Helper(object):
         cc = self.g_d
         cc_sum = self.cc_sum
 
-        npts_padding = (len(self.cc_sum)-1)/2
+        padding_left = (len(self.cc_sum)-1)/2
         cc_sum[:] = 0.
 
         for _i in indices:
             cc_sum += np.dot(source, cc[_i, :, :])
 
-        return cc_sum.argmax() - npts_padding
+        return cc_sum.argmax() - padding_left
 
 
-    def __init__(self, d, g, norm, time_shift_max, debug=False):
+    def __init__(self, d, g, norm, time_shift_min, time_shift_max, debug=False):
         """ 
         Computes auto- and cross-correlations between data and synthetics
         for use by the other two methods
@@ -181,7 +183,10 @@ class Helper(object):
         self.debug = debug
 
         npts, dt = get_time_sampling(d)
-        npts_padding = int(time_shift_max/dt)
+
+        padding_left = int(-time_shift_min/dt)
+        padding_right = int(+time_shift_max/dt)
+        npts_padding = padding_left+padding_right
 
         ncomp = len(components)
 
@@ -189,13 +194,13 @@ class Helper(object):
         ngreens = greens.shape[1]
 
         self.source = None
-        self.cc_sum = np.zeros(2*npts_padding+1)
+        self.cc_sum = np.zeros(npts_padding+1)
 
 
         #
         # correlate greens and data
         #
-        corr = np.zeros((ncomp, ngreens, 2*npts_padding+1))
+        corr = np.zeros((ncomp, ngreens, npts_padding+1))
 
         # the main work starts now
         for _i, component in enumerate(g.components):
@@ -224,8 +229,8 @@ class Helper(object):
         # autocorrelate greens
         #
         npts, dt = get_time_sampling(g)
-        ones = np.pad(np.ones(npts-2*npts_padding), 2*npts_padding, 'constant')
-        corr = np.zeros((ncomp, 2*npts_padding+1, ngreens, ngreens))
+        ones = np.pad(np.ones(npts-npts_padding), npts_padding, 'constant')
+        corr = np.zeros((ncomp, npts_padding+1, ngreens, ngreens))
 
         # the main work starts now
         for _i in range(ncomp):
