@@ -5,7 +5,7 @@ import warnings
 from mtuq.misfit import simple, fast1, fast2
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
-from mtuq.util.signal import get_components
+from mtuq.util.signal import check_padding, get_components
 
 
 
@@ -119,10 +119,10 @@ class Misfit(object):
             norm = 'hybrid'
 
         assert norm in ['L1', 'L2', 'hybrid'],\
-            ValueError("Bad input argument")
+            ValueError("Bad input argument: norm")
 
         assert time_shift_max >= 0.,\
-            ValueError("Bad input argument")
+            ValueError("Bad input argument: time_shift_max")
 
         if norm=='L1':
             warnings.warn(
@@ -145,19 +145,23 @@ class Misfit(object):
         """ Evaluates misfit on given data
         """
 
+        # check input arguments
+        check_padding(greens, self.time_shift_min, self.time_shift_max)
+
         if optimization_level==0 or set_attributes:
             return simple.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max, verbose, set_attributes)
+                self.time_shift_min, self.time_shift_max, verbose, 
+                set_attributes)
 
         if optimization_level==1:
             return fast1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_max, verbose)
+                self.time_shift_min, self.time_shift_max, verbose)
 
         if optimization_level==2:
             return fast2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
-                self.time_shift_max, verbose)
+                self.time_shift_min, self.time_shift_max, verbose)
 
 

@@ -43,36 +43,34 @@ if __name__=='__main__':
         filter_type='Bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens,
+        pick_type='FK_metadata',
+        FK_database=path_greens,
         window_type='body_wave',
         window_length=15.,
-        padding_length=2.,
-        weight_type='body_wave',
-        cap_weight_file=path_weights,
+        capuaf_file=path_weights,
         )
 
     process_sw = ProcessData(
         filter_type='Bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens,
+        pick_type='FK_metadata',
+        FK_database=path_greens,
         window_type='surface_wave',
         window_length=150.,
-        padding_length=10.,
-        weight_type='surface_wave',
-        cap_weight_file=path_weights,
+        capuaf_file=path_weights,
         )
 
 
     misfit_bw = Misfit(
-        time_shift_max=2.,
+        time_shift_min=-2.,
+        time_shift_max=+2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
-        time_shift_max=10.,
+        time_shift_min=-10.,
+        time_shift_max=+10.,
         time_shift_groups=['ZR','T'],
         )
 

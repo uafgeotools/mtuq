@@ -34,7 +34,6 @@ if __name__=='__main__':
         taup_model='ak135',
         window_type='cap_bw',
         window_length=15.,
-        padding_length=0,
         weight_type='cap_bw',
         cap_weight_file=path_weights,
         )
@@ -47,7 +46,6 @@ if __name__=='__main__':
         taup_model='ak135',
         window_type='cap_sw',
         window_length=150.,
-        padding_length=0,
         weight_type='cap_sw',
         cap_weight_file=path_weights,
         )

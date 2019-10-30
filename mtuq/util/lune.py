@@ -13,7 +13,8 @@ u0 = 0.75*beta0 - 0.5*np.sin(2.*beta0) + 0.0625*np.sin(4.*beta0)
 
 
 def to_mij(rho, v, w, kappa, sigma, h):
-    """ Converts from lune parameters to mij
+    """ Converts from lune parameters to moment tensor parameters 
+    (up-south-east convention)
     """
     m0 = rho/np.sqrt(2.)
 

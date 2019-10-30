@@ -1,10 +1,16 @@
+#
+# all these functions reproduce functionality from
+# github.com/uafseismo/capuaf
+#
 
 
 import csv
 import numpy as np
 import obspy
+from collections import defaultdict
 from copy import deepcopy
 from mtuq.event import MomentTensor
+from mtuq.util import AttribDict
 from mtuq.wavelet import EarthquakeTrapezoid
 
 
@@ -26,6 +32,74 @@ def parse_weight_file(filename):
             weights[id] = [float(w) for w in row[1:]]
 
     return weights
+
+
+class Reader(object):
+    def __init__(self, path):
+        self._path = path
+
+    def parse_id(self, string):
+        return '.'.join(string.split('.')[1:4])
+
+    def parse_weights(self):
+        weights = defaultdict(AttribDict)
+          
+        with open(self._path) as file:
+            reader = csv.reader(
+                filter(lambda row: row[0]!='#', file),
+                delimiter=' ',
+                skipinitialspace=True)
+
+            for row in reader:
+                _id = self.parse_id(row[0])
+
+                weights[_id]['body_wave_Z'] = float(row[2])
+                weights[_id]['body_wave_R'] = float(row[3])
+                weights[_id]['surface_wave_Z'] = float(row[4])
+                weights[_id]['surface_wave_R'] = float(row[5])
+                weights[_id]['surface_wave_T'] = float(row[6])
+
+        return weights
+
+
+    def parse_picks(self):
+        picks = defaultdict(AttribDict)
+
+        with open(self._path) as file:
+            reader = csv.reader(
+                filter(lambda row: row[0]!='#', file),
+                delimiter=' ',
+                skipinitialspace=True)
+
+            for row in reader:
+                _id = self.parse_id(row[0])
+
+                picks[_id]['P'] = float(row[7])
+                picks[_id]['S'] = float(row[9])
+
+        return picks
+
+
+
+    def parse_statics(self):
+        statics = defaultdict(AttribDict)
+
+        with open(self._path) as file:
+            reader = csv.reader(
+                filter(lambda row: row[0]!='#', file),
+                delimiter=' ',
+                skipinitialspace=True)
+
+            for row in reader:
+                _id = self.parse_id(row[0])
+
+                statics[_id]['body_wave_Z'] = float(row[11])
+                statics[_id]['body_wave_R'] = float(row[11])
+                statics[_id]['surface_wave_Z'] = float(row[12])
+                statics[_id]['surface_wave_R'] = float(row[12])
+                statics[_id]['surface_wave_T'] = float(row[13])
+
+        return statics
 
 
 def remove_unused_stations(dataset, filename):

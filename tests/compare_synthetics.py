@@ -511,21 +511,21 @@ if __name__=='__main__':
     #
 
     process_bw = ProcessData(
-        filter_type='Bandpass',
+        filter_type='bandpass',
         freq_min= 0.1,
         freq_max= 0.333,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens_fk,
+        pick_type='FK_metadata',
+        FK_database=path_greens_fk,
         window_type='body_wave',
         window_length=30.,
         )
 
     process_sw = ProcessData(
-        filter_type='Bandpass',
+        filter_type='bandpass',
         freq_min=0.025,
         freq_max=0.0625,
-        pick_type='from_fk_metadata',
-        fk_database=path_greens_fk,
+        pick_type='FK_metadata',
+        FK_database=path_greens_fk,
         window_type='surface_wave',
         window_length=150.,
         )

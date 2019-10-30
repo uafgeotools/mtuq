@@ -83,6 +83,17 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
         return np.interp(t_new, t_old, resampled_data)
 
 
+def pad(trace, padding):
+    dt = trace.stats.delta
+
+    npts_padding = (
+        int(round(abs(padding[0])/dt)),
+        int(round(abs(padding[1])/dt)),
+        )
+
+    trace.data = np.pad(trace.data, npts_padding, 'constant')
+    trace.stats.starttime += abs(padding[0])
+
 
 def check_time_sampling(stream):
     """ Checks if all traces in stream have the same time sampling
@@ -104,6 +115,26 @@ def check_time_sampling(stream):
 
     return True
 
+
+def check_padding(dataset, time_shift_min, time_shift_max):
+    for stream in dataset:
+        _, dt = get_time_sampling(stream)
+
+        for trace in stream:
+            npts_left = getattr(trace, 'npts_left', 0)
+            npts_right = getattr(trace, 'npts_right', 0)
+
+            if (time_shift_min!=0 or time_shift_max!=0) and\
+               npts_left==0 and npts_right==0:
+
+                pad(trace, (time_shift_min, time_shift_max))
+
+                setattr(trace, 'npts_left', int(round(-time_shift_min/dt)))
+                setattr(trace, 'npts_right', int(round(+time_shift_max/dt)))
+
+            else:
+                assert npts_left == int(round(-time_shift_min/dt))
+                assert npts_right == int(round(+time_shift_max/dt))
 
 
 def get_arrival(arrivals, phase):
