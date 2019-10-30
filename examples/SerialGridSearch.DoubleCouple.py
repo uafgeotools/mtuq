@@ -53,7 +53,6 @@ if __name__=='__main__':
         taup_model=model,
         window_type='body_wave',
         window_length=15.,
-        padding_length=2.,
         capuaf_file=path_weights,
         )
 
@@ -65,7 +64,6 @@ if __name__=='__main__':
         taup_model=model,
         window_type='surface_wave',
         window_length=150.,
-        padding_length=10.,
         capuaf_file=path_weights,
         )
 

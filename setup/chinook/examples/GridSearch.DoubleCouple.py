@@ -49,7 +49,6 @@ if __name__=='__main__':
         taup_model='ak135',
         window_type='body_wave',
         window_length=15.,
-        padding_length=2.,
         capuaf_file=path_weights,
         )
 
@@ -61,7 +60,6 @@ if __name__=='__main__':
         taup_model='ak135',
         window_type='surface_wave',
         window_length=150.,
-        padding_length=10.,
         capuaf_file=path_weights,
         )
 
@@ -70,14 +68,12 @@ if __name__=='__main__':
         time_shift_min=-2.,
         time_shift_max=+2.,
         time_shift_groups=['ZR'],
-        data_processing=process_bw,
         )
 
     misfit_sw = Misfit(
         time_shift_min=-10.,
         time_shift_max=+10.,
         time_shift_groups=['ZR','T'],
-        data_processing=process_sw,
         )
 
 
