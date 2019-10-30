@@ -119,7 +119,9 @@ def check_padding(dataset, time_shift_min, time_shift_max):
                 padding_left = int(-time_shift_min/dt)
                 padding_right = int(+time_shift_max/dt)
                 padding = (padding_left, padding_right)
-                np.pad(trace.data, padding, mode='constant')
+
+                trace.data = np.pad(trace.data, padding, mode='constant')
+                trace.stats.starttime += time_shift_min
 
                 setattr(trace, 'padding_left', padding_left)
                 setattr(trace, 'padding_right', padding_right)
