@@ -14,6 +14,7 @@ def plot_beachball(filename, mt):
     """
     beachball(mt, size=200, linewidth=2, facecolor='b')
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 def misfit_vs_depth(filename, data, misfit, origins, sources, results):
@@ -74,6 +75,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
     pyplot.xlabel('Depth (km)')
     pyplot.ylabel('Normalized misfit')
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 def _hide_axis(ax):

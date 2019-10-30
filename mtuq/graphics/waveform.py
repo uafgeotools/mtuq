@@ -195,7 +195,7 @@ def plot_data_synthetics(filename,
         _irow += 1
 
     pyplot.savefig(filename)
-
+    pyplot.close()
 
 
 def plot_data_greens(filename, 
