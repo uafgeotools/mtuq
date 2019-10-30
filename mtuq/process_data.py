@@ -406,8 +406,7 @@ class ProcessData(object):
         # 
 
         # using a longer window for Green's functions than for data allows for
-        # more accurate time-shift corrections (otherwise, traces will later be
-        # padded with zeros)
+        # more accurate time-shift corrections
 
         if 'type:greens' in tags:
             starttime -= self.padding_left

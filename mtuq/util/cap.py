@@ -75,7 +75,7 @@ class Reader(object):
                 _id = self.parse_id(row[0])
 
                 picks[_id]['P'] = float(row[7])
-                picks[_id]['S'] = float(row[8])
+                picks[_id]['S'] = float(row[9])
 
         return picks
 
@@ -93,11 +93,11 @@ class Reader(object):
             for row in reader:
                 _id = self.parse_id(row[0])
 
-                statics[_id]['body_wave_Z'] = float(row[9])
-                statics[_id]['body_wave_R'] = float(row[9])
-                statics[_id]['surface_wave_Z'] = float(row[10])
-                statics[_id]['surface_wave_R'] = float(row[10])
-                statics[_id]['surface_wave_T'] = float(row[11])
+                statics[_id]['body_wave_Z'] = float(row[11])
+                statics[_id]['body_wave_R'] = float(row[11])
+                statics[_id]['surface_wave_Z'] = float(row[12])
+                statics[_id]['surface_wave_R'] = float(row[12])
+                statics[_id]['surface_wave_T'] = float(row[13])
 
         return statics
 
