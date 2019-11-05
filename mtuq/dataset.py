@@ -70,25 +70,25 @@ class Dataset(list):
         super(Dataset, self).append(stream)
 
 
-    def select(self, origin=None, station=None):
+    def select(self, origin=None, station=None, ids=None):
         """ Selects streams that match the given station or origin
         """
-        if origin and station:
-            return self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.station==station and
-                               stream.origin==origin, self))
+        selected = self
 
-        elif station:
-            return self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.station==station, self))
+        if station:
+            selected = self.__class__(id=self.id, streams=filter(
+                lambda stream: stream.station==station, selected))
 
-        elif origin:
-            return self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.origin==origin, self))
+        if origin:
+            selected = self.__class__(id=self.id, streams=filter(
+                lambda stream: stream.origin==origin, selected))
 
-        else:
-            raise Exception(
-                "No selection criteria given for Dataset.select")
+        if ids:
+            selected = self.__class__(id=self.id, streams=filter(
+                lambda stream: stream.id in ids, selected))
+
+        return selected
+
 
 
     def apply(self, function, *args, **kwargs):
