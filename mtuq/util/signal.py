@@ -149,6 +149,15 @@ def get_arrival(arrivals, phase):
     return arrival.time
 
 
+def check_components(stream):
+    """ Raises an exception if multiple components of same type found in stream
+    """
+    components = set()
+    for component in get_components(stream):
+        if component in components:
+           raise Exception('Multiple %s components in stream' % component)
+        components.add(component)
+
 
 def get_components(stream):
     components = []

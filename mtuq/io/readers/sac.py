@@ -8,7 +8,7 @@ from os.path import join
 from obspy.core import Stream
 from mtuq import Dataset, Origin, Station
 from mtuq.util import iterable, warn
-from mtuq.util.signal import check_time_sampling
+from mtuq.util.signal import check_components, check_time_sampling
 
 
 def read(filenames, event_id=None, tags=[]):
@@ -37,6 +37,10 @@ def read(filenames, event_id=None, tags=[]):
     streams = []
     for id in data_sorted:
         streams += [data_sorted[id]]
+
+    # check for redundant components
+    for stream in streams:
+        check_components(stream)
 
     # collect event metadata
     preliminary_origin = _get_origin(streams[0], event_id)

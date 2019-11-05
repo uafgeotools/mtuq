@@ -149,9 +149,6 @@ class ProcessData(object):
         if self.padding is None:
              self.padding = (0., 0.)
 
-        assert self.padding[0] <= 0.
-        assert self.padding[1] >= 0.
-
 
         #
         # check phase pick parameters
@@ -440,8 +437,8 @@ class ProcessData(object):
             endtime += self.padding[1]
 
             for trace in traces:
-                setattr(trace, 'npts_left', int(round(self.padding[0]/dt)))
-                setattr(trace, 'npts_right', int(round(self.padding[1]/dt)))
+                setattr(trace, 'npts_left', int(round(abs(self.padding[0])/dt)))
+                setattr(trace, 'npts_right', int(round(abs(self.padding[1])/dt)))
 
 
         #
