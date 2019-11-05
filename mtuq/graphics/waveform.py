@@ -231,9 +231,13 @@ def plot_data_greens(filename,
     total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
     total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
 
-    header = NewStyleHeader(event_name,
-        process_bw, process_sw, misfit_bw, misfit_bw,
-        model, solver, source, origin)
+    if 'header' in kwargs:
+        header = kwargs.pop('header')
+
+    else:
+        header = NewStyleHeader(event_name,
+            process_bw, process_sw, misfit_bw, misfit_bw,
+            model, solver, source, origin)
 
     plot_data_synthetics(filename,
         data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
