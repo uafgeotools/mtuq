@@ -418,9 +418,10 @@ class ProcessData(object):
                 key = self.window_type +'_'+ component
 
                 try:
-                    offset = self._statics[id][key]
+                    offset = self.statics[id][key]
                     starttime += offset
                     endtime += offset
+
                 except:
                     pass
 
