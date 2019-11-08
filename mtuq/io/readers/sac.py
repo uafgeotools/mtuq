@@ -140,5 +140,5 @@ def _glob(filenames):
    _list = list()
    for filename in iterable(filenames):
        _list.extend(glob.glob(filename))
-   return _list
+   return sorted(_list)
 

@@ -123,17 +123,14 @@ class GreensTensor(Stream):
         self._array = np.zeros((nc, nr, nt))
 
         # allocate obspy structures to hold synthetics
-        if not hasattr(self, '_synthetics'):
-            self._synthetics = Stream()
-            self._synthetics.station = self.station
-            self._synthetics.origin = self.origin
-        for trace in self._synthetics:
-            self._synthetics.remove(trace)
+        self._synthetics = Stream()
+        self._synthetics.station = self.station
+        self._synthetics.origin = self.origin
         for component in self.components:
             # add stats object
             stats = self.station.copy()
             stats.update({'npts': nt, 'channel': component})
-             # add trace object
+            # add trace object
             self._synthetics += Trace(np.zeros(nt), stats)
 
 
