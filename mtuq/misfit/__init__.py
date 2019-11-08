@@ -144,9 +144,15 @@ class Misfit(object):
         optimization_level=2, set_attributes=False):
         """ Evaluates misfit on given data
         """
+        # To allow time shifts, Green's functions must be longer than data,
+        # i.e., Green's functions must start -time_shift_min before data and
+        # end +time_shift_max after data.  One way to achieve this is by 
+        # supplying padding values to mtuq.ProcessData. If these padding values
+        # are not supplied, then Green's functions  will be padded by zeros via
+        # the following command.
 
-        # check input arguments
         check_padding(greens, self.time_shift_min, self.time_shift_max)
+
 
         if optimization_level==0 or set_attributes:
             return simple.misfit(
