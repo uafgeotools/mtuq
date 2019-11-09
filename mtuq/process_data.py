@@ -149,9 +149,6 @@ class ProcessData(object):
         if self.padding is None:
              self.padding = (0., 0.)
 
-        assert self.padding[0] >= 0.
-        assert self.padding[1] >= 0.
-
 
         #
         # check phase pick parameters
@@ -308,8 +305,38 @@ class ProcessData(object):
             tags[index] = 'type:displacement'
 
 
+
         #
-        # part 2: determine phase picks
+        # part 2a: apply distance scaling
+        #
+
+        if self.apply_scaling:
+            for trace in traces:
+                trace.data *=\
+                     (distance_in_m/self.scaling_coefficient)**self.scaling_power
+
+        #
+        # part 2b: apply user-supplied data weights
+        #
+        if 'type:greens' in tags:
+            pass
+
+        elif self.apply_weights:
+            for trace in traces:
+                try:
+                    component = trace.stats.channel[-1].upper()
+                    weight = self.weights[id][self.window_type+'_'+component]
+                except:
+                    weight = None
+
+                if weight:
+                    setattr(trace, 'weight', weight)
+                else:
+                    traces.remove(trace)
+
+
+        #
+        # part 3: determine phase picks
         #
 
         # Phase arrival times will be stored in a dictionary indexed by 
@@ -359,7 +386,7 @@ class ProcessData(object):
 
 
         #
-        # part 3a: determine window start and end times
+        # part 4a: determine window start and end times
         #
 
         # Start and end times will be stored in a dictionary indexed by 
@@ -381,23 +408,26 @@ class ProcessData(object):
 
 
         #
-        # part 3b: apply statics
+        # part 4b: apply statics
         # 
-        if 'type:greens' in tags:
+        if 'type:greens' in tags or\
+           'type:synthetics':
+
             for trace in traces:
                 component = trace.stats.channel[-1].upper()
                 key = self.window_type +'_'+ component
 
                 try:
-                    offset = self._statics[id][key]
+                    offset = self.statics[id][key]
                     starttime += offset
                     endtime += offset
+
                 except:
                     pass
 
 
         #
-        # part 3c: apply padding
+        # part 4c: apply padding
         # 
 
         # using a longer window for Green's functions than for data allows for
@@ -408,46 +438,19 @@ class ProcessData(object):
             endtime += self.padding[1]
 
             for trace in traces:
-                setattr(trace, 'npts_left', int(round(self.padding[0]/dt)))
-                setattr(trace, 'npts_right', int(round(self.padding[1]/dt)))
+                setattr(trace, 'npts_left', int(round(abs(self.padding[0])/dt)))
+                setattr(trace, 'npts_right', int(round(abs(self.padding[1])/dt)))
 
 
         #
-        # part 3d: cut and taper traces
+        # part 4d: cut and taper traces
         #
         for trace in traces:
             # cuts trace and adjusts metadata
             cut(trace, starttime, endtime)
+
             taper(trace.data)
 
-
-        #
-        # part 4a: apply distance scaling
-        #
-
-        if self.apply_scaling:
-            for trace in traces:
-                trace.data *=\
-                     (distance_in_m/self.scaling_coefficient)**self.scaling_power
-
-        #
-        # part 4b: apply user-supplied data weights
-        #
-        if 'type:greens' in tags:
-            pass
-
-        elif self.apply_weights:
-            for trace in traces:
-                try:
-                    component = trace.stats.channel[-1].upper()
-                    weight = self.weights[id][self.window_type+'_'+component]
-                except:
-                    weight = None
-
-                if weight:
-                    setattr(trace, 'weight', weight)
-                else:
-                    traces.remove(trace)
 
         return traces
 

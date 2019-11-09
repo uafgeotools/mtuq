@@ -107,8 +107,8 @@ class Grid(object):
 
         subsets = []
         for iproc in range(nproc):
-            start=iproc*self.size/nproc
-            stop=(iproc+1)*self.size/nproc
+            start=int(iproc*self.size/nproc)
+            stop=(iproc+1)*int(self.size/nproc)
             subsets += [Grid(self.items, start, stop, callback=self.callback)]
         return subsets
 
@@ -228,8 +228,8 @@ class UnstructuredGrid(object):
         """
         subsets = []
         for iproc in range(nproc):
-            start=iproc*self.size/nproc
-            stop=(iproc+1)*self.size/nproc
+            start=iproc*int(self.size/nproc)
+            stop=(iproc+1)*int(self.size/nproc)
             items = []
             for key, val in self.items:
                 items += [[key, val[start:stop]]]

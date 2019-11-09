@@ -38,7 +38,22 @@ class Reader(object):
     def __init__(self, path):
         self._path = path
 
-    def parse_id(self, string):
+    def parse_ids(self):
+        ids = []
+
+        with open(self._path) as file:
+            reader = csv.reader(
+                filter(lambda row: row[0]!='#', file),
+                delimiter=' ',
+                skipinitialspace=True)
+
+            for row in reader:
+                ids += [self._parse_id(row[0])]
+
+        return ids
+
+
+    def _parse_id(self, string):
         return '.'.join(string.split('.')[1:4])
 
     def parse_weights(self):
@@ -51,7 +66,7 @@ class Reader(object):
                 skipinitialspace=True)
 
             for row in reader:
-                _id = self.parse_id(row[0])
+                _id = self._parse_id(row[0])
 
                 weights[_id]['body_wave_Z'] = float(row[2])
                 weights[_id]['body_wave_R'] = float(row[3])
@@ -72,7 +87,7 @@ class Reader(object):
                 skipinitialspace=True)
 
             for row in reader:
-                _id = self.parse_id(row[0])
+                _id = self._parse_id(row[0])
 
                 picks[_id]['P'] = float(row[7])
                 picks[_id]['S'] = float(row[9])
@@ -91,7 +106,7 @@ class Reader(object):
                 skipinitialspace=True)
 
             for row in reader:
-                _id = self.parse_id(row[0])
+                _id = self._parse_id(row[0])
 
                 statics[_id]['body_wave_Z'] = float(row[11])
                 statics[_id]['body_wave_R'] = float(row[11])

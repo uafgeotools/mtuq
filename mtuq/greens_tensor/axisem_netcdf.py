@@ -60,11 +60,10 @@ class GreensTensor(GreensTensorBase):
         # the mathematical formulas here are based on Minson & Dreger 2008
         for _i, component in enumerate(self.components):
             if component=='Z':
-                ZSS = self.select(channel="ZSS")[0].data
-                ZDS = self.select(channel="ZDS")[0].data
-                ZDD = self.select(channel="ZDD")[0].data
-                ZEP = self.select(channel="ZEP")[0].data
-                ZDS *= -1
+                ZSS = +self.select(channel="ZSS")[0].data
+                ZDS = -self.select(channel="ZDS")[0].data
+                ZDD = +self.select(channel="ZDD")[0].data
+                ZEP = +self.select(channel="ZEP")[0].data
                 array[_i, _j+0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 array[_i, _j+1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 array[_i, _j+2, :] =  ZDD/3. + ZEP/3.
@@ -73,11 +72,10 @@ class GreensTensor(GreensTensorBase):
                 array[_i, _j+5, :] =  ZDS * np.sin(phi)
 
             elif component=='R':
-                RSS = self.select(channel="RSS")[0].data
-                RDS = self.select(channel="RDS")[0].data
-                RDD = self.select(channel="RDD")[0].data
-                REP = self.select(channel="REP")[0].data
-                RDS *= -1
+                RSS = +self.select(channel="RSS")[0].data
+                RDS = -self.select(channel="RDS")[0].data
+                RDD = +self.select(channel="RDD")[0].data
+                REP = +self.select(channel="REP")[0].data
                 array[_i, _j+0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 array[_i, _j+1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 array[_i, _j+2, :] =  RDD/3. + REP/3.
@@ -86,9 +84,8 @@ class GreensTensor(GreensTensorBase):
                 array[_i, _j+5, :] =  RDS * np.sin(phi)
 
             elif component=='T':
-                TSS = self.select(channel="TSS")[0].data
-                TDS = self.select(channel="TDS")[0].data
-                TSS *= -1
+                TSS = -self.select(channel="TSS")[0].data
+                TDS = +self.select(channel="TDS")[0].data
                 array[_i, _j+0, :] = TSS/2. * np.sin(2*phi)
                 array[_i, _j+1, :] = -TSS/2. * np.sin(2*phi)
                 array[_i, _j+2, :] = 0.
