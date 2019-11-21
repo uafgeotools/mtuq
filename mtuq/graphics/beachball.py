@@ -1,20 +1,46 @@
-#
-# utilities for plotting
-#
 
 import numpy as np
 import matplotlib.pyplot as pyplot
+import shutil
+import subprocess
+import warnings
 from mtuq.event import MomentTensor
 from obspy.imaging.beachball import beach, beachball
-
 
 
 def plot_beachball(filename, mt):
     """ Plots source mechanism
     """
+    if _gmt_major_version() >= 6:
+        _plot_gmt(filename, mt)
+
+    else:
+        warnings.warn(OBSPY_WARNING)
+        _plot_obspy(filename, mt)
+
+
+def _plot_obspy(filename, mt):
+    """ Plots source mechanism using obspy
+    """
     beachball(mt, size=200, linewidth=2, facecolor='b')
     pyplot.savefig(filename)
     pyplot.close()
+
+
+def _plot_gmt(filename, mt):
+    """ Plots source mechanism using GMT
+    """
+    # create Post Script image
+    subprocess.call('\n'.join([
+        ('gmt psmeca -R-5/5/-5/5 -JM5 -Sm1 -h1 << END > %s' % filename),
+        'lat lon depth   mrr   mtt   mff   mrt    mrf    mtf',
+        '0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0'
+        'END']) % tuple(mt), shell=True)
+
+    # create PNG image
+    subprocess.call('gmt psconvert %s -A -Tg' % filename,
+        shell=True)
+
 
 
 def misfit_vs_depth(filename, data, misfit, origins, sources, results):
@@ -100,6 +126,31 @@ def transform1(v):
 
 def transform2(v):
     return np.log((1. - v.min())/(1. - v))
+
+
+def _gmt_version():
+    if shutil.which('gmt'):
+        proc = subprocess.Popen('gmt --version',
+            stdout=subprocess.PIPE, shell=True)
+
+        bytes_string = proc.stdout.readline()
+        string = str(bytes_string, "utf-8").strip()
+        return string
+
+
+def _gmt_major_version():
+    if _gmt_version() is not None:
+        return int(_gmt_version().split('.')[0])
+
+
+OBSPY_WARNING = """
+WARNING:  
+
+ObsPy beachballs exhibit severe plotting artifacts.
+
+To avoid plotting artificats, consider installing an up-to-date version of
+Generic Mapping Tools (>=6).
+"""
 
 
 gray = [0.667, 0.667, 0.667]
