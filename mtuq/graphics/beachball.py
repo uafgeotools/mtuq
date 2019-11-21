@@ -1,44 +1,71 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
+import obspy.imaging.beachball
 import shutil
 import subprocess
 import warnings
 from mtuq.event import MomentTensor
-from obspy.imaging.beachball import beach, beachball
+
+
+WARNING = """
+To correctly plot focal mechanims, MTUQ uses Generic Mapping Tools (GMT).
+Users must install this package themselves, since it is not available through
+the Python Package Index.
+
+If GMT >=6.0.0 executables are not found on the system path, MTUQ falls back to
+ObsPy. As described in the following GitHub issue, ObsPy focal mechanisms 
+suffer from severe plotting artifacts:
+
+https://github.com/obspy/obspy/issues/2388
+"""
 
 
 def plot_beachball(filename, mt):
     """ Plots source mechanism
     """
-    if _gmt_major_version() >= 6:
-        _plot_gmt(filename, mt)
+    from mtuq.graphics import gmt_major_version
 
-    else:
-        warnings.warn(OBSPY_WARNING)
-        _plot_obspy(filename, mt)
+    try:
+        assert gmt_major_version() >= 6
+        beachball_gmt(filename, mt)
+
+    except:
+        beachball_obspy(filename, mt)
 
 
-def _plot_obspy(filename, mt):
+def beachball_obspy(filename, mt):
     """ Plots source mechanism using obspy
     """
-    beachball(mt, size=200, linewidth=2, facecolor='b')
+    warnings.warn(WARNING)
+
+    obspy.imaging.beachball.beachball(
+        mt, size=200, linewidth=2, facecolor='b')
+
     pyplot.savefig(filename)
     pyplot.close()
 
 
-def _plot_gmt(filename, mt):
+def beachball_gmt(filename, mt):
     """ Plots source mechanism using GMT
     """
+    # check file extension
+    if filename.endswith('.png'):
+        filename = filename[:-4]
+
+    if filename.endswith('.ps'):
+        filename = filename[:-3]
+
     # create Post Script image
     subprocess.call('\n'.join([
-        ('gmt psmeca -R-5/5/-5/5 -JM5 -Sm1 -h1 << END > %s' % filename),
+        ('gmt psmeca -R-5/5/-5/5 -JM5 -Sm1 -Ggrey50 -h1 << END > %s'
+         % filename+'.ps'),
         'lat lon depth   mrr   mtt   mff   mrt    mrf    mtf',
         '0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0'
         'END']) % tuple(mt), shell=True)
 
     # create PNG image
-    subprocess.call('gmt psconvert %s -A -Tg' % filename,
+    subprocess.call('gmt psconvert %s -A -Tg' % (filename+'.ps'),
         shell=True)
 
 
@@ -126,31 +153,6 @@ def transform1(v):
 
 def transform2(v):
     return np.log((1. - v.min())/(1. - v))
-
-
-def _gmt_version():
-    if shutil.which('gmt'):
-        proc = subprocess.Popen('gmt --version',
-            stdout=subprocess.PIPE, shell=True)
-
-        bytes_string = proc.stdout.readline()
-        string = str(bytes_string, "utf-8").strip()
-        return string
-
-
-def _gmt_major_version():
-    if _gmt_version() is not None:
-        return int(_gmt_version().split('.')[0])
-
-
-OBSPY_WARNING = """
-WARNING:  
-
-ObsPy beachballs exhibit severe plotting artifacts.
-
-To avoid plotting artificats, consider installing an up-to-date version of
-Generic Mapping Tools (>=6).
-"""
 
 
 gray = [0.667, 0.667, 0.667]
