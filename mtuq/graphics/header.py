@@ -1,9 +1,10 @@
 
 import numpy as np
+import os
 from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
-from mtuq.graphics.beachball import gray
+from mtuq.graphics.beachball import gray, plot_beachball
 #from mtuq.util.moment_tensor.TapeTape2015 import from_mij
 from obspy.core import AttribDict
 
@@ -68,9 +69,8 @@ class TextHeader(Header):
             _write_text(text, xp, yp, ax)
 
 
-
 class OldStyleHeader(Header):
-    """ Stores information from a CAP-style figure header and writes stored
+    """ Stores information from a UAF-style figure header and writes stored
     information to a matplotlib figure
     """
     def __init__(self, event_name, process_bw, process_sw, misfit_bw, misfit_sw,
@@ -82,14 +82,7 @@ class OldStyleHeader(Header):
         self.depth_in_km = origin.depth_in_m/1000.
         self.model = model
         self.solver = solver
-
-        tt = AttribDict()
-        #tt.gamma, tt.delta, tt.M0, tt.kappa, tt.theta, tt.sigma = from_mij(mt)
-        tt.gamma, tt.delta, tt.M0, tt.kappa, tt.theta, tt.sigma =\
-            0., 0., 0., 0., 0., 0.
-
         self.mt = mt
-        self.tt = tt
 
         self.process_bw = process_bw
         self.process_sw = process_sw
@@ -105,69 +98,86 @@ class OldStyleHeader(Header):
         self.sw_win_len = process_sw.window_length
 
 
-    def _beachball(self, ax, height, offset):
-        from obspy.imaging.beachball import beach
+    def add_beachball(self, ax, height, offset):
+
+        #
+        # If ObsPy plotted focal mechanisms correctly we could do the following
+        #
+
+        #from obspy.imaging.beachball import beach
+        ## beachball size
+        #diameter = 0.75*height
+        #xp = 0.50*diameter + offset
+        #yp = 0.45*height
+        #ax.add_collection(
+        #    beach(self.mt, xy=(xp, yp), width=diameter,
+        #    linewidth=0.5, facecolor=gray))
+
+
+        #
+        # Instead, we must use this workaround
+        #
 
         # beachball size
         diameter = 0.75*height
 
         # beachball placement
-        xp = 0.50*diameter + offset
-        yp = 0.45*height
+        xp = offset
+        yp = 0.075*height
 
-        ax.add_collection(
-            beach(self.mt, xy=(xp, yp), width=diameter,
-            linewidth=0.5, facecolor=gray))
+        plot_beachball('tmp.png', self.mt)
+        img = pyplot.imread('tmp.png')
 
+        os.remove('tmp.png')
+        os.remove('tmp.ps')
+
+        ax.imshow(img, extent=(xp,xp+diameter,yp,yp+diameter))
 
 
     def write(self, height, offset):
         """ Writes header text to current figure
         """
         ax = self._get_axis(height)
-        self._beachball(ax, height, offset)
 
-        # write line #1
+        # calculate focal mechanism
+        kappa, sigma, theta, _, gamma, delta = 0., 0., 0., 0., 0., 0.
+
+        # add beachball to upper left corner
+        self.add_beachball(ax, height, offset)
+
+
+        # write text line #1
         px = 0.125
         py = 0.65
-
         line = 'Event %s  Model %s  Depth %d km' % (
             self.event_name, self.model, self.depth_in_km)
-
         _write_text(line, px, py, ax, fontsize=14)
 
-        # write line #2
+
+        # write text line #2
         px = 0.125
         py -= 0.175
-
-        # WARNING: there are lots of inconsistencies between sources in the 
-        # order angles are stated
         line = u'FM %d %d %d    $M_w$ %.1f   %s %d   %s %d   rms %.1e   VR %.1f' %\
-                (self.tt.kappa, self.tt.sigma, self.tt.theta, self.magnitude, 
-                 u'\u03B3', self.tt.gamma, u'\u03B4', self.tt.delta, 0, 0)
-
+                (kappa, sigma, theta, self.magnitude, u'\u03B3', gamma, u'\u03B4', delta, 0, 0)
         _write_text(line, px, py, ax, fontsize=14)
 
-        # write line #3
+
+        # write text line #3
         px = 0.125
         py -= 0.175
-
         line = 'passbands (s):  bw %.1f - %.1f,  sw %.1f - %.1f   ' %\
                 (self.bw_T_min, self.bw_T_max, self.sw_T_min, self.sw_T_max)
         line += 'win. len. (s):  bw %.1f,  sw %.1f   ' %\
                 (self.bw_win_len, self.sw_win_len)
-
         _write_text(line, px, py, ax, fontsize=14)
 
-        # write line #4
+
+        # write text line #4
         px = 0.125
         py -= 0.175
-
         line = 'norm %s   N %d Np %d Ns %d' %\
                 (self.norm, 0, 0, 0,)
-
         _write_text(line, px, py, ax, fontsize=14)
-
 
 
 class NewStyleHeader(OldStyleHeader):
@@ -178,48 +188,39 @@ class NewStyleHeader(OldStyleHeader):
         """ Writes header text to current figure
         """
         ax = self._get_axis(height)
-        self._beachball(ax, height, offset)
+        self.add_beachball(ax, height, offset)
 
-        # write line #1
+
+        # write text line #1
         px = 0.125
         py = 0.65
-
         line = '%s  $M_w$ %.1f  Depth %d km' % (
             self.event_name, self.magnitude, self.depth_in_km)
-
         _write_bold(line, px, py, ax, fontsize=16)
 
-        # write line #2
+
+        # write text line #2
         px = 0.125
         py -= 0.175
-
         line = u'Model %s   Solver %s   %s norm %.1e   VR %1.3f' %\
                 (self.model, self.solver, self.norm, 1., 0.)
-
         _write_text(line, px, py, ax, fontsize=14)
 
-        # write line #3
+
+        # write text line #3
         px = 0.125
         py -= 0.175
-
         line = 'passbands (s):  bw %.1f - %.1f ,  sw %.1f - %.1f   ' %\
                 (self.bw_T_min, self.bw_T_max, self.sw_T_min, self.sw_T_max)
         line += 'win. len. (s):  bw %.1f ,  sw %.1f   ' %\
                 (self.bw_win_len, self.sw_win_len)
-
         _write_text(line, px, py, ax, fontsize=14)
 
-        # write line #4
+
+        # write text line #4
         px = 0.125
         py -= 0.175
-
-        #line = '%s %d   %s %d   %s %d   %s %d   %s %d' %\
-        #        (u'\u03BA', self.tt.kappa, u'\u03C3', self.tt.sigma, 
-        #         u'\u03B8', self.tt.theta, u'\u03B3', self.tt.gamma, 
-        #         u'\u03B4', self.tt.delta)
-
         line = '$M_{ij}$ = [%.2e  %.2e  %.2e  %.2e  %.2e  %.2e]' % tuple(self.mt)
-
         _write_text(line, px, py, ax, fontsize=12)
 
 
