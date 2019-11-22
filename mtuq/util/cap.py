@@ -108,11 +108,11 @@ class Reader(object):
             for row in reader:
                 _id = self._parse_id(row[0])
 
-                statics[_id]['body_wave_Z'] = float(row[11])
-                statics[_id]['body_wave_R'] = float(row[11])
-                statics[_id]['surface_wave_Z'] = float(row[12])
-                statics[_id]['surface_wave_R'] = float(row[12])
-                statics[_id]['surface_wave_T'] = float(row[13])
+                statics[_id]['body_wave_Z'] = 0.#float(row[11])
+                statics[_id]['body_wave_R'] = 0.#float(row[11])
+                statics[_id]['surface_wave_Z'] = float(row[11])
+                statics[_id]['surface_wave_R'] = float(row[11])
+                statics[_id]['surface_wave_T'] = float(row[12])
 
         return statics
 

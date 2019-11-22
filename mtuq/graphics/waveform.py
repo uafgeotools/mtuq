@@ -4,7 +4,7 @@ import matplotlib.pyplot as pyplot
 import warnings
 
 from matplotlib.font_manager import FontProperties
-from mtuq.graphics.header import NewStyleHeader
+from mtuq.graphics.header import Header
 from mtuq.util.signal import get_components
 from obspy.geodetics import gps2dist_azimuth
 
@@ -239,7 +239,7 @@ def plot_data_greens(filename,
         header = kwargs.pop('header')
 
     else:
-        header = NewStyleHeader(event_name,
+        header = Header(event_name,
             process_bw, process_sw, misfit_bw, misfit_bw,
             model, solver, source, origin)
 

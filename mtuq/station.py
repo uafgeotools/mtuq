@@ -16,8 +16,8 @@ class Station(AttribDict):
 
     Optionally, also includes 
 
-    - time discretization attributes, which can be meaningful if all traces at
-      a given station have the same time sampling 
+    - time sampling attributes, which can be relevant if all traces at a
+      given station have the same time discretization
     """
 
     defaults = {

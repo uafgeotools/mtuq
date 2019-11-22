@@ -8,21 +8,19 @@ import warnings
 from mtuq.event import MomentTensor
 
 
-WARNING = """
-To correctly plot focal mechanims, MTUQ uses Generic Mapping Tools (GMT).
-Users must install this package themselves, since it is not available through
-the Python Package Index.
+# To correctly plot focal mechanims, MTUQ uses Generic Mapping Tools (GMT).
+# Users must install this package themselves, since it is not available 
+# through the Python Package Index.
 
-If GMT >=6.0.0 executables are not found on the system path, MTUQ falls back to
-ObsPy. As described in the following GitHub issue, ObsPy focal mechanisms 
-suffer from severe plotting artifacts:
+# If GMT >=6.0.0 executables are not found on the system path, MTUQ falls 
+# back to ObsPy. As described in the following GitHub issue, ObsPy 
+# focal mechanisms suffer from severe plotting artifacts:
 
-https://github.com/obspy/obspy/issues/2388
-"""
+# https://github.com/obspy/obspy/issues/2388
 
 
 def plot_beachball(filename, mt):
-    """ Plots source mechanism
+    """ Plots focal mechanism of given moment tensor as PNG image
     """
     from mtuq.graphics import gmt_major_version
 
@@ -34,20 +32,8 @@ def plot_beachball(filename, mt):
         beachball_obspy(filename, mt)
 
 
-def beachball_obspy(filename, mt):
-    """ Plots source mechanism using obspy
-    """
-    warnings.warn(WARNING)
-
-    obspy.imaging.beachball.beachball(
-        mt, size=200, linewidth=2, facecolor='b')
-
-    pyplot.savefig(filename)
-    pyplot.close()
-
-
 def beachball_gmt(filename, mt):
-    """ Plots source mechanism using GMT
+    """ Plots focal mechanism using GMT
     """
     # check file extension
     if filename.endswith('.png'):
@@ -67,6 +53,28 @@ def beachball_gmt(filename, mt):
     # create PNG image
     subprocess.call('gmt psconvert %s -A -Tg' % (filename+'.ps'),
         shell=True)
+
+
+def beachball_obspy(filename, mt):
+    """ Plots focal mechanism using ObsPy
+    """
+    warnings.warn("""
+        WARNING:
+
+        Generic Mapping Tools (>=6.0.0) executables not found on system path.
+        Falling back to ObsPy.
+
+        As described in the following GitHub issue, ObsPy focal mechanism
+        graphics suffer from severe artifacts:
+
+        https://github.com/obspy/obspy/issues/2388
+        """)
+
+    obspy.imaging.beachball.beachball(
+        mt, size=200, linewidth=2, facecolor='b')
+
+    pyplot.savefig(filename)
+    pyplot.close()
 
 
 

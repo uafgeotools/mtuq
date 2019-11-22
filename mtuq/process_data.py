@@ -16,24 +16,95 @@ from mtuq.util.signal import cut, get_arrival, m_to_deg
 class ProcessData(object):
     """ Performs filtering, windowing and other operations on seismic data
 
+
+
     .. rubric :: Usage
 
-    Processing data is a two-step procedure:
+    Processing data is a two-step procedure. In the first step, the user 
+    supplies desired parameters. In the second step, an ObsPy stream is given
+    as input and a processed stream returned as output:
 
     .. code::
 
-        function_handle = process_data(**parameters) 
-        processed_data = function_handle(data)
+        function = ProcessData(**parameters) 
+        processed_stream = function(stream)
 
-    In the first step, the user supplies a set of filtering, phase-picking,
-    windowing, and weighting parameters.  In the second step, an obspy stream
-    is given as input and a processed stream returned as output.
 
-    See `mtuq/examples/` for a more detailed illustration of how everything
-    works in practice.
+    Data processing can also be applied to entire ``Dataset`` as follows:
+
+    .. code::
+
+        function = ProcessData(**parameters) 
+        processed_dataset = dataset.map(function)
+
+
+    See `mtuq/examples/` for further illustration of how it works in practice.
 
 
     .. rubric :: Parameters
+
+    For more detailed descriptions, please see `mtuq/docs`.
+
+
+    ``filter_type`` (`str`)
+
+    - ``'bandpass'``
+      Butterworth-Bandpass (uses `obspy.signal.filter.bandpass`)
+
+    - ``'lowpass'``
+      Butterworth-Lowpass (uses `obspy.signal.filter.lowpass`)
+
+    - ``'highpass'``
+      Butterworth-Highpass (uses `obspy.signal.filter.highpass`)
+
+
+    ``pick_type`` (`str`)
+
+    - ``'taup'``
+      calculates P, S arrival times from Tau-P model 
+      (uses `obspy.taup.TaupModel.get_arrival_times`)
+
+    - ``'FK_metadata'``
+      reads P, S arrival times from FK metadata
+
+    - ``'FK_metadata'``
+      reads P, S arrival times from SAC metadata fields `t5`, `t6`
+
+    - ``'user_supplied'``
+      reads P, S arrival times from columns 8, 10 of `capuaf_file`
+
+
+    ``window_type`` (`str`)
+
+    - ``'body_wave'``
+      chooses window starttime before P arrival
+
+    - ``'surface_wave'``
+      chooses window starttime after S arrival
+
+
+    ``window_length`` (`float`)
+    window length in seconds
+
+
+    ``padding`` (`list`)
+    padding length in seconds
+
+
+    ``apply_statics`` (`bool`)
+    whether or not to apply static time shifts from columns 11-13 of `capuaf_file`
+
+
+    ``apply_weights`` (`bool`)
+    whether or not to apply objective function weights from columns 3-8 of `capuaf_file`
+
+
+    ``apply_scaling`` (`bool`)
+    whether or not to apply distance-dependent amplitude scaling
+
+
+    ``capuaf_file`` (`str`)
+    path to `CAPUAF`-style text file
 
     """
 
@@ -339,9 +410,6 @@ class ProcessData(object):
         # part 3: determine phase picks
         #
 
-        # Phase arrival times will be stored in a dictionary indexed by 
-        # id. This allows times to be reused later when process_data is
-        # called on synthetics
         if self.pick_type == 'user_supplied':
             picks = self.picks[id]
 
@@ -388,10 +456,6 @@ class ProcessData(object):
         #
         # part 4a: determine window start and end times
         #
-
-        # Start and end times will be stored in a dictionary indexed by 
-        # id. This allows times to be resued later when process_data is
-        # called on synthetics
 
         if self.window_type == 'body_wave':
             # reproduces CAPUAF body wave window

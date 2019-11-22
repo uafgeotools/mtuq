@@ -9,25 +9,23 @@ from mtuq.graphics.beachball import gray, plot_beachball
 from obspy.core import AttribDict
 
 
-class Header(object):
-    """ Base class for storing text and writing it to a matplotlib figure
+class Base(object):
+    """ Base class for storing and writing text to a matplotlib figure
     """
     def __init__(self):
         raise NotImplementedError("Must be implemented by subclass")
 
-    def write(self):
-        raise NotImplementedError("Must be implemented by subclass")
 
     def _get_axis(self, height, fig=None):
-        """ Creates a matplotlib axis object occupying
+        """ Returns matplotlib axes of given height along top of figure
         """
         if fig is None:
             fig = pyplot.gcf()
         width, figure_height = fig.get_size_inches()
 
         assert height < figure_height, Exception(
-             "Header height exceeds entire figure height. Double check height "
-             "arguments and try again.")
+             "Header height exceeds entire figure height. Please double check "
+             "input arguments.")
                
         x0 = 0.
         y0 = 1.-height/figure_height
@@ -47,7 +45,12 @@ class Header(object):
         return ax
 
 
-class TextHeader(Header):
+    def write(self):
+        raise NotImplementedError("Must be implemented by subclass")
+
+
+
+class SimpleTextHeader(Base):
     """ Stores header text in a list [[text, position]], where text is a string
     and position is a (x,y) tuple
     """
@@ -69,9 +72,9 @@ class TextHeader(Header):
             _write_text(text, xp, yp, ax)
 
 
-class OldStyleHeader(Header):
-    """ Stores information from a UAF-style figure header and writes stored
-    information to a matplotlib figure
+class UAFStyleHeader(Base):
+    """ Stores information from a moment tensor inversion and writes UAF-style
+    text to the top of a matplotlib figure
     """
     def __init__(self, event_name, process_bw, process_sw, misfit_bw, misfit_sw,
         model, solver, mt, origin):
@@ -180,9 +183,9 @@ class OldStyleHeader(Header):
         _write_text(line, px, py, ax, fontsize=14)
 
 
-class NewStyleHeader(OldStyleHeader):
-    """ Stores information from a CAP-style figure header and writes stored
-    information to a matplotlib figure
+class Header(UAFStyleHeader):
+    """ Stores information from a moment tensor inversion and writes text to 
+    the top of a matplotlib figure
     """
     def write(self, height, offset):
         """ Writes header text to current figure
