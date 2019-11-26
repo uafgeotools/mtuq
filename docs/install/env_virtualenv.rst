@@ -5,13 +5,8 @@ Install the `virtualenv <https://virtualenv.pypa.io/en/latest/installation/>`_ p
 
 Create a new virtual environment:
 
-.. note::
-
-    If you prefer a location other than ``$HOME``, then change the first line accordingly.
-
 .. code::
 
-   cd $HOME
    virtualenv --python=python2.7 mtuq_env
 
 

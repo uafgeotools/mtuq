@@ -405,7 +405,6 @@ class ProcessData(object):
                 else:
                     traces.remove(trace)
 
-
         #
         # part 3: determine phase picks
         #

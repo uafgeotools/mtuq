@@ -89,7 +89,7 @@ class Misfit(object):
       version is the closest to `ZhuHelmberger1996`'s original C software.
 
     - ``fast2`` is an optimized Python/C++ implementation, in which a Python 
-      wrapper is used to combine obspy Traces into multidimensional arrays.
+      wrapper is used to combine obspy traces into multidimensional arrays.
       These arrays are passed to a C++ extension module, which does the
       main computational work. Unlike the other two versions, this 
       implementation requires that all obspy Traces have the same time
@@ -148,8 +148,8 @@ class Misfit(object):
         # i.e., Green's functions must start -time_shift_min before data and
         # end +time_shift_max after data.  One way to achieve this is by 
         # supplying padding values to mtuq.ProcessData. If these padding values
-        # are not supplied, then Green's functions  will be padded by zeros via
-        # the following command.
+        # were not previously supplied, then Green's functions  will be padded
+        # with zeros by the following command.
 
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
