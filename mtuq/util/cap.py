@@ -21,25 +21,12 @@ from mtuq.wavelet import EarthquakeTrapezoid
 # individual stations and components in a moment tensor inversion
 #
 
-def parse_weight_file(filename):
-    """ Parses CAP-style weight file
-    """
-    weights = {}
-    with open(filename) as file:
-        reader = csv.reader(file, delimiter=' ', skipinitialspace=True)
-        for row in reader:
-            id = '.'.join(row[0].split('.')[1:4])
-            weights[id] = [float(w) for w in row[1:]]
-
-    return weights
-
-
 class Reader(object):
     def __init__(self, path):
         self._path = path
 
-    def parse_ids(self):
-        ids = []
+    def parse_codes(self):
+        codes = []
 
         with open(self._path) as file:
             reader = csv.reader(
@@ -48,12 +35,12 @@ class Reader(object):
                 skipinitialspace=True)
 
             for row in reader:
-                ids += [self._parse_id(row[0])]
+                codes += [self._parse_code(row[0])]
 
-        return ids
+        return codes
 
 
-    def _parse_id(self, string):
+    def _parse_code(self, string):
         return '.'.join(string.split('.')[1:4])
 
     def parse_weights(self):
@@ -66,13 +53,13 @@ class Reader(object):
                 skipinitialspace=True)
 
             for row in reader:
-                _id = self._parse_id(row[0])
+                _code = self._parse_code(row[0])
 
-                weights[_id]['body_wave_Z'] = float(row[2])
-                weights[_id]['body_wave_R'] = float(row[3])
-                weights[_id]['surface_wave_Z'] = float(row[4])
-                weights[_id]['surface_wave_R'] = float(row[5])
-                weights[_id]['surface_wave_T'] = float(row[6])
+                weights[_code]['body_wave_Z'] = float(row[2])
+                weights[_code]['body_wave_R'] = float(row[3])
+                weights[_code]['surface_wave_Z'] = float(row[4])
+                weights[_code]['surface_wave_R'] = float(row[5])
+                weights[_code]['surface_wave_T'] = float(row[6])
 
         return weights
 
@@ -87,10 +74,10 @@ class Reader(object):
                 skipinitialspace=True)
 
             for row in reader:
-                _id = self._parse_id(row[0])
+                _code = self._parse_code(row[0])
 
-                picks[_id]['P'] = float(row[7])
-                picks[_id]['S'] = float(row[9])
+                picks[_code]['P'] = float(row[7])
+                picks[_code]['S'] = float(row[9])
 
         return picks
 
@@ -106,33 +93,51 @@ class Reader(object):
                 skipinitialspace=True)
 
             for row in reader:
-                _id = self._parse_id(row[0])
+                _code = self._parse_code(row[0])
 
-                statics[_id]['body_wave_Z'] = 0.#float(row[11])
-                statics[_id]['body_wave_R'] = 0.#float(row[11])
-                statics[_id]['surface_wave_Z'] = float(row[11])
-                statics[_id]['surface_wave_R'] = float(row[11])
-                statics[_id]['surface_wave_T'] = float(row[12])
+                statics[_code]['body_wave_Z'] = 0.#float(row[11])
+                statics[_code]['body_wave_R'] = 0.#float(row[11])
+                statics[_code]['surface_wave_Z'] = float(row[11])
+                statics[_code]['surface_wave_R'] = float(row[11])
+                statics[_code]['surface_wave_T'] = float(row[12])
 
         return statics
 
 
-def remove_unused_stations(dataset, filename):
-    """ Removes any stations not listed in CAP weight file or any stations
-        with all zero weights
+def parse(filename):
+    """ Parses CAPUAF-style weight file
     """
-    weights = parse_weight_file(filename)
+    return Reader(filename).parse_codes()
 
+
+
+def remove_unused_stations(dataset, filename):
+    """ Removes any stations not listed in CAPUAF weight file and stations with
+        all zero weights
+    """
+    weights = Reader(filename).parse_weights()
+
+    used = []
     unused = []
+
     for stream in dataset:
         id = stream.id
+
         if id not in weights:
-             unused+=[id]
-             continue
+            unused+=[id]
+            continue
 
         if weights[id][1]==weights[id][2]==\
            weights[id][3]==weights[id][4]==weights[id][5]==0.:
-             unused+=[id]
+            unused+=[id]
+        else:
+            used+=[id]
+
+    if len(used)==0:
+        warnings.warn(
+            "No data selected. Please check that the current dataset matches "
+            "the station codes in column 1 of the CAPUAF weight file and that "
+            "columns 3-7 contain at least one nonzero weight.")
 
     for id in unused:
         dataset.remove(id)

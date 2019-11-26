@@ -4,6 +4,8 @@ import numpy as np
 import warnings
 
 from copy import copy
+from mtuq.event import Origin
+from mtuq.station import Station
 from obspy import Stream
 from obspy.geodetics import gps2dist_azimuth
 
@@ -70,22 +72,26 @@ class Dataset(list):
         super(Dataset, self).append(stream)
 
 
-    def select(self, origin=None, station=None, ids=None):
+    def select(self, selector):
         """ Selects streams that match the given station or origin
         """
         selected = self
 
-        if station:
+        if type(selector) is Station:
             selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.station==station, selected))
+                lambda stream: stream.station==selector, selected))
 
-        if origin:
+        elif type(selector) is Origin:
             selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.origin==origin, selected))
+                lambda stream: stream.origin==selector, selected))
 
-        if ids:
+        elif type(selector) is list:
             selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.id in ids, selected))
+                lambda stream: stream.id in selector, selected))
+
+            assert len(selected) > 0, Exception(
+                "No data selected. Please check that the current data match "+
+                "the codes in column 1 of the CAPUAF weight file.")
 
         return selected
 

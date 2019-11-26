@@ -218,21 +218,16 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
-    def select(self, origin=None, station=None):
+    def select(self, selector):
         """ Selects GreensTensors that match the given station or origin
         """
-        if origin and station:
+        if type(selector) is Station:
             return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.station==station and 
-                               tensor.origin==origin, self))
+                lambda tensor: tensor.station==selector, self))
 
-        elif station:
+        elif type(selector) is Origin:
             return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.station==station, self))
-
-        elif origin:
-            return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.origin==origin, self))
+                lambda tensor: tensor.origin==selector, self))
 
 
 

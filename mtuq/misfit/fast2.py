@@ -85,12 +85,10 @@ def _get_greens(greens, stations, components):
         ))
 
     for _i, station in enumerate(stations):
-        tensor = greens.select(station=station)[0]
-
-        # populate array elements
-        tensor.reset_components(components)
+        tensor = greens.select(station)[0]
 
         # fill in array
+        tensor.reset_components(components)
         array[_i, :, :, :] = tensor._array
 
     return array
@@ -112,7 +110,7 @@ def _get_data(data, stations, components, nt):
     array = np.zeros((ns, nc, nt))
 
     for _i, station in enumerate(stations):
-        stream = data.select(station=station)[0]
+        stream = data.select(station)[0]
         for _j, component in enumerate(components):
             try:
                 trace = stream.select(component=component)[0]
@@ -153,7 +151,7 @@ def _get_mask(data, stations, components):
     for _i, station in enumerate(stations):
         for _j, component in enumerate(components):
 
-            stream = data.select(station=station)[0]
+            stream = data.select(station)[0]
             stream = stream.select(component=component)
 
             if len(stream)==0:
