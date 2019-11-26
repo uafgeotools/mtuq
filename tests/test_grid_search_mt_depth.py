@@ -3,13 +3,14 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
+from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, misfit_vs_depth
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import Trapezoid
+from mtuq.util.cap import parse, Trapezoid
 
 
 
@@ -75,6 +76,18 @@ if __name__=='__main__':
         )
 
 
+    stations_list = parse(path_weights)
+
+
+    origin = Origin({
+        'time': '2009-04-07T20:12:55.000000Z',
+        'latitude': 61.454200744628906,
+        'longitude': -149.7427978515625,
+        'depth_in_m': 33033.599853515625,
+        'id': '20090407201255351'
+        })
+
+
     #
     # Next we specify the source parameter grid
     #
@@ -100,23 +113,22 @@ if __name__=='__main__':
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
 
+    # select stations with nonzero weights
+    data.select(stations_list)
+
     data.sort_by_distance()
-
     stations = data.get_stations()
-    origin = data.get_origins()[0]
 
-    origins = []
-    for depth in depths:
-        origins += [origin.copy()]
-        setattr(origins[-1], 'depth_in_m', depth)
 
     print('Processing data...\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
+
     print('Reading Green''s functions...\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
+
 
     print('Processing Greens functions...\n')
     greens.convolve(wavelet)

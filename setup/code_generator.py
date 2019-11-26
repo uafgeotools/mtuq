@@ -5,13 +5,14 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
+from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, plot_beachball
 from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import Trapezoid
+from mtuq.util.cap import parse, Trapezoid
 
 
 """
@@ -124,7 +125,7 @@ if __name__=='__main__':
     # USAGE
     #   python SerialGridSearch.DoubleCouple.py
     #
-    # A typical runtime is about 10 minutes. For faster results try 
+    # A typical runtime is about 60 seconds. For faster results try 
     # GridSearch.DoubleCouple.py, which runs the same inversion in parallel
     #
 
@@ -308,8 +309,8 @@ Paths_BenchmarkCAP="""
 
 PathsComments="""
     #
-    # Here we specify the data used for the inversion. The event is an 
-    # Mw~4 Alaska earthquake
+    # We will investigate the source process of an Mw~4 earthquake using data
+    # from a regional seismic array
     #
 """
 
@@ -346,8 +347,7 @@ Paths_FK="""
 
 DataProcessingComments="""
     #
-    # Body- and surface-wave data are processed separately and held separately 
-    # in memory
+    # Body and surface wave measurements will be made separately
     #
 """
 
@@ -380,7 +380,7 @@ DataProcessingDefinitions="""
 
 MisfitComments="""
     #
-    # We define misfit as a sum of indepedent body- and surface-wave 
+    # For our objective function, we will use a sum of body and surface wave
     # contributions
     #
 """
@@ -398,6 +398,72 @@ MisfitDefinitions="""
         time_shift_max=+10.,
         time_shift_groups=['ZR','T'],
         )
+
+"""
+
+
+
+WeightsComments="""
+    #
+    # User-supplied weights control how much each station contributes to the
+    # objective function
+    #
+"""
+
+
+WeightsDefinitions="""
+    stations_list = parse(path_weights)
+
+"""
+
+
+OriginComments="""
+    #
+    # Origin time and location will be fixed. For an example in which they 
+    # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
+    #
+"""
+
+
+OriginDefinitions="""
+    origin = Origin({
+        'time': '2009-04-07T20:12:55.000000Z',
+        'latitude': 61.454200744628906,
+        'longitude': -149.7427978515625,
+        'depth_in_m': 33033.599853515625,
+        'id': '20090407201255351'
+        })
+
+"""
+
+
+OriginsComments="""
+    #
+    # We will search over a range of depths about the catalog origin
+    #
+
+"""
+
+
+OriginsDefinitions="""
+    catalog_origin = Origin({
+        'time': '2009-04-07T20:12:55.000000Z',
+        'latitude': 61.454200744628906,
+        'longitude': -149.7427978515625,
+        'depth_in_m': 33033.599853515625,
+        'id': '20090407201255351'
+        })
+
+    depths = np.array(
+         # depth in meters
+        [25000, 30000, 35000, 40000,                    
+         45000, 50000, 55000, 60000])
+
+    origins = []
+    for depth in depths:
+        origins += [catalog_origin.copy()]
+        setattr(origins[-1], 'depth_in_m', depth)
+
 
 """
 
@@ -428,11 +494,6 @@ Grid_DoubleCoupleMagnitudeDepth="""
          # moment magnitude (Mw)
         [4.3, 4.4, 4.5,     
          4.6, 4.7, 4.8]) 
-
-    depths = np.array(
-         # depth in meters
-        [25000, 30000, 35000, 40000,                    
-         45000, 50000, 55000, 60000])         
 
     sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
@@ -530,16 +591,20 @@ Main_GridSearch_DoubleCouple="""
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
 
-        data.sort_by_distance()
 
+        # select stations with nonzero weights
+        data.select(stations_list)
+
+        data.sort_by_distance()
         stations = data.get_stations()
-        origin = data.get_origins()[0]
+
 
         print('Processing data...\\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
-        print('Reading Green''s functions...\\n')
+
+        print('Reading Greens functions...\\n')
         greens = download_greens_tensors(stations, origin, model)
 
         print('Processing Greens functions...\\n')
@@ -547,16 +612,16 @@ Main_GridSearch_DoubleCouple="""
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
 
+
     else:
         stations = None
-        origin = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+
     stations = comm.bcast(stations, root=0)
-    origin = comm.bcast(origin, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -602,39 +667,38 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
 
+
+        # select stations with nonzero weights
+        data.select(stations_list)
+
         data.sort_by_distance()
+        stations = data.get_stations()
+
 
         print('Processing data...\\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
 
-        stations = data.get_stations()
-        origin = data.get_origins()[0]
-
-        origins = []
-        for depth in depths:
-            origins += [origin.copy()]
-            setattr(origins[-1], 'depth_in_m', depth)
-
         print('Reading Green''s functions...\\n')
         greens = download_greens_tensors(stations, origins, model)
+
 
         print('Processing Green''s functions...\\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
 
+
     else:
         stations = None
-        origins = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+
     stations = comm.bcast(stations, root=0)
-    origins = comm.bcast(origins, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -678,18 +742,22 @@ Main1_SerialGridSearch_DoubleCouple="""
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
 
-    data.sort_by_distance()
 
+    # select stations with nonzero weights
+    data.select(stations_list)
+
+    data.sort_by_distance()
     stations = data.get_stations()
-    origin = data.get_origins()[0]
 
 
     print('Processing data...\\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
+
     print('Reading Green''s functions...\\n')
     greens = download_greens_tensors(stations, origin, model)
+
 
     print('Processing Greens functions...\\n')
     greens.convolve(wavelet)
@@ -730,23 +798,22 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
         event_id=event_name,
         tags=['units:cm', 'type:velocity']) 
 
+    # select stations with nonzero weights
+    data.select(stations_list)
+
     data.sort_by_distance()
-
     stations = data.get_stations()
-    origin = data.get_origins()[0]
 
-    origins = []
-    for depth in depths:
-        origins += [origin.copy()]
-        setattr(origins[-1], 'depth_in_m', depth)
 
     print('Processing data...\\n')
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
+
     print('Reading Green''s functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
+
 
     print('Processing Greens functions...\\n')
     greens.convolve(wavelet)
@@ -779,10 +846,12 @@ Main_TestGraphics="""
         event_id=event_name,
         tags=['units:cm', 'type:velocity'])
 
-    data.sort_by_distance()
 
+    # select stations with nonzero weights
+    data.select(stations_list)
+
+    data.sort_by_distance()
     stations = data.get_stations()
-    origin = data.get_origins()[0]
 
 
     print('Processing data...\\n')
@@ -1077,6 +1146,10 @@ if __name__=='__main__':
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(OriginComments)
+        file.write(OriginDefinitions)
         file.write(Grid_DoubleCouple)
         file.write(Main_GridSearch_DoubleCouple)
         file.write(WrapUp_GridSearch_DoubleCouple)
@@ -1097,7 +1170,12 @@ if __name__=='__main__':
         file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
+        file.write(MisfitComments)
         file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(OriginsComments)
+        file.write(OriginsDefinitions)
         file.write(Grid_DoubleCoupleMagnitudeDepth)
         file.write(Main_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(WrapUp_GridSearch_DoubleCoupleMagnitudeDepth)
@@ -1117,6 +1195,10 @@ if __name__=='__main__':
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(OriginComments)
+        file.write(OriginDefinitions)
         file.write(Grid_FullMomentTensor)
         file.write(Main_GridSearch_DoubleCouple)
         file.write(WrapUp_GridSearch_DoubleCouple)
@@ -1192,6 +1274,10 @@ if __name__=='__main__':
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
         file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(OriginComments)
+        file.write(OriginDefinitions)
         file.write(Grid_DoubleCouple)
         file.write(Main1_SerialGridSearch_DoubleCouple)
         file.write(Main2_SerialGridSearch_DoubleCouple)
@@ -1225,6 +1311,8 @@ if __name__=='__main__':
             'npts=.*,',
             'npts_per_axis=5,',
             ))
+        file.write(WeightsDefinitions)
+        file.write(OriginDefinitions)
         file.write(
             replace(
             Main1_SerialGridSearch_DoubleCouple,
@@ -1262,6 +1350,8 @@ if __name__=='__main__':
             'FK_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
+        file.write(WeightsDefinitions)
+        file.write(OriginDefinitions)
         file.write(Grid_TestDoubleCoupleMagnitudeDepth)
         file.write(Main_TestGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth)

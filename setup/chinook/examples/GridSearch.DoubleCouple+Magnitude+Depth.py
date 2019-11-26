@@ -4,13 +4,14 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
+from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, misfit_vs_depth
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import Trapezoid
+from mtuq.util.cap import parse, Trapezoid
 
 
 
@@ -87,11 +88,6 @@ if __name__=='__main__':
         [4.3, 4.4, 4.5,     
          4.6, 4.7, 4.8]) 
 
-    depths = np.array(
-         # depth in meters
-        [25000, 30000, 35000, 40000,                    
-         45000, 50000, 55000, 60000])         
-
     sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
         magnitude=magnitudes)
@@ -115,40 +111,39 @@ if __name__=='__main__':
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
 
+
+        # select stations with nonzero weights
+        data.select(stations_list)
+
         data.sort_by_distance()
+        stations = data.get_stations()
+
 
         print('Processing data...\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
 
-        stations = data.get_stations()
-        origin = data.get_origins()[0]
-
-        origins = []
-        for depth in depths:
-            origins += [origin.copy()]
-            setattr(origins[-1], 'depth_in_m', depth)
-
         print('Reading Green''s functions...\n')
         db = open_db(path_greens, format='AxiSEM', model=model)
         greens = db.get_greens_tensors(stations, origins, verbose=True)
+
 
         print('Processing Green''s functions...\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
 
+
     else:
         stations = None
-        origins = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+
     stations = comm.bcast(stations, root=0)
-    origins = comm.bcast(origins, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)

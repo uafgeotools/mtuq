@@ -4,13 +4,14 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
+from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, plot_beachball
 from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import Trapezoid
+from mtuq.util.cap import parse, Trapezoid
 
 
 
@@ -104,16 +105,20 @@ if __name__=='__main__':
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
 
-        data.sort_by_distance()
 
+        # select stations with nonzero weights
+        data.select(stations_list)
+
+        data.sort_by_distance()
         stations = data.get_stations()
-        origin = data.get_origins()[0]
+
 
         print('Processing data...\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
-        print('Reading Green''s functions...\n')
+
+        print('Reading Greens functions...\n')
         db = open_db(path_greens, format='AxiSEM', model=model)
         greens = db.get_greens_tensors(stations, origin)
 
@@ -122,16 +127,16 @@ if __name__=='__main__':
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
 
+
     else:
         stations = None
-        origin = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+
     stations = comm.bcast(stations, root=0)
-    origin = comm.bcast(origin, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)

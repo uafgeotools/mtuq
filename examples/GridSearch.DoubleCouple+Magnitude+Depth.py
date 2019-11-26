@@ -4,13 +4,14 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
+from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, misfit_vs_depth
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import Trapezoid
+from mtuq.util.cap import parse, Trapezoid
 
 
 
@@ -29,8 +30,8 @@ if __name__=='__main__':
 
 
     #
-    # Here we specify the data used for the inversion. The event is an 
-    # Mw~4 Alaska earthquake
+    # We will investigate the source process of an Mw~4 earthquake using data
+    # from a regional seismic array
     #
 
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
@@ -40,8 +41,7 @@ if __name__=='__main__':
 
 
     #
-    # Body- and surface-wave data are processed separately and held separately 
-    # in memory
+    # Body and surface wave measurements will be made separately
     #
 
     process_bw = ProcessData(
@@ -67,6 +67,11 @@ if __name__=='__main__':
         )
 
 
+    #
+    # For our objective function, we will use a sum of body and surface wave
+    # contributions
+    #
+
     misfit_bw = Misfit(
         time_shift_min=-2.,
         time_shift_max=+2.,
@@ -81,6 +86,39 @@ if __name__=='__main__':
 
 
     #
+    # User-supplied weights control how much each station contributes to the
+    # objective function
+    #
+
+    stations_list = parse(path_weights)
+
+
+    #
+    # We will search over a range of depths about the catalog origin
+    #
+
+
+    catalog_origin = Origin({
+        'time': '2009-04-07T20:12:55.000000Z',
+        'latitude': 61.454200744628906,
+        'longitude': -149.7427978515625,
+        'depth_in_m': 33033.599853515625,
+        'id': '20090407201255351'
+        })
+
+    depths = np.array(
+         # depth in meters
+        [25000, 30000, 35000, 40000,                    
+         45000, 50000, 55000, 60000])
+
+    origins = []
+    for depth in depths:
+        origins += [catalog_origin.copy()]
+        setattr(origins[-1], 'depth_in_m', depth)
+
+
+
+    #
     # Following obspy, we use the variable name "source" for the mechanism of
     # an event and "origin" for the location of an event
     #
@@ -89,11 +127,6 @@ if __name__=='__main__':
          # moment magnitude (Mw)
         [4.3, 4.4, 4.5,     
          4.6, 4.7, 4.8]) 
-
-    depths = np.array(
-         # depth in meters
-        [25000, 30000, 35000, 40000,                    
-         45000, 50000, 55000, 60000])         
 
     sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
@@ -118,39 +151,38 @@ if __name__=='__main__':
             event_id=event_name,
             tags=['units:cm', 'type:velocity']) 
 
+
+        # select stations with nonzero weights
+        data.select(stations_list)
+
         data.sort_by_distance()
+        stations = data.get_stations()
+
 
         print('Processing data...\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
 
-        stations = data.get_stations()
-        origin = data.get_origins()[0]
-
-        origins = []
-        for depth in depths:
-            origins += [origin.copy()]
-            setattr(origins[-1], 'depth_in_m', depth)
-
         print('Reading Green''s functions...\n')
         greens = download_greens_tensors(stations, origins, model)
+
 
         print('Processing Green''s functions...\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
 
+
     else:
         stations = None
-        origins = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+
     stations = comm.bcast(stations, root=0)
-    origins = comm.bcast(origins, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
