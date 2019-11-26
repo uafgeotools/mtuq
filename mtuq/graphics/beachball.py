@@ -1,7 +1,8 @@
 
-import numpy as np
-import matplotlib.pyplot as pyplot
 import obspy.imaging.beachball
+import os
+import matplotlib.pyplot as pyplot
+import numpy as np
 import shutil
 import subprocess
 import warnings
@@ -9,7 +10,7 @@ from mtuq.event import MomentTensor
 
 
 # To correctly plot focal mechanims, MTUQ uses Generic Mapping Tools (GMT).
-# Users must install this package themselves, since it is not available 
+# Users must install this package by themselves, since it is not available
 # through the Python Package Index.
 
 # If GMT >=6.0.0 executables are not found on the system path, MTUQ falls 
@@ -59,7 +60,7 @@ def beachball_obspy(filename, mt):
     """ Plots focal mechanism using ObsPy
     """
     warnings.warn("""
-        WARNING:
+        WARNING
 
         Generic Mapping Tools (>=6.0.0) executables not found on system path.
         Falling back to ObsPy.
@@ -94,7 +95,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
     fig = pyplot.figure()
     ax = pyplot.gca()
 
-    # normalize results
+  # normalize results
     norm = 0
     for stream in data:
         for trace in stream:
@@ -113,25 +114,39 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
     # optional further normalization
     results = transform1(results)
     #results = transform2(results)
-    yrange = results.max() - results.min()
+
+    depths = []
+    for origin in origins:
+        depths += [origin.depth_in_m/1000.]
+
+    xr = max(depths) - min(depths)
+    yr = results.max() - results.min()
 
     for _i, origin in enumerate(origins):
-        result = results[_i]
+
         source = sources.get(indices[_i])
+        result = results[_i]
 
         xp = origin.depth_in_m/1000.
         yp = result
         pyplot.plot(xp, yp)
 
         # add beachball
-        marker = beach(source, xy=(xp, yp), width=20., linewidth=0.5, axes=ax)
-        ax.add_collection(marker)
+        plot_beachball('tmp.png', source)
+        img = pyplot.imread('tmp.png')
+        os.remove('tmp.png')
+        os.remove('tmp.ps')
+
+        xw = 0.1*xr
+        yw = 0.1*yr
+        #ax.imshow(img, extent=(xp-xw,xp+xw,yp-yw,yp+yw), transform=ax.transAxes)
 
         # add magnitude label
         label = '%2.1f' % MomentTensor(source).magnitude()
-        _text(xp, yp-0.075*yrange, label)
+        _text(xp, yp-0.075*yr, label)
 
-    pyplot.ylim([-0.15*yrange, 1.15*yrange])
+    pyplot.xlim((-0.1*xr + min(depths), 0.1*xr + max(depths)))
+    pyplot.ylim((-0.1*yr + results.min(), 0.1*yr + results.max()))
 
     pyplot.xlabel('Depth (km)')
     pyplot.ylabel('Normalized misfit')
