@@ -18,7 +18,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
-    nt, dt = get_time_sampling(data[0])
+    nt, dt = _get_time_sampling(data)
     padding = _get_padding(time_shift_min, time_shift_max, dt)
 
     stations = _get_stations(data)
@@ -58,6 +58,12 @@ def misfit(data, greens, sources, norm, time_shift_groups,
           (time.time() - start_time))
 
     return results
+
+
+def _get_time_sampling(dataset):
+    for stream in dataset:
+        if len(stream) > 0:
+            return get_time_sampling(stream)
 
 
 def _get_padding(time_shift_min, time_shift_max, dt):
