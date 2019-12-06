@@ -45,11 +45,10 @@ def beachball_gmt(filename, mt):
 
     # create Post Script image
     subprocess.call('\n'.join([
-        ('gmt psmeca -R-5/5/-5/5 -JM5 -Sm1 -Ggrey50 -h1 << END > %s'
-         % filename+'.ps'),
+        ('gmt psmeca -R-5/5/-5/5 -JM5 -Sm1 -Ggrey50 -h1 << END > %s' % filename+'.ps'),
         'lat lon depth   mrr   mtt   mff   mrt    mrf    mtf',
-        '0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0'
-        'END']) % tuple(mt), shell=True)
+        ('0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0' % tuple(mt)),
+        'END']), shell=True)
 
     # create PNG image
     subprocess.call('gmt psconvert %s -A -Tg' % (filename+'.ps'),
