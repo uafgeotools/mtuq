@@ -317,7 +317,7 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25, callback=to_mi
     rho = []
     for Mw in magnitude:
         M0 = 10.**(1.5*float(Mw) + 9.1)
-        rho += [M0/np.sqrt(2)]
+        rho += [M0*np.sqrt(2)]
 
     return Grid((
         ('rho', asarray(rho)),
@@ -371,7 +371,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
     rho = []
     for Mw in magnitude:
         M0 = 10.**(1.5*float(Mw) + 9.1)
-        rho += [M0/np.sqrt(2)]
+        rho += [M0*np.sqrt(2)]
 
     return Grid((
         ('rho', asarray(rho)),
