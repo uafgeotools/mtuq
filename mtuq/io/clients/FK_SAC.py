@@ -129,7 +129,7 @@ class Client(ClientBase):
 
         tags = [
             'model:%s' % self.model,
-            'solver:%s' % 'syngine',
+            'solver:%s' % 'FK',
              ]
 
         return GreensTensor(traces=[trace for trace in traces], 

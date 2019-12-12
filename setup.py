@@ -41,11 +41,13 @@ class PyTest(test_command):
 
 ENTRY_POINTS = {
     'readers': [
-        'SAC = mtuq.io.readers.sac:read',
+        'SAC = mtuq.io.readers.SAC:read',
         ],
     'greens_tensor_clients': [
-        'AXISEM = mtuq.io.clients.axisem_netcdf:Client',
-        'FK = mtuq.io.clients.fk_sac:Client',
+        'AXISEM = mtuq.io.clients.AxiSEM_NetCDF:Client',
+        'AXISEM_NETCDF = mtuq.io.clients.AxiSEM_NetCDF:Client',
+        'FK = mtuq.io.clients.FK_SAC:Client',
+        'FK_SAC = mtuq.io.clients.FK_SAC:Client',
         'SYNGINE = mtuq.io.clients.syngine:Client',
         ]
     }
