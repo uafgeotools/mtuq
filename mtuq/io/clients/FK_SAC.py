@@ -3,7 +3,7 @@ import obspy
 import numpy as np
 
 from os.path import basename, exists
-from mtuq.greens_tensor.fk_sac import GreensTensor 
+from mtuq.greens_tensor.FK import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
 from obspy.core import Stream
