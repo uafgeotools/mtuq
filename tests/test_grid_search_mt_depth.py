@@ -79,6 +79,18 @@ if __name__=='__main__':
     station_id_list = parse_station_codes(path_weights)
 
 
+    #
+    # Next we specify the source parameter grid
+    #
+
+    sources = DoubleCoupleGridRegular(
+        npts_per_axis=5,
+        magnitude=[4.4, 4.5, 4.6])
+
+    wavelet = Trapezoid(
+        magnitude=4.5)
+
+
     origin = Origin({
         'time': '2009-04-07T20:12:55.000000Z',
         'latitude': 61.454200744628906,
@@ -88,21 +100,14 @@ if __name__=='__main__':
         })
 
 
-    #
-    # Next we specify the source parameter grid
-    #
-
     depths = np.array(
          # depth in meters
         [34000])
 
-    sources = DoubleCoupleGridRegular(
-        npts_per_axis=5,
-        magnitude=[4.4, 4.5, 4.6])
-
-    wavelet = Trapezoid(
-        magnitude=4.5)
-
+    origins = []
+    for depth in depths:
+        origin.depth = depth
+        origins += [origin.copy()]
 
     #
     # The main I/O work starts now

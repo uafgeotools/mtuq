@@ -526,10 +526,6 @@ Grid_TestDoubleCoupleMagnitudeDepth="""
     # Next we specify the source parameter grid
     #
 
-    depths = np.array(
-         # depth in meters
-        [34000])
-
     sources = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitude=[4.4, 4.5, 4.6])
@@ -537,6 +533,15 @@ Grid_TestDoubleCoupleMagnitudeDepth="""
     wavelet = Trapezoid(
         magnitude=4.5)
 
+"""+OriginDefinitions+"""
+    depths = np.array(
+         # depth in meters
+        [34000])
+
+    origins = []
+    for depth in depths:
+        origin.depth = depth
+        origins += [origin.copy()]
 """
 
 
@@ -1018,12 +1023,12 @@ WrapUp_TestGridSearch_DoubleCouple="""
         if not isclose(
             best_source,
             np.array([
-                 -2.65479669144e+15,
-                  6.63699172860e+14,
-                  1.99109751858e+15,
-                  1.76986446096e+15,
-                  1.11874525051e+00,
-                  1.91593448056e+15,
+                -5.64838737e+15,
+                -1.25298635e-01,
+                 5.64838737e+15,
+                -2.94977410e+15,
+                -2.38427402e+15,
+                 1.95665878e+15,
                  ])
             ):
             raise Exception(
@@ -1341,7 +1346,6 @@ if __name__=='__main__':
             ))
         file.write(MisfitDefinitions)
         file.write(WeightsDefinitions)
-        file.write(OriginDefinitions)
         file.write(Grid_TestDoubleCoupleMagnitudeDepth)
         file.write(Main_TestGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth)
