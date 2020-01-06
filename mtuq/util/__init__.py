@@ -56,6 +56,17 @@ def iterable(arg):
         return arg
 
 
+def remove_list(list1, list2):
+    """ Removes all items of list2 from list1
+    """
+    for item in list2:
+        try:
+            list1.remove(item)
+        except ValueError:
+            pass
+    return list1
+
+
 def replace(string, *args):
     narg = len(args)
 

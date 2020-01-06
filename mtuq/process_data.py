@@ -9,7 +9,7 @@ from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists
 from mtuq.util import AttribDict, warn
-from mtuq.util.cap import Reader, taper
+from mtuq.util.cap import WeightParser, taper
 from mtuq.util.signal import cut, get_arrival, m_to_deg
  
 
@@ -274,16 +274,16 @@ class ProcessData(object):
 
         if self.capuaf_file:
             assert exists(capuaf_file)
-            reader = Reader(self.capuaf_file)
+            parser = WeightParser(self.capuaf_file)
 
         if self.apply_statics:
-            self.statics = reader.parse_statics()
+            self.statics = parser.parse_statics()
 
         if self.apply_weights:
-            self.weights = reader.parse_weights()
+            self.weights = parser.parse_weights()
 
         if self.pick_type == 'user_supplied':
-            self.picks = reader.parse_picks()
+            self.picks = parser.parse_picks()
 
 
 

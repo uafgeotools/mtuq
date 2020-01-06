@@ -75,26 +75,21 @@ class Dataset(list):
     def select(self, selector):
         """ Selects streams that match the given station or origin
         """
-        selected = self
-
         if type(selector) is Station:
-            selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.station==selector, selected))
+           selected = lambda stream: stream.station==selector
 
         elif type(selector) is Origin:
-            selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.origin==selector, selected))
+           selected = lambda stream: stream.origin==selector
 
         elif type(selector) is list:
-            selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.id in selector, selected))
+           selected = lambda stream: stream.id in selector
 
-            assert len(selected) > 0, Exception(
-                "No data selected. Please check that the current data match "+
-                "the codes in column 1 of the CAPUAF weight file.")
+        else:
+            raise ValueError(
+                "SELECTOR must be a Station, Origin or list")
 
-        return selected
-
+        return self.__class__(
+            id=self.id, streams=filter(selected, self))
 
 
     def apply(self, function, *args, **kwargs):

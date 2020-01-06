@@ -21,7 +21,11 @@ from mtuq.wavelet import EarthquakeTrapezoid
 # individual stations and components in a moment tensor inversion
 #
 
-class Reader(object):
+class WeightParser(object):
+    """ Parses CAPUAF-style text file
+
+        For more information, see github.com/uafseismo/capuaf/doc/capuaf_manual
+    """
     def __init__(self, path):
         self._path = path
 
@@ -104,10 +108,10 @@ class Reader(object):
         return statics
 
 
-def parse(filename):
+def parse_station_codes(filename):
     """ Parses CAPUAF-style weight file
     """
-    return Reader(filename).parse_codes()
+    return WeightParser(filename).parse_codes()
 
 
 
@@ -115,7 +119,7 @@ def remove_unused_stations(dataset, filename):
     """ Removes any stations not listed in CAPUAF weight file and stations with
         all zero weights
     """
-    weights = Reader(filename).parse_weights()
+    weights = WeightParser(filename).parse_weights()
 
     used = []
     unused = []
