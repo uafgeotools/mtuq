@@ -12,7 +12,7 @@ from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import parse, Trapezoid
+from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
 """
@@ -318,7 +318,7 @@ PathsComments="""
 Paths_Syngine="""
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
-    event_name=   '20090407201255351'
+    event_id=     '20090407201255351'
     model=        'ak135'
 
 """
@@ -328,7 +328,7 @@ Paths_AxiSEM="""
     path_greens= '/home/rmodrak/data/ak135f_scak-2s'
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
-    event_name=   '20090407201255351'
+    event_id=     '20090407201255351'
     model=        'ak135f_scak-2s'
 
 """
@@ -338,7 +338,7 @@ Paths_FK="""
     path_greens=  fullpath('data/tests/benchmark_cap/greens/scak')
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
-    event_name=   '20090407201255351'
+    event_id=     '20090407201255351'
     model=        'scak'
 
 """
@@ -412,7 +412,7 @@ WeightsComments="""
 
 
 WeightsDefinitions="""
-    stations_list = parse(path_weights)
+    station_id_list = parse_station_codes(path_weights)
 
 """
 
@@ -588,12 +588,10 @@ Main_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print('Reading data...\\n')
         data = read(path_data, format='sac', 
-            event_id=event_name,
+            event_id=event_id,
+            station_id_list=station_id_list,
             tags=['units:cm', 'type:velocity']) 
 
-
-        # select stations with nonzero weights
-        data.select(stations_list)
 
         data.sort_by_distance()
         stations = data.get_stations()
@@ -664,12 +662,10 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     if rank==0:
         print('Reading data...\\n')
         data = read(path_data, format='sac', 
-            event_id=event_name,
+            event_id=event_id,
+            station_id_list=station_id_list,
             tags=['units:cm', 'type:velocity']) 
 
-
-        # select stations with nonzero weights
-        data.select(stations_list)
 
         data.sort_by_distance()
         stations = data.get_stations()
@@ -739,12 +735,10 @@ Main1_SerialGridSearch_DoubleCouple="""
 
     print('Reading data...\\n')
     data = read(path_data, format='sac',
-        event_id=event_name,
+        event_id=event_id,
+        station_id_list=station_id_list,
         tags=['units:cm', 'type:velocity']) 
 
-
-    # select stations with nonzero weights
-    data.select(stations_list)
 
     data.sort_by_distance()
     stations = data.get_stations()
@@ -795,11 +789,9 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
 
     print('Reading data...\\n')
     data = read(path_data, format='sac', 
-        event_id=event_name,
+        event_id=event_id,
+        station_id_list=station_id_list,
         tags=['units:cm', 'type:velocity']) 
-
-    # select stations with nonzero weights
-    data.select(stations_list)
 
     data.sort_by_distance()
     stations = data.get_stations()
@@ -843,12 +835,10 @@ Main_TestGraphics="""
 
     print('Reading data...\\n')
     data = read(path_data, format='sac',
-        event_id=event_name,
+        event_id=event_id,
+        station_id_list=station_id_list,
         tags=['units:cm', 'type:velocity'])
 
-
-    # select stations with nonzero weights
-    data.select(stations_list)
 
     data.sort_by_distance()
     stations = data.get_stations()
@@ -874,13 +864,13 @@ Main_TestGraphics="""
 
     print('Figure 1 of 3\\n')
 
-    plot_data_greens(event_name+'.png',
+    plot_data_greens(event_id+'.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print('Figure 2 of 3\\n')
 
-    plot_data_greens(event_name+'.png',
+    plot_data_greens(event_id+'.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
@@ -943,13 +933,13 @@ WrapUp_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print('Savings results...\\n')
 
-        plot_data_greens(event_name+'.png',
+        plot_data_greens(event_id+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_source)
+        plot_beachball(event_id+'_beachball.png', best_source)
 
-        #grid.save(event_name+'.h5', {'misfit': results})
+        #grid.save(event_id+'.h5', {'misfit': results})
 
         print('Finished\\n')
 
@@ -964,14 +954,14 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     if comm.rank==0:
         print('Saving results...\\n')
 
-        plot_data_greens(event_name+'.png',
+        plot_data_greens(event_id+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source)
 
-        misfit_vs_depth(event_name+'_misfit_vs_depth_bw.png',
+        misfit_vs_depth(event_id+'_misfit_vs_depth_bw.png',
             data_bw, misfit_bw, origins, sources, results_bw)
 
-        misfit_vs_depth(event_name+'_misfit_vs_depth_sw.png',
+        misfit_vs_depth(event_id+'_misfit_vs_depth_sw.png',
             data_sw, misfit_sw, origins, sources, results_sw)
 
         print('Finished\\n')
@@ -985,13 +975,13 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
-    plot_data_greens(event_name+'.png', 
+    plot_data_greens(event_id+'.png', 
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, best_source)
 
-    plot_beachball(event_name+'_beachball.png', best_source)
+    plot_beachball(event_id+'_beachball.png', best_source)
 
-    #grid.save(event_name+'.h5', {'misfit': results})
+    #grid.save(event_id+'.h5', {'misfit': results})
 
     print('Finished\\n')
 
@@ -1003,11 +993,11 @@ WrapUp_TestGridSearch_DoubleCouple="""
     best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
-        plot_data_greens(event_name+'.png',
+        plot_data_greens(event_id+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_source)
+        plot_beachball(event_id+'_beachball.png', best_source)
 
 
     if run_checks:
@@ -1048,7 +1038,7 @@ WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     best_source = sources.get((results_bw + results_sw).argmin())
 
     if run_figures:
-        filename = event_name+'_misfit_vs_depth.png'
+        filename = event_id+'_misfit_vs_depth.png'
         #misfit_vs_depth(filename, best_misfit)
 
     if run_checks:
@@ -1066,7 +1056,7 @@ Main_BenchmarkCAP="""
 
     print('Reading data...\\n')
     data = read(path_data, format='sac', 
-        event_id=event_name,
+        event_id=event_id,
         tags=['units:cm', 'type:velocity']) 
 
     data.sort_by_distance()
@@ -1090,7 +1080,7 @@ Main_BenchmarkCAP="""
 
 
     depth = int(origin.depth_in_m/1000.)+1
-    name = '_'.join([model, str(depth), event_name])
+    name = '_'.join([model, str(depth), event_id])
 
 
     print('Comparing waveforms...')
@@ -1148,9 +1138,9 @@ if __name__=='__main__':
         file.write(MisfitDefinitions)
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
+        file.write(Grid_DoubleCouple)
         file.write(OriginComments)
         file.write(OriginDefinitions)
-        file.write(Grid_DoubleCouple)
         file.write(Main_GridSearch_DoubleCouple)
         file.write(WrapUp_GridSearch_DoubleCouple)
 
@@ -1197,9 +1187,9 @@ if __name__=='__main__':
         file.write(MisfitDefinitions)
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
+        file.write(Grid_FullMomentTensor)
         file.write(OriginComments)
         file.write(OriginDefinitions)
-        file.write(Grid_FullMomentTensor)
         file.write(Main_GridSearch_DoubleCouple)
         file.write(WrapUp_GridSearch_DoubleCouple)
 
@@ -1276,9 +1266,9 @@ if __name__=='__main__':
         file.write(MisfitDefinitions)
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
+        file.write(Grid_DoubleCouple)
         file.write(OriginComments)
         file.write(OriginDefinitions)
-        file.write(Grid_DoubleCouple)
         file.write(Main1_SerialGridSearch_DoubleCouple)
         file.write(Main2_SerialGridSearch_DoubleCouple)
         file.write(WrapUp_SerialGridSearch_DoubleCouple)
@@ -1376,6 +1366,8 @@ if __name__=='__main__':
             'FK_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
         file.write(
             replace(
             Grid_DoubleCouple,
@@ -1384,6 +1376,7 @@ if __name__=='__main__':
             'npts=.*,',
             'npts_per_axis=5,',
             ))
+        file.write(OriginDefinitions)
         file.write(
             replace(
             Main1_SerialGridSearch_DoubleCouple,

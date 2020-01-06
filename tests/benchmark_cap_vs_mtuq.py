@@ -10,7 +10,7 @@ from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import parse, Trapezoid
+from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
 
@@ -99,7 +99,7 @@ if __name__=='__main__':
     path_greens=  fullpath('data/tests/benchmark_cap/greens/scak')
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/tests/benchmark_cap/20090407201255351/weights.dat')
-    event_name=   '20090407201255351'
+    event_id=     '20090407201255351'
     model=        'scak'
 
 
@@ -169,7 +169,7 @@ if __name__=='__main__':
 
     print('Reading data...\n')
     data = read(path_data, format='sac', 
-        event_id=event_name,
+        event_id=event_id,
         tags=['units:cm', 'type:velocity']) 
 
     data.sort_by_distance()
@@ -193,7 +193,7 @@ if __name__=='__main__':
 
 
     depth = int(origin.depth_in_m/1000.)+1
-    name = '_'.join([model, str(depth), event_name])
+    name = '_'.join([model, str(depth), event_id])
 
 
     print('Comparing waveforms...')

@@ -10,7 +10,7 @@ from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import parse, Trapezoid
+from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
 
@@ -30,7 +30,7 @@ if __name__=='__main__':
     path_greens=  fullpath('data/tests/benchmark_cap/greens/scak')
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
-    event_name=   '20090407201255351'
+    event_id=     '20090407201255351'
     model=        'scak'
 
 
@@ -79,12 +79,10 @@ if __name__=='__main__':
 
     print('Reading data...\n')
     data = read(path_data, format='sac',
-        event_id=event_name,
+        event_id=event_id,
+        station_id_list=station_id_list,
         tags=['units:cm', 'type:velocity'])
 
-
-    # select stations with nonzero weights
-    data.select(stations_list)
 
     data.sort_by_distance()
     stations = data.get_stations()
@@ -110,13 +108,13 @@ if __name__=='__main__':
 
     print('Figure 1 of 3\n')
 
-    plot_data_greens(event_name+'.png',
+    plot_data_greens(event_id+'.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print('Figure 2 of 3\n')
 
-    plot_data_greens(event_name+'.png',
+    plot_data_greens(event_id+'.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
