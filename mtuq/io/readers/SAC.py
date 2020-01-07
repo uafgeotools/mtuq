@@ -52,8 +52,9 @@ def read(filenames, station_id_list=None, event_id=None, tags=[]):
             data_sorted[station_id] += trace
 
     if station_id_list is not None:
+        keys = list(data_sorted.keys())
         # remove traces not from station_id_list
-        for station_id in data_sorted:
+        for station_id in keys:
             if station_id not in station_id_list:
                 data_sorted.pop(station_id)
 
