@@ -429,8 +429,8 @@ if __name__=='__main__':
         processed_greens = {}
         processed_greens['body_waves'] = greens.map(process_bw)
         processed_greens['surface_waves'] = greens.map(process_sw)
-        [greens.reset_components(['Z','R','T']) for greens in processed_greens['body_waves']]
-        [greens.reset_components(['Z','R','T']) for greens in processed_greens['surface_waves']]
+        [greens._set_components(['Z','R','T']) for greens in processed_greens['body_waves']]
+        [greens._set_components(['Z','R','T']) for greens in processed_greens['surface_waves']]
         return processed_greens
 
 

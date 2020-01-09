@@ -94,7 +94,7 @@ def _get_greens(greens, stations, components):
         tensor = greens.select(station)[0]
 
         # fill in array
-        tensor.reset_components(components)
+        tensor._set_components(components)
         array[_i, :, :, :] = tensor._array
 
     return array

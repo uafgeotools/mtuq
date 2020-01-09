@@ -72,8 +72,8 @@ class GreensTensor(Stream):
 
     def _set_components(self, components):
         """
-        This method must be called prior to ``get_synthetics`` to determine which
-        components are returned.
+        This method must be called prior to ``get_synthetics`` to specify which
+        components are returned
 
         .. note:
 
