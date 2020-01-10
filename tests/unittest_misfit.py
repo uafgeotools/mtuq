@@ -147,7 +147,7 @@ class GreensTensor(object):
     def get_synthetics(self, dummy):
         return self.synthetics
 
-    def reset_components(self, dummy):
+    def _set_components(self, dummy):
         pass
 
 

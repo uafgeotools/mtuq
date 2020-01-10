@@ -26,7 +26,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     # initialize Green's function machinery
     #
     for _j, d in enumerate(data):
-        greens[_j].reset_components(get_components(d))
+        greens[_j]._set_components(get_components(d))
         helpers += [Helper(data[_j], greens[_j], norm, 
                            time_shift_min, time_shift_max)]
 

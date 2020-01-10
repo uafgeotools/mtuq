@@ -3,7 +3,7 @@ import obspy
 import numpy as np
 
 from os.path import basename, exists
-from mtuq.greens_tensor.fk_sac import GreensTensor 
+from mtuq.greens_tensor.FK import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
 from obspy.core import Stream
@@ -20,7 +20,7 @@ class Client(ClientBase):
 
     .. code::
 
-        from mtuq.io.clients.fk_sac import Client
+        from mtuq.io.clients.FK_SAC import Client
         db = Client(path_or_url)
 
     Then the database client can be used to generate GreensTensors:
@@ -129,7 +129,7 @@ class Client(ClientBase):
 
         tags = [
             'model:%s' % self.model,
-            'solver:%s' % 'syngine',
+            'solver:%s' % 'FK',
              ]
 
         return GreensTensor(traces=[trace for trace in traces], 

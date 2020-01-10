@@ -11,8 +11,24 @@ from mtuq.util import iterable, warn
 from mtuq.util.signal import check_components, check_time_sampling
 
 
-def read(filenames, event_id=None, tags=[]):
-    """ Creates MTUQ Dataset from SAC traces
+def read(filenames, station_id_list=None, event_id=None, tags=[]):
+    """ 
+    Reads SAC files and returns MTUQ Dataset
+
+    .. rubric :: Parameters
+
+    - ``filenames`` (``list``)
+      List of SAC files to be read (can contain Unix wildcards)
+
+    - ``station_id_list`` (``list``)
+      Any traces that are not from one of the listed stations will be excluded
+
+    - ``event_id`` (``str``)
+     Identifier to be suppplied to the MTUQ Dataset
+
+    - ``tags`` (``list``)
+      Tags to be supplied to the MTUQ Dataset
+
     """
     # read traces one at a time
     data = Stream()
@@ -25,20 +41,28 @@ def read(filenames, event_id=None, tags=[]):
     # sort by station
     data_sorted = {}
     for trace in data:
-        id = '.'.join((
+        station_id = '.'.join((
             trace.stats.network,
             trace.stats.station,
             trace.stats.location))
-        if id not in data_sorted:
-            data_sorted[id] = Stream(trace)
+
+        if station_id not in data_sorted:
+            data_sorted[station_id] = Stream(trace)
         else:
-            data_sorted[id] += trace
+            data_sorted[station_id] += trace
+
+    if station_id_list is not None:
+        keys = list(data_sorted.keys())
+        # remove traces not from station_id_list
+        for station_id in keys:
+            if station_id not in station_id_list:
+                data_sorted.pop(station_id)
 
     streams = []
-    for id in data_sorted:
-        streams += [data_sorted[id]]
+    for station_id in data_sorted:
+         streams += [data_sorted[station_id]]
 
-    # check for redundant components
+    # check for duplicate components
     for stream in streams:
         check_components(stream)
 

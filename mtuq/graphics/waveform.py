@@ -4,7 +4,7 @@ import matplotlib.pyplot as pyplot
 import warnings
 
 from matplotlib.font_manager import FontProperties
-from mtuq.graphics.header import NewStyleHeader
+from mtuq.graphics.header import Header
 from mtuq.util.signal import get_components
 from obspy.geodetics import gps2dist_azimuth
 
@@ -33,6 +33,9 @@ def plot_data_synthetics(filename,
 
     # how many stations have at least one trace?
     nstations = _count([data_bw, data_sw])
+
+    assert nstations > 0, Exception(
+        'Empty datasets supplied to plot_data_synthetics')
 
     # dimensions of subplot array
     nrow = nstations
@@ -224,8 +227,8 @@ def plot_data_greens(filename,
 
     greens_bw = greens_bw.select(origin)
     greens_sw = greens_sw.select(origin)
-    reset_components(data_bw, greens_bw)
-    reset_components(data_sw, greens_sw)
+    _set_components(data_bw, greens_bw)
+    _set_components(data_sw, greens_sw)
 
     synthetics_bw = greens_bw.get_synthetics(source)
     synthetics_sw = greens_sw.get_synthetics(source)
@@ -239,7 +242,7 @@ def plot_data_greens(filename,
         header = kwargs.pop('header')
 
     else:
-        header = NewStyleHeader(event_name,
+        header = Header(event_name,
             process_bw, process_sw, misfit_bw, misfit_bw,
             model, solver, source, origin)
 
@@ -353,10 +356,10 @@ def add_trace_labels(axis, dat, syn, total_misfit=1.):
         axis.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=12)
 
 
-def reset_components(data, greens):
+def _set_components(data, greens):
     for _i, stream in enumerate(data):
         components = get_components(stream)
-        greens[_i].reset_components(components)
+        greens[_i]._set_components(components)
 
 
 #

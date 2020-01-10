@@ -18,7 +18,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
-    nt, dt = get_time_sampling(data[0])
+    nt, dt = _get_time_sampling(data)
     padding = _get_padding(time_shift_min, time_shift_max, dt)
 
     stations = _get_stations(data)
@@ -60,6 +60,12 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     return results
 
 
+def _get_time_sampling(dataset):
+    for stream in dataset:
+        if len(stream) > 0:
+            return get_time_sampling(stream)
+
+
 def _get_padding(time_shift_min, time_shift_max, dt):
     padding_left = int(-time_shift_min/dt)
     padding_right = int(+time_shift_max/dt)
@@ -85,12 +91,10 @@ def _get_greens(greens, stations, components):
         ))
 
     for _i, station in enumerate(stations):
-        tensor = greens.select(station=station)[0]
-
-        # populate array elements
-        tensor.reset_components(components)
+        tensor = greens.select(station)[0]
 
         # fill in array
+        tensor._set_components(components)
         array[_i, :, :, :] = tensor._array
 
     return array
@@ -112,7 +116,7 @@ def _get_data(data, stations, components, nt):
     array = np.zeros((ns, nc, nt))
 
     for _i, station in enumerate(stations):
-        stream = data.select(station=station)[0]
+        stream = data.select(station)[0]
         for _j, component in enumerate(components):
             try:
                 trace = stream.select(component=component)[0]
@@ -153,7 +157,7 @@ def _get_mask(data, stations, components):
     for _i, station in enumerate(stations):
         for _j, component in enumerate(components):
 
-            stream = data.select(station=station)[0]
+            stream = data.select(station)[0]
             stream = stream.select(component=component)
 
             if len(stream)==0:

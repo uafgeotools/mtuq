@@ -4,6 +4,8 @@ import numpy as np
 import warnings
 
 from copy import copy
+from mtuq.event import Origin
+from mtuq.station import Station
 from obspy import Stream
 from obspy.geodetics import gps2dist_azimuth
 
@@ -70,25 +72,24 @@ class Dataset(list):
         super(Dataset, self).append(stream)
 
 
-    def select(self, origin=None, station=None, ids=None):
+    def select(self, selector):
         """ Selects streams that match the given station or origin
         """
-        selected = self
+        if type(selector) is Station:
+           selected = lambda stream: stream.station==selector
 
-        if station:
-            selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.station==station, selected))
+        elif type(selector) is Origin:
+           selected = lambda stream: stream.origin==selector
 
-        if origin:
-            selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.origin==origin, selected))
+        elif type(selector) is list:
+           selected = lambda stream: stream.id in selector
 
-        if ids:
-            selected = self.__class__(id=self.id, streams=filter(
-                lambda stream: stream.id in ids, selected))
+        else:
+            raise ValueError(
+                "SELECTOR must be a Station, Origin or list")
 
-        return selected
-
+        return self.__class__(
+            id=self.id, streams=filter(selected, self))
 
 
     def apply(self, function, *args, **kwargs):

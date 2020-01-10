@@ -2,7 +2,7 @@
 import obspy
 import numpy as np
 
-from mtuq.greens_tensor.axisem_netcdf import GreensTensor as GreensTensorBase
+from mtuq.greens_tensor.AxiSEM import GreensTensor as GreensTensorBase
 
 
 class GreensTensor(GreensTensorBase):

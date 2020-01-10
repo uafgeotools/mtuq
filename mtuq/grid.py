@@ -271,7 +271,7 @@ class UnstructuredGrid(object):
         return self
 
 
-def FullMomentTensorGridRandom(magnitude=None, npts=50000, callback=to_mij):
+def FullMomentTensorGridRandom(magnitude=None, npts=1000000, callback=to_mij):
     """ Full moment tensor grid with randomly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -300,7 +300,7 @@ def FullMomentTensorGridRandom(magnitude=None, npts=50000, callback=to_mij):
         callback=callback)
 
 
-def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
+def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=20, callback=to_mij):
     """ Full moment tensor grid with regularly-spaced values
     """
     magnitude, count = _check_magnitude(magnitude)
@@ -317,7 +317,7 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=25, callback=to_mi
     rho = []
     for Mw in magnitude:
         M0 = 10.**(1.5*float(Mw) + 9.1)
-        rho += [M0/np.sqrt(2)]
+        rho += [M0*np.sqrt(2)]
 
     return Grid((
         ('rho', asarray(rho)),
@@ -356,7 +356,7 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
         callback=callback)
 
 
-def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
+def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
     """ Double-couple moment tensor grid with regularly-spaced values
     """ 
     magnitude, count = _check_magnitude(magnitude)
@@ -371,7 +371,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
     rho = []
     for Mw in magnitude:
         M0 = 10.**(1.5*float(Mw) + 9.1)
-        rho += [M0/np.sqrt(2)]
+        rho += [M0*np.sqrt(2)]
 
     return Grid((
         ('rho', asarray(rho)),
@@ -384,7 +384,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=25, callback=to_mij):
 
 
 
-def ForceGridRegular(magnitude=None, npts=25):
+def ForceGridRegular(magnitude=None, npts_per_axis=40):
     """ Full moment tensor grid with randomly-spaced values
     """
     raise NotImplementedError

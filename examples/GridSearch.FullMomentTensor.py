@@ -4,13 +4,14 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
+from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, plot_beachball
 from mtuq.grid import FullMomentTensorGridRandom
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
-from mtuq.util.cap import Trapezoid
+from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
 
@@ -28,13 +29,12 @@ if __name__=='__main__':
 
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
-    event_name=   '20090407201255351'
+    event_id=     '20090407201255351'
     model=        'ak135'
 
 
     #
-    # Body- and surface-wave data are processed separately and held separately 
-    # in memory
+    # Body and surface wave measurements will be made separately
     #
 
     process_bw = ProcessData(
@@ -61,7 +61,7 @@ if __name__=='__main__':
 
 
     #
-    # We define misfit as a sum of indepedent body- and surface-wave 
+    # For our objective function, we will use a sum of body and surface wave
     # contributions
     #
 
@@ -79,6 +79,14 @@ if __name__=='__main__':
 
 
     #
+    # User-supplied weights control how much each station contributes to the
+    # objective function
+    #
+
+    station_id_list = parse_station_codes(path_weights)
+
+
+    #
     # Following obspy, we use the variable name "source" for the mechanism of
     # an event and "origin" for the location of an event
     #
@@ -89,6 +97,20 @@ if __name__=='__main__':
 
     wavelet = Trapezoid(
         magnitude=4.5)
+
+
+    #
+    # Origin time and location will be fixed. For an example in which they 
+    # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
+    #
+
+    origin = Origin({
+        'time': '2009-04-07T20:12:55.000000Z',
+        'latitude': 61.454200744628906,
+        'longitude': -149.7427978515625,
+        'depth_in_m': 33033.599853515625,
+        'id': '20090407201255351'
+        })
 
 
     from mpi4py import MPI
@@ -102,19 +124,21 @@ if __name__=='__main__':
     if comm.rank==0:
         print('Reading data...\n')
         data = read(path_data, format='sac', 
-            event_id=event_name,
+            event_id=event_id,
+            station_id_list=station_id_list,
             tags=['units:cm', 'type:velocity']) 
 
-        data.sort_by_distance()
 
+        data.sort_by_distance()
         stations = data.get_stations()
-        origin = data.get_origins()[0]
+
 
         print('Processing data...\n')
         data_bw = data.map(process_bw)
         data_sw = data.map(process_sw)
 
-        print('Reading Green''s functions...\n')
+
+        print('Reading Greens functions...\n')
         greens = download_greens_tensors(stations, origin, model)
 
         print('Processing Greens functions...\n')
@@ -122,16 +146,16 @@ if __name__=='__main__':
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
 
+
     else:
         stations = None
-        origin = None
         data_bw = None
         data_sw = None
         greens_bw = None
         greens_sw = None
 
+
     stations = comm.bcast(stations, root=0)
-    origin = comm.bcast(origin, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
     greens_bw = comm.bcast(greens_bw, root=0)
@@ -166,13 +190,13 @@ if __name__=='__main__':
     if comm.rank==0:
         print('Savings results...\n')
 
-        plot_data_greens(event_name+'.png',
+        plot_data_greens(event_id+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source)
 
-        plot_beachball(event_name+'_beachball.png', best_source)
+        plot_beachball(event_id+'_beachball.png', best_source)
 
-        #grid.save(event_name+'.h5', {'misfit': results})
+        #grid.save(event_id+'.h5', {'misfit': results})
 
         print('Finished\n')
 

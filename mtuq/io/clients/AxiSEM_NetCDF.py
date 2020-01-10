@@ -7,7 +7,7 @@ import obspy
 import numpy as np
 
 from os.path import basename
-from mtuq.greens_tensor.axisem_netcdf import GreensTensor
+from mtuq.greens_tensor.AxiSEM import GreensTensor
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import get_distance_in_deg, resample
 
@@ -24,7 +24,7 @@ class Client(ClientBase):
 
     .. code::
 
-        from mtuq.io.clients.axisem_netcdf import Client
+        from mtuq.io.clients.AxiSEM_NetCDF import Client
         db = Client(path_or_url)
 
     Then the database client can be used to generate GreensTensors:

@@ -2,6 +2,7 @@
 import numpy as np
 from mtuq.util.math import isclose
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
+from obspy.signal.filter import highpass, lowpass
 from scipy.signal import fftconvolve
 
 
@@ -56,31 +57,63 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
     i2 = int(round((t2_old-t2_new)/dt))
 
     nt = int(round((t2_new-t1_new)/dt))
-    resampled_data = np.zeros(nt+1)
+    adjusted = np.zeros(nt+1)
 
-    # cut both ends
+    #
+    # adjust end points, leaving sampling rate unchaged for now
+    #
+
     if t1_old <= t1_new <= t2_new <= t2_old:
-        resampled_data[0:nt] = data[i1:i1+nt]
+        # cut both ends
+        adjusted[0:nt] = data[i1:i1+nt]
 
-    # cut beginning only
     elif t1_old <= t1_new <= t2_old <= t2_new:
-        resampled_data[0:nt+i2] = data[i1:]
+        # cut left, pad right
+        adjusted[0:nt+i2] = data[i1:]
 
-    # cut end only
     elif t1_new <= t1_old <= t2_new <= t2_old:
-        resampled_data[i1:nt] = data[0:-i2-1]
+        # pad left, cut right
+        adjusted[i1:nt] = data[:-i2-1]
 
-    # cut neither end
     elif t1_new <= t1_old <= t2_old <= t2_new:
-        resampled_data[i1:i2] =  data[0:]
+        # pad both ends
+        adjusted[i1:i2] =  data[:]
 
+    #
+    # adjust sampling rate
+    #
 
-    if dt_old==dt_new:
-        return resampled_data
+    nt_old = nt
+    nt_new = int(round((t2_new-t1_new)/dt_new))
+
+    if nt_new==nt_old:
+        return adjusted
     else:
-        t_old = np.linspace(t1_new, t1_new+dt_old*(nt+1), nt+1)
-        t_new = np.arange(t1_new, t2_new+dt_new, dt_new)
-        return np.interp(t_new, t_old, resampled_data)
+        return _resample_trace(adjusted, dt_old, dt_new)
+
+
+def _resample_trace(data, dt_old, dt_new):
+    from obspy.core.trace import Trace
+    trace = Trace(data, {'npts': len(data), 'delta':dt_old})
+    trace.resample(dt_new**-1)
+    return trace.data
+
+
+def downsample(data, dt_old, dt_new, nt_old, nt_new):
+    # deprecated in favor of _resample_trace
+    filtered = lowpass(data, freq=dt_new**-1, df=dt_old**-1, zerophase=True)
+    t1, t2 = 0., nt_new*dt_new
+    t_old = np.linspace(t1, t2, nt_old+1)
+    t_new = np.linspace(t1, t2, nt_new+1)
+    return np.interp(t_new, t_old, filtered)
+
+
+def upsample(dt_old, dt_new, nt_old, nt_new):
+    # deprecated in favor of _resample_trace
+    t1, t2 = 0., nt_new*dt_new
+    t_old = np.linspace(t1, t2, nt_old+1)
+    t_new = np.linspace(t1, t2, nt_new+1)
+    return np.interp(t_new, t_old, filtered)
 
 
 def pad(trace, padding):

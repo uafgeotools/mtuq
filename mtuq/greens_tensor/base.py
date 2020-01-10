@@ -31,7 +31,6 @@ class GreensTensor(Stream):
             origin=None,
             id=None, 
             tags=[],
-            components=[],
             include_mt=True,
             include_force=False):
         """ Constructor method
@@ -52,11 +51,6 @@ class GreensTensor(Stream):
         if not isinstance(origin, Origin):
             raise TypeError
 
-        if components==None:
-            components = []
-        for component in components:
-            assert component in ['Z', 'R', 'T']
-
         # the main work of the constructor starts now
         if id:
             self.id = id
@@ -68,7 +62,6 @@ class GreensTensor(Stream):
         self.tags = tags
         self.include_mt = include_mt
         self.include_force = include_force
-        self.components = components
 
         self.distance_in_m, self.azimuth, _ = gps2dist_azimuth(
             origin.latitude,
@@ -76,23 +69,31 @@ class GreensTensor(Stream):
             station.latitude,
             station.longitude)
 
-        self._preallocate()
-        self._precompute()
 
-
-    def reset_components(self, components):
+    def _set_components(self, components):
         """
-        Resets components returned by ``get_synthetics``
+        This method must be called prior to ``get_synthetics`` to specify which
+        components are returned
 
-        Suppose the transerve component at a certain station is found to be
-        bad. Calling ``reset_components(['Z', 'R'])`` would cause 
-        ``get_synthetics`` to only return the vertical and radial components,
-        not the transverse component, avoiding unnecessary computations.
+        .. note:
+
+           Sometimes it makes sense to return no components at a particular
+           station, for example, if all components are absent from the recorded
+           data.
+
+        .. note:
+
+          Sometimes it makes sense to call this method partway through a 
+          script. For example, if the transerve component at a certain station
+          is discovered to be bad, calling ``_set_components(['Z', 'R'])``
+          would remove the transverse component, avoiding unnecessary 
+          computations.
+
         """
-        if components==self.components:
+        if components==getattr(self, 'components', None):
             return
 
-        elif components==None:
+        if components is None:
             components = []
 
         for component in components:
@@ -108,9 +109,11 @@ class GreensTensor(Stream):
         """
         Preallocates structures used by ``get_synthetics``
 
-        Every time ``get_synthetics`` is called, the numeric trace data gets
-        overwritten. Every time ``reset_components`` is called, the traces
-        themselves get overwritten.  The stream itself never gets overwritten.
+        .. note:
+
+            Every time ``get_synthetics`` is called, the numeric trace data 
+            gets overwritten. Every time ``_set_components`` is called, the 
+            traces get overwritten.  The stream itself never gets overwritten.
         """
         # allocate array to hold linear combination time series
         nt = len(self[0].data)
@@ -144,10 +147,20 @@ class GreensTensor(Stream):
         raise NotImplementedError("Must be implemented by subclass.")
 
 
-    def get_synthetics(self, source):
+    def get_synthetics(self, source, components=None):
         """
         Generates synthetics through a linear combination of time series
         """
+
+        if components is None:
+            # Components argument was not given, so check that attribute is
+            # already set
+            assert(hasattr(self, 'components'))
+
+        else:
+            self._set_components(components)
+
+        # arrays used in linear combination
         array = self._array
         synthetics = self._synthetics
 
@@ -218,30 +231,25 @@ class GreensTensorList(list):
         super(GreensTensorList, self).append(tensor)
 
 
-    def select(self, origin=None, station=None):
+    def select(self, selector):
         """ Selects GreensTensors that match the given station or origin
         """
-        if origin and station:
+        if type(selector) is Station:
             return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.station==station and 
-                               tensor.origin==origin, self))
+                lambda tensor: tensor.station==selector, self))
 
-        elif station:
+        elif type(selector) is Origin:
             return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.station==station, self))
-
-        elif origin:
-            return self.__class__(id=self.id, tensors=filter(
-                lambda tensor: tensor.origin==origin, self))
+                lambda tensor: tensor.origin==selector, self))
 
 
 
-    def get_synthetics(self, source):
+    def get_synthetics(self, source, **kwargs):
         """ Generates synthetic by linear combination of Green's functions 
         """
         synthetics = Dataset()
         for tensor in self:
-            synthetics.append(tensor.get_synthetics(source))
+            synthetics.append(tensor.get_synthetics(source, **kwargs))
         return synthetics
 
 
