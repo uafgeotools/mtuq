@@ -6,8 +6,28 @@ from obspy.core import Stream
 from mtuq.greens_tensor.syngine import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
-from mtuq.util.SPECFEM3D import GREENS_TENSOR_SUFFIXES
 
+
+SUFFIXES = [
+    'Z.Mrr',
+    'Z.Mtt',
+    'Z.Mpp',
+    'Z.Mrt',
+    'Z.Mrp',
+    'Z.Mtp',
+    'R.Mrr',
+    'R.Mtt',
+    'R.Mpp',
+    'R.Mrt',
+    'R.Mrp',
+    'R.Mtp',
+    'T.Mrr',
+    'T.Mtt',
+    'T.Mpp',
+    'T.Mrt',
+    'T.Mrp',
+    'T.Mtp',
+    ]
 
 
 class Client(ClientBase):
@@ -63,8 +83,10 @@ class Client(ClientBase):
 
         if self.include_mt:
             dirname = station.id
-            for suffix in GREENS_TENSOR_SUFFIXES:
-                stream += obspy.read(dirname+'.'+suffix+'.sac', format='sac')
+            for suffix in SUFFIXES:
+                trace = obspy.read(dirname+'.'+suffix+'.sac', format='sac')[0]
+                trace.component = suffix
+                stream += trace
 
         if self.include_force:
             raise NotImplementedError
