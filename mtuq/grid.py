@@ -384,31 +384,29 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
 
 
 
-def ForceGridRegular(magnitude=None, npts_per_axis=40):
-    """ Full moment tensor grid with randomly-spaced values
+def ForceGridRegular(Newtons=1., npts_per_axis=80):
+    """ Force grid with regularly-spaced values
     """
     raise NotImplementedError
 
 
-def ForceGridRandom(magnitude=None, npts=50000, callback=spherical_to_Cartesian):
-    """ Full moment tensor grid with randomly-spaced values
+def ForceGridRandom(Newtons=1., npts=10000, callback=to_xyz):
+    """ Force grid with randomly-spaced values
     """
-    magnitude, count = _check_magnitude(magnitude)
+    Newtons, count = _check_force(Newtons)
     N = npts*count
 
-    theta = [0., 180, N]
-    phi = [0., 360., N]
+    theta = [0., 360., N]
+    h = [-1., 1., N]
 
-    # magnitude is treated separately
-    r = np.zeros((count, npts))
-    for _i, Mw in enumerate(magnitude):
-        M0 = 10.**(1.5*float(Mw) + 9.1)
-        r[_i, :] = M0*np.sqrt(2.)
+    F0 = np.zeros((count, npts))
+    for _i, _F in enumerate(Newtons):
+        F0[_i, :] = _F
 
     return UnstructuredGrid({
-        'r': r.flatten(),
+        'F0': F0.flatten(),
         'theta': random(*theta),
-        'phi': random(*phi)},
+        'h': random(*h)},
         callback=callback)
 
 
@@ -421,4 +419,15 @@ def _check_magnitude(M):
     else:
         raise TypeError
     return M, count
+
+
+def _check_force(Newtons):
+    if type(Newtons) in [np.ndarray, list, tuple]:
+        count = len(Newtons)
+    elif type(Newtons) in [int, float]:
+        Newtons = [float(Newtons)]
+        count = 1
+    else:
+        raise TypeError
+    return Newtons, count
 

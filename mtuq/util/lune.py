@@ -81,4 +81,14 @@ def spherical_to_Cartesian(r, theta, phi):
     return np.array([x, y, z])
 
 
+def to_xyz(F0, theta, h):
+    """ Converts from spherical to Cartesian coordinates
+    """
+    r = F0
+    phi = np.arcos(h)
+
+    return spherical_to_Cartesian(r, theta, phi)
+
+
+
 
