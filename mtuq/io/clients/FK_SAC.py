@@ -20,7 +20,7 @@ class Client(ClientBase):
 
     .. code::
 
-        from mtuq.io.clients.fk_sac import Client
+        from mtuq.io.clients.FK_SAC import Client
         db = Client(path_or_url)
 
     Then the database client can be used to generate GreensTensors:

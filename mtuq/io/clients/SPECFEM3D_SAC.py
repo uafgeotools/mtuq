@@ -1,22 +1,17 @@
 
-try:
-    import instaseis
-except:
-    pass
 import obspy
 import numpy as np
 
-from os.path import basename
-from mtuq.greens_tensor.AxiSEM import GreensTensor
+from obspy.core import Stream
+from mtuq.greens_tensor.syngine import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
-from mtuq.util.signal import get_distance_in_deg, resample
+from mtuq.util.signal import resample
+from mtuq.util.SPECFEM3D import GREENS_TENSOR_SUFFIXES
 
 
 
 class Client(ClientBase):
-    """ 
-    AxiSEM NetCDF database client (based on instaseis)
-
+    """ SPECFEM3D Green's tensor client
 
     .. rubric:: Usage
 
@@ -24,7 +19,7 @@ class Client(ClientBase):
 
     .. code::
 
-        from mtuq.io.clients.AxiSEM_NetCDF import Client
+        from mtuq.io.clients.SPECFEM3D_SAC import Client
         db = Client(path_or_url)
 
     Then the database client can be used to generate GreensTensors:
@@ -33,21 +28,22 @@ class Client(ClientBase):
 
         greens_tensors = db.get_greens_tensors(stations, origin)
 
+
+    .. note::
+
     """
 
-    def __init__(self, path_or_url='', model='', kernelwidth=12):
-        if not path_or_url:
-            raise Exception
-        self.db = instaseis.open_db(path_or_url)
-        self.kernelwidth=12
+    def __init__(self, path_or_url=None, model=None, 
+                 include_mt=True, include_force=False):
 
-        if not model:
-            model = path_or_url
-        self.model = model
+        self.path = path_or_url
+
+        self.include_mt = include_mt
+        self.include_force = include_force
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
-        """ Reads Green's tensors from database
+        """ Reads Green's tensors
 
         Returns a ``GreensTensorList`` in which each element corresponds to a
         (station, origin) pair from the given lists
@@ -59,15 +55,20 @@ class Client(ClientBase):
 
 
     def _get_greens_tensor(self, station=None, origin=None):
-        distance_in_deg = get_distance_in_deg(station, origin)
+        stream = Stream()
 
-        stream = self.db.get_greens_function(
-            epicentral_distance_in_degree=distance_in_deg,
-            source_depth_in_m=origin.depth_in_m, 
-            origin_time=origin.time,
-            kind='displacement',
-            kernelwidth=self.kernelwidth,
-            definition='seiscomp')
+        # read data
+        stream = Stream()
+        stream.id = station.id
+
+        if self.include_mt:
+            dirname = station.id
+            for suffix in GREENS_TENSOR_SUFFIXES:
+                stream += obspy.read(dirname+'.'+suffix+'.sac', format='sac')
+
+        if self.include_force:
+            raise NotImplementedError
+
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
@@ -75,26 +76,30 @@ class Client(ClientBase):
         dt_new = float(station.delta)
 
         # what are the start and end times of the Green's function?
-        trace = stream[0]
-        t1_old = float(trace.stats.starttime)
-        t2_old = float(trace.stats.endtime)
-        dt_old = float(trace.stats.delta)
+        t1_old = float(stream[0].stats.starttime)
+        t2_old = float(stream[0].stats.endtime)
+        dt_old = float(stream[0].stats.delta)
 
         for trace in stream:
             # resample Green's functions
             data_old = trace.data
-            data_new = resample(data_old, t1_old, t2_old, dt_old, 
+            data_new = resample(data_old, t1_old, t2_old, dt_old,
                                           t1_new, t2_new, dt_new)
             trace.data = data_new
             trace.stats.starttime = t1_new
             trace.stats.delta = dt_new
+            trace.stats.npts = len(data_new)
 
         tags = [
             'model:%s' % self.model,
-            'solver:%s' % 'syngine',
+            'solver:%s' % 'SPECFEM3D',
              ]
 
         return GreensTensor(traces=[trace for trace in stream],
             station=station, origin=origin, tags=tags)
 
+
+        return GreensTensor(traces=[trace for trace in stream], 
+            station=station, origin=origin, tags=tags,
+            include_mt=self.include_mt, include_force=self.include_force)
 
