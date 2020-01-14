@@ -73,12 +73,12 @@ class Grid(object):
         self.callback = callback
 
  
-    def as_array(self):
+    def as_array(self, callback=None):
         """ Returns `i-th` point of grid
         """
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
-            array[_i, :] = self.get(_i)
+            array[_i, :] = self.get(_i, callback=callback)
         return array
 
 
@@ -200,12 +200,12 @@ class UnstructuredGrid(object):
         self.callback = callback
 
 
-    def as_array(self):
+    def as_array(self, callback=None):
         """ Returns `i-th` point of grid
         """
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
-            array[_i, :] = self.get(_i+self.start)
+            array[_i, :] = self.get(_i+self.start, callback=callback)
         return array
 
 

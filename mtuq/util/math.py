@@ -3,6 +3,10 @@ import numpy as np
 from scipy.signal import fftconvolve
 
 
+def identity(*args):
+    return args
+
+
 def list_intersect(a, b):
     """ Intersection of two lists
     """
