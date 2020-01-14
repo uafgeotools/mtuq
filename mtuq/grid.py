@@ -403,10 +403,10 @@ def ForceGridRandom(Newtons=1., npts=10000, callback=to_xyz):
     for _i, _F in enumerate(Newtons):
         F0[_i, :] = _F
 
-    return UnstructuredGrid({
-        'F0': F0.flatten(),
-        'theta': random(*theta),
-        'h': random(*h)},
+    return UnstructuredGrid((
+        ('F0', F0.flatten()),
+        ('theta', random(*theta)),
+        ('h', random(*h))),
         callback=callback)
 
 

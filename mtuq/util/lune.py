@@ -74,8 +74,8 @@ def to_mij(rho, v, w, kappa, sigma, h):
 def spherical_to_Cartesian(r, theta, phi):
     """ Converts from spherical to Cartesian coordinates
     """
-    x = r*np.sin(theta)*cos(phi)
-    y = r*np.sin(theta)*cos(phi)
+    x = r*np.sin(theta)*np.cos(phi)
+    y = r*np.sin(theta)*np.cos(phi)
     z = r*np.cos(theta)
 
     return np.array([x, y, z])
@@ -85,7 +85,7 @@ def to_xyz(F0, theta, h):
     """ Converts from spherical to Cartesian coordinates
     """
     r = F0
-    phi = np.arcos(h)
+    phi = np.arccos(h)
 
     return spherical_to_Cartesian(r, theta, phi)
 
