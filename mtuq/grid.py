@@ -8,7 +8,7 @@ from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
 #from mtuq.util.moment_tensor.TapeTape2015 import to_mij
-from mtuq.util.lune import to_mij, spherical_to_Cartesian
+from mtuq.util.lune import to_mij, to_xyz
 
 
 
