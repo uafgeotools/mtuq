@@ -73,18 +73,30 @@ class Grid(object):
         self.callback = callback
 
  
-    def as_array(self, callback=None):
+    def as_array(self, **kwargs):
         """ Returns `i-th` point of grid
         """
+        # optionally override default method
+        if 'callback' in kwargs:
+            callback = kwargs['callback']
+        else:
+            callback = self.callback
+
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
             array[_i, :] = self.get(_i, callback=callback)
         return array
 
 
-    def get(self, i, callback=None):
+    def get(self, i, **kwargs):
         """ Returns `i-th` point of grid
         """
+        # optionally override default method
+        if 'callback' in kwargs:
+            callback = kwargs['callback']
+        else:
+            callback = self.callback
+
         vals = self.vals
         array = np.zeros(self.ndim)
 
@@ -95,8 +107,6 @@ class Grid(object):
 
         if callback:
             return callback(*array)
-        elif self.callback:
-            return self.callback(*array)
         else:
             return array
 
@@ -150,6 +160,14 @@ class Grid(object):
         return self
 
 
+    def _check(self, kwargs):
+        if 'callback' in kwargs:
+            return kwargs['callback']
+        else:
+            return self.callback
+
+
+
 
 class UnstructuredGrid(object):
     """ 
@@ -200,18 +218,30 @@ class UnstructuredGrid(object):
         self.callback = callback
 
 
-    def as_array(self, callback=None):
+    def as_array(self, **kwargs):
         """ Returns `i-th` point of grid
         """
+        # optionally override default method
+        if 'callback' in kwargs:
+            callback = kwargs['callback']
+        else:
+            callback = self.callback
+
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
             array[_i, :] = self.get(_i+self.start, callback=callback)
         return array
 
 
-    def get(self, i, callback=None):
+    def get(self, i, **kwargs):
         """ Returns `i-th` point of grid
         """
+        # optionally override default method
+        if 'callback' in kwargs:
+            callback = kwargs['callback']
+        else:
+            callback = self.callback
+
         i -= self.start
         vals = self.vals
         array = np.zeros(self.ndim)
@@ -221,8 +251,6 @@ class UnstructuredGrid(object):
 
         if callback:
             return callback(*array)
-        elif self.callback:
-            return self.callback(*array)
         else:
             return array
 
@@ -434,4 +462,5 @@ def _check_force(magnitude_in_N):
     else:
         raise TypeError
     return magnitude_in_N, count
+
 

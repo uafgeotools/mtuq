@@ -9,7 +9,6 @@ import time
 from copy import deepcopy
 from mtuq.misfit.fast1 import correlate
 from mtuq.util.lune import to_mij, to_xyz
-from mtuq.util.math import identity
 from mtuq.util.signal import get_components, get_time_sampling
 from mtuq.misfit import c_ext_L2
 
@@ -196,15 +195,16 @@ def _get_groups(groups, components):
 
 
 def _as_array(sources):
-    array = sources.as_array(callback=identity)
+    array = sources.as_array(callback=None)
 
     if array.shape[1]==6:
-        # convert to Mij parameterization
+        # convert moment tensors to Mij parameterization (up,south,east)
         return np.ascontiguousarray(to_mij(
-            array[:,0], array[:,1], array[:,2], array[:,3], array[:,4], array[:,5]))
+            array[:,0], array[:,1], array[:,2], 
+            array[:,3], array[:,4], array[:,5]))
 
     elif array.shape[1]==3:
-        # convert to Fz(U),Fx(S),Fy(E) parameterization
+        # convert forces to F1,F2,F3 parameterization (1:up,2:south,3:east)
         return np.ascontiguousarray(to_xyz(
             array[:,0], array[:,1], array[:,2]))
 
