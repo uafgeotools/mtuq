@@ -82,7 +82,7 @@ class Grid(object):
         return array
 
 
-    def get(self, i):
+    def get(self, i, callback=None):
         """ Returns `i-th` point of grid
         """
         vals = self.vals
@@ -93,7 +93,9 @@ class Grid(object):
             array[_k] = val[int(i%len(val))]
             i/=len(val)
 
-        if self.callback:
+        if callback:
+            return callback(*array)
+        elif self.callback:
             return self.callback(*array)
         else:
             return array
@@ -207,7 +209,7 @@ class UnstructuredGrid(object):
         return array
 
 
-    def get(self, i):
+    def get(self, i, callback=None):
         """ Returns `i-th` point of grid
         """
         i -= self.start
@@ -217,7 +219,9 @@ class UnstructuredGrid(object):
         for _k in range(self.ndim):
             array[_k] = vals[_k][i]
 
-        if self.callback:
+        if callback:
+            return callback(*array)
+        elif self.callback:
             return self.callback(*array)
         else:
             return array
@@ -384,23 +388,23 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
 
 
 
-def ForceGridRegular(Newtons=1., npts_per_axis=80):
+def ForceGridRegular(magnitude_in_N=1., npts_per_axis=80):
     """ Force grid with regularly-spaced values
     """
     raise NotImplementedError
 
 
-def ForceGridRandom(Newtons=1., npts=10000, callback=to_xyz):
+def ForceGridRandom(magnitude_in_N=1., npts=10000, callback=to_xyz):
     """ Force grid with randomly-spaced values
     """
-    Newtons, count = _check_force(Newtons)
+    magnitude_in_N, count = _check_force(magnitude_in_N)
     N = npts*count
 
     theta = [0., 360., N]
     h = [-1., 1., N]
 
     F0 = np.zeros((count, npts))
-    for _i, _F in enumerate(Newtons):
+    for _i, _F in enumerate(magnitude_in_N):
         F0[_i, :] = _F
 
     return UnstructuredGrid((
@@ -421,13 +425,13 @@ def _check_magnitude(M):
     return M, count
 
 
-def _check_force(Newtons):
-    if type(Newtons) in [np.ndarray, list, tuple]:
-        count = len(Newtons)
-    elif type(Newtons) in [int, float]:
-        Newtons = [float(Newtons)]
+def _check_force(magnitude_in_N):
+    if type(magnitude_in_N) in [np.ndarray, list, tuple]:
+        count = len(magnitude_in_N)
+    elif type(magnitude_in_N) in [int, float]:
+        magnitude_in_N = [float(magnitude_in_N)]
         count = 1
     else:
         raise TypeError
-    return Newtons, count
+    return magnitude_in_N, count
 
