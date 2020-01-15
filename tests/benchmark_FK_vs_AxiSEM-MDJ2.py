@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 from mtuq import open_db
+from mtuq.graphics.header import SimpleHeader
 from mtuq.graphics.waveform import plot_data_synthetics
 from mtuq.process_data import ProcessData
 from mtuq.event import Origin
@@ -155,14 +156,8 @@ if __name__=='__main__':
     bw_win_len = process_bw.window_length
     sw_win_len = process_sw.window_length
 
-    #header = Header({}, shape=[4,2])
-    #header[0] = 'BLACK: AxiSEM (2 s)'
-    #header[1] = 'RED: FK'
-    #header[2] = 'model: mdj2'
-    #header[4] = 'b.w. bandpass: %.1f - %.1f s' % (bw_T_min, bw_T_max)
-    #header[5] = 's.w. bandpass: %.1f - %.1f s' % (sw_T_min, sw_T_max)
-    #header[6] = 'b.w. window: %.1f s' % bw_win_len
-    #header[7] = 's.w. window: %.1f s' % sw_win_len
+    bold = {'fontweight': 'bold'}
+    italic = {'style': 'italic'}
 
 
     #
@@ -192,9 +187,20 @@ if __name__=='__main__':
         axisem_bw = greens_axisem_bw.get_synthetics(mt, components=['Z','R','T'])
         axisem_sw = greens_axisem_sw.get_synthetics(mt, components=['Z','R','T'])
 
-        plot_data_synthetics('AxiSEM_vs_FK_'+str(_i)+'.png',
+        header = SimpleHeader((
+            (0.02, 0.75, '%d of %d' % (_i+1, len(grid)), bold),
+            (0.02, 0.55, 'BLACK: AxiSEM (2 s)'),
+            (0.25, 0.55, 'RED: FK'),
+            (0.02, 0.40, 'model: MDJ2'),
+            (0.02, 0.25, 'b.w. bandpass: %.1f - %.1f s' % (bw_T_min, bw_T_max)),
+            (0.25, 0.25, 's.w. bandpass: %.1f - %.1f s' % (sw_T_min, sw_T_max)),
+            (0.02, 0.10, 'b.w. window: %.1f s' % bw_win_len),
+            (0.25, 0.10, 's.w. window: %.1f s' % sw_win_len),
+            ))
+
+        plot_data_synthetics('AxiSEM_vs_FK_'+str(_i+1)+'.png',
             axisem_bw, axisem_sw, fk_bw, fk_sw, stations, origin,
-            station_labels=False, trace_labels=False)
+            header=header, station_labels=True, trace_labels=False)
 
 
 
