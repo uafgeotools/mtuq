@@ -23,38 +23,66 @@ class Grid(object):
 
     .. code ::
 
-       grid = Grid(('x': np.linspace(0., 1., N)),
-                   ('y': np.linpsace(0., 1., N)))
+       grid = Grid(('x', np.linspace(0., 1., N)),
+                   ('y', np.linpsace(0., 1., N)))
 
 
     To parameterize the surface of the Earth with an `N`-by-`2N` Mercator grid:
 
     .. code::          
 
-       grid = Grid(('latitude': np.linspace(-90., 90., N)),
-                   ('longitude': np.linspace(-180., 180., 2*N)))
+       grid = Grid(('latitude', np.linspace(-90., 90., N)),
+                   ('longitude', np.linspace(-180., 180., 2*N)))
 
 
-    .. rubric:: Iterating on grids
+    .. rubric:: Usage
 
-    The order of iteration over a grid is determined by the order of keys in
-    the dictionary input argument. In the unit square example above, ``'x'`` is
-    the fast axis and ``'y'`` is the slow axis.
+    There are two main ways of using grids: (1) iterating over grids and 
+    (2) accessing individual grid points by index number.
+
+
+    .. rubric:: Iterating over grids
+
+    Iterating over a grid is similar to iterating over a multidimensional 
+    NumPy array.  The order of grid points is determined by the order of axes
+    used to create the grid.  For instance, in the unit square example above, 
+    ``'x'`` is the fast axis and ``'y'`` is the slow axis.
+
+    If ``start`` and ``stop`` arguments are given when creating a grid,
+    iteration will begin and end at these indices.  Otherwise, iteration will
+    begin at the first index (i=0) and stop at the last index.
+
+
+    .. rubric:: Accessing individual grid points
+
+    Individual grid points can be accessed through the ``get`` and ``get_dict``
+    methods.  
+
+    ``get(i)`` returns the i-th point in the grid as a NumPy array.
+
+    If a ``callback`` function is given when creating a grid, then ``get`` 
+    returns the result of applying the callback to the i-th grid point.  This
+    behavior can be overridden by supplying a callback function as a keyword
+    argument to ``get`` itself.  If ``callback`` is ``None``, then no function 
+    is applied.
+
+    ``get_dict(i)`` returns the i-th grid point as a dictionary of coordinate
+    axis names and coordinate values without applying any callback.
 
     """
-    def __init__(self, items, start=0, stop=None, callback=None):
-        self.items = items
+    def __init__(self, axes, start=0, stop=None, callback=None):
+        self.axes = axes
 
-        # list of parameter names
-        self.keys = [item[0] for item in items]
+        # list of axis names
+        self.keys = [item[0] for item in axes]
         
         # corresponding list of axis arrays
-        self.vals = [item[1] for item in items]
+        self.vals = [item[1] for item in axes]
 
         # what is the length along each axis?
         shape = []
-        for axis in self.vals:
-            shape += [len(axis)]
+        for array in self.vals:
+            shape += [len(array)]
 
         # what attributes would the grid have if stored as a numpy array?
         self.ndim = len(shape)
@@ -76,7 +104,7 @@ class Grid(object):
     def as_array(self, **kwargs):
         """ Returns `i-th` point of grid
         """
-        # optionally override default method
+        # optionally override default callback
         if 'callback' in kwargs:
             callback = kwargs['callback']
         else:
@@ -91,7 +119,7 @@ class Grid(object):
     def get(self, i, **kwargs):
         """ Returns `i-th` point of grid
         """
-        # optionally override default method
+        # optionally override default callback
         if 'callback' in kwargs:
             callback = kwargs['callback']
         else:
@@ -111,6 +139,16 @@ class Grid(object):
             return array
 
 
+    def get_dict(self, i):
+        """ Returns `i-th` point of grid as a dictionary of parameter names and
+        values
+        """
+        keys = self.keys
+        vals = self.get(i, callback=None)
+
+        return dict(zip(keys, vals))
+
+
     def partition(self, nproc):
         """ Partitions grid for parallel processing
         """
@@ -121,7 +159,7 @@ class Grid(object):
         for iproc in range(nproc):
             start=int(iproc*self.size/nproc)
             stop=(iproc+1)*int(self.size/nproc)
-            subsets += [Grid(self.items, start, stop, callback=self.callback)]
+            subsets += [Grid(self.axes, start, stop, callback=self.callback)]
         return subsets
 
 
@@ -171,8 +209,8 @@ class Grid(object):
 
 class UnstructuredGrid(object):
     """ 
-    A grid defined by a list of individual coordinate points, which can be
-    irregularly spaced
+    An unstructured grid is defined by a list of individual coordinate points, 
+    which can be irregularly spaced
 
     .. rubric:: Example
 
@@ -181,21 +219,53 @@ class UnstructuredGrid(object):
 
     .. code ::
 
-      grid = UnstructuredGrid((('x': np.random.rand(N)),
-                               ('y': np.random.rand(N)))
+      grid = UnstructuredGrid((('x', np.random.rand(N)),
+                               ('y', np.random.rand(N)))
+
+    .. rubric:: Usage
+
+    There are two main ways of using grids: (1) iterating over grids and 
+    (2) accessing individual grid points by index number.
+
+
+    .. rubric:: Iterating over grids
+
+    Iterating over an unstructured grid is similar to iterating over a list.
+
+    If ``start`` and ``stop`` arguments are given when creating an unstructured
+    grid, iteration will begin and end at these indices.  Otherwise, iteration
+    will begin at the first index (i=0) and stop at the last index.
+
+
+    .. rubric:: Accessing individual grid points
+
+    Individual grid points can be accessed through the ``get`` and ``get_dict``
+    methods.  
+
+    ``get(i)`` returns the i-th point in the grid as a NumPy array.
+
+    If a ``callback`` function is given when creating an unstructured grid, then
+    ``get`` returns the result of applying the callback to the i-th grid point.
+    This behavior can be overridden by supplying a callback function as a
+    keyword argument to ``get`` itself.  If ``callback`` is ``None``, then no 
+    function is applied.
+
+    ``get_dict(i)`` returns the i-th grid point as a dictionary of coordinate
+    axis names and coordinate values without applying any callback.
+
 
     """
-    def __init__(self, items, start=0, stop=None, callback=None):
-        self.items = items
+    def __init__(self, coordinate_points, start=0, stop=None, callback=None):
+        self.coordinate_points = coordinate_points
 
         # list of parameter names
-        self.keys = [item[0] for item in items]
+        self.keys = [item[0] for item in coordinate_points]
 
-        # corresponding list of axis arrays
-        self.vals = [item[1] for item in items]
+        # corresponding list of parameter values
+        self.vals = [item[1] for item in coordinate_points]
 
         # there is no shape attribute because it is an unstructured grid,
-        # however, ndim and size are still well defined
+        # however, ndim and size still make sense
         self.ndim = len(self.vals)
         size = len(self.vals[0])
 
@@ -221,7 +291,7 @@ class UnstructuredGrid(object):
     def as_array(self, **kwargs):
         """ Returns `i-th` point of grid
         """
-        # optionally override default method
+        # optionally override default callback
         if 'callback' in kwargs:
             callback = kwargs['callback']
         else:
@@ -236,7 +306,7 @@ class UnstructuredGrid(object):
     def get(self, i, **kwargs):
         """ Returns `i-th` point of grid
         """
-        # optionally override default method
+        # optionally override default callback
         if 'callback' in kwargs:
             callback = kwargs['callback']
         else:
@@ -255,6 +325,16 @@ class UnstructuredGrid(object):
             return array
 
 
+    def get_dict(self, i):
+        """ Returns `i-th` point of grid as a dictionary of parameter names and
+        values
+        """
+        keys = self.keys
+        vals = self.get(i, callback=None)
+
+        return dict(zip(keys, vals))
+
+
     def partition(self, nproc):
         """ Partitions grid for parallel processing
         """
@@ -262,10 +342,10 @@ class UnstructuredGrid(object):
         for iproc in range(nproc):
             start=iproc*int(self.size/nproc)
             stop=(iproc+1)*int(self.size/nproc)
-            items = []
-            for key, val in self.items:
-                items += [[key, val[start:stop]]]
-            subsets += [UnstructuredGrid(items, start, stop, callback=self.callback)]
+            coordinate_points = []
+            for key, val in self.coordinate_points:
+                coordinate_points += [[key, val[start:stop]]]
+            subsets += [UnstructuredGrid(coordinate_points, start, stop, callback=self.callback)]
         return subsets
 
 
