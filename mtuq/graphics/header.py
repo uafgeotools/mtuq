@@ -50,26 +50,31 @@ class Base(object):
 
 
 
-class SimpleTextHeader(Base):
-    """ Stores header text in a list [[text, position]], where text is a string
-    and position is a (x,y) tuple
+class SimpleHeader(Base):
+    """ Prints header text from a list ((xp, yp, text), ...)
     """
     def __init__(self, items):
-        # validates dictionary
-        for text, p in items:
-            assert type(text) in [str, unicode]
-            assert 0. <= pos[0] <= 1.
-            assert 0. <= pos[1] <= 1.
-            pass
+        # validates items
+        for item in items:
+            assert len(item) >= 3
+            xp, yp, text  = item[0], item[1], item[2]
+            assert 0. <= xp <= 1.
+            assert 0. <= yp <= 1.
 
         self.items = items
 
 
-    def write(self, ax):
-        for key, val in self.items:
-            text = key
-            xp, yp = val
-            _write_text(text, xp, yp, ax)
+    def write(self, height, offset):
+        ax = self._get_axis(height)
+
+        for item in self.items:
+            xp, yp, text = item[0], item[1], item[2]
+            kwargs = {}
+            if len(item) > 3:
+                kwargs = item[3]
+
+            _write_text(text, xp, yp, ax, **kwargs)
+
 
 
 class UAFStyleHeader(Base):
@@ -232,8 +237,8 @@ class Header(UAFStyleHeader):
 # utility functions
 #
 
-def _write_text(text, x, y, ax, fontsize=12):
-    pyplot.text(x, y, text, fontsize=fontsize, transform=ax.transAxes)
+def _write_text(text, x, y, ax, fontsize=12, **kwargs):
+    pyplot.text(x, y, text, fontsize=fontsize, transform=ax.transAxes,  **kwargs)
 
 
 def _write_bold(text, x, y, ax, fontsize=14):
