@@ -13,6 +13,7 @@ from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
+from mtuq.util.lune import to_mij
 
 
 """
@@ -648,8 +649,12 @@ Main_GridSearch_DoubleCouple="""
         data_sw, greens_sw, misfit_sw, origin, sources)
 
     if comm.rank==0:
-        best_misfit = (results_bw + results_sw).min()
-        best_source = sources.get((results_bw + results_sw).argmin())
+        results_sum = results_bw + results_sw
+
+        best_misfit = results_sum.min()
+        best_source = sources.get(results_sum.argmin(), callback=to_mij)
+        lune_dict = sources.get_dict(results_sum.argmin())
+
 
 """
 
@@ -724,11 +729,13 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
     if rank==0:
         results = results_bw + results_sw
-        best_misfit = (results).min()
+        best_misfit = results.min()
 
-        _i, _j = np.unravel_index(np.argmin(results), results.shape)
-        best_source = sources.get(_i)
-        best_origin = origins[_j]
+        _j, _i = np.unravel_index(np.argmin(results), results.shape)
+        best_origin = origins[_i]
+        best_source = sources.get(_j, callback=to_mij)
+        lune_dict = sources.get_dict(_j)
+
 
 """
 
@@ -772,17 +779,17 @@ Main2_SerialGridSearch_DoubleCouple="""
     #
 
     print('Evaluating body wave misfit...\\n')
-
-    results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origin, sources)
+    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, sources)
 
     print('Evaluating surface wave misfit...\\n')
+    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, sources)
 
-    results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origin, sources)
 
-    best_misfit = (results_bw + results_sw).min()
-    best_source = sources.get((results_bw + results_sw).argmin())
+    results_sum = results_bw + results_sw
+
+    best_misfit = results_sum.min()
+    best_source = sources.get(results_sum.argmin(), callback=to_mij)
+    lune_dict = sources.get_dict(results_sum.argmin())
 
 """
 

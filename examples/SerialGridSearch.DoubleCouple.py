@@ -12,6 +12,7 @@ from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
+from mtuq.util.lune import to_mij
 
 
 
@@ -156,17 +157,17 @@ if __name__=='__main__':
     #
 
     print('Evaluating body wave misfit...\n')
-
-    results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origin, sources)
+    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, sources)
 
     print('Evaluating surface wave misfit...\n')
+    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, sources)
 
-    results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origin, sources)
 
-    best_misfit = (results_bw + results_sw).min()
-    best_source = sources.get((results_bw + results_sw).argmin())
+    results_sum = results_bw + results_sw
+
+    best_misfit = results_sum.min()
+    best_source = sources.get(results_sum.argmin(), callback=to_mij)
+    lune_dict = sources.get_dict(results_sum.argmin())
 
 
     #
