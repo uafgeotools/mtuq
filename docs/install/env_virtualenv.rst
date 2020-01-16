@@ -7,14 +7,14 @@ Create a new virtual environment:
 
 .. code::
 
-   virtualenv --python=python2.7 mtuq_env
+   virtualenv --python=python3 mtuq_env
 
 
 Download MTUQ source code:
 
 .. code::
 
-   git clone https://github.com/uafseismo/mtuq.git
+   git clone https://github.com/uafgeotools/mtuq.git mtuq_src
 
 
 Install MTUQ:
@@ -22,7 +22,7 @@ Install MTUQ:
 .. code::
 
    source mtuq_env/bin/activate
-   cd mtuq
+   cd mtuq_src
    pip install -e .
 
 

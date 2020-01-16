@@ -10,7 +10,4 @@ To install MTUQ, follow the instructions from one of the three pages below.  If 
    env_custom
 
 
-.. note::
-   Virtual environments are necessary in Python to avoid dependency conflicts.  
-
 

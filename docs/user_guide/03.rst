@@ -1,50 +1,51 @@
 
-Acquiring seismic data
-======================
+Green's functions
+=================
 
-Acquiring and quality control checking seismic data can be one of the most challenging steps in an inversion.  This page describes our preferred data client and MTUQ's data and metadata format requirements.
-
-
-
-Data acquisition clients
-------------------------
-
-IRIS and other scientific repositories host large volumes of seismic data.  Native ObsPy clients and ObsPy wrappers such as PySEP provide a way of downloading waveforms programmatically from such hosts.
-
-PySEP is our preferred data acquisition client because it was developed at the same university as MTUQ.  Besides downloading waveforms through ObsPy calls, PySEP performs data processing and quality control checks so that the data processing and time discretization requirements described below are automatically satisfied.  
-
-Additionally, PySEP generates "weight files" that can optionally be used by `mtuq.process_data` to control the relative contribution of different datums to the data misfit function.
+The response of a medium to an impulsive source is called a Green's function.  This page explains how Green's functions are used in source inversions.   It describes the types of Green's functions supported by MTUQ and how these can be acquired.
 
 
 
-File format, metadata, and data processing requirements
--------------------------------------------------------
+Downloading precomputed Green's functions
+-----------------------------------------
 
-MTUQ expects waveforms in SAC format with the following metadata information
-
-    - station latitude
-    - station longitude
-    - network, station and location codes
+In many cases, the easiest way to acquire Green's functions is to download them.  A webservice called `syngine <http://ds.iris.edu/ds/products/syngine/>`_ makes precomputed Green's functions available for a number of one-dimensional Earth models, including PREM, AK135, and iasp91.
 
 
-Additionally, the following procesing steps must be performed prior to reading the data by MTUQ
+Computing Green's functions for 1D Earth models
+-----------------------------------------------
 
-    - instrument response removed
-    - traces rotated into vertical (Z), radial (R) and transverse (T) components
+For one-dimensional models, two software packages can be used to compute Green's functions: (1) AxiSEM (preferred), and (2) FK.
 
-
-
-Time discretization requirements
---------------------------------
-
-If at all possible, the sampling rate and number of samples should be the same for all waveforms.  If these attributes vary in the data supplied to MTUQ, the code may fail or performance may be slower.
-
-   The starttime of each waveform must be early enough and the endtime late enough to include body wave and surface wave arrivals, otherwise ``mtuq.process_data`` may raise exceptions.   (See also `mtuq.process_data` parameters `pick_type`, `window_type`, and `window_length`.)
+AxiSEM and FK save the wavefield over the entire simulation domain, which makes it easy to search over hypocenter and depth parameters.  (In comparison, syngine downloads Green's functions only at specific stations.)
 
 
+Computing Green's functions for 3D Earth models
+-----------------------------------------------
 
-Other file formats
------------------
+For three-dimensional models, SPECFEM3D can be used to compute Green's functions. SPECFEM3D output must be saved at individual stations using the CMT3D filename convention.  Currently, SPECFEM3D does not provide an adequate file format for saving entire wavefields.
 
-Besides SAC files, many other file formats could be supported in principle.  The functions ``obspy.read`` and ``mtuq.read`` by design share nearly the same input argument syntax, and new file format support could be added following functionality and syntax of ``mtuq.io.readers.SAC``.
+
+Role of Green's functions
+-------------------------
+
+One reason Green's functions are useful is that the wavefield from a more complicated source can be obtained just by summing them.
+
+Another reason Green's functions are useful is that they provide computaional savings in inversions.  When more than a handful of sources are involved, it is cheaper to obtain medium responses by summing Green's functions than it is to perform many individual wavefield simulations.
+
+In MTUQ, ``GreensTensor`` objects provide access to the full set of Green's functions needed to describe the medium response between a given station and origin.
+
+
+
+Green's function conventions
+----------------------------
+
+A variety of Green's function conventions exist.  Figuring out which are used in a particular application can be challenging because it depends on
+
+- the type of medium under consideration (for example, acoustic media require fewer independent Green's functions than elastic media)
+
+- the choice of local Cartesian basis conventions (for example, some authors employ "Up-South-East", others "North-East-Down"; see `ObsPy documentation <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_ for more information)
+
+One of the major design goals of MTUQ is to avoid exposing users to unnecessary basis convention complexity. MTUQ accomplishes this by understanding external formats and converting to a common internal format that works for both one-dimensional and three-dimensional media. For local Cartesian representations, MTUQ consistently uses an 'Up-South-East' convention.
+
 

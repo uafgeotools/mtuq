@@ -67,7 +67,7 @@ class ProcessData(object):
     - ``'FK_metadata'``
       reads P, S arrival times from FK metadata
 
-    - ``'FK_metadata'``
+    - ``'SAC_metadata'``
       reads P, S arrival times from SAC metadata fields `t5`, `t6`
 
     - ``'user_supplied'``
