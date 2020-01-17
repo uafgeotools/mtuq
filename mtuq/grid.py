@@ -7,7 +7,6 @@ from numpy import pi as PI
 from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-#from mtuq.util.moment_tensor.TapeTape2015 import to_mij
 from mtuq.util.lune import to_mij, to_xyz
 
 
@@ -77,7 +76,7 @@ class Grid(object):
         self.keys = [item[0] for item in axes]
         
         # corresponding list of axis arrays
-        self.vals = [item[1] for item in axes]
+        self.vals = [asarray(item[1]) for item in axes]
 
         # what is the length along each axis?
         shape = []
@@ -273,7 +272,7 @@ class UnstructuredGrid(object):
         self.keys = [item[0] for item in coordinate_points]
 
         # corresponding list of parameter values
-        self.vals = [item[1] for item in coordinate_points]
+        self.vals = [asarray(item[1]) for item in coordinate_points]
 
         # there is no shape attribute because it is an unstructured grid,
         # however, ndim and size still make sense
