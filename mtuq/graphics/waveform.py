@@ -333,7 +333,9 @@ def add_trace_labels(axis, dat, syn, total_misfit=1.):
     d = dat.data
 
     # display cross-correlation time shift
-    time_shift = getattr(syn, 'time_shift', np.nan)
+    time_shift = 0.
+    time_shift += getattr(syn, 'time_shift', np.nan)
+    time_shift += getattr(dat, 'static_time_shift', 0)
     axis.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=12)
 
     # display maximum cross-correlation coefficient

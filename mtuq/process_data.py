@@ -16,8 +16,6 @@ from mtuq.util.signal import cut, get_arrival, m_to_deg
 class ProcessData(object):
     """ Performs filtering, windowing and other operations on seismic data
 
-
-
     .. rubric :: Usage
 
     Processing data is a two-step procedure. In the first step, the user 
@@ -473,20 +471,26 @@ class ProcessData(object):
         #
         # part 4b: apply statics
         # 
-        if 'type:greens' in tags or\
-           'type:synthetics':
-
+        if self.apply_statics:
             for trace in traces:
-                component = trace.stats.channel[-1].upper()
-                key = self.window_type +'_'+ component
+                try:
+                    component = trace.stats.component
+                except:
+                    component = trace.stats.channel[-1].upper()
 
                 try:
-                    offset = self.statics[id][key]
-                    starttime += offset
-                    endtime += offset
-
+                    key = self.window_type +'_'+ component
+                    static = self.statics[id][key]
                 except:
-                    pass
+                    print('Error reading static time shift: %s' % id)
+                    continue
+
+                if 'type:greens' in tags:
+                    starttime += static
+                    endtime += static
+
+                trace.static_time_shift = static
+
 
 
         #
