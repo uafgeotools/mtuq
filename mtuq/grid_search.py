@@ -7,12 +7,44 @@ from mtuq.util import iterable, timer
 def grid_search(data, greens, misfit, origins, sources, 
     allgather=True, verbose=True):
 
-    """ Evaluates misfit over origin and source grids
+    """ Evaluates misfit over grids
 
-    If invoked from an MPI environment, the grid is partitioned between
-    processes and each process runs ``grid_search_serial`` on its given
-    partition. If not invoked from an MPI environment, this function simply 
-    reduces to ``grid_search_serial``.
+    .. rubric :: Usage
+
+    Carries out a grid search by evaluating `misfit(data, greens)` over
+    origin and source grids.  Returns an array of misfit values of shape 
+    ``(len(sources), len(origins))`` 
+
+    .. note:
+
+      If invoked from an MPI environment, the grid is partitioned between
+      processes and each process runs ``grid_search_serial`` on its given
+      partition. If not invoked from an MPI environment, this function simply 
+      reduces to ``grid_search_serial``.
+
+
+    .. rubric :: Parameters
+
+    ``data``
+    Must be ``mtuq.dataset.Dataset``
+
+    ``greens``
+    Must be ``mtuq.greens_tensor.GreensTensorList``.
+
+    ``misfit``
+    Can be ``mtuq.misfit.Misfit`` or some other function that acts on the first
+    two arguments
+
+    ``origins``
+    Must be a `list` of ``mtuq.source.Origin`` objects
+
+    ``sources``
+    Must be ``mtuq.grid.Grid``or ``mtuq.grid.UnstructuredGrid``
+
+    ``allgather``
+    Whether or not to combine results from all processes, if invoked from an
+    MPI environment
+            
     """
     if _is_mpi_env():
         from mpi4py import MPI
