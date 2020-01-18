@@ -95,7 +95,7 @@ class Client(ClientBase):
                 for filename in SYNTHETICS_FILENAMES:
                     stream += obspy.read(dirname+'/'+filename, format='sac')
 
-                    # overwrite channel name
+                    # overwrite channel attribute
                     stream[-1].stats.channel = stream[-1].stats.channel[-1]+str(_i)
 
 
@@ -110,6 +110,8 @@ class Client(ClientBase):
         dt_old = float(stream[0].stats.delta)
 
         for trace in stream:
+            trace.stats.component = trace.stats.channel[0]
+
             # resample Green's functions
             data_old = trace.data
             data_new = resample(data_old, t1_old, t2_old, dt_old,
