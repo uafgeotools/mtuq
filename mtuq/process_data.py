@@ -450,29 +450,30 @@ class ProcessData(object):
 
 
 
-        #
-        # part 4a: determine window start and end times
-        #
+        for trace in traces:
 
-        if self.window_type == 'body_wave':
-            # reproduces CAPUAF body wave window
-            starttime = picks['P'] - 0.4*self.window_length
-            endtime = starttime + self.window_length
+            #
+            # part 4a: determine window start and end times
+            #
 
-        elif self.window_type == 'surface_wave':
-            # reproduces CAPUAF surface wave window
-            starttime = picks['S'] - 0.3*self.window_length
-            endtime = starttime + self.window_length
+            if self.window_type == 'body_wave':
+                # reproduces CAPUAF body wave window
+                starttime = picks['P'] - 0.4*self.window_length
+                endtime = starttime + self.window_length
 
-        starttime += float(origin.time)
-        endtime += float(origin.time)
+            elif self.window_type == 'surface_wave':
+                # reproduces CAPUAF surface wave window
+                starttime = picks['S'] - 0.3*self.window_length
+                endtime = starttime + self.window_length
+
+            starttime += float(origin.time)
+            endtime += float(origin.time)
 
 
-        #
-        # part 4b: apply statics
-        # 
-        if self.apply_statics:
-            for trace in traces:
+            #
+            # part 4b: apply statics
+            # 
+            if self.apply_statics:
                 try:
                     component = trace.stats.component
                 except:
@@ -481,38 +482,35 @@ class ProcessData(object):
                 try:
                     key = self.window_type +'_'+ component
                     static = self.statics[id][key]
+                    trace.static_time_shift = static
                 except:
                     print('Error reading static time shift: %s' % id)
                     continue
 
                 if 'type:greens' in tags:
-                    starttime += static
-                    endtime += static
-
-                trace.static_time_shift = static
+                    starttime -= static
+                    endtime -= static
 
 
+            #
+            # part 4c: apply padding
+            # 
 
-        #
-        # part 4c: apply padding
-        # 
+            # using a longer window for Green's functions than for data allows for
+            # more accurate time-shift corrections
 
-        # using a longer window for Green's functions than for data allows for
-        # more accurate time-shift corrections
+            if 'type:greens' in tags:
+                starttime -= self.padding[0]
+                endtime += self.padding[1]
 
-        if 'type:greens' in tags:
-            starttime -= self.padding[0]
-            endtime += self.padding[1]
-
-            for trace in traces:
                 setattr(trace, 'npts_left', int(round(abs(self.padding[0])/dt)))
                 setattr(trace, 'npts_right', int(round(abs(self.padding[1])/dt)))
 
 
-        #
-        # part 4d: cut and taper traces
-        #
-        for trace in traces:
+            #
+            # part 4d: cut and taper trace
+            #
+
             # cuts trace and adjusts metadata
             cut(trace, starttime, endtime)
 
