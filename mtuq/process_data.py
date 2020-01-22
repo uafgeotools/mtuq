@@ -473,6 +473,11 @@ class ProcessData(object):
             #
             # part 4b: apply statics
             # 
+
+            # In our convention, a positive static time shift means synthetics
+            # are arriving too early and need to be shifted in the positive 
+            # direction to match the observed data. 
+
             if self.apply_statics:
                 try:
                     component = trace.stats.component

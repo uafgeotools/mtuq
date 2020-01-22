@@ -228,4 +228,11 @@ def m_to_deg(distance_in_m):
 
 
 
+def isempty(dataset):
+    if len(dataset)==0:
+        return True
+    elif sum([len(stream) for stream in dataset])==0:
+        return True
+    else:
+        return False
 

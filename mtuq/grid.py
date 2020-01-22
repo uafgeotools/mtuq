@@ -49,7 +49,7 @@ class Grid(object):
 
     If ``start`` and ``stop`` arguments are given when creating a grid,
     iteration will begin and end at these indices.  Otherwise, iteration will
-    begin at the first index (i=0) and stop at the last index.
+    begin at the first index (`i=0`) and stop at the last index.
 
 
     .. rubric:: Accessing individual grid points
@@ -244,7 +244,7 @@ class UnstructuredGrid(object):
 
     If ``start`` and ``stop`` arguments are given when creating an unstructured
     grid, iteration will begin and end at these indices.  Otherwise, iteration
-    will begin at the first index (i=0) and stop at the last index.
+    will begin at the first index (`i=0`) and stop at the last index.
 
 
     .. rubric:: Accessing individual grid points
