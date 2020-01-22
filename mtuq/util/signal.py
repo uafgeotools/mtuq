@@ -162,12 +162,12 @@ def check_padding(dataset, time_shift_min, time_shift_max):
 
                 pad(trace, (time_shift_min, time_shift_max))
 
-                setattr(trace, 'npts_left', int(round(-time_shift_min/dt)))
-                setattr(trace, 'npts_right', int(round(+time_shift_max/dt)))
+                setattr(trace, 'npts_left', int(round(+time_shift_max/dt)))
+                setattr(trace, 'npts_right', int(round(-time_shift_min/dt)))
 
             else:
-                assert npts_left == int(round(-time_shift_min/dt))
-                assert npts_right == int(round(+time_shift_max/dt))
+                assert npts_left == int(round(+time_shift_max/dt))
+                assert npts_right == int(round(-time_shift_min/dt))
 
 
 def get_arrival(arrivals, phase):
