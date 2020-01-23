@@ -202,7 +202,7 @@ class Header(UAFStyleHeader):
         # write text line #1
         px = 0.125
         py = 0.65
-        line = '%s  $M_w$ %.1f  Depth %d km' % (
+        line = '%s  $M_w$ %.2f  Depth %d km' % (
             self.event_name, self.magnitude, self.depth_in_km)
         _write_bold(line, px, py, ax, fontsize=16)
 

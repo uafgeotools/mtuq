@@ -64,6 +64,7 @@ def plot_data_synthetics(filename,
     # initialize figure
     fig, axes = pyplot.subplots(nrow, ncol, 
         figsize=(width, height),
+        subplot_kw=dict(clip_on=False),
         gridspec_kw=dict(width_ratios=[0.4,0.4,1.,1.,1.]))
 
     pyplot.subplots_adjust(
@@ -147,7 +148,7 @@ def plot_data_synthetics(filename,
                 ylim = [-2*max_trace, +2*max_trace]
                 axis.set_ylim(*ylim)
             elif normalize=='maximum_amplitude':
-                ylim = [-2*max_amplitude_bw, +2*max_amplitude_bw]
+                ylim = [-1.5*max_amplitude_bw, +1.5*max_amplitude_bw]
                 axis.set_ylim(*ylim)
 
             if trace_labels:
@@ -190,7 +191,7 @@ def plot_data_synthetics(filename,
                 ylim = [-max_trace, +max_trace]
                 axis.set_ylim(*ylim)
             elif normalize=='maximum_amplitude':
-                ylim = [-max_amplitude_sw, +max_amplitude_sw]
+                ylim = [-0.8*max_amplitude_sw, +0.8*max_amplitude_sw]
                 axis.set_ylim(*ylim)
 
             if trace_labels:
@@ -265,13 +266,15 @@ def plot(axis, dat, syn, label=None):
     start = getattr(syn, 'start', 0)
     stop = getattr(syn, 'stop', len(syn.data))
 
-    meta = dat.stats
+    t = np.linspace(0,t2-t1,nt,dt)
     d = dat.data
     s = syn.data
 
-    t = np.linspace(0,t2-t1,nt,dt)
-    axis.plot(t, d, 'k')
-    axis.plot(t, s[start:stop], 'r')
+    # in theory, ``clip_on=False`` and ``zorder=10`` should prevent the plotted
+    # data from getting "clipped", but this doesn't seem to be happening
+    # in practice
+    axis.plot(t, d, 'k', clip_on=False, zorder=10)
+    axis.plot(t, s[start:stop], 'r', clip_on=False, zorder=10)
 
 
 def add_component_labels(axes):
