@@ -200,13 +200,13 @@ def _as_array(sources):
     if array.shape[1]==6:
         # convert moment tensors to Mij parameterization (up,south,east)
         return np.ascontiguousarray(to_mij(
-            array[:,0], array[:,1], array[:,2], 
-            array[:,3], array[:,4], array[:,5]))
+            array[:,0], array[:,1], array[:,2],  # rho, v, w
+            array[:,3], array[:,4], array[:,5])) # kappa, sigma, h
 
     elif array.shape[1]==3:
         # convert forces to F1,F2,F3 parameterization (1:up,2:south,3:east)
         return np.ascontiguousarray(to_xyz(
-            array[:,0], array[:,1], array[:,2]))
+            array[:,0], array[:,1], array[:,2])) # F0 (radius), theta (azimuth), phi (colatitude)
 
 
 #

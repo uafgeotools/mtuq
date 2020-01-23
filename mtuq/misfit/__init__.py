@@ -5,7 +5,7 @@ import warnings
 from mtuq.misfit import simple, fast1, fast2
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
-from mtuq.util.signal import check_padding, get_components
+from mtuq.util.signal import check_padding, get_components, isempty
 
 
 
@@ -32,7 +32,6 @@ class Misfit(object):
     In the second step, the user supplies data, Green's functions, and sources.
     Synthetics are then generated and compared with data, and an array of 
     misfit values is returned of the same length as `sources`.
-
 
 
     .. rubric :: Parameters
@@ -148,9 +147,16 @@ class Misfit(object):
 
 
     def __call__(self, data, greens, sources, verbose=0, 
-        optimization_level=2, set_attributes=False):
+        optimization_level=1, set_attributes=False):
         """ Evaluates misfit on given data
         """
+        if isempty(data):
+            warnings.warn(
+                "Empty data set. No misfit evaluations will be carried out",
+                Warning)
+
+            return np.zeros((len(sources), 1))
+
 
         # To allow time shifts, Green's functions must be longer than data,
         # i.e., Green's functions must start +time_shift_max before data and
