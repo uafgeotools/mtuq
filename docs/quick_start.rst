@@ -10,9 +10,14 @@ Before running the example, users must install MTUQ following these instructions
 
 After running the example, users can check their result against the expected output shown here.
 
+.. warning::
+
+  At the time this documentation was written, there were ObsPy graphics bugs.  Please read this important note.
+
 .. note::
 
   The first time the example runs, Green's functions will be downloaded, which can take several minutes.  Any subsequent runs will be much faster.
+
 
 
 Parallel examples

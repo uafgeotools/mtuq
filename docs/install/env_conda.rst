@@ -9,7 +9,7 @@ Create a conda virtual environment:
 .. code::
 
    conda config --prepend channels conda-forge
-   conda create -n mtuqv python=3
+   conda create -n mtuq python=3
    conda install numpy h5py obspy instaseis
 
 
@@ -21,5 +21,6 @@ Install MTUQ:
    git clone https://github.com/uafgeotools/mtuq.git
    cd mtuq
    pip install -e .
+
 
 

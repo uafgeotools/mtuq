@@ -2,39 +2,72 @@
 Green's functions
 =================
 
-The response of a medium to an impulsive source is called a Green's function.  This page explains how Green's functions are used in source inversions.   It describes the types of Green's functions supported by MTUQ and how these can be acquired.
+The response of a medium to an impulsive source is called a Green's function.  This page explains how Green's functions are used in source inversions.   It describes the types of Green's functions supported by MTUQ and how they can be acquired.
+
+
+Role of Green's functions
+-------------------------
+
+In source inversions, the main reason Green's functions are useful is that they provide computaional savings.  It is usually cheaper to generate synthetics by summing Green's functions than it is to perform many individual wavefield simulations.
+
+In MTUQ, `GreensTensor objects <https://uafgeotools.github.io/mtuq/library>`_ provide access to the full set of Green's functions needed to describe the medium response between a given station and origin.
 
 
 
 Downloading precomputed Green's functions
 -----------------------------------------
 
-In many cases, the easiest way to acquire Green's functions is to download them.  A webservice called `syngine <http://ds.iris.edu/ds/products/syngine/>`_ makes precomputed Green's functions available for a number of one-dimensional Earth models, including PREM, AK135, and iasp91.
+One of the easiest ways to acquire Green's functions is to download them using `syngine <http://ds.iris.edu/ds/products/syngine/>`_.  The syngine webservice makes Green's functions available from the following 1D Earth models: PREM, AK135, and iasp91.
+
+At the time this documentation was written, one limitation of syngine is that Green's functions are availble from only a handful of Earth models.  Another limitation is that syngine provides Green's functions only at specific stations, not over the whole Earth.  If these limitations affect your use case, an alternative is to compute your own Green's function database, as described below.
 
 
 Computing Green's functions for 1D Earth models
 -----------------------------------------------
 
-For one-dimensional models, two software packages can be used to compute Green's functions: (1) AxiSEM (preferred), and (2) FK.
+MTUQ currently supports 1D Green's functions from two solvers: AxiSEM (preferred) and FK.
 
-AxiSEM and FK save the wavefield over the entire simulation domain, which makes it easy to search over hypocenter and depth parameters.  (In comparison, syngine downloads Green's functions only at specific stations.)
+`AxiSEM <https://github.com/geodynamics/axisem>`_ simulates wave propagation in radially-symmeric Earth models using a spectral-element method.  To generate synthetics in format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://geodynamics.org/cig/software/axisem/axisem-manual.pdf>`_  under "Output wavefields in NetCDF formated needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
+
+To open an AxiSEM database client in MTUQ:
+
+.. code ::
+
+   from mtuq import open_db
+   db = open_db(path_to_NetCDF_file, format="AxiSEM")
+
+
+`FK <https://www.eas.slu.edu/People/LZhu/home.html>`_ simulates wave propagation in horizontally-layered elastic media using  frequency-wavenumber method.   FK  simulations create SAC files in a directory tree organized by model, event depth, and event distance.  Each SAC file represents a vertical, radial, or transverse velocity time series in units of 10^-20*cm*(dyne-cm)^-1 s^-1.
+
+
+To open an FK database client in MTUQ:
+
+.. code ::
+
+   from mtuq import open_db
+   db = open_db(path_to_FK_directory_tree, format="FK")
+
+
+
+Once opened, an AxiSEM of FK database client can be used to generate ``GreensTensor`` objects:
+
+.. code::
+
+   greens_tensors = db.get_greens_tensors(stations, origin)
+
+
+
 
 
 Computing Green's functions for 3D Earth models
 -----------------------------------------------
 
-For three-dimensional models, SPECFEM3D can be used to compute Green's functions. SPECFEM3D output must be saved at individual stations using the CMT3D filename convention.  Currently, SPECFEM3D does not provide an adequate file format for saving entire wavefields.
+.. warning::
+  
+   This section describes features still under development.  The documentation may be incomplete or describe planned rather than current functionality.
 
 
-Role of Green's functions
--------------------------
-
-One reason Green's functions are useful is that the wavefield from a more complicated source can be obtained just by summing them.
-
-Another reason Green's functions are useful is that they provide computaional savings in inversions.  When more than a handful of sources are involved, it is cheaper to obtain medium responses by summing Green's functions than it is to perform many individual wavefield simulations.
-
-In MTUQ, ``GreensTensor`` objects provide access to the full set of Green's functions needed to describe the medium response between a given station and origin.
-
+MTUQ currently supports 3D Green's functions from SPECFEM3D.  Output must be saved at individual stations using the CMT3D filename convention.
 
 
 Green's function conventions
