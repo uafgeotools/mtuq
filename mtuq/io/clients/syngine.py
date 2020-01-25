@@ -71,13 +71,12 @@ class Client(ClientBase):
     def _get_greens_tensor(self, station=None, origin=None):
         stream = Stream()
 
-        # download and unzip data
+        # download and unzip time series
         dirname = unzip(
             download_greens_tensor(self.url, self.model, station, origin))
 
-        # read data
+        # read time series
         stream = Stream()
-        stream.id = station.id
 
         if self.include_mt:
             for filename in GREENS_TENSOR_FILENAMES:

@@ -28,7 +28,7 @@ class ProcessData(object):
         processed_stream = function(stream)
 
 
-    Data processing can also be applied to entire ``Dataset`` as follows:
+    Data processing can also be applied to an entire ``Dataset`` as follows:
 
     .. code::
 

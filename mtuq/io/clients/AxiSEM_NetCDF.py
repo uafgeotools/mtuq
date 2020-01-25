@@ -93,7 +93,7 @@ class Client(ClientBase):
 
         tags = [
             'model:%s' % self.model,
-            'solver:%s' % 'syngine',
+            'solver:%s' % 'AxiSEM',
              ]
 
         return GreensTensor(traces=[trace for trace in stream],
