@@ -28,7 +28,7 @@ Additionally, MTUQ provides
 
 [Acquiring Green's functions](https://uafgeotools.github.io/mtuq/user_guide/03.html)
 
-[Library reference](https://uafgeotools.github.io/mtuq/install/index.html)
+[Library reference](https://uafgeotools.github.io/mtuq/library/index.html)
 
 
 
