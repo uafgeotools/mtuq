@@ -5,6 +5,8 @@ If you are familiar with environment management in Python, then feel free to ins
 
    git clone https://github.com/uafseismo/mtuq.git
    cd mtuq
+   pip install numpy
+   pip install obspy instaseis
    pip install -e .
 
 

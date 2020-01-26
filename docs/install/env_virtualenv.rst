@@ -23,6 +23,8 @@ Install MTUQ:
 
    source mtuq_env/bin/activate
    cd mtuq_src
+   pip install numpy
+   pip install obspy instaseis
    pip install -e .
 
 
