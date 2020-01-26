@@ -1,32 +1,32 @@
 # mtuq
 
-MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from regional broadband seismic data.  
+MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data.  
 
-The package reproduces the functionality of [ZhaoHelmberger1994] and [ZhuHelmberger1996] and has been [tested against](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) their Perl/C codes.
+The package includes the functionality of [ZhaoHelmberger1994] and [ZhuHelmberger1996] and has been [tested against](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) their Perl/C codes.
 
 Additionally, MTUQ provides
 
-- a flexible toolbox design, borrowing from [ObsPy] and [instaseis] data structures
-- C-accelerated, MPI-parallelized misfit function evaluation
+- a flexible Python design, borrowing from [ObsPy] and [instaseis] data structures
+- C-accelerated, (optionally) MPI-parallelized misfit function evaluation
 - ability to interface with modern solvers, including AxiSEM and SPECFEM3D
 
 
 
 ## Getting started
 
-[Installation instructions](https://uafgeotools.github.io/mtuq/install/index.html)
+[Installation](https://uafgeotools.github.io/mtuq/install/index.html)
 
-[Quick start instruction](https://uafgeotools.github.io/mtuq/quick_start.html)
+[Quick start](https://uafgeotools.github.io/mtuq/quick_start.html)
 
 
 
 ## User guide
 
-[Learning Python and Obspy](https://uafgeotools.github.io/mtuq/user_guide/01.index)
+[Learning Python and Obspy](https://uafgeotools.github.io/mtuq/user_guide/01.html)
 
-[Acquiring seismic data](https://uafgeotools.github.io/mtuq/user_guide/02.index)
+[Acquiring seismic data](https://uafgeotools.github.io/mtuq/user_guide/02.html)
 
-[Acquiring Green's functions](https://uafgeotools.github.io/mtuq/user_guide/03.index)
+[Acquiring Green's functions](https://uafgeotools.github.io/mtuq/user_guide/03.html)
 
 [Library reference](https://uafgeotools.github.io/mtuq/install/index.html)
 
@@ -41,3 +41,4 @@ Additionally, MTUQ provides
 [ZhaoHelmberger1994]: https://pubs.geoscienceworld.org/ssa/bssa/article-abstract/84/1/91/102552/Source-estimation-from-broadband-regional?redirectedFrom=fulltext
 
 [ZhuHelmberger1996]: https://pubs.geoscienceworld.org/ssa/bssa/article-abstract/86/5/1634/120218/Advancement-in-source-estimation-techniques-using?redirectedFrom=fulltext
+
