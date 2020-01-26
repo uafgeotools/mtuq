@@ -23,4 +23,10 @@ Install MTUQ:
    pip install -e .
 
 
+Unpack seismic waveforms used by examples:
+
+.. code::
+
+    bash ./data/examples/unpack.bash
+    bash ./data/tests/unpack.bash
 
