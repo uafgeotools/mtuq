@@ -71,13 +71,12 @@ class Client(ClientBase):
     def _get_greens_tensor(self, station=None, origin=None):
         stream = Stream()
 
-        # download and unzip data
+        # download and unzip time series
         dirname = unzip(
             download_greens_tensor(self.url, self.model, station, origin))
 
-        # read data
+        # read time series
         stream = Stream()
-        stream.id = station.id
 
         if self.include_mt:
             for filename in GREENS_TENSOR_FILENAMES:
@@ -95,7 +94,7 @@ class Client(ClientBase):
                 for filename in SYNTHETICS_FILENAMES:
                     stream += obspy.read(dirname+'/'+filename, format='sac')
 
-                    # overwrite channel name
+                    # overwrite channel attribute
                     stream[-1].stats.channel = stream[-1].stats.channel[-1]+str(_i)
 
 
@@ -110,6 +109,8 @@ class Client(ClientBase):
         dt_old = float(stream[0].stats.delta)
 
         for trace in stream:
+            trace.stats.component = trace.stats.channel[0]
+
             # resample Green's functions
             data_old = trace.data
             data_new = resample(data_old, t1_old, t2_old, dt_old,
@@ -123,10 +124,6 @@ class Client(ClientBase):
             'model:%s' % self.model,
             'solver:%s' % 'syngine',
              ]
-
-        return GreensTensor(traces=[trace for trace in stream],
-            station=station, origin=origin, tags=tags)
-
 
         return GreensTensor(traces=[trace for trace in stream], 
             station=station, origin=origin, tags=tags,

@@ -99,8 +99,10 @@ class WeightParser(object):
             for row in reader:
                 _code = self._parse_code(row[0])
 
-                statics[_code]['body_wave_Z'] = 0.#float(row[11])
-                statics[_code]['body_wave_R'] = 0.#float(row[11])
+                # CAPUAF does not implement body-wave statics
+                statics[_code]['body_wave_Z'] = 0.
+                statics[_code]['body_wave_R'] = 0.
+
                 statics[_code]['surface_wave_Z'] = float(row[11])
                 statics[_code]['surface_wave_R'] = float(row[11])
                 statics[_code]['surface_wave_T'] = float(row[12])

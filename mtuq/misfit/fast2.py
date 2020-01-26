@@ -6,7 +6,9 @@ See ``mtuq/misfit/__init__.py`` for more information
 
 import numpy as np
 import time
+from copy import deepcopy
 from mtuq.misfit.fast1 import correlate
+from mtuq.util.lune import to_mij, to_xyz
 from mtuq.util.signal import get_components, get_time_sampling
 from mtuq.misfit import c_ext_L2
 
@@ -193,29 +195,18 @@ def _get_groups(groups, components):
 
 
 def _as_array(sources):
-    Ngreens = len(sources.get(sources.start))
-    Nsources = len(sources)
+    array = sources.as_array(callback=None)
 
-    array = np.zeros((
-        Nsources,
-        Ngreens, 
-        ))
+    if array.shape[1]==6:
+        # convert moment tensors to Mij parameterization (up,south,east)
+        return np.ascontiguousarray(to_mij(
+            array[:,0], array[:,1], array[:,2],  # rho, v, w
+            array[:,3], array[:,4], array[:,5])) # kappa, sigma, h
 
-    for _i, source in enumerate(sources):
-        array[_i, :] = source
-
-    return array
-
-
-def _as_array(sources):
-    from mtuq.util.lune import to_mij
-    callback = sources.callback
-    sources.callback = None
-    array = sources.as_array()
-    array = np.ascontiguousarray(to_mij(
-        array[:,0], array[:,1], array[:,2], array[:,3], array[:,4], array[:,5]))
-    sources.callback = callback
-    return array
+    elif array.shape[1]==3:
+        # convert forces to F1,F2,F3 parameterization (1:up,2:south,3:east)
+        return np.ascontiguousarray(to_xyz(
+            array[:,0], array[:,1], array[:,2])) # F0 (radius), theta (azimuth), phi (colatitude)
 
 
 #

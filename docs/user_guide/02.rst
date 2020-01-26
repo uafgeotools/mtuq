@@ -1,0 +1,50 @@
+
+Acquiring seismic data
+======================
+
+Acquiring and quality control checking seismic data can be one of the most challenging steps in an inversion.  This page describes our preferred data client and MTUQ's data and metadata format requirements.
+
+
+
+Data acquisition clients
+------------------------
+
+`IRIS <https://www.iris.edu>`_ and other scientific repositories host large volumes of seismic data.  Native `ObsPy clients <https://docs.obspy.org/master/packages/obspy.clients.iris.html>`_ and ObsPy wrappers such as `PySEP <https://github.com/uafgeotools/pysep>`_ provide a way of programmatically downloading waveforms from such hosts.
+
+PySEP is our preferred data acquisition client because it was developed at the same university as MTUQ.  Besides downloading waveforms through ObsPy calls, PySEP performs data processing and quality control checks so that the data processing and time discretization requirements described below are automatically satisfied.  
+
+Additionally, PySEP generates "weight files" that can optionally be used by `mtuq.process_data` to control the relative contribution of different datums to the data misfit function.
+
+
+
+File format, metadata, and data processing requirements
+-------------------------------------------------------
+
+MTUQ expects waveforms in SAC format with the following metadata information
+
+- station latitude
+- station longitude
+- network, station and location codes
+
+
+Additionally, the following procesing steps must be performed prior to reading the data by MTUQ
+
+- instrument response removed
+- traces rotated into vertical (Z), radial (R) and transverse (T) components
+
+
+
+Time discretization requirements
+--------------------------------
+
+If at all possible, the sampling rate and number of samples should be the same for all waveforms.  If these attributes vary in the data supplied to MTUQ, the code may fail or performance may be slower.
+
+The starttime of each waveform must be early enough and the endtime late enough to include body wave and surface wave arrivals, otherwise `mtuq.process_data` may raise exceptions.   (See also `mtuq.process_data` parameters `pick_type`, `window_type`, and `window_length`.)
+
+
+
+Other file formats
+-----------------
+
+Besides SAC files, many other file formats could be supported in principle.  By design, the functions `obspy.read` and `mtuq.read` share nearly the same input argument syntax, so new file format support could be added following functionality and syntax of `mtuq.io.readers.SAC`.
+

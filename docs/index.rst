@@ -1,15 +1,32 @@
-mtuq documentation
-==================
+MTUQ
+====
 
-.. warning::
-
-   MTUQ is still in under development.  This documentation is incomplete and describes planned rather than current functionality.
-
-
+Getting started
+---------------
 .. toctree::
    :maxdepth: 1
 
    install/index
-   tutorial/index
+   quick_start
+
+
+User guide
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   user_guide/01
+   user_guide/02
+   user_guide/03
+
+
+Library reference
+-----------------
+
+.. toctree::
+   :maxdepth: 1
+
    library/index
+
 

@@ -38,18 +38,15 @@ class GreensTensor(GreensTensorBase):
             self.tags += ['units:m']
 
 
-
-
     def _precompute(self):
         """ Computes numpy arrays used by get_synthetics
         """
         if self.include_mt:
             self._precompute_mt()
+            self._permute()
 
         if self.include_force:
             self._precompute_force()
-
-        self._permute_array()
 
 
     def _precompute_mt(self):
@@ -97,15 +94,13 @@ class GreensTensor(GreensTensorBase):
     def _precompute_force(self):
         array = self._array
         phi = np.deg2rad(self.azimuth)
+
         _j = 0
         if self.include_mt:
             _j += 6
 
         for _i, component in enumerate(self.components):
-            if not include_force:
-                break
-
-            elif component=='Z':
+            if component=='Z':
                 Z0 = self.select(channel="Z0")[0].data
                 Z1 = self.select(channel="Z1")[0].data
                 Z2 = self.select(channel="Z2")[0].data
@@ -131,7 +126,7 @@ class GreensTensor(GreensTensorBase):
 
 
 
-    def _permute_array(self):
+    def _permute(self):
         """ Accounts for different basis conventions
         """
         # The mathematical formulas above are based on the North-East-Down

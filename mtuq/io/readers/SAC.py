@@ -3,6 +3,7 @@ import glob
 import os
 import numpy as np
 import obspy
+import warnings
 
 from os.path import join
 from obspy.core import Stream
@@ -36,7 +37,11 @@ def read(filenames, station_id_list=None, event_id=None, tags=[]):
         try:
             data += obspy.read(filename, format='sac')
         except:
-            print('Not a SAC file: %d' % filename)
+            print('Not a SAC file: %s' % filename)
+
+    assert len(data) > 0, Exception(
+        "Failed to read in any SAC files.")
+
 
     # sort by station
     data_sorted = {}

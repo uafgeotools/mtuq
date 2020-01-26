@@ -162,12 +162,12 @@ def check_padding(dataset, time_shift_min, time_shift_max):
 
                 pad(trace, (time_shift_min, time_shift_max))
 
-                setattr(trace, 'npts_left', int(round(-time_shift_min/dt)))
-                setattr(trace, 'npts_right', int(round(+time_shift_max/dt)))
+                setattr(trace, 'npts_left', int(round(+time_shift_max/dt)))
+                setattr(trace, 'npts_right', int(round(-time_shift_min/dt)))
 
             else:
-                assert npts_left == int(round(-time_shift_min/dt))
-                assert npts_right == int(round(+time_shift_max/dt))
+                assert npts_left == int(round(+time_shift_max/dt))
+                assert npts_right == int(round(-time_shift_min/dt))
 
 
 def get_arrival(arrivals, phase):
@@ -228,4 +228,11 @@ def m_to_deg(distance_in_m):
 
 
 
+def isempty(dataset):
+    if len(dataset)==0:
+        return True
+    elif sum([len(stream) for stream in dataset])==0:
+        return True
+    else:
+        return False
 

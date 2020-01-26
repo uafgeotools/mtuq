@@ -1,10 +1,9 @@
-=================
-Library Reference
-=================
+Index
+=====
 
 .. warning::
 
-   MTUQ is still in under development.  This documentation is incomplete and describes planned rather than current functionality.
+   MTUQ is still in under development.  Some documentation may be incomplete or describe planned rather than current functionality.
 
 
 .. rubric:: Seismic data structures
@@ -73,8 +72,8 @@ Library Reference
     These classes provide low-level database and web service access.  Normally it is easier to use high-level functions ``mtuq.download_greens_tensors`` or ``mtuq.open_db`` instead.
 
 =================================================================================================  ================================================================================================= 
-`mtuq.io.clients.axisem_netcdf.Client <generated/mtuq.io.clients.axisem_netcdf.Client.html>`_       AxiSEM NetCDF database client (based on instaseis)
-`mtuq.io.clients.fk_sac.Client <generated/mtuq.io.clients.fk_sac.Client.html>`_                     FK database client
+`mtuq.io.clients.AxiSEM_NetCDF.Client <generated/mtuq.io.clients.AxiSEM_NetCDF.Client.html>`_       AxiSEM NetCDF database client (based on instaseis)
+`mtuq.io.clients.FK_SAC.Client <generated/mtuq.io.clients.FK_SAC.Client.html>`_                     FK database client
 `mtuq.io.clients.syngine.Client <generated/mtuq.io.clients.syngine.Client.html>`_                   Syngine web service client
 =================================================================================================  ================================================================================================= 
 

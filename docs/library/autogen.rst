@@ -26,8 +26,8 @@ autogen
    mtuq.download_greens_tensors
    mtuq.open_db
    mtuq.read
-   mtuq.io.clients.axisem_netcdf.Client
-   mtuq.io.clients.fk_sac.Client
+   mtuq.io.clients.AxiSEM_NetCDF.Client
+   mtuq.io.clients.FK_SAC.Client
    mtuq.io.clients.syngine.Client
    mtuq.misfit.simple
    mtuq.misfit.fast1

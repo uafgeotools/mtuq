@@ -4,7 +4,7 @@ Installing MTUQ on chinook
 
 Clone mtuq in a directory of your choice:
 
-    > git clone https://github.com/uafseismo/mtuq
+    > git clone https://github.com/uafgeotools/mtuq
 
 
 Then run the installation script:
@@ -78,7 +78,7 @@ Modifying the examples
 ----------------------
 
 To obtain moment tensor estimates for events other than the main Silwal2016 
-event, users can download waveforms using uafseismo/pysep and modify the MTUQ
+event, users can download waveforms using uafgeotools/pysep and modify the MTUQ
 examples as follows:
 
 - Change `path_data` to the pysep download directory

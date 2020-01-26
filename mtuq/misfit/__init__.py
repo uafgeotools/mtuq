@@ -5,7 +5,7 @@ import warnings
 from mtuq.misfit import simple, fast1, fast2
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
-from mtuq.util.signal import check_padding, get_components
+from mtuq.util.signal import check_padding, get_components, isempty
 
 
 
@@ -34,8 +34,7 @@ class Misfit(object):
     misfit values is returned of the same length as `sources`.
 
 
-
-    .. rubric :: Parameters
+    .. rubric:: Parameters
 
     ``norm`` (`str`)
 
@@ -64,6 +63,13 @@ class Misfit(object):
     ``time_shift_max`` (`float`): maximum allowable time shift (s)
 
 
+    .. note:: 
+
+      In our convention, a positive time shift means synthetics are arriving 
+      too early and need to be shifted in the positive direction to match the
+      the observed data. 
+
+
 
     .. rubric:: Optimization Levels
 
@@ -78,8 +84,8 @@ class Misfit(object):
     - a very fast Python/C++ version (``mtuq.misfit.fast2``)
 
 
-    While exactly the same in terms of input argument syntax, these three 
-    versions differ in terms of performance:
+    While the same in terms of input argument syntax, these three versions
+    differ in terms of performance:
 
     - ``simple`` provides a reference for understanding what the code is doing
       and for checking the correctness of the fast implementations
@@ -144,13 +150,20 @@ class Misfit(object):
         optimization_level=2, set_attributes=False):
         """ Evaluates misfit on given data
         """
+        if isempty(data):
+            warnings.warn(
+                "Empty data set. No misfit evaluations will be carried out",
+                Warning)
+
+            return np.zeros((len(sources), 1))
+
+
         # To allow time shifts, Green's functions must be longer than data,
-        # i.e., Green's functions must start -time_shift_min before data and
-        # end +time_shift_max after data.  One way to achieve this is by 
+        # i.e., Green's functions must start +time_shift_max before data and
+        # end -time_shift_min after data.  One way to achieve this is by 
         # supplying padding values to mtuq.ProcessData. If these padding values
         # were not previously supplied, then Green's functions  will be padded
         # with zeros by the following command.
-
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
 

@@ -68,6 +68,12 @@ class Client(ClientBase):
 
 
     def _get_greens_tensor(self, station=None, origin=None):
+        if station is None:
+            raise Exception("Missing station input argument")
+
+        if origin is None:
+            raise Exception("Missing station input argument")
+
         traces = []
 
         distance_in_m, _, _ = gps2dist_azimuth(
@@ -109,6 +115,8 @@ class Client(ClientBase):
                 format='sac')[0]
 
             trace.stats.channel = channels[_i]
+            trace.stats.component = channels[_i][0]
+
 
             # what are the start and end times of the Green's function?
             t1_old = float(origin.time)+float(trace.stats.starttime)

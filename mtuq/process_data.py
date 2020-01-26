@@ -16,8 +16,6 @@ from mtuq.util.signal import cut, get_arrival, m_to_deg
 class ProcessData(object):
     """ Performs filtering, windowing and other operations on seismic data
 
-
-
     .. rubric :: Usage
 
     Processing data is a two-step procedure. In the first step, the user 
@@ -30,7 +28,7 @@ class ProcessData(object):
         processed_stream = function(stream)
 
 
-    Data processing can also be applied to entire ``Dataset`` as follows:
+    Data processing can also be applied to an entire ``Dataset`` as follows:
 
     .. code::
 
@@ -67,7 +65,7 @@ class ProcessData(object):
     - ``'FK_metadata'``
       reads P, S arrival times from FK metadata
 
-    - ``'FK_metadata'``
+    - ``'SAC_metadata'``
       reads P, S arrival times from SAC metadata fields `t5`, `t6`
 
     - ``'user_supplied'``
@@ -452,63 +450,72 @@ class ProcessData(object):
 
 
 
-        #
-        # part 4a: determine window start and end times
-        #
+        for trace in traces:
 
-        if self.window_type == 'body_wave':
-            # reproduces CAPUAF body wave window
-            starttime = picks['P'] - 0.4*self.window_length
-            endtime = starttime + self.window_length
+            #
+            # part 4a: determine window start and end times
+            #
 
-        elif self.window_type == 'surface_wave':
-            # reproduces CAPUAF surface wave window
-            starttime = picks['S'] - 0.3*self.window_length
-            endtime = starttime + self.window_length
+            if self.window_type == 'body_wave':
+                # reproduces CAPUAF body wave window
+                starttime = picks['P'] - 0.4*self.window_length
+                endtime = starttime + self.window_length
 
-        starttime += float(origin.time)
-        endtime += float(origin.time)
+            elif self.window_type == 'surface_wave':
+                # reproduces CAPUAF surface wave window
+                starttime = picks['S'] - 0.3*self.window_length
+                endtime = starttime + self.window_length
+
+            starttime += float(origin.time)
+            endtime += float(origin.time)
 
 
-        #
-        # part 4b: apply statics
-        # 
-        if 'type:greens' in tags or\
-           'type:synthetics':
+            #
+            # part 4b: apply statics
+            # 
 
-            for trace in traces:
-                component = trace.stats.channel[-1].upper()
-                key = self.window_type +'_'+ component
+            # In our convention, a positive static time shift means synthetics
+            # are arriving too early and need to be shifted in the positive 
+            # direction to match the observed data. 
+
+            if self.apply_statics:
+                try:
+                    component = trace.stats.component
+                except:
+                    component = trace.stats.channel[-1].upper()
 
                 try:
-                    offset = self.statics[id][key]
-                    starttime += offset
-                    endtime += offset
-
+                    key = self.window_type +'_'+ component
+                    static = self.statics[id][key]
+                    trace.static_time_shift = static
                 except:
-                    pass
+                    print('Error reading static time shift: %s' % id)
+                    continue
+
+                if 'type:greens' in tags:
+                    starttime -= static
+                    endtime -= static
 
 
-        #
-        # part 4c: apply padding
-        # 
+            #
+            # part 4c: apply padding
+            # 
 
-        # using a longer window for Green's functions than for data allows for
-        # more accurate time-shift corrections
+            # using a longer window for Green's functions than for data allows for
+            # more accurate time-shift corrections
 
-        if 'type:greens' in tags:
-            starttime -= self.padding[0]
-            endtime += self.padding[1]
+            if 'type:greens' in tags:
+                starttime -= self.padding[0]
+                endtime += self.padding[1]
 
-            for trace in traces:
                 setattr(trace, 'npts_left', int(round(abs(self.padding[0])/dt)))
                 setattr(trace, 'npts_right', int(round(abs(self.padding[1])/dt)))
 
 
-        #
-        # part 4d: cut and taper traces
-        #
-        for trace in traces:
+            #
+            # part 4d: cut and taper trace
+            #
+
             # cuts trace and adjusts metadata
             cut(trace, starttime, endtime)
 
