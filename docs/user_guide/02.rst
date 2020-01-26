@@ -13,7 +13,7 @@ Data acquisition clients
 
 PySEP is our preferred data acquisition client because it was developed at the same university as MTUQ.  Besides downloading waveforms through ObsPy calls, PySEP performs data processing and quality control checks so that the data processing and time discretization requirements described below are automatically satisfied.  
 
-Additionally, PySEP generates "weight files" that can optionally be used by ``mtuq.process_data`` to control the relative contribution of different datums to the data misfit function.
+Additionally, PySEP generates "weight files" that can optionally be used by `mtuq.process_data` to control the relative contribution of different datums to the data misfit function.
 
 
 
@@ -39,12 +39,12 @@ Time discretization requirements
 
 If at all possible, the sampling rate and number of samples should be the same for all waveforms.  If these attributes vary in the data supplied to MTUQ, the code may fail or performance may be slower.
 
-The starttime of each waveform must be early enough and the endtime late enough to include body wave and surface wave arrivals, otherwise ``mtuq.process_data`` may raise exceptions.   (See also `mtuq.process_data` parameters `pick_type`, `window_type`, and `window_length`.)
+The starttime of each waveform must be early enough and the endtime late enough to include body wave and surface wave arrivals, otherwise `mtuq.process_data` may raise exceptions.   (See also `mtuq.process_data` parameters `pick_type`, `window_type`, and `window_length`.)
 
 
 
 Other file formats
 -----------------
 
-Besides SAC files, many other file formats could be supported in principle.  By design, the functions ``obspy.read`` and ``mtuq.read`` share nearly the same input argument syntax, so new file format support could be added following functionality and syntax of ``mtuq.io.readers.SAC``.
+Besides SAC files, many other file formats could be supported in principle.  By design, the functions `obspy.read` and `mtuq.read` share nearly the same input argument syntax, so new file format support could be added following functionality and syntax of `mtuq.io.readers.SAC`.
 

@@ -3,7 +3,7 @@ Index
 
 .. warning::
 
-   MTUQ is still in under development.  Some documentation may incomplete or describe planned rather than current functionality.
+   MTUQ is still in under development.  Some documentation may be incomplete or describe planned rather than current functionality.
 
 
 .. rubric:: Seismic data structures

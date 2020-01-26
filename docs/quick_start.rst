@@ -4,15 +4,15 @@ Quick start information
 Serial example
 --------------
 
-One of the easiest ways to get started is to try out ``examples/SerialGridSearch.Double.py``.  This script estimates the focal mechanism of an event from `Silwal2016`, using raw seismic data included within the MTUQ repository. 
+One of the easiest ways to get started is to try out `examples/SerialGridSearch.Double.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  This script estimates the focal mechanism of an event from `Silwal2016`, using raw seismic data included within the MTUQ repository. 
 
-Before running the example, users must install MTUQ following these instructions. 
+Before running the example, users must install MTUQ following `these instructions <https://uafgeotools.github.io/mtuq/install/index.html>`_.
 
-After running the example, users can check their result against the expected output shown here.
+After running the example, users can check their result against this `expected output <https://github.com/rmodrak/mtbench/blob/master/output/SilwalTape2016/figures_syngine/20090407201255351.png>`_.
 
 .. warning::
 
-  At the time this documentation was written, there were ObsPy graphics bugs.  Please read this important note.
+  At the time this documentation was written, there were ObsPy graphics bugs.  `Please see here <https://uafgeotools.github.io/mtuq/install/index.html>`_ for more information.
 
 .. note::
 
@@ -23,12 +23,12 @@ After running the example, users can check their result against the expected out
 Parallel examples
 -----------------
 
-All the other scripts in ``examples/`` use MPI parallelization.  To see if MPI executables and libraries are present in your environment, start by checking if `mpirun` is on the system path.  If necessary, ask a system administrator for assistance configuring MPI.
+All the other scripts in `examples/` use MPI parallelization.  To see if MPI executables and libraries are present in your environment, start by checking if `mpirun` is on the system path.  If necessary, ask a system administrator for assistance configuring MPI.
 
 
 
-Modifying the examples
-----------------------
+Modifying examples
+------------------
 
 To obtain moment tensor estimates for events other than the `Silwal2016` event, users can download waveforms using PySEP (github.com/uafgeotools/pysep) and modify the examples as follows:
 

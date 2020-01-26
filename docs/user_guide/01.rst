@@ -3,11 +3,8 @@ Learning Python and ObsPy
 
 MTUQ is written in Python, an interpreted language with a strong scientific ecosystem.  
 
-One of the most widely-used Python packages for seismology is `ObsPy <https://github.com/obspy/obspy/wiki>`_. 
+One of the most widely-used Python packages for seismology is `ObsPy <https://github.com/obspy/obspy/wiki>`_.  To avoid reinventing the wheel, MTUQ makes extensive use of ObsPy data structures.
 
-An excellent place to start learning about Python or ObsPy is the `ObsPy tutorial <http://docs.obspy.org/tutorial/index.html>`_.  These `other links <https://wiki.python.org/moin/BeginnersGuide/Programmers>`_ may also be helpful.
+An excellent place to start learning about Python or ObsPy is the `ObsPy tutorial <http://docs.obspy.org/tutorial/index.html>`_.
 
-
-.. note::
-   MTUQ makes extensive use of ObsPy data structures to allow easy interfacing with other codes.
 
