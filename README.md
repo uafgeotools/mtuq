@@ -2,11 +2,11 @@
 
 MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data.  
 
-The package includes the functionality of [ZhaoHelmberger1994] and [ZhuHelmberger1996] and has been [tested against](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) their Perl/C codes.
+The package reproduces the functionality of [ZhaoHelmberger1994] and [ZhuHelmberger1996] and has been [tested against](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) their Perl/C codes.
 
 Additionally, MTUQ provides
 
-- a flexible Python design, borrowing from [ObsPy] and [instaseis] data structures
+- a flexible Python design, borrowing from [ObsPy] and [Instaseis] data structures
 - C-accelerated, (optionally) MPI-parallelized misfit function evaluation
 - ability to interface with modern solvers, including AxiSEM and SPECFEM3D
 
@@ -22,7 +22,7 @@ Additionally, MTUQ provides
 
 ## User guide
 
-[Learning Python and Obspy](https://uafgeotools.github.io/mtuq/user_guide/01.html)
+[Learning Python and ObsPy](https://uafgeotools.github.io/mtuq/user_guide/01.html)
 
 [Acquiring seismic data](https://uafgeotools.github.io/mtuq/user_guide/02.html)
 
@@ -34,7 +34,7 @@ Additionally, MTUQ provides
 
 [![Build Status](https://travis-ci.org/uafseismo/mtuq.svg?branch=master)](https://travis-ci.org/uafseismo/mtuq)
 
-[instaseis]: http://instaseis.net/
+[Instaseis]: http://instaseis.net/
 
 [obspy]: https://github.com/obspy/obspy/wiki
 

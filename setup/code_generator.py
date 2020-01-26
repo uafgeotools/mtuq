@@ -295,7 +295,7 @@ Paths_BenchmarkCAP="""
 
 
     # the following directories correspond to the moment tensors in the list 
-    # "grid" below
+    # "sources" below
     paths = []
     paths += [fullpath('data/tests/benchmark_cap/20090407201255351/0')]
     paths += [fullpath('data/tests/benchmark_cap/20090407201255351/1')]
