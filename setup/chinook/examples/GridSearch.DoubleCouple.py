@@ -86,7 +86,7 @@ if __name__=='__main__':
 
     sources = DoubleCoupleGridRandom(
         npts=50000,
-        magnitude=4.5)
+        magnitudes=[4.5])
 
     wavelet = Trapezoid(
         magnitude=4.5)

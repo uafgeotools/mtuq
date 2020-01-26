@@ -477,7 +477,7 @@ Grid_DoubleCouple="""
 
     sources = DoubleCoupleGridRandom(
         npts=50000,
-        magnitude=4.5)
+        magnitudes=[4.5])
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -498,7 +498,7 @@ Grid_DoubleCoupleMagnitudeDepth="""
 
     sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
-        magnitude=magnitudes)
+        magnitudes=magnitudes)
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -514,7 +514,7 @@ Grid_FullMomentTensor="""
 
     sources = FullMomentTensorGridRandom(
         npts=1000000,
-        magnitude=4.5)
+        magnitudes=[4.5])
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -529,7 +529,7 @@ Grid_TestDoubleCoupleMagnitudeDepth="""
 
     sources = DoubleCoupleGridRegular(
         npts_per_axis=5,
-        magnitude=[4.4, 4.5, 4.6])
+        magnitudes=[4.4, 4.5, 4.6])
 
     wavelet = Trapezoid(
         magnitude=4.5)

@@ -402,11 +402,14 @@ class UnstructuredGrid(object):
         return self
 
 
-def FullMomentTensorGridRandom(magnitude=None, npts=1000000, callback=to_mij):
+def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
     """ Full moment tensor grid with randomly-spaced values
 
-    Drawn from the uniform distribution defined by `Tape2015`
-    (https://doi.org/10.1093/gji/ggv262)
+    Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
+    returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
+
+    Moment tensors are drawn from the uniform distribution defined by 
+    `Tape2015` (https://doi.org/10.1093/gji/ggv262)
 
     .. rubric :: Usage
 
@@ -416,7 +419,7 @@ def FullMomentTensorGridRandom(magnitude=None, npts=1000000, callback=to_mij):
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
-    magnitude, count = _check_magnitude(magnitude)
+    magnitudes, count = _check_magnitudes(magnitudes)
     N = npts*count
 
     # lower bound, upper bound, number of points
@@ -428,7 +431,7 @@ def FullMomentTensorGridRandom(magnitude=None, npts=1000000, callback=to_mij):
 
     # magnitude is treated separately
     rho = np.zeros((count, npts))
-    for _i, Mw in enumerate(magnitude):
+    for _i, Mw in enumerate(magnitudes):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho[_i, :] = M0*np.sqrt(2.)
 
@@ -439,13 +442,16 @@ def FullMomentTensorGridRandom(magnitude=None, npts=1000000, callback=to_mij):
         ('kappa', random(*kappa)),
         ('sigma', random(*sigma)),
         ('h', random(*h))),
-        callback=callback)
+        callback=to_mij)
 
 
-def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=20, callback=to_mij):
+def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
     """ Full moment tensor grid with regularly-spaced values
 
-    Based on the uniform distribution defined by `Tape2015`
+    Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
+    returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^5`.
+
+    Grid discretization based on the uniform distribution defined by `Tape2015`
     (https://doi.org/10.1093/gji/ggv262)
 
     .. rubric :: Usage
@@ -456,7 +462,7 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=20, callback=to_mi
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
-    magnitude, count = _check_magnitude(magnitude)
+    magnitudes, count = _check_magnitudes(magnitudes)
     N = npts_per_axis
 
     # lower bound, upper bound, number of points
@@ -468,7 +474,7 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=20, callback=to_mi
 
     # magnitude is treated separately
     rho = []
-    for Mw in magnitude:
+    for Mw in magnitudes:
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho += [M0*np.sqrt(2)]
 
@@ -479,11 +485,14 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=20, callback=to_mi
         ('kappa', regular(*kappa)),
         ('sigma', regular(*sigma)),
         ('h', regular(*h))),
-        callback=callback)
+        callback=to_mij)
 
 
-def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
+def DoubleCoupleGridRandom(magnitudes=None, npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
+
+    Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
+    returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
 
     .. rubric :: Usage
 
@@ -493,7 +502,7 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
-    magnitude, count = _check_magnitude(magnitude)
+    magnitudes, count = _check_magnitudes(magnitudes)
     N = npts*count
 
     # lower bound, upper bound, number of points
@@ -503,7 +512,7 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
 
     # magnitude is treated separately
     rho = np.zeros((count, npts))
-    for _i, Mw in enumerate(magnitude):
+    for _i, Mw in enumerate(magnitudes):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho[_i, :] = M0*np.sqrt(2.)
 
@@ -514,11 +523,14 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
         ('kappa', random(*kappa)),
         ('sigma', random(*sigma)),
         ('h', random(*h))),
-        callback=callback)
+        callback=to_mij)
 
 
-def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
+def DoubleCoupleGridRegular(magnitudes=None, npts_per_axis=40):
     """ Double-couple moment tensor grid with regularly-spaced values
+
+    Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
+    returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^3`.
 
     .. rubric :: Usage
 
@@ -528,7 +540,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """ 
-    magnitude, count = _check_magnitude(magnitude)
+    magnitudes, count = _check_magnitudes(magnitudes)
     N = npts_per_axis
 
     # lower bound, upper bound, number of points
@@ -538,7 +550,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
 
     # magnitude is treated separately
     rho = []
-    for Mw in magnitude:
+    for Mw in magnitudes:
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho += [M0*np.sqrt(2)]
 
@@ -549,7 +561,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
         ('kappa', regular(*kappa)),
         ('sigma', regular(*sigma)),
         ('h', regular(*h))),
-        callback=callback)
+        callback=to_mij)
 
 
 
@@ -559,7 +571,7 @@ def ForceGridRegular(magnitude_in_N=1., npts_per_axis=80):
     raise NotImplementedError
 
 
-def ForceGridRandom(magnitude_in_N=1., npts=10000, callback=to_xyz):
+def ForceGridRandom(magnitude_in_N=1., npts=10000):
     """ Force grid with randomly-spaced values
     """
     magnitude_in_N, count = _check_force(magnitude_in_N)
@@ -576,10 +588,10 @@ def ForceGridRandom(magnitude_in_N=1., npts=10000, callback=to_xyz):
         ('F0', F0.flatten()),
         ('theta', random(*theta)),
         ('h', random(*h))),
-        callback=callback)
+        callback=to_xyz)
 
 
-def _check_magnitude(M):
+def _check_magnitudes(M):
     if type(M) in [np.ndarray, list, tuple]:
         count = len(M)
     elif type(M) in [int, float]:
