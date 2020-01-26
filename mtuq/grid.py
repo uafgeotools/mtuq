@@ -106,11 +106,11 @@ class Grid(object):
 
         .. rubric:: callback functions
 
-            If a ``callback`` function was given when creating a grid, then 
-            ``as_array`` returns the result of applying the callback to the 
-            i-th grid point.  This behavior can be overridden by supplying a 
-            callback function as a keyword argument to ``as_array`` itself.  
-            If ``callback`` is ``None``, then no function is applied.
+        If a ``callback`` function was given when creating a grid, then 
+        ``as_array`` returns the result of applying the callback to the 
+        i-th grid point.  This behavior can be overridden by supplying a 
+        callback function as a keyword argument to ``as_array`` itself.  
+        If ``callback`` is ``None``, then no function is applied.
 
         """
         # optionally override default callback
@@ -130,11 +130,11 @@ class Grid(object):
 
         .. rubric:: callback functions
 
-            If a ``callback`` function was given when creating a grid, then 
-            ``geet`` returns the result of applying the callback to the 
-            i-th grid point.  This behavior can be overridden by supplying a 
-            callback function as a keyword argument to ``geet`` itself.  
-            If ``callback`` is ``None``, then no function is applied.
+        If a ``callback`` function was given when creating a grid, then 
+        ``geet`` returns the result of applying the callback to the 
+        i-th grid point.  This behavior can be overridden by supplying a 
+        callback function as a keyword argument to ``geet`` itself.  
+        If ``callback`` is ``None``, then no function is applied.
         """
         # optionally override default callback
         if 'callback' in kwargs:
@@ -304,11 +304,11 @@ class UnstructuredGrid(object):
 
         .. rubric:: callback functions
 
-            If a ``callback`` function was given when creating a grid, then 
-            ``as_array`` returns the result of applying the callback to the 
-            i-th grid point.  This behavior can be overridden by supplying a 
-            callback function as a keyword argument to ``as_array`` itself.  
-            If ``callback`` is ``None``, then no function is applied.
+        If a ``callback`` function was given when creating a grid, then 
+        ``as_array`` returns the result of applying the callback to the 
+        i-th grid point.  This behavior can be overridden by supplying a 
+        callback function as a keyword argument to ``as_array`` itself.  
+        If ``callback`` is ``None``, then no function is applied.
 
         """
 
@@ -329,11 +329,11 @@ class UnstructuredGrid(object):
 
         .. rubric:: callback functions
 
-            If a ``callback`` function was given when creating a grid, then 
-            ``geet`` returns the result of applying the callback to the 
-            i-th grid point.  This behavior can be overridden by supplying a 
-            callback function as a keyword argument to ``geet`` itself.  
-            If ``callback`` is ``None``, then no function is applied.
+        If a ``callback`` function was given when creating a grid, then 
+        ``geet`` returns the result of applying the callback to the 
+        i-th grid point.  This behavior can be overridden by supplying a 
+        callback function as a keyword argument to ``geet`` itself.  
+        If ``callback`` is ``None``, then no function is applied.
 
         """
         # optionally override default callback

@@ -34,7 +34,7 @@ class Misfit(object):
     misfit values is returned of the same length as `sources`.
 
 
-    .. rubric :: Parameters
+    .. rubric:: Parameters
 
     ``norm`` (`str`)
 

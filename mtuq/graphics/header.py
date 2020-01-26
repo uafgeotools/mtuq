@@ -142,28 +142,31 @@ class UAFStyleHeader(Base):
         ax.imshow(img, extent=(xp,xp+diameter,yp,yp+diameter))
 
 
-    def write(self, height, offset):
+    def write(self, height, width, margin_left, margin_top):
         """ Writes header text to current figure
         """
         ax = self._get_axis(height)
+
+        px0 = (margin_left + 0.75*height)/width + 0.05
+        py0 = 0.8 - margin_top/height
 
         # calculate focal mechanism
         kappa, sigma, theta, _, gamma, delta = 0., 0., 0., 0., 0., 0.
 
         # add beachball to upper left corner
-        self.add_beachball(ax, height, offset)
+        self.add_beachball(ax, height, margin_left)
 
 
         # write text line #1
-        px = 0.125
-        py = 0.65
+        px = px0
+        py = py0
         line = 'Event %s  Model %s  Depth %d km' % (
             self.event_name, self.model, self.depth_in_km)
         _write_text(line, px, py, ax, fontsize=14)
 
 
         # write text line #2
-        px = 0.125
+        px = px0
         py -= 0.175
         line = u'FM %d %d %d    $M_w$ %.1f   %s %d   %s %d   rms %.1e   VR %.1f' %\
                 (kappa, sigma, theta, self.magnitude, u'\u03B3', gamma, u'\u03B4', delta, 0, 0)
@@ -171,7 +174,7 @@ class UAFStyleHeader(Base):
 
 
         # write text line #3
-        px = 0.125
+        px = px0
         py -= 0.175
         line = 'passbands (s):  bw %.1f - %.1f,  sw %.1f - %.1f   ' %\
                 (self.bw_T_min, self.bw_T_max, self.sw_T_min, self.sw_T_max)
@@ -181,7 +184,7 @@ class UAFStyleHeader(Base):
 
 
         # write text line #4
-        px = 0.125
+        px = px0
         py -= 0.175
         line = 'norm %s   N %d Np %d Ns %d' %\
                 (self.norm, 0, 0, 0,)
@@ -192,23 +195,27 @@ class Header(UAFStyleHeader):
     """ Stores information from a moment tensor inversion and writes text to 
     the top of a matplotlib figure
     """
-    def write(self, height, offset):
+    def write(self, height, width, margin_left, margin_top):
         """ Writes header text to current figure
         """
         ax = self._get_axis(height)
-        self.add_beachball(ax, height, offset)
+
+        px0 = (margin_left + 0.75*height)/width + 0.05
+        py0 = 0.8 - margin_top/height
+
+        self.add_beachball(ax, height, margin_left)
 
 
         # write text line #1
-        px = 0.125
-        py = 0.65
+        px = px0
+        py = py0
         line = '%s  $M_w$ %.2f  Depth %d km' % (
             self.event_name, self.magnitude, self.depth_in_km)
         _write_bold(line, px, py, ax, fontsize=16)
 
 
         # write text line #2
-        px = 0.125
+        px = px0
         py -= 0.175
         line = u'Model %s   Solver %s   %s norm %.1e   VR %1.3f' %\
                 (self.model, self.solver, self.norm, 1., 0.)
@@ -216,7 +223,7 @@ class Header(UAFStyleHeader):
 
 
         # write text line #3
-        px = 0.125
+        px = px0
         py -= 0.175
         line = 'passbands (s):  bw %.1f - %.1f ,  sw %.1f - %.1f   ' %\
                 (self.bw_T_min, self.bw_T_max, self.sw_T_min, self.sw_T_max)
@@ -226,7 +233,7 @@ class Header(UAFStyleHeader):
 
 
         # write text line #4
-        px = 0.125
+        px = px0
         py -= 0.175
         line = '$M_{ij}$ = [%.2e  %.2e  %.2e  %.2e  %.2e  %.2e]' % tuple(self.mt)
         _write_text(line, px, py, ax, fontsize=12)

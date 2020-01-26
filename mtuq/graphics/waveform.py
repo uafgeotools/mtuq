@@ -30,20 +30,28 @@ def plot_data_synthetics(filename,
 
     """ Creates CAP-style data/synthetics figure
     """
+    if _isempty(data_bw):
+        pass
+
+    if _isempty(data_sw):
+        raise Exception('Empty dataset')
 
     # how many stations have at least one trace?
     nstations = _count([data_bw, data_sw])
 
-    assert nstations > 0, Exception(
-        'Empty datasets supplied to plot_data_synthetics')
 
     # dimensions of subplot array
-    nrow = nstations
-    ncol = 5
+    nrows = nstations
+    ncolumns = 6
     _irow = 0
 
+    # column 0 - station labels
+    # columns 1,2 - body wave traces
+    # columns 3,4,5 - surface wave traces
+    column_width_ratios = [0.1,0.4,0.4,1.,1.,1.]
+
     # figure dimensions in inches
-    height = 1.4*nrow
+    height = 1.4*nrows
     width = 15.
     margin_bottom = 0.25
     margin_top = 0.25
@@ -51,41 +59,63 @@ def plot_data_synthetics(filename,
     margin_right = 0.25
 
     if header:
-        margin_top = 2.
+        header_height = 1.75
+        header_width = width
+        header_margin_top = margin_top
+        header_margin_left = margin_left
+        height += header_height
+    else:
+        header_height = 0.
+        header_width = 0.
+        header_margin_top = 0.
+        header_margin_bottom = 0.
 
     if station_labels:
-        margin_left += 0.9
+        margin_left += 0.5
 
     height += margin_bottom
     height += margin_top
     width += margin_left
     width += margin_right
 
+    # adjust dimensions if body waves absent
+    if _isempty(data_bw):
+        width -= 4
+        column_width_ratios=[0.1,0.,0.,1.,1.,1.]
+    
+
     # initialize figure
-    fig, axes = pyplot.subplots(nrow, ncol, 
+    fig, axes = pyplot.subplots(nrows, ncolumns, 
         figsize=(width, height),
         subplot_kw=dict(clip_on=False),
-        gridspec_kw=dict(width_ratios=[0.4,0.4,1.,1.,1.]))
+        gridspec_kw=dict(width_ratios=column_width_ratios)
+        )
 
     pyplot.subplots_adjust(
         left=margin_left/width,
         right=1.-margin_right/width,
         bottom=margin_bottom/height,
-        top=1.-(margin_top)/height,
+        top=1.-(header_height+margin_top)/height,
         wspace=0.,
         hspace=0.,
         )
 
     _hide_axes(axes)
-    add_component_labels(axes)
+
+
+    # add labels above each column
+    add_component_labels(axes,
+        body_wave_labels=(not _isempty(data_bw)),
+        surface_wave_labels=(not _isempty(data_sw)),
+        )
 
     if header:
-        # write CAP-style header
-        header_height = margin_top
-        header_offset = margin_left-int(bool(station_labels))*0.9
-        header.write(header_height, header_offset)
+        # write CAPUAF-style header
+        header.write(header_height, header_width,
+            header_margin_left, header_margin_top)
 
-    # determine maximum amplitudes
+
+    # determine maximum trace amplitudes
     max_amplitude_bw = 0.
     if data_bw.max() > max_amplitude_bw:
         max_amplitude_bw = data_bw.max()
@@ -134,9 +164,9 @@ def plot_data_synthetics(filename,
 
             # plot traces
             if component=='Z':
-                axis = axes[_irow][0]
-            elif component=='R':
                 axis = axes[_irow][1]
+            elif component=='R':
+                axis = axes[_irow][2]
             else:
                 continue
 
@@ -148,7 +178,7 @@ def plot_data_synthetics(filename,
                 ylim = [-2*max_trace, +2*max_trace]
                 axis.set_ylim(*ylim)
             elif normalize=='maximum_amplitude':
-                ylim = [-1.5*max_amplitude_bw, +1.5*max_amplitude_bw]
+                ylim = [-2*max_amplitude_bw, +2*max_amplitude_bw]
                 axis.set_ylim(*ylim)
 
             if trace_labels:
@@ -175,11 +205,11 @@ def plot_data_synthetics(filename,
 
             # plot traces
             if component=='Z':
-                axis = axes[_irow][2]
-            elif component=='R':
                 axis = axes[_irow][3]
-            elif component=='T':
+            elif component=='R':
                 axis = axes[_irow][4]
+            elif component=='T':
+                axis = axes[_irow][5]
             else:
                 continue
 
@@ -191,7 +221,7 @@ def plot_data_synthetics(filename,
                 ylim = [-max_trace, +max_trace]
                 axis.set_ylim(*ylim)
             elif normalize=='maximum_amplitude':
-                ylim = [-0.8*max_amplitude_sw, +0.8*max_amplitude_sw]
+                ylim = [-max_amplitude_sw, +max_amplitude_sw]
                 axis.set_ylim(*ylim)
 
             if trace_labels:
@@ -270,38 +300,41 @@ def plot(axis, dat, syn, label=None):
     d = dat.data
     s = syn.data
 
-    # in theory, ``clip_on=False`` and ``zorder=10`` should prevent the plotted
-    # data from getting "clipped", but this doesn't seem to be happening
-    # in practice
-    axis.plot(t, d, 'k', clip_on=False, zorder=10)
-    axis.plot(t, s[start:stop], 'r', clip_on=False, zorder=10)
+    # ``clip_on=False`` and ``zorder=10`` should prevent the plotted data from
+    # getting "clipped", but this doesn't seem to be happening in practice
+    axis.plot(t, d, 'k', linewidth=1.,
+        clip_on=False, zorder=10)
+    axis.plot(t, s[start:stop], 'r', linewidth=0.75, 
+        clip_on=False, zorder=10)
 
 
-def add_component_labels(axes):
-    """ Displays station id, distance, and azimuth to the left of current axes
+def add_component_labels(axes, body_wave_labels=True, surface_wave_labels=True):
+    """ Displays component name above each column
     """
     font = FontProperties()
     font.set_weight('bold')
 
-    ax = axes[0][0]
-    pyplot.text(0.,0.70, 'Z', fontproperties=font, fontsize=16, 
-        transform=ax.transAxes)
+    if body_wave_labels:
+        ax = axes[0][1]
+        pyplot.text(0.,0.70, 'Z', fontproperties=font, fontsize=16, 
+            transform=ax.transAxes)
 
-    ax = axes[0][1]
-    pyplot.text(0.,0.70, 'R', fontproperties=font, fontsize=16, 
-        transform=ax.transAxes)
+        ax = axes[0][2]
+        pyplot.text(0.,0.70, 'R', fontproperties=font, fontsize=16, 
+            transform=ax.transAxes)
 
-    ax = axes[0][2]
-    pyplot.text(0.,0.70, 'Z', fontproperties=font, fontsize=16,
-        transform=ax.transAxes)
+    if surface_wave_labels:
+        ax = axes[0][3]
+        pyplot.text(0.,0.70, 'Z', fontproperties=font, fontsize=16,
+            transform=ax.transAxes)
 
-    ax = axes[0][3]
-    pyplot.text(0.,0.70, 'R', fontproperties=font, fontsize=16,
-        transform=ax.transAxes)
+        ax = axes[0][4]
+        pyplot.text(0.,0.70, 'R', fontproperties=font, fontsize=16,
+            transform=ax.transAxes)
 
-    ax = axes[0][4]
-    pyplot.text(0.,0.70, 'T', fontproperties=font, fontsize=16,
-        transform=ax.transAxes)
+        ax = axes[0][5]
+        pyplot.text(0.,0.70, 'T', fontproperties=font, fontsize=16,
+            transform=ax.transAxes)
 
 
 def add_station_labels(ax, station, origin):
@@ -315,15 +348,15 @@ def add_station_labels(ax, station, origin):
 
     # display station name
     label = '.'.join([station.network, station.station])
-    pyplot.text(-0.5,0.50, label, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-1.,0.50, label, fontsize=12, transform=ax.transAxes)
 
     # display distance
     distance = '%d km' % round(distance_in_m/1000.)
-    pyplot.text(-0.5,0.35, distance, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-1.,0.35, distance, fontsize=12, transform=ax.transAxes)
 
     # display azimuth
     azimuth =  '%d%s' % (round(azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(-0.5,0.20, azimuth, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-1.,0.20, azimuth, fontsize=12, transform=ax.transAxes)
 
 
 
@@ -390,6 +423,10 @@ def _count(datasets):
                 count += 1
                 break
     return count
+
+
+def _isempty(dataset):
+    return bool(_count([dataset])==0)
 
 
 def _max(dat, syn):
