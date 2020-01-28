@@ -7,7 +7,7 @@ from numpy import pi as PI
 from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_mij, to_xyz
+from mtuq.util.lune import to_mij, to_rtp
 
 
 
@@ -588,7 +588,7 @@ def ForceGridRandom(magnitude_in_N=1., npts=10000):
         ('F0', F0.flatten()),
         ('theta', random(*theta)),
         ('h', random(*h))),
-        callback=to_xyz)
+        callback=to_rtp)
 
 
 def _check_magnitudes(M):
