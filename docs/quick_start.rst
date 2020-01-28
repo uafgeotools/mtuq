@@ -30,7 +30,7 @@ All the other scripts in `examples/` use MPI parallelization.  To see if MPI exe
 Modifying examples
 ------------------
 
-To obtain moment tensor estimates for events other than the `Silwal2016` event, users can download waveforms using PySEP (github.com/uafgeotools/pysep) and modify the examples as follows:
+To obtain moment tensor estimates for events other than `Silwal2016`, users can download waveforms using PySEP (github.com/uafgeotools/pysep) and modify the examples as follows:
 
 - Change `path_data` to the new PySEP download directory
 
