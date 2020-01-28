@@ -48,6 +48,8 @@ ENTRY_POINTS = {
         'AXISEM_NETCDF = mtuq.io.clients.AxiSEM_NetCDF:Client',
         'FK = mtuq.io.clients.FK_SAC:Client',
         'FK_SAC = mtuq.io.clients.FK_SAC:Client',
+        'SPECFEM3D = mtuq.io.clients.SPECFEM3D_SAC:Client',
+        'SPECFEM3D_SAC = mtuq.io.clients.SPECFEM3D_SAC:Client',
         'SYNGINE = mtuq.io.clients.syngine:Client',
         ]
     }
