@@ -82,9 +82,10 @@ class Client(ClientBase):
         stream.id = station.id
 
         if self.include_mt:
-            dirname = station.id
+            prefix = station.id
             for suffix in SUFFIXES:
-                trace = obspy.read(dirname+'.'+suffix+'.sac', format='sac')[0]
+                trace = obspy.read(
+                    self.path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
                 trace.component = suffix
                 stream += trace
 
