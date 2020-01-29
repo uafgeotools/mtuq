@@ -23,7 +23,15 @@ Install MTUQ:
 
    source mtuq_env/bin/activate
    cd mtuq_src
+   pip install numpy
+   pip install obspy instaseis
    pip install -e .
 
 
+Unpack seismic waveforms used by examples:
+
+.. code::
+
+    bash ./data/examples/unpack.bash
+    bash ./data/tests/unpack.bash
 

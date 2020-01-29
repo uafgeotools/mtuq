@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 cd $(dirname ${BASH_SOURCE[0]})
 
@@ -9,7 +9,7 @@ make html
 cd _build/html
 touch .nojekyll
 git init
-git remote add origin git@github.com:uafseismo/mtuq.git
+git remote add origin git@github.com:uafgeotools/mtuq.git
 git checkout -b gh-pages
 git add -A
 git commit -m "Added website"

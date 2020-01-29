@@ -42,8 +42,8 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
             # time sampling scheme
             npts, dt = get_time_sampling(d)
-            padding_left = int(-time_shift_min/dt)
-            padding_right = int(+time_shift_max/dt)
+            padding_left = int(+time_shift_max/dt)
+            padding_right = int(-time_shift_min/dt)
 
 
             #

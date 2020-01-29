@@ -10,7 +10,7 @@ Role of Green's functions
 
 In source inversions, the main reason Green's functions are useful is that they provide computaional savings.  It is usually cheaper to generate synthetics by summing Green's functions than it is to perform many individual wavefield simulations.
 
-In MTUQ, `GreensTensor objects <https://uafgeotools.github.io/mtuq/library>`_ provide access to the full set of Green's functions needed to describe the medium response between a given station and origin.
+In MTUQ, `GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to the full set of Green's functions needed to describe the medium response between a given station and origin.
 
 
 
@@ -22,8 +22,8 @@ One of the easiest ways to acquire Green's functions is to download them using `
 At the time this documentation was written, one limitation of syngine is that Green's functions are availble from only a handful of Earth models.  Another limitation is that syngine provides Green's functions only at specific stations, not over the whole Earth.  If these limitations affect your use case, an alternative is to compute your own Green's function database, as described below.
 
 
-Computing Green's functions for 1D Earth models
------------------------------------------------
+Computing Green's functions from 1D Earth models
+------------------------------------------------
 
 MTUQ currently supports 1D Green's functions from two solvers: AxiSEM (preferred) and FK.
 
@@ -49,7 +49,7 @@ To open an FK database client in MTUQ:
 
 
 
-Once opened, an AxiSEM of FK database client can be used to generate `GreensTensor` objects:
+Once opened, an AxiSEM of FK database client can be used to generate `GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects as follows:
 
 .. code::
 
@@ -59,15 +59,50 @@ Once opened, an AxiSEM of FK database client can be used to generate `GreensTens
 
 
 
-Computing Green's functions for 3D Earth models
------------------------------------------------
+Computing Green's functions from 3D Earth models
+------------------------------------------------
 
-.. warning::
-  
-   This section describes features still under development.  The documentation may be incomplete or describe planned rather than current functionality.
+MTUQ currently supports 3D Green's functions from SPECFEM3D.  
+
+To generate a complete Green's function database for a given hypocenter and depth, 6 SPECFEM3D wavefield simulations are required.  Output must be saved as SAC files at individual stations using the following filename convention, which comes from `GRD_CMT3D <https://github.com/UTCompSeismo/GRD_CMT3D/tree/master/cmt3d>`_.  Place all SAC files corresponding to a single hypocenter and depth in the same directory as follows:
+
+.. code ::
+
+  {basedir}/{event_id}/
+      {net}.{sta}.{loc}.Z.Mrr.sac
+      {net}.{sta}.{loc}.Z.Mtt.sac
+      {net}.{sta}.{loc}.Z.Mpp.sac
+      {net}.{sta}.{loc}.Z.Mrt.sac
+      {net}.{sta}.{loc}.Z.Mrp.sac
+      {net}.{sta}.{loc}.Z.Mtp.sac
+      {net}.{sta}.{loc}.R.Mrr.sac
+      {net}.{sta}.{loc}.R.Mtt.sac
+      {net}.{sta}.{loc}.R.Mpp.sac
+      {net}.{sta}.{loc}.R.Mrt.sac
+      {net}.{sta}.{loc}.R.Mrp.sac
+      {net}.{sta}.{loc}.R.Mtp.sac
+      {net}.{sta}.{loc}.T.Mrr.sac
+      {net}.{sta}.{loc}.T.Mtt.sac
+      {net}.{sta}.{loc}.T.Mpp.sac
+      {net}.{sta}.{loc}.T.Mrt.sac
+      {net}.{sta}.{loc}.T.Mrp.sac
+      {net}.{sta}.{loc}.T.Mtp.sac
 
 
-MTUQ currently supports 3D Green's functions from SPECFEM3D.  Output must be saved at individual stations using the CMT3D filename convention.
+To open an SPECFEM3D database client in MTUQ:
+
+.. code ::
+
+   from mtuq import open_db
+   db = open_db(path_SPECFEM3D_output_directory, format="SPECFEM3D")
+
+
+Once opened, a SPECFEM3D database client can be used to generate `GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects as follows:
+
+.. code::
+
+   greens_tensors = db.get_greens_tensors(stations, origin)
+
 
 
 Green's function conventions

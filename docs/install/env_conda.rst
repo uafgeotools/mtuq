@@ -1,7 +1,7 @@
 Installation under conda
 ========================
 
-Download and install miniconda following `these instructions <https://conda.io/docs/user-guide/install/index.html>`_.
+Download and install `miniconda <https://docs.conda.io/en/latest/miniconda.html>`.
 
 
 Create a conda virtual environment:
@@ -23,4 +23,10 @@ Install MTUQ:
    pip install -e .
 
 
+Unpack seismic waveforms used by examples:
+
+.. code::
+
+    bash ./data/examples/unpack.bash
+    bash ./data/tests/unpack.bash
 

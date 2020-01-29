@@ -90,7 +90,7 @@ if True:
 
     sources = DoubleCoupleGridRegular(
         npts_per_axis=10,
-        magnitude=4.5)
+        magnitudes=[4.5])
 
     wavelet = Trapezoid(
         magnitude=4.5)

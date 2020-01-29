@@ -69,8 +69,8 @@ def _get_time_sampling(dataset):
 
 
 def _get_padding(time_shift_min, time_shift_max, dt):
-    padding_left = int(-time_shift_min/dt)
-    padding_right = int(+time_shift_max/dt)
+    padding_left = int(+time_shift_max/dt)
+    padding_right = int(-time_shift_min/dt)
     return [padding_left, padding_right]
 
 
@@ -223,7 +223,7 @@ def _corr_1_2(data, greens, padding):
         Nstations,
         Ncomponents,
         Ngreens,
-        padding[0]+padding[0]+1,
+        padding[0]+padding[1]+1,
         ))
 
     for _i in range(Nstations):
@@ -268,7 +268,7 @@ def _autocorr_2(greens, padding):
     corr = np.zeros((
         Nstations,
         Ncomponents, 
-        padding[0]+padding[0]+1, 
+        padding[0]+padding[1]+1, 
         Ngreens, 
         Ngreens,
         ))

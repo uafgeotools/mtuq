@@ -4,7 +4,7 @@ Quick start information
 Serial example
 --------------
 
-One of the easiest ways to get started is to try out `examples/SerialGridSearch.Double.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  This script estimates the focal mechanism of an event from `Silwal2016`, using raw seismic data included within the MTUQ repository. 
+One of the easiest ways to get started is to try out `examples/SerialGridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  This script estimates the focal mechanism of an event from `Silwal2016`, using raw seismic data included within the MTUQ repository. 
 
 Before running the example, users must install MTUQ following `these instructions <https://uafgeotools.github.io/mtuq/install/index.html>`_.
 
@@ -30,7 +30,7 @@ All the other scripts in `examples/` use MPI parallelization.  To see if MPI exe
 Modifying examples
 ------------------
 
-To obtain moment tensor estimates for events other than the `Silwal2016` event, users can download waveforms using PySEP (github.com/uafgeotools/pysep) and modify the examples as follows:
+To obtain moment tensor estimates for events other than `Silwal2016`, users can download waveforms using PySEP (github.com/uafgeotools/pysep) and modify the examples as follows:
 
 - Change `path_data` to the new PySEP download directory
 

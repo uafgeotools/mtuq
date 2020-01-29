@@ -91,7 +91,7 @@ if __name__=='__main__':
 
     sources = DoubleCoupleGridRegular(
         npts_per_axis=25,
-        magnitude=magnitudes)
+        magnitudes=magnitudes)
 
     wavelet = Trapezoid(
         magnitude=4.5)

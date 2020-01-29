@@ -8,7 +8,7 @@ from scipy import signal
 class Wavelet(object):
     """ Source wavelet/source-time function base class
 
-    Most easily an analytical expression can be used to define the wavelet, but
+    Most easily, an analytical expression can be used to define the wavelet, but
     a user-supplied time series or on-the-fly numerical procedure can also be
     used.  By inheriting from this class and implementing the ``evaluate`` 
     method, all of these differents types of wavelets can be defined.

@@ -11,7 +11,7 @@ def grid_search(data, greens, misfit, origins, sources,
 
     .. rubric :: Usage
 
-    Carries out a grid search by evaluating `misfit(data, greens)` over
+    Carries out a grid search by evaluating `misfit(data, greens, source)` over
     origin and source grids.  Returns an array of misfit values of shape 
     ``(len(sources), len(origins))`` 
 
@@ -25,26 +25,17 @@ def grid_search(data, greens, misfit, origins, sources,
 
     .. rubric :: Parameters
 
-    ``data``
-    Must be ``mtuq.dataset.Dataset``
+    ``data`` (``mtuq.dataset.Dataset``)
 
-    ``greens``
-    Must be ``mtuq.greens_tensor.GreensTensorList``.
+    ``greens`` (``mtuq.greens_tensor.GreensTensorList``.)
 
-    ``misfit``
-    Can be ``mtuq.misfit.Misfit`` or some other function that acts on the first
-    two arguments
+    ``misfit`` (``mtuq.misfit.Misfit`` or some other function)
 
-    ``origins``
-    Must be a `list` of ``mtuq.source.Origin`` objects
+    ``origins`` (`list` of ``mtuq.source.Origin`` objects)
 
-    ``sources``
-    Must be ``mtuq.grid.Grid``or ``mtuq.grid.UnstructuredGrid``
+    ``sources`` (``mtuq.grid.Grid`` or ``mtuq.grid.UnstructuredGrid``)
 
-    ``allgather``
-    Whether or not to combine results from all processes, if invoked from an
-    MPI environment
-            
+    ``allgather`` (`bool`)
     """
     if _is_mpi_env():
         from mpi4py import MPI

@@ -7,7 +7,7 @@ from numpy import pi as PI
 from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_mij, to_xyz
+from mtuq.util.lune import to_mij, to_rtp
 
 
 
@@ -34,12 +34,6 @@ class Grid(object):
                    ('longitude', np.linspace(-180., 180., 2*N)))
 
 
-    .. rubric:: Usage
-
-    There are two main ways of using grids: (1) iterating over grids and 
-    (2) accessing individual grid points by index number.
-
-
     .. rubric:: Iterating over grids
 
     Iterating over a grid is similar to iterating over a multidimensional 
@@ -57,7 +51,7 @@ class Grid(object):
     Individual grid points can be accessed through the ``get`` and ``get_dict``
     methods.  
 
-    ``get(i)`` returns the i-th point in the grid as a NumPy array.
+    ``get(i)`` returns the i-th grid point as a NumPy array.
 
     If a ``callback`` function is given when creating a grid, then ``get`` 
     returns the result of applying the callback to the i-th grid point.  This
@@ -126,7 +120,7 @@ class Grid(object):
 
 
     def get(self, i, **kwargs):
-        """ Returns `i-th` point of grid
+        """ Returns `i-th` grid point
 
         .. rubric:: callback functions
 
@@ -157,8 +151,8 @@ class Grid(object):
 
 
     def get_dict(self, i):
-        """ Returns `i-th` point of grid as a dictionary of parameter names and
-        values
+        """ Returns `i-th` grid point grid as a dictionary of parameter names 
+        and values
         """
         keys = self.keys
         vals = self.get(i, callback=None)
@@ -232,11 +226,6 @@ class UnstructuredGrid(object):
       grid = UnstructuredGrid((('x', np.random.rand(N)),
                                ('y', np.random.rand(N)))
 
-    .. rubric:: Usage
-
-    There are two main ways of using grids: (1) iterating over grids and 
-    (2) accessing individual grid points by index number.
-
 
     .. rubric:: Iterating over grids
 
@@ -252,7 +241,7 @@ class UnstructuredGrid(object):
     Individual grid points can be accessed through the ``get`` and ``get_dict``
     methods.  
 
-    ``get(i)`` returns the i-th point in the grid as a NumPy array.
+    ``get(i)`` returns the i-th grid point as a NumPy array.
 
     If a ``callback`` function is given when creating an unstructured grid, then
     ``get`` returns the result of applying the callback to the i-th grid point.
@@ -325,7 +314,7 @@ class UnstructuredGrid(object):
 
 
     def get(self, i, **kwargs):
-        """ Returns `i-th` point of grid
+        """ Returns `i-th` grid point
 
         .. rubric:: callback functions
 
@@ -356,7 +345,7 @@ class UnstructuredGrid(object):
 
 
     def get_dict(self, i):
-        """ Returns `i-th` point of grid as a dictionary of parameter names and
+        """ Returns `i-th` grid point as a dictionary of parameter names and
         values
         """
         keys = self.keys
@@ -413,10 +402,24 @@ class UnstructuredGrid(object):
         return self
 
 
-def FullMomentTensorGridRandom(magnitude=None, npts=1000000, callback=to_mij):
+def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
     """ Full moment tensor grid with randomly-spaced values
+
+    Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
+    returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
+
+    Moment tensors are drawn from the uniform distribution defined by 
+    `Tape2015` (https://doi.org/10.1093/gji/ggv262)
+
+    .. rubric :: Usage
+
+    Use ``get(i)`` to return the i-th moment tensor as a vector
+    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
+
+    Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
+    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
-    magnitude, count = _check_magnitude(magnitude)
+    magnitudes, count = _check_magnitudes(magnitudes)
     N = npts*count
 
     # lower bound, upper bound, number of points
@@ -428,7 +431,7 @@ def FullMomentTensorGridRandom(magnitude=None, npts=1000000, callback=to_mij):
 
     # magnitude is treated separately
     rho = np.zeros((count, npts))
-    for _i, Mw in enumerate(magnitude):
+    for _i, Mw in enumerate(magnitudes):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho[_i, :] = M0*np.sqrt(2.)
 
@@ -439,13 +442,27 @@ def FullMomentTensorGridRandom(magnitude=None, npts=1000000, callback=to_mij):
         ('kappa', random(*kappa)),
         ('sigma', random(*sigma)),
         ('h', random(*h))),
-        callback=callback)
+        callback=to_mij)
 
 
-def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=20, callback=to_mij):
+def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
     """ Full moment tensor grid with regularly-spaced values
+
+    Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
+    returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^5`.
+
+    Grid discretization based on the uniform distribution defined by `Tape2015`
+    (https://doi.org/10.1093/gji/ggv262)
+
+    .. rubric :: Usage
+
+    Use ``get(i)`` to return the i-th moment tensor as a vector
+    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
+
+    Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
+    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
-    magnitude, count = _check_magnitude(magnitude)
+    magnitudes, count = _check_magnitudes(magnitudes)
     N = npts_per_axis
 
     # lower bound, upper bound, number of points
@@ -457,7 +474,7 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=20, callback=to_mi
 
     # magnitude is treated separately
     rho = []
-    for Mw in magnitude:
+    for Mw in magnitudes:
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho += [M0*np.sqrt(2)]
 
@@ -468,13 +485,24 @@ def FullMomentTensorGridRegular(magnitude=None, npts_per_axis=20, callback=to_mi
         ('kappa', regular(*kappa)),
         ('sigma', regular(*sigma)),
         ('h', regular(*h))),
-        callback=callback)
+        callback=to_mij)
 
 
-def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
+def DoubleCoupleGridRandom(magnitudes=None, npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
+
+    Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
+    returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
+
+    .. rubric :: Usage
+
+    Use ``get(i)`` to return the i-th moment tensor as a vector
+    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
+
+    Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
+    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
-    magnitude, count = _check_magnitude(magnitude)
+    magnitudes, count = _check_magnitudes(magnitudes)
     N = npts*count
 
     # lower bound, upper bound, number of points
@@ -484,7 +512,7 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
 
     # magnitude is treated separately
     rho = np.zeros((count, npts))
-    for _i, Mw in enumerate(magnitude):
+    for _i, Mw in enumerate(magnitudes):
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho[_i, :] = M0*np.sqrt(2.)
 
@@ -495,13 +523,24 @@ def DoubleCoupleGridRandom(magnitude=None, npts=50000, callback=to_mij):
         ('kappa', random(*kappa)),
         ('sigma', random(*sigma)),
         ('h', random(*h))),
-        callback=callback)
+        callback=to_mij)
 
 
-def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
+def DoubleCoupleGridRegular(magnitudes=None, npts_per_axis=40):
     """ Double-couple moment tensor grid with regularly-spaced values
+
+    Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
+    returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^3`.
+
+    .. rubric :: Usage
+
+    Use ``get(i)`` to return the i-th moment tensor as a vector
+    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
+
+    Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
+    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """ 
-    magnitude, count = _check_magnitude(magnitude)
+    magnitudes, count = _check_magnitudes(magnitudes)
     N = npts_per_axis
 
     # lower bound, upper bound, number of points
@@ -511,7 +550,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
 
     # magnitude is treated separately
     rho = []
-    for Mw in magnitude:
+    for Mw in magnitudes:
         M0 = 10.**(1.5*float(Mw) + 9.1)
         rho += [M0*np.sqrt(2)]
 
@@ -522,7 +561,7 @@ def DoubleCoupleGridRegular(magnitude=None, npts_per_axis=40, callback=to_mij):
         ('kappa', regular(*kappa)),
         ('sigma', regular(*sigma)),
         ('h', regular(*h))),
-        callback=callback)
+        callback=to_mij)
 
 
 
@@ -532,7 +571,7 @@ def ForceGridRegular(magnitude_in_N=1., npts_per_axis=80):
     raise NotImplementedError
 
 
-def ForceGridRandom(magnitude_in_N=1., npts=10000, callback=to_xyz):
+def ForceGridRandom(magnitude_in_N=1., npts=10000):
     """ Force grid with randomly-spaced values
     """
     magnitude_in_N, count = _check_force(magnitude_in_N)
@@ -549,10 +588,10 @@ def ForceGridRandom(magnitude_in_N=1., npts=10000, callback=to_xyz):
         ('F0', F0.flatten()),
         ('theta', random(*theta)),
         ('h', random(*h))),
-        callback=callback)
+        callback=to_rtp)
 
 
-def _check_magnitude(M):
+def _check_magnitudes(M):
     if type(M) in [np.ndarray, list, tuple]:
         count = len(M)
     elif type(M) in [int, float]:
