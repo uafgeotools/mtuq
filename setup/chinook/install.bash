@@ -28,7 +28,7 @@ fi
 
 
 # load system modules
-module load lang/Python/2.7.12-pic-intel-2016b
+module load lang/Python/3.5.2-foss-2016b
 
 
 # create virutal environment
@@ -37,7 +37,8 @@ virtualenv "$ENV"
 source "$ENV/bin/activate"
 pip --no-cache-dir install mpi4py
 pip --no-cache-dir install numpy
-pip --no-cache-dir install obspy instaseis
+pip --no-cache-dir install obspy
+pip --no-cache-dir install instaseis
 
 
 # install mtuq in editable mode
