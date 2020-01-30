@@ -1,7 +1,7 @@
 Installation under conda
 ========================
 
-Download and install `miniconda <https://docs.conda.io/en/latest/miniconda.html>`_.
+First, download and install miniconda following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
 Create a conda virtual environment:

@@ -93,19 +93,16 @@ class Dataset(list):
 
 
     def apply(self, function, *args, **kwargs):
-        """ Applies function to all streams
-
-        Applies a function to each stream in the Dataset, identical to the 
-        Python built-in ``apply``.
+        """ Applies a function to all streams
 
         .. warning ::
 
-            Although ``map`` returns a new Dataset, it is possible, depending
-            on the behavior of the given function, that the streams or traces
-            of the original Dataset are overwitten.
+            Even though ``apply`` returns a new Dataset, there is nothing to 
+            prevent the function from overwriting the streams of the original 
+            Dataset. 
 
-            See also ``mtuq.process_data.ProcessData``, which has an
-            `overwrite` keyword argument that is `False` by default.
+            By default, nothing gets overwritten when using 
+            ``mtuq.process_data``, because the `inplace` argument is `False`.
 
         """
         processed = []
@@ -119,19 +116,19 @@ class Dataset(list):
     def map(self, function, *sequences):
         """ Maps function to all streams
 
-        Maps a function to each stream in the Dataset. If one or more optional
+        Maps a function to all streams in the Dataset. If one or more optional
         sequences are given, the function is called with an argument list 
-        consisting of corresponding items of each sequence, identical to the 
+        consisting of corresponding items of each sequence, just like the 
         Python built-in ``map``.
 
         .. warning ::
 
-            Although ``map`` returns a new Dataset, it is possible, depending
-            on the behavior of the given function, that the streams or traces
-            of the original Dataset are overwitten.
+            Even though ``map`` returns a new Dataset, there is nothing to 
+            prevent the function from overwriting the streams of the original 
+            Dataset. 
 
-            See also ``mtuq.process_data.ProcessData``, which has an
-            `overwrite` keyword argument that is `False` by default.
+           By default, nothing gets overwritten when using 
+            ``mtuq.process_data``, because the `inplace` argument is `False`.
 
         """
         processed = []
@@ -177,10 +174,14 @@ class Dataset(list):
 
 
     def get_stations(self):
-        """ Returns station metadata from all streams
+        """ Returns station metadata from all streams as a `list` of
+        `mtuq.station.Stations` objects
 
-        For Datasets created using ``mtuq.io.readers``, SAC headers or
-        other file metadata are used to populate the Station attributes
+        .. note ::
+
+          For Datasets created using ``mtuq.io.readers``, SAC header metadata
+          is used to populate the Station attributes
+
         """
         stations = []
         for stream in self:
@@ -189,15 +190,16 @@ class Dataset(list):
 
 
     def get_origins(self):
-        """ Returns origin metadata from all streams
+        """ Returns origin metadata from all streams as a `list` of 
+        `mtuq.event.Origin` objects
 
-        What do these metadata represent?
+        .. note ::
 
-        - For Datasets created using ``mtuq.io.readers.sac``, origin metadata
-          represent catalog information read from SAC headers
+          - For Datasets created using ``mtuq.io.readers.sac``, origin 
+            metadata represent catalog information read from SAC headers
 
-        - For Datasets created using ``GreensTensor.get_synthetics``, origin
-          metadata are inherited from the GreensTensor
+          - For Datasets created using ``GreensTensor.get_synthetics``,
+            origin metadata are inherited from the GreensTensor
 
         """
         origins = []

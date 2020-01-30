@@ -9,11 +9,11 @@ Acquiring and quality control checking seismic data can be one of the most chall
 Data acquisition clients
 ------------------------
 
-`IRIS <https://www.iris.edu>`_ and other scientific repositories host large volumes of seismic data.  Native `ObsPy clients <https://docs.obspy.org/master/packages/obspy.clients.iris.html>`_ and ObsPy wrappers such as `PySEP <https://github.com/uafgeotools/pysep>`_ provide a way of programmatically downloading waveforms from such hosts.
+`ObsPy clients <https://docs.obspy.org/master/packages/obspy.clients.iris.html>`_ and ObsPy wrappers such as `PySEP <https://github.com/uafgeotools/pysep>`_ provide a way of programmatically downloading waveforms from `IRIS <https://www.iris.edu>`_  and other seismic data repositories.
 
-PySEP is our preferred data acquisition client because it was developed at the same university as MTUQ.  Besides downloading waveforms through ObsPy calls, PySEP performs data processing and quality control checks so that the data processing and time discretization requirements described below are automatically satisfied.  
+PySEP is our preferred data acquisition client.  Besides downloading waveforms through ObsPy calls, PySEP performs data processing and quality control checks so that the data processing and time discretization requirements described below are automatically satisfied.  
 
-Additionally, PySEP generates "weight files" that can optionally be used by `mtuq.process_data` to control the relative contribution of different datums to the data misfit function.
+Additionally, PySEP generates "weight files" that can optionally be used by `mtuq.process_data` to control the relative contribution of different stations to the data misfit function.
 
 
 
