@@ -185,7 +185,7 @@ if __name__=='__main__':
 
         plot_data_greens(event_id+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, best_origin, best_source)
+            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
         misfit_vs_depth(event_id+'_misfit_vs_depth_bw.png',
             data_bw, misfit_bw, origins, sources, results_bw)

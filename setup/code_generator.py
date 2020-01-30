@@ -947,7 +947,7 @@ WrapUp_GridSearch_DoubleCouple="""
 
         plot_data_greens(event_id+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source)
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'_beachball.png', best_source)
 
@@ -968,7 +968,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         plot_data_greens(event_id+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, best_origin, best_source)
+            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
         misfit_vs_depth(event_id+'_misfit_vs_depth_bw.png',
             data_bw, misfit_bw, origins, sources, results_bw)
@@ -989,7 +989,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     plot_data_greens(event_id+'.png', 
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, best_source)
+        misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
     plot_beachball(event_id+'_beachball.png', best_source)
 
@@ -1007,7 +1007,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
     if run_figures:
         plot_data_greens(event_id+'.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source)
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'_beachball.png', best_source)
 
