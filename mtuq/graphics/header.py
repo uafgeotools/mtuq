@@ -82,7 +82,7 @@ class UAFStyleHeader(Base):
     text to the top of a matplotlib figure
     """
     def __init__(self, event_name, process_bw, process_sw, misfit_bw, misfit_sw,
-        model, solver, mt, origin):
+        model, solver, mt, lune_dict, origin, best_misfit_bw, best_misfit_sw):
 
         self.event_name = event_name
         self.magnitude = MomentTensor(mt).magnitude()
@@ -91,6 +91,11 @@ class UAFStyleHeader(Base):
         self.model = model
         self.solver = solver
         self.mt = mt
+        self.lune_dict = lune_dict
+        self.origin = origin
+        self.best_misfit_bw = best_misfit_bw[0]*1.e10
+        self.best_misfit_sw = best_misfit_sw[0]*1.e10
+        self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
 
         self.process_bw = process_bw
         self.process_sw = process_sw
@@ -209,16 +214,16 @@ class Header(UAFStyleHeader):
         # write text line #1
         px = px0
         py = py0
-        line = '%s  $M_w$ %.2f  Depth %d km' % (
-            self.event_name, self.magnitude, self.depth_in_km)
+        line = '%s  $M_w$ %.2f  Depth %d km  %s' % (
+            self.event_name, self.magnitude, self.depth_in_km, _latlon(self.origin))
         _write_bold(line, px, py, ax, fontsize=16)
 
 
         # write text line #2
         px = px0
         py -= 0.175
-        line = u'Model %s   Solver %s   %s norm %.1e   VR %1.3f' %\
-                (self.model, self.solver, self.norm, 1., 0.)
+        line = u'Model %s   Solver %s   %s norm %.1e' % \
+                (self.model, self.solver, self.norm, self.best_misfit)
         _write_text(line, px, py, ax, fontsize=14)
 
 
@@ -235,7 +240,11 @@ class Header(UAFStyleHeader):
         # write text line #4
         px = px0
         py -= 0.175
-        line = '$M_{ij}$ = [%.2e  %.2e  %.2e  %.2e  %.2e  %.2e]' % tuple(self.mt)
+        line = _focal_mechanism(self.lune_dict)
+        line += '  %s, %s = %.2f, %.2f' % ('v', 'w',
+            self.lune_dict['v'], self.lune_dict['w'])
+       #line += '  %s, %s = %.2f, %.2f' % (u'\u03B3', u'\u03B4',
+       #    self.lune_dict['delta'], self.lune_dict['gamma'])
         _write_text(line, px, py, ax, fontsize=12)
 
 
@@ -243,6 +252,31 @@ class Header(UAFStyleHeader):
 #
 # utility functions
 #
+
+
+def _latlon(origin):
+    if origin.latitude >= 0:
+        latlon = '%.1f%s%s' % (+origin.latitude, u'\N{DEGREE SIGN}', 'N')
+    else:
+        latlon = '%.1f%s%s' % (-origin.latitude, u'\N{DEGREE SIGN}', 'S')
+
+    if origin.longitude > 0:
+        latlon += '% .1f%s%s' % (+origin.longitude, u'\N{DEGREE SIGN}', 'E')
+    else:
+        latlon += '% .1f%s%s' % (-origin.longitude, u'\N{DEGREE SIGN}', 'W')
+
+    return latlon
+
+
+def _focal_mechanism(lune_dict):
+    strike = lune_dict['kappa']
+    dip = np.arccos(lune_dict['h'])
+    #dip = lune_dict['theta']
+    slip = lune_dict['sigma']
+
+    return ("strike, dip, slip = %d, %d, %d" %
+        (strike, dip, slip))
+
 
 def _write_text(text, x, y, ax, fontsize=12, **kwargs):
     pyplot.text(x, y, text, fontsize=fontsize, transform=ax.transAxes,  **kwargs)

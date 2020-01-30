@@ -245,6 +245,7 @@ def plot_data_greens(filename,
         stations,
         origin,
         source,
+        lune_dict,
         **kwargs):
 
     """ Creates CAP-style data/synthetics figure
@@ -275,7 +276,8 @@ def plot_data_greens(filename,
     else:
         header = Header(event_name,
             process_bw, process_sw, misfit_bw, misfit_bw,
-            model, solver, source, origin)
+            model, solver, source, lune_dict, origin,
+            total_misfit_bw, total_misfit_sw)
 
     plot_data_synthetics(filename,
         data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
