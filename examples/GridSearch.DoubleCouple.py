@@ -189,7 +189,6 @@ if __name__=='__main__':
 
     if comm.rank==0:
         results_sum = results_bw + results_sw
-
         best_misfit = results_sum.min()
         best_source = sources.get(results_sum.argmin(), callback=to_mij)
         lune_dict = sources.get_dict(results_sum.argmin())
