@@ -141,8 +141,11 @@ class Header(Base):
         plot_beachball('tmp.png', self.mt)
         img = pyplot.imread('tmp.png')
 
-        os.remove('tmp.png')
-        os.remove('tmp.ps')
+        try:
+            os.remove('tmp.png')
+            os.remove('tmp.ps')
+        except:
+            pass
 
         ax.imshow(img, extent=(xp,xp+diameter,yp,yp+diameter))
 
