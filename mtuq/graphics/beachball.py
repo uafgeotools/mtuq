@@ -15,7 +15,7 @@ from mtuq.event import MomentTensor
 
 # If GMT >=6.0.0 executables are not found on the system path, MTUQ falls 
 # back to ObsPy. As described in the following GitHub issue, ObsPy 
-# focal mechanisms suffer from severe plotting artifacts:
+# focal mechanism plots suffer from  plotting artifacts:
 
 # https://github.com/obspy/obspy/issues/2388
 
@@ -65,13 +65,13 @@ def beachball_obspy(filename, mt):
         Falling back to ObsPy.
 
         As described in the following GitHub issue, ObsPy focal mechanism
-        graphics suffer from severe artifacts:
+        plots suffer from artifacts:
 
         https://github.com/obspy/obspy/issues/2388
         """)
 
     obspy.imaging.beachball.beachball(
-        mt, size=200, linewidth=2, facecolor='b')
+        mt, size=200, linewidth=2, facecolor=gray)
 
     pyplot.savefig(filename)
     pyplot.close()
