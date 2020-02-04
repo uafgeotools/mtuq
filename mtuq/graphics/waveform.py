@@ -304,9 +304,9 @@ def plot(axis, dat, syn, label=None):
 
     # ``clip_on=False`` and ``zorder=10`` should prevent the plotted data from
     # getting "clipped", but this doesn't seem to be happening in practice
-    axis.plot(t, d, 'k', linewidth=1.,
+    axis.plot(t, d, 'k', linewidth=1.5,
         clip_on=False, zorder=10)
-    axis.plot(t, s[start:stop], 'r', linewidth=0.75, 
+    axis.plot(t, s[start:stop], 'r', linewidth=1.25, 
         clip_on=False, zorder=10)
 
 

@@ -192,7 +192,7 @@ class Header(Base):
         py -= 0.175
         line = _focal_mechanism(self.lune_dict)
         line +=  _delta_gamma(self.lune_dict)
-        _write_text(line, px, py, ax, fontsize=12)
+        _write_text(line, px, py, ax, fontsize=14)
 
 
 def _lat_lon(origin):
