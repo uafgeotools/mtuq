@@ -5,7 +5,7 @@ from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
 from mtuq.graphics.beachball import gray, plot_beachball
-#from mtuq.util.moment_tensor.TapeTape2015 import from_mij
+from mtuq.util.lune import to_delta_gamma
 from obspy.core import AttribDict
 
 
@@ -215,7 +215,7 @@ class Header(UAFStyleHeader):
         px = px0
         py = py0
         line = '%s  $M_w$ %.2f  Depth %d km  %s' % (
-            self.event_name, self.magnitude, self.depth_in_km, _latlon(self.origin))
+            self.event_name, self.magnitude, self.depth_in_km, _lat_lon(self.origin))
         _write_bold(line, px, py, ax, fontsize=16)
 
 
@@ -241,20 +241,11 @@ class Header(UAFStyleHeader):
         px = px0
         py -= 0.175
         line = _focal_mechanism(self.lune_dict)
-        line += '  %s, %s = %.2f, %.2f' % ('v', 'w',
-            self.lune_dict['v'], self.lune_dict['w'])
-       #line += '  %s, %s = %.2f, %.2f' % (u'\u03B3', u'\u03B4',
-       #    self.lune_dict['delta'], self.lune_dict['gamma'])
+        line +=  _delta_gamma(self.lune_dict)
         _write_text(line, px, py, ax, fontsize=12)
 
 
-
-#
-# utility functions
-#
-
-
-def _latlon(origin):
+def _lat_lon(origin):
     if origin.latitude >= 0:
         latlon = '%.1f%s%s' % (+origin.latitude, u'\N{DEGREE SIGN}', 'N')
     else:
@@ -274,8 +265,14 @@ def _focal_mechanism(lune_dict):
     #dip = lune_dict['theta']
     slip = lune_dict['sigma']
 
-    return ("strike, dip, slip = %d, %d, %d" %
+    return ("strike  dip  slip:  %d  %d  %d;  " %
         (strike, dip, slip))
+
+
+def _delta_gamma(lune_dict):
+    v, w = lune_dict['v'], lune_dict['w']
+    delta, gamma = to_delta_gamma(v, w)
+    return '  %s  %s:  %d  %d' % (u'\u03B3', u'\u03B4', delta, gamma)
 
 
 def _write_text(text, x, y, ax, fontsize=12, **kwargs):

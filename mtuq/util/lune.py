@@ -7,9 +7,8 @@ k2R6 = 2.0 * np.sqrt(6.)
 k2R3 = 2.0 * np.sqrt(3.)
 k4R6 = 4.0 * np.sqrt(6.)
 k8R6 = 8.0 * np.sqrt(6.)
+
 deg2rad = np.pi / 180.
-beta0 = np.linspace(0, np.pi, 100)
-u0 = 0.75*beta0 - 0.5*np.sin(2.*beta0) + 0.0625*np.sin(4.*beta0)
 
 
 def to_mij(rho, v, w, kappa, sigma, h):
@@ -17,13 +16,8 @@ def to_mij(rho, v, w, kappa, sigma, h):
     (up-south-east convention)
     """
     m0 = rho/np.sqrt(2.)
-
-    gamma = (1./3.)*np.arcsin(3.*v)
-    beta = np.interp(3.*np.pi/8. - w, u0, beta0)
-    gamma /= deg2rad
-    beta /= deg2rad
-
-    delta = 90. - beta
+    delta, gamma = to_delta_gamma(v, w)
+    beta = 90. - delta
     theta = np.arccos(h)/deg2rad
 
     Cb  = np.cos(beta*deg2rad)
@@ -90,7 +84,6 @@ def to_xyz(F0, theta, h):
     return spherical_to_Cartesian(F0, theta, np.arccos(h))
 
 
-
 def to_rtp(F0, theta, h):
     """ Converts from spherical to Cartesian coordinates
     """
@@ -99,4 +92,17 @@ def to_rtp(F0, theta, h):
         return np.column_stack([z, x, y,])
     else:
         return np.array([z, x, y])
+
+
+def to_delta_gamma(v, w):
+    beta0 = np.linspace(0, np.pi, 100)
+    u0 = 0.75*beta0 - 0.5*np.sin(2.*beta0) + 0.0625*np.sin(4.*beta0)
+    beta = np.interp(3.*np.pi/8. - w, u0, beta0)
+    beta /= deg2rad
+    delta = 90. - beta
+
+    gamma = (1./3.)*np.arcsin(3.*v)
+    gamma /= deg2rad
+
+    return delta, gamma
 

@@ -11,7 +11,6 @@ from mtuq.util.lune import to_mij, to_rtp
 
 
 
-
 class Grid(object):
     """
     A regularly-spaced grid defined by values along axes
