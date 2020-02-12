@@ -245,6 +245,7 @@ def plot_data_greens(filename,
         stations,
         origin,
         source,
+        lune_dict,
         **kwargs):
 
     """ Creates CAP-style data/synthetics figure
@@ -275,7 +276,8 @@ def plot_data_greens(filename,
     else:
         header = Header(event_name,
             process_bw, process_sw, misfit_bw, misfit_bw,
-            model, solver, source, origin)
+            model, solver, source, lune_dict, origin,
+            total_misfit_bw, total_misfit_sw)
 
     plot_data_synthetics(filename,
         data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
@@ -302,9 +304,9 @@ def plot(axis, dat, syn, label=None):
 
     # ``clip_on=False`` and ``zorder=10`` should prevent the plotted data from
     # getting "clipped", but this doesn't seem to be happening in practice
-    axis.plot(t, d, 'k', linewidth=1.,
+    axis.plot(t, d, 'k', linewidth=1.5,
         clip_on=False, zorder=10)
-    axis.plot(t, s[start:stop], 'r', linewidth=0.75, 
+    axis.plot(t, s[start:stop], 'r', linewidth=1.25, 
         clip_on=False, zorder=10)
 
 

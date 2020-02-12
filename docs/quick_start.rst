@@ -23,7 +23,7 @@ After running the example, users can check their result against this `expected o
 Parallel examples
 -----------------
 
-All the other scripts in `examples/` use MPI parallelization.  To see if MPI executables and libraries are present in your environment, start by checking if `mpirun` is on the system path.  If necessary, ask a system administrator for assistance configuring MPI.
+All the other `examples <https://github.com/uafgeotools/mtuq/blob/master/examples/>`_ use MPI parallelization.  To see if MPI executables and libraries are present in your environment, start by checking if `mpirun` is on the system path.  If necessary, ask a system administrator for assistance configuring MPI.
 
 
 

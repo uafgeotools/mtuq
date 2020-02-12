@@ -27,7 +27,7 @@ Computing Green's functions from 1D Earth models
 
 MTUQ currently supports 1D Green's functions from two solvers: AxiSEM (preferred) and FK.
 
-`AxiSEM <https://github.com/geodynamics/axisem>`_ simulates wave propagation in radially-symmeric Earth models using a spectral-element method.  To generate synthetics in format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://geodynamics.org/cig/software/axisem/axisem-manual.pdf>`_  under "Output wavefields in NetCDF formated needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
+`AxiSEM <https://github.com/geodynamics/axisem>`_ simulates wave propagation in radially-symmeric Earth models using a spectral-element method.  To generate synthetics in a format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://geodynamics.org/cig/software/axisem/axisem-manual.pdf>`_  under "Output wavefields in NetCDF formated needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
 
 To open an AxiSEM database client in MTUQ:
 
@@ -37,7 +37,7 @@ To open an AxiSEM database client in MTUQ:
    db = open_db(path_to_NetCDF_file, format="AxiSEM")
 
 
-`FK <https://www.eas.slu.edu/People/LZhu/home.html>`_ simulates wave propagation in horizontally-layered elastic media using  frequency-wavenumber method.   FK  simulations create SAC files in a directory tree organized by model, event depth, and event distance.  Each SAC file represents a vertical, radial, or transverse velocity time series in units of 10^-20*cm*(dyne-cm)^-1 s^-1.
+`FK <https://www.eas.slu.edu/People/LZhu/home.html>`_ simulates wave propagation in horizontally-layered elastic media using a frequency-wavenumber method.   FK  simulations create SAC files in a directory tree organized by model, event depth, and event distance.  Each SAC file represents a vertical, radial, or transverse velocity time series in units of 10^-20*cm*(dyne-cm)^-1 s^-1.
 
 
 To open an FK database client in MTUQ:
@@ -49,7 +49,7 @@ To open an FK database client in MTUQ:
 
 
 
-Once opened, an AxiSEM of FK database client can be used to generate `GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects as follows:
+Once opened, an AxiSEM or FK database client can be used to generate `GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects as follows:
 
 .. code::
 

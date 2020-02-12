@@ -176,7 +176,7 @@ class GreensTensor(Stream):
 
     def convolve(self, wavelet):
         """
-        Convolves given wavelet with all time series
+        Convolves time series with the given wavelet
 
         :type wavelet: mtuq.util.wavelets.Wavelet
         :param wavelet: Source wavelet to be convolved

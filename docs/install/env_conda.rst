@@ -1,7 +1,7 @@
 Installation under conda
 ========================
 
-Download and install `miniconda <https://docs.conda.io/en/latest/miniconda.html>`.
+First, download and install miniconda following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
 Create a conda virtual environment:
@@ -10,7 +10,6 @@ Create a conda virtual environment:
 
    conda config --prepend channels conda-forge
    conda create -n mtuq python=3
-   conda install numpy h5py obspy instaseis
 
 
 Install MTUQ: 
@@ -18,6 +17,7 @@ Install MTUQ:
 .. code::
 
    conda activate mtuq
+   conda install numpy obspy instaseis
    git clone https://github.com/uafgeotools/mtuq.git
    cd mtuq
    pip install -e .
