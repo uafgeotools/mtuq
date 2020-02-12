@@ -69,52 +69,6 @@ if __name__=='__main__':
 """
 
 
-Docstring_ChinookGridSearch_DoubleCouple="""
-if __name__=='__main__':
-    #
-    # THIS EXAMPLE ONLY WORKS ON CHINOOK.ALASKA.EDU
-    #
-
-    #
-    # CAP-style double-couple inversion example
-    # 
-
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors, using Green's functions and phase picks from a local
-    # FK database
-
-    #
-    # USAGE
-    #   mpirun -n <NPROC> python ChinookGridSearch.DoubleCouple.py
-    #
-
-"""
-
-
-Docstring_ChinookGridSearch_DoubleCoupleMagnitudeDepth="""
-if __name__=='__main__':
-    #
-    # THIS EXAMPLE ONLY WORKS ON CHINOOK.ALASKA.EDU
-    #
-
-    #
-    # CAP-style double-couple inversion example
-    # 
-
-    #
-    # Carries out grid search over source orientation, magnitude, and depth
-    # using Green's functions and phase picks from a local FK database
-    #
-
-    #
-    # USAGE
-    #   mpirun -n <NPROC> python ChinookGridSearch.DoubleCouple+Magntidue+Depth.py
-    #
-
-"""
-
-
 Docstring_SerialGridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
@@ -1204,66 +1158,6 @@ if __name__=='__main__':
         file.write(OriginDefinitions)
         file.write(Main_GridSearch_DoubleCouple)
         file.write(WrapUp_GridSearch_DoubleCouple)
-
-
-    with open('setup/chinook/examples/GridSearch.DoubleCouple.py', 'w') as file:
-        file.write("#!/usr/bin/env python\n")
-        file.write(
-            replace(
-            Imports,
-            'syngine',
-            'fk',
-            ))
-        file.write(Docstring_ChinookGridSearch_DoubleCouple)
-        file.write(Paths_AxiSEM)
-        file.write(
-            replace(
-            DataProcessingDefinitions,
-            'taup_model=.*,',
-            'taup_model=\'ak135\',',
-            ))
-        file.write(MisfitDefinitions)
-        file.write(Grid_DoubleCouple)
-        file.write(
-            replace(
-            Main_GridSearch_DoubleCouple,
-            'greens = download_greens_tensors\(stations, origin, model\)',
-            'db = open_db(path_greens, format=\'AxiSEM\', model=model)\n        '
-           +'greens = db.get_greens_tensors(stations, origin)',
-            ))
-        file.write(WrapUp_GridSearch_DoubleCouple)
-
-
-    with open('setup/chinook/examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
-        file.write("#!/usr/bin/env python\n")
-        file.write(
-            replace(
-            Imports,
-            'syngine',
-            'fk',
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
-            'plot_beachball',
-            'misfit_vs_depth',
-            ))
-        file.write(Docstring_ChinookGridSearch_DoubleCoupleMagnitudeDepth)
-        file.write(Paths_AxiSEM)
-        file.write(
-            replace(
-            DataProcessingDefinitions,
-            'taup_model=.*,',
-            'taup_model=\'ak135\',',
-            ))
-        file.write(MisfitDefinitions)
-        file.write(Grid_DoubleCoupleMagnitudeDepth)
-        file.write(
-            replace(
-            Main_GridSearch_DoubleCoupleMagnitudeDepth,
-            'greens = download_greens_tensors\(stations, origins, model\)',
-            'db = open_db(path_greens, format=\'AxiSEM\', model=model)\n        '
-           +'greens = db.get_greens_tensors(stations, origins, verbose=True)',
-            ))
-        file.write(WrapUp_GridSearch_DoubleCoupleMagnitudeDepth)
 
 
     with open('examples/SerialGridSearch.DoubleCouple.py', 'w') as file:
