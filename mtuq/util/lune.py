@@ -106,3 +106,24 @@ def to_delta_gamma(v, w):
 
     return delta, gamma
 
+
+def to_v_w(delta, gamma):
+    delta /= DEG
+    gamma /= DEG
+    beta = PI/2. - delta
+
+    u = (0.75*beta - 0.5*np.sin(2.*beta) + 0.0625*np.sin(4.*beta))
+    v = (1./3.)*np.sin(3.*gamma)
+    w = 3.*PI/8. - u
+
+    return v, w
+
+
+def to_M0(Mw):
+    return 10.**(1.5*float(Mw) + 9.1)
+
+
+def to_rho(Mw):
+    return to_M0(Mw)*np.sqrt(2.)
+
+
