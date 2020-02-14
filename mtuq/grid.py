@@ -5,6 +5,8 @@ import numpy as np
 from builtins import object
 from numpy import pi as PI
 from numpy.random import uniform as random
+from xarray import DataArray
+
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
 from mtuq.util.lune import to_mij, to_rtp, to_rho
@@ -118,26 +120,15 @@ class Grid(object):
         return array
 
 
-    def as_xarray(self, values):
-        """ Returns a set of values defined on grid as an xarray DataArray
-        """
-        try:
-            from xarray import DataArray
-        except ImportError:
-            raise ImportError("xarray not installed")
-
-        return DataArray(values, dims=self.dims, coords=self.coords)
-
-
     def get(self, i, **kwargs):
         """ Returns `i-th` grid point
 
         .. rubric:: callback functions
 
         If a ``callback`` function was given when creating a grid, then 
-        ``geet`` returns the result of applying the callback to the 
+        ``get`` returns the result of applying the callback to the 
         i-th grid point.  This behavior can be overridden by supplying a 
-        callback function as a keyword argument to ``geet`` itself.  
+        callback function as a keyword argument to ``get`` itself.  
         If ``callback`` is ``None``, then no function is applied.
         """
         # optionally override default callback
@@ -180,20 +171,61 @@ class Grid(object):
         for iproc in range(nproc):
             start=int(iproc*self.size/nproc)
             stop=(iproc+1)*int(self.size/nproc)
-            subsets += [Grid(self.axes, start, stop, callback=self.callback)]
+            subsets += [Grid(
+                self.dims, self.coords, start, stop, callback=self.callback)]
         return subsets
 
 
-    def save(self, filename, items={}):
-        """ Saves a set of values defined on grid
-        """
-        import h5py
-        with h5py.File(filename, 'w') as hf:
-            for key, val in zip(self.dims, self.coords):
-                hf.create_dataset(key, data=val)
+    def save(self, filename, values, labels=None):
+        """ Saves one or more sets of values and corresponding grid
+        coordinates to a NetCDF file or files
 
-            for key, val in items.items():
-                hf.create_dataset(key, data=val)
+        .. rubric:: Input arguments
+
+        ``values`` (NumPy array) 
+
+        A 1-D or 2-D  NumPy array containing one or more sets of values 
+        defined over the entire grid.  The length of the array along the
+        first dimension must match the size of the grid. (Note that
+        `mtuq.grid_search` results automatically satisfy this requirement.)
+
+
+        ``labels`` (list)
+
+        Optional list containing a label for each set of values.  For each
+        corresponding output file, the full filename becomes 
+        `filename+label`. 
+
+        If this argument is not given and only one file is being written,
+        the label defaults to an empty string.  If multiple files are being
+        written, the labels default to '0000000', '0000001', and so on.
+
+        """
+        # how many NetCDF files will be written?
+        nout = 1
+        if values.ndim > 1:
+            nout = values.shape[1]
+
+        # check input arguments
+        if values.shape[0] != self.size:
+            raise ValueError("Mismatch between values and grid shape")
+
+        if labels is None and nout==1:
+            labels = ['']
+        elif labels is None and nout>1:
+            labels = ['%06d' % _i for  _i in range(nn)]
+
+        if len(labels)!=nout:
+            raise ValueError("Mismatch between values and number of labels")
+
+        # now, begin actually writing output files
+        for _i in range(nout):
+
+            # for I/O, we will use xarray
+            da = DataArray(np.reshape(values[:, _i], self.shape),
+                dims=self.dims, coords=self.coords)
+
+            da.to_netcdf(filename+labels[_i])
 
 
     def __len__(self):
@@ -328,9 +360,9 @@ class UnstructuredGrid(object):
         .. rubric:: callback functions
 
         If a ``callback`` function was given when creating a grid, then 
-        ``geet`` returns the result of applying the callback to the 
+        ``get`` returns the result of applying the callback to the 
         i-th grid point.  This behavior can be overridden by supplying a 
-        callback function as a keyword argument to ``geet`` itself.  
+        callback function as a keyword argument to ``get`` itself.  
         If ``callback`` is ``None``, then no function is applied.
 
         """
@@ -370,23 +402,19 @@ class UnstructuredGrid(object):
         for iproc in range(nproc):
             start=iproc*int(self.size/nproc)
             stop=(iproc+1)*int(self.size/nproc)
-            coordinate_points = []
-            for key, val in self.coordinate_points:
-                coordinate_points += [[key, val[start:stop]]]
-            subsets += [UnstructuredGrid(coordinate_points, start, stop, callback=self.callback)]
+            coords = []
+            for key, val in zip(self.dims, self.coords):
+                coords += [[key, val[start:stop]]]
+            subsets += [UnstructuredGrid(
+                self.dims, coords, start, stop, callback=self.callback)]
         return subsets
 
 
-    def save(self, filename, items={}):
-        """ Saves a set of values defined on grid
+    def save(self, filename, values, labels=None):
+        """ Saves a set of values and corresponding grid coordinates to a NetCDF
+        file
         """
-        import h5py
-        with h5py.File(filename, 'w') as hf:
-            for key, val in zip(self.dims, self.coords):
-                hf.create_dataset(key, data=val)
-
-            for key, val in items.items():
-                hf.create_dataset(key, data=val)
+        raise NotImplementedError
 
 
     def __len__(self):
@@ -544,31 +572,28 @@ def DoubleCoupleGridRegular(magnitudes=None, npts_per_axis=40):
         callback=to_mij)
 
 
-def ForceGridRegular(magnitude_in_N=1., npts_per_axis=80):
+def ForceGridRegular(magnitudes_in_N=1., npts_per_axis=80):
     """ Force grid with regularly-spaced values
     """
     theta = regular(0., 360., npts)
     h = regular(-1., 1., npts)
-    F0 = asarray(mangitude_in_N)
-
-    theta = np.tile(theta, len(magnitudes))
-    h = np.tile(h, len(magnitudes))
-    F0 = np.repeat(F0, npts)
+    F0 = asarray(magnitudes_in_N)
 
     return Grid(
         dims=('F0', 'theta', 'h'),
         coords=(F0, theta, h),
         callback=to_rtp)
 
-def ForceGridRandom(magnitude_in_N=1., npts=10000):
+
+def ForceGridRandom(magnitudes_in_N=1., npts=10000):
     """ Force grid with randomly-spaced values
     """
-    theta = np.random(0., 360., npts)
-    h = np.random(-1., 1., npts)
-    F0 = asarray(mangitude_in_N)
+    theta = random(0., 360., npts)
+    h = random(-1., 1., npts)
+    F0 = asarray(magnitudes_in_N)
 
-    theta = np.tile(theta, len(magnitudes))
-    h = np.tile(h, len(magnitudes))
+    theta = np.tile(theta, len(magnitudes_in_N))
+    h = np.tile(h, len(magnitudes_in_N))
     F0 = np.repeat(F0, npts)
 
     return UnstructuredGrid(
