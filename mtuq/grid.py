@@ -475,13 +475,6 @@ def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
     h = regular(0., 1., npts_per_axis)
     rho = list(map(to_rho, asarray(magnitudes)))
 
-    v = np.tile(v, len(magnitudes))
-    w = np.tile(w, len(magnitudes))
-    kappa = np.tile(kappa, len(magnitudes))
-    sigma = np.tile(sigma, len(magnitudes))
-    h = np.tile(h, len(magnitudes))
-    rho = np.repeat(rho, npts)
-
     return Grid(
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
         coords=(rho, v, w, kappa, sigma, h),
@@ -537,19 +530,13 @@ def DoubleCoupleGridRegular(magnitudes=None, npts_per_axis=40):
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """ 
-    v = np.zeros(npts_per_axis)
-    w = np.zeros(npts_per_axis)
+    v = 0.
+    w = 0.
+
     kappa = regular(0., 360, npts_per_axis)
     sigma = regular(-90., 90., npts_per_axis)
     h = regular(0., 1., npts_per_axis)
     rho = list(map(to_rho, asarray(magnitudes)))
-
-    v = np.tile(v, len(magnitudes))
-    w = np.tile(w, len(magnitudes))
-    kappa = np.tile(kappa, len(magnitudes))
-    sigma = np.tile(sigma, len(magnitudes))
-    h = np.tile(h, len(magnitudes))
-    rho = np.repeat(rho, npts)
 
     return Grid(
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
