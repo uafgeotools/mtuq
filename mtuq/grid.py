@@ -7,7 +7,7 @@ from numpy import pi as PI
 from numpy.random import uniform as random
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_mij, to_rtp
+from mtuq.util.lune import to_mij, to_rtp, to_rho
 
 
 
@@ -21,16 +21,18 @@ class Grid(object):
 
     .. code ::
 
-       grid = Grid(('x', np.linspace(0., 1., N)),
-                   ('y', np.linpsace(0., 1., N)))
+       x = np.linspace(0., 1., N)
+       y = np.linspace(0., 1., N)
+       grid = Grid(dims=('x','y'), coords=(x, y))
 
 
     To parameterize the surface of the Earth with an `N`-by-`2N` Mercator grid:
 
     .. code::          
 
-       grid = Grid(('latitude', np.linspace(-90., 90., N)),
-                   ('longitude', np.linspace(-180., 180., 2*N)))
+       lat = np.linspace(-90., 90., N)
+       lon = np.linspace(-90., 90., N)
+       grid = Grid(dims=('lat', 'lon'), coords=(lat, lon))
 
 
     .. rubric:: Iterating over grids
@@ -62,18 +64,16 @@ class Grid(object):
     axis names and coordinate values without applying any callback.
 
     """
-    def __init__(self, axes, start=0, stop=None, callback=None):
-        self.axes = axes
-
+    def __init__(self, dims=None, coords=None, start=0, stop=None, callback=None):
         # list of axis names
-        self.keys = [item[0] for item in axes]
+        self.dims = dims
         
-        # corresponding list of axis arrays
-        self.vals = [asarray(item[1]) for item in axes]
+        # corresponding list of axis coordinates
+        self.coords = list(map(asarray, coords))
 
         # what is the length along each axis?
         shape = []
-        for array in self.vals:
+        for array in self.coords:
             shape += [len(array)]
 
         # what attributes would the grid have if stored as a numpy array?
@@ -118,6 +118,17 @@ class Grid(object):
         return array
 
 
+    def as_xarray(self, values):
+        """ Returns a set of values defined on grid as an xarray DataArray
+        """
+        try:
+            from xarray import DataArray
+        except ImportError:
+            raise ImportError("xarray not installed")
+
+        return DataArray(values, dims=self.dims, coords=self.coords)
+
+
     def get(self, i, **kwargs):
         """ Returns `i-th` grid point
 
@@ -135,7 +146,7 @@ class Grid(object):
         else:
             callback = self.callback
 
-        vals = self.vals
+        vals = self.coords
         array = np.zeros(self.ndim)
 
         for _k in range(self.ndim):
@@ -153,7 +164,7 @@ class Grid(object):
         """ Returns `i-th` grid point grid as a dictionary of parameter names 
         and values
         """
-        keys = self.keys
+        keys = self.dims
         vals = self.get(i, callback=None)
 
         return dict(zip(keys, vals))
@@ -178,10 +189,10 @@ class Grid(object):
         """
         import h5py
         with h5py.File(filename, 'w') as hf:
-            for key, val in zip(self.keys, self.vals):
+            for key, val in zip(self.dims, self.coords):
                 hf.create_dataset(key, data=val)
 
-            for key, val in items.iteritems():
+            for key, val in items.items():
                 hf.create_dataset(key, data=val)
 
 
@@ -212,7 +223,7 @@ class Grid(object):
 
 class UnstructuredGrid(object):
     """ 
-    An unstructured grid is defined by a list of individual coordinate points, 
+    An unstructured grid is defined by lists of individual coordinate points, 
     which can be irregularly spaced
 
     .. rubric:: Example
@@ -222,8 +233,9 @@ class UnstructuredGrid(object):
 
     .. code ::
 
-      grid = UnstructuredGrid((('x', np.random.rand(N)),
-                               ('y', np.random.rand(N)))
+       x = np.random.rand(N)
+       y = np.random.rand(N)
+       grid = Grid(dims=('x','y'), coords=(x, y))
 
 
     .. rubric:: Iterating over grids
@@ -253,22 +265,20 @@ class UnstructuredGrid(object):
 
 
     """
-    def __init__(self, coordinate_points, start=0, stop=None, callback=None):
-        self.coordinate_points = coordinate_points
-
+    def __init__(self, dims=None, coords=None, start=0, stop=None, callback=None):
         # list of parameter names
-        self.keys = [item[0] for item in coordinate_points]
+        self.dims = dims
 
         # corresponding list of parameter values
-        self.vals = [asarray(item[1]) for item in coordinate_points]
+        self.coords = list(map(asarray, coords))
 
         # there is no shape attribute because it is an unstructured grid,
         # however, ndim and size still make sense
-        self.ndim = len(self.vals)
-        size = len(self.vals[0])
+        self.ndim = len(self.dims)
+        size = len(self.coords[0])
 
         # check consistency
-        for array in self.vals:
+        for array in self.coords:
             assert len(array) == size
 
         # what part of the grid do we want to iterate over?
@@ -331,7 +341,7 @@ class UnstructuredGrid(object):
             callback = self.callback
 
         i -= self.start
-        vals = self.vals
+        vals = self.coords
         array = np.zeros(self.ndim)
 
         for _k in range(self.ndim):
@@ -347,7 +357,7 @@ class UnstructuredGrid(object):
         """ Returns `i-th` grid point as a dictionary of parameter names and
         values
         """
-        keys = self.keys
+        keys = self.dims
         vals = self.get(i, callback=None)
 
         return dict(zip(keys, vals))
@@ -372,10 +382,10 @@ class UnstructuredGrid(object):
         """
         import h5py
         with h5py.File(filename, 'w') as hf:
-            for key, val in zip(self.keys, self.vals):
+            for key, val in zip(self.dims, self.coords):
                 hf.create_dataset(key, data=val)
 
-            for key, val in items.iteritems():
+            for key, val in items.items():
                 hf.create_dataset(key, data=val)
 
 
@@ -418,30 +428,26 @@ def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
-    magnitudes, count = _check_magnitudes(magnitudes)
-    N = npts*count
 
-    # lower bound, upper bound, number of points
-    v = [-1./3., 1./3., N]
-    w = [-3./8.*PI, 3./8.*PI, N]
-    kappa = [0., 360, N]
-    sigma = [-180., 180., N]
-    h = [0., 1., N]
+    v = random(-1./3., 1./3., npts)
+    w = random(-3./8.*PI, 3./8.*PI, npts)
+    kappa = random(0., 360, npts)
+    sigma = random(-90., 90., npts)
+    h = random(0., 1., npts)
+    rho = list(map(to_rho, asarray(magnitudes)))
 
-    # magnitude is treated separately
-    rho = np.zeros((count, npts))
-    for _i, Mw in enumerate(magnitudes):
-        M0 = 10.**(1.5*float(Mw) + 9.1)
-        rho[_i, :] = M0*np.sqrt(2.)
-
-    return UnstructuredGrid((
-        ('rho', rho.flatten()),
-        ('v', random(*v)),
-        ('w', random(*w)),
-        ('kappa', random(*kappa)),
-        ('sigma', random(*sigma)),
-        ('h', random(*h))),
+    v = np.tile(v, len(magnitudes))
+    w = np.tile(w, len(magnitudes))
+    kappa = np.tile(kappa, len(magnitudes))
+    sigma = np.tile(sigma, len(magnitudes))
+    h = np.tile(h, len(magnitudes))
+    rho = np.repeat(rho, npts)
+    
+    return UnstructuredGrid(
+        dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+        coords=(rho, v, w, kappa, sigma, h),
         callback=to_mij)
+
 
 
 def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
@@ -460,30 +466,25 @@ def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
 
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
+
     """
-    magnitudes, count = _check_magnitudes(magnitudes)
-    N = npts_per_axis
+    v = regular(-1./3., 1./3., npts_per_axis)
+    w = regular(-3./8.*PI, 3./8.*PI, npts_per_axis)
+    kappa = regular(0., 360, npts_per_axis)
+    sigma = regular(-90., 90., npts_per_axis)
+    h = regular(0., 1., npts_per_axis)
+    rho = list(map(to_rho, asarray(magnitudes)))
 
-    # lower bound, upper bound, number of points
-    v = [-1./3., 1./3., N]
-    w = [-3./8.*PI, 3./8.*PI, N]
-    kappa = [0., 360, N]
-    sigma = [-180., 180., N]
-    h = [0., 1., N]
+    v = np.tile(v, len(magnitudes))
+    w = np.tile(w, len(magnitudes))
+    kappa = np.tile(kappa, len(magnitudes))
+    sigma = np.tile(sigma, len(magnitudes))
+    h = np.tile(h, len(magnitudes))
+    rho = np.repeat(rho, npts)
 
-    # magnitude is treated separately
-    rho = []
-    for Mw in magnitudes:
-        M0 = 10.**(1.5*float(Mw) + 9.1)
-        rho += [M0*np.sqrt(2)]
-
-    return Grid((
-        ('rho', asarray(rho)),
-        ('v', regular(*v)),
-        ('w', regular(*w)),
-        ('kappa', regular(*kappa)),
-        ('sigma', regular(*sigma)),
-        ('h', regular(*h))),
+    return Grid(
+        dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+        coords=(rho, v, w, kappa, sigma, h),
         callback=to_mij)
 
 
@@ -500,28 +501,25 @@ def DoubleCoupleGridRandom(magnitudes=None, npts=50000):
 
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
+
     """
-    magnitudes, count = _check_magnitudes(magnitudes)
-    N = npts*count
+    v = np.zeros(npts)
+    w = np.zeros(npts)
+    kappa = random(0., 360, npts)
+    sigma = random(-90., 90., npts)
+    h = random(0., 1., npts)
+    rho = list(map(to_rho, asarray(magnitudes)))
 
-    # lower bound, upper bound, number of points
-    kappa = [0., 360, N]
-    sigma = [-180., 180., N]
-    h = [0., 1., N]
+    v = np.tile(v, len(magnitudes))
+    w = np.tile(w, len(magnitudes))
+    kappa = np.tile(kappa, len(magnitudes))
+    sigma = np.tile(sigma, len(magnitudes))
+    h = np.tile(h, len(magnitudes))
+    rho = np.repeat(rho, npts)
 
-    # magnitude is treated separately
-    rho = np.zeros((count, npts))
-    for _i, Mw in enumerate(magnitudes):
-        M0 = 10.**(1.5*float(Mw) + 9.1)
-        rho[_i, :] = M0*np.sqrt(2.)
-
-    return UnstructuredGrid((
-        ('rho', rho.flatten()),
-        ('v', np.zeros(N)),
-        ('w', np.zeros(N)),
-        ('kappa', random(*kappa)),
-        ('sigma', random(*sigma)),
-        ('h', random(*h))),
+    return UnstructuredGrid(
+        dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+        coords=(rho, v, w, kappa, sigma, h),
         callback=to_mij)
 
 
@@ -539,76 +537,55 @@ def DoubleCoupleGridRegular(magnitudes=None, npts_per_axis=40):
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """ 
-    magnitudes, count = _check_magnitudes(magnitudes)
-    N = npts_per_axis
+    v = np.zeros(npts_per_axis)
+    w = np.zeros(npts_per_axis)
+    kappa = regular(0., 360, npts_per_axis)
+    sigma = regular(-90., 90., npts_per_axis)
+    h = regular(0., 1., npts_per_axis)
+    rho = list(map(to_rho, asarray(magnitudes)))
 
-    # lower bound, upper bound, number of points
-    kappa = [0., 360, N]
-    sigma = [-180., 180., N]
-    h = [0., 1., N]
+    v = np.tile(v, len(magnitudes))
+    w = np.tile(w, len(magnitudes))
+    kappa = np.tile(kappa, len(magnitudes))
+    sigma = np.tile(sigma, len(magnitudes))
+    h = np.tile(h, len(magnitudes))
+    rho = np.repeat(rho, npts)
 
-    # magnitude is treated separately
-    rho = []
-    for Mw in magnitudes:
-        M0 = 10.**(1.5*float(Mw) + 9.1)
-        rho += [M0*np.sqrt(2)]
-
-    return Grid((
-        ('rho', asarray(rho)),
-        ('v', asarray(0.)),
-        ('w', asarray(0.)),
-        ('kappa', regular(*kappa)),
-        ('sigma', regular(*sigma)),
-        ('h', regular(*h))),
+    return Grid(
+        dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+        coords=(rho, v, w, kappa, sigma, h),
         callback=to_mij)
-
 
 
 def ForceGridRegular(magnitude_in_N=1., npts_per_axis=80):
     """ Force grid with regularly-spaced values
     """
-    raise NotImplementedError
+    theta = regular(0., 360., npts)
+    h = regular(-1., 1., npts)
+    F0 = asarray(mangitude_in_N)
 
+    theta = np.tile(theta, len(magnitudes))
+    h = np.tile(h, len(magnitudes))
+    F0 = np.repeat(F0, npts)
+
+    return Grid(
+        dims=('F0', 'theta', 'h'),
+        coords=(F0, theta, h),
+        callback=to_rtp)
 
 def ForceGridRandom(magnitude_in_N=1., npts=10000):
     """ Force grid with randomly-spaced values
     """
-    magnitude_in_N, count = _check_force(magnitude_in_N)
-    N = npts*count
+    theta = np.random(0., 360., npts)
+    h = np.random(-1., 1., npts)
+    F0 = asarray(mangitude_in_N)
 
-    theta = [0., 360., N]
-    h = [-1., 1., N]
+    theta = np.tile(theta, len(magnitudes))
+    h = np.tile(h, len(magnitudes))
+    F0 = np.repeat(F0, npts)
 
-    F0 = np.zeros((count, npts))
-    for _i, _F in enumerate(magnitude_in_N):
-        F0[_i, :] = _F
-
-    return UnstructuredGrid((
-        ('F0', F0.flatten()),
-        ('theta', random(*theta)),
-        ('h', random(*h))),
+    return UnstructuredGrid(
+        dims=('F0', 'theta', 'h'),
+        coords=(F0, theta, h),
         callback=to_rtp)
-
-
-def _check_magnitudes(M):
-    if type(M) in [np.ndarray, list, tuple]:
-        count = len(M)
-    elif type(M) in [int, float]:
-        M = [float(M)]
-        count = 1
-    else:
-        raise TypeError
-    return M, count
-
-
-def _check_force(magnitude_in_N):
-    if type(magnitude_in_N) in [np.ndarray, list, tuple]:
-        count = len(magnitude_in_N)
-    elif type(magnitude_in_N) in [int, float]:
-        magnitude_in_N = [float(magnitude_in_N)]
-        count = 1
-    else:
-        raise TypeError
-    return magnitude_in_N, count
-
 
