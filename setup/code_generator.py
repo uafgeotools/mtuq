@@ -7,7 +7,7 @@ import numpy as np
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, plot_beachball
-from mtuq.grid import DoubleCoupleGridRandom
+from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
@@ -22,10 +22,7 @@ from mtuq.util.lune import to_mij
 Docstring_GridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
-    # Double-couple inversion example
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors
+    # Carries out grid search over 64,000 double-couple moment tensors
     #
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.DoubleCouple.py
@@ -40,8 +37,6 @@ if __name__=='__main__':
 Docstring_GridSearch_DoubleCoupleMagnitudeDepth="""
 if __name__=='__main__':
     #
-    # Double-couple inversion example
-    #   
     # Carries out grid search over source orientation, magnitude, and depth
     #   
     # USAGE
@@ -57,8 +52,6 @@ if __name__=='__main__':
 Docstring_GridSearch_FullMomentTensor="""
 if __name__=='__main__':
     #
-    # Full moment tensor inversion example
-    #   
     # Carries out grid search over all moment tensor parameters except
     # magnitude 
     #
@@ -72,10 +65,7 @@ if __name__=='__main__':
 Docstring_SerialGridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
-    # Double-couple inversion example
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors
+    # Carries out grid search over 64,000 double-couple moment tensors
     #
     # USAGE
     #   python SerialGridSearch.DoubleCouple.py
@@ -429,8 +419,8 @@ Grid_DoubleCouple="""
     # an event and "origin" for the location of an event
     #
 
-    sources = DoubleCoupleGridRandom(
-        npts=50000,
+    sources = DoubleCoupleGridRegular(
+        npts_per_axis=40,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -466,8 +456,8 @@ Grid_FullMomentTensor="""
     # an event and "origin" for the location of an event
     #
 
-    sources = FullMomentTensorGridRandom(
-        npts=1000000,
+    sources = FullMomentTensorGridRegular(
+        npts_per_axis=20,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -728,7 +718,7 @@ Main1_SerialGridSearch_DoubleCouple="""
 
 Main2_SerialGridSearch_DoubleCouple="""
     #
-    # The main computational work starts nows
+    # The main computational work starts now
     #
 
     print('Evaluating body wave misfit...\\n')
@@ -849,7 +839,7 @@ Main_TestGraphics="""
 
 Main_TestMisfit="""
     #
-    # The main computational work starts nows
+    # The main computational work starts now
     #
 
     print('Evaluating body wave misfit...\\n')
@@ -903,7 +893,7 @@ WrapUp_GridSearch_DoubleCouple="""
 
         plot_beachball(event_id+'_beachball.png', best_source)
 
-        #grid.save(event_id+'.h5', {'misfit': results})
+        sources.save(event_id+'.nc', results_sum)
 
         print('Finished\\n')
 
@@ -945,7 +935,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     plot_beachball(event_id+'_beachball.png', best_source)
 
-    #grid.save(event_id+'.h5', {'misfit': results})
+    sources.save(event_id+'.nc', results_sum)
 
     print('Finished\\n')
 
@@ -1113,8 +1103,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
             'plot_beachball',
             'misfit_vs_depth',
             ))
@@ -1139,8 +1127,8 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'DoubleCoupleGridRandom',
-            'FullMomentTensorGridRandom',
+            'DoubleCoupleGridRegular',
+            'FullMomentTensorGridRegular',
             ))
         file.write(Docstring_GridSearch_FullMomentTensor)
         file.write(Paths_Syngine)
@@ -1178,12 +1166,7 @@ if __name__=='__main__':
 
 
     with open('tests/test_grid_search_mt.py', 'w') as file:
-        file.write(
-            replace(
-            Imports,
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
-            ))
+        file.write(Imports)
         file.write(Docstring_TestGridSearch_DoubleCouple)
         file.write(ArgparseDefinitions)
         file.write(Paths_FK)
@@ -1199,9 +1182,7 @@ if __name__=='__main__':
         file.write(
             replace(
             Grid_DoubleCouple,
-            'Random',
-            'Regular',
-            'npts=.*,',
+            'npts.*,',
             'npts_per_axis=5,',
             ))
         file.write(WeightsDefinitions)
@@ -1226,8 +1207,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
             'plot_beachball',
             'misfit_vs_depth',
             ))
@@ -1253,8 +1232,6 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
             ))
         file.write(Docstring_TestGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(ArgparseDefinitions)
@@ -1273,9 +1250,7 @@ if __name__=='__main__':
         file.write(
             replace(
             Grid_DoubleCouple,
-            'Random',
-            'Regular',
-            'npts=.*,',
+            'npts.*,',
             'npts_per_axis=5,',
             ))
         file.write(OriginDefinitions)
@@ -1343,12 +1318,7 @@ if __name__=='__main__':
 
 
     with open('mtuq/util/gallery.py', 'w') as file:
-        file.write(
-            replace(
-            Imports,
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
-             ))
+        file.write(Imports)
         file.write(Docstring_Gallery)
         file.write(Paths_Syngine)
         file.write(DataProcessingDefinitions)
@@ -1356,9 +1326,7 @@ if __name__=='__main__':
         file.write(
             replace(
             Grid_DoubleCouple,
-            'DoubleCoupleGridRandom',
-            'DoubleCoupleGridRegular',
-            'npts=.*',
+            'npts.*',
             'npts_per_axis=10,',
             ))
         file.write(

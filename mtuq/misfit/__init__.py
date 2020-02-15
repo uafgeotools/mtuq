@@ -66,9 +66,8 @@ class Misfit(object):
     .. note:: 
 
       In our convention, a positive time shift means synthetics are arriving 
-      too early and need to be shifted in the positive direction to match the
-      the observed data. 
-
+      too early and need to be shifted forward in time to match the observed
+      data. 
 
 
     .. rubric:: Optimization Levels

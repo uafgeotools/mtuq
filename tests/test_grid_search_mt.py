@@ -142,7 +142,7 @@ if __name__=='__main__':
 
 
     #
-    # The main computational work starts nows
+    # The main computational work starts now
     #
 
     print('Evaluating body wave misfit...\n')

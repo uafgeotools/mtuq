@@ -18,8 +18,6 @@ from mtuq.util.lune import to_mij
 
 if __name__=='__main__':
     #
-    # Double-couple inversion example
-    #   
     # Carries out grid search over source orientation, magnitude, and depth
     #   
     # USAGE
