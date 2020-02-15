@@ -13,29 +13,44 @@ def grid_search(data, greens, misfit, origins, sources,
 
     Carries out a grid search by evaluating `misfit(data, greens, source)` over
     origin and source grids.  Returns an array of misfit values of shape 
-    ``(len(sources), len(origins))`` 
+    `(len(sources), len(origins))` 
+
+
+    .. rubric :: Input arguments
+
+
+    ``data`` (``mtuq.dataset.Dataset``)
+    The observed data that will be compared with synthetic data.
+
+
+    ``greens`` (``mtuq.greens_tensor.GreensTensorList``.)
+    Green's functions that will be used to generate synthetic data.
+
+
+    ``misfit`` (``mtuq.misfit.Misfit`` or some other function)
+    Implements norm of data and synthetics.
+
+
+    ``origins`` (`list` of ``mtuq.source.Origin`` objects)
+    Event origins that will be used to generate synthetics.
+
+
+    ``sources`` (``mtuq.grid.Grid`` or ``mtuq.grid.UnstructuredGrid``)
+    Source mechanisms that will be used to generate synthetics.
+
+
+    ``allgather`` (`bool`)
+    Whether results will be broadcast from the master process to all other
+    processes (ignored if not invoked from an MPI environment).
+
 
     .. note:
 
       If invoked from an MPI environment, the grid is partitioned between
       processes and each process runs ``grid_search_serial`` on its given
-      partition. If not invoked from an MPI environment, this function simply 
+      partition. If not invoked from an MPI environment, `grid_search`
       reduces to ``grid_search_serial``.
 
-
-    .. rubric :: Parameters
-
-    ``data`` (``mtuq.dataset.Dataset``)
-
-    ``greens`` (``mtuq.greens_tensor.GreensTensorList``.)
-
-    ``misfit`` (``mtuq.misfit.Misfit`` or some other function)
-
-    ``origins`` (`list` of ``mtuq.source.Origin`` objects)
-
-    ``sources`` (``mtuq.grid.Grid`` or ``mtuq.grid.UnstructuredGrid``)
-
-    ``allgather`` (`bool`)
     """
     if _is_mpi_env():
         from mpi4py import MPI

@@ -33,7 +33,7 @@ class Grid(object):
     .. code::          
 
        lat = np.linspace(-90., 90., N)
-       lon = np.linspace(-90., 90., N)
+       lon = np.linspace(-180., 180., N)
        grid = Grid(dims=('lat', 'lon'), coords=(lat, lon))
 
 
@@ -180,25 +180,35 @@ class Grid(object):
         """ Saves one or more sets of values and corresponding grid
         coordinates to a NetCDF file or files
 
+
         .. rubric:: Input arguments
+
 
         ``values`` (NumPy array) 
 
-        A 1-D or 2-D  NumPy array containing one or more sets of values 
-        defined over the entire grid.  The length of the array along the
-        first dimension must match the size of the grid. (Note that
-        `mtuq.grid_search` results automatically satisfy this requirement.)
+        A 1-D or 2-D NumPy array containing one or more sets of values defined
+        over the entire grid. 
+
+        The length of the array along the first dimension must match the size
+        of the grid.  For a 1-D array, one output file will be written, and
+        for a 2-D array, the number of output files corresponds to the length
+        along the second dimension.
+
+        ``labels`` (`list`)
+
+        Optional list of labels. If this argument is given, the output 
+        filenames become `filename+label[0]`, `filename+label[1]`, and so on.
+        If not given, the label defaults to an empty string if there is just
+        output file, or to `'0000000'`, `'0000001'`, and so on if there are 
+        multiple output files.
 
 
-        ``labels`` (list)
+        .. note:
 
-        Optional list containing a label for each set of values.  For each
-        corresponding output file, the full filename becomes 
-        `filename+label`. 
+        `mtuq.grid_search` returns NumPy arrays of misfit values with shape
+        ``(len(sources), len(origins))`` that can be written out using
+        this method.
 
-        If this argument is not given and only one file is being written,
-        the label defaults to an empty string.  If multiple files are being
-        written, the labels default to '0000000', '0000001', and so on.
 
         """
         # how many NetCDF files will be written?
@@ -213,7 +223,7 @@ class Grid(object):
         if labels is None and nout==1:
             labels = ['']
         elif labels is None and nout>1:
-            labels = ['%06d' % _i for  _i in range(nn)]
+            labels = ['%06d' % _i for  _i in range(nout)]
 
         if len(labels)!=nout:
             raise ValueError("Mismatch between values and number of labels")
