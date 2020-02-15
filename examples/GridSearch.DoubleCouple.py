@@ -6,7 +6,7 @@ import numpy as np
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, plot_beachball
-from mtuq.grid import DoubleCoupleGridRandom
+from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
@@ -18,10 +18,7 @@ from mtuq.util.lune import to_mij
 
 if __name__=='__main__':
     #
-    # Double-couple inversion example
-    # 
-    # Carries out grid search over 50,000 randomly chosen double-couple 
-    # moment tensors
+    # Carries out grid search over 64,000 double-couple moment tensors
     #
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.DoubleCouple.py
@@ -100,8 +97,8 @@ if __name__=='__main__':
     # an event and "origin" for the location of an event
     #
 
-    sources = DoubleCoupleGridRandom(
-        npts=50000,
+    sources = DoubleCoupleGridRegular(
+        npts_per_axis=40,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -189,7 +186,6 @@ if __name__=='__main__':
 
     if comm.rank==0:
         results_sum = results_bw + results_sw
-
         best_misfit = results_sum.min()
         best_source = sources.get(results_sum.argmin(), callback=to_mij)
         lune_dict = sources.get_dict(results_sum.argmin())
@@ -209,7 +205,7 @@ if __name__=='__main__':
 
         plot_beachball(event_id+'_beachball.png', best_source)
 
-        #grid.save(event_id+'.h5', {'misfit': results})
+        sources.save(event_id+'.nc', results_sum)
 
         print('Finished\n')
 

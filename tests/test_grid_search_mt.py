@@ -142,7 +142,7 @@ if __name__=='__main__':
 
 
     #
-    # The main computational work starts nows
+    # The main computational work starts now
     #
 
     print('Evaluating body wave misfit...\n')
@@ -153,7 +153,6 @@ if __name__=='__main__':
 
 
     results_sum = results_bw + results_sw
-
     best_misfit = results_sum.min()
     best_source = sources.get(results_sum.argmin(), callback=to_mij)
     lune_dict = sources.get_dict(results_sum.argmin())
@@ -171,7 +170,7 @@ if __name__=='__main__':
 
 
     if run_checks:
-        def isclose(a, b, atol=1.e6, rtol=1.e-8):
+        def isclose(a, b, atol=1.e6, rtol=1.e-6):
             # the default absolute tolerance (1.e6) is several orders of 
             # magnitude less than the moment of an Mw=0 event
 
@@ -185,15 +184,14 @@ if __name__=='__main__':
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
-        if not isclose(
-            best_source,
+        if not isclose(best_source,
             np.array([
-                -5.64838737e+15,
-                -1.25298635e-01,
-                 5.64838737e+15,
-                -2.94977410e+15,
-                -2.38427402e+15,
-                 1.95665878e+15,
+                 -5.648387e+15,
+                  2.541774e+15,
+                  3.106613e+15,
+                  5.899548e+14,
+                  3.746716e+15,
+                  3.424153e+15,
                  ])
             ):
             raise Exception(

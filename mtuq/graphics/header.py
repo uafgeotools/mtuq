@@ -211,8 +211,12 @@ def _lat_lon(origin):
 
 def _focal_mechanism(lune_dict):
     strike = lune_dict['kappa']
-    dip = np.arccos(lune_dict['h'])
-    #dip = lune_dict['theta']
+
+    try:
+        dip = np.arccos(lune_dict['h'])
+    except:
+        dip = lune_dict['theta']
+
     slip = lune_dict['sigma']
 
     return ("strike  dip  slip:  %d  %d  %d;  " %
@@ -220,8 +224,12 @@ def _focal_mechanism(lune_dict):
 
 
 def _delta_gamma(lune_dict):
-    v, w = lune_dict['v'], lune_dict['w']
-    delta, gamma = to_delta_gamma(v, w)
+    try:
+        v, w = lune_dict['v'], lune_dict['w']
+        delta, gamma = to_delta_gamma(v, w)
+    except:
+        delta, gamma = lune_dict['delta'], lune_dict['gamma']
+
     return '  %s  %s:  %d  %d' % (u'\u03B3', u'\u03B4', delta, gamma)
 
 

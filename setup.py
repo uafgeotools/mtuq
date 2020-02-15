@@ -86,7 +86,7 @@ setup(
     python_requires='~=3.5',
     install_requires=[
         "numpy", "scipy", "obspy",
-        "h5py", "retry", "flake8>=3.0", "pytest", "nose",
+        "xarray", "retry", "flake8>=3.0", "pytest", "nose",
         "sphinx", "sphinx-bootstrap-theme"
     ],
     ext_modules = [
