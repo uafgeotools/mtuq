@@ -25,7 +25,7 @@ class Grid(object):
 
        x = np.linspace(0., 1., N)
        y = np.linspace(0., 1., N)
-       grid = Grid(dims=('x','y'), coords=(x, y))
+       grid = Grid(dims=('x', 'y'), coords=(x, y))
 
 
     To parameterize the surface of the Earth with an `N`-by-`2N` Mercator grid:
@@ -199,15 +199,15 @@ class Grid(object):
         Optional list of labels. If this argument is given, the output 
         filenames become `filename+label[0]`, `filename+label[1]`, and so on.
         If not given, the label defaults to an empty string if there is just
-        output file, or to `'0000000'`, `'0000001'`, and so on if there are 
-        multiple output files.
+        one output file, or to `'0000000'`, `'0000001'`, and so on if there 
+        are multiple output files.
 
 
-        .. note:
+        .. note::
 
-        `mtuq.grid_search` returns NumPy arrays of misfit values with shape
-        ``(len(sources), len(origins))`` that can be written out using
-        this method.
+           `mtuq.grid_search` returns NumPy arrays of misfit values with shape
+           `(len(sources), len(origins))` that can be written out using this
+           method.
 
 
         """
@@ -277,7 +277,7 @@ class UnstructuredGrid(object):
 
        x = np.random.rand(N)
        y = np.random.rand(N)
-       grid = Grid(dims=('x','y'), coords=(x, y))
+       grid = Grid(dims=('x', 'y'), coords=(x, y))
 
 
     .. rubric:: Iterating over grids

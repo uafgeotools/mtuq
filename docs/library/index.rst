@@ -1,5 +1,5 @@
-Index
-=====
+Library reference
+=================
 
 .. warning::
 

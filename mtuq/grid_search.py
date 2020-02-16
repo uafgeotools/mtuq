@@ -20,28 +20,34 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``data`` (``mtuq.dataset.Dataset``)
+
     The observed data that will be compared with synthetic data.
 
 
     ``greens`` (``mtuq.greens_tensor.GreensTensorList``.)
+
     Green's functions that will be used to generate synthetic data.
 
 
     ``misfit`` (``mtuq.misfit.Misfit`` or some other function)
+
     Implements norm of data and synthetics.
 
 
     ``origins`` (`list` of ``mtuq.source.Origin`` objects)
+
     Event origins that will be used to generate synthetics.
 
 
     ``sources`` (``mtuq.grid.Grid`` or ``mtuq.grid.UnstructuredGrid``)
+
     Source mechanisms that will be used to generate synthetics.
 
 
     ``allgather`` (`bool`)
-    Whether results will be broadcast from the master process to all other
-    processes (ignored if not invoked from an MPI environment).
+
+    Should results be broadcast from the master process to all other
+    processes? (Gets ignored if not an MPI environment.)
 
 
     .. note:

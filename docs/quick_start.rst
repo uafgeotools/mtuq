@@ -1,5 +1,5 @@
-Quick start information
-=======================
+Quick start
+===========
 
 Serial example
 --------------
