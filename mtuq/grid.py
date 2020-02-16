@@ -42,7 +42,7 @@ class Grid(object):
     Iterating over a grid is similar to iterating over a multidimensional 
     NumPy array.  The order of grid points is determined by the order of axes
     used to create the grid.  For instance, in the unit square example above, 
-    ``'x'`` is the fast axis and ``'y'`` is the slow axis.
+    ``'x'`` is the slow axis and ``'y'`` is the fast axis.
 
     If ``start`` and ``stop`` arguments are given when creating a grid,
     iteration will begin and end at these indices.  Otherwise, iteration will
@@ -140,7 +140,7 @@ class Grid(object):
         vals = self.coords
         array = np.zeros(self.ndim)
 
-        for _k in range(self.ndim):
+        for _k in range(self.ndim-1, -1, -1):
             val = vals[_k]
             array[_k] = val[int(i%len(val))]
             i/=len(val)
@@ -232,7 +232,7 @@ class Grid(object):
         for _i in range(nout):
 
             # for I/O, we will use xarray
-            da = DataArray(np.reshape(values[:, _i], self.shape, order='F'),
+            da = DataArray(np.reshape(values[:, _i], self.shape, order='C'),
                 dims=self.dims, coords=self.coords)
 
             da.to_netcdf(filename+labels[_i])
