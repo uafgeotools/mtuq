@@ -116,7 +116,7 @@ class Grid(object):
 
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
-            array[_i, :] = self.get(_i, callback=callback)
+            array[_i, :] = self.get(_i+self.start, callback=callback)
         return array
 
 
@@ -232,7 +232,7 @@ class Grid(object):
         for _i in range(nout):
 
             # for I/O, we will use xarray
-            da = DataArray(np.reshape(values[:, _i], self.shape),
+            da = DataArray(np.reshape(values[:, _i], self.shape, order='F'),
                 dims=self.dims, coords=self.coords)
 
             da.to_netcdf(filename+labels[_i])
