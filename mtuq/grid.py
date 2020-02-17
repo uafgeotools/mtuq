@@ -193,7 +193,7 @@ class Grid(object):
         return subsets
 
 
-    def save(self, filename, values, labels=None):
+    def save(self, filename, values=None, labels=None):
         """ Saves one or more sets of values and corresponding grid
         coordinates to a NetCDF file or files
 
@@ -228,10 +228,17 @@ class Grid(object):
 
 
         """
-        # how many NetCDF files will be written?
-        nout = 1
+        if values is None:
+            # writes grid coordinates only
+            self.as_dataarray().to_netcdf(filename)
+            return
+
+        # how many sets of values will be written?
         if values.ndim > 1:
             nout = values.shape[1]
+        else:
+            nout = 1
+            values.reshape((values.size, 1))
 
         # check input arguments
         if values.shape[0] != self.size:
