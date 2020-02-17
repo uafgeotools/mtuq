@@ -5,7 +5,7 @@ import numpy as np
 from builtins import object
 from numpy import pi as PI
 from numpy.random import uniform as random
-from xarray import DataArray
+from xarray import DataArray, Dataset
 
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
@@ -80,7 +80,7 @@ class Grid(object):
 
         # what attributes would the grid have if stored as a numpy array?
         self.ndim = len(shape)
-        self.shape = shape
+        self.shape = tuple(shape)
 
         # what part of the grid do we want to iterate over?
         self.start = start
@@ -95,29 +95,46 @@ class Grid(object):
         self.callback = callback
 
  
-    def as_array(self, **kwargs):
-        """ Returns the entire set of grid points as a multidimensional 
-        Numpy array
-
-        .. rubric:: callback functions
-
-        If a ``callback`` function was given when creating a grid, then 
-        ``as_array`` returns the result of applying the callback to the 
-        i-th grid point.  This behavior can be overridden by supplying a 
-        callback function as a keyword argument to ``as_array`` itself.  
-        If ``callback`` is ``None``, then no function is applied.
-
+    def as_array(self):
+        """ Returns the entire set of grid points as Numpy array
         """
-        # optionally override default callback
-        if 'callback' in kwargs:
-            callback = kwargs['callback']
-        else:
-            callback = self.callback
-
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
-            array[_i, :] = self.get(_i+self.start, callback=callback)
+            array[_i, :] = self.get(_i+self.start, callback=None)
         return array
+
+
+    def as_dataarray(self, values=None):
+        """ Returns the entire set of grid points as xarray DataArray
+        """
+        if values is None:
+            values = np.empty(self.shape)
+            values[:] = np.nan
+
+        if values.shape != self.shape:
+            raise Exception("Mismatch between values and grid shape")
+
+        return DataArray(data=values, dims=self.dims, coords=self.coords)
+
+
+    def as_dataset(self, values=None):
+        """ Returns the entire set of grid points as xarray Dataset
+        """
+        if values is None:
+            values = np.empty(self.size)
+            values[:] = np.nan
+
+        if values.size != self.size:
+            raise Exception("Mismatch between values and grid shape")
+
+        array = self.as_array()
+
+        data_vars = {self.dims[_i]: array[:, _i]
+            for _i in range(self.ndim)}
+
+        data_vars.update({'values': values})
+
+        return Dataset(data_vars)
 
 
     def get(self, i, **kwargs):
@@ -191,16 +208,16 @@ class Grid(object):
 
         The length of the array along the first dimension must match the size
         of the grid.  For a 1-D array, one output file will be written, and
-        for a 2-D array, the number of output files corresponds to the length
-        along the second dimension.
+        for a 2-D array, the number of output files is the length along the
+        second dimension.
 
         ``labels`` (`list`)
 
         Optional list of labels. If this argument is given, the output 
         filenames become `filename+label[0]`, `filename+label[1]`, and so on.
         If not given, the label defaults to an empty string if there is just
-        one output file, or to `'0000000'`, `'0000001'`, and so on if there 
-        are multiple output files.
+        one output file, or to `'0000000'`, `'0000001'`, ... if there are
+        multiple output files.
 
 
         .. note::
@@ -232,9 +249,7 @@ class Grid(object):
         for _i in range(nout):
 
             # for I/O, we will use xarray
-            da = DataArray(np.reshape(values[:, _i], self.shape, order='C'),
-                dims=self.dims, coords=self.coords)
-
+            da = self.as_dataarray(np.reshape(values[:, _i], self.shape))
             da.to_netcdf(filename+labels[_i])
 
 
@@ -338,30 +353,31 @@ class UnstructuredGrid(object):
         self.callback = callback
 
 
-    def as_array(self, **kwargs):
-        """ Returns the entire set of grid points as a multidimensional 
-        Numpy array
-
-        .. rubric:: callback functions
-
-        If a ``callback`` function was given when creating a grid, then 
-        ``as_array`` returns the result of applying the callback to the 
-        i-th grid point.  This behavior can be overridden by supplying a 
-        callback function as a keyword argument to ``as_array`` itself.  
-        If ``callback`` is ``None``, then no function is applied.
-
+    def as_array(self):
+        """ Returns the entire set of grid points as NumPy array
         """
-
-        # optionally override default callback
-        if 'callback' in kwargs:
-            callback = kwargs['callback']
-        else:
-            callback = self.callback
-
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
-            array[_i, :] = self.get(_i+self.start, callback=callback)
+            array[_i, :] = self.get(_i+self.start, callback=None)
         return array
+
+
+    def as_dataset(self, values=None):
+        """ Returns the entire set of grid points as xarray Dataset
+        """
+        if values is None:
+            values = np.empty(self.size)
+            values[:] = np.nan
+
+        if values.size != self.size:
+            raise Exception("Mismatch between values and grid shape")
+
+        data_vars = {self.dims[_i]: self.coords[_i]
+            for _i in range(self.ndim)}
+
+        data_vars.update({'values': values})
+
+        return Dataset(data_vars)
 
 
     def get(self, i, **kwargs):

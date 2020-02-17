@@ -2,19 +2,20 @@
 import numpy as np
 
 
-kR3 = np.sqrt(3.0)
-k2R6 = 2.0 * np.sqrt(6.)
-k2R3 = 2.0 * np.sqrt(3.)
-k4R6 = 4.0 * np.sqrt(6.)
-k8R6 = 8.0 * np.sqrt(6.)
-
-deg2rad = np.pi / 180.
+deg2rad = np.pi/180.
+rad2deg = 180./np.pi
 
 
 def to_mij(rho, v, w, kappa, sigma, h):
     """ Converts from lune parameters to moment tensor parameters 
     (up-south-east convention)
     """
+    kR3 = np.sqrt(3.)
+    k2R6 = 2.*np.sqrt(6.)
+    k2R3 = 2.*np.sqrt(3.)
+    k4R6 = 4.*np.sqrt(6.)
+    k8R6 = 8.*np.sqrt(6.)
+
     m0 = rho/np.sqrt(2.)
     delta, gamma = to_delta_gamma(v, w)
     beta = 90. - delta
@@ -95,19 +96,23 @@ def to_rtp(F0, theta, h):
 
 
 def to_delta_gamma(v, w):
+    """ Converts from Tape2015 parameters to lune coordinates
+    """
     beta0 = np.linspace(0, np.pi, 100)
     u0 = 0.75*beta0 - 0.5*np.sin(2.*beta0) + 0.0625*np.sin(4.*beta0)
     beta = np.interp(3.*np.pi/8. - w, u0, beta0)
-    beta /= deg2rad
+    beta *= rad2deg
     delta = 90. - beta
 
     gamma = (1./3.)*np.arcsin(3.*v)
-    gamma /= deg2rad
+    gamma *= rad2deg
 
     return delta, gamma
 
 
 def to_v_w(delta, gamma):
+    """ Converts from lune coordinates to Tape2015 parameters
+    """
     delta /= DEG
     gamma /= DEG
     beta = PI/2. - delta
@@ -120,10 +125,14 @@ def to_v_w(delta, gamma):
 
 
 def to_M0(Mw):
+    """ Converts from moment magnitude to scalar moment
+    """
     return 10.**(1.5*float(Mw) + 9.1)
 
 
 def to_rho(Mw):
+    """ Converts from moment magnitude to Tape2012 magnitude parameter
+    """
     return to_M0(Mw)*np.sqrt(2.)
 
 
