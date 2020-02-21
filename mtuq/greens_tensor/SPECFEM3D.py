@@ -50,6 +50,9 @@ class GreensTensor(GreensTensorBase):
 
 
     def _precompute_mt(self):
+        """ Assembles NumPy arrays used in moment tensor linear combination
+        """
+
         array = self._array
         phi = np.deg2rad(self.azimuth)
         _j = 0
