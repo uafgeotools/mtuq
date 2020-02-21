@@ -10,6 +10,7 @@ from xarray import DataArray, Dataset
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
 from mtuq.util.lune import to_mij, to_rtp, to_rho
+from mtuq.util.xarray import array_to_dict
 
 
 
@@ -111,8 +112,11 @@ class Grid(object):
             values = np.empty(self.shape)
             values[:] = np.nan
 
-        if values.shape != self.shape:
+        if values.size != self.size:
             raise Exception("Mismatch between values and grid shape")
+
+        if values.shape != self.shape:
+            values = np.reshape(values, self.shape)
 
         return DataArray(data=values, dims=self.dims, coords=self.coords)
 
@@ -186,78 +190,52 @@ class Grid(object):
 
         subsets = []
         for iproc in range(nproc):
-            start=int(iproc*self.size/nproc)
-            stop=(iproc+1)*int(self.size/nproc)
+            start = int(iproc*self.size/nproc)
+            stop = int((iproc+1)*self.size/nproc)
+
             subsets += [Grid(
                 self.dims, self.coords, start, stop, callback=self.callback)]
         return subsets
 
 
-    def save(self, filename, values=None, labels=None):
+    def save(self, filename, values=None):
         """ Saves one or more sets of values and corresponding grid
-        coordinates to a NetCDF file or files
-
+        coordinates to a NetCDF files
 
         .. rubric:: Input arguments
 
+        ``values`` (dict)
 
-        ``values`` (NumPy array) 
-
-        A 1-D or 2-D NumPy array containing one or more sets of values defined
-        over the entire grid. 
-
-        The length of the array along the first dimension must match the size
-        of the grid.  For a 1-D array, one output file will be written, and
-        for a 2-D array, the number of output files is the length along the
-        second dimension.
-
-        ``labels`` (`list`)
-
-        Optional list of labels. If this argument is given, the output 
-        filenames become `filename+label[0]`, `filename+label[1]`, and so on.
-        If not given, the label defaults to an empty string if there is just
-        one output file, or to `'0000000'`, `'0000001'`, ... if there are
-        multiple output files.
-
+        A dictionary {label: values} containing sets of values defined on the
+        grid. Each label must be a string and each set of values must be a 
+        NumPy array with the same size as the grid.
 
         .. note::
 
            `mtuq.grid_search` returns NumPy arrays of misfit values with shape
-           `(len(sources), len(origins))` that can be written out using this
+           `(len(sources), len(origins))` that can directly supplied to this 
            method.
-
 
         """
         if values is None:
-            # writes grid coordinates only
+            # write grid coordinates only
             self.as_dataarray().to_netcdf(filename)
             return
 
-        # how many sets of values will be written?
-        if values.ndim > 1:
-            nout = values.shape[1]
-        else:
-            nout = 1
-            values.reshape((values.size, 1))
+        if type(values)==np.ndarray:
+            # attempt to convert NumPy array to dict using a generic sequence
+            # '000000', '000001', ... for the dictionary keys
+            values = array_to_dict(values, self.shape)
 
-        # check input arguments
-        if values.shape[0] != self.size:
-            raise ValueError("Mismatch between values and grid shape")
+        if not type(values)==dict:
+            raise ValueError
 
-        if labels is None and nout==1:
-            labels = ['']
-        elif labels is None and nout>1:
-            labels = ['%06d' % _i for  _i in range(nout)]
-
-        if len(labels)!=nout:
-            raise ValueError("Mismatch between values and number of labels")
-
-        # now, begin actually writing output files
-        for _i in range(nout):
+        # now, begin actually writing NetCDF files
+        for label, array in values.items():
 
             # for I/O, we will use xarray
-            da = self.as_dataarray(np.reshape(values[:, _i], self.shape))
-            da.to_netcdf(filename+labels[_i])
+            da = self.as_dataarray(np.reshape(array, self.shape))
+            da.to_netcdf(filename+label)
 
 
     def __len__(self):
@@ -299,7 +277,7 @@ class UnstructuredGrid(object):
 
        x = np.random.rand(N)
        y = np.random.rand(N)
-       grid = Grid(dims=('x', 'y'), coords=(x, y))
+       grid = UnstructuredGrid(dims=('x', 'y'), coords=(x, y))
 
 
     .. rubric:: Iterating over grids
@@ -433,21 +411,16 @@ class UnstructuredGrid(object):
         """
         subsets = []
         for iproc in range(nproc):
-            start=iproc*int(self.size/nproc)
-            stop=(iproc+1)*int(self.size/nproc)
+            start = int(iproc*self.size/nproc)
+            stop = int((iproc+1)*self.size/nproc)
+
             coords = []
             for key, val in zip(self.dims, self.coords):
                 coords += [[key, val[start:stop]]]
             subsets += [UnstructuredGrid(
                 self.dims, coords, start, stop, callback=self.callback)]
+
         return subsets
-
-
-    def save(self, filename, values, labels=None):
-        """ Saves a set of values and corresponding grid coordinates to a NetCDF
-        file
-        """
-        raise NotImplementedError
 
 
     def __len__(self):
@@ -633,4 +606,5 @@ def ForceGridRandom(magnitudes_in_N=1., npts=10000):
         dims=('F0', 'theta', 'h'),
         coords=(F0, theta, h),
         callback=to_rtp)
+
 
