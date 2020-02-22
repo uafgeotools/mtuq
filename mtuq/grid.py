@@ -8,8 +8,8 @@ from numpy.random import uniform as random
 from xarray import DataArray, Dataset
 
 from mtuq.util import AttribDict, asarray
-from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_mij, to_rtp, to_rho
+from mtuq.util.math import tight_interval as regular
+from mtuq.util.lune import to_mij, to_rtp, to_rho, v_w_grid
 from mtuq.util.xarray import array_to_dict
 
 
@@ -445,6 +445,7 @@ class UnstructuredGrid(object):
         return self
 
 
+
 def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
     """ Full moment tensor grid with randomly-spaced values
 
@@ -484,14 +485,19 @@ def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
 
 
 
-def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
+def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20, tightness=0.8):
     """ Full moment tensor grid with regularly-spaced values
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
-    returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^5`.
+    returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
 
-    Grid discretization based on the uniform distribution defined by `Tape2015`
-    (https://doi.org/10.1093/gji/ggv262)
+    For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
+    For tightness~1, grid will be regular in Tape2015 parameters v, w.
+    For intermediate values, the grid will be "semiregular" in the sense of
+    a linear interpolation between the above cases.
+
+    Another way to think about is that `tightness` increases, the extremal
+    grid points closer get to the boundary of the lune.
 
     .. rubric :: Usage
 
@@ -502,8 +508,8 @@ def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
 
     """
-    v = regular(-1./3., 1./3., npts_per_axis)
-    w = regular(-3./8.*PI, 3./8.*PI, npts_per_axis)
+    v, w = v_w_grid(npts_per_axis, 2*npts_per_axis, tightness)
+
     kappa = regular(0., 360, npts_per_axis)
     sigma = regular(-90., 90., npts_per_axis)
     h = regular(0., 1., npts_per_axis)
