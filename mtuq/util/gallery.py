@@ -4,7 +4,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -84,11 +84,10 @@ if True:
 
 
     #
-    # Following obspy, we use the variable name "source" for the mechanism of
-    # an event and "origin" for the location of an event
+    # Next, we specify the moment tensor grid and source-time function
     #
 
-    sources = DoubleCoupleGridRegular(
+    grid = DoubleCoupleGridRegular(
         npts_per_axis=10,
         magnitudes=[4.5])
 

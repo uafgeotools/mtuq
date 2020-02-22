@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot
 from xarray import DataArray
 from mtuq.grid import Grid
-from mtuq.util.lune import to_delta_gamma
+from mtuq.util.lune import to_delta, to_gamma
 from mtuq.util.xarray import dataarray_to_table
 
 

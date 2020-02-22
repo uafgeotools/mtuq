@@ -6,7 +6,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -415,11 +415,10 @@ OriginsDefinitions="""
 
 Grid_DoubleCouple="""
     #
-    # Following obspy, we use the variable name "source" for the mechanism of
-    # an event and "origin" for the location of an event
+    # Next, we specify the moment tensor grid and source-time function
     #
 
-    sources = DoubleCoupleGridRegular(
+    grid = DoubleCoupleGridRegular(
         npts_per_axis=40,
         magnitudes=[4.5])
 
@@ -431,8 +430,7 @@ Grid_DoubleCouple="""
 
 Grid_DoubleCoupleMagnitudeDepth="""
     #
-    # Following obspy, we use the variable name "source" for the mechanism of
-    # an event and "origin" for the location of an event
+    # Next, we specify the moment tensor grid and source-time function
     #
 
     magnitudes = np.array(
@@ -440,8 +438,8 @@ Grid_DoubleCoupleMagnitudeDepth="""
         [4.3, 4.4, 4.5,     
          4.6, 4.7, 4.8]) 
 
-    sources = DoubleCoupleGridRegular(
-        npts_per_axis=25,
+    grid = DoubleCoupleGridRegular(
+        npts_per_axis=30,
         magnitudes=magnitudes)
 
     wavelet = Trapezoid(
@@ -452,11 +450,10 @@ Grid_DoubleCoupleMagnitudeDepth="""
 
 Grid_FullMomentTensor="""
     #
-    # Following obspy, we use the variable name "source" for the mechanism of
-    # an event and "origin" for the location of an event
+    # Next, we specify the moment tensor grid and source-time function
     #
 
-    sources = FullMomentTensorGridRegular(
+    grid = FullMomentTensorGridRegular(
         npts_per_axis=20,
         magnitudes=[4.5])
 
@@ -468,10 +465,10 @@ Grid_FullMomentTensor="""
 
 Grid_TestDoubleCoupleMagnitudeDepth="""
     #
-    # Next we specify the source parameter grid
+    # Next, we specify the moment tensor grid and source-time function
     #
 
-    sources = DoubleCoupleGridRegular(
+    grid = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitudes=[4.4, 4.5, 4.6])
 
@@ -584,19 +581,19 @@ Main_GridSearch_DoubleCouple="""
         print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origin, sources)
+        data_bw, greens_bw, misfit_bw, origin, grid)
 
     if comm.rank==0:
         print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origin, sources)
+        data_sw, greens_sw, misfit_sw, origin, grid)
 
     if comm.rank==0:
         results_sum = results_bw + results_sw
         best_misfit = results_sum.min()
-        best_source = sources.get(results_sum.argmin(), callback=to_mij)
-        lune_dict = sources.get_dict(results_sum.argmin())
+        best_source = grid.get(results_sum.argmin(), callback=to_mij)
+        lune_dict = grid.get_dict(results_sum.argmin())
 
 
 """
@@ -662,13 +659,13 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, sources)
+        data_bw, greens_bw, misfit_bw, origins, grid)
 
     if rank==0:
         print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, sources)
+        data_sw, greens_sw, misfit_sw, origins, grid)
 
     if rank==0:
         results = results_bw + results_sw
@@ -676,8 +673,8 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         _j, _i = np.unravel_index(np.argmin(results), results.shape)
         best_origin = origins[_i]
-        best_source = sources.get(_j, callback=to_mij)
-        lune_dict = sources.get_dict(_j)
+        best_source = grid.get(_j, callback=to_mij)
+        lune_dict = grid.get_dict(_j)
 
 
 """
@@ -722,16 +719,16 @@ Main2_SerialGridSearch_DoubleCouple="""
     #
 
     print('Evaluating body wave misfit...\\n')
-    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, sources)
+    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, grid)
 
     print('Evaluating surface wave misfit...\\n')
-    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, sources)
+    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
 
 
     results_sum = results_bw + results_sw
     best_misfit = results_sum.min()
-    best_source = sources.get(results_sum.argmin(), callback=to_mij)
-    lune_dict = sources.get_dict(results_sum.argmin())
+    best_source = grid.get(results_sum.argmin(), callback=to_mij)
+    lune_dict = grid.get_dict(results_sum.argmin())
 
 """
 
@@ -774,12 +771,12 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, sources, verbose=False)
+        data_bw, greens_bw, misfit_bw, origins, grid, verbose=False)
 
     print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, sources, verbose=False)
+        data_sw, greens_sw, misfit_sw, origins, grid, verbose=False)
 
 
 """
@@ -845,13 +842,13 @@ Main_TestMisfit="""
     print('Evaluating body wave misfit...\\n')
 
     results_0 = misfit_bw(
-        data_bw, greens_bw, sources, optimization_level=0)
+        data_bw, greens_bw, grid, optimization_level=0)
 
     results_1 = misfit_bw(
-        data_bw, greens_bw, sources, optimization_level=1)
+        data_bw, greens_bw, grid, optimization_level=1)
 
     results_2 = misfit_bw(
-        data_bw, greens_bw, sources, optimization_level=2)
+        data_bw, greens_bw, grid, optimization_level=2)
 
     print(results_0.max())
     print(results_1.max())
@@ -862,13 +859,13 @@ Main_TestMisfit="""
     print('Evaluating surface wave misfit...\\n')
 
     results_0 = misfit_sw(
-        data_sw, greens_sw, sources, optimization_level=0)
+        data_sw, greens_sw, grid, optimization_level=0)
 
     results_1 = misfit_sw(
-        data_sw, greens_sw, sources, optimization_level=1)
+        data_sw, greens_sw, grid, optimization_level=1)
 
     results_2 = misfit_sw(
-        data_sw, greens_sw, sources, optimization_level=2)
+        data_sw, greens_sw, grid, optimization_level=2)
 
     print(results_0.max())
     print(results_1.max())
@@ -893,7 +890,11 @@ WrapUp_GridSearch_DoubleCouple="""
 
         plot_beachball(event_id+'_beachball.png', best_source)
 
-        sources.save(event_id+'.nc', results_sum)
+        plot_misfit(event_id+'_misfit.ps', grid, results_sum)
+
+        plot_misfit(event_id+'_misfit.ps', grid, results_sum)
+
+        grid.save(event_id+'.nc', results_sum)
 
         print('Finished\\n')
 
@@ -913,10 +914,10 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
         misfit_vs_depth(event_id+'_misfit_vs_depth_bw.png',
-            data_bw, misfit_bw, origins, sources, results_bw)
+            data_bw, misfit_bw, origins, grid, results_bw)
 
         misfit_vs_depth(event_id+'_misfit_vs_depth_sw.png',
-            data_sw, misfit_sw, origins, sources, results_sw)
+            data_sw, misfit_sw, origins, grid, results_sw)
 
         print('Finished\\n')
 """
@@ -935,7 +936,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     plot_beachball(event_id+'_beachball.png', best_source)
 
-    sources.save(event_id+'.nc', results_sum)
+    plot_misfit(event_id+'_misfit.ps', grid, results_sum)
+
+    grid.save(event_id+'.nc', results_sum)
 
     print('Finished\\n')
 
@@ -944,7 +947,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
 WrapUp_TestGridSearch_DoubleCouple="""
     best_misfit = (results_bw + results_sw).min()
-    best_source = sources.get((results_bw + results_sw).argmin())
+    best_source = grid.get((results_bw + results_sw).argmin())
 
     if run_figures:
         plot_data_greens(event_id+'.png',
@@ -988,7 +991,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     best_misfit = (results_bw + results_sw).min()
-    best_source = sources.get((results_bw + results_sw).argmin())
+    best_source = grid.get((results_bw + results_sw).argmin())
 
     if run_figures:
         filename = event_id+'_misfit_vs_depth.png'
