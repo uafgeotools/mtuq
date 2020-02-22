@@ -195,7 +195,7 @@ def _get_groups(groups, components):
 
 
 def _as_array(sources):
-    array = sources.as_array(callback=None)
+    array = sources.as_array()
 
     if array.shape[1]==6:
         # convert moment tensors to Mij parameterization (up,south,east)

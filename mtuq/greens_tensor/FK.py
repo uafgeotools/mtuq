@@ -37,7 +37,7 @@ class GreensTensor(GreensTensorBase):
 
 
     def _precompute(self):
-        """ Computes numpy arrays used by get_synthetics
+        """ Computes NumPy arrays used by get_synthetics
         """
         if self.include_mt:
             self._precompute_mt()
@@ -49,6 +49,10 @@ class GreensTensor(GreensTensorBase):
 
 
     def _precompute_mt(self):
+        """ Recombines FK time series so they can be used in straightforward
+        liner combination with Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
+        """
+
         array = self._array
         phi = np.deg2rad(self.azimuth)
         _j = 0

@@ -1,20 +1,22 @@
 
 import numpy as np
+from mtuq.util.math import open_interval
 
 
-kR3 = np.sqrt(3.0)
-k2R6 = 2.0 * np.sqrt(6.)
-k2R3 = 2.0 * np.sqrt(3.)
-k4R6 = 4.0 * np.sqrt(6.)
-k8R6 = 8.0 * np.sqrt(6.)
-
-deg2rad = np.pi / 180.
+deg2rad = np.pi/180.
+rad2deg = 180./np.pi
 
 
 def to_mij(rho, v, w, kappa, sigma, h):
     """ Converts from lune parameters to moment tensor parameters 
     (up-south-east convention)
     """
+    kR3 = np.sqrt(3.)
+    k2R6 = 2.*np.sqrt(6.)
+    k2R3 = 2.*np.sqrt(3.)
+    k4R6 = 4.*np.sqrt(6.)
+    k8R6 = 8.*np.sqrt(6.)
+
     m0 = rho/np.sqrt(2.)
     delta, gamma = to_delta_gamma(v, w)
     beta = 90. - delta
@@ -95,35 +97,96 @@ def to_rtp(F0, theta, h):
 
 
 def to_delta_gamma(v, w):
+    """ Converts from Tape2015 parameters to lune coordinates
+    """
+    return to_delta(w), to_gamma(v)
+
+
+def to_gamma(v):
+    """ Converts from Tape2015 parameter v to lune longitude
+    """
+    gamma = (1./3.)*np.arcsin(3.*v)
+    gamma *= rad2deg
+    return gamma
+
+
+def to_delta(w):
+    """ Converts from Tape2015 parameter w to lune latitude
+    """
     beta0 = np.linspace(0, np.pi, 100)
     u0 = 0.75*beta0 - 0.5*np.sin(2.*beta0) + 0.0625*np.sin(4.*beta0)
     beta = np.interp(3.*np.pi/8. - w, u0, beta0)
-    beta /= deg2rad
+    beta *= rad2deg
     delta = 90. - beta
-
-    gamma = (1./3.)*np.arcsin(3.*v)
-    gamma /= deg2rad
-
-    return delta, gamma
+    return delta
 
 
 def to_v_w(delta, gamma):
-    delta /= DEG
-    gamma /= DEG
-    beta = PI/2. - delta
+    """ Converts from lune coordinates to Tape2015 parameters
+    """
+    return to_v(gamma), to_w(delta)
 
-    u = (0.75*beta - 0.5*np.sin(2.*beta) + 0.0625*np.sin(4.*beta))
+
+def to_v(gamma):
+    """ Converts from lune longitude to Tape2015 parameter v
+    """
+    gamma *= deg2rad
     v = (1./3.)*np.sin(3.*gamma)
-    w = 3.*PI/8. - u
+    return v
 
-    return v, w
+
+def to_w(delta):
+    """ Converts from lune latitude to Tape2015 parameter w
+    """
+    delta *= deg2rad
+    beta = np.pi/2. - delta
+    u = (0.75*beta - 0.5*np.sin(2.*beta) + 0.0625*np.sin(4.*beta))
+    w = 3.*np.pi/8. - u
+    return w
 
 
 def to_M0(Mw):
+    """ Converts from moment magnitude to scalar moment
+    """
     return 10.**(1.5*float(Mw) + 9.1)
 
 
 def to_rho(Mw):
+    """ Converts from moment magnitude to Tape2012 magnitude parameter
+    """
     return to_M0(Mw)*np.sqrt(2.)
 
 
+def v_w_grid(npts_v, npts_w, tightness=0.5):
+    """ Semiregular moment tensor grid
+
+    For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
+    For tightness~1, grid will be regular in Tape2015 parameters v, w.
+    For intermediate values, the grid will be "semiregular" in the sense of
+    a linear interpolation between the above cases.
+
+    Another way to think about is that as `tightness` increases, the extremal
+    grid points get closer to the boundary of the lune.
+    """
+    assert 0. <= tightness < 1.,\
+        Exception("Allowable range: 0. <= tightness < 1.")
+
+    v1 = open_interval(-1./3., 1./3., npts_v)
+    w1 = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
+
+    gamma1 = to_gamma(v1)
+    delta1 = to_delta(w1)
+
+    gamma2 = np.linspace(-30., 30., npts_v)
+    delta2 = np.linspace(-90., 90., npts_w)
+
+    delta = delta1*(1.-tightness) + delta2*tightness
+    gamma = gamma1*(1.-tightness) + gamma2*tightness
+
+    return to_v(gamma), to_w(delta)
+
+
+def HammerGrid():
+    """ Unstructured grid for visualization on the lune
+    """
+    raise NotImplementedError

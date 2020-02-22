@@ -5,11 +5,12 @@ import numpy as np
 from builtins import object
 from numpy import pi as PI
 from numpy.random import uniform as random
-from xarray import DataArray
+from xarray import DataArray, Dataset
 
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_mij, to_rtp, to_rho
+from mtuq.util.lune import to_mij, to_rtp, to_rho, v_w_grid
+from mtuq.util.xarray import array_to_dict
 
 
 
@@ -25,7 +26,7 @@ class Grid(object):
 
        x = np.linspace(0., 1., N)
        y = np.linspace(0., 1., N)
-       grid = Grid(dims=('x','y'), coords=(x, y))
+       grid = Grid(dims=('x', 'y'), coords=(x, y))
 
 
     To parameterize the surface of the Earth with an `N`-by-`2N` Mercator grid:
@@ -33,7 +34,7 @@ class Grid(object):
     .. code::          
 
        lat = np.linspace(-90., 90., N)
-       lon = np.linspace(-90., 90., N)
+       lon = np.linspace(-180., 180., N)
        grid = Grid(dims=('lat', 'lon'), coords=(lat, lon))
 
 
@@ -42,7 +43,7 @@ class Grid(object):
     Iterating over a grid is similar to iterating over a multidimensional 
     NumPy array.  The order of grid points is determined by the order of axes
     used to create the grid.  For instance, in the unit square example above, 
-    ``'x'`` is the fast axis and ``'y'`` is the slow axis.
+    ``'x'`` is the slow axis and ``'y'`` is the fast axis.
 
     If ``start`` and ``stop`` arguments are given when creating a grid,
     iteration will begin and end at these indices.  Otherwise, iteration will
@@ -80,7 +81,7 @@ class Grid(object):
 
         # what attributes would the grid have if stored as a numpy array?
         self.ndim = len(shape)
-        self.shape = shape
+        self.shape = tuple(shape)
 
         # what part of the grid do we want to iterate over?
         self.start = start
@@ -95,29 +96,49 @@ class Grid(object):
         self.callback = callback
 
  
-    def as_array(self, **kwargs):
-        """ Returns the entire set of grid points as a multidimensional 
-        Numpy array
-
-        .. rubric:: callback functions
-
-        If a ``callback`` function was given when creating a grid, then 
-        ``as_array`` returns the result of applying the callback to the 
-        i-th grid point.  This behavior can be overridden by supplying a 
-        callback function as a keyword argument to ``as_array`` itself.  
-        If ``callback`` is ``None``, then no function is applied.
-
+    def as_array(self):
+        """ Returns the entire set of grid points as Numpy array
         """
-        # optionally override default callback
-        if 'callback' in kwargs:
-            callback = kwargs['callback']
-        else:
-            callback = self.callback
-
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
-            array[_i, :] = self.get(_i, callback=callback)
+            array[_i, :] = self.get(_i+self.start, callback=None)
         return array
+
+
+    def as_dataarray(self, values=None):
+        """ Returns the entire set of grid points as xarray DataArray
+        """
+        if values is None:
+            values = np.empty(self.shape)
+            values[:] = np.nan
+
+        if values.size != self.size:
+            raise Exception("Mismatch between values and grid shape")
+
+        if values.shape != self.shape:
+            values = np.reshape(values, self.shape)
+
+        return DataArray(data=values, dims=self.dims, coords=self.coords)
+
+
+    def as_dataset(self, values=None):
+        """ Returns the entire set of grid points as xarray Dataset
+        """
+        if values is None:
+            values = np.empty(self.size)
+            values[:] = np.nan
+
+        if values.size != self.size:
+            raise Exception("Mismatch between values and grid shape")
+
+        array = self.as_array()
+
+        data_vars = {self.dims[_i]: array[:, _i]
+            for _i in range(self.ndim)}
+
+        data_vars.update({'values': values})
+
+        return Dataset(data_vars)
 
 
     def get(self, i, **kwargs):
@@ -140,7 +161,7 @@ class Grid(object):
         vals = self.coords
         array = np.zeros(self.ndim)
 
-        for _k in range(self.ndim):
+        for _k in range(self.ndim-1, -1, -1):
             val = vals[_k]
             array[_k] = val[int(i%len(val))]
             i/=len(val)
@@ -169,63 +190,52 @@ class Grid(object):
 
         subsets = []
         for iproc in range(nproc):
-            start=int(iproc*self.size/nproc)
-            stop=(iproc+1)*int(self.size/nproc)
+            start = int(iproc*self.size/nproc)
+            stop = int((iproc+1)*self.size/nproc)
+
             subsets += [Grid(
                 self.dims, self.coords, start, stop, callback=self.callback)]
         return subsets
 
 
-    def save(self, filename, values, labels=None):
+    def save(self, filename, values=None):
         """ Saves one or more sets of values and corresponding grid
-        coordinates to a NetCDF file or files
+        coordinates to a NetCDF files
 
         .. rubric:: Input arguments
 
-        ``values`` (NumPy array) 
+        ``values`` (dict)
 
-        A 1-D or 2-D  NumPy array containing one or more sets of values 
-        defined over the entire grid.  The length of the array along the
-        first dimension must match the size of the grid. (Note that
-        `mtuq.grid_search` results automatically satisfy this requirement.)
+        A dictionary {label: values} containing sets of values defined on the
+        grid. Each label must be a string and each set of values must be a 
+        NumPy array with the same size as the grid.
 
+        .. note::
 
-        ``labels`` (list)
-
-        Optional list containing a label for each set of values.  For each
-        corresponding output file, the full filename becomes 
-        `filename+label`. 
-
-        If this argument is not given and only one file is being written,
-        the label defaults to an empty string.  If multiple files are being
-        written, the labels default to '0000000', '0000001', and so on.
+           `mtuq.grid_search` returns NumPy arrays of misfit values with shape
+           `(len(sources), len(origins))` that can directly supplied to this 
+           method.
 
         """
-        # how many NetCDF files will be written?
-        nout = 1
-        if values.ndim > 1:
-            nout = values.shape[1]
+        if values is None:
+            # write grid coordinates only
+            self.as_dataarray().to_netcdf(filename)
+            return
 
-        # check input arguments
-        if values.shape[0] != self.size:
-            raise ValueError("Mismatch between values and grid shape")
+        if type(values)==np.ndarray:
+            # attempt to convert NumPy array to dict using a generic sequence
+            # '000000', '000001', ... for the dictionary keys
+            values = array_to_dict(values, self.shape)
 
-        if labels is None and nout==1:
-            labels = ['']
-        elif labels is None and nout>1:
-            labels = ['%06d' % _i for  _i in range(nn)]
+        if not type(values)==dict:
+            raise ValueError
 
-        if len(labels)!=nout:
-            raise ValueError("Mismatch between values and number of labels")
-
-        # now, begin actually writing output files
-        for _i in range(nout):
+        # now, begin actually writing NetCDF files
+        for label, array in values.items():
 
             # for I/O, we will use xarray
-            da = DataArray(np.reshape(values[:, _i], self.shape),
-                dims=self.dims, coords=self.coords)
-
-            da.to_netcdf(filename+labels[_i])
+            da = self.as_dataarray(np.reshape(array, self.shape))
+            da.to_netcdf(filename+label)
 
 
     def __len__(self):
@@ -267,7 +277,7 @@ class UnstructuredGrid(object):
 
        x = np.random.rand(N)
        y = np.random.rand(N)
-       grid = Grid(dims=('x','y'), coords=(x, y))
+       grid = UnstructuredGrid(dims=('x', 'y'), coords=(x, y))
 
 
     .. rubric:: Iterating over grids
@@ -328,30 +338,31 @@ class UnstructuredGrid(object):
         self.callback = callback
 
 
-    def as_array(self, **kwargs):
-        """ Returns the entire set of grid points as a multidimensional 
-        Numpy array
-
-        .. rubric:: callback functions
-
-        If a ``callback`` function was given when creating a grid, then 
-        ``as_array`` returns the result of applying the callback to the 
-        i-th grid point.  This behavior can be overridden by supplying a 
-        callback function as a keyword argument to ``as_array`` itself.  
-        If ``callback`` is ``None``, then no function is applied.
-
+    def as_array(self):
+        """ Returns the entire set of grid points as NumPy array
         """
-
-        # optionally override default callback
-        if 'callback' in kwargs:
-            callback = kwargs['callback']
-        else:
-            callback = self.callback
-
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
-            array[_i, :] = self.get(_i+self.start, callback=callback)
+            array[_i, :] = self.get(_i+self.start, callback=None)
         return array
+
+
+    def as_dataset(self, values=None):
+        """ Returns the entire set of grid points as xarray Dataset
+        """
+        if values is None:
+            values = np.empty(self.size)
+            values[:] = np.nan
+
+        if values.size != self.size:
+            raise Exception("Mismatch between values and grid shape")
+
+        data_vars = {self.dims[_i]: self.coords[_i]
+            for _i in range(self.ndim)}
+
+        data_vars.update({'values': values})
+
+        return Dataset(data_vars)
 
 
     def get(self, i, **kwargs):
@@ -400,21 +411,16 @@ class UnstructuredGrid(object):
         """
         subsets = []
         for iproc in range(nproc):
-            start=iproc*int(self.size/nproc)
-            stop=(iproc+1)*int(self.size/nproc)
+            start = int(iproc*self.size/nproc)
+            stop = int((iproc+1)*self.size/nproc)
+
             coords = []
             for key, val in zip(self.dims, self.coords):
                 coords += [[key, val[start:stop]]]
             subsets += [UnstructuredGrid(
                 self.dims, coords, start, stop, callback=self.callback)]
+
         return subsets
-
-
-    def save(self, filename, values, labels=None):
-        """ Saves a set of values and corresponding grid coordinates to a NetCDF
-        file
-        """
-        raise NotImplementedError
 
 
     def __len__(self):
@@ -437,6 +443,7 @@ class UnstructuredGrid(object):
 
     def __iter__(self):
         return self
+
 
 
 def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
@@ -478,14 +485,19 @@ def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
 
 
 
-def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
+def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20, tightness=0.8):
     """ Full moment tensor grid with regularly-spaced values
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
-    returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^5`.
+    returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
 
-    Grid discretization based on the uniform distribution defined by `Tape2015`
-    (https://doi.org/10.1093/gji/ggv262)
+    For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
+    For tightness~1, grid will be regular in Tape2015 parameters v, w.
+    For intermediate values, the grid will be "semiregular" in the sense of
+    a linear interpolation between the above cases.
+
+    Another way to think about is that `tightness` increases, the extremal
+    grid points closer get to the boundary of the lune.
 
     .. rubric :: Usage
 
@@ -496,8 +508,8 @@ def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20):
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
 
     """
-    v = regular(-1./3., 1./3., npts_per_axis)
-    w = regular(-3./8.*PI, 3./8.*PI, npts_per_axis)
+    v, w = v_w_grid(npts_per_axis, 2*npts_per_axis, tightness)
+
     kappa = regular(0., 360, npts_per_axis)
     sigma = regular(-90., 90., npts_per_axis)
     h = regular(0., 1., npts_per_axis)
@@ -600,4 +612,5 @@ def ForceGridRandom(magnitudes_in_N=1., npts=10000):
         dims=('F0', 'theta', 'h'),
         coords=(F0, theta, h),
         callback=to_rtp)
+
 

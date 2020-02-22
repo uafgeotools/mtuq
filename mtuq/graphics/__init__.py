@@ -3,6 +3,8 @@ import shutil
 import subprocess
 
 from mtuq.graphics.beachball import plot_beachball, misfit_vs_depth
+from mtuq.graphics.lune import plot_misfit, plot_misfit_vw,\
+    plot_likelihood, plot_likelihood_vw
 from mtuq.graphics.waveform import plot_data_synthetics, plot_data_greens
 
 

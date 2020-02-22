@@ -4,7 +4,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -86,11 +86,10 @@ if __name__=='__main__':
 
 
     #
-    # Following obspy, we use the variable name "source" for the mechanism of
-    # an event and "origin" for the location of an event
+    # Next, we specify the moment tensor grid and source-time function
     #
 
-    sources = DoubleCoupleGridRegular(
+    grid = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitudes=[4.5])
 
@@ -146,20 +145,20 @@ if __name__=='__main__':
     #
 
     print('Evaluating body wave misfit...\n')
-    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, sources)
+    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, grid)
 
     print('Evaluating surface wave misfit...\n')
-    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, sources)
+    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
 
 
     results_sum = results_bw + results_sw
     best_misfit = results_sum.min()
-    best_source = sources.get(results_sum.argmin(), callback=to_mij)
-    lune_dict = sources.get_dict(results_sum.argmin())
+    best_source = grid.get(results_sum.argmin(), callback=to_mij)
+    lune_dict = grid.get_dict(results_sum.argmin())
 
 
     best_misfit = (results_bw + results_sw).min()
-    best_source = sources.get((results_bw + results_sw).argmin())
+    best_source = grid.get((results_bw + results_sw).argmin())
 
     if run_figures:
         plot_data_greens(event_id+'.png',

@@ -13,8 +13,6 @@ from scipy.signal import fftconvolve
 
 class GreensTensor(Stream):
     """
-    Green's tensor base class
-
     Holds multiple time series corresponding to the independent elements 
     of an elastic Green's tensor. 
 
@@ -187,7 +185,7 @@ class GreensTensor(Stream):
 
     def select(self, component=None, channel=None):
         """
-        Selects only those traces that match the supplied metadata criteria
+        Selects time series that match the supplied metadata criteria
         """
         return Stream([trace for trace in self]).select(
             component=component, channel=channel)

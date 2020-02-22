@@ -5,7 +5,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, misfit_vs_depth
+from mtuq.graphics import plot_data_greens, misfit_vs_depth, plot_misfit
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -118,8 +118,7 @@ if __name__=='__main__':
 
 
     #
-    # Following obspy, we use the variable name "source" for the mechanism of
-    # an event and "origin" for the location of an event
+    # Next, we specify the moment tensor grid and source-time function
     #
 
     magnitudes = np.array(
@@ -127,8 +126,8 @@ if __name__=='__main__':
         [4.3, 4.4, 4.5,     
          4.6, 4.7, 4.8]) 
 
-    sources = DoubleCoupleGridRegular(
-        npts_per_axis=25,
+    grid = DoubleCoupleGridRegular(
+        npts_per_axis=30,
         magnitudes=magnitudes)
 
     wavelet = Trapezoid(
@@ -194,13 +193,13 @@ if __name__=='__main__':
         print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, sources)
+        data_bw, greens_bw, misfit_bw, origins, grid)
 
     if rank==0:
         print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, sources)
+        data_sw, greens_sw, misfit_sw, origins, grid)
 
     if rank==0:
         results = results_bw + results_sw
@@ -208,8 +207,8 @@ if __name__=='__main__':
 
         _j, _i = np.unravel_index(np.argmin(results), results.shape)
         best_origin = origins[_i]
-        best_source = sources.get(_j, callback=to_mij)
-        lune_dict = sources.get_dict(_j)
+        best_source = grid.get(_j, callback=to_mij)
+        lune_dict = grid.get_dict(_j)
 
 
 
@@ -225,9 +224,9 @@ if __name__=='__main__':
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
         misfit_vs_depth(event_id+'_misfit_vs_depth_bw.png',
-            data_bw, misfit_bw, origins, sources, results_bw)
+            data_bw, misfit_bw, origins, grid, results_bw)
 
         misfit_vs_depth(event_id+'_misfit_vs_depth_sw.png',
-            data_sw, misfit_sw, origins, sources, results_sw)
+            data_sw, misfit_sw, origins, grid, results_sw)
 
         print('Finished\n')

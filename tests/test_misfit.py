@@ -4,7 +4,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -86,11 +86,10 @@ if __name__=='__main__':
 
 
     #
-    # Following obspy, we use the variable name "source" for the mechanism of
-    # an event and "origin" for the location of an event
+    # Next, we specify the moment tensor grid and source-time function
     #
 
-    sources = DoubleCoupleGridRegular(
+    grid = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitudes=[4.5])
 
@@ -145,13 +144,13 @@ if __name__=='__main__':
     print('Evaluating body wave misfit...\n')
 
     results_0 = misfit_bw(
-        data_bw, greens_bw, sources, optimization_level=0)
+        data_bw, greens_bw, grid, optimization_level=0)
 
     results_1 = misfit_bw(
-        data_bw, greens_bw, sources, optimization_level=1)
+        data_bw, greens_bw, grid, optimization_level=1)
 
     results_2 = misfit_bw(
-        data_bw, greens_bw, sources, optimization_level=2)
+        data_bw, greens_bw, grid, optimization_level=2)
 
     print(results_0.max())
     print(results_1.max())
@@ -162,13 +161,13 @@ if __name__=='__main__':
     print('Evaluating surface wave misfit...\n')
 
     results_0 = misfit_sw(
-        data_sw, greens_sw, sources, optimization_level=0)
+        data_sw, greens_sw, grid, optimization_level=0)
 
     results_1 = misfit_sw(
-        data_sw, greens_sw, sources, optimization_level=1)
+        data_sw, greens_sw, grid, optimization_level=1)
 
     results_2 = misfit_sw(
-        data_sw, greens_sw, sources, optimization_level=2)
+        data_sw, greens_sw, grid, optimization_level=2)
 
     print(results_0.max())
     print(results_1.max())

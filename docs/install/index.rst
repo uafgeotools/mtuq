@@ -1,5 +1,5 @@
-Installation instructions
-=========================
+Installation
+============
 
 To install MTUQ, follow the instructions for conda (preferred) or one of the other environments below:
 

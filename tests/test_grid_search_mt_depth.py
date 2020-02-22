@@ -4,7 +4,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, misfit_vs_depth
+from mtuq.graphics import plot_data_greens, misfit_vs_depth, plot_misfit
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -81,10 +81,10 @@ if __name__=='__main__':
 
 
     #
-    # Next we specify the source parameter grid
+    # Next, we specify the moment tensor grid and source-time function
     #
 
-    sources = DoubleCoupleGridRegular(
+    grid = DoubleCoupleGridRegular(
         npts_per_axis=5,
         magnitudes=[4.4, 4.5, 4.6])
 
@@ -147,17 +147,17 @@ if __name__=='__main__':
     print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, sources, verbose=False)
+        data_bw, greens_bw, misfit_bw, origins, grid, verbose=False)
 
     print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, sources, verbose=False)
+        data_sw, greens_sw, misfit_sw, origins, grid, verbose=False)
 
 
 
     best_misfit = (results_bw + results_sw).min()
-    best_source = sources.get((results_bw + results_sw).argmin())
+    best_source = grid.get((results_bw + results_sw).argmin())
 
     if run_figures:
         filename = event_id+'_misfit_vs_depth.png'
