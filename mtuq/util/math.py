@@ -31,6 +31,14 @@ def closed_interval(x1,x2,nx):
     return np.linspace(x1,x2,nx)
 
 
+def tight_interval(x1,x2,nx,tightness=0.999):
+    # tightness (float) 
+    # 0. reduces to ``open_intervel``, 1. reduces to ``closed_intervel``
+    Lo = open_interval(x1,x2,nx)
+    Lc = closed_interval(x1,x2,nx)
+    return Lo*(1.-tightness) + Lc*tightness
+
+
 def correlate(v1, v2):
     """ Fast cross-correlation function
 
