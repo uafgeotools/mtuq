@@ -8,7 +8,7 @@ from numpy.random import uniform as random
 from xarray import DataArray, Dataset
 
 from mtuq.util import AttribDict, asarray
-from mtuq.util.math import tight_interval as regular
+from mtuq.util.math import open_interval as regular
 from mtuq.util.lune import to_mij, to_rtp, to_rho, v_w_grid
 from mtuq.util.xarray import array_to_dict
 
