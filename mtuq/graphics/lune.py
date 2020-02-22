@@ -8,24 +8,100 @@ from mtuq.util.lune import to_delta_gamma
 from mtuq.util.xarray import dataarray_to_table
 
 
-def plot_vw(filename, grid, values):
+def plot_misfit(filename, grid, misfit):
+    """ Plots misfit values on lune
+    (GMT implementation)
+    """
+    _check(grid, misfit)
+    
+    # convert to DataArray for easy manipulation
+    da = grid.as_dataarray(misfit)
 
-    if type(grid) != Grid:
-        raise TypeError
+    da = da.min(['rho', 'kappa', 'sigma', 'h'])
+    da.values -= da.values.min()
+    da.values /= da.values.max()
 
-    for dim in ('rho', 'v', 'w', 'kappa', 'sigma', 'h'):
-        assert dim in grid.dims, Exception("Unexpected grid format")
+    delta = to_delta(da.coords['w'])
+    gamma = to_gamma(da.coords['v'])
+    
+    delta, gamma = np.meshgrid(delta, gamma)
+    delta = delta.flatten()
+    gamma = gamma.flatten()
+    values = da.values.flatten() 
+    
+    np.savetxt('misfit.txt',
+        np.column_stack([gamma, delta, values]))
+    
+    
+def plot_likelihood(filename, grid, misfit):
+    """ Plots likelihood values on lune
+    (GMT implementation)
+    """
+    _check(grid, misfit)
 
-    for dim in ('v', 'w'):
-        assert grid.sizes[dim]>1, Exception("Unexpected grid format")
+    # convert to DataArray for easy manipulation
+    da = grid.as_dataarray(misfit)
 
-    # create DataArray
-    da = grid.as_dataarray(values)
+    da.values = np.exp(-da.values)
+    da = da.sum(['rho', 'kappa', 'sigma', 'h'])
 
-    # sum over magnitude
-    da = da.sum(dim='rho')
+    delta = to_delta(da.coords['w'])
+    gamma = to_gamma(da.coords['v'])
 
-    # reduce over orientation
+    delta, gamma = np.meshgrid(delta, gamma)
+    delta = delta.flatten()
+    gamma = gamma.flatten()
+    values = da.values.flatten()
+
+    np.savetxt('likelihood.txt',
+        np.column_stack([gamma, delta, values]))
+    
+
+def plot_misfit_vw(filename, grid, misfit):
+    """ Plots misfit values on v-w rectangle
+    (GMT implementation)
+    """
+    _check(grid, misfit)
+
+    # convert to DataArray for easy manipulation
+    da = grid.as_dataarray(misfit)
+
+    da = da.min(['rho', 'kappa', 'sigma', 'h'])
+    da.values -= da.values.min()
+    da.values /= da.values.max()
+
+    np.savetxt('misfit_vw.txt', 
+        dataarray_to_table(da, ('v', 'w')))
+
+
+def plot_likelihood_vw(filename, grid, misfit):
+    """ Plots likelihood values on v-w rectangle
+    (GMT implementation)
+    """
+    _check(grid, misfit)
+
+    # convert to DataArray for easy manipulation
+    da = grid.as_dataarray(misfit)
+
+    da.values = np.exp(-values)
+    da = da.sum(['rho', 'kappa', 'sigma', 'h'])
+    da.values -= da.values.min()
+    da.values /= da.values.max()
+
+    np.savetxt('likelihood_vw.txt', 
+        dataarray_to_table(da, ('v', 'w')))
+
+
+def plot_misfit_vw_matplotlib(filename, grid, misfit):
+    """ Plots values on moment tensor grid using v-w projection
+    (matplotlib implementation)
+    """
+    _check(grid, misfit)
+
+    # convert to DataArray for easy manipulation
+    da = grid.as_dataarray(misfit)
+
+    da = da.min(dim='rho')
     da = da.min(dim=('kappa', 'sigma', 'h'))
 
     # now actually plot values
@@ -38,46 +114,11 @@ def plot_vw(filename, grid, values):
     pyplot.savefig(filename)
 
 
-def plot_vw_gmt(filename, grid, values):
+def _check(grid, misfit):
+    if type(grid) != Grid:
+        raise TypeError
 
-    da = grid.as_dataarray(values)
-
-    da = da.sum('rho')
-    da = da.min(['kappa', 'sigma', 'h'])
-
-    # normalize values
-    da.values -= da.values.min()
-    da.values /= da.values.max()
-
-    np.savetxt('tmp.vw', dataarray_to_table(da, ('v', 'w')))
-
-
-def plot_lune_gmt(filename, grid, values):
-
-    da = grid.as_dataarray(values)
-
-    da = da.sum('rho')
-    da = da.min(['kappa', 'sigma', 'h'])
-
-    v = np.array(da.coords['v'])
-    w = np.array(da.coords['w'])
-
-    print('v', v.min(), v.max())
-    print('w', w.min(), w.max())
-
-    delta, gamma = to_delta_gamma(v, w)
-
-    # normalize values
-    da.values -= da.values.min()
-    da.values /= da.values.max()
-
-    # flatten values
-    delta, gamma = np.meshgrid(delta, gamma)
-    delta = delta.flatten()
-    gamma = gamma.flatten()
-    values = da.values.flatten()
-
-    np.savetxt('tmp.lune', np.column_stack(
-        [gamma, delta, values]))
+    for dim in ('rho', 'v', 'w', 'kappa', 'sigma', 'h'):
+        assert dim in grid.dims, Exception("Unexpected grid format")
 
 

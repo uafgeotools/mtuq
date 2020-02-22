@@ -183,10 +183,6 @@ def v_w_grid(npts_v, npts_w, tightness=0.5):
     delta = delta1*(1.-tightness) + delta2*tightness
     gamma = gamma1*(1.-tightness) + gamma2*tightness
 
-    print(delta1)
-    print(delta2)
-    print(delta)
-
     return to_v(gamma), to_w(delta)
 
 
