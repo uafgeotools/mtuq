@@ -109,18 +109,18 @@ if __name__=='__main__':
 
     print('Figure 1 of 3\n')
 
-    plot_data_greens(event_id+'.png',
+    plot_data_greens('graphics_test_1.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print('Figure 2 of 3\n')
 
-    plot_data_greens(event_id+'.png',
+    plot_data_greens('graphics_test_2.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print('Figure 3 of 3\n')
 
-    plot_beachball('test_graphics3.png', mt)
+    plot_beachball('graphics_test_3.png', mt)
 
     print('Finished\n')
