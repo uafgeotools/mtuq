@@ -6,7 +6,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -890,9 +890,7 @@ WrapUp_GridSearch_DoubleCouple="""
 
         plot_beachball(event_id+'_beachball.png', best_source)
 
-        plot_misfit(event_id+'_misfit.ps', grid, results_sum)
-
-        plot_misfit(event_id+'_misfit.ps', grid, results_sum)
+        plot_misfit_dc(event_id+'_misfit.ps', grid, results_sum)
 
         grid.save(event_id+'.nc', results_sum)
 
@@ -936,7 +934,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     plot_beachball(event_id+'_beachball.png', best_source)
 
-    plot_misfit(event_id+'_misfit.ps', grid, results_sum)
+    plot_misfit_dc(event_id+'_misfit.ps', grid, results_sum)
 
     grid.save(event_id+'.nc', results_sum)
 
@@ -958,7 +956,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
 
     if run_checks:
-        def isclose(a, b, atol=1.e6, rtol=1.e-6):
+        def isclose(a, b, atol=1.e6, rtol=1.e-8):
             # the default absolute tolerance (1.e6) is several orders of 
             # magnitude less than the moment of an Mw=0 event
 
@@ -1145,7 +1143,12 @@ if __name__=='__main__':
         file.write(OriginComments)
         file.write(OriginDefinitions)
         file.write(Main_GridSearch_DoubleCouple)
-        file.write(WrapUp_GridSearch_DoubleCouple)
+        file.write(
+            replace(
+            WrapUp_GridSearch_DoubleCouple,
+            'plot_misfit_dc',
+            'plot_misfit',
+            ))
 
 
     with open('examples/SerialGridSearch.DoubleCouple.py', 'w') as file:

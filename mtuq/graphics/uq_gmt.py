@@ -59,7 +59,6 @@ def plot_likelihood(filename, grid, misfit):
     da = da.sum(['rho', 'kappa', 'sigma', 'h'])
     da.values -= da.values.min()
     da.values /= da.values.max()
-    da.values = np.exp(-da.values)
 
     # get coordinates
     delta = to_delta(da.coords['w'])
@@ -90,7 +89,7 @@ def gmt_not_found_warning(filename):
         WARNING
 
         Generic Mapping Tools executables not found on system path.
-        PostScript graphics have not been written. 
+        PostScript output has not been written. 
 
         Misfit values have been saved to:
             %s

@@ -4,7 +4,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -169,7 +169,7 @@ if __name__=='__main__':
 
 
     if run_checks:
-        def isclose(a, b, atol=1.e6, rtol=1.e-6):
+        def isclose(a, b, atol=1.e6, rtol=1.e-8):
             # the default absolute tolerance (1.e6) is several orders of 
             # magnitude less than the moment of an Mw=0 event
 
