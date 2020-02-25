@@ -8,11 +8,11 @@ from mtuq.util.lune import to_delta, to_gamma
 from mtuq.util.xarray import dataarray_to_table
 
 
-def plot_misfit_dc(filename, grid, misfit):
+def plot_misfit_dc(filename, grid, values):
     """ Plots misfit values over strike, dip, and slip
     (matplotlib implementation)
     """
-    da = check_grid('DoubleCouple', grid)
+    da = check_grid('DoubleCouple', grid, values)
 
     # manipulate DataArray
     da = da.min(dim='rho')
@@ -45,7 +45,6 @@ def plot_misfit_dc(filename, grid, misfit):
 
     # FIXME: do labels correspond to the correct axes ?!
     marginal = da.min(dim=('sigma'))
-    print(marginal.dims)
     x = marginal.coords['h']
     y = marginal.coords['kappa']
     pyplot.subplot(2, 2, 1)
@@ -54,7 +53,6 @@ def plot_misfit_dc(filename, grid, misfit):
     pyplot.ylabel('strike')
 
     marginal = da.min(dim=('h'))
-    print(marginal.dims)
     x = marginal.coords['sigma']
     y = marginal.coords['kappa']
     pyplot.subplot(2, 2, 2)
@@ -63,7 +61,6 @@ def plot_misfit_dc(filename, grid, misfit):
     pyplot.ylabel('strike')
 
     marginal = da.min(dim=('kappa'))
-    print(marginal.dims)
     x = marginal.coords['sigma']
     y = marginal.coords['h']
     pyplot.subplot(2, 2, 4)
@@ -74,11 +71,11 @@ def plot_misfit_dc(filename, grid, misfit):
     pyplot.savefig(filename)
 
 
-def plot_misfit_vw(filename, grid, misfit):
+def plot_misfit_vw(filename, grid, values):
     """ Plots values on moment tensor grid using v-w projection
     (matplotlib implementation)
     """
-    da = check_grid('FullMomentTensor', grid)
+    da = check_grid('FullMomentTensor', grid, values)
 
     # manipulate DataArray
     da = da.min(dim='rho')
@@ -94,11 +91,11 @@ def plot_misfit_vw(filename, grid, misfit):
     pyplot.savefig(filename)
 
 
-def plot_likelihood_vw(filename, grid, misfit):
+def plot_likelihood_vw(filename, grid, values):
     """ Plots values on moment tensor grid using v-w projection
     (matplotlib implementation)
     """
-    da = check_grid('FullMomentTensor', grid)
+    da = check_grid('FullMomentTensor', grid, values)
 
     # manipulate DataArray
     da = da.min(dim='rho')
@@ -112,7 +109,7 @@ def plot_likelihood_vw(filename, grid, misfit):
     pyplot.ylim([-3./8.*np.pi, 3./8.*np.pi])
 
 
-def check_grid(grid_type, grid):
+def check_grid(grid_type, grid, values):
     if grid_type in ('DC', 'dc', 'DoubleCouple'):
         _check_dc(grid)
 
@@ -123,7 +120,7 @@ def check_grid(grid_type, grid):
         raise ValueError("Unexpected grid_type")
 
     if type(grid)==Grid:
-        return grid.as_dataarray()
+        return grid.as_dataarray(values)
     else:
         return grid
 

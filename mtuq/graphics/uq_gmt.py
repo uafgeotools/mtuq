@@ -13,11 +13,11 @@ from mtuq.util.xarray import dataarray_to_table
 
 
 
-def plot_misfit(filename, grid, misfit):
+def plot_misfit(filename, grid, values):
     """ Plots misfit values on lune
     (GMT implementation)
     """
-    da = check_grid('FullMomentTensor', grid)
+    da = check_grid('FullMomentTensor', grid, values)
     
     # manipulate DataArray
     da = da.min(['rho', 'kappa', 'sigma', 'h'])
@@ -48,11 +48,11 @@ def plot_misfit(filename, grid, misfit):
             tmpname)
 
 
-def plot_likelihood(filename, grid, misfit):
+def plot_likelihood(filename, grid, values):
     """ Plots likelihood values on lune
     (GMT implementation)
     """
-    da = check_grid('FullMomentTensor', grid)
+    da = check_grid('FullMomentTensor', grid, values)
 
     # manipulate DataArray
     da.values = np.exp(-da.values)
