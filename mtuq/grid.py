@@ -491,8 +491,8 @@ def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20, tightness=0.8
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
     returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
 
-    For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
-    For tightness~1, grid will be regular in Tape2015 parameters v, w.
+    For tightness~0, grid will be regular in Tape2012 parameters v, w.
+    For tightness~1, grid will be regular in Tape2015 parameters delta, gamma.
     For intermediate values, the grid will be "semiregular" in the sense of
     a linear interpolation between the above cases.
 
