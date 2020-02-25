@@ -34,7 +34,7 @@ def plot_misfit(filename, grid, values):
 
     # write misfit values
     name, ext = _check_ext(filename)
-    tmpname = 'tmp_'+name+'_likelihood.txt'
+    tmpname = 'tmp_'+name+'.txt'
     np.savetxt(tmpname, np.column_stack([gamma, delta, values]))
 
     # write PostScript graphics
@@ -70,7 +70,7 @@ def plot_likelihood(filename, grid, values):
 
     # write misfit values
     name, ext = _check_ext(filename)
-    tmpname = 'tmp_'+name+'.txt'
+    tmpname = 'tmp_'+name+'_likelihood.txt'
     np.savetxt(tmpname, np.column_stack([gamma, delta, values]))
 
     # write PostScript graphics

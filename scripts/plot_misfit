@@ -20,8 +20,6 @@ function plot_reference_arcs {
     area_arg=$2
     out=$3
 
-    echo $1 $2 $3 $4
-
     (echo -30 35.2644 ; echo 30 54.7356)  |\
      psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K $shiftd >> $out
 
