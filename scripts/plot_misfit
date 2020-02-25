@@ -1,0 +1,141 @@
+#!/bin/bash
+
+
+function gmt_settings {
+    gmtdefaults -D > .gmtdefaults4
+    gmtset CHAR_ENCODING Standard+
+    gmtset MEASURE_UNIT inch # cm / inch
+    gmtset PAGE_ORIENTATION portrait
+    gmtset BASEMAP_TYPE plain
+    gmtset PAPER_MEDIA letter
+    gmtset LABEL_FONT_SIZE 12
+    gmtset ANOT_FONT_SIZE 12
+    gmtset PLOT_DEGREE_FORMAT ddd.x
+    gmtset COLOR_FOREGROUND 75/75/75 # for polarity cpt
+}
+
+
+function plot_reference_arcs {
+    proj_arg=$1
+    area_arg=$2
+    out=$3
+
+    echo $1 $2 $3 $4
+
+    (echo -30 35.2644 ; echo 30 54.7356)  |\
+     psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    (echo -30 -54.7356; echo 30 -35.2644) |\
+     psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    (echo -30 35.2644 ; echo 30 -35.2644) |\
+    psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K $shiftd >> $out
+
+}
+
+
+function plot_reference_points {
+    proj_arg=$1
+    area_arg=$2
+    out=$3
+
+    echo   0.0000 -90.0000 |\
+    psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo -30.0000 -54.7356 |\
+    psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo -30.0000 0.0000   |\
+    psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo -30.0000 35.2644  |\
+    psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo   0.0000 90.0000  |\
+    psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo 30.0000 54.7356   |\
+    psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo 30.0000 0.0000    |\
+    psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo 30.0000 -35.2644  |\
+    psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo "  0.0000 -90.0000 8 0 1 CT (-1,-1,-1)" |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/-10p >> $out
+
+    echo "-30.0000   0.0000 8 0 1 RM  (2,-1,-1)" |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+
+    echo "-30.0000  35.2644 8 0 1 RM    (1,0,0)" |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+
+    echo "  0.0000  90.0000 8 0 1 CB    (1,1,1)" |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/10p  >> $out
+
+    echo " 30.0000  54.7356 8 0 1 LM    (1,1,0)" |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+
+    echo " 30.0000   0.0000 8 0 1 LM   (1,1,-2)" |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+
+    echo " 30.0000 -35.2644 8 0 1 LM   (0,0,-1)" |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+
+    echo "-30.0000 -54.7356 8 0 1 RM  (0,-1,-1)" |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+
+    echo   0.0 -90.0 10 0 1 CB ISO   |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/-25p   >> $out
+
+    echo   0.0  90.0 10 0 1 CB ISO   |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/20p    >> $out
+
+    echo -30.0   0.0 10 0 1 RM CLVD  |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/-10p >> $out
+
+    echo  30.0   0.0 10 0 1 LM CLVD  |\
+    pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/-10p  >> $out
+}
+
+
+
+
+misfit_table=$1
+out=$2
+
+proj_arg="-JH0/3.4i"
+area_arg="-R-30/30/-90/90"
+shiftd=""
+
+
+gmt_settings
+
+
+# display background grid
+psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -G255 -K $shiftd  > $out
+
+
+# generate color palette
+misfit_min=0.
+misfit_max=1.
+misfit_del=0.02
+makecpt -Cpanoply -D -T${misfit_min}/${misfit_max}/${misfit_del} > tmp_cpt
+
+
+# display color bar
+#tick_major=`echo $misfit_min $misfit_max | awk '{printf "%.0f", ($2-$1)/5}'`
+#psscale -Cpanoply -D2.8/9/1/0.2 -Al -Bf1a${tick_major}:"VR(@~L@~)": -E $shiftd -O -K >> $out
+
+
+# plot misfit values
+pscontour ${misfit_table} $proj_arg $area_arg -Ctmp_cpt -O -K -I -N -V $shiftd -W+ -A- >> $out
+
+# plot reference points and arcs
+plot_reference_arcs $proj_arg $area_arg $out
+plot_reference_points $proj_arg $area_arg $out
+
+
+

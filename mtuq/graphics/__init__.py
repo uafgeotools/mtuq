@@ -3,8 +3,8 @@ import shutil
 import subprocess
 
 from mtuq.graphics.beachball import plot_beachball, misfit_vs_depth
-from mtuq.graphics.lune import plot_misfit, plot_misfit_vw,\
-    plot_likelihood, plot_likelihood_vw
+from mtuq.graphics.uq import plot_misfit_dc, plot_misfit_vw
+from mtuq.graphics.uq_gmt import plot_misfit, plot_likelihood
 from mtuq.graphics.waveform import plot_data_synthetics, plot_data_greens
 
 
@@ -21,6 +21,5 @@ def gmt_version():
 def gmt_major_version():
     if gmt_version() is not None:
         return int(gmt_version().split('.')[0])
-
 
 

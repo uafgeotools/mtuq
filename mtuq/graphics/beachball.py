@@ -23,7 +23,7 @@ from mtuq.event import MomentTensor
 def plot_beachball(filename, mt):
     """ Plots focal mechanism of given moment tensor as PNG image
     """
-    from mtuq.graphics import gmt_major_version
+    from mtuq.graphics.gmt import gmt_major_version
 
     try:
         assert gmt_major_version() >= 6
