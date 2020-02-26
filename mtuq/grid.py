@@ -204,17 +204,17 @@ class Grid(object):
 
         .. rubric:: Input arguments
 
-        ``values`` (dict)
+        ``values`` (`dict` or Numpy array)
 
-        A dictionary {label: values} containing sets of values defined on the
-        grid. Each label must be a string and each set of values must be a 
-        NumPy array with the same size as the grid.
+        Passing a dictionary {label: values} results in separate output for
+        each set of values.  In the dictionary, each `label` must be a string
+        and each `values` must be a NumPy array of the same size as the grid.
 
-        .. note::
-
-           `mtuq.grid_search` returns NumPy arrays of misfit values with shape
-           `(len(sources), len(origins))` that can directly supplied to this 
-           method.
+        Currently, it is also possible to supply as NumPy array rather than a
+        `dict` of Numpy arrays, provided the shape of the array along `axis=0`
+        matches the size of the grid. In this way, it is possible to pass 
+        `mtuq.grid_search` results directly to `grid.save`.  (The filename 
+        labels we simply be '000000', '000001' and so on.)
 
         """
         if values is None:
@@ -491,13 +491,13 @@ def FullMomentTensorGridRegular(magnitudes=[1.], npts_per_axis=20, tightness=0.8
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
     returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
 
-    For tightness~0, grid will be regular in Tape2012 parameters v, w.
-    For tightness~1, grid will be regular in Tape2015 parameters delta, gamma.
+    For tightness~0, grid will be regular in Tape2015 parameters v, w.
+    For tightness~1, grid will be regular in Tape2012 parameters delta, gamma.
     For intermediate values, the grid will be "semiregular" in the sense of
     a linear interpolation between the above cases.
 
-    Another way to think about is that `tightness` increases, the extremal
-    grid points closer get to the boundary of the lune.
+    Another way to think about it is that as `tightness` increases, the
+    extremal grid points closer get to the boundary of the lune.
 
     .. rubric :: Usage
 
