@@ -12,7 +12,6 @@ from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
-from mtuq.util.lune import to_mij
 
 
 
@@ -207,7 +206,7 @@ if __name__=='__main__':
 
         _j, _i = np.unravel_index(np.argmin(results), results.shape)
         best_origin = origins[_i]
-        best_source = grid.get(_j, callback=to_mij)
+        best_source = grid.get(_j)
         lune_dict = grid.get_dict(_j)
 
 

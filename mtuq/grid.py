@@ -446,7 +446,7 @@ class UnstructuredGrid(object):
 
 
 
-def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
+def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
     """ Full moment tensor grid with randomly-spaced values
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
@@ -485,7 +485,7 @@ def FullMomentTensorGridRandom(magnitudes=None, npts=1000000):
 
 
 
-def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20, tightness=0.8):
+def FullMomentTensorGridRegular(magnitudes=[1.], npts_per_axis=20, tightness=0.8):
     """ Full moment tensor grid with regularly-spaced values
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
@@ -521,7 +521,7 @@ def FullMomentTensorGridRegular(magnitudes=None, npts_per_axis=20, tightness=0.8
         callback=to_mij)
 
 
-def DoubleCoupleGridRandom(magnitudes=None, npts=50000):
+def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
@@ -556,7 +556,7 @@ def DoubleCoupleGridRandom(magnitudes=None, npts=50000):
         callback=to_mij)
 
 
-def DoubleCoupleGridRegular(magnitudes=None, npts_per_axis=40):
+def DoubleCoupleGridRegular(magnitudes=[1.], npts_per_axis=40):
     """ Double-couple moment tensor grid with regularly-spaced values
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 

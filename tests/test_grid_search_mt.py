@@ -11,7 +11,6 @@ from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
-from mtuq.util.lune import to_mij
 
 
 
@@ -153,7 +152,7 @@ if __name__=='__main__':
 
     results_sum = results_bw + results_sw
     best_misfit = results_sum.min()
-    best_source = grid.get(results_sum.argmin(), callback=to_mij)
+    best_source = grid.get(results_sum.argmin())
     lune_dict = grid.get_dict(results_sum.argmin())
 
 
@@ -170,7 +169,7 @@ if __name__=='__main__':
 
 
     if run_checks:
-        def isclose(a, b, atol=1.e6, rtol=1.e-8):
+        def isclose(a, b, atol=1.e6, rtol=1.e-6):
             # the default absolute tolerance (1.e6) is several orders of 
             # magnitude less than the moment of an Mw=0 event
 

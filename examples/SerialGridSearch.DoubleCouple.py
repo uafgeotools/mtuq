@@ -12,7 +12,6 @@ from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
-from mtuq.util.lune import to_mij
 
 
 
@@ -161,7 +160,7 @@ if __name__=='__main__':
 
     results_sum = results_bw + results_sw
     best_misfit = results_sum.min()
-    best_source = grid.get(results_sum.argmin(), callback=to_mij)
+    best_source = grid.get(results_sum.argmin())
     lune_dict = grid.get_dict(results_sum.argmin())
 
 
