@@ -5,14 +5,13 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, misfit_vs_depth, plot_misfit
+from mtuq.graphics import plot_data_greens, misfit_vs_depth, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
-from mtuq.util.lune import to_mij
 
 
 
@@ -207,7 +206,7 @@ if __name__=='__main__':
 
         _j, _i = np.unravel_index(np.argmin(results), results.shape)
         best_origin = origins[_i]
-        best_source = grid.get(_j, callback=to_mij)
+        best_source = grid.get(_j)
         lune_dict = grid.get_dict(_j)
 
 
@@ -219,7 +218,7 @@ if __name__=='__main__':
     if comm.rank==0:
         print('Saving results...\n')
 
-        plot_data_greens(event_id+'.png',
+        plot_data_greens(event_id+'_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 

@@ -6,14 +6,13 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
-from mtuq.util.lune import to_mij
 
 
 """
@@ -592,7 +591,7 @@ Main_GridSearch_DoubleCouple="""
     if comm.rank==0:
         results_sum = results_bw + results_sw
         best_misfit = results_sum.min()
-        best_source = grid.get(results_sum.argmin(), callback=to_mij)
+        best_source = grid.get(results_sum.argmin())
         lune_dict = grid.get_dict(results_sum.argmin())
 
 
@@ -673,7 +672,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         _j, _i = np.unravel_index(np.argmin(results), results.shape)
         best_origin = origins[_i]
-        best_source = grid.get(_j, callback=to_mij)
+        best_source = grid.get(_j)
         lune_dict = grid.get_dict(_j)
 
 
@@ -727,7 +726,7 @@ Main2_SerialGridSearch_DoubleCouple="""
 
     results_sum = results_bw + results_sw
     best_misfit = results_sum.min()
-    best_source = grid.get(results_sum.argmin(), callback=to_mij)
+    best_source = grid.get(results_sum.argmin())
     lune_dict = grid.get_dict(results_sum.argmin())
 
 """
@@ -815,19 +814,19 @@ Main_TestGraphics="""
 
     print('Figure 1 of 3\\n')
 
-    plot_data_greens(event_id+'.png',
+    plot_data_greens('graphics_test_1.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print('Figure 2 of 3\\n')
 
-    plot_data_greens(event_id+'.png',
+    plot_data_greens('graphics_test_2.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, mt, header=False)
 
     print('Figure 3 of 3\\n')
 
-    plot_beachball('test_graphics3.png', mt)
+    plot_beachball('graphics_test_3.png', mt)
 
     print('Finished\\n')
 """
@@ -884,17 +883,15 @@ WrapUp_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print('Savings results...\\n')
 
-        plot_data_greens(event_id+'.png',
+        plot_data_greens(event_id+'DC_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
-        plot_beachball(event_id+'_beachball.png', best_source)
+        plot_beachball(event_id+'DC_beachball.png', best_source)
 
-        plot_misfit(event_id+'_misfit.ps', grid, results_sum)
+        plot_misfit_dc(event_id+'DC_misfit.png', grid, results_sum)
 
-        plot_misfit(event_id+'_misfit.ps', grid, results_sum)
-
-        grid.save(event_id+'.nc', results_sum)
+        grid.save(event_id+'DC.nc', results_sum)
 
         print('Finished\\n')
 
@@ -909,7 +906,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     if comm.rank==0:
         print('Saving results...\\n')
 
-        plot_data_greens(event_id+'.png',
+        plot_data_greens(event_id+'_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
@@ -930,15 +927,15 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
-    plot_data_greens(event_id+'.png', 
+    plot_data_greens(event_id+'DC_waveforms.png', 
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
-    plot_beachball(event_id+'_beachball.png', best_source)
+    plot_beachball(event_id+'DC_beachball.png', best_source)
 
-    plot_misfit(event_id+'_misfit.ps', grid, results_sum)
+    plot_misfit_dc(event_id+'DC_misfit.png', grid, results_sum)
 
-    grid.save(event_id+'.nc', results_sum)
+    grid.save(event_id+'DC.nc', results_sum)
 
     print('Finished\\n')
 
@@ -950,11 +947,12 @@ WrapUp_TestGridSearch_DoubleCouple="""
     best_source = grid.get((results_bw + results_sw).argmin())
 
     if run_figures:
-        plot_data_greens(event_id+'.png',
+
+        plot_data_greens(event_id+'DC_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
-        plot_beachball(event_id+'_beachball.png', best_source)
+        plot_beachball(event_id+'DC_beachball.png', best_source)
 
 
     if run_checks:
@@ -1132,6 +1130,8 @@ if __name__=='__main__':
             Imports,
             'DoubleCoupleGridRegular',
             'FullMomentTensorGridRegular',
+            'plot_misfit_dc',
+            'plot_misfit',
             ))
         file.write(Docstring_GridSearch_FullMomentTensor)
         file.write(Paths_Syngine)
@@ -1145,7 +1145,16 @@ if __name__=='__main__':
         file.write(OriginComments)
         file.write(OriginDefinitions)
         file.write(Main_GridSearch_DoubleCouple)
-        file.write(WrapUp_GridSearch_DoubleCouple)
+        file.write(
+            replace(
+            WrapUp_GridSearch_DoubleCouple,
+            'DC',
+            'FMT',
+            'plot_misfit_dc',
+            'plot_misfit',
+            'misfit.png',
+            'misfit.ps',
+            ))
 
 
     with open('examples/SerialGridSearch.DoubleCouple.py', 'w') as file:

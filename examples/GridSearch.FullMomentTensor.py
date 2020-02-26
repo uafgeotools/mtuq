@@ -12,7 +12,6 @@ from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
-from mtuq.util.lune import to_mij
 
 
 
@@ -179,7 +178,7 @@ if __name__=='__main__':
     if comm.rank==0:
         results_sum = results_bw + results_sw
         best_misfit = results_sum.min()
-        best_source = grid.get(results_sum.argmin(), callback=to_mij)
+        best_source = grid.get(results_sum.argmin())
         lune_dict = grid.get_dict(results_sum.argmin())
 
 
@@ -191,17 +190,15 @@ if __name__=='__main__':
     if comm.rank==0:
         print('Savings results...\n')
 
-        plot_data_greens(event_id+'.png',
+        plot_data_greens(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
-        plot_beachball(event_id+'_beachball.png', best_source)
+        plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit(event_id+'_misfit.ps', grid, results_sum)
+        plot_misfit(event_id+'FMT_misfit.ps', grid, results_sum)
 
-        plot_misfit(event_id+'_misfit.ps', grid, results_sum)
-
-        grid.save(event_id+'.nc', results_sum)
+        grid.save(event_id+'FMT.nc', results_sum)
 
         print('Finished\n')
 

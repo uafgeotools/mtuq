@@ -178,7 +178,7 @@ def v_w_grid(npts_v, npts_w, tightness=0.5):
     delta1 = to_delta(w1)
 
     gamma2 = np.linspace(-30., 30., npts_v)
-    delta2 = np.linspace(-90., 90., npts_w)
+    delta2 = np.linspace(-87.5, 87.5, npts_w)
 
     delta = delta1*(1.-tightness) + delta2*tightness
     gamma = gamma1*(1.-tightness) + gamma2*tightness
