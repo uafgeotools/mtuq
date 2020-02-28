@@ -96,7 +96,7 @@ class Grid(object):
         self.callback = callback
 
  
-    def as_array(self):
+    def to_array(self):
         """ Returns the entire set of grid points as Numpy array
         """
         array = np.zeros((self.size, self.ndim))
@@ -105,7 +105,7 @@ class Grid(object):
         return array
 
 
-    def as_dataarray(self, values=None):
+    def to_xarray(self, values=None):
         """ Returns the entire set of grid points as xarray DataArray
         """
         if values is None:
@@ -121,7 +121,7 @@ class Grid(object):
         return DataArray(data=values, dims=self.dims, coords=self.coords)
 
 
-    def as_dataset(self, values=None):
+    def to_dataset(self, values=None):
         """ Returns the entire set of grid points as xarray Dataset
         """
         if values is None:
@@ -131,7 +131,7 @@ class Grid(object):
         if values.size != self.size:
             raise Exception("Mismatch between values and grid shape")
 
-        array = self.as_array()
+        array = self.to_array()
 
         data_vars = {self.dims[_i]: array[:, _i]
             for _i in range(self.ndim)}
@@ -199,27 +199,33 @@ class Grid(object):
 
 
     def save(self, filename, values=None):
-        """ Saves one or more sets of values and corresponding grid
-        coordinates to a NetCDF files
+        """ Writes one or more sets of values and corresponding grid
+        coordinates to a  NetCDF output file
 
         .. rubric:: Input arguments
 
-        ``values`` (`dict` or Numpy array)
+        ``filename`` (str)
 
-        Passing a dictionary {label: values} results in separate output for
-        each set of values.  In the dictionary, each `label` must be a string
-        and each `values` must be a NumPy array of the same size as the grid.
+        Filename of NetCDF output file.
 
-        Currently, it is also possible to supply as NumPy array rather than a
-        `dict` of Numpy arrays, provided the shape of the array along `axis=0`
-        matches the size of the grid. In this way, it is possible to pass 
-        `mtuq.grid_search` results directly to `grid.save`.  (The filename 
-        labels we simply be '000000', '000001' and so on.)
+
+        ``values`` (`dict` or NumPy array)
+
+        Passing a dictionary {label: values} results in separate output file
+        for each set of values.  Each `label` in the dictionary must be a 
+        string and each `values` must be a NumPy array of the same size as the 
+        grid.
+
+        Rather than a `dict` of NumPy arrays, it is also possible to supply a
+        2-D NumPy array provided that `array.shape[0] = grid.size`.  This makes 
+        it possible to pass  `mtuq.grid_search` results directly to `grid.save`.  
+        In this case, the number of output files will be `array.shape[1]` and 
+        the filename labels will be '000000', '000001' and so on.
 
         """
         if values is None:
             # write grid coordinates only
-            self.as_dataarray().to_netcdf(filename)
+            self.to_xarray().to_netcdf(filename)
             return
 
         if type(values)==np.ndarray:
@@ -234,7 +240,7 @@ class Grid(object):
         for label, array in values.items():
 
             # for I/O, we will use xarray
-            da = self.as_dataarray(np.reshape(array, self.shape))
+            da = self.to_xarray(np.reshape(array, self.shape))
             da.to_netcdf(filename+label)
 
 
@@ -338,7 +344,7 @@ class UnstructuredGrid(object):
         self.callback = callback
 
 
-    def as_array(self):
+    def to_array(self):
         """ Returns the entire set of grid points as NumPy array
         """
         array = np.zeros((self.size, self.ndim))
@@ -347,7 +353,7 @@ class UnstructuredGrid(object):
         return array
 
 
-    def as_dataset(self, values=None):
+    def to_dataset(self, values=None):
         """ Returns the entire set of grid points as xarray Dataset
         """
         if values is None:

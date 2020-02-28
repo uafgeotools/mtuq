@@ -157,7 +157,7 @@ class CompositeSource(object):
         size = 0
         for source in sources:
             assert type(source) in [MomentTensor, Force]
-            arrays += [source.as_array()]
+            arrays += [source.to_array()]
             size += arrays[-1].size
 
         self.sources = sources

@@ -33,7 +33,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     # data arrays
     data = _get_data(data, stations, components, nt)
     greens = _get_greens(greens, stations, components)
-    sources = _as_array(sources)
+    sources = _to_array(sources)
 
     # correlation arrays
     data_data = _autocorr_1(data)
@@ -194,8 +194,8 @@ def _get_groups(groups, components):
     return array
 
 
-def _as_array(sources):
-    array = sources.as_array()
+def _to_array(sources):
+    array = sources.to_array()
 
     if array.shape[1]==6:
         # convert moment tensors to Mij parameterization (up,south,east)
