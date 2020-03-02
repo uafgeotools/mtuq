@@ -85,7 +85,7 @@ class Header(Base):
         model, solver, mt, lune_dict, origin, best_misfit_bw, best_misfit_sw):
 
         self.event_name = event_name
-        self.magnitude = MomentTensor(mt).magnitude()
+        self.magnitude = mt.magnitude()
         self.depth_in_m = origin.depth_in_m
         self.depth_in_km = origin.depth_in_m/1000.
         self.model = model

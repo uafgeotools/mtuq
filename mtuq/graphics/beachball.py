@@ -25,6 +25,9 @@ def plot_beachball(filename, mt):
     """
     from mtuq.graphics.gmt import gmt_major_version
 
+    if type(mt)!=MomentTensor:
+        mt = MomentTensor(mt)
+
     try:
         assert gmt_major_version() >= 6
         beachball_gmt(filename, mt)
@@ -47,7 +50,7 @@ def beachball_gmt(filename, mt):
     subprocess.call('\n'.join([
         ('gmt psmeca -R-5/5/-5/5 -JM5 -Sm1 -Ggrey50 -h1 << END > %s' % filename+'.ps'),
         'lat lon depth   mrr   mtt   mff   mrt    mrf    mtf',
-        ('0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0' % tuple(mt)),
+        ('0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0' % tuple(mt.as_vector())),
         'END']), shell=True)
 
     # create PNG image
@@ -71,7 +74,7 @@ def beachball_obspy(filename, mt):
         """)
 
     obspy.imaging.beachball.beachball(
-        mt, size=200, linewidth=2, facecolor=gray)
+        mt.as_vector(), size=200, linewidth=2, facecolor=gray)
 
     pyplot.savefig(filename)
     pyplot.close()
