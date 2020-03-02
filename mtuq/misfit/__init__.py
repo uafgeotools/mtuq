@@ -2,7 +2,7 @@
 import numpy as np
 import warnings
 
-from mtuq.misfit import simple, fast1, fast2
+from mtuq.misfit import level0, level1, level2
 from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import check_padding, get_components, isempty
@@ -76,24 +76,24 @@ class Misfit(object):
     performed by this software package. Python object-oriented programming
     makes it possible to offer three different implementations:
 
-    - a readable pure Python version (``mtuq.misfit.simple``)
+    - a readable pure Python version (``mtuq.misfit.level0``)
 
-    - a fast pure Python version (``mtuq.misfit.fast1``)
+    - a fast pure Python version (``mtuq.misfit.level1``)
 
-    - a very fast Python/C++ version (``mtuq.misfit.fast2``)
+    - a very fast Python/C++ version (``mtuq.misfit.level2``)
 
 
     While the same in terms of input argument syntax, these three versions
     differ in terms of performance:
 
-    - ``simple`` provides a reference for understanding what the code is doing
+    - ``level0`` provides a reference for understanding what the code is doing
       and for checking the correctness of the fast implementations
 
-    - ``fast1`` is an optimized pure Python implementation which provides 
+    - ``level1`` is an optimized pure Python implementation which provides 
       significant computational savings when `len(sources)` > 100. This
       version is the closest to `ZhuHelmberger1996`'s original C software.
 
-    - ``fast2`` is an optimized Python/C++ implementation, in which a Python 
+    - ``level2`` is an optimized Python/C++ implementation, in which a Python 
       wrapper is used to combine obspy traces into multidimensional arrays.
       These arrays are passed to a C++ extension module, which does the
       main computational work. Unlike the other two versions, this 
@@ -167,18 +167,18 @@ class Misfit(object):
 
 
         if optimization_level==0 or set_attributes:
-            return simple.misfit(
+            return level0.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
                 self.time_shift_min, self.time_shift_max, verbose, 
                 set_attributes)
 
         if optimization_level==1:
-            return fast1.misfit(
+            return level1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
                 self.time_shift_min, self.time_shift_max, verbose)
 
         if optimization_level==2:
-            return fast2.misfit(
+            return level2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
                 self.time_shift_min, self.time_shift_max, verbose)
 

@@ -85,8 +85,8 @@ Library reference
     Misfit evaluation is the most computationally intensive task performed by this package, and the only task that has been heavily optimized.  These classes provide low-level access to non-optimized and optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misfit``.
 
 =================================================================================================  =================================================================================================
-`mtuq.misfit.simple.misfit <generated/mtuq.misfit.simple.html>`_                                    Easy-to-read pure Python implementation
-`mtuq.misfit.fast1.misfit <generated/mtuq.misfit.fast1.html>`_                                      Fast pure Python implementation
-`mtuq.misfit.fast2.misfit <generated/mtuq.misfit.fast2.html>`_                                      Fast Python/C implementation
+`mtuq.misfit.level0.misfit <generated/mtuq.misfit.level0.html>`_                                    Easy-to-read pure Python implementation
+`mtuq.misfit.level1.misfit <generated/mtuq.misfit.level1.html>`_                                      Fast pure Python implementation
+`mtuq.misfit.level2.misfit <generated/mtuq.misfit.level2.html>`_                                      Fast Python/C implementation
 =================================================================================================  =================================================================================================
 
