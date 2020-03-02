@@ -171,7 +171,7 @@ def to_rho(Mw):
     return to_M0(Mw)*np.sqrt(2.)
 
 
-def v_w_grid(npts_v, npts_w, tightness=0.5):
+def semiregular_grid(npts_v, npts_w, tightness=0.5):
     """ Semiregular moment tensor grid
 
     For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.

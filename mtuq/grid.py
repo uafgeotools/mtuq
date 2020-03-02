@@ -10,7 +10,7 @@ from xarray import DataArray
 
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_mt, to_rtp, to_rho, v_w_grid
+from mtuq.util.lune import to_mt, to_rtp, to_rho, semiregular_grid
 from mtuq.util.xarray import array_to_dict
 
 
@@ -201,13 +201,14 @@ class Grid(object):
 
     def save(self, filename, values=None):
         """ Writes one or more sets of values and corresponding grid
-        coordinates to a  NetCDF output file
+        coordinates to a NetCDF output file
+
 
         .. rubric:: Input arguments
 
         ``filename`` (str)
 
-        Filename of NetCDF output file.
+        Name of NetCDF output file
 
 
         ``values`` (`dict` or NumPy array)
@@ -241,7 +242,7 @@ class Grid(object):
         for label, array in values.items():
 
             # for I/O, we will use xarray
-            da = self.to_xarray(np.reshape(array, self.shape))
+            df = self.to_dataframe(np.reshape(array, self.shape))
             da.to_netcdf(filename+label)
 
 
@@ -430,6 +431,54 @@ class UnstructuredGrid(object):
         return subsets
 
 
+    def save(self, filename, values=None):
+        """ Writes one or more sets of values and corresponding grid
+        coordinates to an HDF output file
+
+
+        .. rubric:: Input arguments
+
+
+        ``filename`` (str)
+
+        Name of HDF output file (or filename suffix, if multiple values are given)
+
+
+        ``values`` (`dict` or NumPy array)
+
+        Passing a dictionary {label: values} results in separate output file
+        for each set of values.  Each `label` in the dictionary must be a 
+        string and each `values` must be a NumPy array of the same size as the 
+        grid.
+
+        Rather than a `dict` of NumPy arrays, it is also possible to supply a
+        2-D NumPy array provided that `array.shape[0] = grid.size`.  This makes 
+        it possible to pass  `mtuq.grid_search` results directly to `grid.save`.  
+        In this case, the number of output files will be `array.shape[1]` and 
+        the filename labels will be '000000', '000001' and so on.
+
+        """
+        if values is None:
+            # write grid coordinates only
+            self.to_dataframe().to_hdf(filename, key='df', mode='w')
+            return
+
+        if type(values)==np.ndarray:
+            # attempt to convert NumPy array to dict using a generic sequence
+            # '000000', '000001', ... for the dictionary keys
+            values = array_to_dict(values, [self.size])
+
+        if not type(values)==dict:
+            raise ValueError
+
+        # now, begin actually writing NetCDF files
+        for label, array in values.items():
+
+            # for I/O, we will use xarray
+            df = self.to_dataframe(array)
+            df.to_hdf(filename+label, key='df', mode='w')
+
+
     def __len__(self):
         return self.size
 
@@ -493,7 +542,7 @@ def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
 
 
 def FullMomentTensorGridRegular(magnitudes=[1.], npts_per_axis=20, tightness=0.8):
-    """ Full moment tensor grid with regularly-spaced values
+    """ Full moment tensor grid with semi-regular values
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
     returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
@@ -515,7 +564,7 @@ def FullMomentTensorGridRegular(magnitudes=[1.], npts_per_axis=20, tightness=0.8
     of Tape2015 parameters `rho, v, w, kappa, sigma, h`
 
     """
-    v, w = v_w_grid(npts_per_axis, 2*npts_per_axis, tightness)
+    v, w = semiregular_grid(npts_per_axis, 2*npts_per_axis, tightness)
 
     kappa = regular(0., 360, npts_per_axis)
     sigma = regular(-90., 90., npts_per_axis)
