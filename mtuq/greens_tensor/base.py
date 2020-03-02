@@ -159,6 +159,7 @@ class GreensTensor(Stream):
             self._set_components(components)
 
         # arrays used in linear combination
+        source = source.as_vector()
         array = self._array
         synthetics = self._synthetics
 

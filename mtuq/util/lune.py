@@ -1,10 +1,24 @@
 
 import numpy as np
+from mtuq.event import MomentTensor
 from mtuq.util.math import open_interval
 
 
 deg2rad = np.pi/180.
 rad2deg = 180./np.pi
+
+
+def to_mt(rho, v, w, kappa, sigma, h):
+    """ Converts from lune parameters to MomentTensor object
+    """
+    mt = to_mij(rho, v, w, kappa, sigma, h)
+    return MomentTensor(mt, convention='USE')
+
+
+def to_force(F0, theta, h):
+    """ Converts from spherical coordinates to Force object
+    """
+    raise NotImplementedError
 
 
 def to_mij(rho, v, w, kappa, sigma, h):

@@ -34,8 +34,9 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     # begin iterating over sources
     #
     for _i, source in enumerate(sources):
-        for _j, d in enumerate(data):
+        source = source.as_vector()
 
+        for _j, d in enumerate(data):
             components = greens[_j].components
             if not components:
                 continue

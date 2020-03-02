@@ -10,7 +10,7 @@ from xarray import DataArray
 
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_mij, to_rtp, to_rho, v_w_grid
+from mtuq.util.lune import to_mt, to_rtp, to_rho, v_w_grid
 from mtuq.util.xarray import array_to_dict
 
 
@@ -488,7 +488,7 @@ def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
     return UnstructuredGrid(
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
         coords=(rho, v, w, kappa, sigma, h),
-        callback=to_mij)
+        callback=to_mt)
 
 
 
@@ -525,7 +525,7 @@ def FullMomentTensorGridRegular(magnitudes=[1.], npts_per_axis=20, tightness=0.8
     return Grid(
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
         coords=(rho, v, w, kappa, sigma, h),
-        callback=to_mij)
+        callback=to_mt)
 
 
 def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
@@ -560,7 +560,7 @@ def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
     return UnstructuredGrid(
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
         coords=(rho, v, w, kappa, sigma, h),
-        callback=to_mij)
+        callback=to_mt)
 
 
 def DoubleCoupleGridRegular(magnitudes=[1.], npts_per_axis=40):
@@ -588,7 +588,7 @@ def DoubleCoupleGridRegular(magnitudes=[1.], npts_per_axis=40):
     return Grid(
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
         coords=(rho, v, w, kappa, sigma, h),
-        callback=to_mij)
+        callback=to_mt)
 
 
 def ForceGridRegular(magnitudes_in_N=1., npts_per_axis=80):
