@@ -184,7 +184,7 @@ def check_grid(grid_type, grid, values):
         return grid.to_xarray(values)
 
     elif type(grid)==UnstructuredGrid:
-        return grid.to_dataframe(values)
+        return grid.to_dataframe(values.flatten())
 
     else:
         return grid

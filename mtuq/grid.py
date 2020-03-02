@@ -423,8 +423,8 @@ class UnstructuredGrid(object):
             stop = int((iproc+1)*self.size/nproc)
 
             coords = []
-            for key, val in zip(self.dims, self.coords):
-                coords += [[key, val[start:stop]]]
+            for array in self.coords:
+                coords += [array[start:stop]]
             subsets += [UnstructuredGrid(
                 self.dims, coords, start, stop, callback=self.callback)]
 
@@ -475,7 +475,7 @@ class UnstructuredGrid(object):
         for label, array in values.items():
 
             # for I/O, we will use xarray
-            df = self.to_dataframe(array)
+            df = self.to_dataframe(array.flatten())
             df.to_hdf(filename+label, key='df', mode='w')
 
 
