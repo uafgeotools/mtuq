@@ -5,7 +5,8 @@ import numpy as np
 from builtins import object
 from numpy import pi as PI
 from numpy.random import uniform as random
-from xarray import DataArray, Dataset
+from pandas import DataFrame
+from xarray import DataArray
 
 from mtuq.util import AttribDict, asarray
 from mtuq.util.math import open_interval as regular
@@ -121,7 +122,7 @@ class Grid(object):
         return DataArray(data=values, dims=self.dims, coords=self.coords)
 
 
-    def to_dataset(self, values=None):
+    def to_dataframe(self, values=None):
         """ Returns the entire set of grid points as xarray Dataset
         """
         if values is None:
@@ -138,7 +139,7 @@ class Grid(object):
 
         data_vars.update({'values': values})
 
-        return Dataset(data_vars)
+        return DataFrame(data_vars)
 
 
     def get(self, i, **kwargs):
@@ -353,7 +354,7 @@ class UnstructuredGrid(object):
         return array
 
 
-    def to_dataset(self, values=None):
+    def to_dataframe(self, values=None):
         """ Returns the entire set of grid points as xarray Dataset
         """
         if values is None:
@@ -368,7 +369,7 @@ class UnstructuredGrid(object):
 
         data_vars.update({'values': values})
 
-        return Dataset(data_vars)
+        return DataFrame(data_vars)
 
 
     def get(self, i, **kwargs):
