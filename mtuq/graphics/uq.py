@@ -120,7 +120,7 @@ def check_grid(grid_type, grid, values):
         raise ValueError("Unexpected grid_type")
 
     if type(grid)==Grid:
-        return grid.to_dataarray(values)
+        return grid.to_xarray(values)
     else:
         return grid
 
