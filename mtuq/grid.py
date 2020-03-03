@@ -106,7 +106,7 @@ class Grid(object):
         return array
 
 
-    def to_xarray(self, values=None):
+    def to_dataarray(self, values=None):
         """ Returns the entire set of grid points as xarray DataArray
         """
         if values is None:
@@ -227,7 +227,7 @@ class Grid(object):
         """
         if values is None:
             # write grid coordinates only
-            self.to_xarray().to_netcdf(filename)
+            self.to_dataarray().to_netcdf(filename)
             return
 
         if type(values)==np.ndarray:
@@ -242,7 +242,7 @@ class Grid(object):
         for label, array in values.items():
 
             # for I/O, we will use xarray
-            df = self.to_dataframe(np.reshape(array, self.shape))
+            da = self.to_dataarray(np.reshape(array, self.shape))
             da.to_netcdf(filename+label)
 
 
