@@ -149,6 +149,11 @@ class Misfit(object):
         optimization_level=2, set_attributes=False):
         """ Evaluates misfit on given data
         """
+        # Normally misfit is evaluated over a Grid or Unstructured grid of 
+        # sources, which are already iterable.  The following is necessary
+        # in case a single sources is given
+        sources = iterable(sources)
+
         if isempty(data):
             warnings.warn(
                 "Empty data set. No misfit evaluations will be carried out",

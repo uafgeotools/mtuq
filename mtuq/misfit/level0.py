@@ -6,7 +6,6 @@ See ``mtuq/misfit/__init__.py`` for more information
 
 import numpy as np
 
-from mtuq.util import iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
 
@@ -18,7 +17,6 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
-    sources = iterable(sources)
     results = np.zeros((len(sources), 1))
 
     #
