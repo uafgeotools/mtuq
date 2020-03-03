@@ -133,12 +133,8 @@ def _plot_likelihood_vw_random(filename, df, npts_v=20, npts_w=40):
     vp = open_interval(-1./3., 1./3., npts_v)
     wp = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
 
-    pyplot.savefig(filename)
-
-
-    # compute marginal distribution for v,w
-    marginal = np.zeros((npts_w, npts_v))
-
+    # sum over parameters to obtain marginal distribution
+    marginal = np.empty((npts_w, npts_v))
     for _i in range(npts_w):
         for _j in range(npts_v):
             # which grid points lie within cell (i,j)?
@@ -150,8 +146,7 @@ def _plot_likelihood_vw_random(filename, df, npts_v=20, npts_w=40):
             na = len(subset)
             ne = len(df)/float(npts_v*npts_w)
 
-            # what is the sum over all misfit evaulations?
-            marginal[_i, _j] = subset['values'].sum()
+            marginal[_i, _j] = np.exp(-subset['values']).sum()
             marginal[_i, _j] *= ne/na**2
 
     # plot misfit
