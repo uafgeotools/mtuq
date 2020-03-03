@@ -195,18 +195,43 @@ def _get_groups(groups, components):
 
 
 def _to_array(sources):
-    array = sources.to_array()
+    dims = sources.dims
+    df = sources.to_dataframe()
 
-    if array.shape[1]==6:
-        # convert moment tensors to Mij parameterization (up,south,east)
+    if _type(dims)=='MomentTensor':
         return np.ascontiguousarray(to_mij(
-            array[:,0], array[:,1], array[:,2],  # rho, v, w
-            array[:,3], array[:,4], array[:,5])) # kappa, sigma, h
+            df['rho'].to_numpy(),
+            df['v'].to_numpy(),
+            df['w'].to_numpy(),
+            df['kappa'].to_numpy(),
+            df['sigma'].to_numpy(),
+            df['h'].to_numpy(),
+            ))
 
-    elif array.shape[1]==3:
-        # convert forces to F1,F2,F3 parameterization (1:up,2:south,3:east)
+    elif _type(dims)=='Force':
         return np.ascontiguousarray(to_xyz(
-            array[:,0], array[:,1], array[:,2])) # F0 (radius), theta (azimuth), phi (colatitude)
+            df['F0'].to_numpy(),    # magnitude
+            df['theta'].to_numpy(), # azimuth
+            df['phi'].to_numpy(),   # colatitude
+            ))
+
+
+def _type(dims):
+    if 'rho' in dims\
+       and 'v' in dims\
+       and 'w' in dims\
+       and 'kappa' in dims\
+       and 'sigma' in dims\
+       and 'h' in dims:
+        return 'MomentTensor'
+
+    elif 'F0' in dims\
+       and 'theta' in dims\
+       and 'phi' in dims:
+        return 'Force'
+
+    else:
+        raise ValueError
 
 
 #

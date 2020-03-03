@@ -133,10 +133,8 @@ class Grid(object):
             raise Exception("Mismatch between values and grid shape")
 
         array = self.to_array()
-
         data_vars = {self.dims[_i]: array[:, _i]
             for _i in range(self.ndim)}
-
         data_vars.update({'values': values})
 
         return DataFrame(data_vars)
