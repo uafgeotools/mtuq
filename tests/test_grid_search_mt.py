@@ -156,9 +156,6 @@ if __name__=='__main__':
     lune_dict = grid.get_dict(results_sum.argmin())
 
 
-    best_misfit = (results_bw + results_sw).min()
-    best_source = grid.get((results_bw + results_sw).argmin())
-
     if run_figures:
 
         plot_data_greens(event_id+'DC_waveforms.png',
@@ -183,7 +180,7 @@ if __name__=='__main__':
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
-        if not isclose(best_source,
+        if not isclose(best_source.as_vector(),
             np.array([
                  -5.648387e+15,
                   2.541774e+15,

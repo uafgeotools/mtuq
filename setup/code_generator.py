@@ -944,9 +944,6 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCouple="""
-    best_misfit = (results_bw + results_sw).min()
-    best_source = grid.get((results_bw + results_sw).argmin())
-
     if run_figures:
 
         plot_data_greens(event_id+'DC_waveforms.png',
@@ -971,7 +968,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
-        if not isclose(best_source,
+        if not isclose(best_source.as_vector(),
             np.array([
                  -5.648387e+15,
                   2.541774e+15,
