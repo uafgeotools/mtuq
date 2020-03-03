@@ -19,13 +19,13 @@ def plot_misfit_dc(filename, grid, values):
     gridtype = type(grid)
 
     if gridtype==Grid:
-        # convert from mtuq object to xarray DataArray
+        # convert from mtuq.Grid to xarray.DataArray
         da = grid.to_dataarray(values)
 
         _plot_misfit_regular(filename, da)
 
     elif gridtype==UnstructuredGrid:
-        # convert from mtuq object to pandas Dataframe
+        # convert from mtuq.UnstructuredGrid to pandas.Dataframe
         df = grid.to_dataframe(values)
 
         _plot_misfit_random(filename, df)

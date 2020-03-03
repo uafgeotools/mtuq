@@ -20,13 +20,13 @@ def plot_misfit_vw(filename, grid, values):
     gridtype = type(grid)
 
     if gridtype==Grid:
-        # convert from mtuq object to xarray DataArray
+        # convert from mtuq.Grid to xarray.DataArray
         da = grid.to_dataarray(values)
 
         _plot_misfit_regular(filename, da)
 
     elif gridtype==UnstructuredGrid:
-        # convert from mtuq object to pandas Dataframe
+        # convert from mtuq.UnstructuredGrid to pandas.Dataframe
         df = grid.to_dataframe(values)
 
         _plot_misfit_random(filename, df)
@@ -39,14 +39,14 @@ def plot_likelihood_vw(filename, grid, values=None):
     gridtype = type(grid)
 
     if gridtype==Grid:
-        # convert from mtuq object to xarray DataArray
+        # convert from mtuq.Grid to xarray DataArray
         da = grid.to_dataarray(values)
 
         _plot_likelihood_regular(filename, da)
 
 
     elif gridtype==UnstructuredGrid:
-        # convert from mtuq object to xarray DataArray
+        # convert from mtuq.UnstructuredGrid to pandas.Dataframe
         df = grid.to_dataframe(values)
 
         _plot_likelihood_random(filename, df)
@@ -81,25 +81,28 @@ def _plot_likelihood_regular(filename, da):
     (matplotlib implementation)
     """
     # necessary to avoid floating point errors?
-    df['values'] /= df['values'].min()
+    df['values'] *= 1.e6
 
-    # manipulate DataArray
+    # sum over likelihoods to obtain marginal distribution
+    da.values = np.exp(-da.values/2.)
     marginal = da.sum(dim=('rho', 'kappa', 'sigma', 'h'))
 
     # plot misfit
     pyplot.figure(figsize=(2., 7.07))
-    pyplot.pcolor(da.coords['v'], da.coords['w'], marginal.values)
+    pyplot.pcolor(da.coords['v'], da.coords['w'], marginal.values.T)
     pyplot.axis('equal')
     pyplot.xlim([-1./3., 1./3.])
     pyplot.ylim([-3./8.*np.pi, 3./8.*np.pi])
+
+    pyplot.savefig(filename)
 
 
 def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
     """ Plots randomly-spaced values on 'v-w' rectangle
     (matplotlib implementation)
     """
-    # necessary to avoid floating point erros
-    df['values'] /= df['values'].min()
+    # necessary to avoid floating point errors?
+    df['values'] *= 1.e6
 
     # define edges of cells
     v = closed_interval(-1./3., 1./3., npts_v+1)
@@ -109,7 +112,7 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
     vp = open_interval(-1./3., 1./3., npts_v)
     wp = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
 
-    # sum over parameters to obtain marginal distribution
+    # sum over likelihoods to obtain marginal distribution
     marginal = np.empty((npts_w, npts_v))
     for _i in range(npts_w):
         for _j in range(npts_v):
@@ -122,7 +125,7 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
             na = len(subset)
             ne = len(df)/float(npts_v*npts_w)
 
-            marginal[_i, _j] = np.exp(-subset['values']).sum()
+            marginal[_i, _j] = np.exp(-subset['values']/2.).sum()
             marginal[_i, _j] *= ne/na**2
 
     # plot misfit

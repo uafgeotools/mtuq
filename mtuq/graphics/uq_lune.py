@@ -22,13 +22,13 @@ def plot_misfit(filename, grid, values):
     gridtype = type(grid)
 
     if gridtype==Grid:
-        # convert from mtuq object to xarray DataArray
+        # convert from mtuq.Grid to xarray.DataArray
         da = grid.to_dataarray(values)
 
         _plot_misfit_regular(filename, da)
 
     elif gridtype==UnstructuredGrid:
-        # convert from mtuq object to pandas Dataframe
+        # convert from mtuq.UnstructuredGrid to pandas.Dataframe
         df = grid.to_dataframe(values)
 
         _plot_misfit_random(filename, df)
@@ -58,7 +58,7 @@ def _plot_misfit_regular(filename, da):
     # write PostScript graphics
     if _gmt():
         _call("%s %s %s" %
-           (fullpath('scripts/plot_misfit'),
+           (fullpath('mtuq/graphics/_gmt/plot_misfit'),
             tmpname,
             name+ext))
     else:
