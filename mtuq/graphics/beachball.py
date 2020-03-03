@@ -1,13 +1,7 @@
 
-import obspy.imaging.beachball
-import os
-import matplotlib.pyplot as pyplot
-import numpy as np
-import shutil
-import subprocess
-import warnings
-from mtuq.event import MomentTensor
-
+#
+# graphics/beachball.py - first motion "beachball" plots
+#
 
 # To correctly plot focal mechanims, MTUQ uses Generic Mapping Tools (GMT).
 # Users must install this package by themselves, since it is not available
@@ -19,11 +13,20 @@ from mtuq.event import MomentTensor
 
 # https://github.com/obspy/obspy/issues/2388
 
+import obspy.imaging.beachball
+import os
+import matplotlib.pyplot as pyplot
+import numpy as np
+import shutil
+import subprocess
+import warnings
+from mtuq.event import MomentTensor
+
 
 def plot_beachball(filename, mt):
     """ Plots focal mechanism of given moment tensor as PNG image
     """
-    from mtuq.graphics.gmt import gmt_major_version
+    from mtuq.graphics._gmt import gmt_major_version
 
     if type(mt)!=MomentTensor:
         mt = MomentTensor(mt)

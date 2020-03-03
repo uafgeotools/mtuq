@@ -1,4 +1,9 @@
 
+#
+# graphics/header.py - figure headers and text
+#
+
+
 import numpy as np
 import os
 from matplotlib import pyplot

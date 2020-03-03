@@ -1,4 +1,8 @@
 
+#
+# graphics/uq_lune.py - uncertainty quantification on the eigenvalue lune
+#
+
 import numpy as np
 import shutil
 import subprocess
@@ -6,19 +10,33 @@ import subprocess
 from matplotlib import pyplot
 from os.path import splitext
 from xarray import DataArray
-from mtuq.graphics.uq import check_grid
+from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import fullpath
 from mtuq.util.lune import to_delta, to_gamma
 from mtuq.util.xarray import dataarray_to_table
 
 
-
 def plot_misfit(filename, grid, values):
-    """ Plots misfit values on lune
-    (GMT implementation)
+    """ Plots misfit on eigenvalue lune
     """
-    da = check_grid('FullMomentTensor', grid, values)
-    
+    gridtype = type(grid)
+
+    if gridtype==Grid:
+        # convert from mtuq object to xarray DataArray
+        da = grid.to_dataarray(values)
+
+        _plot_misfit_regular(filename, da)
+
+    elif gridtype==UnstructuredGrid:
+        # convert from mtuq object to pandas Dataframe
+        df = grid.to_dataframe(values)
+
+        _plot_misfit_random(filename, df)
+
+
+def _plot_misfit_regular(filename, da):
+    """ Plots misfit values on lune
+    """
     # manipulate DataArray
     da = da.min(['rho', 'kappa', 'sigma', 'h'])
     da.values -= da.values.min()
@@ -48,40 +66,10 @@ def plot_misfit(filename, grid, values):
             tmpname)
 
 
-def plot_likelihood(filename, grid, values):
-    """ Plots likelihood values on lune
-    (GMT implementation)
+def _plot_misfit_random(filename, da):
+    """ Plots randomly-spaced misfit values on lune
     """
-    da = check_grid('FullMomentTensor', grid, values)
-
-    # manipulate DataArray
-    da.values = np.exp(-da.values)
-    da = da.sum(['rho', 'kappa', 'sigma', 'h'])
-    da.values -= da.values.min()
-    da.values /= da.values.max()
-
-    # get coordinates
-    delta = to_delta(da.coords['w'])
-    gamma = to_gamma(da.coords['v'])
-    delta, gamma = np.meshgrid(delta, gamma)
-    delta = delta.flatten()
-    gamma = gamma.flatten()
-    values = da.values.flatten()
-
-    # write misfit values
-    name, ext = _check_ext(filename)
-    tmpname = 'tmp_'+name+'_likelihood.txt'
-    np.savetxt(tmpname, np.column_stack([gamma, delta, values]))
-
-    # write PostScript graphics
-    if _gmt():
-        _call("%s %s %s" %
-           (fullpath('scripts/plot_misfit'),
-            tmpname,
-            name+ext))
-    else:
-        gmt_not_found_warning(
-            tmpname)
+    raise NotImplementedError
 
 
 def gmt_not_found_warning(filename):
