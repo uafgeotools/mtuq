@@ -145,13 +145,12 @@ class Misfit(object):
         self.time_shift_groups = time_shift_groups
 
 
-    def __call__(self, data, greens, sources, verbose=0, 
+    def __call__(self, data, greens, sources, handle=None, 
         optimization_level=2, set_attributes=False):
         """ Evaluates misfit on given data
         """
-        # Normally misfit is evaluated over a Grid or Unstructured grid of 
-        # sources, which are already iterable.  The following is necessary
-        # in case a single sources is given
+        # Normally misfit is evaluated over a grid of sources; the following
+        # makes things work if just a single source is given
         sources = iterable(sources)
 
         if isempty(data):
@@ -162,29 +161,33 @@ class Misfit(object):
             return np.zeros((len(sources), 1))
 
 
-        # To allow time shifts, Green's functions must be longer than data,
-        # i.e., Green's functions must start +time_shift_max before data and
-        # end -time_shift_min after data.  One way to achieve this is by 
-        # supplying padding values to mtuq.ProcessData. If these padding values
-        # were not previously supplied, then Green's functions  will be padded
-        # with zeros by the following command.
+        # For the greatest accuracy, Green's functions must be longer than 
+        # data (i.e., Green's functions must begin +time_shift_max before data a
+        # and end -time_shift_min after data.) 
+        #
+        # To achieve this, users can supply left and right padding lengths
+        # via the `padding` parameter when calling `mtuq.ProcessData`.
+        #
+        # If padding lengths were not supplied, then Green's functions may be
+        # padded with zeros, which may result in slightly less accurate time 
+        # shifts
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
 
         if optimization_level==0 or set_attributes:
             return level0.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_min, self.time_shift_max, verbose, 
+                self.time_shift_min, self.time_shift_max, handle, 
                 set_attributes)
 
         if optimization_level==1:
             return level1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_min, self.time_shift_max, verbose)
+                self.time_shift_min, self.time_shift_max, handle)
 
         if optimization_level==2:
             return level2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
-                self.time_shift_min, self.time_shift_max, verbose)
+                self.time_shift_min, self.time_shift_max, handle)
 
 

@@ -163,3 +163,30 @@ def url2uuid(url):
     return uuid.uuid5(namespace, name)
 
 
+class ProgressBar(object):
+    def __init__(self, start, stop, percent=10.):
+        assert (0 <= start)
+        assert (start <= stop)
+        assert (0 < percent <= 50.)
+
+        if percent > 1.:
+            percent = round(percent)
+            self.message = "  about %2.0f percent finished"
+        else:
+            percent = 10*round(percent/10.)
+            self.message = "  about %3.1f percent finished"
+
+        self.start = start
+        self.stop = stop
+
+        self.index = start
+        self.interval = percent/100.*stop
+        self.thresh = start
+            
+
+    def __call__(self):
+        self.index += 1
+        if self.index > self.thresh:
+            print(self.message % (100*self.thresh/self.stop))
+            self.thresh += self.interval
+

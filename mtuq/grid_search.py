@@ -1,6 +1,6 @@
 
 import numpy as np
-from mtuq.util import iterable, timer
+from mtuq.util import iterable, timer, ProgressBar
 
 
 
@@ -89,9 +89,22 @@ def grid_search_serial(data, greens, misfit, origins, sources,
     """ Evaluates misfit over origin and source grids 
     (serial implementation)
     """
+    origins = iterable(origins)
+    ni = len(origins)
+    nj = len(sources)
+
     results = []
-    for origin in iterable(origins):
-        results += [misfit(data, greens.select(origin), sources, verbose)]
+    for _i, origin in enumerate(origins):
+
+        # optional progress bar
+        if verbose:
+            handle = ProgressBar(start=_i*nj, stop=ni*nj)
+        else:
+            handle = None
+
+        # evaluate misfit function
+        results += [misfit(data, greens.select(origin), sources, handle)]
+
     return np.concatenate(results, axis=1)
 
 

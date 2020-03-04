@@ -11,7 +11,7 @@ from mtuq.util.signal import get_components, get_time_sampling
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
-    time_shift_min, time_shift_max, verbose=0):
+    time_shift_min, time_shift_max, handle=None):
     """
     Data misfit function (fast pure Python version)
 
@@ -34,6 +34,10 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     for _i, source in enumerate(sources):
         source = source.as_vector()
 
+        # optional progress bar handle
+        if handle:
+            handle()
+
         for _j, d in enumerate(data):
             components = greens[_j].components
             if not components:
@@ -51,7 +55,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
             for group in time_shift_groups:
                 # Finds the time-shift between data and synthetics that yields
                 # the maximum cross-correlation value across all components in 
-                # a given group, subject to time_shift_max constraint
+                # a given group, subject to min/max constraints
                 _, indices = list_intersect_with_indices(
                     components, group)
 
