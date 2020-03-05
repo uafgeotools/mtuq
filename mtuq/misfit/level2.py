@@ -16,26 +16,37 @@ from mtuq.misfit import c_ext_L2
 def misfit(data, greens, sources, norm, time_shift_groups,
     time_shift_min, time_shift_max, verbose=0):
     """
-    Data misfit function (fast Python/C version)
+    Datt
+ misfit function (fast Python/C version)
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
+    #
+    # collection information from data
+    #
     nt, dt = _get_time_sampling(data)
-    padding = _get_padding(time_shift_min, time_shift_max, dt)
-
     stations = _get_stations(data)
     components = _get_components(data)
 
-    # boolean arrays
-    groups = _get_groups(time_shift_groups, components)
+    # which components are absent from the data (boolean array)?
     mask = _get_mask(data, stations, components)
 
-    # data arrays
-    data = _get_data(data, stations, components, nt)
+    # which components will be used to determine time shifts (boolean array)?
+    groups = _get_groups(time_shift_groups, components)
+
+
+    #
+    # collapse main structures into NumPy arrays
+    #
+    data = _get_data(data, stations, components)
     greens = _get_greens(greens, stations, components)
     sources = _to_array(sources)
 
-    # correlation arrays
+
+    #
+    # cross-correlate data and synthetics
+    #
+    padding = _get_padding(time_shift_min, time_shift_max, dt)
     data_data = _autocorr_1(data)
     greens_greens = _autocorr_2(greens, padding)
     greens_data = _corr_1_2(data, greens, padding)
@@ -45,14 +56,19 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     else:
         hybrid_norm = 0
 
+
+    #
+    # call C extension
+    #
+
     start_time = time.time()
 
     if norm in ['L2', 'hybrid']:
         results = c_ext_L2.misfit(
            data_data, greens_data, greens_greens, sources, groups, mask,
-           hybrid_norm, dt, padding[0], padding[1], int(verbose))
+           hybrid_norm, dt, padding[0], padding[1], int(bool(verbose)))
 
-    else:
+    elif norm in ['L1']:
         raise NotImplementedError
 
     if verbose:
@@ -102,7 +118,7 @@ def _get_greens(greens, stations, components):
     return array
 
 
-def _get_data(data, stations, components, nt):
+def _get_data(data, stations, components):
     #Collects numeric trace data from all streams as a single NumPy array
 
     #Compared with iterating over streams and traces, provides a potentially
@@ -112,6 +128,8 @@ def _get_data(data, stations, components, nt):
 
     #    Requires that all streams have the same time discretization
     #    (or else an error is raised)
+
+    nt, dt = _get_time_sampling(data)
 
     ns = len(stations)
     nc = len(components)

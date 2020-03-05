@@ -149,7 +149,7 @@ class Misfit(object):
         optimization_level=2, set_attributes=False):
         """ Evaluates misfit on given data
         """
-        # Normally misfit is evaluated over a grid of sources; the following
+        # Normally misfit is evaluated over a grid of sources; `iterable`
         # makes things work if just a single source is given
         sources = iterable(sources)
 
