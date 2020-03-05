@@ -39,7 +39,7 @@ def plot_likelihood_vw(filename, grid, values=None):
     gridtype = type(grid)
 
     if gridtype==Grid:
-        # convert from mtuq.Grid to xarray DataArray
+        # convert from mtuq.Grid to xarray.DataArray
         da = grid.to_dataarray(values)
 
         _plot_likelihood_regular(filename, da)
@@ -59,41 +59,51 @@ def _plot_misfit_regular(filename, da):
     # manipulate DataArray
     da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
 
-    # plot misfit
-    pyplot.figure(figsize=(2., 7.07))
-    pyplot.pcolor(da.coords['v'], da.coords['w'], da.values)
-    pyplot.axis('equal')
-    pyplot.xlim([-1./3., 1./3.])
-    pyplot.ylim([-3./8.*np.pi, 3./8.*np.pi])
-
+    _plot_v_w(da.coords['v'], da.coords['w'], da.values.T)
     pyplot.savefig(filename)
 
 
-def _plot_misfit_random(filename, df):
+def _plot_misfit_random(filename, df, npts_v=20, npts_w=40):
     """ Plots randomly-spaced values on 'v-w' rectangle
     (matplotlib implementation)
     """
-    raise NotImplementedError
+    # define edges of cells
+    v = closed_interval(-1./3., 1./3., npts_v+1)
+    w = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w+1)
+
+    # define centers of cells
+    vp = open_interval(-1./3., 1./3., npts_v)
+    wp = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
+
+    # sum over likelihoods to obtain marginal distribution
+    best_misfit = np.empty((npts_w, npts_v))
+    for _i in range(npts_w):
+        for _j in range(npts_v):
+            # which grid points lie within cell (i,j)?
+            subset = df.loc[
+                df['v'].between(v[_j], v[_j+1]) &
+                df['w'].between(w[_i], w[_i+1])]
+
+            best_misfit[_i, _j] = subset['values'].min()
+
+    _plot_v_w(vp, wp, best_misfit)
+    pyplot.savefig(filename)
 
 
 def _plot_likelihood_regular(filename, da):
     """ Plots regularly-spaced values on 'v-w' rectangle
     (matplotlib implementation)
     """
-    # necessary to avoid floating point errors?
-    df['values'] *= 1.e6
+    # better way to estimate sigma?
+    sigma = np.mean(da.values)**0.5
+    da.values /= sigma**2.
 
     # sum over likelihoods to obtain marginal distribution
     da.values = np.exp(-da.values/2.)
     marginal = da.sum(dim=('rho', 'kappa', 'sigma', 'h'))
+    marginal /= np.pi/2*marginal.sum()
 
-    # plot misfit
-    pyplot.figure(figsize=(2., 7.07))
-    pyplot.pcolor(da.coords['v'], da.coords['w'], marginal.values.T)
-    pyplot.axis('equal')
-    pyplot.xlim([-1./3., 1./3.])
-    pyplot.ylim([-3./8.*np.pi, 3./8.*np.pi])
-
+    _plot_v_w(da.coords['v'], da.coords['w'], marginal.values.T)
     pyplot.savefig(filename)
 
 
@@ -101,8 +111,9 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
     """ Plots randomly-spaced values on 'v-w' rectangle
     (matplotlib implementation)
     """
-    # necessary to avoid floating point errors?
-    df['values'] *= 1.e6
+    # better way to estimate sigma?
+    sigma = np.mean(df['values'])**0.5
+    df['values'] /= sigma**2.
 
     # define edges of cells
     v = closed_interval(-1./3., 1./3., npts_v+1)
@@ -128,13 +139,18 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
             marginal[_i, _j] = np.exp(-subset['values']/2.).sum()
             marginal[_i, _j] *= ne/na**2
 
-    # plot misfit
-    pyplot.figure(figsize=(2., 7.07))
-    pyplot.pcolor(vp, wp, marginal)
+    marginal /= np.pi/2*marginal.sum()
+
+
+    _plot_v_w(vp, wp, marginal)
+    pyplot.savefig(filename)
+
+
+def _plot_v_w(v, w, values):
+    pyplot.figure(figsize=(3., 8.))
+    pyplot.pcolor(v, w, values)
     pyplot.axis('equal')
     pyplot.xlim([-1./3., 1./3.])
     pyplot.ylim([-3./8.*np.pi, 3./8.*np.pi])
-
-    pyplot.savefig(filename)
 
 
