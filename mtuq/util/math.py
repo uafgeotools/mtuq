@@ -24,7 +24,7 @@ def isclose(X, Y):
 
 
 def open_interval(x1,x2,nx):
-    return np.linspace(x1,x2,nx+2)[1:-1]
+    return np.linspace(x1,x2,2*nx+1)[1:-1:2]
 
 
 def closed_interval(x1,x2,nx):

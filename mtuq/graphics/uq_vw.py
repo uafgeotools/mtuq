@@ -168,9 +168,9 @@ def _centers_to_edges(v):
     #FIXME: still need to fix spacing
     v = v.copy()
     dv = (v[1]-v[0])
-    v -= dv
+    v -= dv/2
     v = np.pad(v, (0, 1))
-    v[-1] = v[-2] + 2*dv
+    v[-1] = v[-2] + dv
     return v
 
 
