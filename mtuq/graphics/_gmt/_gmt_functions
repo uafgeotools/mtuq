@@ -1,0 +1,110 @@
+#!/bin/bash
+
+
+function gmt_settings {
+    gmtdefaults -D > .gmtdefaults4
+    $GMT gmtset CHAR_ENCODING Standard+
+    $GMT gmtset MEASURE_UNIT inch # cm / inch
+    $GMT gmtset PAGE_ORIENTATION portrait
+    $GMT gmtset BASEMAP_TYPE plain
+    $GMT gmtset PAPER_MEDIA letter
+    $GMT gmtset LABEL_FONT_SIZE 12
+    $GMT gmtset ANOT_FONT_SIZE 12
+    $GMT gmtset PLOT_DEGREE_FORMAT ddd.x
+    $GMT gmtset COLOR_FOREGROUND 75/75/75 # for polarity cpt
+}
+
+
+function plot_reference_arcs {
+    proj_arg=$1
+    area_arg=$2
+    out=$3
+
+    (echo -30 35.2644 ; echo 30 54.7356)  |\
+     $GMT psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    (echo -30 -54.7356; echo 30 -35.2644) |\
+     $GMT psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    (echo -30 35.2644 ; echo 30 -35.2644) |\
+    $GMT psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K $shiftd >> $out
+
+}
+
+
+function plot_reference_points {
+    proj_arg=$1
+    area_arg=$2
+    out=$3
+
+    echo   0.0000 -90.0000 |\
+    $GMT psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo -30.0000 -54.7356 |\
+    $GMT psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo -30.0000 0.0000   |\
+    $GMT psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo -30.0000 35.2644  |\
+    $GMT psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo   0.0000 90.0000  |\
+    $GMT psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo 30.0000 54.7356   |\
+    $GMT psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo 30.0000 0.0000    |\
+    $GMT psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+    echo 30.0000 -35.2644  |\
+    $GMT psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K $shiftd >> $out
+
+}
+
+
+function plot_reference_labels {
+    proj_arg=$1
+    area_arg=$2
+    out=$3
+
+    echo "  0.0000 -90.0000 8 0 1 CT (-1,-1,-1)" |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/-10p >> $out
+
+    echo "-30.0000   0.0000 8 0 1 RM  (2,-1,-1)" |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+
+    echo "-30.0000  35.2644 8 0 1 RM    (1,0,0)" |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+
+    echo "  0.0000  90.0000 8 0 1 CB    (1,1,1)" |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/10p  >> $out
+
+    echo " 30.0000  54.7356 8 0 1 LM    (1,1,0)" |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+
+    echo " 30.0000   0.0000 8 0 1 LM   (1,1,-2)" |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+
+    echo " 30.0000 -35.2644 8 0 1 LM   (0,0,-1)" |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+
+    echo "-30.0000 -54.7356 8 0 1 RM  (0,-1,-1)" |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+
+    echo   0.0 -90.0 10 0 1 CB ISO   |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/-25p   >> $out
+
+    echo   0.0  90.0 10 0 1 CB ISO   |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/20p    >> $out
+
+    echo -30.0   0.0 10 0 1 RM CLVD  |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/-10p >> $out
+
+    echo  30.0   0.0 10 0 1 LM CLVD  |\
+    $GMT pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/-10p  >> $out
+
+}
+
+
