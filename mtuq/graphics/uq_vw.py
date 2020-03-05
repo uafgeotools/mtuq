@@ -59,7 +59,11 @@ def _plot_misfit_regular(filename, da):
     # manipulate DataArray
     da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
 
-    _plot_v_w(da.coords['v'], da.coords['w'], da.values.T)
+    # coords gives the center of each cell, but pcolor requires corners
+    v = _centers_to_edges(da.coords['v'])
+    w = _centers_to_edges(da.coords['w'])
+
+    _plot_v_w(v, w, da.values.T)
     pyplot.savefig(filename)
 
 
@@ -72,8 +76,8 @@ def _plot_misfit_random(filename, df, npts_v=20, npts_w=40):
     w = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w+1)
 
     # define centers of cells
-    vp = open_interval(-1./3., 1./3., npts_v)
-    wp = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
+    vp = closed_interval(-1./3., 1./3., npts_v)
+    wp = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
 
     # sum over likelihoods to obtain marginal distribution
     best_misfit = np.empty((npts_w, npts_v))
@@ -103,7 +107,11 @@ def _plot_likelihood_regular(filename, da):
     marginal = da.sum(dim=('rho', 'kappa', 'sigma', 'h'))
     marginal /= np.pi/2*marginal.sum()
 
-    _plot_v_w(da.coords['v'], da.coords['w'], marginal.values.T)
+    # coords gives the center of each cell, but pcolor requires corners
+    v = _centers_to_edges(da.coords['v'])
+    w = _centers_to_edges(da.coords['w'])
+
+    _plot_v_w(v, w, marginal.values.T)
     pyplot.savefig(filename)
 
 
@@ -120,8 +128,8 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
     w = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w+1)
 
     # define centers of cells
-    vp = open_interval(-1./3., 1./3., npts_v)
-    wp = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
+    vp = closed_interval(-1./3., 1./3., npts_v)
+    wp = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
 
     # sum over likelihoods to obtain marginal distribution
     marginal = np.empty((npts_w, npts_v))
@@ -147,10 +155,22 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
 
 
 def _plot_v_w(v, w, values):
-    pyplot.figure(figsize=(3., 8.))
-    pyplot.pcolor(v, w, values)
-    pyplot.axis('equal')
+    fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
+    pyplot.pcolor(v, w, values, snap=True)
     pyplot.xlim([-1./3., 1./3.])
     pyplot.ylim([-3./8.*np.pi, 3./8.*np.pi])
+    pyplot.xticks([], [])
+    pyplot.yticks([], [])
+    pyplot.colorbar(orientation='horizontal', ticks=[], pad=0.)
+
+
+def _centers_to_edges(v):
+    #FIXME: still need to fix spacing
+    v = v.copy()
+    dv = (v[1]-v[0])
+    v -= dv
+    v = np.pad(v, (0, 1))
+    v[-1] = v[-2] + 2*dv
+    return v
 
 
