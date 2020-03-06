@@ -8,7 +8,7 @@ from numpy.random import uniform as random
 from pandas import DataFrame
 from xarray import DataArray
 
-from mtuq.util import AttribDict, asarray
+from mtuq.util import asarray
 from mtuq.util.math import open_interval as regular
 from mtuq.util.lune import to_mt, to_rtp, to_rho, semiregular_grid
 from mtuq.util.xarray import array_to_dict

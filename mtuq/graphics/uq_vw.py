@@ -63,7 +63,7 @@ def _plot_misfit_regular(filename, da):
     v = _centers_to_edges(da.coords['v'])
     w = _centers_to_edges(da.coords['w'])
 
-    _plot_v_w(v, w, da.values.T)
+    _plot_v_w(v, w, da.values.T, 'hot')
     pyplot.savefig(filename)
 
 
@@ -74,10 +74,6 @@ def _plot_misfit_random(filename, df, npts_v=20, npts_w=40):
     # define edges of cells
     v = closed_interval(-1./3., 1./3., npts_v+1)
     w = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w+1)
-
-    # define centers of cells
-    vp = closed_interval(-1./3., 1./3., npts_v)
-    wp = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
 
     # sum over likelihoods to obtain marginal distribution
     best_misfit = np.empty((npts_w, npts_v))
@@ -90,7 +86,7 @@ def _plot_misfit_random(filename, df, npts_v=20, npts_w=40):
 
             best_misfit[_i, _j] = subset['values'].min()
 
-    _plot_v_w(vp, wp, best_misfit)
+    _plot_v_w(v, w, best_misfit, 'hot')
     pyplot.savefig(filename)
 
 
@@ -98,6 +94,8 @@ def _plot_likelihood_regular(filename, da):
     """ Plots regularly-spaced values on 'v-w' rectangle
     (matplotlib implementation)
     """
+    da = da.copy()
+
     # better way to estimate sigma?
     sigma = np.mean(da.values)**0.5
     da.values /= sigma**2.
@@ -111,7 +109,7 @@ def _plot_likelihood_regular(filename, da):
     v = _centers_to_edges(da.coords['v'])
     w = _centers_to_edges(da.coords['w'])
 
-    _plot_v_w(v, w, marginal.values.T)
+    _plot_v_w(v, w, marginal.values.T, cmap='hot_r')
     pyplot.savefig(filename)
 
 
@@ -119,6 +117,8 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
     """ Plots randomly-spaced values on 'v-w' rectangle
     (matplotlib implementation)
     """
+    df = df.copy()
+
     # better way to estimate sigma?
     sigma = np.mean(df['values'])**0.5
     df['values'] /= sigma**2.
@@ -126,10 +126,6 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
     # define edges of cells
     v = closed_interval(-1./3., 1./3., npts_v+1)
     w = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w+1)
-
-    # define centers of cells
-    vp = closed_interval(-1./3., 1./3., npts_v)
-    wp = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
 
     # sum over likelihoods to obtain marginal distribution
     marginal = np.empty((npts_w, npts_v))
@@ -150,13 +146,13 @@ def _plot_likelihood_random(filename, df, npts_v=20, npts_w=40):
     marginal /= np.pi/2*marginal.sum()
 
 
-    _plot_v_w(vp, wp, marginal)
+    _plot_v_w(v, w, marginal, cmap='hot_r')
     pyplot.savefig(filename)
 
 
-def _plot_v_w(v, w, values):
+def _plot_v_w(v, w, values, cmap='hot'):
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
-    pyplot.pcolor(v, w, values, snap=True)
+    pyplot.pcolor(v, w, values, cmap=cmap)
     pyplot.xlim([-1./3., 1./3.])
     pyplot.ylim([-3./8.*np.pi, 3./8.*np.pi])
     pyplot.xticks([], [])
@@ -165,7 +161,6 @@ def _plot_v_w(v, w, values):
 
 
 def _centers_to_edges(v):
-    #FIXME: still need to fix spacing
     v = v.copy()
     dv = (v[1]-v[0])
     v -= dv/2
