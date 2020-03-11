@@ -47,7 +47,7 @@ def grid_search(data, greens, misfit, origins, sources,
     ``allgather`` (`bool`)
 
     Should results be broadcast from the master process to all other
-    processes? (Ignored if not an MPI environment.)
+    processes? (Ignored outside MPI environment.)
 
 
     .. note:

@@ -23,22 +23,6 @@ def isclose(X, Y):
         np.linalg.norm(X-Y) < EPSVAL)
 
 
-def open_interval(x1,x2,nx):
-    return np.linspace(x1,x2,2*nx+1)[1:-1:2]
-
-
-def closed_interval(x1,x2,nx):
-    return np.linspace(x1,x2,nx)
-
-
-def tight_interval(x1,x2,nx,tightness=0.999):
-    # tightness (float) 
-    # 0. reduces to ``open_intervel``, 1. reduces to ``closed_intervel``
-    Lo = open_interval(x1,x2,nx)
-    Lc = closed_interval(x1,x2,nx)
-    return Lo*(1.-tightness) + Lc*tightness
-
-
 def correlate(v1, v2):
     """ Fast cross-correlation function
 
@@ -54,5 +38,28 @@ def correlate(v1, v2):
         # for short traces, time-domain implementation is usually faster
         return np.correlate(v1, v2, 'valid')
 
+
+def open_interval(x1, x2, N):
+    """ Covers the open interval (x1, x2) with N regularly-spaced points
+    """
+
+    # NOTE: the spacing np.linspace(x1, x2, N)[1:-1] would be slightly simpler 
+    # but not as readily used by matplotlib.pyplot.pcolor
+
+    return np.linspace(x1, x2, 2*N+1)[1:-1:2]
+
+
+def closed_interval(x1, x2, N):
+    """ Covers the closed interval [x1, x2] with N regularly-spaced points
+    """
+    return np.linspace(x1, x2, N)
+
+
+def tight_interval(x1,x2,N,tightness=0.999):
+    # tightness (float) 
+    # 0. reduces to ``open_intervel``, 1. reduces to ``closed_intervel``
+    Lo = open_interval(x1,x2,N)
+    Lc = closed_interval(x1,x2,N)
+    return Lo*(1.-tightness) + Lc*tightness
 
 

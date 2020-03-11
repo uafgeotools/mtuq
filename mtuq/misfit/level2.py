@@ -22,11 +22,12 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     See ``mtuq/misfit/__init__.py`` for more information
     """
     #
-    # collection information from data
+    # collect metadata
     #
     nt, dt = _get_time_sampling(data)
     stations = _get_stations(data)
     components = _get_components(data)
+
 
     # which components are absent from the data (boolean array)?
     mask = _get_mask(data, stations, components)
@@ -77,6 +78,10 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
     return results
 
+
+#
+# utility functions
+#
 
 def _get_time_sampling(dataset):
     for stream in dataset:
