@@ -81,7 +81,7 @@ class Client(ClientBase):
         dt_old = float(trace.stats.delta)
 
         for trace in stream:
-            trace.stats.component= trace.stats.channel[0]
+            trace.stats._component = trace.stats.channel[0]
 
             # resample Green's functions
             data_old = trace.data
