@@ -98,7 +98,7 @@ class Grid(object):
 
  
     def to_array(self):
-        """ Returns the entire set of grid points as Numpy array
+        """ Returns the entire set of grid points as a NumPy array
         """
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
@@ -107,7 +107,7 @@ class Grid(object):
 
 
     def to_dataarray(self, values=None):
-        """ Returns the entire set of grid points as xarray DataArray
+        """ Returns the entire set of grid points as an xarray.DataArray
         """
         if values is None:
             values = np.empty(self.shape)
@@ -123,7 +123,7 @@ class Grid(object):
 
 
     def to_dataframe(self, values=None):
-        """ Returns the entire set of grid points as xarray Dataset
+        """ Returns the entire set of grid points as a pandas.DataFrame 
         """
         if values is None:
             values = np.empty(self.size)
@@ -345,7 +345,7 @@ class UnstructuredGrid(object):
 
 
     def to_array(self):
-        """ Returns the entire set of grid points as NumPy array
+        """ Returns the entire set of grid points as a NumPy array
         """
         array = np.zeros((self.size, self.ndim))
         for _i in range(self.size):
@@ -354,7 +354,7 @@ class UnstructuredGrid(object):
 
 
     def to_dataframe(self, values=None):
-        """ Returns the entire set of grid points as xarray Dataset
+        """ Returns the entire set of grid points as a pandas.DataFrame
         """
         if values is None:
             values = np.empty(self.size)

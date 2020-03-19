@@ -19,35 +19,29 @@ def grid_search(data, greens, misfit, origins, sources,
     .. rubric :: Input arguments
 
 
-    ``data`` (``mtuq.dataset.Dataset``)
-
-    The observed data that will be compared with synthetic data.
-
-
-    ``greens`` (``mtuq.greens_tensor.GreensTensorList``.)
-
-    Green's functions that will be used to generate synthetic data.
+    ``data`` (``mtuq.dataset.Dataset``):
+    The observed data that will be compared with synthetic data
 
 
-    ``misfit`` (``mtuq.misfit.Misfit`` or some other function)
+    ``greens`` (``mtuq.greens_tensor.GreensTensorList``):
+    Green's functions that will be used to generate synthetic data
 
-    Implements norm of data and synthetics.
+
+    ``misfit`` (``mtuq.misfit.Misfit`` or some other function):
+    Implements norm of data and synthetics
 
 
     ``origins`` (`list` of ``mtuq.source.Origin`` objects)
-
-    Event origins that will be used to generate synthetics.
-
-
-    ``sources`` (``mtuq.grid.Grid`` or ``mtuq.grid.UnstructuredGrid``)
-
-    Source mechanisms that will be used to generate synthetics.
+    Origins that will be used to generate synthetics
 
 
-    ``allgather`` (`bool`)
+    ``sources`` (``mtuq.grid.Grid`` or ``mtuq.grid.UnstructuredGrid``):
+    Source mechanisms that will be used to generate synthetics
 
+
+    ``allgather`` (`bool`):
     Should results be broadcast from the master process to all other
-    processes? (Ignored outside MPI environment.)
+    processes? (Ignored outside MPI environment)
 
 
     .. note:
