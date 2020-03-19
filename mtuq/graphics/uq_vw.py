@@ -46,17 +46,11 @@ def plot_misfit_vw(filename, grid, values=None):
 
 
 
-def plot_likelihood_vw(filename, grid, values=None, sigma=None):
+def plot_likelihood_vw(filename, grid, values=None, sigma=1.):
     """ Plots maximum likelihood values on 'v-w' rectangle
     """
     # convert to DataArray or DataFrame
     grid = _convert(grid, values)
-
-    # better way to define sigma?
-    try:
-        sigma *= np.mean(grid.values)**0.5
-    except:
-        sigma = np.mean(grid.values)**0.5
 
     # convert from misfit to likelihood
     grid.values = np.exp(-grid.values/(2.*sigma**2))
@@ -82,17 +76,11 @@ def plot_likelihood_vw(filename, grid, values=None, sigma=None):
 
 
 
-def plot_marginal_vw(filename, grid, values=None, sigma=None):
+def plot_marginal_vw(filename, grid, values=None, sigma=1.):
     """ Plots marginal likelihood values on 'v-w' rectangle
     """
     # convert to DataArray or DataFrame
     grid = _convert(grid, values)
-
-    # better way to define sigma?
-    try:
-        sigma *= np.mean(grid.values)**0.5
-    except:
-        sigma = np.mean(grid.values)**0.5
 
     # convert from misfit to likelihood
     grid.values = np.exp(-grid.values/(2.*sigma**2))
@@ -110,7 +98,7 @@ def plot_marginal_vw(filename, grid, values=None, sigma=None):
         df = grid
         v, w, values = _bin(df, lambda df: df.sum()/len(df))
         area = np.pi/2.
-        values /= area*da.values.sum()
+        values /= area*df.values.sum()
 
 
     _plot_v_w(v, w, values, cmap='hot_r')
