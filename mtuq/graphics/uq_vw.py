@@ -116,11 +116,11 @@ def _convert(grid, values=None):
 
     if type(grid)==Grid:
         assert values is not None
-        return grid.to_dataarray(values).copy()
+        return grid.to_dataarray(np.squeeze(values)).copy()
 
     elif type(grid)==UnstructuredGrid:
         assert values is not None
-        return grid.to_dataframe(values).copy()
+        return grid.to_dataframe(np.squeeze(values)).copy()
 
     elif type(grid)==DataArray:
         assert values is None
