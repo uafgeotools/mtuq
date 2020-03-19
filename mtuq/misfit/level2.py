@@ -62,7 +62,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     #
     try:
         progress_args = [getattr(progress_handle, attrib) for attrib in 
-            ['start', 'stop', 'percent_interval']]
+            ['start_index', 'stop_index', 'percent_interval']]
     except:
         progress_args = [0, 0, 0]
 

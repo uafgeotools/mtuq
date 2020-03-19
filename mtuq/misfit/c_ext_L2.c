@@ -80,6 +80,8 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   int cc_argmax, it, itpad, j1, j2, nd, NPAD;
   npy_float64 cc_max, L2_sum, L2_tmp;
 
+  int index, next_index, stop_index, index_interval;
+
 
 
   // parse arguments
@@ -96,7 +98,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
                         &NPAD2,
                         &verbose,
                         &progress_msg_start,
-                        &progress_msg_start,
+                        &progress_msg_stop,
                         &progress_msg_interval)) {
     return NULL;
   }
@@ -129,11 +131,32 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   PyObject *results = PyArray_SimpleNew(nd, dims_results, NPY_DOUBLE);
 
 
+  // initialize progress messages
+  if (progress_msg_interval > 0) {
+    index = progress_msg_start;
+    next_index = progress_msg_start;
+    stop_index = progress_msg_stop;
+    index_interval = progress_msg_interval/100.*progress_msg_stop;
+  }
+  else {
+    index = 0;
+    next_index = -1;
+  }
+
   //
   // Begin iterating over sources
   //
 
   for(isrc=0; isrc<NSRC; ++isrc) {
+
+
+    // display progress message
+    if (index == next_index) {
+        printf("  about %d percent finished\n", 100*index/stop_index);
+        next_index += index_interval;
+    }
+    index += 1;
+
 
     L2_sum = (npy_float64) 0.;
 
