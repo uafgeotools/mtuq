@@ -1,5 +1,17 @@
 
 #
+# suppress warnings
+#
+
+# ObsPy returns numerous warnings of this type - FutureWarning: Passing 
+# (type, 1) or '1type' as a synonym of type is deprecated; in a future version
+# of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+                                                                             
+
+#
 # make central objects easily accessible
 #
 
@@ -87,7 +99,6 @@ def _unpickle_method(func_name, obj, cls):
     return func.__get__(obj, cls)
 
 copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
-
 
 
 
