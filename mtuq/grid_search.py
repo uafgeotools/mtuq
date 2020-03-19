@@ -96,14 +96,13 @@ def grid_search_serial(data, greens, misfit, origins, sources,
     results = []
     for _i, origin in enumerate(origins):
 
-        # optional progress bar
+        # optional progress function handle
+        progress_handle = None
         if verbose:
-            handle = ProgressBar(start=_i*nj, stop=ni*nj)
-        else:
-            handle = None
+            progress_handle = ProgressBar(start=_i*nj, stop=ni*nj)
 
         # evaluate misfit function
-        results += [misfit(data, greens.select(origin), sources, handle)]
+        results += [misfit(data, greens.select(origin), sources, verbose, progress_handle)]
 
     return np.concatenate(results, axis=1)
 

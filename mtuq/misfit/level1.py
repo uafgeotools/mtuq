@@ -11,7 +11,7 @@ from mtuq.util.signal import get_components, get_time_sampling
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
-    time_shift_min, time_shift_max, handle=None):
+    time_shift_min, time_shift_max, verbose, progress_handle=None):
     """
     Data misfit function (fast pure Python version)
 
@@ -34,9 +34,9 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     for _i, source in enumerate(sources):
         source = source.as_vector()
 
-        # optional progress bar handle
-        if handle:
-            handle()
+        # optional progress bar
+        if progress_handle:
+            progress_handle()
 
         for _j, d in enumerate(data):
             components = greens[_j].components

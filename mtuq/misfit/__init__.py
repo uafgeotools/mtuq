@@ -145,8 +145,8 @@ class Misfit(object):
         self.time_shift_groups = time_shift_groups
 
 
-    def __call__(self, data, greens, sources, handle=None, 
-        optimization_level=2, set_attributes=False):
+    def __call__(self, data, greens, sources, verbose=0, progress_handle=None, 
+        set_attributes=False, optimization_level=2):
         """ Evaluates misfit on given data
         """
         # Normally misfit is evaluated over a grid of sources; `iterable`
@@ -161,9 +161,9 @@ class Misfit(object):
             return np.zeros((len(sources), 1))
 
 
-        # For the greatest accuracy, Green's functions must be longer than 
-        # data (i.e., Green's functions must begin +time_shift_max before data a
-        # and end -time_shift_min after data.) 
+        # For greatest accuracy, Green's functions must be longer than data
+        # (i.e., Green's functions must begin +time_shift_max before data and
+        # end -time_shift_min after data.) 
         #
         # To achieve this, users can supply left and right padding lengths
         # via the `padding` parameter when calling `mtuq.ProcessData`.
@@ -177,17 +177,17 @@ class Misfit(object):
         if optimization_level==0 or set_attributes:
             return level0.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_min, self.time_shift_max, handle, 
+                self.time_shift_min, self.time_shift_max, verbose, progress_handle,
                 set_attributes)
 
         if optimization_level==1:
             return level1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_min, self.time_shift_max, handle)
+                self.time_shift_min, self.time_shift_max, verbose, progress_handle)
 
         if optimization_level==2:
             return level2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
-                self.time_shift_min, self.time_shift_max, handle)
+                self.time_shift_min, self.time_shift_max, verbose, progress_handle)
 
 

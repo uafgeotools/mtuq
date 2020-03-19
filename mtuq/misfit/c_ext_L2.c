@@ -72,6 +72,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   npy_float64 dt;
   int NPAD1, NPAD2;
   int verbose;
+  int progress_msg_start, progress_msg_stop, progress_msg_interval;
 
   int NSRC, NSTA, NC, NG, NGRP;
   int isrc, ista, ic, ig, igrp;
@@ -80,8 +81,9 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   npy_float64 cc_max, L2_sum, L2_tmp;
 
 
+
   // parse arguments
-  if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!idiii",
+  if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!idiiiiii",
                         &PyArray_Type, &data_data,
                         &PyArray_Type, &greens_data,
                         &PyArray_Type, &greens_greens,
@@ -92,7 +94,10 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
                         &dt,
                         &NPAD1,
                         &NPAD2,
-                        &verbose)) {
+                        &verbose,
+                        &progress_msg_start,
+                        &progress_msg_start,
+                        &progress_msg_interval)) {
     return NULL;
   }
 
