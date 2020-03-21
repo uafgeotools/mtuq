@@ -84,7 +84,7 @@ def beachball_obspy(filename, mt):
 
 
 
-def misfit_vs_depth(filename, data, misfit, origins, sources, results):
+def misfit_vs_depth(filename, data, misfit, origins, grid, results):
     """ Plots misfit versus depth from grid search results
 
     Creates a scatter plot in which the the placment of each marker shows the 
@@ -129,7 +129,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
 
     for _i, origin in enumerate(origins):
 
-        source = sources.get(indices[_i])
+        mt = grid.get(indices[_i])
         result = results[_i]
 
         xp = origin.depth_in_m/1000.
@@ -137,7 +137,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
         pyplot.plot(xp, yp)
 
         # add beachball
-        plot_beachball('tmp.png', source)
+        plot_beachball('tmp.png', mt)
         img = pyplot.imread('tmp.png')
         os.remove('tmp.png')
         os.remove('tmp.ps')
@@ -147,7 +147,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
         #ax.imshow(img, extent=(xp-xw,xp+xw,yp-yw,yp+yw), transform=ax.transAxes)
 
         # add magnitude label
-        label = '%2.1f' % MomentTensor(source).magnitude()
+        label = '%2.1f' % mt.magnitude()
         _text(xp, yp-0.075*yr, label)
 
     pyplot.xlim((-0.1*xr + min(depths), 0.1*xr + max(depths)))

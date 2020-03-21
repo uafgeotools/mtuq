@@ -83,7 +83,7 @@ def grid_search(data, greens, misfit, origins, sources,
         # all processes share results
         return np.concatenate(comm.allgather(results))
     else:
-        # each process just returns its own results
+        # each process returns just its own results
         return results
 
 
