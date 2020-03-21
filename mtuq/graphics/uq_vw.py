@@ -9,6 +9,17 @@
 # (https://doi.org/10.1093/gji/ggv262)
 #
 
+#
+# These utilities expect  xarray.DataArray format if grid spacing is regular 
+# and pandas.DataFrame format if grid spacing is random.  We use these 
+# structures because they make data manipulation much easier.  To convert to
+# these formats, see
+#     mtuq.grid.Grid.to_dataarray
+#     mtuq.grid.UnstructuredGrid.to_dataframe
+#
+
+
+
 
 import numpy as np
 
@@ -22,116 +33,106 @@ from mtuq.util.xarray import dataarray_to_table
 
 
 
-def plot_misfit_vw(filename, grid, values=None):
+def plot_misfit_vw(filename, struct):
     """ Plots misfit values on 'v-w' rectangle
     """
-    # convert to DataArray or DataFrame
-    grid = _convert(grid, values)
+    _check(struct)
+    struct = struct.copy()
 
 
-    if type(grid)==DataArray:
-        da = grid.min(dim=('rho', 'kappa', 'sigma', 'h'))
+    if type(structure)==DataArray:
+        da = structure.copy()
+        da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
         values = da.values
 
 
-    elif type(grid)==DataFrame:
-        df = grid
+    elif type(structure)==DataFrame:
+        df = structure.copy()
         v, w, values = _bin(df, lambda df: df.min())
 
 
-    _plot_v_w(v, w, values, cmap='hot')
+    _plot_vw(v, w, values, cmap='hot')
     pyplot.savefig(filename)
 
 
 
-def plot_likelihood_vw(filename, grid, values=None, sigma=1.):
+def plot_likelihood_vw(filename, struct, sigma=1.):
     """ Plots maximum likelihood values on 'v-w' rectangle
     """
-    # convert to DataArray or DataFrame
-    grid = _convert(grid, values)
+    _check(struct)
+    struct = struct.copy()
+
 
     # convert from misfit to likelihood
-    grid.values = np.exp(-grid.values/(2.*sigma**2))
+    struct.values = np.exp(-struct.values/(2.*sigma**2))
 
 
-    if type(grid)==DataArray:
-        da = grid
-        da.values /= da.values.sum()
-        da = grid.max(dim=('rho', 'kappa', 'sigma', 'h'))
+    if type(structure)==DataArray:
+        da = struct.max(dim=('rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        values = da.values
+        values = da.values/da.values.sum()
 
 
-    elif type(grid)==DataFrame:
-        df = grid
+    elif type(structure)==DataFrame:
+        df = struct
         df['values'] /= df['values'].sum()
         v, w, values = _bin(df, lambda df: df.max())
 
 
-    _plot_v_w(v, w, values, cmap='hot_r')
+    _plot_vw(v, w, values, cmap='hot_r')
     pyplot.savefig(filename)
 
 
 
-def plot_marginal_vw(filename, grid, values=None, sigma=1.):
+def plot_marginal_vw(filename, struct, sigma=1.):
     """ Plots marginal likelihood values on 'v-w' rectangle
     """
-    # convert to DataArray or DataFrame
-    grid = _convert(grid, values)
+    _check(struct)
+    struct = struct.copy()
+
 
     # convert from misfit to likelihood
-    grid.values = np.exp(-grid.values/(2.*sigma**2))
+    struct.values = np.exp(-struct.values/(2.*sigma**2))
 
 
-    if type(grid)==DataArray:
-        da = grid.sum(dim=('rho', 'kappa', 'sigma', 'h'))
+    if type(structure)==DataArray:
+        da = struct.sum(dim=('rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
         area = (np.pi/2.)*da.values.sum()
         values = da.values/area
 
 
-    elif type(grid)==DataFrame:
-        df = grid
+    elif type(structure)==DataFrame:
+        df = struct
         v, w, values = _bin(df, lambda df: df.sum()/len(df))
         area = np.pi/2.
         values /= area*df.values.sum()
 
 
-    _plot_v_w(v, w, values, cmap='hot_r')
+    _plot_vw(v, w, values, cmap='hot_r')
     pyplot.savefig(filename)
 
 
 
-def _convert(grid, values=None):
-    """ Converts from mtuq object to DataArray or DataFrame
+def _check(struct):
+    """ Checks data structures
     """
+    if type(struct) in (DataArray, DataFrame):
+        pass
 
-    # Returns xarray.DataArray if grid spacing is regular or pandas.DataFrame
-    # if grid spacing is random.  We use these data structures because they
-    # make data manipulation easier
-
-    if type(grid)==Grid:
-        assert values is not None
-        return grid.to_dataarray(np.squeeze(values)).copy()
-
-    elif type(grid)==UnstructuredGrid:
-        assert values is not None
-        return grid.to_dataframe(np.squeeze(values)).copy()
-
-    elif type(grid)==DataArray:
-        assert values is None
-        return grid.copy()
-
-    elif type(grid)==DataFrame:
-        assert values is None
-        return grid.copy()
+    elif type(struct) in (Grid, UnstructuredGrid):
+        raise TypeError(
+            "Plotting utilities expect grid and misfit values as a DataArray "
+            "or DataFrame.  For one way of converting to these formats, see "
+            "  mtuq.grid.Grid.to_dataarray" 
+            "  mutq.grid.UnstructuredGrid.to_dataframe")
 
     else:
-        raise ValueError("Unexpected grid format")
+        raise TypeError("Unexpected grid format")
 
 
 
@@ -165,12 +166,11 @@ def _bin(df, handle, npts_v=20, npts_w=40):
 
 
 
-
 #
 # pyplot wrappers
 #
 
-def _plot_v_w(v, w, values, cmap='hot'):
+def _plot_vw(v, w, values, cmap='hot'):
     """ Creates v-w color plot 
 
     (Thinly wraps pyplot.pcolor)

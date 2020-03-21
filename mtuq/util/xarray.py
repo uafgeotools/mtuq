@@ -34,3 +34,28 @@ def array_to_dict(array, shape):
 
     return {keys[_i]: array[:,_i] for _i in range(nout)}
 
+
+
+def open_nc(filename):
+    raise NotImplementedError
+
+    da = open_dataarray(filename)
+
+    return Grid(
+        dims=da.dims,
+        coords=[da.coords[dim] for dim in da.dims],
+        callback=to_mt,
+        )
+
+
+def open_h5():
+    raise NotImplementedError
+
+    df = read_hdf(filename)
+
+    return UnstructuredGrid(
+        dims=da.dims,
+        coords=[da.columns[dim] for dim in da.dims],
+        callback=to_mt,
+        )
+
