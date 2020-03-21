@@ -45,6 +45,32 @@ Library reference
 =================================================================================================  =================================================================================================
 
 
+.. rubric:: Data visualization
+
+=================================================================================================  =================================================================================================
+mtuq.graphics.plot_data_synthetics                                                                 Compares data and synthetics
+mtuq.graphics.plot_misfit_vs_depth                                                                 Plots misfit vs depth
+mtuq.graphics.plot_beachball                                                                       Plots focal mechansim (requires GMT)
+=================================================================================================  =================================================================================================
+
+
+.. rubric:: Uncertainty visualization
+
+=================================================================================================  =================================================================================================
+mtuq.graphics.plot_likelihood                                                                      Plots maximum likelihoods on lune (requires GMT)
+mtuq.graphics.plot_marginal                                                                        Plots marginal likelihoods on lune (requires GMT)
+mtuq.graphics.plot_misfit                                                                          Plots misfit on lune (requires GMT)
+mtuq.graphics.plot_likelihood_vw                                                                   Plots maximum likelihoods on `vw` rectangle
+mtuq.graphics.plot_marginal_vw                                                                     Plots marginal likelihoods on `vw` rectangle
+mtuq.graphics.plot_misfit_vw                                                                       Plots misfit on `vw` rectangle
+mtuq.graphics.plot_likelihood_dc                                                                   Plots maximum likelihoods over strike, dip, and slip
+mtuq.graphics.plot_marginal_dc                                                                     Plots marginal likelihoods over strike, dip, and slip
+mtuq.graphics.plot_misfit_dc                                                                       Plots misfit over strike, dip, and slip
+
+=================================================================================================  =================================================================================================
+
+
+
 .. rubric:: Moment tensor grids
 
 =================================================================================================  =================================================================================================

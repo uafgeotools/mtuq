@@ -40,8 +40,8 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``msg_interval`` (``int``):
-    How frequently, as percent of total evaluations, should progress messages
-    be displayed? (value between 0 and 100)
+    How frequently, as a percentage of total evaluations, should progress 
+    messages be displayed? (value between 0 and 100)
 
 
     ``timed`` (``bool``):
@@ -50,7 +50,7 @@ def grid_search(data, greens, misfit, origins, sources,
 
     ``allgather`` (`bool`):
     Should results be broadcast from the master process to all other
-    processes? (Ignored outside MPI environment)
+    processes? (ignored outside MPI environment)
 
 
     .. note:
