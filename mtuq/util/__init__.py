@@ -113,7 +113,7 @@ def timer(func):
     """ Decorator for measuring execution time
     """
     def timed_func(*args, **kwargs):
-        if kwargs.get('verbose', True):
+        if kwargs.get('timed', True):
             start_time = time.time()
             output = func(*args, **kwargs)
             elapsed_time = time.time() - start_time

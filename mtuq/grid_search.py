@@ -5,7 +5,7 @@ from mtuq.util import iterable, timer, ProgressCallback
 
 
 def grid_search(data, greens, misfit, origins, sources, 
-    msg_interval=25, allgather=True):
+    msg_interval=25, timed=True, allgather=True):
 
     """ Evaluates misfit over grids
 
@@ -44,6 +44,10 @@ def grid_search(data, greens, misfit, origins, sources,
     be displayed? (value between 0 and 100)
 
 
+    ``timed`` (``bool``):
+    Display elapsed time at end?
+
+
     ``allgather`` (`bool`):
     Should results be broadcast from the master process to all other
     processes? (Ignored outside MPI environment)
@@ -68,10 +72,12 @@ def grid_search(data, greens, misfit, origins, sources,
         sources = comm.scatter(sources, root=0)
 
         if iproc != 0:
+            timed = False
             msg_interval = 0
 
     results = _grid_search_serial(
-        data, greens, misfit, origins, sources, msg_interval)
+        data, greens, misfit, origins, sources, timed=timed, 
+        msg_interval=msg_interval)
 
     if allgather and _is_mpi_env():
         # all processes share results
@@ -84,7 +90,7 @@ def grid_search(data, greens, misfit, origins, sources,
 
 @timer
 def _grid_search_serial(data, greens, misfit, origins, sources, 
-    msg_interval=25):
+    timed=True, msg_interval=25):
     """ Evaluates misfit over origin and source grids 
     (serial implementation)
     """

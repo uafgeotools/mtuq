@@ -69,7 +69,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     # call C extension
     #
 
-    debug_level = 1
+    debug_level = 0
 
     start_time = time.time()
 
