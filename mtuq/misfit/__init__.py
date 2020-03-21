@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 
 from mtuq.misfit import level0, level1, level2
-from mtuq.util import iterable
+from mtuq.util import Null, iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import check_padding, get_components, isempty
 
@@ -145,7 +145,7 @@ class Misfit(object):
         self.time_shift_groups = time_shift_groups
 
 
-    def __call__(self, data, greens, sources, verbose=0, progress_handle=None, 
+    def __call__(self, data, greens, sources, progress_handle=Null(), 
         set_attributes=False, optimization_level=2):
         """ Evaluates misfit on given data
         """
@@ -177,17 +177,17 @@ class Misfit(object):
         if optimization_level==0 or set_attributes:
             return level0.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_min, self.time_shift_max, verbose, progress_handle,
+                self.time_shift_min, self.time_shift_max, progress_handle,
                 set_attributes)
 
         if optimization_level==1:
             return level1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_min, self.time_shift_max, verbose, progress_handle)
+                self.time_shift_min, self.time_shift_max, progress_handle)
 
         if optimization_level==2:
             return level2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
-                self.time_shift_min, self.time_shift_max, verbose, progress_handle)
+                self.time_shift_min, self.time_shift_max, progress_handle)
 
 

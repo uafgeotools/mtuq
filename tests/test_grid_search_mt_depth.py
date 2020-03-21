@@ -146,12 +146,12 @@ if __name__=='__main__':
     print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, grid, verbose=False)
+        data_bw, greens_bw, misfit_bw, origins, grid, 0)
 
     print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, grid, verbose=False)
+        data_sw, greens_sw, misfit_sw, origins, grid, 0)
 
 
 

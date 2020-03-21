@@ -1,11 +1,11 @@
 
 import numpy as np
-from mtuq.util import iterable, timer, ProgressBar
+from mtuq.util import iterable, timer, ProgressCallback
 
 
 
 def grid_search(data, greens, misfit, origins, sources, 
-    allgather=True, verbose=True):
+    msg_interval=25, allgather=True):
 
     """ Evaluates misfit over grids
 
@@ -39,6 +39,11 @@ def grid_search(data, greens, misfit, origins, sources,
     Source mechanisms that will be used to generate synthetics
 
 
+    ``msg_interval`` (``int``):
+    How frequently, as percent of total evaluations, should progress messages
+    be displayed? (value between 0 and 100)
+
+
     ``allgather`` (`bool`):
     Should results be broadcast from the master process to all other
     processes? (Ignored outside MPI environment)
@@ -47,9 +52,9 @@ def grid_search(data, greens, misfit, origins, sources,
     .. note:
 
       If invoked from an MPI environment, the grid is partitioned between
-      processes and each process runs ``grid_search_serial`` on its given
+      processes and each process runs ``_grid_search_serial`` on its given
       partition. If not invoked from an MPI environment, `grid_search`
-      reduces to ``grid_search_serial``.
+      reduces to ``_grid_search_serial``.
 
     """
     if _is_mpi_env():
@@ -63,10 +68,10 @@ def grid_search(data, greens, misfit, origins, sources,
         sources = comm.scatter(sources, root=0)
 
         if iproc != 0:
-            verbose = False
+            msg_interval = 0
 
-    results = grid_search_serial(
-        data, greens, misfit, origins, sources, verbose=verbose)
+    results = _grid_search_serial(
+        data, greens, misfit, origins, sources, msg_interval)
 
     if allgather and _is_mpi_env():
         # all processes share results
@@ -78,8 +83,8 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
 @timer
-def grid_search_serial(data, greens, misfit, origins, sources, 
-    verbose=True):
+def _grid_search_serial(data, greens, misfit, origins, sources, 
+    msg_interval=25):
     """ Evaluates misfit over origin and source grids 
     (serial implementation)
     """
@@ -90,13 +95,12 @@ def grid_search_serial(data, greens, misfit, origins, sources,
     results = []
     for _i, origin in enumerate(origins):
 
-        # optional progress function handle
-        progress_handle = None
-        if verbose:
-            progress_handle = ProgressBar(start=_i*nj, stop=ni*nj)
+        msg_handle = ProgressCallback(
+            start=_i*nj, stop=ni*nj, percent=msg_interval)
 
         # evaluate misfit function
-        results += [misfit(data, greens.select(origin), sources, verbose, progress_handle)]
+        results += [misfit(
+            data, greens.select(origin), sources, msg_handle)]
 
     return np.concatenate(results, axis=1)
 

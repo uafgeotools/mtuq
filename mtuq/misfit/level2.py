@@ -14,10 +14,9 @@ from mtuq.misfit import c_ext_L2
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
-    time_shift_min, time_shift_max, verbose, progress_handle):
+    time_shift_min, time_shift_max, msg_handle):
     """
-    Datt
- misfit function (fast Python/C version)
+    Data misfit function (fast Python/C version)
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
@@ -58,32 +57,31 @@ def misfit(data, greens, sources, norm, time_shift_groups,
         hybrid_norm = 0
 
     #
-    # collect progress bar attributes
+    # collect message attributes
     #
     try:
-        progress_args = [getattr(progress_handle, attrib) for attrib in 
-            ['start_index', 'stop_index', 'percent_interval']]
+        msg_args = [getattr(msg_handle, attrib) for attrib in 
+            ['start', 'stop', 'percent']]
     except:
-        progress_args = [0, 0, 0]
-
-
-
+        msg_args = [0, 0, 0]
 
     #
     # call C extension
     #
+
+    debug_level = 1
 
     start_time = time.time()
 
     if norm in ['L2', 'hybrid']:
         results = c_ext_L2.misfit(
            data_data, greens_data, greens_greens, sources, groups, mask,
-           hybrid_norm, dt, padding[0], padding[1], verbose, *progress_args)
+           hybrid_norm, dt, padding[0], padding[1], debug_level, *msg_args)
 
     elif norm in ['L1']:
         raise NotImplementedError
 
-    if verbose:
+    if debug_level > 0:
       print('  Elapsed time (C extension) (s): %f' % \
           (time.time() - start_time))
 

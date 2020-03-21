@@ -771,12 +771,12 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, grid, verbose=False)
+        data_bw, greens_bw, misfit_bw, origins, grid, 0)
 
     print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, grid, verbose=False)
+        data_sw, greens_sw, misfit_sw, origins, grid, 0)
 
 
 """
@@ -1207,8 +1207,8 @@ if __name__=='__main__':
         file.write(
             replace(
             Main2_SerialGridSearch_DoubleCouple,
-            'verbose=True',
-            'verbose=False',
+            'origin, grid',
+            'origin, grid, 0',
             ))
         file.write(WrapUp_TestGridSearch_DoubleCouple)
 

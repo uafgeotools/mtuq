@@ -71,8 +71,8 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   int hybrid_norm;
   npy_float64 dt;
   int NPAD1, NPAD2;
-  int verbose;
-  int progress_msg_start, progress_msg_stop, progress_msg_interval;
+  int debug_level;
+  int msg_start, msg_stop, msg_percent;
 
   int NSRC, NSTA, NC, NG, NGRP;
   int isrc, ista, ic, ig, igrp;
@@ -80,8 +80,8 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   int cc_argmax, it, itpad, j1, j2, nd, NPAD;
   npy_float64 cc_max, L2_sum, L2_tmp;
 
-  int index, next_index, stop_index, index_interval;
-
+  float iter, next_iter;
+  int msg_count, msg_interval;
 
 
   // parse arguments
@@ -96,10 +96,10 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
                         &dt,
                         &NPAD1,
                         &NPAD2,
-                        &verbose,
-                        &progress_msg_start,
-                        &progress_msg_stop,
-                        &progress_msg_interval)) {
+                        &debug_level,
+                        &msg_start,
+                        &msg_stop,
+                        &msg_percent)) {
     return NULL;
   }
 
@@ -112,7 +112,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
   NPAD = (int) NPAD1+NPAD2+1;
 
-  if (verbose>1) {
+  if (debug_level>1) {
     printf(" number of sources:  %d\n", NSRC);
     printf(" number of stations:  %d\n", NSTA);
     printf(" number of components:  %d\n", NC);
@@ -132,15 +132,16 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
 
   // initialize progress messages
-  if (progress_msg_interval > 0) {
-    index = progress_msg_start;
-    next_index = progress_msg_start;
-    stop_index = progress_msg_stop;
-    index_interval = progress_msg_interval/100.*progress_msg_stop;
+  if (msg_percent > 0) {
+    msg_interval = msg_percent/100.*msg_stop;
+    msg_count = 100./msg_percent*msg_start/msg_stop;
+    iter = (float) msg_start;
+    next_iter = (float) msg_count*msg_interval;
+
   }
   else {
-    index = 0;
-    next_index = -1;
+    iter = 0;
+    next_iter = INFINITY;
   }
 
   //
@@ -151,11 +152,12 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
 
     // display progress message
-    if (index == next_index) {
-        printf("  about %d percent finished\n", 100*index/stop_index);
-        next_index += index_interval;
+    if (iter >= next_iter) {
+        printf("  about %d percent finished\n", msg_percent*msg_count);
+        msg_count += 1;
+        next_iter = msg_count*msg_interval;
     }
-    index += 1;
+    iter += 1;
 
 
     L2_sum = (npy_float64) 0.;
@@ -184,7 +186,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
           // Skip traces that have been assigned zero weight
           if (((int) weights(ista,ic))==0) {
-              if (verbose>1) {
+              if (debug_level>1) {
                 if (isrc==0) {
                   printf(" skipping trace: %d %d\n", ista, ic);
                 }
