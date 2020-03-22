@@ -191,7 +191,7 @@ def semiregular_grid(npts_v, npts_w, tightness=0.5):
     gamma1 = to_gamma(v1)
     delta1 = to_delta(w1)
 
-    gamma2 = np.linspace(-30., 30., npts_v)
+    gamma2 = np.linspace(-29.5, 29.5, npts_v)
     delta2 = np.linspace(-87.5, 87.5, npts_w)
 
     delta = delta1*(1.-tightness) + delta2*tightness

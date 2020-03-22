@@ -40,7 +40,7 @@ def plot_misfit_vw(filename, struct):
     struct = struct.copy()
 
 
-    if type(structure)==DataArray:
+    if type(struct)==DataArray:
         da = structure.copy()
         da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
@@ -48,7 +48,7 @@ def plot_misfit_vw(filename, struct):
         values = da.values
 
 
-    elif type(structure)==DataFrame:
+    elif type(struct)==DataFrame:
         df = structure.copy()
         v, w, values = _bin(df, lambda df: df.min())
 
@@ -69,14 +69,14 @@ def plot_likelihood_vw(filename, struct, sigma=1.):
     struct.values = np.exp(-struct.values/(2.*sigma**2))
 
 
-    if type(structure)==DataArray:
+    if type(struct)==DataArray:
         da = struct.max(dim=('rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
         values = da.values/da.values.sum()
 
 
-    elif type(structure)==DataFrame:
+    elif type(struct)==DataFrame:
         df = struct
         df['values'] /= df['values'].sum()
         v, w, values = _bin(df, lambda df: df.max())
@@ -98,7 +98,7 @@ def plot_marginal_vw(filename, struct, sigma=1.):
     struct.values = np.exp(-struct.values/(2.*sigma**2))
 
 
-    if type(structure)==DataArray:
+    if type(struct)==DataArray:
         da = struct.sum(dim=('rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
@@ -106,7 +106,7 @@ def plot_marginal_vw(filename, struct, sigma=1.):
         values = da.values/area
 
 
-    elif type(structure)==DataFrame:
+    elif type(struct)==DataFrame:
         df = struct
         v, w, values = _bin(df, lambda df: df.sum()/len(df))
         area = np.pi/2.
@@ -126,8 +126,8 @@ def _check(struct):
 
     elif type(struct) in (Grid, UnstructuredGrid):
         raise TypeError(
-            "Plotting utilities expect grid and misfit values as a DataArray "
-            "or DataFrame.  For one way of converting to these formats, see "
+            "Plotting utilities expect grid and misfit values in DataArray or "
+            "DataFrame format.  For converting to these formats, see "
             "  mtuq.grid.Grid.to_dataarray" 
             "  mutq.grid.UnstructuredGrid.to_dataframe")
 
@@ -183,8 +183,8 @@ def _plot_vw(v, w, values, cmap='hot'):
         values = values.T
 
     # pcolor requires corners of pixels
-    corners_v = _centers_to_corners(v)
-    corners_w = _centers_to_corners(w)
+    corners_v = _centers_to_edges(v)
+    corners_w = _centers_to_edges(w)
 
     # `values` gets mapped to pixel colors
     pyplot.pcolor(corners_v, corners_w, values, cmap=cmap)
@@ -204,7 +204,7 @@ def _plot_vw(v, w, values, cmap='hot'):
         )
 
 
-def _centers_to_corners(v):
+def _centers_to_edges(v):
     v = v.copy()
     dv = (v[1]-v[0])
     v -= dv/2

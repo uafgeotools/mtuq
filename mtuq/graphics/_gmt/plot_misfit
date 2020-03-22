@@ -1,10 +1,11 @@
 #!/bin/bash
 
-cd $(dirname ${BASH_SOURCE[0]})
+
+export PATH=${PATH:+${PATH}:}$(dirname ${BASH_SOURCE[0]})
 source _gmt_functions
 
 
-GMT="gmt"
+export GMT="" #$(usr/bin/env gmt)
 misfit_table=$1
 out=$2
 
@@ -26,8 +27,8 @@ $GMT psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -G255 -K $shiftd  > $out
 misfit_min=0.
 misfit_max=1.
 misfit_del=0.02
-$GMT makecpt -Cpanoply -D -T${misfit_min}/${misfit_max}/${misfit_del} > tmp_cpt
 
+$GMT makecpt -Cpanoply -D -T${misfit_min}/${misfit_max}/${misfit_del} > tmp_cpt
 
 # display color bar
 #tick_major=`echo $misfit_min $misfit_max | awk '{printf "%.0f", ($2-$1)/5}'`
@@ -42,6 +43,9 @@ $GMT pscontour ${misfit_table} $proj_arg $area_arg -Ctmp_cpt -O -K -I -N -V $shi
 plot_reference_arcs $proj_arg $area_arg $out
 plot_reference_points $proj_arg $area_arg $out
 plot_reference_labels $proj_arg $area_arg $out
+
+
+rm tmp*
 
 
 
