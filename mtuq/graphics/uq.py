@@ -17,7 +17,7 @@ from mtuq.util.lune import to_delta, to_gamma
 from mtuq.util.xarray import dataarray_to_table
 
 
-def plot_misfit(filename, struct):
+def plot_misfit(filename, struct, title=None):
     """ Plots misfit on eigenvalue lune
     """
     struct = struct.copy()
@@ -39,7 +39,7 @@ def plot_misfit(filename, struct):
         _plot_lune(filename, gamma, delta, da.values)
 
 
-def plot_likelihood(filename, struct, sigma=1.):
+def plot_likelihood(filename, struct, sigma=1., title=None):
     """ Plots misfit on eigenvalue lune
     """
     struct = struct.copy()
@@ -66,7 +66,7 @@ def plot_likelihood(filename, struct, sigma=1.):
 
 
 
-def plot_marginal(filename, struct, sigma=1.):
+def plot_marginal(filename, struct, sigma=1., title=None):
     """ Plots misfit on eigenvalue lune
     """
     struct = struct.copy()

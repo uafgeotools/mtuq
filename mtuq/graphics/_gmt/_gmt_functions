@@ -28,7 +28,7 @@ function gmt_settings {
 }
 
 
-function plot_reference_arcs {
+function add_reference_arcs {
     proj_arg=$1
     area_arg=$2
     out=$3
@@ -45,7 +45,7 @@ function plot_reference_arcs {
 }
 
 
-function plot_reference_points {
+function add_reference_points {
     proj_arg=$1
     area_arg=$2
     out=$3
@@ -77,47 +77,74 @@ function plot_reference_points {
 }
 
 
-function plot_reference_labels {
+function add_reference_labels {
     proj_arg=$1
     area_arg=$2
     out=$3
 
-    echo "  0.0000 -90.0000 8 0 1 CT (-1,-1,-1)" |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/-10p >> $out
+    echo "  0.0000 -90.0000 (-1,-1,-1)" |\
+    gmt pstext -F+f8p+jCT -N $proj_arg $area_arg -O -K $shiftd -D0p/-10p >> $out
 
-    echo "-30.0000   0.0000 8 0 1 RM  (2,-1,-1)" |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+    echo "-30.0000   0.0000 (2,-1,-1)" |\
+    gmt pstext -F+f8p+jRM -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
 
-    echo "-30.0000  35.2644 8 0 1 RM    (1,0,0)" |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+    echo "-30.0000  35.2644 (1,0,0)" |\
+    gmt pstext -F+f8p+jRM -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
 
-    echo "  0.0000  90.0000 8 0 1 CB    (1,1,1)" |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/10p  >> $out
+    echo "  0.0000  90.0000 (1,1,1)" |\
+    gmt pstext -F+f8p+jCB -N $proj_arg $area_arg -O -K $shiftd -D0p/10p  >> $out
 
-    echo " 30.0000  54.7356 8 0 1 LM    (1,1,0)" |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+    echo " 30.0000  54.7356 (1,1,0)" |\
+    gmt pstext -F+f8p+jLM -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
 
-    echo " 30.0000   0.0000 8 0 1 LM   (1,1,-2)" |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+    echo " 30.0000   0.0000 (1,1,-2)" |\
+    gmt pstext -F+f8p+jLM -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
 
-    echo " 30.0000 -35.2644 8 0 1 LM   (0,0,-1)" |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
+    echo " 30.0000 -35.2644 (0,0,-1)" |\
+    gmt pstext -F+f8p+jLM -N $proj_arg $area_arg -O -K $shiftd -D10p/0p  >> $out
 
-    echo "-30.0000 -54.7356 8 0 1 RM  (0,-1,-1)" |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
+    echo "-30.0000 -54.7356 (0,-1,-1)" |\
+    gmt pstext -F+f8p+jRM -N $proj_arg $area_arg -O -K $shiftd -D-10p/0p >> $out
 
-    echo   0.0 -90.0 10 0 1 CB ISO   |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/-25p   >> $out
+    echo   0.0 -90.0 ISO   |\
+    gmt pstext -F+f10p+jCB -N $proj_arg $area_arg -O -K $shiftd -D0p/-25p   >> $out
 
-    echo   0.0  90.0 10 0 1 CB ISO   |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/20p    >> $out
+    echo   0.0  90.0 ISO   |\
+    gmt pstext -F+f10p+jCB -N $proj_arg $area_arg -O -K $shiftd -D0p/20p    >> $out
 
-    echo -30.0   0.0 10 0 1 RM CLVD  |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D-10p/-10p >> $out
+    echo -30.0   0.0 CLVD  |\
+    gmt pstext -F+f10p+jRM -N $proj_arg $area_arg -O -K $shiftd -D-10p/-10p >> $out
 
-    echo  30.0   0.0 10 0 1 LM CLVD  |\
-    gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D10p/-10p  >> $out
+    echo  30.0   0.0 CLVD  |\
+    gmt pstext -F+f10p+jLM -N $proj_arg $area_arg -O -K $shiftd -D10p/-10p  >> $out
 
 }
 
 
+function add_title {
+    if [ ! -z "$2" ]; then
+        :
+    elif [ ! -z "$1" ]; then
+        :
+    fi
+
+    
+    #echo   0.0  90.0 10p 0 CB $title   |\
+    #gmt pstext -N $proj_arg $area_arg -O -K $shiftd -D0p/20p    >> $out
+}
+
+
+
+
+function psclose {
+cat << EOF >> $1
+%%PageTrailer
+U
+showpage
+
+%%Trailer
+
+end
+%%EOF
+EOF
+}
