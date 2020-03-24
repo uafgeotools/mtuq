@@ -66,7 +66,7 @@ gmt pscontour $in $proj_arg $area_arg -Ctmp.cpt -I -N -A- -O -K >> $out
 # display reference points and arcs
 add_reference_arcs $proj_arg $area_arg $out
 add_reference_points $proj_arg $area_arg $out
-add_reference_labels $proj_arg $area_arg $out
+#add_reference_labels $proj_arg $area_arg $out
 
 
 # convert PostScript
