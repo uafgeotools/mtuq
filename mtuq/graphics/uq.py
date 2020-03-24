@@ -39,6 +39,60 @@ def plot_misfit(filename, struct):
         _plot_lune(filename, gamma, delta, da.values)
 
 
+def plot_likelihood(filename, struct, sigma=1.):
+    """ Plots misfit on eigenvalue lune
+    """
+    struct = struct.copy()
+    struct.values -= struct.values.min()
+    struct.values /= struct.values.max()
+
+
+    # convert from misfit to likelihood
+    struct.values = np.exp(-struct.values/(2.*sigma**2))
+
+
+    if type(struct)==DataArray:
+        da = struct.copy()
+        da = da.max(dim=('rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(da.coords['v'])
+        delta = to_delta(da.coords['w'])
+        _plot_lune(filename, gamma, delta, da.values)
+
+
+    elif type(struct)==DataFrame:
+        df = struct.copy()
+        gamma, delta, values = _bin(df, lambda df: df.max())
+        _plot_lune(filename, gamma, delta, values)
+
+
+
+def plot_marginal(filename, struct, sigma=1.):
+    """ Plots misfit on eigenvalue lune
+    """
+    struct = struct.copy()
+    struct.values -= struct.values.min()
+    struct.values /= struct.values.max()
+
+
+    # convert from misfit to likelihood
+    struct.values = np.exp(-struct.values/(2.*sigma**2))
+
+
+    if type(struct)==DataArray:
+        da = struct.copy()
+        da = da.sum(dim=('rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(da.coords['v'])
+        delta = to_delta(da.coords['w'])
+        _plot_lune(filename, gamma, delta, da.values)
+
+
+    elif type(struct)==DataFrame:
+        df = struct.copy()
+        gamma, delta, values = _bin(df, lambda df: df.sum()/len(df))
+        _plot_lune(filename, gamma, delta, values)
+
+
+
 def _plot_lune(filename, gamma, delta, values):
     """ Plots misfit values on lune
     """
@@ -47,17 +101,34 @@ def _plot_lune(filename, gamma, delta, values):
     gamma = gamma.flatten()
     values = values.flatten() 
 
-    # write misfit values
+    minval = values.min()
+    maxval = values.max()
+    if minval==maxval:
+       warnings.warn("Cannot plot a uniform surface")
+       return
+
+    #
+    # prepare gmt input
+    #
+
+    vmin_vmax_dv = '%e/%e/%e' % (minval, maxval, (maxval-minval)/100.)
+
+    # FIXME: can GMT accept virtual files?
     name, ext = _check_ext(filename)
     tmpname = 'tmp_'+name+'.txt'
     np.savetxt(tmpname, np.column_stack([gamma, delta, values]))
 
-    # write PostScript graphics
+    #
+    # call gmt script
+    #
+
     if _gmt():
-        _call("%s %s %s" %
-           (fullpath('mtuq/graphics/_gmt/plot_misfit'),
+        _call("%s %s %s %s" %
+           (fullpath('mtuq/graphics/_gmt/_plot_lune'),
             tmpname,
-            name+ext))
+            name+ext,
+            vmin_vmax_dv
+            ))
     else:
         gmt_not_found_warning(
             tmpname)
