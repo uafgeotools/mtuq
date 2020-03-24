@@ -5,8 +5,7 @@ export PATH=${PATH:+${PATH}:}$(dirname ${BASH_SOURCE[0]})
 source _gmt_functions
 
 
-export GMT="" #$(usr/bin/env gmt)
-misfit_table=$1
+table=$1
 out=$2
 
 
@@ -20,23 +19,16 @@ gmt_settings
 
 
 # display background grid
-$GMT psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -G255 -K $shiftd  > $out
+gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10+g255 -K $shiftd  > $out
 
 
 # generate color palette
-misfit_min=0.
-misfit_max=1.
-misfit_del=0.02
-
-$GMT makecpt -Cpanoply -D -T${misfit_min}/${misfit_max}/${misfit_del} > tmp_cpt
-
-# display color bar
-#tick_major=`echo $misfit_min $misfit_max | awk '{printf "%.0f", ($2-$1)/5}'`
-#$GMT psscale -Cpanoply -D2.8/9/1/0.2 -Al -Bf1a${tick_major}:"VR(@~L@~)": -E $shiftd -O -K >> $out
+zrange_arg=$(gmt info tmp_20090407201255351FMT_misfit_regular.txt -T0.02+c2)
+gmt makecpt -Cpanoply -D ${zrange_arg} > tmp.cpt
 
 
 # plot misfit values
-$GMT pscontour ${misfit_table} $proj_arg $area_arg -Ctmp_cpt -O -K -I -N -V $shiftd -W+ -A- >> $out
+gmt pscontour $table $proj_arg $area_arg -Ctmp.cpt -O -K -I -N $shiftd  -A- >> $out
 
 
 # plot reference points and arcs
@@ -46,6 +38,5 @@ plot_reference_labels $proj_arg $area_arg $out
 
 
 rm tmp*
-
 
 
