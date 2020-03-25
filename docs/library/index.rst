@@ -57,9 +57,9 @@ mtuq.graphics.plot_beachball                                                    
 .. rubric:: Uncertainty visualization
 
 =================================================================================================  =================================================================================================
-mtuq.graphics.plot_likelihood                                                                      Plots maximum likelihoods on lune (requires GMT)
-mtuq.graphics.plot_marginal                                                                        Plots marginal likelihoods on lune (requires GMT)
-mtuq.graphics.plot_misfit                                                                          Plots misfit on lune (requires GMT)
+`mtuq.graphics.plot_likelihood <generated/mtuq.graphics.plot_likelihood.html>`_                    Plots maximum likelihoods on lune (requires GMT)
+`mtuq.graphics.plot_marginal <generated/mtuq.graphics.plot_marginal.html>`_                        Plots marginal likelihoods on lune (requires GMT)
+`mtuq.graphics.plot_misfit <generated/mtuq.graphics.plot_misfit.html>`_                            Plots misfit on lune (requires GMT)
 mtuq.graphics.plot_likelihood_vw                                                                   Plots maximum likelihoods on `vw` rectangle
 mtuq.graphics.plot_marginal_vw                                                                     Plots marginal likelihoods on `vw` rectangle
 mtuq.graphics.plot_misfit_vw                                                                       Plots misfit on `vw` rectangle

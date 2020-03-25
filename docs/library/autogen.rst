@@ -11,6 +11,9 @@ autogen
    mtuq.GreensTensorList
    mtuq.Origin
    mtuq.Station
+   mtuq.graphics.plot_likelihood
+   mtuq.graphics.plot_marginal
+   mtuq.graphics.plot_misfit
    mtuq.grid.DoubleCoupleGridRandom
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom

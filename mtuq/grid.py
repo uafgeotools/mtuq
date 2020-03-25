@@ -32,7 +32,7 @@ class Grid(object):
 
     To parameterize the surface of the Earth with an `N`-by-`2N` Mercator grid:
 
-    .. code::          
+    .. code ::          
 
        lat = np.linspace(-90., 90., N)
        lon = np.linspace(-180., 180., N)
@@ -204,23 +204,38 @@ class Grid(object):
 
         .. rubric:: Input arguments
 
-        ``filename`` (str)
-
+        ``filename`` (str):
         Name of NetCDF output file
 
 
-        ``values`` (`dict` or NumPy array)
+        ``values`` (NumPy array or `dict` of arrays):
+        Values assoicated with grid points
 
-        Passing a dictionary {label: values} results in separate output file
-        for each set of values.  Each `label` in the dictionary must be a 
-        string and each `values` must be a NumPy array of the same size as the 
-        grid.
 
-        Rather than a `dict` of NumPy arrays, it is also possible to supply a
-        2-D NumPy array provided that `array.shape[0] = grid.size`.  This makes 
-        it possible to pass  `mtuq.grid_search` results directly to `grid.save`.  
-        In this case, the number of output files will be `array.shape[1]` and 
-        the filename labels will be '000000', '000001' and so on.
+        .. rubric:: Usage
+
+        If values is a 1-D Numpy array, it must be the same size as the grid.
+        Typically, such arrays are obtained by evaluating a function over all 
+        grid points.  An easy way to ensure that the order of elements in the
+        array corresponds to the order of points in the grid is to iterate over
+        the grid as follows:
+
+        .. code ::
+
+           for _i, pt in enumerate(grid):
+               values[_i] = func(pt)
+
+        It is also possible to supply a dictionary {label: array} for the
+        `values` input argument, which results in separate output file being 
+        written for each  dictionary item.  In the dictionary, each `label` is
+        a string that gets appended to the filename and each `array` must be of
+        the same size as the grid.
+
+        Finally, it is possible to supply a 2-D  NumPy array provided that 
+        `array.shape[0] = grid.size`.  This makes it possible to pass 
+        `mtuq.grid_search` results directly to this method. In this case, the
+        number of output files will be `array.shape[1]` and '000000', '000001' 
+        and so on will be appended to the filename.
 
         """
         if values is None:
@@ -437,23 +452,34 @@ class UnstructuredGrid(object):
         .. rubric:: Input arguments
 
 
-        ``filename`` (str)
-
+        ``filename`` (str):
         Name of HDF output file (or filename suffix, if multiple values are given)
 
 
-        ``values`` (`dict` or NumPy array)
+        .. rubric:: Usage
 
-        Passing a dictionary {label: values} results in separate output file
-        for each set of values.  Each `label` in the dictionary must be a 
-        string and each `values` must be a NumPy array of the same size as the 
-        grid.
+        If values is a 1-D Numpy array, it must be the same size as the grid.
+        Typically, such arrays are obtained by evaluating a function over all 
+        grid points.  An easy way to ensure that the order of elements in the
+        array corresponds to the order of points in the grid is to iterate over
+        the grid as follows:
 
-        Rather than a `dict` of NumPy arrays, it is also possible to supply a
-        2-D NumPy array provided that `array.shape[0] = grid.size`.  This makes 
-        it possible to pass  `mtuq.grid_search` results directly to `grid.save`.  
-        In this case, the number of output files will be `array.shape[1]` and 
-        the filename labels will be '000000', '000001' and so on.
+        .. code ::
+
+           for _i, pt in enumerate(grid):
+               values[_i] = func(pt)
+
+        It is also possible to supply a dictionary {label: array} for the
+        `values` input argument, which results in separate output file being 
+        written for each  dictionary item.  In the dictionary, each `label` is
+        a string that gets appended to the filename and each `array` must be of
+        the same size as the grid.
+
+        Finally, it is possible to supply a 2-D  NumPy array provided that 
+        `array.shape[0] = grid.size`.  This makes it possible to pass 
+        `mtuq.grid_search` results directly to this method. In this case, the
+        number of output files will be `array.shape[1]` and '000000', '000001' 
+        and so on will be appended to the filename.
 
         """
         if values is None:

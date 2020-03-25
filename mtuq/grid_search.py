@@ -11,40 +11,40 @@ def grid_search(data, greens, misfit, origins, sources,
 
     .. rubric :: Usage
 
-    Carries out a grid search by evaluating `misfit(data, greens, source)` over
-    origin and source grids.  Returns an array of misfit values of shape 
-    `(len(sources), len(origins))` 
+    Carries out a grid search by evaluating `misfit(data, greens.select(origin), source)`
+    for all origins and sources.  Returns a NumPy array of misfit values of 
+    shape `(len(sources), len(origins))` 
 
 
     .. rubric :: Input arguments
 
 
-    ``data`` (``mtuq.dataset.Dataset``):
+    ``data`` (`mtuq.dataset.Dataset`):
     The observed data that will be compared with synthetic data
 
 
-    ``greens`` (``mtuq.greens_tensor.GreensTensorList``):
+    ``greens`` (`mtuq.greens_tensor.GreensTensorList`):
     Green's functions that will be used to generate synthetic data
 
 
-    ``misfit`` (``mtuq.misfit.Misfit`` or some other function):
+    ``misfit`` (`mtuq.misfit.Misfit` or some other function):
     Implements norm of data and synthetics
 
 
-    ``origins`` (`list` of ``mtuq.source.Origin`` objects)
+    ``origins`` (`list` of `mtuq.source.Origin` objects)
     Origins that will be used to generate synthetics
 
 
-    ``sources`` (``mtuq.grid.Grid`` or ``mtuq.grid.UnstructuredGrid``):
+    ``sources`` (`mtuq.grid.Grid` or `mtuq.grid.UnstructuredGrid`):
     Source mechanisms that will be used to generate synthetics
 
 
-    ``msg_interval`` (``int``):
+    ``msg_interval`` (`int`):
     How frequently, as a percentage of total evaluations, should progress 
     messages be displayed? (value between 0 and 100)
 
 
-    ``timed`` (``bool``):
+    ``timed`` (`bool`):
     Display elapsed time at end?
 
 
