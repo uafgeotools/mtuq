@@ -20,43 +20,39 @@ from mtuq.util.xarray import dataarray_to_table
 
 def plot_misfit(filename, struct, title='misfit values'):
     """ Plots misfit on eigenvalue lune
-    (GMT wrapper)
+    (requires GMT)
 
 
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Output file
+    Name of output EPS or PNG file
 
     ``struct`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensor and associated misfit values
+    Data structure containing moment tensors and associated misfit values
 
     ``title`` (`str`):
     Optional figure title
 
 
-    .. note :
+    .. note::
 
-      `DataArray` or `DataFrame` input arguments are used here because they
-      make data manipulation much easier.  To convert to these formats, see 
+      `DataArray` or `DataFrame` input arguments are used because they make
+      data manipulation much easier.  To convert to these formats, see 
       `mtuq.grid.Grid.to_datarray` or `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
 
-    .. note :
+    .. note::
 
-      This utility requires Generic Mapping Tools >=5.  For an alternative that
-      requires only matplotlib, see `plot_misfit_vw`.
-    
+      This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
+      alternative, see `plot_misfit_vw`.
 
     """
     struct = struct.copy()
-    struct.values *= 1.e2
-    #struct.values -= struct.values.min()
-    #struct.values /= struct.values.max()
 
 
     if type(struct)==DataArray:
-        da = struct.copy()
+        da = struct
         da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
@@ -64,7 +60,7 @@ def plot_misfit(filename, struct, title='misfit values'):
 
 
     elif type(struct)==DataFrame:
-        df = struct.copy()
+        df = struct
         gamma, delta, values = _bin(df, lambda df: df.min())
         _plot_lune(filename, gamma, delta, values, title)
 
@@ -72,41 +68,38 @@ def plot_misfit(filename, struct, title='misfit values'):
 
 def plot_likelihood(filename, struct, sigma=1., title=None):
     """ Plots maximum likelihood on eigenvalue lune
-    (GMT wrapper)
+    (requires GMT)
 
 
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Output file
+    Name of output EPS or PNG file
 
     ``struct`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensor and associated misfit values
+    Data structure containing moment tensors and associated misfit values
 
-    ``sigma`` (`str`):
+    ``sigma`` (`float`):
     Standard deviation applied to misfit values to obtain likelihood values
 
     ``title`` (`str`):
     Optional figure title
 
 
-    .. note :
+    .. note::
 
-      `DataArray` or `DataFrame` input arguments are used here because they
-      make data manipulation much easier.  To convert to these formats, see 
+      `DataArray` or `DataFrame` input arguments are used because they make
+      data manipulation much easier.  To convert to these formats, see 
       `mtuq.grid.Grid.to_datarray` or `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
 
-    .. note :
+    .. note::
 
-      This utility requires Generic Mapping Tools >=5.  For an alternative that
-      requires only matplotlib, see `plot_likelihod_vw`.
-    
+      This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
+      alternative, see `plot_likelihood_vw`.
 
     """
     struct = struct.copy()
-    struct.values -= struct.values.min()
-    struct.values /= struct.values.max()
 
 
     # convert from misfit to likelihood
@@ -114,7 +107,7 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
 
     if type(struct)==DataArray:
-        da = struct.copy()
+        da = struct
         da = da.max(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
@@ -122,7 +115,7 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
 
     elif type(struct)==DataFrame:
-        df = struct.copy()
+        df = struct
         gamma, delta, values = _bin(df, lambda df: df.max())
         _plot_lune(filename, gamma, delta, values, title)
 
@@ -130,41 +123,39 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
 def plot_marginal(filename, struct, sigma=1., title=None):
     """ Plots marginal likelihood on eigenvalue lune
-    (GMT wrapper)
+    (requires GMT)
     
     
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Output file
+    Name of output EPS or PNG file
 
     ``struct`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensor and associated misfit values
+    Data structure containing moment tensors and associated misfit values
 
-    ``sigma`` (`str`):
+    ``sigma`` (`float`):
     Standard deviation applied to misfit values to obtain likelihood values
         
     ``title`` (`str`):
     Optional figure title
         
         
-    .. note :
+    .. note::
 
-      `DataArray` or `DataFrame` input arguments are used here because they
-      make data manipulation much easier.  To convert to these formats, see 
+      `DataArray` or `DataFrame` input arguments are used because they make
+      data manipulation much easier.  To convert to these formats, see 
       `mtuq.grid.Grid.to_datarray` or `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
 
-    .. note :
+    .. note::
 
-      This utility requires Generic Mapping Tools >=5.  For an alternative that
-      requires only matplotlib, see `plot_marginal_vw`.
+      This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
+      alternative, see `plot_marginal_vw`.
     
     """
 
     struct = struct.copy()
-    struct.values -= struct.values.min()
-    struct.values /= struct.values.max()
 
 
     # convert from misfit to likelihood
@@ -172,7 +163,7 @@ def plot_marginal(filename, struct, sigma=1., title=None):
 
 
     if type(struct)==DataArray:
-        da = struct.copy()
+        da = struct
         da = da.sum(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
@@ -180,7 +171,7 @@ def plot_marginal(filename, struct, sigma=1., title=None):
 
 
     elif type(struct)==DataFrame:
-        df = struct.copy()
+        df = struct
         gamma, delta, values = _bin(df, lambda df: df.sum()/len(df))
         _plot_lune(filename, gamma, delta, values)
 
