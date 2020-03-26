@@ -3,24 +3,6 @@
 # graphics/uq_vw.py - uncertainty quantification on the v-w rectangle
 #
 
-#
-# For details about the v-w rectangle, see 
-# Tape2015 - A uniform parameterization of moment tensors
-# (https://doi.org/10.1093/gji/ggv262)
-#
-
-#
-# These utilities expect  xarray.DataArray format if grid spacing is regular 
-# and pandas.DataFrame format if grid spacing is random.  We use these 
-# structures because they make data manipulation much easier.  To convert to
-# these formats, see
-#     mtuq.grid.Grid.to_dataarray
-#     mtuq.grid.UnstructuredGrid.to_dataframe
-#
-
-
-
-
 import numpy as np
 
 from matplotlib import pyplot
@@ -32,9 +14,49 @@ from mtuq.util.math import closed_interval, open_interval
 from mtuq.util.xarray import dataarray_to_table
 
 
+#
+# For details about the v-w rectangle, see 
+# Tape2015 - A uniform parameterization of moment tensors
+# (https://doi.org/10.1093/gji/ggv262)
+#
 
-def plot_misfit_vw(filename, struct):
+v_min = -1./3.
+v_max = +1./3.
+w_min = -3.*np.pi/8.
+w_max = +3.*np.pi/8.
+vw_area = (v_max-v_min)*(w_max-w_min)
+
+
+
+def plot_misfit_vw(filename, struct, title=None):
     """ Plots misfit values on 'v-w' rectangle
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of EPS or PNG output file
+
+    ``struct`` (`DataArray` or `DataFrame`):
+    Structure containing moment tensors and corresponding misfit values
+
+    ``title`` (`str`):
+    Optional figure title
+
+
+    .. rubric :: Usage
+
+    Moment tensors and corresponding misfit values must be given as a
+    `DataArray` and `DataFrame`.
+
+    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
+    and irregularly-spaced grids, respectively.  These structures make
+    multidimensional min, max and sum operations easy, so they are used here
+    for projecting from 6-D moment tensor space onto v-w space.
+
+    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
+    `mtuq.grid.Grid.to_datarray` and
+    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+
     """
     _check(struct)
     struct = struct.copy()
@@ -58,8 +80,35 @@ def plot_misfit_vw(filename, struct):
 
 
 
-def plot_likelihood_vw(filename, struct, sigma=1.):
+def plot_likelihood_vw(filename, struct, sigma=1., title=None):
     """ Plots maximum likelihood values on 'v-w' rectangle
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of EPS or PNG output file
+
+    ``struct`` (`DataArray` or `DataFrame`):
+    Structure containing moment tensors and corresponding misfit values
+
+    ``title`` (`str`):
+    Optional figure title
+
+
+    .. rubric :: Usage
+
+    Moment tensors and corresponding misfit values must be given as a
+    `DataArray` and `DataFrame`.
+
+    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
+    and irregularly-spaced grids, respectively.  These structures make
+    multidimensional min, max and sum operations easy, so they are used here
+    for projecting from 6-D moment tensor space onto v-w space.
+
+    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
+    `mtuq.grid.Grid.to_datarray` and
+    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+
     """
     _check(struct)
     struct = struct.copy()
@@ -67,13 +116,15 @@ def plot_likelihood_vw(filename, struct, sigma=1.):
 
     # convert from misfit to likelihood
     struct.values = np.exp(-struct.values/(2.*sigma**2))
+    struct.values /= struct.values.sum()
+
 
 
     if type(struct)==DataArray:
         da = struct.max(dim=('rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        values = da.values/da.values.sum()
+        values = da.values
 
 
     elif type(struct)==DataFrame:
@@ -82,13 +133,43 @@ def plot_likelihood_vw(filename, struct, sigma=1.):
         v, w, values = _bin(df, lambda df: df.max())
 
 
+    values /= values.sum()
+    values /= vw_area
+
     _plot_vw(v, w, values, cmap='hot_r')
     pyplot.savefig(filename)
 
 
 
-def plot_marginal_vw(filename, struct, sigma=1.):
+def plot_marginal_vw(filename, struct, sigma=1., title=None):
     """ Plots marginal likelihood values on 'v-w' rectangle
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of EPS or PNG output file
+
+    ``struct`` (`DataArray` or `DataFrame`):
+    Structure containing moment tensors and corresponding misfit values
+
+    ``title`` (`str`):
+    Optional figure title
+
+
+    .. rubric :: Usage
+
+    Moment tensors and corresponding misfit values must be given as a
+    `DataArray` and `DataFrame`.
+
+    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
+    and irregularly-spaced grids, respectively.  These structures make
+    multidimensional min, max and sum operations easy, so they are used here
+    for projecting from 6-D moment tensor space onto v-w space.
+
+    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
+    `mtuq.grid.Grid.to_datarray` and
+    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+
     """
     _check(struct)
     struct = struct.copy()
@@ -96,22 +177,23 @@ def plot_marginal_vw(filename, struct, sigma=1.):
 
     # convert from misfit to likelihood
     struct.values = np.exp(-struct.values/(2.*sigma**2))
+    struct.values /= struct.values.sum()
 
 
     if type(struct)==DataArray:
         da = struct.sum(dim=('rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        area = (np.pi/2.)*da.values.sum()
-        values = da.values/area
+        values = da.values
 
 
     elif type(struct)==DataFrame:
         df = struct
         v, w, values = _bin(df, lambda df: df.sum()/len(df))
-        area = np.pi/2.
-        values /= area*df.values.sum()
 
+
+    values /= values.sum()
+    values /= vw_area
 
     _plot_vw(v, w, values, cmap='hot_r')
     pyplot.savefig(filename)

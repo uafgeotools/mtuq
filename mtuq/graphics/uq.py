@@ -18,7 +18,14 @@ from mtuq.util.lune import to_delta, to_gamma
 from mtuq.util.xarray import dataarray_to_table
 
 
-def plot_misfit(filename, struct, title='misfit values'):
+#
+# For details about the eigenvalue lune, see 
+# Tape2012 - A geometric setting for moment tensors
+# (https://doi.org/10.1111/j.1365-246X.2012.05491.x)
+#
+
+
+def plot_misfit(filename, struct, title=None):
     """ Plots misfit on eigenvalue lune
     (requires GMT)
 
@@ -26,20 +33,28 @@ def plot_misfit(filename, struct, title='misfit values'):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of output EPS or PNG file
+    Name of EPS or PNG output file
 
     ``struct`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensors and associated misfit values
+    Structure containing moment tensors and corresponding misfit values
 
     ``title`` (`str`):
     Optional figure title
 
 
-    .. note::
+    .. rubric :: Usage
 
-      `DataArray` or `DataFrame` input arguments are used because they make
-      data manipulation much easier.  To convert to these formats, see 
-      `mtuq.grid.Grid.to_datarray` or `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given as a
+    `DataArray` and `DataFrame`.
+
+    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
+    and irregularly-spaced grids, respectively.  These structures make
+    multidimensional min, max and sum operations easy, so they are used here
+    for projecting from 6-D moment tensor space onto 2-D lune space.
+
+    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
+    `mtuq.grid.Grid.to_datarray` and
+    `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
 
     .. note::
@@ -74,10 +89,8 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of output EPS or PNG file
+    Name of EPS or PNG output file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensors and associated misfit values
 
     ``sigma`` (`float`):
     Standard deviation applied to misfit values to obtain likelihood values
@@ -86,11 +99,19 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
     Optional figure title
 
 
-    .. note::
+   .. rubric :: Usage
 
-      `DataArray` or `DataFrame` input arguments are used because they make
-      data manipulation much easier.  To convert to these formats, see 
-      `mtuq.grid.Grid.to_datarray` or `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given as a
+    `DataArray` and `DataFrame`.
+
+    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
+    and irregularly-spaced grids, respectively.  These structures make
+    multidimensional min, max and sum operations easy, so they are used here
+    for projecting from 6-D moment tensor space onto 2-D lune space.
+
+    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
+    `mtuq.grid.Grid.to_datarray` and
+    `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
 
     .. note::
@@ -129,25 +150,33 @@ def plot_marginal(filename, struct, sigma=1., title=None):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of output EPS or PNG file
+    Name of EPS or PNG output file
 
     ``struct`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensors and associated misfit values
+    Structure containing moment tensors and corresponding misfit values
 
     ``sigma`` (`float`):
     Standard deviation applied to misfit values to obtain likelihood values
         
     ``title`` (`str`):
     Optional figure title
+
+
+   .. rubric :: Usage
+
+    Moment tensors and corresponding misfit values must be given as a
+    `DataArray` and `DataFrame`.
+
+    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
+    and irregularly-spaced grids, respectively.  These structures make
+    multidimensional min, max and sum operations easy, so they are used here
+    for projecting from 6-D moment tensor space onto 2-D lune space.
+
+    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
+    `mtuq.grid.Grid.to_datarray` and
+    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+
         
-        
-    .. note::
-
-      `DataArray` or `DataFrame` input arguments are used because they make
-      data manipulation much easier.  To convert to these formats, see 
-      `mtuq.grid.Grid.to_datarray` or `mtuq.grid.UnstructuredGrid.to_dataframe`.
-
-
     .. note::
 
       This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
