@@ -35,7 +35,7 @@ def plot_misfit_vw(filename, struct, title=None):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of EPS or PNG output file
+    Name of output image file
 
     ``struct`` (`DataArray` or `DataFrame`):
     Structure containing moment tensors and corresponding misfit values
@@ -88,7 +88,7 @@ def plot_likelihood_vw(filename, struct, sigma=1., title=None):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of EPS or PNG output file
+    Name of output image file
 
     ``struct`` (`DataArray` or `DataFrame`):
     Structure containing moment tensors and corresponding misfit values
@@ -150,7 +150,7 @@ def plot_marginal_vw(filename, struct, sigma=1., title=None):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of EPS or PNG output file
+    Name of output image file
 
     ``struct`` (`DataArray` or `DataFrame`):
     Structure containing moment tensors and corresponding misfit values

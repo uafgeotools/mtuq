@@ -2,6 +2,11 @@
 #
 # graphics/uq.py - uncertainty quantification on the eigenvalue lune
 #
+# For details about the eigenvalue lune, see 
+# Tape2012 - A geometric setting for moment tensors
+# (https://doi.org/10.1111/j.1365-246X.2012.05491.x)
+#
+
 
 import numpy as np
 import shutil
@@ -9,20 +14,13 @@ import subprocess
 import warnings
 
 from matplotlib import pyplot
-from os.path import splitext
 from pandas import DataFrame
 from xarray import DataArray
+from mtuq.graphics._gmt import gmt_cmd, check_ext
 from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import fullpath
 from mtuq.util.lune import to_delta, to_gamma
 from mtuq.util.xarray import dataarray_to_table
-
-
-#
-# For details about the eigenvalue lune, see 
-# Tape2012 - A geometric setting for moment tensors
-# (https://doi.org/10.1111/j.1365-246X.2012.05491.x)
-#
 
 
 def plot_misfit(filename, struct, title=None):
@@ -32,7 +30,7 @@ def plot_misfit(filename, struct, title=None):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of EPS or PNG output file
+    Name of output image file
 
     ``struct`` (`DataArray` or `DataFrame`):
     Structure containing moment tensors and corresponding misfit values
@@ -58,8 +56,12 @@ def plot_misfit(filename, struct, title=None):
 
     .. note ::
 
-      This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
-      alternative, see `plot_misfit_vw`.
+      This utility requires Generic Mapping Tools >=5.
+
+      To display information about supported image formats, type
+      `gmt psconvert --help1.
+
+      For a matplotlib-only alternative, see `plot_misfit_vw`.
 
     """
     struct = struct.copy()
@@ -70,13 +72,15 @@ def plot_misfit(filename, struct, title=None):
         da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
-        _plot_lune(filename, gamma, delta, da.values, title)
+        values = da.values
 
 
     elif type(struct)==DataFrame:
         df = struct
         gamma, delta, values = _bin(df, lambda df: df.min())
-        _plot_lune(filename, gamma, delta, values, title)
+
+
+    _plot_lune(filename, gamma, delta, values, title)
 
 
 
@@ -87,8 +91,10 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of EPS or PNG output file
+    Name of output image file
 
+    ``struct`` (`DataArray` or `DataFrame`):
+    Structure containing moment tensors and corresponding misfit values
 
     ``sigma`` (`float`):
     Standard deviation applied to misfit values to obtain likelihood values
@@ -114,8 +120,12 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
     .. note ::
 
-      This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
-      alternative, see `plot_likelihood_vw`.
+      This utility requires Generic Mapping Tools >=5.
+
+      To display information about supported image formats, type
+      `gmt psconvert --help1.
+
+      For a matplotlib-only alternative, see `plot_misfit_vw`.
 
     """
     struct = struct.copy()
@@ -151,7 +161,7 @@ def plot_marginal(filename, struct, sigma=1., title=None):
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
-    Name of EPS or PNG output file
+    Name of output image file
 
     ``struct`` (`DataArray` or `DataFrame`):
     Structure containing moment tensors and corresponding misfit values
@@ -180,9 +190,13 @@ def plot_marginal(filename, struct, sigma=1., title=None):
         
     .. note ::
 
-      This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
-      alternative, see `plot_marginal_vw`.
-    
+      This utility requires Generic Mapping Tools >=5.
+
+      To display information about supported image formats, type
+      `gmt psconvert --help1.
+
+      For a matplotlib-only alternative, see `plot_misfit_vw`.
+ 
     """
 
     struct = struct.copy()
@@ -258,7 +272,7 @@ def _bin(df, handle, npts_v=40, npts_w=20, tightness=0.8):
 
 
 #
-# GMT utilities
+# GMT wrappers
 #
 
 def _plot_lune(filename, gamma, delta, values, title=None):
@@ -294,21 +308,23 @@ def _plot_lune(filename, gamma, delta, values, title=None):
 
     zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/100.)
     title = _parse(title)
+    name, fmt = check_ext(filename)
 
     # FIXME: can GMT accept virtual files?
-    name, ext = _check_ext(filename)
     tmpname = 'tmp_'+name+'.txt'
     np.savetxt(tmpname, np.column_stack([gamma, delta, values]))
+
 
     #
     # call gmt script
     #
 
-    if _gmt():
-        _call("%s %s %s %s %s" %
-           (fullpath('mtuq/graphics/_gmt/_plot_lune'),
+    if gmt_cmd():
+        _call("%s %s %s %s %s %s" %
+           (fullpath('mtuq/graphics/_gmt/plot_lune'),
             tmpname,
-            name+ext,
+            filename,
+            fmt,
             zmin_zmax_dz,
             title
             ))
@@ -333,24 +349,6 @@ def _call(cmd):
     subprocess.call(cmd, shell=True)
 
 
-def _gmt():
-    return shutil.which('gmt')
-
-
-#
-# utility functions
-#
-
-def _check_ext(filename):
-    name, ext = splitext(filename)
-
-    if ext.lower()!='ps':
-        print('Appending extension ".ps" to PostScript file')
-        return name, '.ps'
-    else:
-        return name, '.'+ext
-
-
 def _parse(title):
     if not title:
         return ""
@@ -359,4 +357,5 @@ def _parse(title):
     for part in title.split("\n"):
         title_args += "'"+part+"' "
     return title_args
+
 
