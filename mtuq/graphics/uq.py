@@ -132,13 +132,17 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
         da = da.max(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
-        _plot_lune(filename, gamma, delta, da.values, title)
+        values = da.values
 
 
     elif type(struct)==DataFrame:
         df = struct
         gamma, delta, values = _bin(df, lambda df: df.max())
-        _plot_lune(filename, gamma, delta, values, title)
+
+
+    values /= values.sum()
+
+    _plot_lune(filename, gamma, delta, values, title)
 
 
 
@@ -196,14 +200,17 @@ def plot_marginal(filename, struct, sigma=1., title=None):
         da = da.sum(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
-        _plot_lune(filename, gamma, delta, da.values)
+        values = da.values
 
 
     elif type(struct)==DataFrame:
         df = struct
         gamma, delta, values = _bin(df, lambda df: df.sum()/len(df))
-        _plot_lune(filename, gamma, delta, values)
 
+    values /= lune_det(delta, gamma)
+    values /= values.sum()
+
+    _plot_lune(filename, gamma, delta, values)
 
 
 
@@ -267,21 +274,21 @@ def _plot_lune(filename, gamma, delta, values, title=None):
 
     minval = values.min()
     maxval = values.max()
-    exp = -np.fix(np.log10(maxval-minval))
 
     if minval==maxval:
-       warnings.warn(
-           "Nothing to plot: all values are identical.",
-           Warning)
-       return
+        warnings.warn(
+            "Nothing to plot: all values are identical",
+            Warning)
+        return
 
     if maxval-minval < 1.e-6:
-       warnings.warn(
-           "Multiplying values by 10^%d to avoid GMT plotting errors" % exp,
+        exp = -np.fix(np.log10(maxval-minval))
+        warnings.warn(
+           "Multiplying by 10^%d to avoid GMT plotting errors" % exp,
            Warning)
-       values *= 10.**exp
-       minval *= 10.**exp
-       maxval *= 10.**exp
+        values *= 10.**exp
+        minval *= 10.**exp
+        maxval *= 10.**exp
 
 
     #
