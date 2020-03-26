@@ -26,8 +26,7 @@ from mtuq.util.xarray import dataarray_to_table
 
 
 def plot_misfit(filename, struct, title=None):
-    """ Plots misfit on eigenvalue lune
-    (requires GMT)
+    """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
     .. rubric :: Input arguments
@@ -49,15 +48,15 @@ def plot_misfit(filename, struct, title=None):
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
-    multidimensional min, max and sum operations easy, so they are used here
-    for projecting from 6-D moment tensor space onto 2-D lune space.
+    multidimensional `min`, `max` and `sum` operations easy, so they are used
+    here for projecting from 6-D moment tensor space onto 2-D lune space.
 
     For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
     `mtuq.grid.Grid.to_datarray` and
     `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
 
-    .. note::
+    .. note ::
 
       This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
       alternative, see `plot_misfit_vw`.
@@ -82,8 +81,7 @@ def plot_misfit(filename, struct, title=None):
 
 
 def plot_likelihood(filename, struct, sigma=1., title=None):
-    """ Plots maximum likelihood on eigenvalue lune
-    (requires GMT)
+    """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
     .. rubric :: Input arguments
@@ -99,22 +97,22 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
     Optional figure title
 
 
-   .. rubric :: Usage
+    .. rubric :: Usage
 
     Moment tensors and corresponding misfit values must be given as a
     `DataArray` and `DataFrame`.
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
-    multidimensional min, max and sum operations easy, so they are used here
-    for projecting from 6-D moment tensor space onto 2-D lune space.
+    multidimensional `min`, `max` and `sum` operations easy, so they are used
+    here for projecting from 6-D moment tensor space onto 2-D lune space.
 
     For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
     `mtuq.grid.Grid.to_datarray` and
     `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
 
-    .. note::
+    .. note ::
 
       This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
       alternative, see `plot_likelihood_vw`.
@@ -147,8 +145,7 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
 
 def plot_marginal(filename, struct, sigma=1., title=None):
-    """ Plots marginal likelihood on eigenvalue lune
-    (requires GMT)
+    """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
     .. rubric :: Input arguments
@@ -166,22 +163,22 @@ def plot_marginal(filename, struct, sigma=1., title=None):
     Optional figure title
 
 
-   .. rubric :: Usage
+    .. rubric :: Usage
 
     Moment tensors and corresponding misfit values must be given as a
     `DataArray` and `DataFrame`.
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
-    multidimensional min, max and sum operations easy, so they are used here
-    for projecting from 6-D moment tensor space onto 2-D lune space.
+    multidimensional `min`, `max` and `sum` operations easy, so they are used
+    here for projecting from 6-D moment tensor space onto 2-D lune space.
 
     For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
     `mtuq.grid.Grid.to_datarray` and
     `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
         
-    .. note::
+    .. note ::
 
       This utility requires Generic Mapping Tools >=5.  For a matplotlib-only
       alternative, see `plot_marginal_vw`.
@@ -231,7 +228,7 @@ def _bin(df, handle, npts_v=40, npts_w=20, tightness=0.8):
     # what cell edges correspond to the above centers?
     edges_v = np.array(centers_v[:-1] + centers_v[1:])/2.
     edges_v = np.pad(edges_v, 2)
-    edges_v[0] = -1./3.; edges_v[-1] = +1./3..
+    edges_v[0] = -1./3.; edges_v[-1] = +1./3.
 
     edges_w = np.array(centers_w[:-1] + centers_w[1:])/2.
     edges_w = np.pad(edges_w, 2)

@@ -60,12 +60,9 @@ mtuq.graphics.plot_beachball                                                    
 `mtuq.graphics.plot_likelihood <generated/mtuq.graphics.plot_likelihood.html>`_                    Plots maximum likelihoods on lune (requires GMT)
 `mtuq.graphics.plot_marginal <generated/mtuq.graphics.plot_marginal.html>`_                        Plots marginal likelihoods on lune (requires GMT)
 `mtuq.graphics.plot_misfit <generated/mtuq.graphics.plot_misfit.html>`_                            Plots misfit on lune (requires GMT)
-mtuq.graphics.plot_likelihood_vw                                                                   Plots maximum likelihoods on `vw` rectangle
-mtuq.graphics.plot_marginal_vw                                                                     Plots marginal likelihoods on `vw` rectangle
-mtuq.graphics.plot_misfit_vw                                                                       Plots misfit on `vw` rectangle
-mtuq.graphics.plot_likelihood_dc                                                                   Plots maximum likelihoods over strike, dip, and slip
-mtuq.graphics.plot_marginal_dc                                                                     Plots marginal likelihoods over strike, dip, and slip
-mtuq.graphics.plot_misfit_dc                                                                       Plots misfit over strike, dip, and slip
+`mtuq.graphics.plot_likelihood_vw <generated/mtuq.graphics.plot_likelihood_vw.html>`_              Plots maximum likelihoods on `v-w` rectangle
+`mtuq.graphics.plot_marginal_vw <generated/mtuq.graphics.plot_marginal_vw.html>`_                  Plots marginal likelihoods on `v-w` rectangle
+`mtuq.graphics.plot_misfit_vw <generated/mtuq.graphics.plot_misfit_vw.html>`_                      Plots misfit on `v-w` rectangle
 
 =================================================================================================  =================================================================================================
 

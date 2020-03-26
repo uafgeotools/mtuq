@@ -99,9 +99,8 @@ class Dataset(list):
 
             Although ``apply`` returns a new Dataset, contents of the original 
             Dataset may still be overwritten when applying certain functions.
-
-            If you are unsure of the behavior of the function and wish to 
-            preserve the original Dataset, make a `deepcopy` of it first.
+            If you wish to preserve the original Dataset and are unsure 
+            how a function operates, make a `deepcopy` of the Dataset first. 
 
             (Deep copies are not necessary when using `mtuq.process_data`, 
             because the original trace data are preserved by default.
@@ -129,9 +128,8 @@ class Dataset(list):
 
             Although ``map`` returns a new Dataset, contents of the original 
             Dataset may still be overwritten when mapping certain functions.
-
-            If you are unsure of the behavior of the function and wish to 
-            preserve the original Dataset, make a `deepcopy` of it first. 
+            If you wish to preserve the original Dataset and are unsure 
+            how a function operates, make a `deepcopy` of the Dataset first. 
 
             (Deep copies are not necessary when using `mtuq.process_data`, 
             because the original trace data are preserved by default.

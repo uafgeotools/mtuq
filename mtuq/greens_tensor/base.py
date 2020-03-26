@@ -21,7 +21,7 @@ class GreensTensor(Stream):
         Besides the methods described below, GreensTensor also includes
         data processing methods inherited from ``obspy.core.Stream``.
         For descriptions of inherited methods, see `ObsPy documentation
-        <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
+        <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html>`_
     """
     def __init__(self, 
             traces=None, 

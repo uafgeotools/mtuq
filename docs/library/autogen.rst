@@ -14,6 +14,9 @@ autogen
    mtuq.graphics.plot_likelihood
    mtuq.graphics.plot_marginal
    mtuq.graphics.plot_misfit
+   mtuq.graphics.plot_likelihood_vw
+   mtuq.graphics.plot_marginal_vw
+   mtuq.graphics.plot_misfit_vw
    mtuq.grid.DoubleCoupleGridRandom
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom

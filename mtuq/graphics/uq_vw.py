@@ -15,7 +15,7 @@ from mtuq.util.xarray import dataarray_to_table
 
 
 #
-# For details about the v-w rectangle, see 
+# For details about the  rectangle:`v-w` rectangle rectangle, see 
 # Tape2015 - A uniform parameterization of moment tensors
 # (https://doi.org/10.1093/gji/ggv262)
 #
@@ -29,7 +29,8 @@ vw_area = (v_max-v_min)*(w_max-w_min)
 
 
 def plot_misfit_vw(filename, struct, title=None):
-    """ Plots misfit values on 'v-w' rectangle
+    """ Plots misfit values on `v-w` rectangle
+
 
     .. rubric :: Input arguments
 
@@ -50,8 +51,8 @@ def plot_misfit_vw(filename, struct, title=None):
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
-    multidimensional min, max and sum operations easy, so they are used here
-    for projecting from 6-D moment tensor space onto v-w space.
+    multidimensional `min`, `max` and `sum` operations easy, so they are used
+    here for projecting from 6-D moment tensor space onto `v-w` rectangle.
 
     For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
     `mtuq.grid.Grid.to_datarray` and
@@ -81,7 +82,8 @@ def plot_misfit_vw(filename, struct, title=None):
 
 
 def plot_likelihood_vw(filename, struct, sigma=1., title=None):
-    """ Plots maximum likelihood values on 'v-w' rectangle
+    """ Plots maximum likelihoods on `v-w` rectangle
+
 
     .. rubric :: Input arguments
 
@@ -102,8 +104,8 @@ def plot_likelihood_vw(filename, struct, sigma=1., title=None):
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
-    multidimensional min, max and sum operations easy, so they are used here
-    for projecting from 6-D moment tensor space onto v-w space.
+    multidimensional `min`, `max` and `sum` operations easy, so they are used
+    here for projecting from 6-D moment tensor space onto `v-w` rectangle.
 
     For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
     `mtuq.grid.Grid.to_datarray` and
@@ -142,7 +144,8 @@ def plot_likelihood_vw(filename, struct, sigma=1., title=None):
 
 
 def plot_marginal_vw(filename, struct, sigma=1., title=None):
-    """ Plots marginal likelihood values on 'v-w' rectangle
+    """ Plots marginal likelihoods on `v-w` rectangle
+
 
     .. rubric :: Input arguments
 
@@ -163,8 +166,8 @@ def plot_marginal_vw(filename, struct, sigma=1., title=None):
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
-    multidimensional min, max and sum operations easy, so they are used here
-    for projecting from 6-D moment tensor space onto v-w space.
+    multidimensional `min`, `max` and `sum` operations easy, so they are used
+    here for projecting from 6-D moment tensor space onto `v-w` rectangle.
 
     For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
     `mtuq.grid.Grid.to_datarray` and
@@ -253,7 +256,7 @@ def _bin(df, handle, npts_v=20, npts_w=40):
 #
 
 def _plot_vw(v, w, values, cmap='hot'):
-    """ Creates v-w color plot 
+    """ Creates `v-w` color plot 
 
     (Thinly wraps pyplot.pcolor)
 
