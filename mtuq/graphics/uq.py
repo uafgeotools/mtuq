@@ -211,38 +211,45 @@ def plot_marginal(filename, struct, sigma=1., title=None):
 # utilities for irregularly-spaced grids
 #
 
-def _bin(df, handle, npts_delta=40, npts_gamma=20, tightness=0.8):
+def _bin(df, handle, npts_v=40, npts_w=20, tightness=0.8):
     """ Bins DataFrame into rectangular cells
     """
-    npts_v, npts_w = npts_gamma, npts_delta
-    v, w = semiregular_grid(npts_v, npts_w)
+    # at which points will we plot values?
+    centers_v, centers_w = semiregular_grid(
+        npts_v, npts_w, tightness=tightness)
 
-    centers_gamma = to_gamma(v)
-    centers_delta = to_delta(w)
+    centers_gamma, centers_delta = to_gamma(centers_v), to_delta(centers_w)
 
-    # what cell edges correspond to the above cell centers?
-    gamma = np.array(centers_gamma[:-1] + centers_gamma[1:])/2.
-    gamma = np.pad(gamma, 2)
-    gamma[0] = -30.; gamma[-1] = +30.
-    delta = np.array(centers_delta[:-1] + centers_delta[1:])/2.
-    delta = np.pad(delta, 2)
-    delta[0] = -90.; delta[-1] = +90.
 
+    # what cell edges correspond to the above centers?
+    edges_v = np.array(centers_v[:-1] + centers_v[1:])/2.
+    edges_v = np.pad(edges_v, 2)
+    edges_v[0] = -1./3.; edges_v[-1] = +1./3..
+
+    edges_w = np.array(centers_w[:-1] + centers_w[1:])/2.
+    edges_w = np.pad(edges_w, 2)
+    edges_w[0] = -3.*np.pi/8.; edges_w[-1] = +3.*np.pi/8
+
+    edges_gamma, edges_delta = to_gamma(edges_v), to_delta(edges_w)
+
+
+    # bin grid points into cells
     binned = np.empty((npts_delta, npts_gamma))
     for _i in range(npts_delta):
         for _j in range(npts_gamma):
             # which grid points lie within cell (i,j)?
             subset = df.loc[
-                df['gamma'].between(gamma[_j], gamma[_j+1]) &
-                df['delta'].between(delta[_i], delta[_i+1])]
+                df['gamma'].between(edges_gamma[_j], edges_gamma[_j+1]) &
+                df['delta'].between(edges_delta[_i], edges_delta[_i+1])]
 
             binned[_i, _j] = handle(subset['values'])
 
+            # normalize by area of cell
+            binned[_i, _j] /= edges_v[_j+1] - edges_v[_j]
+            binned[_i, _j] /= edges_w[_i+1] - edges_w[_i]
+
+
     return centers_gamma, centers_delta, binned
-
-
-def _centers_to_edges(v):
-    raise NotImplementedError
 
 
 
