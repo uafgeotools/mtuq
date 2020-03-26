@@ -8,6 +8,19 @@ deg2rad = np.pi/180.
 rad2deg = 180./np.pi
 
 
+def lune_det(delta, gamma):
+    """ Determinant of lune mapping as function of lune coordinates
+    """
+    deg2rad = np.pi/180.
+    delta, gamma = np.meshgrid(delta, gamma)
+    beta = 90. - delta
+
+    beta *= deg2rad
+    gamma *= deg2rad
+
+    return 4./np.pi * np.sin(beta)**3 * np.cos(3.*gamma)
+
+
 def to_mt(rho, v, w, kappa, sigma, h):
     """ Converts from lune parameters to MomentTensor object
     """
