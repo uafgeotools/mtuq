@@ -42,7 +42,7 @@ def plot_misfit(filename, struct, title=None):
     .. rubric :: Usage
 
     Moment tensors and corresponding misfit values must be given as a
-    `DataArray` and `DataFrame`.
+    `DataArray` or `DataFrame`.
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
@@ -58,10 +58,11 @@ def plot_misfit(filename, struct, title=None):
 
       This utility requires Generic Mapping Tools >=5.
 
-      To display information about supported image formats, type
-      `gmt psconvert --help1.
+      To display information about supported image formats:
+      `gmt psconvert --help`.
 
-      For a matplotlib-only alternative, see `plot_misfit_vw`.
+      For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
+
 
     """
     struct = struct.copy()
@@ -106,7 +107,7 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
     .. rubric :: Usage
 
     Moment tensors and corresponding misfit values must be given as a
-    `DataArray` and `DataFrame`.
+    `DataArray` or `DataFrame`.
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
@@ -122,10 +123,10 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
       This utility requires Generic Mapping Tools >=5.
 
-      To display information about supported image formats, type
-      `gmt psconvert --help1.
+      To display information about supported image formats:
+      `gmt psconvert --help`.
 
-      For a matplotlib-only alternative, see `plot_misfit_vw`.
+      For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
 
     """
     struct = struct.copy()
@@ -176,7 +177,7 @@ def plot_marginal(filename, struct, sigma=1., title=None):
     .. rubric :: Usage
 
     Moment tensors and corresponding misfit values must be given as a
-    `DataArray` and `DataFrame`.
+    `DataArray` or `DataFrame`.
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
@@ -192,10 +193,10 @@ def plot_marginal(filename, struct, sigma=1., title=None):
 
       This utility requires Generic Mapping Tools >=5.
 
-      To display information about supported image formats, type
-      `gmt psconvert --help1.
+      To display information about supported image formats:
+      `gmt psconvert --help`.
 
-      For a matplotlib-only alternative, see `plot_misfit_vw`.
+      For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
  
     """
 

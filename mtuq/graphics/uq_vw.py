@@ -47,7 +47,7 @@ def plot_misfit_vw(filename, struct, title=None):
     .. rubric :: Usage
 
     Moment tensors and corresponding misfit values must be given as a
-    `DataArray` and `DataFrame`.
+    `DataArray` or `DataFrame`.
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
@@ -100,7 +100,7 @@ def plot_likelihood_vw(filename, struct, sigma=1., title=None):
     .. rubric :: Usage
 
     Moment tensors and corresponding misfit values must be given as a
-    `DataArray` and `DataFrame`.
+    `DataArray` or `DataFrame`.
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
@@ -162,7 +162,7 @@ def plot_marginal_vw(filename, struct, sigma=1., title=None):
     .. rubric :: Usage
 
     Moment tensors and corresponding misfit values must be given as a
-    `DataArray` and `DataFrame`.
+    `DataArray` or `DataFrame`.
 
     `DataArrays` and `DataFrames` can be used to represent regularly-spaced
     and irregularly-spaced grids, respectively.  These structures make
