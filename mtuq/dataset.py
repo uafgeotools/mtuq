@@ -97,12 +97,15 @@ class Dataset(list):
 
         .. warning ::
 
-            Even though ``apply`` returns a new Dataset, there is nothing to 
-            prevent the function from overwriting the streams of the original 
-            Dataset. 
+            Although ``apply`` returns a new Dataset, contents of the original 
+            Dataset may still be overwritten when applying certain functions.
+            If you wish to preserve the original Dataset and are unsure 
+            how a function operates, make a `deepcopy` of the Dataset first. 
 
-            By default, nothing gets overwritten when using 
-            ``mtuq.process_data``, because the `inplace` argument is `False`.
+            (Deep copies are not necessary when using `mtuq.process_data`, 
+            because the original trace data are preserved by default.
+            This behavior can be overridden by manually supplying 
+            `inplace=True` as a keyword argument.)
 
         """
         processed = []
@@ -123,12 +126,15 @@ class Dataset(list):
 
         .. warning ::
 
-            Even though ``map`` returns a new Dataset, there is nothing to 
-            prevent the function from overwriting the streams of the original 
-            Dataset. 
+            Although ``map`` returns a new Dataset, contents of the original 
+            Dataset may still be overwritten when mapping certain functions.
+            If you wish to preserve the original Dataset and are unsure 
+            how a function operates, make a `deepcopy` of the Dataset first. 
 
-           By default, nothing gets overwritten when using 
-            ``mtuq.process_data``, because the `inplace` argument is `False`.
+            (Deep copies are not necessary when using `mtuq.process_data`, 
+            because the original trace data are preserved by default.
+            This behavior can be overridden by manually supplying 
+            `inplace=True` as a keyword argument.)
 
         """
         processed = []

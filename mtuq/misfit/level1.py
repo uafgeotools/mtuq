@@ -5,21 +5,19 @@ See ``mtuq/misfit/__init__.py`` for more information
 """
 
 import numpy as np
-from mtuq.util import iterable
 from mtuq.util.math import correlate, isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components, get_time_sampling
 
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
-    time_shift_min, time_shift_max, verbose=0):
+    time_shift_min, time_shift_max, msg_handle):
     """
     Data misfit function (fast pure Python version)
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
     helpers = []
-    sources = iterable(sources)
     results = np.zeros((len(sources), 1))
 
     #
@@ -34,8 +32,12 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     # begin iterating over sources
     #
     for _i, source in enumerate(sources):
-        for _j, d in enumerate(data):
+        source = source.as_vector()
 
+        # optional progress message
+        msg_handle()
+
+        for _j, d in enumerate(data):
             components = greens[_j].components
             if not components:
                 continue
@@ -52,7 +54,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
             for group in time_shift_groups:
                 # Finds the time-shift between data and synthetics that yields
                 # the maximum cross-correlation value across all components in 
-                # a given group, subject to time_shift_max constraint
+                # a given group, subject to min/max constraints
                 _, indices = list_intersect_with_indices(
                     components, group)
 

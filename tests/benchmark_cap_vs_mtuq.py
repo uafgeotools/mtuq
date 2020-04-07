@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
-from mtuq.event import Origin
+from mtuq.event import MomentTensor
 from mtuq.graphics import plot_data_synthetics, plot_beachball, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
@@ -143,7 +143,11 @@ if __name__=='__main__':
     # Next we specify the source parameter grid
     #
 
-    sources = [
+    magnitude = 4.5
+    moment = 10.**(1.5*magnitude + 9.1) # units: N-m
+
+    sources = []
+    for array in [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
        np.array([1., 0., 0., 0., 0., 0.]), # source 1 (on-diagonal)
@@ -152,15 +156,12 @@ if __name__=='__main__':
        np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # source 4 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # source 5 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # source 6 (off-diagonal)
-       ]
+       ]:
 
-    Mw = 4.5
-    M0 = 10.**(1.5*Mw + 9.1) # units: N-m
-    for mt in sources:
-        mt *= np.sqrt(2)*M0
+        sources += [MomentTensor(np.sqrt(2)*moment*array)]
 
     wavelet = Trapezoid(
-        magnitude=Mw)
+        magnitude=magnitude)
 
 
     #

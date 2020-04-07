@@ -11,6 +11,12 @@ autogen
    mtuq.GreensTensorList
    mtuq.Origin
    mtuq.Station
+   mtuq.graphics.plot_likelihood
+   mtuq.graphics.plot_marginal
+   mtuq.graphics.plot_misfit
+   mtuq.graphics.plot_likelihood_vw
+   mtuq.graphics.plot_marginal_vw
+   mtuq.graphics.plot_misfit_vw
    mtuq.grid.DoubleCoupleGridRandom
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom
@@ -29,7 +35,7 @@ autogen
    mtuq.io.clients.AxiSEM_NetCDF.Client
    mtuq.io.clients.FK_SAC.Client
    mtuq.io.clients.syngine.Client
-   mtuq.misfit.simple
-   mtuq.misfit.fast1
-   mtuq.misfit.fast2
+   mtuq.misfit.level0
+   mtuq.misfit.level1
+   mtuq.misfit.level2
    

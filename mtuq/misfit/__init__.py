@@ -2,8 +2,8 @@
 import numpy as np
 import warnings
 
-from mtuq.misfit import simple, fast1, fast2
-from mtuq.util import iterable
+from mtuq.misfit import level0, level1, level2
+from mtuq.util import Null, iterable
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import check_padding, get_components, isempty
 
@@ -76,24 +76,24 @@ class Misfit(object):
     performed by this software package. Python object-oriented programming
     makes it possible to offer three different implementations:
 
-    - a readable pure Python version (``mtuq.misfit.simple``)
+    - a readable pure Python version (``mtuq.misfit.level0``)
 
-    - a fast pure Python version (``mtuq.misfit.fast1``)
+    - a fast pure Python version (``mtuq.misfit.level1``)
 
-    - a very fast Python/C++ version (``mtuq.misfit.fast2``)
+    - a very fast Python/C++ version (``mtuq.misfit.level2``)
 
 
     While the same in terms of input argument syntax, these three versions
     differ in terms of performance:
 
-    - ``simple`` provides a reference for understanding what the code is doing
+    - ``level0`` provides a reference for understanding what the code is doing
       and for checking the correctness of the fast implementations
 
-    - ``fast1`` is an optimized pure Python implementation which provides 
+    - ``level1`` is an optimized pure Python implementation which provides 
       significant computational savings when `len(sources)` > 100. This
       version is the closest to `ZhuHelmberger1996`'s original C software.
 
-    - ``fast2`` is an optimized Python/C++ implementation, in which a Python 
+    - ``level2`` is an optimized Python/C++ implementation, in which a Python 
       wrapper is used to combine obspy traces into multidimensional arrays.
       These arrays are passed to a C++ extension module, which does the
       main computational work. Unlike the other two versions, this 
@@ -145,10 +145,14 @@ class Misfit(object):
         self.time_shift_groups = time_shift_groups
 
 
-    def __call__(self, data, greens, sources, verbose=0, 
-        optimization_level=2, set_attributes=False):
+    def __call__(self, data, greens, sources, progress_handle=Null(), 
+        set_attributes=False, optimization_level=2):
         """ Evaluates misfit on given data
         """
+        # Normally misfit is evaluated over a grid of sources; `iterable`
+        # makes things work if just a single source is given
+        sources = iterable(sources)
+
         if isempty(data):
             warnings.warn(
                 "Empty data set. No misfit evaluations will be carried out",
@@ -157,29 +161,33 @@ class Misfit(object):
             return np.zeros((len(sources), 1))
 
 
-        # To allow time shifts, Green's functions must be longer than data,
-        # i.e., Green's functions must start +time_shift_max before data and
-        # end -time_shift_min after data.  One way to achieve this is by 
-        # supplying padding values to mtuq.ProcessData. If these padding values
-        # were not previously supplied, then Green's functions  will be padded
-        # with zeros by the following command.
+        # For greatest accuracy, Green's functions must be longer than data
+        # (i.e., Green's functions must begin +time_shift_max before data and
+        # end -time_shift_min after data.) 
+        #
+        # To achieve this, users can supply left and right padding lengths
+        # via the `padding` parameter when calling `mtuq.ProcessData`.
+        #
+        # If padding lengths were not supplied, then Green's functions may be
+        # padded with zeros, which may result in slightly less accurate time 
+        # shifts
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
 
         if optimization_level==0 or set_attributes:
-            return simple.misfit(
+            return level0.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_min, self.time_shift_max, verbose, 
+                self.time_shift_min, self.time_shift_max, progress_handle,
                 set_attributes)
 
         if optimization_level==1:
-            return fast1.misfit(
+            return level1.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
-                self.time_shift_min, self.time_shift_max, verbose)
+                self.time_shift_min, self.time_shift_max, progress_handle)
 
         if optimization_level==2:
-            return fast2.misfit(
+            return level2.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups,
-                self.time_shift_min, self.time_shift_max, verbose)
+                self.time_shift_min, self.time_shift_max, progress_handle)
 
 

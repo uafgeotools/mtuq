@@ -7,35 +7,46 @@ See ``mtuq/misfit/__init__.py`` for more information
 import numpy as np
 import time
 from copy import deepcopy
-from mtuq.misfit.fast1 import correlate
+from mtuq.misfit.level1 import correlate
 from mtuq.util.lune import to_mij, to_xyz
 from mtuq.util.signal import get_components, get_time_sampling
 from mtuq.misfit import c_ext_L2
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
-    time_shift_min, time_shift_max, verbose=0):
+    time_shift_min, time_shift_max, msg_handle):
     """
     Data misfit function (fast Python/C version)
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
+    #
+    # collect metadata
+    #
     nt, dt = _get_time_sampling(data)
-    padding = _get_padding(time_shift_min, time_shift_max, dt)
-
     stations = _get_stations(data)
     components = _get_components(data)
 
-    # boolean arrays
-    groups = _get_groups(time_shift_groups, components)
+
+    # which components are absent from the data (boolean array)?
     mask = _get_mask(data, stations, components)
 
-    # data arrays
-    data = _get_data(data, stations, components, nt)
-    greens = _get_greens(greens, stations, components)
-    sources = _as_array(sources)
+    # which components will be used to determine time shifts (boolean array)?
+    groups = _get_groups(time_shift_groups, components)
 
-    # correlation arrays
+
+    #
+    # collapse main structures into NumPy arrays
+    #
+    data = _get_data(data, stations, components)
+    greens = _get_greens(greens, stations, components)
+    sources = _to_array(sources)
+
+
+    #
+    # cross-correlate data and synthetics
+    #
+    padding = _get_padding(time_shift_min, time_shift_max, dt)
     data_data = _autocorr_1(data)
     greens_greens = _autocorr_2(greens, padding)
     greens_data = _corr_1_2(data, greens, padding)
@@ -45,22 +56,41 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     else:
         hybrid_norm = 0
 
+    #
+    # collect message attributes
+    #
+    try:
+        msg_args = [getattr(msg_handle, attrib) for attrib in 
+            ['start', 'stop', 'percent']]
+    except:
+        msg_args = [0, 0, 0]
+
+    #
+    # call C extension
+    #
+
+    debug_level = 0
+
     start_time = time.time()
 
     if norm in ['L2', 'hybrid']:
         results = c_ext_L2.misfit(
            data_data, greens_data, greens_greens, sources, groups, mask,
-           hybrid_norm, dt, padding[0], padding[1], int(verbose))
+           hybrid_norm, dt, padding[0], padding[1], debug_level, *msg_args)
 
-    else:
+    elif norm in ['L1']:
         raise NotImplementedError
 
-    if verbose:
+    if debug_level > 0:
       print('  Elapsed time (C extension) (s): %f' % \
           (time.time() - start_time))
 
     return results
 
+
+#
+# utility functions
+#
 
 def _get_time_sampling(dataset):
     for stream in dataset:
@@ -102,7 +132,7 @@ def _get_greens(greens, stations, components):
     return array
 
 
-def _get_data(data, stations, components, nt):
+def _get_data(data, stations, components):
     #Collects numeric trace data from all streams as a single NumPy array
 
     #Compared with iterating over streams and traces, provides a potentially
@@ -112,6 +142,8 @@ def _get_data(data, stations, components, nt):
 
     #    Requires that all streams have the same time discretization
     #    (or else an error is raised)
+
+    nt, dt = _get_time_sampling(data)
 
     ns = len(stations)
     nc = len(components)
@@ -194,19 +226,44 @@ def _get_groups(groups, components):
     return array
 
 
-def _as_array(sources):
-    array = sources.as_array()
+def _to_array(sources):
+    dims = sources.dims
+    df = sources.to_dataframe()
 
-    if array.shape[1]==6:
-        # convert moment tensors to Mij parameterization (up,south,east)
+    if _type(dims)=='MomentTensor':
         return np.ascontiguousarray(to_mij(
-            array[:,0], array[:,1], array[:,2],  # rho, v, w
-            array[:,3], array[:,4], array[:,5])) # kappa, sigma, h
+            df['rho'].to_numpy(),
+            df['v'].to_numpy(),
+            df['w'].to_numpy(),
+            df['kappa'].to_numpy(),
+            df['sigma'].to_numpy(),
+            df['h'].to_numpy(),
+            ))
 
-    elif array.shape[1]==3:
-        # convert forces to F1,F2,F3 parameterization (1:up,2:south,3:east)
+    elif _type(dims)=='Force':
         return np.ascontiguousarray(to_xyz(
-            array[:,0], array[:,1], array[:,2])) # F0 (radius), theta (azimuth), phi (colatitude)
+            df['F0'].to_numpy(),    # magnitude
+            df['theta'].to_numpy(), # azimuth
+            df['phi'].to_numpy(),   # colatitude
+            ))
+
+
+def _type(dims):
+    if 'rho' in dims\
+       and 'v' in dims\
+       and 'w' in dims\
+       and 'kappa' in dims\
+       and 'sigma' in dims\
+       and 'h' in dims:
+        return 'MomentTensor'
+
+    elif 'F0' in dims\
+       and 'theta' in dims\
+       and 'phi' in dims:
+        return 'Force'
+
+    else:
+        raise ValueError
 
 
 #

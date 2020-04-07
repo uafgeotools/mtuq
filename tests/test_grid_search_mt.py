@@ -144,10 +144,10 @@ if __name__=='__main__':
     #
 
     print('Evaluating body wave misfit...\n')
-    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, grid)
+    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, grid, 0)
 
     print('Evaluating surface wave misfit...\n')
-    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
+    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid, 0)
 
 
     results_sum = results_bw + results_sw
@@ -155,9 +155,6 @@ if __name__=='__main__':
     best_source = grid.get(results_sum.argmin())
     lune_dict = grid.get_dict(results_sum.argmin())
 
-
-    best_misfit = (results_bw + results_sw).min()
-    best_source = grid.get((results_bw + results_sw).argmin())
 
     if run_figures:
 
@@ -183,14 +180,14 @@ if __name__=='__main__':
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
-        if not isclose(best_source,
+        if not isclose(best_source.as_vector(),
             np.array([
-                 -5.648387e+15,
-                  2.541774e+15,
-                  3.106613e+15,
-                  5.899548e+14,
-                  3.746716e+15,
-                  3.424153e+15,
+                 -6.731618e+15,
+                  8.398708e+14,
+                  5.891747e+15,
+                 -1.318056e+15,
+                  7.911756e+14,
+                  2.718294e+15,
                  ])
             ):
             raise Exception(

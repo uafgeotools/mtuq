@@ -45,7 +45,30 @@ Library reference
 =================================================================================================  =================================================================================================
 
 
-.. rubric:: Grid classes
+.. rubric:: Data visualization
+
+=================================================================================================  =================================================================================================
+mtuq.graphics.plot_data_synthetics                                                                 Compares data and synthetics
+mtuq.graphics.plot_misfit_vs_depth                                                                 Plots misfit vs depth
+mtuq.graphics.plot_beachball                                                                       Plots focal mechansim (requires GMT)
+=================================================================================================  =================================================================================================
+
+
+.. rubric:: Uncertainty visualization
+
+=================================================================================================  =================================================================================================
+`mtuq.graphics.plot_likelihood <generated/mtuq.graphics.plot_likelihood.html>`_                    Plots maximum likelihoods on lune (requires GMT)
+`mtuq.graphics.plot_marginal <generated/mtuq.graphics.plot_marginal.html>`_                        Plots marginal likelihoods on lune (requires GMT)
+`mtuq.graphics.plot_misfit <generated/mtuq.graphics.plot_misfit.html>`_                            Plots misfit on lune (requires GMT)
+`mtuq.graphics.plot_likelihood_vw <generated/mtuq.graphics.plot_likelihood_vw.html>`_              Plots maximum likelihoods on `v-w` rectangle
+`mtuq.graphics.plot_marginal_vw <generated/mtuq.graphics.plot_marginal_vw.html>`_                  Plots marginal likelihoods on `v-w` rectangle
+`mtuq.graphics.plot_misfit_vw <generated/mtuq.graphics.plot_misfit_vw.html>`_                      Plots misfit on `v-w` rectangle
+
+=================================================================================================  =================================================================================================
+
+
+
+.. rubric:: Moment tensor grids
 
 =================================================================================================  =================================================================================================
 `mtuq.grid.FullMomentTensorGridRandom <generated/mtuq.grid.FullMomentTensorGridRandom.html>`_       Grid with randomly-drawn full moment tensors
@@ -85,8 +108,8 @@ Library reference
     Misfit evaluation is the most computationally intensive task performed by this package, and the only task that has been heavily optimized.  These classes provide low-level access to non-optimized and optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misfit``.
 
 =================================================================================================  =================================================================================================
-`mtuq.misfit.simple.misfit <generated/mtuq.misfit.simple.html>`_                                    Easy-to-read pure Python implementation
-`mtuq.misfit.fast1.misfit <generated/mtuq.misfit.fast1.html>`_                                      Fast pure Python implementation
-`mtuq.misfit.fast2.misfit <generated/mtuq.misfit.fast2.html>`_                                      Fast Python/C implementation
+`mtuq.misfit.level0.misfit <generated/mtuq.misfit.level0.html>`_                                    Easy-to-read pure Python implementation
+`mtuq.misfit.level1.misfit <generated/mtuq.misfit.level1.html>`_                                      Fast pure Python implementation
+`mtuq.misfit.level2.misfit <generated/mtuq.misfit.level2.html>`_                                      Fast Python/C implementation
 =================================================================================================  =================================================================================================
 

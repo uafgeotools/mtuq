@@ -52,16 +52,24 @@ class MomentTensor(object):
     """ Moment tensor object
 
     .. note::
-        It is easy to convert from ``MomentTensor`` objects to NumPy arrays 
+        It is possible to convert from ``MomentTensor`` objects to NumPy arrays 
         using the ``as_vector`` and ``as_matrix`` methods
 
     """
-    def __init__(self, array=None, convention="Unknown"):
+    def __init__(self, array=None, convention="USE"):
         if array is None:
-            raise Exception
+            raise Exception(
+               "Missing argument: moment tensors must be given as a "
+               "NumPy array")
 
-        if len(array) != 6:
-            raise Exception
+        if array.size != 6:
+            raise ValueError(
+                "Unexpected array size: moment tensors must be given as a "
+                "NumPy array with six elements")
+
+        if convention.upper() != 'USE':
+            raise NotImplementedError(
+                "So far, only up-south-east convention is implemented")
 
         try:
             self._array = np.asarray(array)
@@ -69,18 +77,20 @@ class MomentTensor(object):
             raise TypeError(
                 "Couldn't cast input argument as numpy array.")
           
-        self.code = convention
+        self.convention = convention.upper()
 
 
-    def change_convention(self, code):
+    def change_convention(self, new_convention):
         """ Changes basis convention by applying permuation
         """
-        if not self.code:
+        if not self.convention:
             raise Exception("Can't determine moment tensor permutation "
                 "starting basis is unknown.")
 
         self._arary = _change_convention_mt(
-           self._array, self.code, code)
+           self._array, self.convention, new_convention.upper())
+
+        self.convention = new_convention.upper()
 
 
     def as_vector(self):
@@ -108,16 +118,16 @@ class MomentTensor(object):
     def magnitude(self):
         """ Calculates moment magnitude (`M_w`)
         """
-        # how to generalize for users who prefer slightly different formulas? 
+        # how to generalize for slightly different formulas? 
         return 2./3.*(np.log10(self.moment()) - 9.1)
 
 
 class Force(object):
     """ Force source
 
-    .. note::
-        It is easy to convert from ``Force`` objects to NumPy arrays using the
-        ``as_vector`` method
+    .. note:
+        It is possible to convert from ``Force`` objects to NumPy arrays using 
+        the ``as_vector`` method
     """
     def __init__(self, array, convention="Unknown"):
         if array is None:
@@ -133,13 +143,13 @@ class Force(object):
                 "Couldn't cast input argument as numpy array.")
 
 
-    def change_convention(self):
+    def change_convention(self, new_convention):
         """ Changes basis convention by applying permuation
         """
-        if self.code==0:
-            raise Exception
+        self._arary = _change_convention_force(
+           self._array, self.convention, new_convention.upper())
 
-        self._arary = _change_convention_force(self._array, self.code, code)
+        self.convention = new_convention.upper()
 
 
     def as_vector(self):

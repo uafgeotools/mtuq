@@ -1,0 +1,186 @@
+#!/bin/bash
+
+
+function gmt_settings_ver4 {
+    gmtdefaults -D > .gmtdefaults4
+    gmt gmtset BASEMAP_TYPE plain
+    gmt gmtset CHAR_ENCODING Standard+
+    gmt gmtset COLOR_FOREGROUND 75/75/75 # for polarity cpt
+    gmt gmtset MEASURE_UNIT inch # cm / inch
+    gmt gmtset PAPER_MEDIA letter
+    gmt gmtset PAGE_ORIENTATION portrait
+    gmt gmtset PLOT_DEGREE_FORMAT ddd.x
+    gmt gmtset LABEL_FONT_SIZE 12
+    gmt gmtset ANOT_FONT_SIZE 12
+}
+
+
+function gmt_settings {
+    gmt gmtset COLOR_FOREGROUND 75/75/75 # for polarity cpt
+    gmt gmtset FONT_ANNOT 12p
+    gmt gmtset FONT_LABEL 12p
+    gmt gmtset FORMAT_GEO_MAP ddd.x
+    gmt gmtset MAP_FRAME_TYPE plain
+    gmt gmtset PROJ_LENGTH_UNIT i # inch
+    gmt gmtset PS_CHAR_ENCODING Standard+
+    gmt gmtset PS_MEDIA letter
+    gmt gmtset PS_PAGE_ORIENTATION portrait
+}
+
+
+function add_reference_arcs {
+    ps=$1
+    proj_arg=$2
+    area_arg=$3
+
+    (echo -30 35.2644 ; echo 30 54.7356)  |\
+     gmt psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    (echo -30 -54.7356; echo 30 -35.2644) |\
+     gmt psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    (echo -30 35.2644 ; echo 30 -35.2644) |\
+    gmt psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+}
+
+
+function add_reference_points {
+    ps=$1
+    proj_arg=$2
+    area_arg=$3
+
+    echo   0.0 -90.0000 |\
+    gmt psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K >> $ps
+
+    echo -30.0 -54.7356 |\
+    gmt psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K >> $ps
+
+    echo -30.0 0.0000   |\
+    gmt psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K >> $ps
+
+    echo -30.0 35.2644  |\
+    gmt psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K >> $ps
+
+    echo   0.0 90.0000  |\
+    gmt psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K >> $ps
+
+    echo 30.0 54.7356   |\
+    gmt psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K >> $ps
+
+    echo 30.0 0.0000    |\
+    gmt psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K >> $ps
+
+    echo 30.0 -35.2644  |\
+    gmt psxy -N -Sp8p -W1p,0 $proj_arg $area_arg -O -K >> $ps
+
+}
+
+
+function add_reference_labels {
+    ps=$1
+    proj_arg=$2
+    area_arg=$3
+
+    echo "  0.0 -90.0000 (-1,-1,-1)" |\
+    gmt pstext -F+f8p+jCT -N $proj_arg $area_arg -O -K -D0p/-10p >> $ps
+
+    echo "-30.0   0.0000 (2,-1,-1)" |\
+    gmt pstext -F+f8p+jRM -N $proj_arg $area_arg -O -K -D-10p/0p >> $ps
+
+    echo "-30.0  35.2644 (1,0,0)" |\
+    gmt pstext -F+f8p+jRM -N $proj_arg $area_arg -O -K -D-10p/0p >> $ps
+
+    echo "  0.0  90.0000 (1,1,1)" |\
+    gmt pstext -F+f8p+jCB -N $proj_arg $area_arg -O -K -D0p/10p  >> $ps
+
+    echo " 30.0  54.7356 (1,1,0)" |\
+    gmt pstext -F+f8p+jLM -N $proj_arg $area_arg -O -K -D10p/0p  >> $ps
+
+    echo " 30.0   0.0000 (1,1,-2)" |\
+    gmt pstext -F+f8p+jLM -N $proj_arg $area_arg -O -K -D10p/0p  >> $ps
+
+    echo " 30.0 -35.2644 (0,0,-1)" |\
+    gmt pstext -F+f8p+jLM -N $proj_arg $area_arg -O -K -D10p/0p  >> $ps
+
+    echo "-30.0 -54.7356 (0,-1,-1)" |\
+    gmt pstext -F+f8p+jRM -N $proj_arg $area_arg -O -K -D-10p/0p >> $ps
+
+    echo   0.0 -90.0 ISO   |\
+    gmt pstext -F+f10p+jCB -N $proj_arg $area_arg -O -K -D0p/-25p   >> $ps
+
+    echo   0.0  90.0 ISO   |\
+    gmt pstext -F+f10p+jCB -N $proj_arg $area_arg -O -K -D0p/20p    >> $ps
+
+    echo -30.0   0.0 CLVD  |\
+    gmt pstext -F+f10p+jRM -N $proj_arg $area_arg -O -K -D-10p/-10p >> $ps
+
+    echo  30.0   0.0 CLVD  |\
+    gmt pstext -F+f10p+jLM -N $proj_arg $area_arg -O -K -D10p/-10p  >> $ps
+
+}
+
+
+function add_title {
+    ps=$1
+    title="$2"
+    subtitle="$3"
+
+    if [ ! -z "$subtitle" ]; then
+
+        echo "  0.0  90.0 ${title}" |\
+        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/25p >> $ps
+
+        echo "  0.0  90.0 ${subtitle}" |\
+        gmt pstext -F+f15p+jCT -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
+
+    elif [ ! -z "$title" ]; then
+
+        echo "  0.0  90.0 ${title}" |\
+        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
+
+    fi
+
+}
+
+
+function get_fmt_arg {
+    case $1 in
+       BMP) echo -Tb;;
+       EPS) echo -Ta;;
+       PDF) echo -Tf;;
+       JPG) echo -Tj;;
+       PNG) echo -Tg;;
+       PPM) echo -Tm;;
+       SVG) echo -Ts;;
+       TIFF) echo -Tt;;
+    esac
+}
+
+
+function custom_psconvert {
+    in=$1
+    out=$2
+    fmt=$3
+
+    fmt_arg=$(get_fmt_arg $fmt)
+    gmt psconvert ${in} -F${out} -A $fmt_arg
+
+}
+
+
+function custom_psclose {
+cat << EOF >> $1
+%%PageTrailer
+U
+showpage
+
+%%Trailer
+
+end
+%%EOF
+EOF
+}
+
+
+

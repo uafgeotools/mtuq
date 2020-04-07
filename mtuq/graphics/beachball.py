@@ -1,13 +1,7 @@
 
-import obspy.imaging.beachball
-import os
-import matplotlib.pyplot as pyplot
-import numpy as np
-import shutil
-import subprocess
-import warnings
-from mtuq.event import MomentTensor
-
+#
+# graphics/beachball.py - first motion "beachball" plots
+#
 
 # To correctly plot focal mechanims, MTUQ uses Generic Mapping Tools (GMT).
 # Users must install this package by themselves, since it is not available
@@ -19,11 +13,23 @@ from mtuq.event import MomentTensor
 
 # https://github.com/obspy/obspy/issues/2388
 
+import obspy.imaging.beachball
+import os
+import matplotlib.pyplot as pyplot
+import numpy as np
+import shutil
+import subprocess
+import warnings
+from mtuq.event import MomentTensor
+
 
 def plot_beachball(filename, mt):
     """ Plots focal mechanism of given moment tensor as PNG image
     """
-    from mtuq.graphics.gmt import gmt_major_version
+    from mtuq.graphics._gmt import gmt_major_version
+
+    if type(mt)!=MomentTensor:
+        mt = MomentTensor(mt)
 
     try:
         assert gmt_major_version() >= 6
@@ -47,7 +53,7 @@ def beachball_gmt(filename, mt):
     subprocess.call('\n'.join([
         ('gmt psmeca -R-5/5/-5/5 -JM5 -Sm1 -Ggrey50 -h1 << END > %s' % filename+'.ps'),
         'lat lon depth   mrr   mtt   mff   mrt    mrf    mtf',
-        ('0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0' % tuple(mt)),
+        ('0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0' % tuple(mt.as_vector())),
         'END']), shell=True)
 
     # create PNG image
@@ -71,14 +77,14 @@ def beachball_obspy(filename, mt):
         """)
 
     obspy.imaging.beachball.beachball(
-        mt, size=200, linewidth=2, facecolor=gray)
+        mt.as_vector(), size=200, linewidth=2, facecolor=gray)
 
     pyplot.savefig(filename)
     pyplot.close()
 
 
 
-def misfit_vs_depth(filename, data, misfit, origins, sources, results):
+def misfit_vs_depth(filename, data, misfit, origins, grid, results):
     """ Plots misfit versus depth from grid search results
 
     Creates a scatter plot in which the the placment of each marker shows the 
@@ -123,7 +129,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
 
     for _i, origin in enumerate(origins):
 
-        source = sources.get(indices[_i])
+        mt = grid.get(indices[_i])
         result = results[_i]
 
         xp = origin.depth_in_m/1000.
@@ -131,7 +137,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
         pyplot.plot(xp, yp)
 
         # add beachball
-        plot_beachball('tmp.png', source)
+        plot_beachball('tmp.png', mt)
         img = pyplot.imread('tmp.png')
         os.remove('tmp.png')
         os.remove('tmp.ps')
@@ -141,7 +147,7 @@ def misfit_vs_depth(filename, data, misfit, origins, sources, results):
         #ax.imshow(img, extent=(xp-xw,xp+xw,yp-yw,yp+yw), transform=ax.transAxes)
 
         # add magnitude label
-        label = '%2.1f' % MomentTensor(source).magnitude()
+        label = '%2.1f' % mt.magnitude()
         _text(xp, yp-0.075*yr, label)
 
     pyplot.xlim((-0.1*xr + min(depths), 0.1*xr + max(depths)))

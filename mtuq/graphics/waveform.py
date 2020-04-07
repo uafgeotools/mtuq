@@ -1,4 +1,8 @@
 
+#
+# graphics/waveform.py - plots of observed and synthetic waveforms
+#
+
 import numpy as np
 import matplotlib.pyplot as pyplot
 import warnings
@@ -303,7 +307,7 @@ def plot(axis, dat, syn, label=None):
     s = syn.data
 
     # ``clip_on=False`` and ``zorder=10`` should prevent the plotted data from
-    # getting "clipped", but this doesn't seem to be happening in practice
+    # getting "clipped", but this doesn't seem to be happening
     axis.plot(t, d, 'k', linewidth=1.5,
         clip_on=False, zorder=10)
     axis.plot(t, s[start:stop], 'r', linewidth=1.25, 

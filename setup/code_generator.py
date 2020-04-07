@@ -500,7 +500,11 @@ Grid_BenchmarkCAP="""
     # Next we specify the source parameter grid
     #
 
-    sources = [
+    magnitude = 4.5
+    moment = 10.**(1.5*magnitude + 9.1) # units: N-m
+
+    sources = []
+    for array in [
        # Mrr, Mtt, Mpp, Mrt, Mrp, Mtp
        np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]), # explosion
        np.array([1., 0., 0., 0., 0., 0.]), # source 1 (on-diagonal)
@@ -509,15 +513,12 @@ Grid_BenchmarkCAP="""
        np.sqrt(1./2.)*np.array([0., 0., 0., 1., 0., 0.]), # source 4 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 1., 0.]), # source 5 (off-diagonal)
        np.sqrt(1./2.)*np.array([0., 0., 0., 0., 0., 1.]), # source 6 (off-diagonal)
-       ]
+       ]:
 
-    Mw = 4.5
-    M0 = 10.**(1.5*Mw + 9.1) # units: N-m
-    for mt in sources:
-        mt *= np.sqrt(2)*M0
+        sources += [MomentTensor(np.sqrt(2)*moment*array)]
 
     wavelet = Trapezoid(
-        magnitude=Mw)
+        magnitude=magnitude)
 
 """
 
@@ -770,12 +771,12 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     print('Evaluating body wave misfit...\\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, grid, verbose=False)
+        data_bw, greens_bw, misfit_bw, origins, grid, 0)
 
     print('Evaluating surface wave misfit...\\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, grid, verbose=False)
+        data_sw, greens_sw, misfit_sw, origins, grid, 0)
 
 
 """
@@ -943,9 +944,6 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCouple="""
-    best_misfit = (results_bw + results_sw).min()
-    best_source = grid.get((results_bw + results_sw).argmin())
-
     if run_figures:
 
         plot_data_greens(event_id+'DC_waveforms.png',
@@ -970,14 +968,14 @@ WrapUp_TestGridSearch_DoubleCouple="""
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
-        if not isclose(best_source,
+        if not isclose(best_source.as_vector(),
             np.array([
-                 -5.648387e+15,
-                  2.541774e+15,
-                  3.106613e+15,
-                  5.899548e+14,
-                  3.746716e+15,
-                  3.424153e+15,
+                 -6.731618e+15,
+                  8.398708e+14,
+                  5.891747e+15,
+                 -1.318056e+15,
+                  7.911756e+14,
+                  2.718294e+15,
                  ])
             ):
             raise Exception(
@@ -1209,8 +1207,8 @@ if __name__=='__main__':
         file.write(
             replace(
             Main2_SerialGridSearch_DoubleCouple,
-            'verbose=True',
-            'verbose=False',
+            'origin, grid',
+            'origin, grid, 0',
             ))
         file.write(WrapUp_TestGridSearch_DoubleCouple)
 
@@ -1280,6 +1278,8 @@ if __name__=='__main__':
         file.write(
             replace(
             Imports,
+            'Origin',
+            'MomentTensor',
             'syngine',
             'fk',
             'plot_data_greens',

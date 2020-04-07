@@ -21,7 +21,7 @@ class GreensTensor(Stream):
         Besides the methods described below, GreensTensor also includes
         data processing methods inherited from ``obspy.core.Stream``.
         For descriptions of inherited methods, see `ObsPy documentation
-        <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.htm>`_
+        <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html>`_
     """
     def __init__(self, 
             traces=None, 
@@ -75,17 +75,11 @@ class GreensTensor(Stream):
 
         .. note:
 
-           Sometimes it makes sense to return no components at a particular
-           station, for example, if all components are absent from the recorded
-           data.
-
-        .. note:
-
           Sometimes it makes sense to call this method partway through a 
-          script. For example, if the transerve component at a certain station
-          is discovered to be bad, calling ``_set_components(['Z', 'R'])``
-          would remove the transverse component, avoiding unnecessary 
-          computations.
+          script. For example, if all three componets are originally present 
+          at a particular station but the transerve component is later 
+          discovered to be bad, calling ``_set_components(['Z', 'R'])``
+          would remove it
 
         """
         if components==getattr(self, 'components', None):
@@ -159,6 +153,7 @@ class GreensTensor(Stream):
             self._set_components(components)
 
         # arrays used in linear combination
+        source = source.as_vector()
         array = self._array
         synthetics = self._synthetics
 
@@ -256,17 +251,23 @@ class GreensTensorList(list):
     def apply(self, function, *args, **kwargs):
         """ Applies function to all GreensTensors
  
-        Applies a function to each GreensTensor in the list, identical to the 
+        Applies a function to each GreensTensor in the list, similar to the 
         Python built-in ``apply``.  
 
         .. warning ::
 
-            Although ``map`` returns a new GreensTensorList, it is possible,
-            depending on the behavior of the given function, that the elements 
-            of the original list are overwritten.
+            Although ``apply`` returns a new GreensTensorList, contents of the
+            of the original GreensTensorList may still be overwritten
+            when applying certain functions.
+            
+            If you are unsure of the behavior of the function and wish to 
+            preserve the original GreensTensorList, make a `deepcopy` of it 
+            first.
 
-            See also ``mtuq.process_data.ProcessData``, which has an
-            `overwrite` keyword argument that is `False` by default.
+            (Deep copies are not necessary when using `mtuq.process_data`, 
+            because the original trace data are preserved by default.
+            This behavior can be overridden by manually supplying 
+            `inplace=True` as a keyword argument.)
 
         """
         processed = []
@@ -281,17 +282,23 @@ class GreensTensorList(list):
 
         Maps a function to each GreensTensor in the list. If one or more 
         optional sequences are given, the function is called with an argument 
-        list consisting of the corresponding item of each sequence, identical 
+        list consisting of the corresponding item of each sequence, similar
         to the Python built-in ``map``.
 
         .. warning ::
 
-            Although ``map`` returns a new GreensTensorList, it is possible,
-            depending on the behavior of the given function, that the elements 
-            of the original list are overwritten.
+            Although ``map`` returns a new GreensTensorList, contents of the
+            original GreensTensorList may still be overwritten when mapping
+            certain functions.
+            
+            If you are unsure of the behavior of the function and wish to 
+            preserve the original GreensTensorList, make a `deepcopy` of it 
+            first.
 
-            See also ``mtuq.process_data.ProcessData``, which has an
-            `overwrite` keyword argument that is `False` by default.
+            (Deep copies are not necessary when using `mtuq.process_data`, 
+            because the original trace data are preserved by default.
+            This behavior can be overridden by manually supplying 
+            `inplace=True` as a keyword argument.)
 
         """
         processed = []

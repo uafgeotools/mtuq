@@ -115,7 +115,7 @@ class Client(ClientBase):
                 format='sac')[0]
 
             trace.stats.channel = channels[_i]
-            trace.stats.component = channels[_i][0]
+            trace.stats._component = channels[_i][0]
 
 
             # what are the start and end times of the Green's function?

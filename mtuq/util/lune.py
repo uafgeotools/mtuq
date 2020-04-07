@@ -1,10 +1,37 @@
 
 import numpy as np
+from mtuq.event import MomentTensor
 from mtuq.util.math import open_interval
 
 
 deg2rad = np.pi/180.
 rad2deg = 180./np.pi
+
+
+def lune_det(delta, gamma):
+    """ Determinant of lune mapping as function of lune coordinates
+    """
+    deg2rad = np.pi/180.
+    delta, gamma = np.meshgrid(delta, gamma)
+    beta = 90. - delta
+
+    beta *= deg2rad
+    gamma *= deg2rad
+
+    return 4./np.pi * np.sin(beta)**3 * np.cos(3.*gamma)
+
+
+def to_mt(rho, v, w, kappa, sigma, h):
+    """ Converts from lune parameters to MomentTensor object
+    """
+    mt = to_mij(rho, v, w, kappa, sigma, h)
+    return MomentTensor(mt, convention='USE')
+
+
+def to_force(F0, theta, h):
+    """ Converts from spherical coordinates to Force object
+    """
+    raise NotImplementedError
 
 
 def to_mij(rho, v, w, kappa, sigma, h):
@@ -157,7 +184,7 @@ def to_rho(Mw):
     return to_M0(Mw)*np.sqrt(2.)
 
 
-def v_w_grid(npts_v, npts_w, tightness=0.5):
+def semiregular_grid(npts_v, npts_w, tightness=0.5):
     """ Semiregular moment tensor grid
 
     For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
@@ -177,7 +204,7 @@ def v_w_grid(npts_v, npts_w, tightness=0.5):
     gamma1 = to_gamma(v1)
     delta1 = to_delta(w1)
 
-    gamma2 = np.linspace(-30., 30., npts_v)
+    gamma2 = np.linspace(-29.5, 29.5, npts_v)
     delta2 = np.linspace(-87.5, 87.5, npts_w)
 
     delta = delta1*(1.-tightness) + delta2*tightness

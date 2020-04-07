@@ -313,7 +313,7 @@ def get_data_cap(dummy_bw, dummy_sw, path, event_name):
 
 
 def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt, 
-                        Mw=None, apply_shifts=True):
+                        apply_shifts=True):
 
     synthetics_bw = deepcopy(dummy_bw)
     synthetics_sw = deepcopy(dummy_sw)
@@ -331,10 +331,7 @@ def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt,
                 trace.data = dummy.select(component=component)[0].data
 
                 if apply_shifts:
-                    if Mw is None:
-                        Mw = MomentTensor(mt).magnitude()
-
-                    apply_magnitude_dependent_shift(trace, Mw)
+                    apply_magnitude_dependent_shift(trace, mt.magnitude())
 
     return synthetics_bw, synthetics_sw
 
