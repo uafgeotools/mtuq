@@ -10,6 +10,7 @@ import warnings
 from matplotlib.font_manager import FontProperties
 from mtuq.graphics.header import Header
 from mtuq.util.signal import get_components
+from obspy import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
 
 
@@ -179,7 +180,11 @@ def plot_data_synthetics(filename,
             # normalize amplitudes
             if normalize=='trace_amplitude':
                 max_trace = _max(dat, syn)
-                ylim = [-2*max_trace, +2*max_trace]
+                ylim = [-3*max_trace, +3*max_trace]
+                axis.set_ylim(*ylim)
+            elif normalize=='station_amplitude':
+                max_stream = _max(stream_dat, stream_syn)
+                ylim = [-3*max_stream, +3*max_stream]
                 axis.set_ylim(*ylim)
             elif normalize=='maximum_amplitude':
                 ylim = [-2*max_amplitude_bw, +2*max_amplitude_bw]
@@ -222,7 +227,11 @@ def plot_data_synthetics(filename,
             # normalize amplitude
             if normalize=='trace_amplitude':
                 max_trace = _max(dat, syn)
-                ylim = [-max_trace, +max_trace]
+                ylim = [-1.5*max_trace, +1.5*max_trace]
+                axis.set_ylim(*ylim)
+            elif normalize=='station_amplitude':
+                max_stream = _max(stream_dat, stream_syn)
+                ylim = [-1.5*max_stream, +1.5*max_stream]
                 axis.set_ylim(*ylim)
             elif normalize=='maximum_amplitude':
                 ylim = [-max_amplitude_sw, +max_amplitude_sw]
@@ -436,10 +445,15 @@ def _isempty(dataset):
 
 
 def _max(dat, syn):
-    # maximum amplitude of two traces
-    return max(
-        abs(dat.max()),
-        abs(syn.max()))
+    if type(dat)==Trace:
+        return max(
+            abs(dat.max()),
+            abs(syn.max()))
+    elif type(dat)==Stream:
+        return max(
+            max(map(abs, dat.max())),
+            max(map(abs, syn.max())))
+
 
 
 def _hide_axes(axes):
