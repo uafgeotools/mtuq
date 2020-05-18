@@ -141,12 +141,11 @@ def unzip(filename):
 
 
 def warn(*args, **kwargs):
-    try:
+    if is_mpi_env():
         from mpi4py import MPI
-        comm = MPI_WORLD.COMM
-        if comm.rank==0:
+        if MPI.COMM_WORLD.rank==0:
            warnings.warn(*args, **kwargs)
-    except:
+    else:
        warnings.warn(*args, **kwargs)
 
 

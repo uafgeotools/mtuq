@@ -1,6 +1,6 @@
 
 import numpy as np
-from mtuq.util import iterable, timer, ProgressCallback
+from mtuq.util import iterable, timer, warn, ProgressCallback
 
 
 
@@ -65,6 +65,9 @@ def grid_search(data, greens, misfit, origins, sources,
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         iproc, nproc = comm.rank, comm.size
+
+        if nproc > sources.size:
+            raise Exception('Number of cores exceeds size of grid')
 
         # partition grid and scatter across processes
         if iproc == 0:

@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 
 from mtuq.misfit import level0, level1, level2
-from mtuq.util import Null, iterable
+from mtuq.util import Null, iterable, warn
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import check_padding, get_components, isempty
 
@@ -154,7 +154,7 @@ class Misfit(object):
         sources = iterable(sources)
 
         if isempty(data):
-            warnings.warn(
+            warn(
                 "Empty data set. No misfit evaluations will be carried out",
                 Warning)
 
