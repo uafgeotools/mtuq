@@ -12,31 +12,24 @@ from mtuq.util.math import closed_interval, open_interval
 from mtuq.util.xarray import dataarray_to_table
 
 
-def plot_misfit_dc(filename, grid, values):
+def plot_misfit_dc(filename, struct):
     """ Plots misfit over strike, dip, and slip
     (matplotlib implementation)
     """
-    gridtype = type(grid)
+    struct = struct.copy()
 
-    if gridtype==Grid:
-        # convert from mtuq.Grid to xarray.DataArray
-        da = grid.to_dataarray(values)
+    if type(struct)==DataArray:
+        _plot_dc(filename, _marginal(struct))
+        
 
-        _plot_misfit_regular(filename, da)
-
-    elif gridtype==UnstructuredGrid:
-        # convert from mtuq.UnstructuredGrid to pandas.Dataframe
-        df = grid.to_dataframe(values)
-
-        _plot_misfit_random(filename, df)
+    elif type(struct)==DataFrame:
+        warnings.warn(
+            'plot_misfit_dc not implemented for irregularly-spaced grids')
 
 
-def _plot_misfit_regular(filename, da):
-    """ Plots regularly-spaced misfit values
-    (matplotlib implementation)
-    """
-    # manipulate DataArray
-    da = da.min(dim='rho')
+def _marginal(da):
+    if 'rho' in da.dims:
+        da = da.max(dim='rho')
 
     if 'v' in da.dims:
         assert len(da.coords['v'])==1
@@ -46,7 +39,11 @@ def _plot_misfit_regular(filename, da):
         assert len(da.coords['w'])==1
         da = da.squeeze(dim='w')
 
+    return da
 
+
+
+def _plot_dc(filename, da):
     # prepare axes
     fig, axes = pyplot.subplots(2, 2, 
         figsize=(8., 6.),

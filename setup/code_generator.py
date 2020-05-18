@@ -453,7 +453,7 @@ Grid_FullMomentTensor="""
     #
 
     grid = FullMomentTensorGridRegular(
-        npts_per_axis=20,
+        npts_per_axis=15,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -890,7 +890,7 @@ WrapUp_GridSearch_DoubleCouple="""
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
-        plot_misfit_dc(event_id+'DC_misfit.png', grid, results_sum)
+        plot_misfit_dc(event_id+'DC_misfit.png', grid.to_dataarray(results_sum))
 
         grid.save(event_id+'DC.nc', results_sum)
 
@@ -934,7 +934,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
-    plot_misfit_dc(event_id+'DC_misfit.png', grid, results_sum)
+    plot_misfit_dc(event_id+'DC_misfit.png', grid.to_dataarray(results_sum))
 
     grid.save(event_id+'DC.nc', results_sum)
 
@@ -1150,8 +1150,6 @@ if __name__=='__main__':
             'FMT',
             'plot_misfit_dc',
             'plot_misfit',
-            'misfit.png',
-            'misfit.ps',
             ))
 
 

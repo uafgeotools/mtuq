@@ -1,6 +1,6 @@
 
 import numpy as np
-from mtuq.util import iterable, timer, ProgressCallback
+from mtuq.util import iterable, timer, warn, ProgressCallback
 
 
 
@@ -11,10 +11,10 @@ def grid_search(data, greens, misfit, origins, sources,
 
     .. rubric :: Usage
 
-    Carries out a grid search by evaluating `misfit(data, greens.select(origin), source)`
-    for all origins and sources.  Returns a NumPy array of misfit values of 
-    shape `(len(sources), len(origins))` 
-
+    Carries out a grid search by evaluating 
+    `misfit(data, greens.select(origin), source)` for all origins and sources.
+    Returns a NumPy array of misfit values of shape 
+    `(len(sources), len(origins))` 
 
     .. rubric :: Input arguments
 
@@ -65,6 +65,9 @@ def grid_search(data, greens, misfit, origins, sources,
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         iproc, nproc = comm.rank, comm.size
+
+        if nproc > sources.size:
+            raise Exception('Number of cores exceeds size of grid')
 
         # partition grid and scatter across processes
         if iproc == 0:

@@ -1,4 +1,5 @@
 
+import os
 import re
 import numpy as np
 
@@ -71,7 +72,11 @@ def download_greens_tensor(url, model, station, origin):
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
 
-    filename = fullpath('data/greens_tensor/syngine/cache/', str(url2uuid(url)))
+    try:
+       dirname = os.environs['SYNGINE_DOWNLOADS']
+    except:
+       dirname = 'data/greens_tensor/syngine/cache/'
+    filename = fullpath(dirname, str(url2uuid(url)))
     if exists(filename):
         return filename
     elif exists(filename+'.zip'):
