@@ -89,7 +89,7 @@ if __name__=='__main__':
     #
 
     grid = FullMomentTensorGridRegular(
-        npts_per_axis=20,
+        npts_per_axis=15,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -196,7 +196,7 @@ if __name__=='__main__':
 
         plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit(event_id+'FMT_misfit.ps', grid, results_sum)
+        plot_misfit(event_id+'FMT_misfit.png', grid.to_dataarray(results_sum))
 
         grid.save(event_id+'FMT.nc', results_sum)
 

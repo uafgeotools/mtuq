@@ -176,7 +176,7 @@ if __name__=='__main__':
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
-    plot_misfit_dc(event_id+'DC_misfit.png', grid, results_sum)
+    plot_misfit_dc(event_id+'DC_misfit.png', grid.to_dataarray(results_sum))
 
     grid.save(event_id+'DC.nc', results_sum)
 

@@ -2,7 +2,7 @@
 
 
 # USAGE
-#   _plot_lune in out fmt range [title]  [subtitle]
+#   plot_lune in out fmt range [title]  [subtitle]
 #
 #   Plots lon,lat,z values from ASCII file on eigenvalue lune
 #
@@ -15,9 +15,11 @@
 #    SUBTITLE - optional subtitle string
 #
 # EXAMPLE
-#    _plot_lune likelihood.xyz likelihood.png PNG "-T0./1./0.01" "Maximum likelihood"
+#    plot_lune likelihood.xyz likelihood.png PNG "-T0./1./0.01" "Maximum likelihood"
 
 
+
+# add mtuq/graphics/_gmt to the path
 export PATH=${PATH:+${PATH}:}$(dirname ${BASH_SOURCE[0]})
 source _gmt_functions
 
