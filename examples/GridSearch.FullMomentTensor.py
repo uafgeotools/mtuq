@@ -196,7 +196,7 @@ if __name__=='__main__':
 
         plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit(event_id+'FMT_misfit.ps', grid, results_sum)
+        plot_misfit(event_id+'FMT_misfit.ps', grid.to_dataarray(results_sum))
 
         grid.save(event_id+'FMT.nc', results_sum)
 
