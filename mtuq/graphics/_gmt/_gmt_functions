@@ -147,7 +147,7 @@ function add_title {
 function get_fmt_arg {
     case $1 in
        BMP) echo -Tb;;
-       EPS) echo -Ta;;
+       EPS) echo -Te;;
        PDF) echo -Tf;;
        JPG) echo -Tj;;
        PNG) echo -Tg;;
