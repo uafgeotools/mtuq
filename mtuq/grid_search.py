@@ -11,10 +11,10 @@ def grid_search(data, greens, misfit, origins, sources,
 
     .. rubric :: Usage
 
-    Carries out a grid search by evaluating `misfit(data, greens.select(origin), source)`
-    for all origins and sources.  Returns a NumPy array of misfit values of 
-    shape `(len(sources), len(origins))` 
-
+    Carries out a grid search by evaluating 
+    `misfit(data, greens.select(origin), source)` for all origins and sources.
+    Returns a NumPy array of misfit values of shape 
+    `(len(sources), len(origins))` 
 
     .. rubric :: Input arguments
 

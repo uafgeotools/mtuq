@@ -453,7 +453,7 @@ Grid_FullMomentTensor="""
     #
 
     grid = FullMomentTensorGridRegular(
-        npts_per_axis=20,
+        npts_per_axis=15,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -1150,8 +1150,6 @@ if __name__=='__main__':
             'FMT',
             'plot_misfit_dc',
             'plot_misfit',
-            'misfit.png',
-            'misfit.ps',
             ))
 
 
