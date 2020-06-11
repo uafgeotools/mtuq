@@ -218,7 +218,7 @@ def _focal_mechanism(lune_dict):
     strike = lune_dict['kappa']
 
     try:
-        dip = np.arccos(lune_dict['h'])
+        dip = np.degrees(np.arccos(lune_dict['h']))
     except:
         dip = lune_dict['theta']
 
