@@ -1,14 +1,14 @@
 # mtuq
 
-MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data.  
+MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, along with
 
-The package reproduces the functionality of [ZhaoHelmberger1994] and [ZhuHelmberger1996] and has been [tested against](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) their Perl/C codes.
-
-Additionally, MTUQ provides
-
-- a flexible Python design, borrowing from [ObsPy] and [Instaseis] data structures
-- C-accelerated, (optionally) MPI-parallelized misfit function evaluation
 - ability to interface with modern solvers, including AxiSEM and SPECFEM3D
+- GMT wrappers for uncertainty visualization on the eigenvalue lune
+- C-accelerated, MPI-parallelized misfit function evaluation
+- a flexible Python design borrowing from [ObsPy] and [Instaseis] data structures
+
+The package has been [tested against](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) community Perl/C codes.
+
 
 
 
