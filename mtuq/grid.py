@@ -692,5 +692,3 @@ def ForceGridRandom(magnitudes_in_N=1., npts=10000):
         dims=('F0', 'theta', 'h'),
         coords=(F0, theta, h),
         callback=to_rtp)
-
-

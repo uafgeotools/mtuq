@@ -5,7 +5,7 @@ from mtuq.util import iterable, timer, warn, ProgressCallback
 
 
 def grid_search(data, greens, misfit, origins, sources, 
-    msg_interval=25, timed=True, allgather=True):
+    msg_interval=25, timed=True):
 
     """ Evaluates misfit over grids
 
@@ -48,11 +48,6 @@ def grid_search(data, greens, misfit, origins, sources,
     Display elapsed time at end?
 
 
-    ``allgather`` (`bool`):
-    Should results be broadcast from the master process to all other
-    processes? (ignored outside MPI environment)
-
-
     .. note:
 
       If invoked from an MPI environment, the grid is partitioned between
@@ -78,16 +73,21 @@ def grid_search(data, greens, misfit, origins, sources,
             timed = False
             msg_interval = 0
 
-    results = _grid_search_serial(
+    # NumPy array of misfit values of shape `(len(sources), len(origins))` 
+    values = _grid_search_serial(
         data, greens, misfit, origins, sources, timed=timed, 
         msg_interval=msg_interval)
 
-    if allgather and _is_mpi_env():
-        # all processes share results
-        return np.concatenate(comm.allgather(results))
-    else:
-        # each process returns just its own results
-        return results
+    if _is_mpi_env():
+        values = np.concatenate(comm.allgather(values))
+
+    #if type(sources)==Grid:
+    #    return MTUQDataArray(sources, origins, values)
+    #
+    #elif type(sources)==UnstructuredGrid:
+    #    return MTUQDataFrame(sources, origins, values)
+
+    return values
 
 
 
@@ -101,17 +101,17 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
     ni = len(origins)
     nj = len(sources)
 
-    results = []
+    values = []
     for _i, origin in enumerate(origins):
 
         msg_handle = ProgressCallback(
             start=_i*nj, stop=ni*nj, percent=msg_interval)
 
         # evaluate misfit function
-        results += [misfit(
+        values += [misfit(
             data, greens.select(origin), sources, msg_handle)]
 
-    return np.concatenate(results, axis=1)
+    return np.concatenate(values, axis=1)
 
 
 
@@ -131,4 +131,30 @@ def _is_mpi_env():
     else:
         return False
 
+
+def MTUQDataArray(DataArray):
+    def __init__(self, sources, origins, values):
+        raise NotImplementedError
+
+
+    def best_source(self):
+        raise NotImplementedError
+
+
+    def best_origin(self):
+        raise NotImplementedError
+
+
+
+def MTUQDataFrame(DataFrame):
+    def __init__(self, sources, origins, values):
+        raise NotImplementedError
+
+
+    def best_source(self):
+        raise NotImplementedError
+
+
+    def best_origin(self):
+        raise NotImplementedError
 
