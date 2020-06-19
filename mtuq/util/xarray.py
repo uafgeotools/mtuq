@@ -2,60 +2,91 @@
 import numpy as np
 
 
-def dataarray_to_table(da, dims):
-    values = da.values.flatten()
+def parse_regular(origins, sources, values):
+    from mtuq.grid import Grid
 
-    stacked = da.stack(z=dims)
-    indexes = stacked.indexes['z']
+    origin_dims, origin_coords, origin_shape = _parse(origins)
+    if origin_shape is None:
+        raise TypeError
 
-    table = np.empty((da.size, 3))
-    for _i, vw in enumerate(indexes):
-        table[_i, 0] = vw[0]
-        table[_i, 1] = vw[1]
-        table[_i, 2] = values[_i]
-
-    return table
-
-
-def array_to_dict(array, shape):
-    if array.ndim == 1:
-        array.reshape((array.size, 1))
-
-    # how many sets of values are contained in array?
-    nout = array.shape[1]
-
-    if array.shape[0] != np.product(shape):
-        raise ValueError("Mismatch between array and grid shape")
-
-    if nout > 1:
-        keys = ['%06d' % _i for  _i in range(nout)]
+    if issubclass(type(sources), Grid):
+        source_dims, source_coords, source_shape =\
+            sources.dims, sources.coords, sources.shape
     else:
-        keys = ['']
+        raise TypeError
 
-    return {keys[_i]: array[:,_i] for _i in range(nout)}
+    attrs = {
+        'origins': origins,
+        'sources': sources,
+        'values': values,
+        'origin_dims': origin_dims,
+        'origin_coords': origin_coords,
+        'origin_shape': origin_shape,
+        'source_dims': source_dims,
+        'source_coords': source_coords,
+        'source_shape': source_shape,
+        }
+
+    return {
+        'data': np.reshape(values, source_shape + origin_shape),
+        'coords': source_coords + origin_coords,
+        'dims': source_dims + origin_dims,
+        'attrs': attrs,
+        }
 
 
+def parse_irregular(origins, sources, values):
+    origin_dims, origin_coords, _ = _parse(origins)
 
-def open_nc(filename):
-    raise NotImplementedError
+    if issubclass(type(sources), UnstructuredGrid):
+        source_dims, source_coords = sources.dims, sources.coords
+    else:
+        raise TypeError
 
-    da = open_dataarray(filename)
+    for _i, coords in enumerate(source_coords):
+        source_coords[_i] = repmat(coords, len(origins))
 
-    return Grid(
-        dims=da.dims,
-        coords=[da.coords[dim] for dim in da.dims],
-        callback=to_mt,
-        )
+    for _j, coords in enumerate(origin_coords):
+        origin_coords[_j] = repmat(coords, len(sources))
+
+    attrs = {
+        'origins': origins,
+        'sources': sources,
+        'values': values,
+        'origin_dims': origin_dims,
+        'origin_coords': origin_coords,
+        'source_dims': source_dims,
+        'source_coords': source_coords,
+        }
 
 
-def open_h5():
-    raise NotImplementedError
+    return {
+        'data': values.flatten(),
+        'coords': source_coords + origin_coords,
+        'dims': source_dims + origin_dims,
+        'attrs': attrs}
 
-    df = read_hdf(filename)
 
-    return UnstructuredGrid(
-        dims=da.dims,
-        coords=[da.columns[dim] for dim in da.dims],
-        callback=to_mt,
-        )
+def _parse(origins, dims=('latitude', 'longitude', 'depth_in_m')):
+    ni = len(origins)
+    nj = len(dims)
+
+    array = np.empty((ni, nj))
+    for _i, origin in enumerate(origins):
+        for _j, dim in enumerate(dims):
+            array[_i,_j] = origin[dim]
+
+    coords = []
+    coords_uniq = []
+    shape = ()
+    for _j, dim in enumerate(dims):
+        coords += [np.unique(array[:,_j])]
+        coords_uniq += [np.unique(array[:,_j])]
+        shape += (len(coords_uniq[-1]),)
+
+    if np.product(shape)==ni:
+        return dims, coords_uniq, shape
+    else:
+        return dims, coords, None
+
 

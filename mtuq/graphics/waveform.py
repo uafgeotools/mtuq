@@ -258,7 +258,7 @@ def plot_data_greens(filename,
         stations,
         origin,
         source,
-        lune_dict,
+        source_dict,
         **kwargs):
 
     """ Creates CAP-style data/synthetics figure
@@ -278,8 +278,8 @@ def plot_data_greens(filename,
     synthetics_bw = greens_bw.get_synthetics(source)
     synthetics_sw = greens_sw.get_synthetics(source)
 
-    # besides calculating misfit, these commands also set the trace attributes
-    # used to align data and synthetics in the waveform plots
+    # besides calculating misfit, these commands set the trace attributes used
+    # to align data and synthetics in the waveform plots
     total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
     total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
 
@@ -289,7 +289,7 @@ def plot_data_greens(filename,
     else:
         header = Header(event_name,
             process_bw, process_sw, misfit_bw, misfit_bw,
-            model, solver, source, lune_dict, origin,
+            model, solver, source, source_dict, origin,
             total_misfit_bw, total_misfit_sw)
 
     plot_data_synthetics(filename,

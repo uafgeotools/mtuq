@@ -1,6 +1,13 @@
 
 import numpy as np
-from mtuq.util import iterable, timer, warn, ProgressCallback
+import pandas
+import xarray
+
+from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback
+from mtuq.util.xarray import parse_regular, parse_irregular
+from os.path import splitext
+
+xarray.set_options(keep_attrs=True)
 
 
 
@@ -12,9 +19,12 @@ def grid_search(data, greens, misfit, origins, sources,
     .. rubric :: Usage
 
     Carries out a grid search by evaluating 
-    `misfit(data, greens.select(origin), source)` for all origins and sources.
-    Returns a NumPy array of misfit values of shape 
-    `(len(sources), len(origins))` 
+    `misfit(data, greens.select(origin), source)` over all origins and sources.
+
+    If `origins` and `sources` are regularly-spaced, returns an `MTUQDataArray`
+    containing misfit values and corresponding grid points; otherwise, returns
+    an `MTUQDataFrame`.
+
 
     .. rubric :: Input arguments
 
@@ -62,8 +72,12 @@ def grid_search(data, greens, misfit, origins, sources,
         iproc, nproc = comm.rank, comm.size
 
         if nproc > sources.size:
-            raise Exception('Number of cores exceeds size of grid')
+            raise Exception('Number of CPU cores exceeds size of grid')
 
+    origins = iterable(origins)
+    sources = iterable(sources)
+
+    if _is_mpi_env():
         # partition grid and scatter across processes
         if iproc == 0:
             sources = sources.partition(nproc)
@@ -73,22 +87,21 @@ def grid_search(data, greens, misfit, origins, sources,
             timed = False
             msg_interval = 0
 
-    # NumPy array of misfit values of shape `(len(sources), len(origins))` 
     values = _grid_search_serial(
         data, greens, misfit, origins, sources, timed=timed, 
         msg_interval=msg_interval)
 
+
     if _is_mpi_env():
+        # convert to NumPy array of shape `(len(sources), len(origins))` 
         values = np.concatenate(comm.allgather(values))
 
-    #if type(sources)==Grid:
-    #    return MTUQDataArray(sources, origins, values)
-    #
-    #elif type(sources)==UnstructuredGrid:
-    #    return MTUQDataFrame(sources, origins, values)
-
-    return values
-
+    try:
+        # succeeds only for regularly-spaced grids
+        return MTUQDataArray(**parse_regular(origins, sources, values))
+    except:
+        # fallback for irregularly-spaced grids
+        return MTUQDataFrame(**parse_irregular(origins, sources, values))
 
 
 @timer
@@ -97,7 +110,6 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
     """ Evaluates misfit over origin and source grids 
     (serial implementation)
     """
-    origins = iterable(origins)
     ni = len(origins)
     nj = len(sources)
 
@@ -114,6 +126,64 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
     return np.concatenate(values, axis=1)
 
 
+class MTUQDataArray(xarray.DataArray):
+    """ Data structure for storing values on regularly-spaced grids
+
+    Thinly overloads xarray.DataArray with the following attributes that
+    are carried over directly from the grid search:  
+    `origins`, `sources`, `values`
+    """
+
+    def idxmin(self):
+        return self.where(self==self.max(), drop=True).squeeze().coords
+
+    def best_origin(self):
+        values = self.attrs['values']
+        idx = np.unravel_index(values.argmin(), values.shape)[1]
+        return self.attrs['origins'][idx]
+
+    def best_source(self):
+        values = self.attrs['values']
+        idx = np.unravel_index(values.argmin(), values.shape)[0]
+        return self.attrs['sources'].get(idx)
+
+    def save(self, filename, *args, **kwargs):
+        """ Saves grid search results to NetCDF file
+        """
+        da = self.copy()
+        da.attrs = []
+        print('Saving NetCDF file: %s' % filename)
+        da.to_netcdf(filename)
+
+
+class MTUQDataFrame(pandas.DataFrame):
+    """ Data structure for storing values on irregularly-spaced grids
+
+    Thinly overloads pandas.DataFrame with the following attributes that
+    are carried over directly from the grid search:  
+    `origins`, `sources`, `values`
+    """
+
+    def best_origin(self):
+        values = self.attrs['values']
+        idx = np.unravel_index(values.argmin(), values.shape)[1]
+        return self.attrs['origins'][idx]
+
+    def best_source(self):
+        values = self.attrs['values']
+        idx = np.unravel_index(values.argmin(), values.shape)[0]
+        return self.attrs['sources'].get(idx)
+
+    def save(self, filename, *args, **kwargs):
+        """ Saves grid search results to HDF5 file
+        """
+        print('Saving HDF5 file: %s' % filename)
+        self.to_hdf(filename)
+
+
+#
+# utility functions
+#
 
 def _is_mpi_env():
     try:
@@ -130,31 +200,4 @@ def _is_mpi_env():
         return True
     else:
         return False
-
-
-def MTUQDataArray(DataArray):
-    def __init__(self, sources, origins, values):
-        raise NotImplementedError
-
-
-    def best_source(self):
-        raise NotImplementedError
-
-
-    def best_origin(self):
-        raise NotImplementedError
-
-
-
-def MTUQDataFrame(DataFrame):
-    def __init__(self, sources, origins, values):
-        raise NotImplementedError
-
-
-    def best_source(self):
-        raise NotImplementedError
-
-
-    def best_origin(self):
-        raise NotImplementedError
 
