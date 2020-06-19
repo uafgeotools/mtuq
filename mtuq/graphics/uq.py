@@ -17,13 +17,11 @@ from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics._gmt import gmt_cmd, check_ext
-from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import fullpath
 from mtuq.util.lune import to_delta, to_gamma
-from mtuq.util.xarray import dataarray_to_table
 
 
-def plot_misfit(filename, struct, title=None):
+def plot_misfit(filename, ds, title=None):
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
@@ -32,8 +30,8 @@ def plot_misfit(filename, struct, title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -41,17 +39,9 @@ def plot_misfit(filename, struct, title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
-
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto 2-D lune space.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
 
     .. note ::
@@ -65,19 +55,19 @@ def plot_misfit(filename, struct, title=None):
 
 
     """
-    struct = struct.copy()
+    ds = ds.copy()
 
 
-    if type(struct)==DataArray:
-        da = struct
+    if issubclass(type(ds), DataArray):
+        da = ds
         da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
         values = da.values
 
 
-    elif type(struct)==DataFrame:
-        df = struct
+    elif issubclass(type(ds), DataFrame):
+        df = ds
         gamma, delta, values = _bin(df, lambda df: df.min())
 
 
@@ -85,7 +75,7 @@ def plot_misfit(filename, struct, title=None):
 
 
 
-def plot_likelihood(filename, struct, sigma=1., title=None):
+def plot_likelihood(filename, ds, sigma=1., title=None):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -94,11 +84,11 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``sigma`` (`float`):
-    Standard deviation applied to misfit values to obtain likelihood values
+    Standard deviation applied to misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -106,17 +96,9 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
-
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto 2-D lune space.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
 
     .. note ::
@@ -129,23 +111,23 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
       For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
 
     """
-    struct = struct.copy()
+    ds = ds.copy()
 
 
     # convert from misfit to likelihood
-    struct.values = np.exp(-struct.values/(2.*sigma**2))
+    ds.values = np.exp(-ds.values/(2.*sigma**2))
 
 
-    if type(struct)==DataArray:
-        da = struct
+    if issubclass(type(ds), DataArray):
+        da = ds
         da = da.max(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
         values = da.values
 
 
-    elif type(struct)==DataFrame:
-        df = struct
+    elif issubclass(type(ds), DataFrame):
+        df = ds
         gamma, delta, values = _bin(df, lambda df: df.max())
 
 
@@ -155,7 +137,7 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
 
 
-def plot_marginal(filename, struct, sigma=1., title=None):
+def plot_marginal(filename, ds, sigma=1., title=None):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -164,11 +146,11 @@ def plot_marginal(filename, struct, sigma=1., title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``sigma`` (`float`):
-    Standard deviation applied to misfit values to obtain likelihood values
+    Standard deviation applied to misfit values
         
     ``title`` (`str`):
     Optional figure title
@@ -176,17 +158,9 @@ def plot_marginal(filename, struct, sigma=1., title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
-
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto 2-D lune space.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
         
     .. note ::
@@ -200,23 +174,23 @@ def plot_marginal(filename, struct, sigma=1., title=None):
  
     """
 
-    struct = struct.copy()
+    ds = ds.copy()
 
 
     # convert from misfit to likelihood
-    struct.values = np.exp(-struct.values/(2.*sigma**2))
+    ds.values = np.exp(-ds.values/(2.*sigma**2))
 
 
-    if type(struct)==DataArray:
-        da = struct
+    if issubclass(type(ds), DataArray):
+        da = ds
         da = da.sum(dim=('rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
         values = da.values
 
 
-    elif type(struct)==DataFrame:
-        df = struct
+    elif issubclass(type(ds), DataFrame):
+        df = ds
         gamma, delta, values = _bin(df, lambda df: df.sum()/len(df))
 
     values /= lune_det(delta, gamma)
