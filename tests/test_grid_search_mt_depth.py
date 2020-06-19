@@ -155,8 +155,8 @@ if __name__=='__main__':
 
 
 
-    best_misfit = (results_bw + results_sw).min()
-    best_source = grid.get((results_bw + results_sw).argmin())
+    results = results_bw + results_sw
+    best_source = results.best_source()
 
     if run_figures:
         filename = event_id+'_misfit_vs_depth.png'

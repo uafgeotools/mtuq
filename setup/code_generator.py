@@ -590,10 +590,9 @@ Main_GridSearch_DoubleCouple="""
         data_sw, greens_sw, misfit_sw, origin, grid)
 
     if comm.rank==0:
-        results_sum = results_bw + results_sw
-        best_misfit = results_sum.min()
-        best_source = grid.get(results_sum.argmin())
-        lune_dict = grid.get_dict(results_sum.argmin())
+        results = results_bw + results_sw
+        best_source = results.best_source()
+        lune_dict = results.idxmin()
 
 
 """
@@ -669,12 +668,10 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
     if rank==0:
         results = results_bw + results_sw
-        best_misfit = results.min()
 
-        _j, _i = np.unravel_index(np.argmin(results), results.shape)
-        best_origin = origins[_i]
-        best_source = grid.get(_j)
-        lune_dict = grid.get_dict(_j)
+        lune_dict = results.idxmin()
+        best_source = results.best_source()
+        best_origin = results.best_origin()
 
 
 """
@@ -725,10 +722,9 @@ Main2_SerialGridSearch_DoubleCouple="""
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
 
 
-    results_sum = results_bw + results_sw
-    best_misfit = results_sum.min()
-    best_source = grid.get(results_sum.argmin())
-    lune_dict = grid.get_dict(results_sum.argmin())
+    results = results_bw + results_sw
+    lune_dict = results.idxmin()
+    best_source = results.best_source()
 
 """
 
@@ -890,9 +886,9 @@ WrapUp_GridSearch_DoubleCouple="""
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
-        plot_misfit_dc(event_id+'DC_misfit.png', grid.to_dataarray(results_sum))
+        plot_misfit_dc(event_id+'DC_misfit.png', results)
 
-        grid.save(event_id+'DC.nc', results_sum)
+        results.save(event_id+'DC.nc')
 
         print('Finished\\n')
 
@@ -934,9 +930,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
-    plot_misfit_dc(event_id+'DC_misfit.png', grid.to_dataarray(results_sum))
+    plot_misfit_dc(event_id+'DC_misfit.png', results)
 
-    grid.save(event_id+'DC.nc', results_sum)
+    results.save(event_id+'DC.nc')
 
     print('Finished\\n')
 
@@ -986,8 +982,8 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
-    best_misfit = (results_bw + results_sw).min()
-    best_source = grid.get((results_bw + results_sw).argmin())
+    results = results_bw + results_sw
+    best_source = results.best_source()
 
     if run_figures:
         filename = event_id+'_misfit_vs_depth.png'

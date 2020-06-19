@@ -183,10 +183,9 @@ if __name__=='__main__':
         data_sw, greens_sw, misfit_sw, origin, grid)
 
     if comm.rank==0:
-        results_sum = results_bw + results_sw
-        best_misfit = results_sum.min()
-        best_source = grid.get(results_sum.argmin())
-        lune_dict = grid.get_dict(results_sum.argmin())
+        results = results_bw + results_sw
+        best_source = results.best_source()
+        lune_dict = results.idxmin()
 
 
 
@@ -203,9 +202,9 @@ if __name__=='__main__':
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
-        plot_misfit_dc(event_id+'DC_misfit.png', grid.to_dataarray(results_sum))
+        plot_misfit_dc(event_id+'DC_misfit.png', results)
 
-        grid.save(event_id+'DC.nc', results_sum)
+        results.save(event_id+'DC.nc')
 
         print('Finished\n')
 

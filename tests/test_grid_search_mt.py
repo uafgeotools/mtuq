@@ -150,10 +150,9 @@ if __name__=='__main__':
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid, 0)
 
 
-    results_sum = results_bw + results_sw
-    best_misfit = results_sum.min()
-    best_source = grid.get(results_sum.argmin())
-    lune_dict = grid.get_dict(results_sum.argmin())
+    results = results_bw + results_sw
+    lune_dict = results.idxmin()
+    best_source = results.best_source()
 
 
     if run_figures:

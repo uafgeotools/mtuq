@@ -202,12 +202,10 @@ if __name__=='__main__':
 
     if rank==0:
         results = results_bw + results_sw
-        best_misfit = results.min()
 
-        _j, _i = np.unravel_index(np.argmin(results), results.shape)
-        best_origin = origins[_i]
-        best_source = grid.get(_j)
-        lune_dict = grid.get_dict(_j)
+        lune_dict = results.idxmin()
+        best_source = results.best_source()
+        best_origin = results.best_origin()
 
 
 
