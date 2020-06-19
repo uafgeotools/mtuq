@@ -91,7 +91,6 @@ def grid_search(data, greens, misfit, origins, sources,
         data, greens, misfit, origins, sources, timed=timed, 
         msg_interval=msg_interval)
 
-
     if _is_mpi_env():
         values = np.concatenate(comm.allgather(values))
 
@@ -129,8 +128,10 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
 class MTUQDataArray(xarray.DataArray):
     """ Data structure for storing values on regularly-spaced grids
 
-    Almost identical to xarray parent class, except preserves grid search  
-    inputs (`origins`, `sources`) 
+    Almost identical to xarray parent class, except preserves grid search 
+    inputs `origins`, `sources` and provides associated methods 
+    `best_origin`, `best_source`
+
     """
 
     def idxmin(self):
@@ -138,13 +139,13 @@ class MTUQDataArray(xarray.DataArray):
 
     def best_origin(self):
         origins, sources = (self.attrs['origins'], self.attrs['sources'])
-        shape = (len(sources), len(origins))
+        shape = (np.product(sources.shape), len(origins))
         idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[1]
         return origins[idx]
 
     def best_source(self):
         origins, sources = (self.attrs['origins'], self.attrs['sources'])
-        shape = (len(sources), len(origins))
+        shape = (np.product(sources.shape), len(origins))
         idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[0]
         return sources.get(idx)
 
@@ -161,18 +162,19 @@ class MTUQDataFrame(pandas.DataFrame):
     """ Data structure for storing values on irregularly-spaced grids
 
     Almost identical to pandas parent class, except preserves grid search  
-    variables (`origins`, `sources`) 
+    inputs `origins`, `sources` and provides associated methods 
+    `best_origin`, `best_source`
     """
 
     def best_origin(self):
         origins, sources = (self.attrs['origins'], self.attrs['sources'])
-        shape = (len(origins), len(sources))
+        shape = (np.product(sources.shape), len(origins))
         idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[1]
         return origins[idx]
 
     def best_source(self):
         origins, sources = (self.attrs['origins'], self.attrs['sources'])
-        shape = (len(origins), len(sources))
+        shape = (np.product(sources.shape), len(origins))
         idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[0]
         return sources.get(idx)
 
