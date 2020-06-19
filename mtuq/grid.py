@@ -197,68 +197,6 @@ class Grid(object):
         return subsets
 
 
-    def save(self, filename, values=None):
-        """ Writes one or more sets of values and corresponding grid
-        coordinates to a NetCDF output file
-
-
-        .. rubric:: Input arguments
-
-        ``filename`` (str):
-        Name of NetCDF output file
-
-
-        ``values`` (NumPy array or `dict` of arrays):
-        Values assoicated with grid points
-
-
-        .. rubric:: Usage
-
-        If values is a 1-D Numpy array, it must be the same size as the grid.
-        Typically, such arrays are obtained by evaluating a function over all 
-        grid points.  An easy way to ensure that the order of elements in the
-        array corresponds to the order of points in the grid is to iterate over
-        the grid as follows:
-
-        .. code ::
-
-           for _i, pt in enumerate(grid):
-               values[_i] = func(pt)
-
-        It is also possible to supply a dictionary {label: array} for the
-        `values` input argument, which results in separate output file being 
-        written for each  dictionary item.  In the dictionary, each `label` is
-        a string that gets appended to the filename and each `array` must be of
-        the same size as the grid.
-
-        Finally, it is possible to supply a 2-D  NumPy array provided that 
-        `array.shape[0] = grid.size`.  This makes it possible to pass 
-        `mtuq.grid_search` results directly to this method. In this case, the
-        number of output files will be `array.shape[1]` and '000000', '000001' 
-        and so on will be appended to the filename.
-
-        """
-        if values is None:
-            # write grid coordinates only
-            self.to_dataarray().to_netcdf(filename)
-            return
-
-        if type(values)==np.ndarray:
-            # attempt to convert NumPy array to dict using a generic sequence
-            # '000000', '000001', ... for the dictionary keys
-            values = array_to_dict(values, self.shape)
-
-        if not type(values)==dict:
-            raise ValueError
-
-        # now, begin actually writing NetCDF files
-        for label, array in values.items():
-
-            # for I/O, we will use xarray
-            da = self.to_dataarray(np.reshape(array, self.shape))
-            da.to_netcdf(filename+label)
-
-
     def __len__(self):
         return self.size
 
@@ -442,65 +380,6 @@ class UnstructuredGrid(object):
                 self.dims, coords, start, stop, callback=self.callback)]
 
         return subsets
-
-
-    def save(self, filename, values=None):
-        """ Writes one or more sets of values and corresponding grid
-        coordinates to an HDF output file
-
-
-        .. rubric:: Input arguments
-
-
-        ``filename`` (str):
-        Name of HDF output file (or filename suffix, if multiple values are given)
-
-
-        .. rubric:: Usage
-
-        If values is a 1-D Numpy array, it must be the same size as the grid.
-        Typically, such arrays are obtained by evaluating a function over all 
-        grid points.  An easy way to ensure that the order of elements in the
-        array corresponds to the order of points in the grid is to iterate over
-        the grid as follows:
-
-        .. code ::
-
-           for _i, pt in enumerate(grid):
-               values[_i] = func(pt)
-
-        It is also possible to supply a dictionary {label: array} for the
-        `values` input argument, which results in separate output file being 
-        written for each  dictionary item.  In the dictionary, each `label` is
-        a string that gets appended to the filename and each `array` must be of
-        the same size as the grid.
-
-        Finally, it is possible to supply a 2-D  NumPy array provided that 
-        `array.shape[0] = grid.size`.  This makes it possible to pass 
-        `mtuq.grid_search` results directly to this method. In this case, the
-        number of output files will be `array.shape[1]` and '000000', '000001' 
-        and so on will be appended to the filename.
-
-        """
-        if values is None:
-            # write grid coordinates only
-            self.to_dataframe().to_hdf(filename, key='df', mode='w')
-            return
-
-        if type(values)==np.ndarray:
-            # attempt to convert NumPy array to dict using a generic sequence
-            # '000000', '000001', ... for the dictionary keys
-            values = array_to_dict(values, [self.size])
-
-        if not type(values)==dict:
-            raise ValueError
-
-        # now, begin actually writing NetCDF files
-        for label, array in values.items():
-
-            # for I/O, we will use xarray
-            df = self.to_dataframe(array.flatten())
-            df.to_hdf(filename+label, key='df', mode='w')
 
 
     def __len__(self):
