@@ -18,7 +18,6 @@ def parse_regular(origins, sources, values):
     attrs = {
         'origins': origins,
         'sources': sources,
-        'values': values,
         'origin_dims': origin_dims,
         'origin_coords': origin_coords,
         'origin_shape': origin_shape,
@@ -52,7 +51,6 @@ def parse_irregular(origins, sources, values):
     attrs = {
         'origins': origins,
         'sources': sources,
-        'values': values,
         'origin_dims': origin_dims,
         'origin_coords': origin_coords,
         'source_dims': source_dims,

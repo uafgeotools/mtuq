@@ -93,7 +93,6 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     if _is_mpi_env():
-        # convert to NumPy array of shape `(len(sources), len(origins))` 
         values = np.concatenate(comm.allgather(values))
 
     try:
@@ -123,29 +122,31 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
         values += [misfit(
             data, greens.select(origin), sources, msg_handle)]
 
+    # returns NumPy array of shape `(len(sources), len(origins))` 
     return np.concatenate(values, axis=1)
 
 
 class MTUQDataArray(xarray.DataArray):
     """ Data structure for storing values on regularly-spaced grids
 
-    Thinly overloads xarray.DataArray with the following attributes that
-    are carried over directly from the grid search:  
-    `origins`, `sources`, `values`
+    Almost identical to xarray parent class, except preserves grid search  
+    inputs (`origins`, `sources`) 
     """
 
     def idxmin(self):
         return self.where(self==self.max(), drop=True).squeeze().coords
 
     def best_origin(self):
-        values = self.attrs['values']
-        idx = np.unravel_index(values.argmin(), values.shape)[1]
-        return self.attrs['origins'][idx]
+        origins, sources = (self.attrs['origins'], self.attrs['sources'])
+        shape = (len(sources), len(origins))
+        idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[1]
+        return origins[idx]
 
     def best_source(self):
-        values = self.attrs['values']
-        idx = np.unravel_index(values.argmin(), values.shape)[0]
-        return self.attrs['sources'].get(idx)
+        origins, sources = (self.attrs['origins'], self.attrs['sources'])
+        shape = (len(sources), len(origins))
+        idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[0]
+        return sources.get(idx)
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to NetCDF file
@@ -159,20 +160,21 @@ class MTUQDataArray(xarray.DataArray):
 class MTUQDataFrame(pandas.DataFrame):
     """ Data structure for storing values on irregularly-spaced grids
 
-    Thinly overloads pandas.DataFrame with the following attributes that
-    are carried over directly from the grid search:  
-    `origins`, `sources`, `values`
+    Almost identical to pandas parent class, except preserves grid search  
+    variables (`origins`, `sources`) 
     """
 
     def best_origin(self):
-        values = self.attrs['values']
-        idx = np.unravel_index(values.argmin(), values.shape)[1]
-        return self.attrs['origins'][idx]
+        origins, sources = (self.attrs['origins'], self.attrs['sources'])
+        shape = (len(origins), len(sources))
+        idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[1]
+        return origins[idx]
 
     def best_source(self):
-        values = self.attrs['values']
-        idx = np.unravel_index(values.argmin(), values.shape)[0]
-        return self.attrs['sources'].get(idx)
+        origins, sources = (self.attrs['origins'], self.attrs['sources'])
+        shape = (len(origins), len(sources))
+        idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[0]
+        return sources.get(idx)
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file
