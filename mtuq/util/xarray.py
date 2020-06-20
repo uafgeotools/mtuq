@@ -1,5 +1,6 @@
 
 import numpy as np
+import pandas
 
 from mtuq.grid import UnstructuredGrid
 
@@ -54,23 +55,26 @@ def parse_regular(origins, sources, values):
 
 
 def parse_irregular(origins, sources, values):
-    if issubclass(type(sources), UnstructuredGrid):
-        source_dims, source_coords = sources.dims, sources.coords
-    else:
+
+    if not issubclass(type(sources), UnstructuredGrid):
         raise TypeError
 
-    for _i, coords in enumerate(source_coords):
-        source_coords[_i] = np.tile(coords, len(origins))
-
     origin_idx = np.arange(len(origins), dtype='int')
-    origin_idx = np.repeat(origin_idx, len(sources))
+    origin_idx = list(np.repeat(origin_idx, len(sources)))
 
-    dims = ('origin_idx',) + source_dims + ('values',)
-    coords = [origin_idx] + source_coords + [values.flatten()]
+    source_idx = np.arange(len(sources.coords[0]), dtype='int')
+    source_idx = list(np.tile(source_idx, len(origins)))
+ 
+    source_coords = []
+    for _i, coords in enumerate(sources.coords):
+        source_coords += [list(np.tile(coords, len(origins)))]
 
-    ndim = len(dims)
-    data_vars = {dims[_i]: coords[_i] for _i in range(ndim)}
+    coords = [origin_idx, source_idx] + source_coords
+    dims = ('origin_idx', 'source_idx') + sources.dims
 
-    return data_vars
+    return {
+        'data': {'misfit': values.flatten()},
+        'index': pandas.MultiIndex.from_tuples(zip(*coords), names=dims),
+        }
 
 

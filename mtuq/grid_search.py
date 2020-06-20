@@ -99,12 +99,7 @@ def grid_search(data, greens, misfit, origins, sources,
         return MTUQDataArray(**parse_regular(origins, sources, values))
     except:
         # fallback for irregularly-spaced grids
-        df = MTUQDataFrame(parse_irregular(origins, sources, values))
-
-        # this doesn't work, despite what DataFrame documentation says about 
-        # respecting subclass type
-        #df = df.astype({'origin_idx':int})
-
+        df = MTUQDataFrame(**parse_irregular(origins, sources, values))
         df.attrs = {'origins': origins, 'sources': sources}
         return df
 
@@ -219,6 +214,11 @@ class MTUQDataFrame(pandas.DataFrame):
 
         print('Saving HDF5 file: %s' % filename)
         df.to_hdf(filename, key='df', mode='w')
+
+    @property
+    def _constructor(self):
+        return MTUQDataFrame
+
 
 
 #
