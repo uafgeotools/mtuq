@@ -142,14 +142,13 @@ class MTUQDataArray(xarray.DataArray):
     """
 
     def idxmin(self):
-        """ Returns dictionary of origin and source values corresponding to 
-        minimum misfit value
+        """ Returns coordinates dictionary corresponding to minimum misfit
         """
         # eventually this will be implemented directly in xarray.DataFrame
         return self.where(self==self.max(), drop=True).squeeze().coords
 
     def best_origin(self):
-        """ Returns Origin object corresponding to minimum misfit
+        """ Returns `Origin` object corresponding to minimum misfit
         """
         origins = self.attrs['origins']
         shape = self._get_shape()
@@ -157,7 +156,7 @@ class MTUQDataArray(xarray.DataArray):
         return origins[idx]
 
     def best_source(self):
-        """ Returns Source object corresponding to minimum misfit
+        """ Returns `Source` object corresponding to minimum misfit
         """
         sources = self.attrs['sources']
         shape = self._get_shape()
@@ -187,7 +186,7 @@ class MTUQDataFrame(pandas.DataFrame):
     """
 
     def best_origin(self):
-        """ Returns Origin object corresponding to minimum misfit
+        """ Returns `Origin` object corresponding to minimum misfit
         """
         origins = self.attrs['origins']
         shape = self._get_shape()
@@ -195,7 +194,7 @@ class MTUQDataFrame(pandas.DataFrame):
         return origins[idx]
 
     def best_source(self):
-        """ Returns Source object corresponding to minimum misfit
+        """ Returns `Source` object corresponding to minimum misfit
         """
         sources = self.attrs['sources']
         shape = self._get_shape()
