@@ -51,19 +51,18 @@ def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
 
 
 
-def FullMomentTensorGridRegular(magnitudes=[1.], npts_per_axis=20, tightness=0.8):
-    """ Full moment tensor grid with semi-regular values
+def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20, tightness=0.8):
+    """ Full moment tensor grid with semiregular values
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`), 
     returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
 
-    For tightness~0, grid will be regular in Tape2015 parameters v, w.
-    For tightness~1, grid will be regular in Tape2012 parameters delta, gamma.
+    For tightness~0, the grid will be regular in Tape2015 parameters v,w,
+    and for tightness~1, regular in Tape2012 parameters delta, gamma.
     For intermediate values, the grid will be "semiregular" in the sense of
-    a linear interpolation between the above cases.
-
-    Another way to think about it is that as `tightness` increases, the
-    extremal grid points closer get to the boundary of the lune.
+    a linear interpolation between the above cases in such a way that, as
+    `tightness` increases, the extremal grid points get closer to the boundary
+    of the lune.
 
     .. rubric :: Usage
 

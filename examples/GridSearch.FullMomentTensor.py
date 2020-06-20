@@ -6,7 +6,7 @@ import numpy as np
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
-from mtuq.grid import FullMomentTensorGridRegular
+from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
@@ -88,7 +88,7 @@ if __name__=='__main__':
     # Next, we specify the moment tensor grid and source-time function
     #
 
-    grid = FullMomentTensorGridRegular(
+    grid = FullMomentTensorGridSemiregular(
         npts_per_axis=15,
         magnitudes=[4.5])
 

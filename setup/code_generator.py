@@ -452,7 +452,7 @@ Grid_FullMomentTensor="""
     # Next, we specify the moment tensor grid and source-time function
     #
 
-    grid = FullMomentTensorGridRegular(
+    grid = FullMomentTensorGridSemiregular(
         npts_per_axis=15,
         magnitudes=[4.5])
 
@@ -1123,7 +1123,7 @@ if __name__=='__main__':
             replace(
             Imports,
             'DoubleCoupleGridRegular',
-            'FullMomentTensorGridRegular',
+            'FullMomentTensorGridSemiregular',
             'plot_misfit_dc',
             'plot_misfit',
             ))
