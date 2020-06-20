@@ -99,7 +99,14 @@ def grid_search(data, greens, misfit, origins, sources,
         return MTUQDataArray(**parse_regular(origins, sources, values))
     except:
         # fallback for irregularly-spaced grids
-        return MTUQDataFrame(**parse_irregular(origins, sources, values))
+        df = MTUQDataFrame(parse_irregular(origins, sources, values))
+
+        # this doesn't work, despite what DataFrame documentation says about 
+        # respecting subclass type
+        #df = df.astype({'origin_idx':int})
+
+        df.attrs = {'origins': origins, 'sources': sources}
+        return df
 
 
 @timer
@@ -135,19 +142,32 @@ class MTUQDataArray(xarray.DataArray):
     """
 
     def idxmin(self):
+        """ Returns dictionary of origin and source values corresponding to 
+        minimum misfit value
+        """
+        # eventually this will be implemented directly in xarray.DataFrame
         return self.where(self==self.max(), drop=True).squeeze().coords
 
     def best_origin(self):
-        origins, sources = (self.attrs['origins'], self.attrs['sources'])
-        shape = (np.product(sources.shape), len(origins))
+        """ Returns Origin object corresponding to minimum misfit
+        """
+        origins = self.attrs['origins']
+        shape = self._get_shape()
         idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[1]
         return origins[idx]
 
     def best_source(self):
-        origins, sources = (self.attrs['origins'], self.attrs['sources'])
-        shape = (np.product(sources.shape), len(origins))
+        """ Returns Source object corresponding to minimum misfit
+        """
+        sources = self.attrs['sources']
+        shape = self._get_shape()
         idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[0]
         return sources.get(idx)
+
+    def _get_shape(self):
+        """ Private helper method
+        """
+        return (np.product(self.attrs['sources'].shape), len(self.attrs['origins']))
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to NetCDF file
@@ -167,22 +187,39 @@ class MTUQDataFrame(pandas.DataFrame):
     """
 
     def best_origin(self):
-        origins, sources = (self.attrs['origins'], self.attrs['sources'])
-        shape = (np.product(sources.shape), len(origins))
-        idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[1]
+        """ Returns Origin object corresponding to minimum misfit
+        """
+        origins = self.attrs['origins']
+        shape = self._get_shape()
+        idx = np.unravel_index(np.reshape(self['values'], shape).argmin(), shape)[1]
         return origins[idx]
 
     def best_source(self):
-        origins, sources = (self.attrs['origins'], self.attrs['sources'])
-        shape = (np.product(sources.shape), len(origins))
-        idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[0]
+        """ Returns Source object corresponding to minimum misfit
+        """
+        sources = self.attrs['sources']
+        shape = self._get_shape()
+        values = self[['values']].to_numpy()
+        idx = np.unravel_index(np.reshape(values, shape).argmin(), shape)[0]
         return sources.get(idx)
+
+    def _get_shape(self):
+        """ Private helper method
+        """
+        origins = self.attrs['origins']
+        return (int(self.shape[0]/len(origins)), len(origins))
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file
         """
+        data_vars = {}
+        array = self.to_numpy()
+        for _i, key in enumerate(self.columns):
+            data_vars[key] = array[:,_i]
+        df = pandas.DataFrame(data_vars)
+
         print('Saving HDF5 file: %s' % filename)
-        self.to_hdf(filename)
+        df.to_hdf(filename, key='df', mode='w')
 
 
 #
