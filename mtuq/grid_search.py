@@ -3,8 +3,8 @@ import numpy as np
 import pandas
 import xarray
 
+from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback
-from mtuq.util.xarray import parse_regular, parse_irregular
 from os.path import splitext
 
 xarray.set_options(keep_attrs=True)
@@ -94,14 +94,14 @@ def grid_search(data, greens, misfit, origins, sources,
     if _is_mpi_env():
         values = np.concatenate(comm.allgather(values))
 
-    try:
-        # succeeds only for regularly-spaced grids
-        return MTUQDataArray(**parse_regular(origins, sources, values))
-    except:
-        # fallback for irregularly-spaced grids
-        df = MTUQDataFrame(**parse_irregular(origins, sources, values))
-        df.attrs = {'origins': origins, 'sources': sources}
-        return df
+    if issubclass(type(sources), Grid):
+        return MTUQDataArray(**_parse_regular(origins, sources, values))
+
+    elif issubclass(type(sources), UnstructuredGrid):
+        return MTUQDataFrame(**_parse_irregular(origins, sources, values))
+
+    else:
+        raise TypeError
 
 
 @timer
@@ -129,11 +129,6 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
 
 class MTUQDataArray(xarray.DataArray):
     """ Data structure for storing values on regularly-spaced grids
-
-    Almost identical to xarray parent class, except preserves grid search 
-    inputs `origins`, `sources` and provides associated methods 
-    `best_origin`, `best_source`
-
     """
 
     def idxmin(self):
@@ -142,83 +137,56 @@ class MTUQDataArray(xarray.DataArray):
         # eventually this will be implemented directly in xarray.DataFrame
         return self.where(self==self.max(), drop=True).squeeze().coords
 
-    def best_origin(self):
-        """ Returns `Origin` object corresponding to minimum misfit
+    def origin_idx(self):
+        """ Returns origin index corresponding to minimum misfit
         """
-        origins = self.attrs['origins']
-        shape = self._get_shape()
-        idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[1]
-        return origins[idx]
+        return int(self.idxmin()['origin_idx'])
 
-    def best_source(self):
-        """ Returns `Source` object corresponding to minimum misfit
+    def source_idx(self):
+        """ Returns source index corresponding to minimum misfit
         """
-        sources = self.attrs['sources']
         shape = self._get_shape()
-        idx = np.unravel_index(np.reshape(self.values, shape).argmin(), shape)[0]
-        return sources.get(idx)
+        return np.unravel_index(self.argmin(), shape)[0]
 
     def _get_shape(self):
         """ Private helper method
         """
-        return (np.product(self.attrs['sources'].shape), len(self.attrs['origins']))
+        nn = len(self.coords['origin_idx'])
+        return (int(self.size/nn), nn)
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to NetCDF file
         """
-        da = self.copy()
-        da.attrs = []
         print('Saving NetCDF file: %s' % filename)
-        da.to_netcdf(filename)
+        self.to_netcdf(filename)
 
 
 class MTUQDataFrame(pandas.DataFrame):
     """ Data structure for storing values on irregularly-spaced grids
-
-    Almost identical to pandas parent class, except preserves grid search  
-    inputs `origins`, `sources` and provides associated methods 
-    `best_origin`, `best_source`
     """
 
-    def best_origin(self):
-        """ Returns `Origin` object corresponding to minimum misfit
+    def origin_idx(self):
+        """ Returns origin index corresponding to minimum misfit
         """
-        origins = self.attrs['origins']
-        shape = self._get_shape()
-        idx = np.unravel_index(np.reshape(self['values'], shape).argmin(), shape)[1]
-        return origins[idx]
+        df = self.reset_index()
+        return df.idxmin()['origin_idx']
 
-    def best_source(self):
-        """ Returns `Source` object corresponding to minimum misfit
+    def source_idx(self):
+        """ Returns source index corresponding to minimum misfit
         """
-        sources = self.attrs['sources']
-        shape = self._get_shape()
-        values = self[['values']].to_numpy()
-        idx = np.unravel_index(np.reshape(values, shape).argmin(), shape)[0]
-        return sources.get(idx)
-
-    def _get_shape(self):
-        """ Private helper method
-        """
-        origins = self.attrs['origins']
-        return (int(self.shape[0]/len(origins)), len(origins))
+        df = self.reset_index()
+        return df.idxmin()['source_idx']
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file
         """
-        data_vars = {}
-        array = self.to_numpy()
-        for _i, key in enumerate(self.columns):
-            data_vars[key] = array[:,_i]
-        df = pandas.DataFrame(data_vars)
-
         print('Saving HDF5 file: %s' % filename)
+        df = pandas.DataFrame(self.values, index=self.index)
         df.to_hdf(filename, key='df', mode='w')
 
     @property
     def _constructor(self):
         return MTUQDataFrame
-
 
 
 #
@@ -240,4 +208,86 @@ def _is_mpi_env():
         return True
     else:
         return False
+
+
+def _parse_regular(origins, sources, values):
+    """ Converts grid_search inputs to DataArray inputs
+    """
+    from mtuq.grid import Grid
+
+    origin_dims = ('origin_idx',)
+    origin_coords = [np.arange(len(origins))]
+    origin_shape = (len(origins),)
+
+    source_dims = sources.dims
+    source_coords = sources.coords
+    source_shape = sources.shape
+
+    attrs = {
+        'origins': origins,
+        'sources': sources,
+        'origin_dims': origin_dims,
+        'origin_coords': origin_coords,
+        'origin_shape': origin_shape,
+        'source_dims': source_dims,
+        'source_coords': source_coords,
+        'source_shape': source_shape,
+        }
+
+    return {
+        'data': np.reshape(values, source_shape + origin_shape),
+        'coords': source_coords + origin_coords,
+        'dims': source_dims + origin_dims,
+        #'attrs': attrs,
+        }
+
+
+def _parse_irregular(origins, sources, values):
+    """ Converts grid_search inputs to DataFrame inputs
+    """
+    if not issubclass(type(sources), UnstructuredGrid):
+        raise TypeError
+
+    origin_idx = np.arange(len(origins), dtype='int')
+    origin_idx = list(np.repeat(origin_idx, len(sources)))
+
+    source_idx = np.arange(len(sources.coords[0]), dtype='int')
+    source_idx = list(np.tile(source_idx, len(origins)))
+
+    source_coords = []
+    for _i, coords in enumerate(sources.coords):
+        source_coords += [list(np.tile(coords, len(origins)))]
+
+    coords = [origin_idx, source_idx] + source_coords
+    dims = ('origin_idx', 'source_idx') + sources.dims
+
+    return {
+        'data': {'misfit': values.flatten()},
+        'index': pandas.MultiIndex.from_tuples(zip(*coords), names=dims),
+        }
+
+
+def _split(dims=('latitude', 'longitude', 'depth_in_m')):
+    """ Tries to split origin coordinates into multidimensional array 
+    (fails if origins aren't reguarly spaced)
+    """
+
+    ni = len(origins)
+    nj = len(origin_dims)
+
+    array = np.empty((ni, nj))
+    for _i, origin in enumerate(origins):
+        for _j, dim in enumerate(origin_dims):
+            array[_i,_j] = origin[dim]
+
+    coords_uniq = []
+    shape = ()
+    for _j, dim in enumerate(origin_dims):
+        coords_uniq += [np.unique(array[:,_j])]
+        shape += (len(coords_uniq[-1]),)
+
+    if np.product(shape)==ni:
+        origin_coords, origin_shape = coords_uniq, shape
+    else:
+        raise TypeError
 

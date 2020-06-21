@@ -3,6 +3,7 @@
 #
 
 import numpy as np
+import warnings
 
 from matplotlib import pyplot
 from pandas import DataFrame
@@ -20,21 +21,14 @@ def plot_misfit_dc(filename, ds):
     if issubclass(type(ds), DataArray):
         _plot_dc(filename, _marginal(ds))
         
-
     elif issubclass(type(ds), DataFrame):
         warnings.warn(
             'plot_misfit_dc not implemented for irregularly-spaced grids')
 
 
 def _marginal(da):
-    if 'latitude' in da.dims:
-        da = da.max(dim='latitude')
-
-    if 'longitude' in da.dims:
-        da = da.max(dim='longitude')
-
-    if 'depth_in_m' in da.dims:
-        da = da.max(dim='depth_in_m')
+    if 'origin_idx' in da.dims:
+        da = da.max(dim='origin_idx')
 
     if 'rho' in da.dims:
         da = da.max(dim='rho')
