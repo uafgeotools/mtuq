@@ -184,8 +184,12 @@ if __name__=='__main__':
 
     if comm.rank==0:
         results = results_bw + results_sw
-        best_source = results.best_source()
-        lune_dict = results.idxmin()
+
+        # source index corresponding to minimum misfit
+        idx = results.source_idx()
+
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
 
 
 

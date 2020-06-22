@@ -10,10 +10,14 @@ class Origin(obspy.core.AttribDict):
     Holds the following event information
 
     - latitude and longitude
-
     - depth
-
     - origin time
+
+    .. note::
+
+        Some file formats have a corresponding reader that creates
+        Origin objects from file metadata (see ``mtuq.io.readers``).
+
     """
     defaults = {
         'time': UTCDateTime(0),

@@ -15,18 +15,7 @@ Library reference
 ============================================================================================================  ============================================================================================================
 
 
-.. rubric:: Station and event structures
-
-============================================================================================================  ============================================================================================================
-`mtuq.Station <generated/mtuq.Station.html>`_                                                                  Station metdata object
-`mtuq.Origin <generated/mtuq.Origin.html>`_                                                                    Origin metdata object
-`mtuq.Wavelet <generated/mtuq.wavelet.Wavelet.html>`_                                                          Source wavelet or source-time function object
-`mtuq.Force <generated/mtuq.Force.html>`_                                                                      Force source
-`mtuq.MomentTensor <generated/mtuq.MomentTensor.html>`_                                                        Moment tensor source
-============================================================================================================  ============================================================================================================
-
-
-.. rubric:: Data I/O functions
+.. rubric:: Data I/O
 
 ============================================================================================================  ============================================================================================================
 `mtuq.download_greens_tensors <generated/mtuq.download_greens_tensors.html>`_                                  Downloads Green's tensors from syngine
@@ -41,22 +30,32 @@ Library reference
 ============================================================================================================  ============================================================================================================
 `mtuq.process_data.ProcessData <generated/mtuq.process_data.ProcessData.html>`_                                Data processing function
 `mtuq.misfit.Misfit <generated/mtuq.misfit.Misfit.html>`_                                                      Misfit function
-`mtuq.grid_search <generated/mtuq.grid_search.grid_search.html>`_                                              Grid search wrapper
+`mtuq.grid_search <generated/mtuq.grid_search.grid_search.html>`_                                              Evaluates misfit over grids
 `mtuq.MTUQDataArray <generated/mtuq.grid_search.MTUQDataArray.html>`_                                          Data structure for storing misfit values on regularly-spaced grids
-`mtuq.MTUQDataArray <generated/mtuq.grid_search.MTUQDataFrame.html>`_                                          Data structure for storing misfit values on irregularly-spaced grids
+`mtuq.MTUQDataFrame <generated/mtuq.grid_search.MTUQDataFrame.html>`_                                          Data structure for storing misfit values on irregularly-spaced grids
+============================================================================================================  ============================================================================================================
+
+
+.. rubric:: Station and event structures
+
+============================================================================================================  ============================================================================================================
+`mtuq.Station <generated/mtuq.Station.html>`_                                                                  Station metdata object
+`mtuq.Origin <generated/mtuq.Origin.html>`_                                                                    Origin metdata object
+`mtuq.Wavelet <generated/mtuq.wavelet.Wavelet.html>`_                                                          Source wavelet or source-time function object
+`mtuq.Force <generated/mtuq.Force.html>`_                                                                      Force source
+`mtuq.MomentTensor <generated/mtuq.MomentTensor.html>`_                                                        Moment tensor source
 ============================================================================================================  ============================================================================================================
 
 
 .. rubric:: Data visualization
 
 ============================================================================================================  ============================================================================================================
-mtuq.graphics.plot_data_synthetics                                                                             Compares data and synthetics
-mtuq.graphics.plot_misfit_vs_depth                                                                             Plots misfit vs depth
-mtuq.graphics.plot_beachball                                                                                   Plots focal mechansim (requires GMT)
+`mtuq.graphics.plot_data_synthetics <generated/mtuq.graphics.plot_data_synthetics.html>`_                      Compares data and synthetics
+`mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots focal mechansim (requires GMT)
 ============================================================================================================  ============================================================================================================
 
 
-.. rubric:: Uncertainty visualization
+.. rubric:: Uncertainty quantification
 
 ============================================================================================================  ============================================================================================================
 `mtuq.graphics.plot_likelihood <generated/mtuq.graphics.plot_likelihood.html>`_                                Plots maximum likelihoods on lune (requires GMT)

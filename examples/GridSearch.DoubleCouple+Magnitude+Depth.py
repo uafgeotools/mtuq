@@ -203,10 +203,11 @@ if __name__=='__main__':
     if rank==0:
         results = results_bw + results_sw
 
-        lune_dict = results.idxmin()
-        best_source = results.best_source()
-        best_origin = results.best_origin()
+        # source index corresponding to minimum misfit
+        idx = results.source_idx()
 
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
 
 
     #

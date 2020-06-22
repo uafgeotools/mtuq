@@ -156,7 +156,9 @@ if __name__=='__main__':
 
 
     results = results_bw + results_sw
-    best_source = results.best_source()
+
+    idx = results.source_idx()
+    best_source = grid.get(idx)
 
     if run_figures:
         filename = event_id+'_misfit_vs_depth.png'

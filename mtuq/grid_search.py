@@ -132,9 +132,11 @@ class MTUQDataArray(xarray.DataArray):
     """
 
     def idxmin(self):
-        """ Returns coordinates dictionary corresponding to minimum misfit
+        """ Returns coordinates corresponding to minimum misfit
         """
-        # eventually this will be implemented directly in xarray.DataFrame
+        # idxmin has been implemented in a beta version of xarray; this
+        # subclass method could be removed if idxmin every becomes part of the
+        # main xarray package
         return self.where(self==self.max(), drop=True).squeeze().coords
 
     def origin_idx(self):
@@ -262,7 +264,7 @@ def _parse_irregular(origins, sources, values):
     dims = ('origin_idx', 'source_idx') + sources.dims
 
     return {
-        'data': {'misfit': values.flatten()},
+        'data': {'values': values.flatten()},
         'index': pandas.MultiIndex.from_tuples(zip(*coords), names=dims),
         }
 

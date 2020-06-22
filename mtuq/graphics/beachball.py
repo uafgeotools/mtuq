@@ -25,6 +25,24 @@ from mtuq.event import MomentTensor
 
 def plot_beachball(filename, mt):
     """ Plots focal mechanism of given moment tensor as PNG image
+
+    .. rubric :: Input arguments
+
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``mt`` (`mtuq.MomentTensor`):
+    Moment tensor object
+
+
+    .. note::
+
+        Ignores any given file extension: always generates a PNG file.
+
+        (TODO: support all GMT image formats.)
+
+
     """
     from mtuq.graphics._gmt import gmt_major_version
 

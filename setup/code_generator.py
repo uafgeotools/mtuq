@@ -591,8 +591,12 @@ Main_GridSearch_DoubleCouple="""
 
     if comm.rank==0:
         results = results_bw + results_sw
-        best_source = results.best_source()
-        lune_dict = results.idxmin()
+
+        # source index corresponding to minimum misfit
+        idx = results.source_idx()
+
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
 
 
 """
@@ -669,10 +673,11 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
     if rank==0:
         results = results_bw + results_sw
 
-        lune_dict = results.idxmin()
-        best_source = results.best_source()
-        best_origin = results.best_origin()
+        # source index corresponding to minimum misfit
+        idx = results.source_idx()
 
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
 
 """
 
@@ -721,10 +726,13 @@ Main2_SerialGridSearch_DoubleCouple="""
     print('Evaluating surface wave misfit...\\n')
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
 
-
     results = results_bw + results_sw
-    lune_dict = results.idxmin()
-    best_source = results.best_source()
+
+    # source index corresponding to minimum misfit
+    idx = results.source_idx()
+
+    best_source = grid.get(idx)
+    lune_dict = grid.get_dict(idx)
 
 """
 
@@ -983,7 +991,9 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     results = results_bw + results_sw
-    best_source = results.best_source()
+
+    idx = results.source_idx()
+    best_source = grid.get(idx)
 
     if run_figures:
         filename = event_id+'_misfit_vs_depth.png'
