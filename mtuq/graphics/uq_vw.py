@@ -55,15 +55,14 @@ def plot_misfit_vw(filename, ds, title=None):
 
 
     if issubclass(type(ds), DataArray):
-        da = dsure.copy()
-        da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
+        da = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        values = da.values
+        values = da.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = dsure.copy()
+        df = ds.reset_index()
         v, w, values = _bin(df, lambda df: df.min())
 
 
@@ -106,14 +105,14 @@ def plot_likelihood_vw(filename, ds, sigma=1., title=None):
 
 
     if issubclass(type(ds), DataArray):
-        da = ds.max(dim=('rho', 'kappa', 'sigma', 'h'))
+        da = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        values = da.values
+        values = da.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds
+        df = ds.reset_index()
         df['values'] /= df['values'].sum()
         v, w, values = _bin(df, lambda df: df.max())
 
@@ -160,14 +159,14 @@ def plot_marginal_vw(filename, ds, sigma=1., title=None):
 
 
     if issubclass(type(ds), DataArray):
-        da = ds.sum(dim=('rho', 'kappa', 'sigma', 'h'))
+        da = ds.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        values = da.values
+        values = da.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds
+        df = ds.reset_index()
         v, w, values = _bin(df, lambda df: df.sum()/len(df))
 
 
@@ -180,12 +179,9 @@ def plot_marginal_vw(filename, ds, sigma=1., title=None):
 
 
 def _check(ds):
-    """ Checks data dsures
+    """ Checks data structures
     """
-    if type(ds) in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
-        pass
-
-    else:
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
 
 
@@ -214,7 +210,7 @@ def _bin(df, handle, npts_v=20, npts_w=40):
                 df['v'].between(v[_j], v[_j+1]) &
                 df['w'].between(w[_i], w[_i+1])]
 
-            binned[_i, _j] = handle(subset['values'])
+            binned[_i, _j] = handle(subset[0])
 
     return centers_v, centers_w, binned
 
@@ -231,10 +227,6 @@ def _plot_vw(v, w, values, cmap='hot'):
 
     """ 
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
-
-    nv, nw = len(v), len(w)
-    if values.shape == (nv, nw):
-        values = values.T
 
     # pcolor requires corners of pixels
     corners_v = _centers_to_edges(v)
@@ -259,11 +251,17 @@ def _plot_vw(v, w, values, cmap='hot'):
 
 
 def _centers_to_edges(v):
-    v = v.copy()
+
+    if issubclass(type(v), DataArray):
+        v = v.values.copy()
+    else:
+        v = v.copy()
+
     dv = (v[1]-v[0])
     v -= dv/2
     v = np.pad(v, (0, 1))
     v[-1] = v[-2] + dv
+
     return v
 
 
