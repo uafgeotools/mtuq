@@ -155,7 +155,7 @@ class MTUQDataArray(xarray.DataArray):
         """
         return int(self.idxmin()['origin_idx'])
 
-    def source_idx(self):
+    def source_idxmin(self):
         """ Returns source index corresponding to minimum misfit
         """
         shape = self._get_shape()
@@ -179,17 +179,17 @@ class MTUQDataFrame(pandas.DataFrame):
     """ Data structure for storing values on irregularly-spaced grids
     """
 
-    def origin_idx(self):
+    def origin_idxmin(self):
         """ Returns origin index corresponding to minimum misfit
         """
         df = self.reset_index()
-        return df.idxmin()['origin_idx']
+        return df['origin_idx'][df[0].idxmin()]
 
-    def source_idx(self):
+    def source_idxmin(self):
         """ Returns source index corresponding to minimum misfit
         """
         df = self.reset_index()
-        return df.idxmin()['source_idx']
+        return df['source_idx'][df[0].idxmin()]
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file
@@ -268,7 +268,7 @@ def _to_dataframe(origins, sources, values, index_type=2):
         dims = ('origin_idx', 'source_idx')
         coords += source_coords
         dims += sources.dims
-        data = {'values': values.flatten()}
+        data = {0: values.flatten()}
         index = pandas.MultiIndex.from_tuples(zip(*coords), names=dims)
         return MTUQDataFrame(data=data, index=index)
 
@@ -279,7 +279,7 @@ def _to_dataframe(origins, sources, values, index_type=2):
         coords += source_coords
         dims += sources.dims
         data = {dims[_i]: coords[_i] for _i in range(len(dims))}
-        data.update({'values': values.flatten()})
+        data.update({0: values.flatten()})
         df = MTUQDataFrame(data=data)
         return df.set_index(list(dims))
 
@@ -290,7 +290,7 @@ def _to_dataframe(origins, sources, values, index_type=2):
         coords = [origin_idx, source_idx]
         dims = ('origin_idx', 'source_idx')
         data = {dims[_i]: coords[_i] for _i in range(len(dims))}
-        data.update({'values': values.flatten()})
+        data.update({0: values.flatten()})
         df = MTUQDataFrame(data=data)
         df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
         return df.set_index(list(dims))
