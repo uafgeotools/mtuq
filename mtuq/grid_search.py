@@ -12,7 +12,7 @@ xarray.set_options(keep_attrs=True)
 
 
 def grid_search(data, greens, misfit, origins, sources, 
-    msg_interval=25, timed=True):
+    msg_interval=25, timed=True, gather=True):
 
     """ Evaluates misfit over grids
 
@@ -58,6 +58,12 @@ def grid_search(data, greens, misfit, origins, sources,
     Display elapsed time at end?
 
 
+    ``gather`` (`bool`):
+    If True, process 0 returns all results and any other processes return None.
+    If False, results are divided evenly among processes. 
+    (Ignored outside MPI environment.)
+
+
     .. note:
 
       If invoked from an MPI environment, the grid is partitioned between
@@ -70,38 +76,44 @@ def grid_search(data, greens, misfit, origins, sources,
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         iproc, nproc = comm.rank, comm.size
-
         if nproc > sources.size:
             raise Exception('Number of CPU cores exceeds size of grid')
 
+
     origins = iterable(origins)
     sources = iterable(sources)
+    subsets = None
+    subset = None
 
     if _is_mpi_env():
         # partition grid and scatter across processes
         if iproc == 0:
-            sources = sources.partition(nproc)
-        sources = comm.scatter(sources, root=0)
-
+            subsets = sources.partition(nproc)
+        subset = comm.scatter(subsets, root=0)
         if iproc != 0:
             timed = False
             msg_interval = 0
 
+
+    # evaluate misfit over origins and sources
     values = _grid_search_serial(
-        data, greens, misfit, origins, sources, timed=timed, 
+        data, greens, misfit, origins, subset or sources, timed=timed, 
         msg_interval=msg_interval)
 
-    if _is_mpi_env():
-        values = np.concatenate(comm.allgather(values))
+    if _is_mpi_env() and gather:
+        values = comm.gather(values, root=0)
+        if iproc == 0:
+            values = np.concatenate(values, axis=0)
+        else:
+            return
 
+
+    # convert from NumPy array to DataArray or DataFrame
     if issubclass(type(sources), Grid):
-        return MTUQDataArray(**_parse_regular(origins, sources, values))
+        return _to_dataarray(origins, sources, values)
 
     elif issubclass(type(sources), UnstructuredGrid):
-        return MTUQDataFrame(**_parse_irregular(origins, sources, values))
-
-    else:
-        raise TypeError
+        return _to_dataframe(origins, sources, values)
 
 
 @timer
@@ -125,6 +137,7 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
 
     # returns NumPy array of shape `(len(sources), len(origins))` 
     return np.concatenate(values, axis=1)
+
 
 
 class MTUQDataArray(xarray.DataArray):
@@ -161,6 +174,7 @@ class MTUQDataArray(xarray.DataArray):
         """
         print('Saving NetCDF file: %s' % filename)
         self.to_netcdf(filename)
+
 
 
 class MTUQDataFrame(pandas.DataFrame):
@@ -212,8 +226,8 @@ def _is_mpi_env():
         return False
 
 
-def _parse_regular(origins, sources, values):
-    """ Converts grid_search inputs to DataArray inputs
+def _to_dataarray(origins, sources, values):
+    """ Converts grid_search inputs to DataArray
     """
     from mtuq.grid import Grid
 
@@ -225,71 +239,54 @@ def _parse_regular(origins, sources, values):
     source_coords = sources.coords
     source_shape = sources.shape
 
-    attrs = {
-        'origins': origins,
-        'sources': sources,
-        'origin_dims': origin_dims,
-        'origin_coords': origin_coords,
-        'origin_shape': origin_shape,
-        'source_dims': source_dims,
-        'source_coords': source_coords,
-        'source_shape': source_shape,
-        }
-
-    return {
+    kwargs = {
         'data': np.reshape(values, source_shape + origin_shape),
         'coords': source_coords + origin_coords,
         'dims': source_dims + origin_dims,
-        #'attrs': attrs,
-        }
+         }
+
+    return MTUQDataArray(**kwargs)
 
 
-def _parse_irregular(origins, sources, values):
-    """ Converts grid_search inputs to DataFrame inputs
+def _to_dataframe(origins, sources, values, index_type='columns'):
+    """ Converts grid_search inputs to DataFrame
     """
     if not issubclass(type(sources), UnstructuredGrid):
         raise TypeError
 
+    if len(origins)*len(sources) > 1.e6:
+        print("  Working with large DataFrames can a very long time")
+
     origin_idx = np.arange(len(origins), dtype='int')
+    source_idx = np.arange(len(sources), dtype='int')
+
+    # Cartesian products
     origin_idx = list(np.repeat(origin_idx, len(sources)))
-
-    source_idx = np.arange(len(sources.coords[0]), dtype='int')
     source_idx = list(np.tile(source_idx, len(origins)))
-
     source_coords = []
     for _i, coords in enumerate(sources.coords):
         source_coords += [list(np.tile(coords, len(origins)))]
 
-    coords = [origin_idx, source_idx] + source_coords
-    dims = ('origin_idx', 'source_idx') + sources.dims
 
-    return {
-        'data': {'values': values.flatten()},
-        'index': pandas.MultiIndex.from_tuples(zip(*coords), names=dims),
-        }
+    # idea 1 - much too slow!
+    #coords = [origin_idx, source_idx]
+    #dims = ('origin_idx', 'source_idx')
+    #coords += source_coords
+    #dims += sources.dims
+    #data = {'values': values.flatten()}
+    #index = pandas.MultiIndex.from_tuples(zip(*coords), names=dims)
+    #return MTUQDataFrame(data=data, index=index)
 
 
-def _split(dims=('latitude', 'longitude', 'depth_in_m')):
-    """ Tries to split origin coordinates into multidimensional array 
-    (fails if origins aren't reguarly spaced)
-    """
+    # idea 2 - ugly but fast!
+    coords = [origin_idx, source_idx]
+    dims = ('origin_idx', 'source_idx')
+    coords += source_coords
+    dims += sources.dims
+    data = {dims[_i]: coords[_i] for _i in range(len(dims))}
+    data.update({'values': values.flatten()})
+    df = MTUQDataFrame(data=data)
+    return df.set_index(list(dims))
 
-    ni = len(origins)
-    nj = len(origin_dims)
 
-    array = np.empty((ni, nj))
-    for _i, origin in enumerate(origins):
-        for _j, dim in enumerate(origin_dims):
-            array[_i,_j] = origin[dim]
-
-    coords_uniq = []
-    shape = ()
-    for _j, dim in enumerate(origin_dims):
-        coords_uniq += [np.unique(array[:,_j])]
-        shape += (len(coords_uniq[-1]),)
-
-    if np.product(shape)==ni:
-        origin_coords, origin_shape = coords_uniq, shape
-    else:
-        raise TypeError
 
