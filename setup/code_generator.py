@@ -593,7 +593,7 @@ Main_GridSearch_DoubleCouple="""
         results = results_bw + results_sw
 
         # source index corresponding to minimum misfit
-        idx = results.source_idx()
+        idx = results.source_idxmin()
 
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
@@ -674,7 +674,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         results = results_bw + results_sw
 
         # source index corresponding to minimum misfit
-        idx = results.source_idx()
+        idx = results.source_idxmin()
 
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
@@ -729,7 +729,7 @@ Main2_SerialGridSearch_DoubleCouple="""
     results = results_bw + results_sw
 
     # source index corresponding to minimum misfit
-    idx = results.source_idx()
+    idx = results.source_idxmin()
 
     best_source = grid.get(idx)
     lune_dict = grid.get_dict(idx)
@@ -992,7 +992,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     results = results_bw + results_sw
 
-    idx = results.source_idx()
+    idx = results.source_idxmin()
     best_source = grid.get(idx)
 
     if run_figures:
