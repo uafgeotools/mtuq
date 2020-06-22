@@ -10,7 +10,6 @@ from os.path import splitext
 xarray.set_options(keep_attrs=True)
 
 
-
 def grid_search(data, greens, misfit, origins, sources, 
     msg_interval=25, timed=True, gather=True):
 
@@ -59,8 +58,8 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``gather`` (`bool`):
-    If True, process 0 returns all results and any other processes return None.
-    If False, results are divided evenly among processes. 
+    If True, process 0 returns all results and any other processes `None`;
+    otherwise, results are divided evenly among processes. 
     (Ignored outside MPI environment.)
 
 
@@ -72,6 +71,14 @@ def grid_search(data, greens, misfit, origins, sources,
       reduces to ``_grid_search_serial``.
 
     """
+
+    origins = iterable(origins)
+    if type(sources) not in (Grid, UnstructuredGrid):
+        raise TypeError
+    subsets = None
+    subset = None
+
+
     if _is_mpi_env():
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
@@ -79,13 +86,6 @@ def grid_search(data, greens, misfit, origins, sources,
         if nproc > sources.size:
             raise Exception('Number of CPU cores exceeds size of grid')
 
-
-    origins = iterable(origins)
-    sources = iterable(sources)
-    subsets = None
-    subset = None
-
-    if _is_mpi_env():
         # partition grid and scatter across processes
         if iproc == 0:
             subsets = sources.partition(nproc)
@@ -107,13 +107,13 @@ def grid_search(data, greens, misfit, origins, sources,
         else:
             return
 
-
     # convert from NumPy array to DataArray or DataFrame
     if issubclass(type(sources), Grid):
         return _to_dataarray(origins, sources, values)
 
     elif issubclass(type(sources), UnstructuredGrid):
         return _to_dataframe(origins, sources, values)
+
 
 
 @timer
@@ -147,9 +147,7 @@ class MTUQDataArray(xarray.DataArray):
     def idxmin(self):
         """ Returns coordinates corresponding to minimum misfit
         """
-        # idxmin has been implemented in a beta version of xarray; this
-        # subclass method could be removed if idxmin every becomes part of the
-        # main xarray package
+        # idxmin has now been implemented in a beta version of xarray
         return self.where(self==self.max(), drop=True).squeeze().coords
 
     def origin_idx(self):
@@ -239,23 +237,20 @@ def _to_dataarray(origins, sources, values):
     source_coords = sources.coords
     source_shape = sources.shape
 
-    kwargs = {
+    return MTUQDataArray(**{
         'data': np.reshape(values, source_shape + origin_shape),
         'coords': source_coords + origin_coords,
         'dims': source_dims + origin_dims,
-         }
-
-    return MTUQDataArray(**kwargs)
+         })
 
 
-def _to_dataframe(origins, sources, values, index_type='columns'):
+def _to_dataframe(origins, sources, values, index_type=2):
     """ Converts grid_search inputs to DataFrame
     """
-    if not issubclass(type(sources), UnstructuredGrid):
-        raise TypeError
-
-    if len(origins)*len(sources) > 1.e6:
-        print("  Working with large DataFrames can a very long time")
+    if len(origins)*len(sources) > 2.e6:
+        print("  pandas.DataFrame constructor might take a long time\n"
+              "  see mtuq.grid_search._to_dataframe\n"
+              "  len(df) = %d\n" % (len(origins)*len(sources)))
 
     origin_idx = np.arange(len(origins), dtype='int')
     source_idx = np.arange(len(sources), dtype='int')
@@ -267,26 +262,36 @@ def _to_dataframe(origins, sources, values, index_type='columns'):
     for _i, coords in enumerate(sources.coords):
         source_coords += [list(np.tile(coords, len(origins)))]
 
+    if index_type==1:
+        # much too slow!
+        coords = [origin_idx, source_idx]
+        dims = ('origin_idx', 'source_idx')
+        coords += source_coords
+        dims += sources.dims
+        data = {'values': values.flatten()}
+        index = pandas.MultiIndex.from_tuples(zip(*coords), names=dims)
+        return MTUQDataFrame(data=data, index=index)
 
-    # idea 1 - much too slow!
-    #coords = [origin_idx, source_idx]
-    #dims = ('origin_idx', 'source_idx')
-    #coords += source_coords
-    #dims += sources.dims
-    #data = {'values': values.flatten()}
-    #index = pandas.MultiIndex.from_tuples(zip(*coords), names=dims)
-    #return MTUQDataFrame(data=data, index=index)
+    if index_type==2:
+        # faster but uglier
+        coords = [origin_idx, source_idx]
+        dims = ('origin_idx', 'source_idx')
+        coords += source_coords
+        dims += sources.dims
+        data = {dims[_i]: coords[_i] for _i in range(len(dims))}
+        data.update({'values': values.flatten()})
+        df = MTUQDataFrame(data=data)
+        return df.set_index(list(dims))
 
-
-    # idea 2 - ugly but fast!
-    coords = [origin_idx, source_idx]
-    dims = ('origin_idx', 'source_idx')
-    coords += source_coords
-    dims += sources.dims
-    data = {dims[_i]: coords[_i] for _i in range(len(dims))}
-    data.update({'values': values.flatten()})
-    df = MTUQDataFrame(data=data)
-    return df.set_index(list(dims))
-
-
+    if index_type==3:
+        # even faster but more complex, would require implementing new 
+        # MTUQDataFrame methods
+        raise NotImplementedError
+        coords = [origin_idx, source_idx]
+        dims = ('origin_idx', 'source_idx')
+        data = {dims[_i]: coords[_i] for _i in range(len(dims))}
+        data.update({'values': values.flatten()})
+        df = MTUQDataFrame(data=data)
+        df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
+        return df.set_index(list(dims))
 
