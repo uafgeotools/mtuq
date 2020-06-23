@@ -1,4 +1,26 @@
 
-Running and modifying examples
-==============================
+Grid searches
+=============
+
+Evaluating misfit functions over seismic source parameters can provide useful uncertainty information.  
+
+
+
+
+types of grids
+--------------
+
+
+manipulating grid search results
+--------------------------------
+
+
+visualizing grid search results
+-------------------------------
+
+
+
+
+
+
 

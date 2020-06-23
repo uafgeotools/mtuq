@@ -173,6 +173,15 @@ class MTUQDataArray(xarray.DataArray):
         print('Saving NetCDF file: %s' % filename)
         self.to_netcdf(filename)
 
+    #def __str__(self):
+    #    out += '  grid shape: %s\n' % da.shape)
+    #    out += '  grid size:  %d\n' % da.size)
+    #    out += '  mean: %.3e\n' % np.mean(da.values))
+    #    out += '  std:  %.3e\n' % np.std(da.values))
+    #    out += '  min:  %.3e\n' % da.values.min())
+    #    out += '  max:  %.3e\n' % da.values.max())
+
+
 
 
 class MTUQDataFrame(pandas.DataFrame):
