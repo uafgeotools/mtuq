@@ -16,15 +16,17 @@ html_title = "MTUQ Documentation"
 master_doc = 'index'
 source_suffix = '.rst'
 templates_path = ['_templates']
+html_static_path = ['_static']
 
 
 # theme options
 html_theme_options = {
     'navbar_title': 'MTUQ',
-    'navbar_site_name': 'Documentation',
+    'navbar_site_name': 'Site',
     'source_link_position': 'none',
     'bootswatch_theme': '',
     'bootstrap_version': '3',
+
 }
 
 # extension options
@@ -36,3 +38,5 @@ html_show_sphinx = False
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
 html_show_copyright = False
 
+def setup(app):
+    app.add_stylesheet('style.css')  # remove line numbers
