@@ -1,11 +1,36 @@
 # mtuq
 
-MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, along with
+MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, drawing from ObsPy and instaseis data structures.
 
-- ability to interface with modern solvers, including AxiSEM and SPECFEM3D
-- GMT wrappers for uncertainty visualization on the eigenvalue lune
-- C-accelerated, MPI-parallelized misfit function evaluation
-- a flexible Python design borrowing from [ObsPy] and [Instaseis] data structures
+
+## Solvers
+
+[Interfaces with modern solvers], including AxiSEM and SPECFEM3D, 
+and legacy solves, including FK.
+
+Clients are provided for opening AxiSEM, SPECFEM3D, and FK databases
+and a utility is provided for downloading AxiSEM synthetics from
+remote syngine databases.
+
+
+## Misfit evaluation
+
+Waveform difference and cross-correlation time-shift misfit evaluation on 
+windowed body-wave and surface-wave traces is implemented in C-accelerated 
+Python.
+
+A separate easy-to-read pure Python implemenation is also included for 
+checking the correctness of the accelerated version.
+
+
+## Visualiztion
+
+Includes source type uncertainty quantification on the eigenvalue lune and
+v-w rectangle, with both pure Python and Generic Mapping Tools plotting
+functions.
+
+
+## Testing
 
 The package has been [tested against](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) community Perl/C codes.
 
