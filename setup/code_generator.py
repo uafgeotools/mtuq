@@ -452,7 +452,7 @@ Grid_FullMomentTensor="""
     # Next, we specify the moment tensor grid and source-time function
     #
 
-    grid = FullMomentTensorGridRegular(
+    grid = FullMomentTensorGridSemiregular(
         npts_per_axis=15,
         magnitudes=[4.5])
 
@@ -590,10 +590,13 @@ Main_GridSearch_DoubleCouple="""
         data_sw, greens_sw, misfit_sw, origin, grid)
 
     if comm.rank==0:
-        results_sum = results_bw + results_sw
-        best_misfit = results_sum.min()
-        best_source = grid.get(results_sum.argmin())
-        lune_dict = grid.get_dict(results_sum.argmin())
+        results = results_bw + results_sw
+
+        # source index corresponding to minimum misfit
+        idx = results.source_idxmin()
+
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
 
 
 """
@@ -669,13 +672,12 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
 
     if rank==0:
         results = results_bw + results_sw
-        best_misfit = results.min()
 
-        _j, _i = np.unravel_index(np.argmin(results), results.shape)
-        best_origin = origins[_i]
-        best_source = grid.get(_j)
-        lune_dict = grid.get_dict(_j)
+        # source index corresponding to minimum misfit
+        idx = results.source_idxmin()
 
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
 
 """
 
@@ -724,11 +726,13 @@ Main2_SerialGridSearch_DoubleCouple="""
     print('Evaluating surface wave misfit...\\n')
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
 
+    results = results_bw + results_sw
 
-    results_sum = results_bw + results_sw
-    best_misfit = results_sum.min()
-    best_source = grid.get(results_sum.argmin())
-    lune_dict = grid.get_dict(results_sum.argmin())
+    # source index corresponding to minimum misfit
+    idx = results.source_idxmin()
+
+    best_source = grid.get(idx)
+    lune_dict = grid.get_dict(idx)
 
 """
 
@@ -890,9 +894,9 @@ WrapUp_GridSearch_DoubleCouple="""
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
-        plot_misfit_dc(event_id+'DC_misfit.png', grid.to_dataarray(results_sum))
+        plot_misfit_dc(event_id+'DC_misfit.png', results)
 
-        grid.save(event_id+'DC.nc', results_sum)
+        results.save(event_id+'DC.nc')
 
         print('Finished\\n')
 
@@ -934,9 +938,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
-    plot_misfit_dc(event_id+'DC_misfit.png', grid.to_dataarray(results_sum))
+    plot_misfit_dc(event_id+'DC_misfit.png', results)
 
-    grid.save(event_id+'DC.nc', results_sum)
+    results.save(event_id+'DC.nc')
 
     print('Finished\\n')
 
@@ -986,8 +990,10 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
-    best_misfit = (results_bw + results_sw).min()
-    best_source = grid.get((results_bw + results_sw).argmin())
+    results = results_bw + results_sw
+
+    idx = results.source_idxmin()
+    best_source = grid.get(idx)
 
     if run_figures:
         filename = event_id+'_misfit_vs_depth.png'
@@ -1127,7 +1133,7 @@ if __name__=='__main__':
             replace(
             Imports,
             'DoubleCoupleGridRegular',
-            'FullMomentTensorGridRegular',
+            'FullMomentTensorGridSemiregular',
             'plot_misfit_dc',
             'plot_misfit',
             ))

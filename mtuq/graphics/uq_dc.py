@@ -3,31 +3,33 @@
 #
 
 import numpy as np
+import warnings
 
 from matplotlib import pyplot
+from pandas import DataFrame
 from xarray import DataArray
-from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util.lune import to_delta, to_gamma
 from mtuq.util.math import closed_interval, open_interval
-from mtuq.util.xarray import dataarray_to_table
 
 
-def plot_misfit_dc(filename, struct):
+def plot_misfit_dc(filename, ds):
     """ Plots misfit over strike, dip, and slip
     (matplotlib implementation)
     """
-    struct = struct.copy()
+    ds = ds.copy()
 
-    if type(struct)==DataArray:
-        _plot_dc(filename, _marginal(struct))
+    if issubclass(type(ds), DataArray):
+        _plot_dc(filename, _marginal(ds))
         
-
-    elif type(struct)==DataFrame:
+    elif issubclass(type(ds), DataFrame):
         warnings.warn(
             'plot_misfit_dc not implemented for irregularly-spaced grids')
 
 
 def _marginal(da):
+    if 'origin_idx' in da.dims:
+        da = da.max(dim='origin_idx')
+
     if 'rho' in da.dims:
         da = da.max(dim='rho')
 

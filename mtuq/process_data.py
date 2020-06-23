@@ -18,31 +18,32 @@ class ProcessData(object):
 
     .. rubric :: Usage
 
-    Processing data is a two-step procedure. In the first step, the user 
-    supplies desired parameters. In the second step, an ObsPy stream is given
-    as input and a processed stream returned as output:
+    Processing data is a two-step procedure. First, the user supplies parameters
+    (see available choices below) to create a data processing function:
 
     .. code::
 
         function = ProcessData(**parameters) 
+
+    Second, an ObsPy stream is given as input to the data processing function 
+    and a processed stream returned as output:
+
+    .. code::
+
         processed_stream = function(stream)
 
 
-    Data processing can also be applied to an entire ``Dataset`` as follows:
+    Data processing can also be applied to an entire ``Dataset`` at once:
 
     .. code::
 
-        function = ProcessData(**parameters) 
         processed_dataset = dataset.map(function)
 
 
-    See `mtuq/examples/` for further illustration of how it works in practice.
+    See `mtuq/examples/` for further illustration of how data processing works.
 
 
     .. rubric :: Parameters
-
-    For more detailed descriptions, please see `mtuq/docs`.
-
 
     ``filter_type`` (`str`)
 

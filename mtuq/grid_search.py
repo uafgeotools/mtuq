@@ -1,20 +1,29 @@
 
 import numpy as np
-from mtuq.util import iterable, timer, warn, ProgressCallback
+import pandas
+import xarray
 
+from mtuq.grid import Grid, UnstructuredGrid
+from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback
+from os.path import splitext
+
+xarray.set_options(keep_attrs=True)
 
 
 def grid_search(data, greens, misfit, origins, sources, 
-    msg_interval=25, timed=True, allgather=True):
+    msg_interval=25, timed=True, gather=True):
 
     """ Evaluates misfit over grids
 
     .. rubric :: Usage
 
     Carries out a grid search by evaluating 
-    `misfit(data, greens.select(origin), source)` for all origins and sources.
-    Returns a NumPy array of misfit values of shape 
-    `(len(sources), len(origins))` 
+    `misfit(data, greens.select(origin), source)` over all origins and sources.
+
+    If `origins` and `sources` are regularly-spaced, returns an `MTUQDataArray`
+    containing misfit values and corresponding grid points; otherwise, returns
+    an `MTUQDataFrame`.
+
 
     .. rubric :: Input arguments
 
@@ -48,9 +57,10 @@ def grid_search(data, greens, misfit, origins, sources,
     Display elapsed time at end?
 
 
-    ``allgather`` (`bool`):
-    Should results be broadcast from the master process to all other
-    processes? (ignored outside MPI environment)
+    ``gather`` (`bool`):
+    If True, process 0 returns all results and any other processes `None`;
+    otherwise, results are divided evenly among processes. 
+    (Ignored outside MPI environment.)
 
 
     .. note:
@@ -61,33 +71,48 @@ def grid_search(data, greens, misfit, origins, sources,
       reduces to ``_grid_search_serial``.
 
     """
+
+    origins = iterable(origins)
+    if type(sources) not in (Grid, UnstructuredGrid):
+        raise TypeError
+    subsets = None
+    subset = None
+
+
     if _is_mpi_env():
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         iproc, nproc = comm.rank, comm.size
-
         if nproc > sources.size:
-            raise Exception('Number of cores exceeds size of grid')
+            raise Exception('Number of CPU cores exceeds size of grid')
 
         # partition grid and scatter across processes
         if iproc == 0:
-            sources = sources.partition(nproc)
-        sources = comm.scatter(sources, root=0)
-
+            subsets = sources.partition(nproc)
+        subset = comm.scatter(subsets, root=0)
         if iproc != 0:
             timed = False
             msg_interval = 0
 
-    results = _grid_search_serial(
-        data, greens, misfit, origins, sources, timed=timed, 
+
+    # evaluate misfit over origins and sources
+    values = _grid_search_serial(
+        data, greens, misfit, origins, subset or sources, timed=timed, 
         msg_interval=msg_interval)
 
-    if allgather and _is_mpi_env():
-        # all processes share results
-        return np.concatenate(comm.allgather(results))
-    else:
-        # each process returns just its own results
-        return results
+    if _is_mpi_env() and gather:
+        values = comm.gather(values, root=0)
+        if iproc == 0:
+            values = np.concatenate(values, axis=0)
+        else:
+            return
+
+    # convert from NumPy array to DataArray or DataFrame
+    if issubclass(type(sources), Grid):
+        return _to_dataarray(origins, sources, values)
+
+    elif issubclass(type(sources), UnstructuredGrid):
+        return _to_dataframe(origins, sources, values)
 
 
 
@@ -97,23 +122,90 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
     """ Evaluates misfit over origin and source grids 
     (serial implementation)
     """
-    origins = iterable(origins)
     ni = len(origins)
     nj = len(sources)
 
-    results = []
+    values = []
     for _i, origin in enumerate(origins):
 
         msg_handle = ProgressCallback(
             start=_i*nj, stop=ni*nj, percent=msg_interval)
 
         # evaluate misfit function
-        results += [misfit(
+        values += [misfit(
             data, greens.select(origin), sources, msg_handle)]
 
-    return np.concatenate(results, axis=1)
+    # returns NumPy array of shape `(len(sources), len(origins))` 
+    return np.concatenate(values, axis=1)
 
 
+
+class MTUQDataArray(xarray.DataArray):
+    """ Data structure for storing values on regularly-spaced grids
+    """
+
+    def idxmin(self):
+        """ Returns coordinates corresponding to minimum misfit
+        """
+        # idxmin has now been implemented in a beta version of xarray
+        return self.where(self==self.max(), drop=True).squeeze().coords
+
+    def origin_idx(self):
+        """ Returns origin index corresponding to minimum misfit
+        """
+        return int(self.idxmin()['origin_idx'])
+
+    def source_idxmin(self):
+        """ Returns source index corresponding to minimum misfit
+        """
+        shape = self._get_shape()
+        return np.unravel_index(self.argmin(), shape)[0]
+
+    def _get_shape(self):
+        """ Private helper method
+        """
+        nn = len(self.coords['origin_idx'])
+        return (int(self.size/nn), nn)
+
+    def save(self, filename, *args, **kwargs):
+        """ Saves grid search results to NetCDF file
+        """
+        print('Saving NetCDF file: %s' % filename)
+        self.to_netcdf(filename)
+
+
+
+class MTUQDataFrame(pandas.DataFrame):
+    """ Data structure for storing values on irregularly-spaced grids
+    """
+
+    def origin_idxmin(self):
+        """ Returns origin index corresponding to minimum misfit
+        """
+        df = self.reset_index()
+        return df['origin_idx'][df[0].idxmin()]
+
+    def source_idxmin(self):
+        """ Returns source index corresponding to minimum misfit
+        """
+        df = self.reset_index()
+        return df['source_idx'][df[0].idxmin()]
+
+    def save(self, filename, *args, **kwargs):
+        """ Saves grid search results to HDF5 file
+        """
+        print('Saving HDF5 file: %s' % filename)
+        df = pandas.DataFrame(self.values, index=self.index)
+        df.to_hdf(filename, key='df', mode='w')
+
+    @property
+    def _constructor(self):
+        return MTUQDataFrame
+
+
+#
+# utility functions
+#
 
 def _is_mpi_env():
     try:
@@ -131,4 +223,75 @@ def _is_mpi_env():
     else:
         return False
 
+
+def _to_dataarray(origins, sources, values):
+    """ Converts grid_search inputs to DataArray
+    """
+    from mtuq.grid import Grid
+
+    origin_dims = ('origin_idx',)
+    origin_coords = [np.arange(len(origins))]
+    origin_shape = (len(origins),)
+
+    source_dims = sources.dims
+    source_coords = sources.coords
+    source_shape = sources.shape
+
+    return MTUQDataArray(**{
+        'data': np.reshape(values, source_shape + origin_shape),
+        'coords': source_coords + origin_coords,
+        'dims': source_dims + origin_dims,
+         })
+
+
+def _to_dataframe(origins, sources, values, index_type=2):
+    """ Converts grid_search inputs to DataFrame
+    """
+    if len(origins)*len(sources) > 2.e6:
+        print("  pandas.DataFrame constructor might take a long time\n"
+              "  see mtuq.grid_search._to_dataframe\n"
+              "  len(df) = %d\n" % (len(origins)*len(sources)))
+
+    origin_idx = np.arange(len(origins), dtype='int')
+    source_idx = np.arange(len(sources), dtype='int')
+
+    # Cartesian products
+    origin_idx = list(np.repeat(origin_idx, len(sources)))
+    source_idx = list(np.tile(source_idx, len(origins)))
+    source_coords = []
+    for _i, coords in enumerate(sources.coords):
+        source_coords += [list(np.tile(coords, len(origins)))]
+
+    if index_type==1:
+        # much too slow!
+        coords = [origin_idx, source_idx]
+        dims = ('origin_idx', 'source_idx')
+        coords += source_coords
+        dims += sources.dims
+        data = {0: values.flatten()}
+        index = pandas.MultiIndex.from_tuples(zip(*coords), names=dims)
+        return MTUQDataFrame(data=data, index=index)
+
+    if index_type==2:
+        # faster but uglier
+        coords = [origin_idx, source_idx]
+        dims = ('origin_idx', 'source_idx')
+        coords += source_coords
+        dims += sources.dims
+        data = {dims[_i]: coords[_i] for _i in range(len(dims))}
+        data.update({0: values.flatten()})
+        df = MTUQDataFrame(data=data)
+        return df.set_index(list(dims))
+
+    if index_type==3:
+        # even faster but more complex, would require implementing new 
+        # MTUQDataFrame methods
+        raise NotImplementedError
+        coords = [origin_idx, source_idx]
+        dims = ('origin_idx', 'source_idx')
+        data = {dims[_i]: coords[_i] for _i in range(len(dims))}
+        data.update({0: values.flatten()})
+        df = MTUQDataFrame(data=data)
+        df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
+        return df.set_index(list(dims))
 

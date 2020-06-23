@@ -14,11 +14,13 @@ class Station(AttribDict):
     - depth and elevation
     - network, station, and location codes
 
-    Optionally, also includes 
+    .. note::
 
-    - time sampling attributes, which can be relevant if all traces at a
-      given station have the same time discretization
+        Each supported file format has a corresponding reader that creates
+        Station objects from file metadata (see ``mtuq.io.readers``).
+
     """
+
 
     defaults = {
         'latitude': None,

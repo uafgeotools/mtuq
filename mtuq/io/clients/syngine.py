@@ -132,7 +132,28 @@ class Client(ClientBase):
 
 
 def download_greens_tensors(stations=[], origins=[], model='', **kwargs):
-    """ Downloads Green's tensor for given stations and origins
+    """ Downloads Green's tensors from syngine
+
+    Downloads Green's functions for all combinations of stations and origins
+    using syngine web service (http://ds.iris.edu/ds/products/syngine/).
+    Returns an `mtuq.GreensTensorList` of length `len(stations)*len(origins)`.
+
+
+    .. rubric :: Input arguments
+
+
+    ``stations`` (list of `mtuq.Station` objects):
+    Stations for which Green's functions will be downloaded
+    
+
+    ``origins`` (list of `mtuq.Origin` objects):
+    Origins for which Green's functions will be downloaded
+
+
+    ``model`` (str):
+    Earth model for which Green's functions will be downloaded, from list of
+    available models given at http://ds.iris.edu/ds/products/syngine/.
+
     """
     client = Client(model=model, **kwargs)
     return client.get_greens_tensors(stations, origins)

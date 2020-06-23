@@ -244,7 +244,7 @@ def _to_array(sources):
         return np.ascontiguousarray(to_xyz(
             df['F0'].to_numpy(),    # magnitude
             df['theta'].to_numpy(), # azimuth
-            df['phi'].to_numpy(),   # colatitude
+            df['h'].to_numpy(),   # cos(colatitude)
             ))
 
 
@@ -259,7 +259,7 @@ def _type(dims):
 
     elif 'F0' in dims\
        and 'theta' in dims\
-       and 'phi' in dims:
+       and 'h' in dims:
         return 'Force'
 
     else:

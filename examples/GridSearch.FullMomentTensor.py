@@ -6,7 +6,7 @@ import numpy as np
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
-from mtuq.grid import FullMomentTensorGridRegular
+from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
@@ -88,7 +88,7 @@ if __name__=='__main__':
     # Next, we specify the moment tensor grid and source-time function
     #
 
-    grid = FullMomentTensorGridRegular(
+    grid = FullMomentTensorGridSemiregular(
         npts_per_axis=15,
         magnitudes=[4.5])
 
@@ -176,10 +176,13 @@ if __name__=='__main__':
         data_sw, greens_sw, misfit_sw, origin, grid)
 
     if comm.rank==0:
-        results_sum = results_bw + results_sw
-        best_misfit = results_sum.min()
-        best_source = grid.get(results_sum.argmin())
-        lune_dict = grid.get_dict(results_sum.argmin())
+        results = results_bw + results_sw
+
+        # source index corresponding to minimum misfit
+        idx = results.source_idxmin()
+
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
 
 
 
@@ -196,9 +199,9 @@ if __name__=='__main__':
 
         plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit(event_id+'FMT_misfit.png', grid.to_dataarray(results_sum))
+        plot_misfit(event_id+'FMT_misfit.png', results)
 
-        grid.save(event_id+'FMT.nc', results_sum)
+        results.save(event_id+'FMT.nc')
 
         print('Finished\n')
 

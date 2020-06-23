@@ -17,13 +17,11 @@ from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics._gmt import gmt_cmd, check_ext
-from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import fullpath
-from mtuq.util.lune import to_delta, to_gamma
-from mtuq.util.xarray import dataarray_to_table
+from mtuq.util.lune import to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit(filename, struct, title=None):
+def plot_misfit(filename, ds, title=None):
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
@@ -32,8 +30,8 @@ def plot_misfit(filename, struct, title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -41,17 +39,9 @@ def plot_misfit(filename, struct, title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
-
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto 2-D lune space.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
 
     .. note ::
@@ -65,19 +55,19 @@ def plot_misfit(filename, struct, title=None):
 
 
     """
-    struct = struct.copy()
+    ds = ds.copy()
 
 
-    if type(struct)==DataArray:
-        da = struct
-        da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
+    if issubclass(type(ds), DataArray):
+        da = ds
+        da = da.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
-        values = da.values
+        values = da.values.transpose()
 
 
-    elif type(struct)==DataFrame:
-        df = struct
+    elif issubclass(type(ds), DataFrame):
+        df = ds.reset_index()
         gamma, delta, values = _bin(df, lambda df: df.min())
 
 
@@ -85,7 +75,7 @@ def plot_misfit(filename, struct, title=None):
 
 
 
-def plot_likelihood(filename, struct, sigma=1., title=None):
+def plot_likelihood(filename, ds, sigma=1., title=None):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -94,11 +84,11 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``sigma`` (`float`):
-    Standard deviation applied to misfit values to obtain likelihood values
+    Standard deviation applied to misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -106,17 +96,9 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
-
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto 2-D lune space.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
 
     .. note ::
@@ -129,23 +111,23 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
       For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
 
     """
-    struct = struct.copy()
+    ds = ds.copy()
 
 
     # convert from misfit to likelihood
-    struct.values = np.exp(-struct.values/(2.*sigma**2))
+    ds.values = np.exp(-ds.values/(2.*sigma**2))
 
 
-    if type(struct)==DataArray:
-        da = struct
-        da = da.max(dim=('rho', 'kappa', 'sigma', 'h'))
+    if issubclass(type(ds), DataArray):
+        da = ds
+        da = da.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
-        values = da.values
+        values = da.values.transpose()
 
 
-    elif type(struct)==DataFrame:
-        df = struct
+    elif issubclass(type(ds), DataFrame):
+        df = ds.reset_index()
         gamma, delta, values = _bin(df, lambda df: df.max())
 
 
@@ -155,7 +137,7 @@ def plot_likelihood(filename, struct, sigma=1., title=None):
 
 
 
-def plot_marginal(filename, struct, sigma=1., title=None):
+def plot_marginal(filename, ds, sigma=1., title=None):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -164,11 +146,11 @@ def plot_marginal(filename, struct, sigma=1., title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``sigma`` (`float`):
-    Standard deviation applied to misfit values to obtain likelihood values
+    Standard deviation applied to misfit values
         
     ``title`` (`str`):
     Optional figure title
@@ -176,17 +158,9 @@ def plot_marginal(filename, struct, sigma=1., title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
-
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto 2-D lune space.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
         
     .. note ::
@@ -200,24 +174,24 @@ def plot_marginal(filename, struct, sigma=1., title=None):
  
     """
 
-    struct = struct.copy()
+    ds = ds.copy()
 
 
     # convert from misfit to likelihood
-    struct.values = np.exp(-struct.values/(2.*sigma**2))
+    ds.values = np.exp(-ds.values/(2.*sigma**2))
 
 
-    if type(struct)==DataArray:
-        da = struct
-        da = da.sum(dim=('rho', 'kappa', 'sigma', 'h'))
+    if issubclass(type(ds), DataArray):
+        da = ds
+        da = da.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         gamma = to_gamma(da.coords['v'])
         delta = to_delta(da.coords['w'])
-        values = da.values
+        values = da.values.transpose()
 
 
-    elif type(struct)==DataFrame:
-        df = struct
-        gamma, delta, values = _bin(df, lambda df: df.sum()/len(df))
+    elif issubclass(type(ds), DataFrame):
+        df = ds.reset_index()
+        gamma, delta, values = _bin(df, lambda df: df.sum()/len(df), normalize=True)
 
     values /= lune_det(delta, gamma)
     values /= values.sum()
@@ -230,45 +204,52 @@ def plot_marginal(filename, struct, sigma=1., title=None):
 # utilities for irregularly-spaced grids
 #
 
-def _bin(df, handle, npts_v=40, npts_w=20, tightness=0.8):
+def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
     """ Bins DataFrame into rectangular cells
     """
     # at which points will we plot values?
     centers_v, centers_w = semiregular_grid(
         npts_v, npts_w, tightness=tightness)
 
-    centers_gamma, centers_delta = to_gamma(centers_v), to_delta(centers_w)
-
-
     # what cell edges correspond to the above centers?
-    edges_v = np.array(centers_v[:-1] + centers_v[1:])/2.
-    edges_v = np.pad(edges_v, 2)
-    edges_v[0] = -1./3.; edges_v[-1] = +1./3.
+    centers_gamma = to_gamma(centers_v)
+    edges_gamma = np.array(centers_gamma[:-1] + centers_gamma[1:])/2.
+    edges_v = to_v(edges_gamma)
 
-    edges_w = np.array(centers_w[:-1] + centers_w[1:])/2.
-    edges_w = np.pad(edges_w, 2)
-    edges_w[0] = -3.*np.pi/8.; edges_w[-1] = +3.*np.pi/8
+    centers_delta = to_delta(centers_w)
+    edges_delta = np.array(centers_delta[:-1] + centers_delta[1:])/2.
+    edges_w = to_w(edges_delta)
 
-    edges_gamma, edges_delta = to_gamma(edges_v), to_delta(edges_w)
+    edges_v = np.pad(edges_v, 1)
+    edges_v[0] = -1./3.
+    edges_v[-1] = +1./3.
+
+    edges_w = np.pad(edges_w, 1)
+    edges_w[0] = -3.*np.pi/8.
+    edges_w[-1] = +3.*np.pi/8
 
 
     # bin grid points into cells
-    binned = np.empty((npts_delta, npts_gamma))
-    for _i in range(npts_delta):
-        for _j in range(npts_gamma):
+    binned = np.empty((npts_w, npts_v))
+    binned[:] = np.nan
+    for _i in range(npts_w):
+        for _j in range(npts_v):
             # which grid points lie within cell (i,j)?
             subset = df.loc[
-                df['gamma'].between(edges_gamma[_j], edges_gamma[_j+1]) &
-                df['delta'].between(edges_delta[_i], edges_delta[_i+1])]
+                df['v'].between(edges_v[_j], edges_v[_j+1]) &
+                df['w'].between(edges_w[_i], edges_w[_i+1])]
 
-            binned[_i, _j] = handle(subset['values'])
+            if len(subset)==0:
+                print("Encountered empty bin")
 
-            # normalize by area of cell
-            binned[_i, _j] /= edges_v[_j+1] - edges_v[_j]
-            binned[_i, _j] /= edges_w[_i+1] - edges_w[_i]
+            binned[_i, _j] = handle(subset[0])
 
+            if normalize:
+              # normalize by area of cell
+              binned[_i, _j] /= edges_v[_j+1] - edges_v[_j]
+              binned[_i, _j] /= edges_w[_i+1] - edges_w[_i]
 
-    return centers_gamma, centers_delta, binned
+    return to_gamma(centers_v), to_delta(centers_w), binned
 
 
 
@@ -279,7 +260,7 @@ def _bin(df, handle, npts_v=40, npts_w=20, tightness=0.8):
 def _plot_lune(filename, gamma, delta, values, title=None):
     """ Plots misfit values on lune
     """
-    delta, gamma = np.meshgrid(delta, gamma)
+    gamma, delta = np.meshgrid(gamma, delta)
     delta = delta.flatten()
     gamma = gamma.flatten()
     values = values.flatten()

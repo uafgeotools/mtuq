@@ -8,10 +8,9 @@ import numpy as np
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.grid import Grid, UnstructuredGrid
+from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util.lune import to_delta, to_gamma
 from mtuq.util.math import closed_interval, open_interval
-from mtuq.util.xarray import dataarray_to_table
 
 
 #
@@ -28,7 +27,7 @@ vw_area = (v_max-v_min)*(w_max-w_min)
 
 
 
-def plot_misfit_vw(filename, struct, title=None):
+def plot_misfit_vw(filename, ds, title=None):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -37,8 +36,8 @@ def plot_misfit_vw(filename, struct, title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -46,33 +45,24 @@ def plot_misfit_vw(filename, struct, title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
-
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto `v-w` rectangle.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
     """
-    _check(struct)
-    struct = struct.copy()
+    _check(ds)
+    ds = ds.copy()
 
 
-    if type(struct)==DataArray:
-        da = structure.copy()
-        da = da.min(dim=('rho', 'kappa', 'sigma', 'h'))
+    if issubclass(type(ds), DataArray):
+        da = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        values = da.values
+        values = da.values.transpose()
 
 
-    elif type(struct)==DataFrame:
-        df = structure.copy()
+    elif issubclass(type(ds), DataFrame):
+        df = ds.reset_index()
         v, w, values = _bin(df, lambda df: df.min())
 
 
@@ -81,7 +71,7 @@ def plot_misfit_vw(filename, struct, title=None):
 
 
 
-def plot_likelihood_vw(filename, struct, sigma=1., title=None):
+def plot_likelihood_vw(filename, ds, sigma=1., title=None):
     """ Plots maximum likelihoods on `v-w` rectangle
 
 
@@ -90,8 +80,8 @@ def plot_likelihood_vw(filename, struct, sigma=1., title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -99,38 +89,30 @@ def plot_likelihood_vw(filename, struct, sigma=1., title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
-
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto `v-w` rectangle.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
     """
-    _check(struct)
-    struct = struct.copy()
+    _check(ds)
+    ds = ds.copy()
 
 
     # convert from misfit to likelihood
-    struct.values = np.exp(-struct.values/(2.*sigma**2))
-    struct.values /= struct.values.sum()
+    ds.values = np.exp(-ds.values/(2.*sigma**2))
+    ds.values /= ds.values.sum()
 
 
 
-    if type(struct)==DataArray:
-        da = struct.max(dim=('rho', 'kappa', 'sigma', 'h'))
+    if issubclass(type(ds), DataArray):
+        da = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        values = da.values
+        values = da.values.transpose()
 
 
-    elif type(struct)==DataFrame:
-        df = struct
+    elif issubclass(type(ds), DataFrame):
+        df = ds.reset_index()
         df['values'] /= df['values'].sum()
         v, w, values = _bin(df, lambda df: df.max())
 
@@ -143,7 +125,7 @@ def plot_likelihood_vw(filename, struct, sigma=1., title=None):
 
 
 
-def plot_marginal_vw(filename, struct, sigma=1., title=None):
+def plot_marginal_vw(filename, ds, sigma=1., title=None):
     """ Plots marginal likelihoods on `v-w` rectangle
 
 
@@ -152,8 +134,8 @@ def plot_marginal_vw(filename, struct, sigma=1., title=None):
     ``filename`` (`str`):
     Name of output image file
 
-    ``struct`` (`DataArray` or `DataFrame`):
-    Structure containing moment tensors and corresponding misfit values
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -161,37 +143,30 @@ def plot_marginal_vw(filename, struct, sigma=1., title=None):
 
     .. rubric :: Usage
 
-    Moment tensors and corresponding misfit values must be given as a
-    `DataArray` or `DataFrame`.
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
 
-    `DataArrays` and `DataFrames` can be used to represent regularly-spaced
-    and irregularly-spaced grids, respectively.  These structures make
-    multidimensional `min`, `max` and `sum` operations easy, so they are used
-    here for projecting from 6-D moment tensor space onto `v-w` rectangle.
-
-    For converting to `DataArrays` and `DataFrames` from MTUQ grid types, see
-    `mtuq.grid.Grid.to_datarray` and
-    `mtuq.grid.UnstructuredGrid.to_dataframe`.
 
     """
-    _check(struct)
-    struct = struct.copy()
+    _check(ds)
+    ds = ds.copy()
 
 
     # convert from misfit to likelihood
-    struct.values = np.exp(-struct.values/(2.*sigma**2))
-    struct.values /= struct.values.sum()
+    ds.values = np.exp(-ds.values/(2.*sigma**2))
+    ds.values /= ds.values.sum()
 
 
-    if type(struct)==DataArray:
-        da = struct.sum(dim=('rho', 'kappa', 'sigma', 'h'))
+    if issubclass(type(ds), DataArray):
+        da = ds.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         v = da.coords['v']
         w = da.coords['w']
-        values = da.values
+        values = da.values.transpose()
 
 
-    elif type(struct)==DataFrame:
-        df = struct
+    elif issubclass(type(ds), DataFrame):
+        df = ds.reset_index()
         v, w, values = _bin(df, lambda df: df.sum()/len(df))
 
 
@@ -203,20 +178,10 @@ def plot_marginal_vw(filename, struct, sigma=1., title=None):
 
 
 
-def _check(struct):
+def _check(ds):
     """ Checks data structures
     """
-    if type(struct) in (DataArray, DataFrame):
-        pass
-
-    elif type(struct) in (Grid, UnstructuredGrid):
-        raise TypeError(
-            "Plotting utilities expect grid and misfit values in DataArray or "
-            "DataFrame format.  For converting to these formats, see "
-            "  mtuq.grid.Grid.to_dataarray" 
-            "  mutq.grid.UnstructuredGrid.to_dataframe")
-
-    else:
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
 
 
@@ -245,7 +210,7 @@ def _bin(df, handle, npts_v=20, npts_w=40):
                 df['v'].between(v[_j], v[_j+1]) &
                 df['w'].between(w[_i], w[_i+1])]
 
-            binned[_i, _j] = handle(subset['values'])
+            binned[_i, _j] = handle(subset[0])
 
     return centers_v, centers_w, binned
 
@@ -262,10 +227,6 @@ def _plot_vw(v, w, values, cmap='hot'):
 
     """ 
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
-
-    nv, nw = len(v), len(w)
-    if values.shape == (nv, nw):
-        values = values.T
 
     # pcolor requires corners of pixels
     corners_v = _centers_to_edges(v)
@@ -290,11 +251,17 @@ def _plot_vw(v, w, values, cmap='hot'):
 
 
 def _centers_to_edges(v):
-    v = v.copy()
+
+    if issubclass(type(v), DataArray):
+        v = v.values.copy()
+    else:
+        v = v.copy()
+
     dv = (v[1]-v[0])
     v -= dv/2
     v = np.pad(v, (0, 1))
     v[-1] = v[-2] + dv
+
     return v
 
 

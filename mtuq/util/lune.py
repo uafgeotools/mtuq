@@ -191,9 +191,6 @@ def semiregular_grid(npts_v, npts_w, tightness=0.5):
     For tightness~1, grid will be regular in Tape2015 parameters v, w.
     For intermediate values, the grid will be "semiregular" in the sense of
     a linear interpolation between the above cases.
-
-    Another way to think about is that as `tightness` increases, the extremal
-    grid points get closer to the boundary of the lune.
     """
     assert 0. <= tightness < 1.,\
         Exception("Allowable range: 0. <= tightness < 1.")
