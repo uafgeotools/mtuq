@@ -1,6 +1,6 @@
 
 import numpy as np
-from mtuq.event import MomentTensor
+from mtuq.event import Force, MomentTensor
 from mtuq.util.math import open_interval
 
 
@@ -31,7 +31,8 @@ def to_mt(rho, v, w, kappa, sigma, h):
 def to_force(F0, theta, h):
     """ Converts from spherical coordinates to Force object
     """
-    raise NotImplementedError
+    rtp = to_rtp(F0, theta, h)
+    return Force(rtp, convention='USE')
 
 
 def to_mij(rho, v, w, kappa, sigma, h):
