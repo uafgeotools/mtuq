@@ -1,38 +1,38 @@
 # mtuq
 
-MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, drawing from ObsPy and instaseis data structures.
+MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, drawing on ObsPy and instaseis data structures.
 
 
 ## Solvers
 
-[Interfaces with modern solvers], including AxiSEM and SPECFEM3D, 
+Interfaces are provided for modern solvers, including AxiSEM and SPECFEM3D, 
 and legacy solves, including FK.
 
-Clients are provided for opening AxiSEM, SPECFEM3D, and FK databases
-and a utility is provided for downloading AxiSEM synthetics from
-remote syngine databases.
+[Utilities](https://uafgeotools.github.io/mtuq/library/index.html#data-i-o)
+are included for working with AxiSEM, SPECFEM3D, and FK databases as well as
+downloading AxiSEM synthetics from remote syngine databases.
 
 
 ## Misfit evaluation
 
-Waveform difference and cross-correlation time-shift misfit evaluation on 
-windowed body-wave and surface-wave traces is implemented in C-accelerated 
+Waveform difference and cross-correlation time-shift [misfit evaluation](https://uafgeotools.github.io/mtuq/library/index.html#data-processing-and-inversion) 
+on windowed body-wave and surface-wave traces is implemented in C-accelerated 
 Python.
 
-A separate easy-to-read pure Python implemenation is also included for 
+A separate easy-to-read pure Python implementation is also included for 
 checking the correctness of the accelerated version.
 
 
-## Visualiztion
+## Visualization
 
-Includes source type uncertainty quantification on the eigenvalue lune and
-v-w rectangle, with both pure Python and Generic Mapping Tools plotting
+Includes moment tensor [uncertainty quantification](https://uafgeotools.github.io/mtuq/library/index.html#uncertainty-quantification) on the eigenvalue lune and
+v-w rectangle, with separate matplotlib and Generic Mapping Tools plotting
 functions.
 
 
 ## Testing
 
-The package has been [tested against](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) community Perl/C codes.
+The package has been tested against [legacy Perl/C codes](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) and [published inversions](https://github.com/rmodrak/mtbench).
 
 
 

@@ -10,15 +10,15 @@ Role of Green's functions
 
 As the response of a medium to a simple impulsive source, Green's functions can be combined to obtain synthetics from more complex sources.
 
-Green's functions are useful because they provide computaional savings.  It is almost always cheaper to work with precomputed Green's functions than it is to perform on-the-fly wavefield simulations.
+Green's functions are useful because they provide computaional savings.  It's almost always cheaper to work with precomputed Green's functions than to perform on-the-fly wavefield simulations.
 
 
 `GreensTensor` objects
 ----------------------
 
-In MTUQ, `GreensTensor` objects provide access to the full set of Green's functions needed to describe the medium response between a given station and origin.  Of particular note, the `get_synthetics` method accepts a `MomentTensor` or other seismic source, and returns a set of traces representing the response at the given station.  The full set of `GreensTensor`  methods is described in the `library reference <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_
+In MTUQ, `GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to the full set of Green's functions needed to describe the medium response between a given station and origin.  In particular, the `get_synthetics` method accepts a `MomentTensor` and returns a set of traces representing the response at the given station.
 
-The following sections describe how Green's functions from external solvers can be downloaded or computed and used to generate MTUQ `GreensTensor` objects.
+The following sections describe how Green's functions from external solvers can be downloaded or computed and used to generate `GreensTensor` objects.
 
 
 
@@ -26,9 +26,7 @@ The following sections describe how Green's functions from external solvers can 
 Downloading precomputed Green's functions
 -----------------------------------------
 
-One of the easiest ways to acquire Green's functions is to download them using `syngine <http://ds.iris.edu/ds/products/syngine/>`_.  The syngine webservice makes Green's functions available from the following 1D Earth models: PREM, AK135, and iasp91.
-
-One limitation of syngine is that Green's functions are availble from only a handful of Earth models.  Another limitation is that syngine provides Green's functions only at specific stations, not over the whole Earth.  If these limitations affect your use case, an alternative is to compute your own Green's function database, as described below.
+One of the easiest ways to acquire Green's functions is to download them using `syngine <http://ds.iris.edu/ds/products/syngine/>`_, a webservice that hosts Green's functions from the following 1D Earth models: PREM, AK135, and iasp91.
 
 To download AK135 Green's functions and generate MTUQ `GreenTensor` objects:
 
@@ -37,12 +35,15 @@ To download AK135 Green's functions and generate MTUQ `GreenTensor` objects:
    from mtuq import download_greens_functions
    greens_tensors = download_greens_functions(model="ak135f_2s")
 
+One limitation of syngine is that Green's functions are available from only a handful of Earth models.  Another limitation is that syngine only provides responses at specific stations, not over the whole Earth.  If these affect your use case, an alternative is to compute your own Green's functions, as described below.
+
+
 
 
 Computing Green's functions from 1D Earth models
 ------------------------------------------------
 
-MTUQ currently supports 1D Green's functions formats: AxiSEM (preferred) and FK.
+MTUQ currently supports the following 1D Green's functions formats: AxiSEM (preferred) and FK.
 
 `AxiSEM <https://github.com/geodynamics/axisem>`_ simulates wave propagation in radially-symmeric Earth models using a spectral-element method.  To generate synthetics in a format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://geodynamics.org/cig/software/axisem/axisem-manual.pdf>`_  under "Output wavefields in NetCDF formated needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
 
@@ -131,6 +132,6 @@ A variety of Green's function conventions exist.  Figuring out which are used in
 
 - the choice of local Cartesian basis conventions (for example, some authors employ "Up-South-East", others "North-East-Down"; see `ObsPy documentation <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_ for more information)
 
-One of the major design goals of MTUQ is to avoid exposing users to unnecessary basis convention complexity. MTUQ accomplishes this by understanding external formats and converting to a common internal format that works for both one-dimensional and three-dimensional media. For local Cartesian representations, MTUQ consistently uses an 'Up-South-East' convention.
+One of the major design goals of MTUQ is to avoid exposing users to basis convention complexity. MTUQ accomplishes this by understanding external formats and converting to a common internal format that works for both one-dimensional and three-dimensional media. For local Cartesian representations, MTUQ consistently uses an 'Up-South-East' convention.
 
 
