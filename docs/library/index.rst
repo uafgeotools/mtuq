@@ -6,7 +6,8 @@ Library reference
    MTUQ is still in under development.  Some documentation may be incomplete or describe planned rather than current functionality.
 
 
-.. rubric:: Seismic data structures
+Seismic data structures
+-----------------------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.Dataset <generated/mtuq.Dataset.html>`_                                                                  Container for observed or synthetic seismic data
@@ -15,7 +16,8 @@ Library reference
 ============================================================================================================  ============================================================================================================
 
 
-.. rubric:: Data I/O
+Data I/O
+--------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.download_greens_tensors <generated/mtuq.download_greens_tensors.html>`_                                  Downloads Green's tensors from syngine
@@ -25,7 +27,8 @@ Library reference
 
 
 
-.. rubric:: Data processing and inversion
+Data processing and inversion
+-----------------------------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.process_data.ProcessData <generated/mtuq.process_data.ProcessData.html>`_                                Data processing function
@@ -36,7 +39,8 @@ Library reference
 ============================================================================================================  ============================================================================================================
 
 
-.. rubric:: Station and event structures
+Station and event structures
+----------------------------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.Station <generated/mtuq.Station.html>`_                                                                  Station metdata object
@@ -47,7 +51,8 @@ Library reference
 ============================================================================================================  ============================================================================================================
 
 
-.. rubric:: Data visualization
+Data visualization
+------------------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.graphics.plot_data_synthetics <generated/mtuq.graphics.plot_data_synthetics.html>`_                      Compares data and synthetics
@@ -55,7 +60,8 @@ Library reference
 ============================================================================================================  ============================================================================================================
 
 
-.. rubric:: Uncertainty quantification
+Uncertainty quantification
+--------------------------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.graphics.plot_likelihood <generated/mtuq.graphics.plot_likelihood.html>`_                                Plots maximum likelihoods on lune (requires GMT)
@@ -68,7 +74,8 @@ Library reference
 
 
 
-.. rubric:: Moment tensor grids
+Moment tensor grids
+-------------------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.grid.FullMomentTensorGridRandom <generated/mtuq.grid.FullMomentTensorGridRandom.html>`_                  Grid with randomly-drawn full moment tensors
@@ -78,7 +85,8 @@ Library reference
 ============================================================================================================  ============================================================================================================
 
 
-.. rubric:: Grid base classes
+Grid base classes
+-----------------
 .. note::
    These base classes can be used for specialized uses cases not covered by any of the above grids
 
@@ -89,7 +97,8 @@ Library reference
 
 
 
-.. rubric:: Database and web service clients
+Database and web service clients
+--------------------------------
 
 .. note::
     These classes provide low-level database and web service access.  Normally it is easier to use high-level functions ``mtuq.download_greens_tensors`` or ``mtuq.open_db`` instead.
@@ -102,7 +111,8 @@ Library reference
 
 
 
-.. rubric::  Low-level misfit modules
+Low-level misfit modules
+------------------------
 
 .. note::
     Misfit evaluation is the most computationally intensive task performed by this package, and the only task that has been heavily optimized.  These classes provide low-level access to non-optimized and optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misfit``.

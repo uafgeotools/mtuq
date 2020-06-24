@@ -24,6 +24,19 @@ def gmt_major_version():
         return int(gmt_version().split('.')[0])
 
 
+def gmt_not_found_warning(filename):
+    warnings.warn("""
+        WARNING
+
+        Generic Mapping Tools executables not found on system path.
+        PostScript output has not been written. 
+
+        Misfit values have been saved to:
+            %s
+        """ % filename)
+
+
+
 gmt_formats = [
     'BMP',
     'EPS',

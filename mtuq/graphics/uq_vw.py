@@ -66,8 +66,7 @@ def plot_misfit_vw(filename, ds, title=None):
         v, w, values = _bin(df, lambda df: df.min())
 
 
-    _plot_vw(v, w, values, cmap='hot')
-    pyplot.savefig(filename)
+    _plot_vw(filename, v, w, values, cmap='hot')
 
 
 
@@ -120,8 +119,7 @@ def plot_likelihood_vw(filename, ds, sigma=1., title=None):
     values /= values.sum()
     values /= vw_area
 
-    _plot_vw(v, w, values, cmap='hot_r')
-    pyplot.savefig(filename)
+    _plot_vw(filename, v, w, values, cmap='hot_r')
 
 
 
@@ -173,8 +171,7 @@ def plot_marginal_vw(filename, ds, sigma=1., title=None):
     values /= values.sum()
     values /= vw_area
 
-    _plot_vw(v, w, values, cmap='hot_r')
-    pyplot.savefig(filename)
+    _plot_vw(filename, v, w, values, cmap='hot_r')
 
 
 
@@ -220,7 +217,7 @@ def _bin(df, handle, npts_v=20, npts_w=40):
 # pyplot wrappers
 #
 
-def _plot_vw(v, w, values, cmap='hot'):
+def _plot_vw(filename, v, w, values, cmap='hot'):
     """ Creates `v-w` color plot 
 
     (Thinly wraps pyplot.pcolor)
@@ -248,6 +245,8 @@ def _plot_vw(v, w, values, cmap='hot'):
         ticks=[], 
         pad=0.,
         )
+
+    pyplot.savefig(filename)
 
 
 def _centers_to_edges(v):

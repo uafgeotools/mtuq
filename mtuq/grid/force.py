@@ -8,7 +8,7 @@ from numpy.random import uniform as random
 from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_rtp
+from mtuq.util.lune import to_force
 
 
 
@@ -22,7 +22,7 @@ def ForceGridRegular(magnitudes_in_N=1., npts_per_axis=80):
     return Grid(
         dims=('F0', 'theta', 'h'),
         coords=(F0, theta, h),
-        callback=to_rtp)
+        callback=to_force)
 
 
 def ForceGridRandom(magnitudes_in_N=1., npts=10000):
@@ -39,4 +39,4 @@ def ForceGridRandom(magnitudes_in_N=1., npts=10000):
     return UnstructuredGrid(
         dims=('F0', 'theta', 'h'),
         coords=(F0, theta, h),
-        callback=to_rtp)
+        callback=to_force)

@@ -3,6 +3,9 @@ import numpy as np
 import obspy
 from obspy.core import UTCDateTime
 
+from mtuq.util import asarray
+
+
 
 class Origin(obspy.core.AttribDict):
     """ Origin metadata object
@@ -56,8 +59,11 @@ class MomentTensor(object):
     """ Moment tensor object
 
     .. note::
-        It is possible to convert from ``MomentTensor`` objects to NumPy arrays 
-        using the ``as_vector`` and ``as_matrix`` methods
+        The constructor accepts moment tensors in any ObsPy `basis convention 
+       <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_.
+
+        In MTUQ code, moment tensors are always internally represented in 
+        `'USE'` convention, or in other words ``up-south-east`` convention.
 
     """
     def __init__(self, array=None, convention="USE"):
@@ -66,35 +72,26 @@ class MomentTensor(object):
                "Missing argument: moment tensors must be given as a "
                "NumPy array")
 
+        try:
+            array = asarray(array)
+        except:
+            raise TypeError(
+                "Couldn't cast input argument as NumPy array.")
+
         if array.size != 6:
             raise ValueError(
                 "Unexpected array size: moment tensors must be given as a "
                 "NumPy array with six elements")
 
-        if convention.upper() != 'USE':
+        if convention.upper() == 'USE':
+            self._array = array
+
+        else:
             raise NotImplementedError(
                 "So far, only up-south-east convention is implemented")
 
-        try:
-            self._array = np.asarray(array)
-        except:
-            raise TypeError(
-                "Couldn't cast input argument as numpy array.")
-          
-        self.convention = convention.upper()
-
-
-    def change_convention(self, new_convention):
-        """ Changes basis convention by applying permuation
-        """
-        if not self.convention:
-            raise Exception("Can't determine moment tensor permutation "
-                "starting basis is unknown.")
-
-        self._arary = _change_convention_mt(
-           self._array, self.convention, new_convention.upper())
-
-        self.convention = new_convention.upper()
+            #self._array = _change_convention_mt(asarray(array),
+            #    asarray(array), convention, 'USE')
 
 
     def as_vector(self):
@@ -110,6 +107,13 @@ class MomentTensor(object):
         return np.array([[array[0], array[3], array[4]],
                          [array[3], array[1], array[5]],
                          [array[4], array[5], array[2]]])
+
+
+    def cast(self, convention):
+        """ Returns 1D NumPy array in given basis convention
+        """
+        return _change_convention_mt(
+           self._array, 'USE', convention.upper())
 
 
     def moment(self):
@@ -129,38 +133,51 @@ class MomentTensor(object):
 class Force(object):
     """ Force source
 
-    .. note:
-        It is possible to convert from ``Force`` objects to NumPy arrays using 
-        the ``as_vector`` method
-    """
-    def __init__(self, array, convention="Unknown"):
-        if array is None:
-            raise Exception
+    .. note::
+        The constructor accepts forces in any ObsPy `basis convention 
+       <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_.
 
-        if len(array) != 3:
-            raise Exception
+        In MTUQ code, forces are always internally represented in 
+        `'USE'` convention, or in other words ``up-south-east`` convention.
+
+    """
+    def __init__(self, array=None, convention="USE"):
+        if array is None:
+            raise Exception(
+               "Missing argument: forces must be given as a "
+               "NumPy array")
 
         try:
-            return np.asarray(array)
+            array = asarray(array)
         except:
             raise TypeError(
-                "Couldn't cast input argument as numpy array.")
+                "Couldn't cast input argument as NumPy array.")
 
+        if array.size != 3:
+            raise ValueError(
+                "Unexpected array size: forces must be given as a "
+                "NumPy array with three elements")
 
-    def change_convention(self, new_convention):
-        """ Changes basis convention by applying permuation
-        """
-        self._arary = _change_convention_force(
-           self._array, self.convention, new_convention.upper())
+        if convention.upper() == 'USE':
+            self._array = array
 
-        self.convention = new_convention.upper()
+        else:
+            raise NotImplementedError(
+                "So far, only up-south-east convention is implemented")
 
+            #self._array = _change_convention_mt(asarray(array),
+            #    asarray(array), convention, 'USE')
 
     def as_vector(self):
         """ Returns force as NumPy array
         """
         return self._array
 
+    def cast(self, convention):
+        """ Returns 1D NumPy array representation in given basis convention
+        """
+        return _change_convention_force(
+           self._array, 'USE', convention.upper())
 
 
 class CompositeSource(object):
