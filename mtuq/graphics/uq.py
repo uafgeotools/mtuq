@@ -16,12 +16,12 @@ import warnings
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics._gmt import gmt_cmd, check_ext
+from mtuq.graphics._gmt import gmt_cmd, gmt_not_found_warning, check_ext
 from mtuq.util import fullpath
 from mtuq.util.lune import to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit(filename, ds, title=None):
+def plot_misfit(filename, ds, title=''):
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
@@ -71,11 +71,11 @@ def plot_misfit(filename, ds, title=None):
         gamma, delta, values = _bin(df, lambda df: df.min())
 
 
-    _plot_lune(filename, gamma, delta, values, title)
+    _plot_lune_gmt(filename, gamma, delta, values, title=title)
 
 
 
-def plot_likelihood(filename, ds, sigma=1., title=None):
+def plot_likelihood(filename, ds, sigma=1., title=''):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -133,11 +133,11 @@ def plot_likelihood(filename, ds, sigma=1., title=None):
 
     values /= values.sum()
 
-    _plot_lune(filename, gamma, delta, values, title)
+    _plot_lune_gmt(filename, gamma, delta, values, title=title)
 
 
 
-def plot_marginal(filename, ds, sigma=1., title=None):
+def plot_marginal(filename, ds, sigma=1., title=''):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -196,7 +196,7 @@ def plot_marginal(filename, ds, sigma=1., title=None):
     values /= lune_det(delta, gamma)
     values /= values.sum()
 
-    _plot_lune(filename, gamma, delta, values)
+    _plot_lune_gmt(filename, gamma, delta, values, title=title)
 
 
 
@@ -257,7 +257,7 @@ def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
 # GMT wrappers
 #
 
-def _plot_lune(filename, gamma, delta, values, title=None):
+def _plot_lune_gmt(filename, gamma, delta, values, add_marker=True, title=''):
     """ Plots misfit values on lune
     """
     gamma, delta = np.meshgrid(gamma, delta)
@@ -288,9 +288,27 @@ def _plot_lune(filename, gamma, delta, values, title=None):
     # prepare gmt input
     #
 
-    zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/100.)
-    title = _parse(title)
     name, fmt = check_ext(filename)
+
+    zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/100.)
+
+    if add_marker:
+        idx = values.argmin()
+        marker_coords = "'%f %f'" % (gamma[idx], delta[idx])
+    else:
+        marker_coords = "''"
+
+    parts=title.split('\n')
+    if len(parts) >= 2:
+        title = "'%s'" % parts[0]
+        subtitle = "'%s'" % parts[1]
+    elif len(parts) == 1:
+        title = "'%s'" % parts[0]
+        subtitle = "''"
+    else:
+        title = "''"
+        subtitle = "''"
+
 
     # FIXME: can GMT accept virtual files?
     tmpname = 'tmp_'+name+'.txt'
@@ -302,42 +320,22 @@ def _plot_lune(filename, gamma, delta, values, title=None):
     #
 
     if gmt_cmd():
-        _call("%s %s %s %s %s %s" %
+        _call("%s %s %s %s %s %s %s %s" %
            (fullpath('mtuq/graphics/_gmt/plot_lune'),
             tmpname,
             filename,
             fmt,
             zmin_zmax_dz,
-            title
+            marker_coords,
+            title,
+            subtitle
             ))
     else:
         gmt_not_found_warning(
             tmpname)
 
 
-def gmt_not_found_warning(filename):
-    warnings.warn("""
-        WARNING
-
-        Generic Mapping Tools executables not found on system path.
-        PostScript output has not been written. 
-
-        Misfit values have been saved to:
-            %s
-        """ % filename)
-
-
 def _call(cmd):
     subprocess.call(cmd, shell=True)
-
-
-def _parse(title):
-    if not title:
-        return ""
-
-    title_args = ''
-    for part in title.split("\n"):
-        title_args += "'"+part+"' "
-    return title_args
 
 

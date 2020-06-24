@@ -2,7 +2,7 @@
 
 
 # USAGE
-#   plot_lune in out fmt range coords [title]  [subtitle]
+#   plot_force in out fmt range [title]  [subtitle]
 #
 #   Plots lon,lat,z values from ASCII file on eigenvalue lune
 #
@@ -11,13 +11,11 @@
 #    OUT - name of output image file
 #    FMT - format of output image file (BMP,EPS,PDF,JPG,PNG,PPM,SVG,TIFF)
 #    RANGE - range and increment of z values as a string "-Tzmin/zmax/dz"
-#    COORDS - optional marker coordinates
 #    TITLE - optional title string
 #    SUBTITLE - optional subtitle string
 #
 # EXAMPLE
-#    plot_lune likelihood.xyz likelihood.png PNG "-T0./1./0.01" "Maximum likelihood"
-
+#    plot_force likelihood.xyz likelihood.png PNG "-T0./1./0.01" "Maximum likelihood"
 
 
 # add mtuq/graphics/_gmt to the path
@@ -41,8 +39,8 @@ marker_coords="$5"
 title="$6"
 subtitle="$7"
 
-proj_arg="-JH0/3.4i"
-area_arg="-R-30/30/-90/90"
+proj_arg="-JH0/6i"
+area_arg="-R-180/180/-90/90"
 
 ps="${out}.ps"
 
@@ -66,12 +64,6 @@ gmt makecpt -Cpanoply -D -T${range_arg} > tmp.cpt
 # plot misfit values
 gmt pscontour $in $proj_arg $area_arg -Ctmp.cpt -I -N -A- -O -K >> $ps
 add_marker $ps $proj_arg $area_arg "$marker_coords"
-
-
-# display reference points and arcs
-add_reference_arcs $ps $proj_arg $area_arg
-add_reference_points $ps $proj_arg $area_arg
-#add_reference_labels $ps $proj_arg $area_arg
 
 
 # convert PostScript

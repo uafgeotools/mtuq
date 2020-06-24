@@ -28,6 +28,22 @@ function gmt_settings {
 }
 
 
+function add_marker {
+    ps=$1
+    proj_arg=$2
+    area_arg=$3
+    coords="$4"
+
+    if [ -z "$coords" ]; then
+        return
+    fi
+
+    echo $coords |\
+    gmt psxy -N -Sc23p -W2.0p,0/255/0 $proj_arg $area_arg -O -K >> $ps
+
+}
+
+
 function add_reference_arcs {
     ps=$1
     proj_arg=$2
@@ -123,10 +139,12 @@ function add_reference_labels {
 
 function add_title {
     ps=$1
-    title="$2"
-    subtitle="$3"
+    prog_arg=$2
+    area_arg=$3
+    title="$4"
+    subtitle="$5"
 
-    if [ ! -z "$subtitle" ]; then
+    if [ -n "$title" ] && [ -n "$subtitle" ]; then
 
         echo "  0.0  90.0 ${title}" |\
         gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/25p >> $ps
@@ -134,7 +152,7 @@ function add_title {
         echo "  0.0  90.0 ${subtitle}" |\
         gmt pstext -F+f15p+jCT -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
 
-    elif [ ! -z "$title" ]; then
+    elif [ -n "$title" ]; then
 
         echo "  0.0  90.0 ${title}" |\
         gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
