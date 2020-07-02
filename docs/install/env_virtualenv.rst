@@ -1,7 +1,7 @@
 Installation under virtualenv
 =============================
 
-Install the `virtualenv <https://virtualenv.pypa.io/en/latest/installation/>`_ program, if not already present.
+Install the `virtualenv <https://virtualenv.pypa.io/en/latest/installation.html>`_ program, if not already present.
 
 Create a new virtual environment:
 
@@ -10,14 +10,14 @@ Create a new virtual environment:
    virtualenv --python=python3 mtuq_env
 
 
-Download MTUQ source code:
+Download `MTUQ` source code:
 
 .. code::
 
    git clone https://github.com/uafgeotools/mtuq.git mtuq_src
 
 
-Install MTUQ:
+Install `MTUQ`:
 
 .. code::
 
@@ -34,4 +34,11 @@ Unpack seismic waveforms used by examples:
 
     bash ./data/examples/unpack.bash
     bash ./data/tests/unpack.bash
+
+
+Finally, install `GMT`:
+
+.. code::
+
+    conda install gmt
 

@@ -1,10 +1,10 @@
-Installation under conda
-========================
+`conda` installation
+====================
 
-First, download and install miniconda following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+First, download and install `miniconda` following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
-Create a conda virtual environment:
+Create a `conda` virtual environment:
 
 .. code::
 
@@ -12,7 +12,7 @@ Create a conda virtual environment:
    conda create -n mtuq python=3
 
 
-Install MTUQ: 
+Install `MTUQ`: 
 
 .. code::
 
@@ -29,4 +29,7 @@ Unpack seismic waveforms used by examples:
 
     bash ./data/examples/unpack.bash
     bash ./data/tests/unpack.bash
+
+
+Finally, install `GMT` following `these instructions <https://github.com/GenericMappingTools/gmt/blob/master/INSTALL.md>`_.  (For a more automated `GMT` installation procedure, consider installing `mtuq` under `conda`.)
 
