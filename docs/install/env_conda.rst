@@ -12,7 +12,7 @@ Create a `conda` virtual environment:
    conda create -n mtuq python=3
 
 
-Install `MTUQ`: 
+Install MTUQ: 
 
 .. code::
 
@@ -31,7 +31,7 @@ Unpack seismic waveforms used by examples:
     bash ./data/tests/unpack.bash
 
 
-Finally, install `GMT`:
+Finally, install GMT:
 
 .. code::
 

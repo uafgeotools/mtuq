@@ -10,14 +10,14 @@ Create a new virtual environment:
    virtualenv --python=python3 mtuq_env
 
 
-Download `MTUQ` source code:
+Download MTUQ source code:
 
 .. code::
 
    git clone https://github.com/uafgeotools/mtuq.git mtuq_src
 
 
-Install `MTUQ`:
+Install MTUQ:
 
 .. code::
 
@@ -36,5 +36,7 @@ Unpack seismic waveforms used by examples:
     bash ./data/tests/unpack.bash
 
 
-Finally, install `GMT` following these `instructions <https://github.com/GenericMappingTools/gmt/blob/master/INSTALL.md>`_.  (For a more automated `GMT` installation, consider installing `mtuq` under `conda` instead.)
+Finally, install GMT following these `instructions <https://github.com/GenericMappingTools/gmt/blob/master/INSTALL.md>`_.  
+
+(For an automated `GMT` installation, consider installing MTUQ under `conda` instead.)
 

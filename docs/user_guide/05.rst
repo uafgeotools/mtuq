@@ -1,0 +1,29 @@
+
+
+Misfit evaluation
+=================
+TODO: Add text
+
+
+
+Using `mtuq.Misfit`
+-------------------
+TODO: Add text
+
+
+
+Creating custom misfit functions
+--------------------------------
+TODO: Add text
+
+
+
+
+
+
+
+
+
+
+
+
