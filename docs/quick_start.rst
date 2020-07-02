@@ -1,15 +1,13 @@
 Quick start
 ===========
 
-An easy way to get started is to try out any of these `examples <https://github.com/uafgeotools/mtuq/blob/master/examples>`_.
+An easy way to get started is to try out these `examples <https://github.com/uafgeotools/mtuq/blob/master/examples>`_, which estimate source parameters for an event from `Silwal2016` using seismic waveforms included with the `MTUQ` repository.
 
-Before running examples, users must first `install MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_.
-
-After installation finishes, examples can be invoked from within the `examples/` directory by
+Before running any of these scripts, users must first `install MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_.  After installation finishes, examples can be invoked within the `examples/` directory as follows:
 
 .. code::
 
-   python ./name_of_example
+   python ./<name_of_example>
 
 
 .. note::
@@ -20,11 +18,9 @@ After installation finishes, examples can be invoked from within the `examples/`
 Serial example
 --------------
 
-The simplest example is `SerialGridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_, which estimates the focal mechanism of an event from `Silwal2016` using seismic waveforms included with the `MTUQ` repository. 
+The simplest example is `SerialGridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  After running the script, users can check their output against this `expected result <https://github.com/rmodrak/mtbench/blob/master/output/SilwalTape2016/figures_syngine/20090407201255351.png>`_.
 
-Users can check their output against this `expected result <https://github.com/rmodrak/mtbench/blob/master/output/SilwalTape2016/figures_syngine/20090407201255351.png>`_.
-
-Because the  example lacks MPI directives, it is more readable more than the other examples.  A typical runtime is about 60 seconds.  For faster results, `GridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple.py>`_ runs the same inversion in parallel.
+Because the serial example lacks MPI directives, it is more readable more than the others.  A typical runtime is about 60 seconds.  For faster results, `GridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple.py>`_ runs the same inversion in parallel.
 
 
 Parallel examples
@@ -38,7 +34,7 @@ If MPI is present, run the parallel examples as follows:
 
 .. code::
 
-   mpirun -n <NPROC> python ./name_of_example
+   mpirun -n <nproc> python ./<name_of_example>
 
 
 If MPI is not present, users can still run any example by invoking it directly, but any parallelization speedup will be lost.

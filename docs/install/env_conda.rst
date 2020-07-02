@@ -1,7 +1,7 @@
-`conda` installation
-====================
+Installation under `conda`
+==========================
 
-First, download and install `miniconda` following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+First, download and install `miniconda` following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
 Create a `conda` virtual environment:
@@ -31,5 +31,9 @@ Unpack seismic waveforms used by examples:
     bash ./data/tests/unpack.bash
 
 
-Finally, install `GMT` following `these instructions <https://github.com/GenericMappingTools/gmt/blob/master/INSTALL.md>`_.  (For a more automated `GMT` installation procedure, consider installing `mtuq` under `conda`.)
+Finally, install `GMT`:
+
+.. code::
+
+    conda install gmt
 

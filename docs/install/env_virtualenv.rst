@@ -1,7 +1,7 @@
-Installation under virtualenv
-=============================
+Installation under `virtualenv`
+===============================
 
-Install the `virtualenv <https://virtualenv.pypa.io/en/latest/installation.html>`_ program, if not already present.
+Install the `virtualenv` program, if not already present, following these `instructions <https://virtualenv.pypa.io/en/latest/installation.html>`_.
 
 Create a new virtual environment:
 
@@ -36,9 +36,5 @@ Unpack seismic waveforms used by examples:
     bash ./data/tests/unpack.bash
 
 
-Finally, install `GMT`:
-
-.. code::
-
-    conda install gmt
+Finally, install `GMT` following these `instructions <https://github.com/GenericMappingTools/gmt/blob/master/INSTALL.md>`_.  (For a more automated `GMT` installation, consider installing `mtuq` under `conda` instead.)
 
