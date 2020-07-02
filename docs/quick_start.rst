@@ -1,44 +1,44 @@
 Quick start
 ===========
 
-Serial example
---------------
+An easy way to get started is to try out these `examples <https://github.com/uafgeotools/mtuq/blob/master/examples>`_, which estimate source parameters for an event from `Silwal2016` using seismic waveforms included with the `MTUQ` repository.
 
-One of the easiest ways to get started is to try out `examples/SerialGridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  This script estimates the focal mechanism of an event from `Silwal2016`, using raw seismic data included within the MTUQ repository. 
+Before running any of these scripts, users must first `install MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_.  After installation finishes, examples can be invoked within the `examples/` directory as follows:
 
-Before running the example, users must install MTUQ following `these instructions <https://uafgeotools.github.io/mtuq/install/index.html>`_.
+.. code::
 
-After running the example, users can check their result against this `expected output <https://github.com/rmodrak/mtbench/blob/master/output/SilwalTape2016/figures_syngine/20090407201255351.png>`_.
+   python ./<name_of_example>
 
-.. warning::
-
-  At the time this documentation was written, there were ObsPy graphics bugs.  `Please see here <https://uafgeotools.github.io/mtuq/install/index.html>`_ for more information.
 
 .. note::
 
-  The first time the example runs, Green's functions will be downloaded, which can take several minutes.  Any subsequent runs will be much faster.
+  The first time an example runs, Green's functions will be downloaded, which can take several minutes.  Any subsequent runs will be much faster.
 
+
+Serial example
+--------------
+
+The simplest example is `SerialGridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  After running the script, users can check their output against this `expected result <https://github.com/rmodrak/mtbench/blob/master/output/SilwalTape2016/figures_syngine/20090407201255351.png>`_.
+
+Because the serial example lacks MPI directives, it is more readable more than the others.  A typical runtime is about 60 seconds.  For faster results, `GridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple.py>`_ runs the same inversion in parallel.
 
 
 Parallel examples
 -----------------
 
-All the other `examples <https://github.com/uafgeotools/mtuq/blob/master/examples/>`_ use MPI parallelization.  To see if MPI executables and libraries are present in your environment, start by checking if `mpirun` is on the system path.  If necessary, ask a system administrator for assistance configuring MPI.
+All the other examples contain MPI directives for faster evaluation on parallel systems.
+
+To see if MPI executables and libraries are present in your environment, start by checking if `mpirun` is on the system path.  If necessary, ask a system administrator for assistance installing or configuring MPI.
+
+If MPI is present, run the parallel examples as follows:
+
+.. code::
+
+   mpirun -n <nproc> python ./<name_of_example>
 
 
+If MPI is not present, users can still run any example by invoking it directly, but any parallelization speedup will be lost.
 
-Modifying examples
-------------------
-
-To obtain moment tensor estimates for events other than `Silwal2016`, users can download waveforms using PySEP (github.com/uafgeotools/pysep) and modify the examples as follows:
-
-- Change `path_data` to the new PySEP download directory
-
-- Change `path_weights` to the new weight file included in the PySEP download
-
-- Optionally, adjust the Earth model, data processing and misfit settings.  (Default choices match Silwal2016.)
-
-- Change `origin` and `magnitude` to desired values for the new event. (Alternatively, if you which to include these variables as search parameters, create lists of origins and magnitudes at the desired spacing.)
 
 
 

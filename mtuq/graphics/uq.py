@@ -298,7 +298,11 @@ def _plot_lune_gmt(filename, gamma, delta, values, add_marker=True, title=''):
     else:
         marker_coords = "''"
 
-    parts=title.split('\n')
+    try:
+        parts=title.split('\n')
+    except:
+        parts=[]
+
     if len(parts) >= 2:
         title = "'%s'" % parts[0]
         subtitle = "'%s'" % parts[1]

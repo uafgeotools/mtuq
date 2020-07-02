@@ -1,20 +1,28 @@
 Installation
 ============
 
-To install MTUQ, follow the instructions for conda (preferred) or one of the other environments below:
+If you're familiar with Python virtual environments, feel free to install MTUQ as follows within an environment of your choice::
+
+   git clone https://github.com/uafseismo/mtuq.git
+   cd mtuq
+   pip install -e .
+
+
+Otherwise, follow the instructions below for `conda` (preferred) or `virtualenv`:
 
 .. toctree::
 
    env_conda
    env_virtualenv
-   env_custom
 
 
+
+Graphics dependencies
+---------------------
 
 .. warning::
 
-  To avoid problems plotting moment tensor first motions (e.g. beachballs), *we urge users to install Generic Mapping Tools (GMT) version 6.0.1 or greater*.  
+   To avoid graphics problems, we recommend installing GMT (>v6.0.0). 
 
-  MTUQ automatically uses GMT executables if present on the system path.  Otherwise, MTUQ falls back to ObsPy, which does not attempt to plot full moment tensors correctly (see `issue <https://github.com/obspy/obspy/issues/2388>`_).  To install GMT under conda, users can simply type ``conda install gmt`` from within an active virtual environment.
-
+MTUQ uses `GMT <https://www.soest.hawaii.edu/gmt>`_ graphics utilities if present on the system path.  Otherwise, MTUQ falls back to ObsPy, which does not attempt to plot full moment tensors correctly (see this `issue <https://github.com/obspy/obspy/issues/2388>`_).  See instructions for installing GMT under the `conda` or `virtualenv` links above.
 

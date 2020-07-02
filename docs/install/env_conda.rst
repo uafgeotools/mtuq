@@ -1,10 +1,10 @@
-Installation under conda
-========================
+Installation under `conda`
+==========================
 
-First, download and install miniconda following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+First, download and install `miniconda` following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
-Create a conda virtual environment:
+Create a `conda` virtual environment:
 
 .. code::
 
@@ -29,4 +29,11 @@ Unpack seismic waveforms used by examples:
 
     bash ./data/examples/unpack.bash
     bash ./data/tests/unpack.bash
+
+
+Finally, install GMT:
+
+.. code::
+
+    conda install gmt
 

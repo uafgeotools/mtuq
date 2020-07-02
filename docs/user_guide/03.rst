@@ -2,21 +2,23 @@
 Acquiring Green's functions
 ===========================
 
-The response of a medium to an impulsive source is called a Green's function.  This page explains how Green's functions are used in source inversions.   It describes the types of Green's functions supported by MTUQ and how these types can be obtained.
+The response of a medium to an impulsive source is called a Green's function.  This page explains the role of Green's functions in source inversions, describes the Green's function formats supported by MTUQ, and gives instructions for they can be obtained.
 
 
 Role of Green's functions
 -------------------------
 
-As the response of a medium to a simple impulsive source, Green's functions can be combined to obtain synthetics from more complex sources.
+Green's functions describe the response of a medium to simple impulsive sources.  By combining these simple impulse responses, it is possible to obtain synthetics from much more complex sources.
 
-Green's functions are useful because they provide computaional savings.  It's almost always cheaper to work with precomputed Green's functions than to perform on-the-fly wavefield simulations.
+In practice, Green's functions are useful because they provide computaional savings.  It's generally less expensive to generate synthetics by combining Green's functions than it is to perform on-the-fly wavefield simulations.
 
 
 `GreensTensor` objects
 ----------------------
 
-In MTUQ, `GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to the full set of Green's functions needed to describe the medium response between a given station and origin.  In particular, the `get_synthetics` method accepts a `MomentTensor` and returns a set of traces representing the response at the given station.
+`GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to the a set of Green's functions needed to describe the medium response between a given station and origin.  
+
+Methods built into the `GreensTensor` class allow data processing and synthetics generation operations.  In particular, the `get_synthetics` method accepts a `MomentTensor` and returns a set of traces representing the response at the given station.
 
 The following sections describe how Green's functions from external solvers can be downloaded or computed and used to generate `GreensTensor` objects.
 

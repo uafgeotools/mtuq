@@ -292,15 +292,13 @@ def _to_dataframe(origins, sources, values, index_type=2):
         df = MTUQDataFrame(data=data)
         return df.set_index(list(dims))
 
-    if index_type==3:
-        # even faster but more complex, would require implementing new 
-        # MTUQDataFrame methods
-        raise NotImplementedError
-        coords = [origin_idx, source_idx]
-        dims = ('origin_idx', 'source_idx')
-        data = {dims[_i]: coords[_i] for _i in range(len(dims))}
-        data.update({0: values.flatten()})
-        df = MTUQDataFrame(data=data)
-        df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
-        return df.set_index(list(dims))
+    #if index_type==3:
+    #    # even faster, but would require new MTUQDataFrame methods
+    #    coords = [origin_idx, source_idx]
+    #    dims = ('origin_idx', 'source_idx')
+    #    data = {dims[_i]: coords[_i] for _i in range(len(dims))}
+    #    data.update({0: values.flatten()})
+    #    df = MTUQDataFrame(data=data)
+    #    df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
+    #    return df.set_index(list(dims))
 

@@ -57,7 +57,7 @@ The package has been tested against [legacy Perl/C codes](https://github.com/uaf
 
 
 
-[![Build Status](https://travis-ci.org/uafseismo/mtuq.svg?branch=master)](https://travis-ci.org/uafseismo/mtuq)
+[![Build Status](https://travis-ci.org/uafgeotools/mtuq.svg?branch=master)](https://travis-ci.org/uafseismo/mtuq)
 
 [Instaseis]: http://instaseis.net/
 

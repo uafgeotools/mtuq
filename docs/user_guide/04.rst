@@ -1,22 +1,28 @@
 
-Grid searches
-=============
 
-Evaluating misfit functions over seismic source parameters can provide useful uncertainty information.  
-
+Data processing
+===============
 
 
-
-types of grids
---------------
+Filtering, windowing and other signal processing operations are essential for making meaningful comparisons between data synthetics
 
 
-manipulating grid search results
---------------------------------
 
 
-visualizing grid search results
--------------------------------
+Using `mtuq.ProcesData`
+----------------------
+TODO: Add text
+
+
+
+Creating custom data processing functions
+-----------------------------------------
+TODO: Add text
+
+
+
+
+
 
 
 
