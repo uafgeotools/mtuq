@@ -59,14 +59,13 @@ class MomentTensor(object):
     """ Moment tensor object
 
     .. note::
-        The constructor accepts moment tensors in any ObsPy `basis convention 
-       <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_.
 
-        In MTUQ code, moment tensors are always internally represented in 
-        `'USE'` convention, or in other words ``up-south-east`` convention.
+        The constructor accepts six-element arrays in any ObsPy `basis convention <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_.
+        Moment tensors are then converted to and internally represented in the
+        ``up-south-east`` convention.
 
     """
-    def __init__(self, array=None, convention="USE"):
+    def __init__(self, array, convention="USE"):
         if array is None:
             raise Exception(
                "Missing argument: moment tensors must be given as a "
@@ -95,13 +94,13 @@ class MomentTensor(object):
 
 
     def as_vector(self):
-        """ Returns independent elements as 1D NumPy array
+        """ Returns 1D NumPy array in `up-south-east` convention
         """
         return self._array
 
 
     def as_matrix(self):
-        """ Returns 2D symmetric NumPy array
+        """ Returns 2D symmetric NumPy array in `up-south-east` convention
         """
         array = self._array
         return np.array([[array[0], array[3], array[4]],
@@ -111,6 +110,12 @@ class MomentTensor(object):
 
     def cast(self, convention):
         """ Returns 1D NumPy array in given basis convention
+
+            .. rubric :: Input arguments
+
+            ``convention`` (`str`):
+            ObsPy `basis convention <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_
+
         """
         return _change_convention_mt(
            self._array, 'USE', convention.upper())
@@ -134,14 +139,13 @@ class Force(object):
     """ Force source
 
     .. note::
-        The constructor accepts forces in any ObsPy `basis convention 
-       <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_.
 
-        In MTUQ code, forces are always internally represented in 
-        `'USE'` convention, or in other words ``up-south-east`` convention.
+        The constructor accepts three-element arrays in any ObsPy `basis convention <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_.
+        Forces are then converted to and internally represented in the
+        ``up-south-east`` convention.
 
     """
-    def __init__(self, array=None, convention="USE"):
+    def __init__(self, array, convention='USE'):
         if array is None:
             raise Exception(
                "Missing argument: forces must be given as a "
@@ -168,13 +172,22 @@ class Force(object):
             #self._array = _change_convention_mt(asarray(array),
             #    asarray(array), convention, 'USE')
 
+
     def as_vector(self):
-        """ Returns force as NumPy array
+        """ Returns 1D NumPy array in `up-south-east` convention
         """
         return self._array
 
+
     def cast(self, convention):
-        """ Returns 1D NumPy array representation in given basis convention
+        """ Returns 1D NumPy array in given basis convention
+
+            .. rubric :: Input arguments
+
+            ``convention`` (`str`):
+            ObsPy `basis convention <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_
+
+
         """
         return _change_convention_force(
            self._array, 'USE', convention.upper())

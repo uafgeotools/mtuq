@@ -12,13 +12,12 @@ from scipy.signal import fftconvolve
 
 
 class GreensTensor(Stream):
-    """
-    Holds multiple time series corresponding to the independent elements 
-    of an elastic Green's tensor. 
+    """ Holds multiple time series corresponding to the independent elements 
+    of an elastic Green's tensor
 
     .. note::
 
-        Besides the methods described below, GreensTensor also includes
+        Besides the methods described below, `GreensTensor` also includes
         data processing methods inherited from ``obspy.core.Stream``.
         For descriptions of inherited methods, see `ObsPy documentation
         <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html>`_
@@ -69,9 +68,8 @@ class GreensTensor(Stream):
 
 
     def _set_components(self, components):
-        """
-        This method must be called prior to ``get_synthetics`` to specify which
-        components are returned
+        """ This method gets called before or during ``get_synthetics`` to 
+        specify which components are returned
 
         .. note:
 
@@ -98,8 +96,7 @@ class GreensTensor(Stream):
 
 
     def _preallocate(self):
-        """
-        Preallocates structures used by ``get_synthetics``
+        """ Preallocates structures used by `get_synthetics`
 
         .. note:
 
@@ -130,8 +127,7 @@ class GreensTensor(Stream):
 
 
     def _precompute(self):
-        """
-        Precomputes numpy array used by ``get_synthetics``
+        """ Precomputes NumPy array used by `get_synthetics`
         """
         # the formulas relating the original time series to the linear
         # combination array vary depending on the scheme being used, so
@@ -140,8 +136,19 @@ class GreensTensor(Stream):
 
 
     def get_synthetics(self, source, components=None):
-        """
-        Generates synthetics through a linear combination of time series
+        """ Generates synthetics through a linear combination of time series
+
+        Returns an ObsPy stream
+
+        .. rubric :: Input arguments
+
+        ``source`` (`MomentTensor`, `Force` or `CompositeSource`):
+        Source object
+
+        ``components`` (`list`):
+        List containing zero or more of the following components: 
+        ``Z``, ``R``, ``T``. (Defaults to ``['Z', 'R', 'T']``.)
+        
         """
 
         if components is None:
@@ -168,19 +175,22 @@ class GreensTensor(Stream):
 
 
     def convolve(self, wavelet):
-        """
-        Convolves time series with the given wavelet
+        """ Convolves time series with given wavelet
 
-        :type wavelet: mtuq.util.wavelets.Wavelet
-        :param wavelet: Source wavelet to be convolved
+        Returns MTUQ `GreensTensor`
+
+        .. rubric :: Input arguments
+
+        ``wavelet`` (`Wavelet` object):
+        Source wavelet
+
         """
         for trace in self:
             wavelet.convolve(trace)
 
 
     def select(self, component=None, channel=None):
-        """
-        Selects time series that match the supplied metadata criteria
+        """ Selects time series that match the supplied metadata criteria
         """
         return Stream([trace for trace in self]).select(
             component=component, channel=channel)
@@ -198,7 +208,7 @@ class GreensTensor(Stream):
 
 
 class GreensTensorList(list):
-    """ Container for one or more GreensTensor objects
+    """ Container for one or more `GreensTensor` objects
     """
 
     def __init__(self, tensors=[], id=None, tags=[]):
@@ -213,7 +223,7 @@ class GreensTensorList(list):
 
 
     def append(self, tensor):
-        """ Appends GreensTensor to list
+        """ Appends `GreensTensor` to the container
         """
         if not hasattr(tensor, 'station'):
             raise Exception("GreensTensor lacks station metadata")
@@ -225,7 +235,7 @@ class GreensTensorList(list):
 
 
     def select(self, selector):
-        """ Selects GreensTensors that match the given station or origin
+        """ Selects `GreensTensors` that match the given station or origin
         """
         if type(selector) is Station:
             return self.__class__(id=self.id, tensors=filter(
@@ -237,37 +247,42 @@ class GreensTensorList(list):
 
 
 
-    def get_synthetics(self, source, **kwargs):
-        """ Generates synthetic by linear combination of Green's functions 
+    def get_synthetics(self, *args, **kwargs):
+        """ Generates synthetics through a linear combination of time series
+
+        Returns an MTUQ `Dataset`
+
+        .. rubric :: Input arguments
+
+        ``source`` (`MomentTensor`, `Force` or `CompositeSource`):
+        Source object
+
+        ``components`` (`list`):
+        List containing zero or more of the following components: 
+        ``Z``, ``R``, ``T``. (Defaults to ``['Z', 'R', 'T']``.)
+        
         """
+
         synthetics = Dataset()
         for tensor in self:
-            synthetics.append(tensor.get_synthetics(source, **kwargs))
+            synthetics.append(tensor.get_synthetics(*args, **kwargs))
         return synthetics
 
 
     # the next three methods can be used to apply signal processing or other
     # operations to all time series in all GreensTensors
     def apply(self, function, *args, **kwargs):
-        """ Applies function to all GreensTensors
+        """ Applies function to all `GreensTensors`
  
-        Applies a function to each GreensTensor in the list, similar to the 
+        Applies a function to each `GreensTensor` in the list, similar to the 
         Python built-in ``apply``.  
 
         .. warning ::
 
-            Although ``apply`` returns a new GreensTensorList, contents of the
-            of the original GreensTensorList may still be overwritten
-            when applying certain functions.
-            
-            If you are unsure of the behavior of the function and wish to 
-            preserve the original GreensTensorList, make a `deepcopy` of it 
-            first.
-
-            (Deep copies are not necessary when using `mtuq.process_data`, 
-            because the original trace data are preserved by default.
-            This behavior can be overridden by manually supplying 
-            `inplace=True` as a keyword argument.)
+            Although ``apply`` returns a new `GreensTensorList`, contents of the
+            original `GreensTensorList` may still be overwritten, depending on
+            the function. To preserve the original, consider making a 
+            `deepcopy` first.
 
         """
         processed = []
@@ -278,27 +293,19 @@ class GreensTensorList(list):
 
 
     def map(self, function, *sequences):
-        """ Maps function to all GreensTensors
+        """ Maps function to all `GreensTensors`
 
-        Maps a function to each GreensTensor in the list. If one or more 
+        Maps a function to each `GreensTensor` in the list. If one or more 
         optional sequences are given, the function is called with an argument 
         list consisting of the corresponding item of each sequence, similar
         to the Python built-in ``map``.
 
         .. warning ::
 
-            Although ``map`` returns a new GreensTensorList, contents of the
-            original GreensTensorList may still be overwritten when mapping
-            certain functions.
-            
-            If you are unsure of the behavior of the function and wish to 
-            preserve the original GreensTensorList, make a `deepcopy` of it 
-            first.
-
-            (Deep copies are not necessary when using `mtuq.process_data`, 
-            because the original trace data are preserved by default.
-            This behavior can be overridden by manually supplying 
-            `inplace=True` as a keyword argument.)
+            Although ``map`` returns a new `GreensTensorList`, contents of the
+            original `GreensTensorList` may still be overwritten, depending on
+            the function. To preserve the original, consider making a 
+            `deepcopy` first.
 
         """
         processed = []
@@ -310,8 +317,15 @@ class GreensTensorList(list):
 
 
     def convolve(self, wavelet):
-        """ 
-        Convolves all Green's tensors with given wavelet
+        """ Convolves time series with given wavelet
+
+        Returns MTUQ `GreensTensorList`
+
+        .. rubric :: Input arguments
+
+        ``wavelet`` (`Wavelet` object):
+        Source wavelet
+
         """
         for tensor in self:
             tensor.convolve(wavelet)
@@ -340,24 +354,21 @@ class GreensTensorList(list):
 
 
     def sort_by_distance(self, reverse=False):
-        """ 
-        Sorts in-place by hypocentral distance
+        """ Sorts in-place by hypocentral distance
         """
         self.sort_by_function(lambda stream: stream.distance,
             reverse=reverse)
 
 
     def sort_by_azimuth(self, reverse=False):
-        """
-        Sorts in-place by source-receiver azimuth
+        """ Sorts in-place by source-receiver azimuth
         """
         self.sort_by_function(lambda stream: stream.azimuth,
             reverse=reverse)
 
 
     def sort_by_function(self, function, reverse=False):
-        """ 
-        Sorts in-place using the python built-in "sort"
+        """ Sorts in-place using the python built-in "sort"
         """
         self.sort(key=function, reverse=reverse)
 

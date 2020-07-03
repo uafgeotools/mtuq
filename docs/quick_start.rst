@@ -1,9 +1,9 @@
 Quick start
 ===========
 
-An easy way to get started is to try out these `examples <https://github.com/uafgeotools/mtuq/blob/master/examples>`_, which estimate source parameters for an event from `Silwal2016` using seismic waveforms included with the `MTUQ` repository.
+An easy way to get started is to try out these `examples <https://github.com/uafgeotools/mtuq/blob/master/examples>`_, which estimate source parameters for an event from `Silwal2016`.
 
-Before running any of these scripts, users must first `install MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_.  After installation finishes, examples can be invoked within the `examples/` directory as follows:
+Before running any of the scripts, users must first `install MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_.  After installation finishes, examples can be invoked within the `examples/` directory as follows:
 
 .. code::
 
@@ -45,7 +45,7 @@ If MPI is not present, users can still run any example by invoking it directly, 
 References
 ----------
 
-[Silwal2016] Vipul Silwal and Carl Tape (2016), Seismic moment tensors and
+[`Silwal2016`] Vipul Silwal and Carl Tape (2016), Seismic moment tensors and
 estimated uncertainties in southern Alaska, JGR, https://doi.org/10.1002/2015JB012588
 
 

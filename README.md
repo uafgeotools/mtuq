@@ -16,8 +16,7 @@ downloading AxiSEM synthetics from remote syngine databases.
 ## Misfit evaluation
 
 Waveform difference and cross-correlation time-shift [misfit evaluation](https://uafgeotools.github.io/mtuq/library/index.html#data-processing-and-inversion) 
-on windowed body-wave and surface-wave traces is implemented in C-accelerated 
-Python.
+on body-wave and surface-wave windows is implemented in C-accelerated Python.
 
 A separate easy-to-read pure Python implementation is also included for 
 checking the correctness of the accelerated version.
@@ -26,13 +25,12 @@ checking the correctness of the accelerated version.
 ## Visualization
 
 Includes moment tensor [uncertainty quantification](https://uafgeotools.github.io/mtuq/library/index.html#uncertainty-quantification) on the eigenvalue lune and
-v-w rectangle, with separate matplotlib and Generic Mapping Tools plotting
-functions.
+v-w rectangle, with matplotlib and Generic Mapping Tools plotting functions.
 
 
 ## Testing
 
-The package has been tested against [legacy Perl/C codes](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) and [published inversions](https://github.com/rmodrak/mtbench).
+The package has been tested against [legacy Perl/C codes](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) as well as [published inversions](https://github.com/rmodrak/mtbench).
 
 
 
@@ -57,7 +55,7 @@ The package has been tested against [legacy Perl/C codes](https://github.com/uaf
 
 
 
-[![Build Status](https://travis-ci.org/uafgeotools/mtuq.svg?branch=master)](https://travis-ci.org/uafseismo/mtuq)
+[![Build Status](https://travis-ci.org/uafgeotools/mtuq.svg?branch=master)](https://travis-ci.org/uafgeotools/mtuq)
 
 [Instaseis]: http://instaseis.net/
 

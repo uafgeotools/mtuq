@@ -1,7 +1,7 @@
 Learning ObsPy and MTUQ
 =======================
 
-To avoid reinventing the wheel, MTUQ makes extensive use of `ObsPy <https://github.com/obspy/obspy/wiki>`_, a widely-used Python package for seismology.  If you're not already familiar with Python or ObsPy, an excellent place to start is the `ObsPy tutorial <http://docs.obspy.org/tutorial/index.html>`_.
+To avoid reinventing the wheel, MTUQ makes extensive use of `ObsPy <https://github.com/obspy/obspy/wiki>`_, a widely-used Python package for seismology.  If you're not familiar with Python or ObsPy, an excellent place to start is the `ObsPy tutorial <http://docs.obspy.org/tutorial/index.html>`_.
 
 
 
@@ -13,44 +13,50 @@ MTUQ code snippets
    Under construction
 
 
+#
 
-1. Reading a single trace:
+Reading a single trace:
 
 .. code ::
 
    git clone --branch data <repo>
 
    import obspy
-   stream = obspy.read('<filename>', format='SAC')
+   stream = obspy.read(<filename>, format='SAC')
 
 
-2. Reading a set of traces:
+#
+
+Reading a set of traces:
 
 .. code ::
 
    git clone --branch data <repo>
 
    import mtuq
-   data = mtuq.read('\*.sac', format='SAC')
+   data = mtuq.read(<wildcard>, format='SAC')
 
+#
 
-3. Processing a single trace
-
-.. code ::
-
-   from mtuq import ProcessData
-
-   function = ProcessData(filter='lowpass', period=5.)
-   procssed_stream = function(stream)
-
-
-4. Processing a set of traces:
+Processing a single trace
 
 .. code ::
 
    from mtuq import ProcessData
 
    function = ProcessData(filter='lowpass', period=5.)
-   procssed_data = data.map(function)
+   processed_stream = function(stream)
+
+
+#
+
+Processing a set of traces:
+
+.. code ::
+
+   from mtuq import ProcessData
+
+   function = ProcessData(filter='lowpass', period=5.)
+   processed_data = data.map(function)
 
 

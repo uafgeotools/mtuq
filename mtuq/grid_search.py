@@ -150,7 +150,7 @@ class MTUQDataArray(xarray.DataArray):
         # idxmin has now been implemented in a beta version of xarray
         return self.where(self==self.max(), drop=True).squeeze().coords
 
-    def origin_idx(self):
+    def origin_idxmin(self):
         """ Returns origin index corresponding to minimum misfit
         """
         return int(self.idxmin()['origin_idx'])

@@ -16,8 +16,9 @@ class Station(AttribDict):
 
     .. note::
 
-        Each supported file format has a corresponding reader that creates
-        Station objects from file metadata (see ``mtuq.io.readers``).
+        Each supported file format has a corresponding reader that reads
+        waveforms and creates Station objects from metadata 
+        (see ``mtuq.io.readers``).
 
     """
 

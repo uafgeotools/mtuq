@@ -15,8 +15,8 @@ class Wavelet(object):
 
     .. rubric:: Example
 
-    By inheriting from ``mtuq.Wavelet``, we can implement a Gaussian function
-    with unit standard deviation:
+    We can implement a Gaussian function with unit standard deviation
+    as follows:
     
     .. code::
 
@@ -24,13 +24,13 @@ class Wavelet(object):
             def evaluate(self, t):
                 return ((2*np.pi)**0.5)**(-1.)*np.exp(-0.5*(t)**2.)
 
-    We can now evaluate ``UnitGaussian`` on any given set, say on the 
+    We can now evaluate ``UnitGaussian`` on any given set, say, on the 
     interval [-5, +5]:
 
     .. code::
 
        t = np.linspace(-5,. +5., 101)
-       y = SimpleGaussian(t)
+       y = UnitGaussian.evaluate(t)
 
     Or we can convolve it with an ObsPy trace:
 
@@ -38,7 +38,7 @@ class Wavelet(object):
 
        from obspy import read
        trace = read('http://examples.obspy.org/exaple_data.sac')[0]
-       convolved_trace = SimpleGaussian.convolve(trace)
+       convolved_trace = UnitGaussian.convolve(trace)
 
     """
     def evaluate(self, t):

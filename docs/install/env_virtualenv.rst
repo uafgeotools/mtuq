@@ -1,9 +1,9 @@
-Installation under `virtualenv`
-===============================
+Installation under virtualenv
+=============================
 
-Install the `virtualenv` program, if not already present, following these `instructions <https://virtualenv.pypa.io/en/latest/installation.html>`_.
+Install `virtualenv`, if not already present, following these `instructions <https://virtualenv.pypa.io/en/latest/installation.html>`_.
 
-Create a new virtual environment:
+Create a virtual environment:
 
 .. code::
 
@@ -38,5 +38,5 @@ Unpack seismic waveforms used by examples:
 
 Finally, install GMT following these `instructions <https://github.com/GenericMappingTools/gmt/blob/master/INSTALL.md>`_.  
 
-(For an automated `GMT` installation, consider installing MTUQ under `conda` instead.)
+(For an automated GMT installation procedure, consider `installing MTUQ under conda <https://uafgeotools.github.io/mtuq/install/env_conda.html>`_ instead.)
 

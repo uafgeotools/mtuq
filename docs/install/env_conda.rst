@@ -1,10 +1,10 @@
-Installation under `conda`
-==========================
+Installation under conda
+========================
 
-First, download and install `miniconda` following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+Install `conda`, if not already present, following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
-Create a `conda` virtual environment:
+Create a virtual environment:
 
 .. code::
 

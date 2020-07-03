@@ -19,8 +19,8 @@ class Dataset(list):
 
     .. note::
 
-        Each supported file format has a corresponding reader that creates a 
-        Dataset (see ``mtuq.io.readers``).
+        Each supported file format has a corresponding reader that creates
+        Datasets (see ``mtuq.io.readers``).
 
     """
     def __init__(self, streams=[], id=None, tags=[]):
@@ -97,15 +97,11 @@ class Dataset(list):
 
         .. warning ::
 
-            Although ``apply`` returns a new Dataset, contents of the original 
-            Dataset may still be overwritten when applying certain functions.
-            If you wish to preserve the original Dataset and are unsure 
-            how a function operates, make a `deepcopy` of the Dataset first. 
+            Although ``apply`` returns a new `Dataset`, contents of the
+            original `Dataset` may still be overwritten, depending on
+            the function. To preserve the original, consider making a 
+            `deepcopy` first.
 
-            (Deep copies are not necessary when using `mtuq.process_data`, 
-            because the original trace data are preserved by default.
-            This behavior can be overridden by manually supplying 
-            `inplace=True` as a keyword argument.)
 
         """
         processed = []
@@ -126,15 +122,10 @@ class Dataset(list):
 
         .. warning ::
 
-            Although ``map`` returns a new Dataset, contents of the original 
-            Dataset may still be overwritten when mapping certain functions.
-            If you wish to preserve the original Dataset and are unsure 
-            how a function operates, make a `deepcopy` of the Dataset first. 
-
-            (Deep copies are not necessary when using `mtuq.process_data`, 
-            because the original trace data are preserved by default.
-            This behavior can be overridden by manually supplying 
-            `inplace=True` as a keyword argument.)
+            Although ``map`` returns a new `Dataset`, contents of the
+            original `Dataset` may still be overwritten, depending on
+            the function. To preserve the original, consider making a 
+            `deepcopy` first.
 
         """
         processed = []
