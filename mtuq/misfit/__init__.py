@@ -73,8 +73,8 @@ class Misfit(object):
     .. rubric:: Optimization Levels
 
     Misfit evaluation is the most complex and computationally expensive task
-    performed by this software package. Python object-oriented programming
-    makes it possible to offer three different implementations:
+    performed by this software. As a result we offer three different
+    implementations:
 
     - a readable pure Python version (``mtuq.misfit.level0``)
 

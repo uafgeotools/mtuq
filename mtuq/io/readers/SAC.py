@@ -18,17 +18,17 @@ def read(filenames, station_id_list=None, event_id=None, tags=[]):
 
     .. rubric :: Parameters
 
-    - ``filenames`` (``list``)
-      List of SAC files to be read (can contain Unix wildcards)
+    ``filenames`` (`str` or `list`)
+    Wildcard string or list of filenames
 
-    - ``station_id_list`` (``list``)
-      Any traces that are not from one of the listed stations will be excluded
+    ``station_id_list`` (`list`)
+    Any traces not from one of the listed stations will be excluded
 
-    - ``event_id`` (``str``)
-     Identifier to be suppplied to the MTUQ Dataset
+    ``event_id`` (`str`)
+    Identifier to be suppplied to the MTUQ Dataset
 
-    - ``tags`` (``list``)
-      Tags to be supplied to the MTUQ Dataset
+    ``tags`` (`list`)
+    Tags to be supplied to the MTUQ Dataset
 
     """
     # read traces one at a time

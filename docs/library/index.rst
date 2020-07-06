@@ -22,7 +22,7 @@ Data I/O
 ============================================================================================================  ============================================================================================================
 `mtuq.download_greens_tensors <generated/mtuq.download_greens_tensors.html>`_                                  Downloads Green's tensors from syngine
 `mtuq.open_db <generated/mtuq.open_db.html>`_                                                                  Opens Green's tensor database from disk
-`mtuq.read <generated/mtuq.read.html>`_                                                                        Reads seismic data from disk
+`mtuq.read <generated/mtuq.io.readers.SAC.read.html>`_                                                         Reads seismic data from disk
 ============================================================================================================  ============================================================================================================
 
 
@@ -31,8 +31,8 @@ Data processing and inversion
 -----------------------------
 
 ============================================================================================================  ============================================================================================================
-`mtuq.process_data.ProcessData <generated/mtuq.process_data.ProcessData.html>`_                                Data processing function
-`mtuq.misfit.Misfit <generated/mtuq.misfit.Misfit.html>`_                                                      Misfit function
+`mtuq.ProcessData <generated/mtuq.process_data.ProcessData.html>`_                                             Data processing function constructor
+`mtuq.Misfit <generated/mtuq.misfit.Misfit.html>`_                                                             Misfit function constructor
 `mtuq.grid_search <generated/mtuq.grid_search.grid_search.html>`_                                              Evaluates misfit over grids
 `mtuq.MTUQDataArray <generated/mtuq.grid_search.MTUQDataArray.html>`_                                          Data structure for storing misfit values on regularly-spaced grids
 `mtuq.MTUQDataFrame <generated/mtuq.grid_search.MTUQDataFrame.html>`_                                          Data structure for storing misfit values on irregularly-spaced grids

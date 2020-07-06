@@ -119,9 +119,9 @@ def to_rtp(F0, theta, h):
     """
     x, y, z = to_xyz(F0, theta, h)
     if type(x) is np.ndarray:
-        return np.column_stack([z, x, y,])
+        return np.column_stack([z, -y, x,])
     else:
-        return np.array([z, x, y])
+        return np.array([z, -y, x])
 
 
 def to_delta_gamma(v, w):

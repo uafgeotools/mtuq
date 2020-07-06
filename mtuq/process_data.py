@@ -40,7 +40,7 @@ class ProcessData(object):
         processed_dataset = dataset.map(function)
 
 
-    See `mtuq/examples/` for further illustration of how data processing works.
+    See `mtuq/examples/` for further illustration.
 
 
     .. rubric :: Parameters
@@ -102,8 +102,27 @@ class ProcessData(object):
     whether or not to apply distance-dependent amplitude scaling
 
 
+
+    .. rubric:: Other input arguments that may be required, depending on the above
+
+    ``freq_min`` (`float`)
+    Required for `filter_type=bandpass`
+
+    ``freq_max`` (`float`)
+    Required for `filter_type=bandpass`
+
+    ``freq`` (`float`)
+    Required for `filter_type=lowpass` or `filter_type=highpass`
+
+
+    ``taup_model`` (`str`)
+    Name of ObsPy TauP model, required for `pick_type=taup`
+
+    ``FK_database`` (`str`)
+    Path to FK database, required for `pick_type=FK_metadata`
+
     ``capuaf_file`` (`str`)
-    path to `CAPUAF`-style text file
+    Path to `CAPUAF`-style text file, required for `pick_type=user_supplied`
 
     """
 

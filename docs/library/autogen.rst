@@ -39,6 +39,7 @@ autogen
    mtuq.io.clients.AxiSEM_NetCDF.Client
    mtuq.io.clients.FK_SAC.Client
    mtuq.io.clients.syngine.Client
+   mtuq.io.readers.SAC.read
    mtuq.misfit.level0
    mtuq.misfit.level1
    mtuq.misfit.level2
