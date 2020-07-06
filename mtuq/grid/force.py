@@ -21,7 +21,7 @@ def ForceGridRegular(magnitudes_in_N=1., npts_per_axis=80):
     .. rubric :: Usage
 
     Use ``get(i)`` to return the i-th force as a vector
-    `Frr, Ftt, Fpp`
+    `Fr, Ft, Fp`
 
     Use ``get_dict(i)`` to return the i-th force as dictionary
     of parameters `F0, theta, h` (magnitude, azimuth, cos(colatitude)).
@@ -47,7 +47,7 @@ def ForceGridRandom(magnitudes_in_N=1., npts=10000):
     .. rubric :: Usage
 
     Use ``get(i)`` to return the i-th force as a vector
-    `Frr, Ftt, Fpp`
+    `Fr, Ft, Fp`
 
     Use ``get_dict(i)`` to return the i-th force as dictionary
     of parameters `F0, theta, h` (magnitude, azimuth, cos(colatitude)).
