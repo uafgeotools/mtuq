@@ -116,7 +116,7 @@ class GreensTensor(GreensTensorBase):
             elif component=='R':
                 R0 = self.select(channel="R0")[0].data
                 R1 = self.select(channel="R1")[0].data
-                R2 = self.select(channel="Z2")[0].data
+                R2 = self.select(channel="R2")[0].data
                 array[_i, _j+0, :] = R0
                 array[_i, _j+1, :] = R1
                 array[_i, _j+2, :] = R2

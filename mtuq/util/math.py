@@ -151,14 +151,17 @@ def to_mij(rho, v, w, kappa, sigma, h):
         return np.array([mt0, mt1, mt2, mt3, mt4, mt5])
 
 
-def to_xyz(F0, theta, h):
+def to_xyz(F0, phi, h):
     """ Converts from spherical to Cartesian coordinates (east-north-up)
     """
-    phi = np.arccos(h)
+    # spherical coordinates in "physics convention"
+    r = F0
+    phi = phi
+    theta = np.arccos(h)
 
-    x = F0*np.sin(theta)*np.cos(phi)
-    y = F0*np.sin(theta)*np.sin(phi)
-    z = F0*np.cos(theta)
+    x = F0*np.sin(phi)*np.cos(theta)
+    y = F0*np.sin(phi)*np.sin(theta)
+    z = F0*np.cos(phi)
 
     if type(F0) is np.ndarray:
         return np.column_stack([x, y, z])
@@ -166,14 +169,17 @@ def to_xyz(F0, theta, h):
         return np.array([x, y, z])
 
 
-def to_rtp(F0, theta, h):
+def to_rtp(F0, phi, h):
     """ Converts from spherical to Cartesian coordinates (up-south-east)
     """
-    phi = np.arccos(h)
+    # spherical coordinates in "physics convention"
+    r = F0
+    phi = phi
+    theta = np.arccos(h)
 
-    x = F0*np.sin(theta)*np.cos(phi)
-    y = F0*np.sin(theta)*np.sin(phi)
-    z = F0*np.cos(theta)
+    x = F0*np.sin(phi)*np.cos(theta)
+    y = F0*np.sin(phi)*np.sin(theta)
+    z = F0*np.cos(phi)
 
     if type(F0) is np.ndarray:
         return np.column_stack([z, -y, x,])

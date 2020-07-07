@@ -71,14 +71,13 @@ class Client(ClientBase):
     def _get_greens_tensor(self, station=None, origin=None):
         stream = Stream()
 
-        # download and unzip time series
-        dirname = unzip(
-            download_greens_tensor(self.url, self.model, station, origin))
-
         # read time series
         stream = Stream()
 
         if self.include_mt:
+            dirname = unzip(
+                download_greens_tensor(self.url, self.model, station, origin))
+
             for filename in GREENS_TENSOR_FILENAMES:
                 stream += obspy.read(dirname+'/'+filename, format='sac')
 
