@@ -2,13 +2,19 @@
 
 import numpy as np
 
-from numpy import pi as PI
 from numpy.random import uniform as random
 
+from mtuq.event import Force
 from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_force
+
+
+def to_force(F0, theta, h):
+    """ Converts from spherical coordinates to Force object
+    """
+    rtp = to_rtp(F0, theta, h)
+    return Force(rtp, convention='USE')
 
 
 def ForceGridRegular(magnitudes_in_N=1., npts_per_axis=80):
@@ -65,3 +71,5 @@ def ForceGridRandom(magnitudes_in_N=1., npts=10000):
         dims=('F0', 'theta', 'h'),
         coords=(F0, theta, h),
         callback=to_force)
+
+

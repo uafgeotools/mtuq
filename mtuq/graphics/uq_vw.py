@@ -9,8 +9,7 @@ from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util.lune import to_delta, to_gamma
-from mtuq.util.math import closed_interval, open_interval
+from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma
 
 
 #

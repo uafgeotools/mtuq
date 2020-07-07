@@ -5,11 +5,18 @@ import numpy as np
 from numpy import pi as PI
 from numpy.random import uniform as random
 
+from mtuq.event import Force, MomentTensor
 from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.lune import to_mt, to_rho, semiregular_grid
+from mtuq.util.math import to_mij, to_rho, semiregular_grid
 
+
+def to_mt(rho, v, w, kappa, sigma, h):
+    """ Converts from lune parameters to MomentTensor object
+    """
+    mt = to_mij(rho, v, w, kappa, sigma, h)
+    return MomentTensor(mt, convention='USE')
 
 
 def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
@@ -48,7 +55,6 @@ def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
         coords=(rho, v, w, kappa, sigma, h),
         callback=to_mt)
-
 
 
 def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20, tightness=0.8):
