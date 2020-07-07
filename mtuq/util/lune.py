@@ -4,20 +4,12 @@ from mtuq.event import Force, MomentTensor
 from mtuq.util.math import open_interval
 
 
-deg2rad = np.pi/180.
-rad2deg = 180./np.pi
-
 
 def lune_det(delta, gamma):
     """ Determinant of lune mapping as function of lune coordinates
     """
-    deg2rad = np.pi/180.
-    delta, gamma = np.meshgrid(delta, gamma)
-    beta = 90. - delta
-
-    beta *= deg2rad
-    gamma *= deg2rad
-
+    delta, gamma = np.meshgrid(np.deg2rad(delta), np.deg2rad(gamma))
+    beta = np.pi/2. - delta
     return 4./np.pi * np.sin(beta)**3 * np.cos(3.*gamma)
 
 
@@ -46,27 +38,33 @@ def to_mij(rho, v, w, kappa, sigma, h):
     k8R6 = 8.*np.sqrt(6.)
 
     m0 = rho/np.sqrt(2.)
+
     delta, gamma = to_delta_gamma(v, w)
     beta = 90. - delta
-    theta = np.arccos(h)/deg2rad
 
-    Cb  = np.cos(beta*deg2rad)
-    Cg  = np.cos(gamma*deg2rad)
-    Cs  = np.cos(sigma*deg2rad)
-    Ct  = np.cos(theta*deg2rad)
-    Ck  = np.cos(kappa*deg2rad)
-    C2k = np.cos(2.0*kappa*deg2rad)
-    C2s = np.cos(2.0*sigma*deg2rad)
-    C2t = np.cos(2.0*theta*deg2rad)
+    gamma = np.deg2rad(gamma)
+    beta = np.deg2rad(90. - delta)
+    kappa = np.deg2rad(kappa)
+    sigma = np.deg2rad(sigma)
+    theta = np.arccos(h)
 
-    Sb  = np.sin(beta*deg2rad)
-    Sg  = np.sin(gamma*deg2rad)
-    Ss  = np.sin(sigma*deg2rad)
-    St  = np.sin(theta*deg2rad)
-    Sk  = np.sin(kappa*deg2rad)
-    S2k = np.sin(2.0*kappa*deg2rad)
-    S2s = np.sin(2.0*sigma*deg2rad)
-    S2t = np.sin(2.0*theta*deg2rad)
+    Cb  = np.cos(beta)
+    Cg  = np.cos(gamma)
+    Cs  = np.cos(sigma)
+    Ct  = np.cos(theta)
+    Ck  = np.cos(kappa)
+    C2k = np.cos(2.0*kappa)
+    C2s = np.cos(2.0*sigma)
+    C2t = np.cos(2.0*theta)
+
+    Sb  = np.sin(beta)
+    Sg  = np.sin(gamma)
+    Ss  = np.sin(sigma)
+    St  = np.sin(theta)
+    Sk  = np.sin(kappa)
+    S2k = np.sin(2.0*kappa)
+    S2s = np.sin(2.0*sigma)
+    S2t = np.sin(2.0*theta)
 
     mt0 = m0 * (1./12.) * \
         (k4R6*Cb + Sb*(kR3*Sg*(-1. - 3.*C2t + 6.*C2s*St*St) + 12.*Cg*S2t*Ss))
@@ -135,8 +133,7 @@ def to_gamma(v):
     """ Converts from Tape2015 parameter v to lune longitude
     """
     gamma = (1./3.)*np.arcsin(3.*v)
-    gamma *= rad2deg
-    return gamma
+    return np.rad2deg(gamma)
 
 
 def to_delta(w):
@@ -145,8 +142,7 @@ def to_delta(w):
     beta0 = np.linspace(0, np.pi, 100)
     u0 = 0.75*beta0 - 0.5*np.sin(2.*beta0) + 0.0625*np.sin(4.*beta0)
     beta = np.interp(3.*np.pi/8. - w, u0, beta0)
-    beta *= rad2deg
-    delta = 90. - beta
+    delta = np.rad2deg(np.pi/2. - beta)
     return delta
 
 
@@ -159,16 +155,14 @@ def to_v_w(delta, gamma):
 def to_v(gamma):
     """ Converts from lune longitude to Tape2015 parameter v
     """
-    gamma *= deg2rad
-    v = (1./3.)*np.sin(3.*gamma)
+    v = (1./3.)*np.sin(3.*np.deg2rad(gamma))
     return v
 
 
 def to_w(delta):
     """ Converts from lune latitude to Tape2015 parameter w
     """
-    delta *= deg2rad
-    beta = np.pi/2. - delta
+    beta = np.deg2rad(90. - delta)
     u = (0.75*beta - 0.5*np.sin(2.*beta) + 0.0625*np.sin(4.*beta))
     w = 3.*np.pi/8. - u
     return w
