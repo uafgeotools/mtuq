@@ -95,30 +95,31 @@ def to_mij(rho, v, w, kappa, sigma, h):
         return np.array([mt0, mt1, mt2, mt3, mt4, mt5])
 
 
-def spherical_to_Cartesian(r, theta, phi):
-    """ Converts from spherical to Cartesian coordinates
+def to_xyz(F0, theta, h):
+    """ Converts from spherical to Cartesian coordinates (east-north-up)
     """
-    x = r*np.sin(theta)*np.cos(phi)
-    y = r*np.sin(theta)*np.sin(phi)
-    z = r*np.cos(theta)
+    phi = np.arccos(h)
 
-    if type(r) is np.ndarray:
+    x = F0*np.sin(theta)*np.cos(phi)
+    y = F0*np.sin(theta)*np.sin(phi)
+    z = F0*np.cos(theta)
+
+    if type(F0) is np.ndarray:
         return np.column_stack([x, y, z])
     else:
         return np.array([x, y, z])
 
 
-def to_xyz(F0, theta, h):
-    """ Converts from spherical to Cartesian coordinates
-    """
-    return spherical_to_Cartesian(F0, theta, np.arccos(h))
-
-
 def to_rtp(F0, theta, h):
-    """ Converts from spherical to Cartesian coordinates
+    """ Converts from spherical to Cartesian coordinates (up-south-east)
     """
-    x, y, z = to_xyz(F0, theta, h)
-    if type(x) is np.ndarray:
+    phi = np.arccos(h)
+
+    x = F0*np.sin(theta)*np.cos(phi)
+    y = F0*np.sin(theta)*np.sin(phi)
+    z = F0*np.cos(theta)
+
+    if type(F0) is np.ndarray:
         return np.column_stack([z, -y, x,])
     else:
         return np.array([z, -y, x])
