@@ -6,6 +6,8 @@ import xarray
 from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback
 from os.path import splitext
+from xarray.core.formatting import unindexed_dims_repr
+
 
 xarray.set_options(keep_attrs=True)
 
@@ -21,7 +23,7 @@ def grid_search(data, greens, misfit, origins, sources,
     `misfit(data, greens.select(origin), source)` over all origins and sources.
 
     If `origins` and `sources` are regularly-spaced, returns an `MTUQDataArray`
-    containing misfit values and corresponding grid points; otherwise, returns
+    containing misfit values and corresponding grid points, otherwise, returns
     an `MTUQDataFrame`.
 
 
@@ -173,14 +175,27 @@ class MTUQDataArray(xarray.DataArray):
         print('Saving NetCDF file: %s' % filename)
         self.to_netcdf(filename)
 
-    #def __str__(self):
-    #    out += '  grid shape: %s\n' % da.shape)
-    #    out += '  grid size:  %d\n' % da.size)
-    #    out += '  mean: %.3e\n' % np.mean(da.values))
-    #    out += '  std:  %.3e\n' % np.std(da.values))
-    #    out += '  min:  %.3e\n' % da.values.min())
-    #    out += '  max:  %.3e\n' % da.values.max())
+    def __repr__(self):
+        summary = [
+            'Summary:',
+            '  grid shape: %s' % self.shape.__repr__(),
+            '  grid size:  %d' % self.size,
+            '  mean: %.3e' % np.mean(self.values),
+            '  std:  %.3e' % np.std(self.values),
+            '  min:  %.3e' % self.values.min(),
+            '  max:  %.3e' % self.values.max(),
+            '',
+        ]
 
+        if hasattr(self, "coords"):
+            if self.coords:
+                summary.append(repr(self.coords))
+
+            unindexed_dims_str = unindexed_dims_repr(self.dims, self.coords)
+            if unindexed_dims_str:
+                summary.append(unindexed_dims_str)
+
+        return "\n".join(summary+[''])
 
 
 
@@ -288,4 +303,6 @@ def _to_dataframe(origins, sources, values):
     #df = MTUQDataFrame(data=data)
     #df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
     # return df.set_index(list(dims))
+
+
 
