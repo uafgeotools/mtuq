@@ -3,9 +3,11 @@ try:
     import instaseis
 except:
     pass
+
 import obspy
 import numpy as np
 
+from obspy.core import Stream
 from os.path import basename
 from mtuq.greens_tensor.AxiSEM import GreensTensor
 from mtuq.io.clients.base import Client as ClientBase
@@ -35,7 +37,9 @@ class Client(ClientBase):
 
     """
 
-    def __init__(self, path_or_url='', model='', kernelwidth=12):
+    def __init__(self, path_or_url='', model='', kernelwidth=12,
+        include_mt=True, include_force=False):
+
         if not path_or_url:
             raise Exception
         self.db = instaseis.open_db(path_or_url)
@@ -44,6 +48,9 @@ class Client(ClientBase):
         if not model:
             model = path_or_url
         self.model = model
+
+        self.include_mt = include_mt
+        self.include_force = include_force
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
@@ -59,15 +66,33 @@ class Client(ClientBase):
 
 
     def _get_greens_tensor(self, station=None, origin=None):
-        distance_in_deg = get_distance_in_deg(station, origin)
 
-        stream = self.db.get_greens_function(
-            epicentral_distance_in_degree=distance_in_deg,
-            source_depth_in_m=origin.depth_in_m, 
-            origin_time=origin.time,
-            kind='displacement',
-            kernelwidth=self.kernelwidth,
-            definition='seiscomp')
+        stream = Stream()
+
+        if self.include_mt:
+            stream += self.db.get_greens_function(
+                epicentral_distance_in_degree=get_distance_in_deg(station, origin),
+                source_depth_in_m=origin.depth_in_m, 
+                origin_time=origin.time,
+                kind='displacement',
+                kernelwidth=self.kernelwidth,
+                definition='seiscomp')
+
+        if self.include_force:
+            receiver = _get_instaseis_receiver(station)
+
+            for _i, force in enumerate([{'f_r': 1.}, {'f_t': 1.}, {'f_p': 1.}]):
+                stream += self.db.get_seismograms(
+                    source=_get_instaseis_source(origin, **force),
+                    receiver=receiver,
+                    components=['Z','R','T'],
+                    kind='displacement',
+                    kernelwidth=self.kernelwidth)
+
+                stream[-3].stats.channel = "Z"+str(_i)
+                stream[-2].stats.channel = "R"+str(_i)
+                stream[-1].stats.channel = "T"+str(_i)
+            
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
@@ -97,6 +122,28 @@ class Client(ClientBase):
              ]
 
         return GreensTensor(traces=[trace for trace in stream],
-            station=station, origin=origin, tags=tags)
+            station=station, origin=origin, tags=tags,
+            include_mt=self.include_mt, include_force=self.include_force)
 
+
+
+#
+# utility functions
+#
+
+def _get_instaseis_source(origin, **kwargs):
+    return instaseis.ForceSource(
+        origin.latitude,
+        origin.longitude,
+        depth_in_m=origin.depth_in_m,
+        origin_time=origin.time,
+        **kwargs)
+
+def _get_instaseis_receiver(station):
+    return instaseis.Receiver(
+        station.latitude,
+        station.longitude,
+        network=station.network,
+        station=station.station,
+        location=station.location)
 

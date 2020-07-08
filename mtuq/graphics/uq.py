@@ -18,7 +18,7 @@ from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics._gmt import gmt_cmd, gmt_not_found_warning, check_ext
 from mtuq.util import fullpath
-from mtuq.util.lune import to_gamma, to_delta, to_v, to_w, semiregular_grid
+from mtuq.util.math import to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
 def plot_misfit(filename, ds, title=''):

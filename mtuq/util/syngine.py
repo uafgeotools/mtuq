@@ -128,10 +128,12 @@ def download_synthetics(url, model, station, origin, source):
 
 
 def download_force_response(url, model, station, origin):
+    # syngine uses up-south-east convention for forces
+    # https://github.com/krischer/instaseis/pull/74
     forces = []
-    forces += [np.array([1., 0., 0.])]
-    forces += [np.array([0., 1., 0.])]
-    forces += [np.array([0., 0., 1.])]
+    forces += [np.array([1., 0., 0.])] # up
+    forces += [np.array([0., 1., 0.])] # south
+    forces += [np.array([0., 0., 1.])] # east
 
     filenames = []
     for force in forces:

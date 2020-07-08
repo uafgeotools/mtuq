@@ -8,7 +8,7 @@ import numpy as np
 import time
 from copy import deepcopy
 from mtuq.misfit.level1 import correlate
-from mtuq.util.lune import to_mij, to_xyz
+from mtuq.util.math import to_mij, to_xyz
 from mtuq.util.signal import get_components, get_time_sampling
 from mtuq.misfit import c_ext_L2
 
@@ -242,9 +242,9 @@ def _to_array(sources):
 
     elif _type(dims)=='Force':
         return np.ascontiguousarray(to_xyz(
-            df['F0'].to_numpy(),    # magnitude
-            df['theta'].to_numpy(), # azimuth
-            df['h'].to_numpy(),   # cos(colatitude)
+            df['F0'].to_numpy(),
+            df['phi'].to_numpy(),
+            df['h'].to_numpy(),
             ))
 
 
@@ -258,7 +258,7 @@ def _type(dims):
         return 'MomentTensor'
 
     elif 'F0' in dims\
-       and 'theta' in dims\
+       and 'phi' in dims\
        and 'h' in dims:
         return 'Force'
 

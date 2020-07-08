@@ -46,15 +46,17 @@ def plot_misfit_force(filename, ds, title=None):
 
     if issubclass(type(ds), DataArray):
         da = ds.min(dim=('origin_idx', 'F0'))
+        phi = da.coords['phi']
+        h = da.coords['h']
         values = da.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
         df = ds.reset_index()
-        theta, h, values = _bin(df, lambda df: df.min())
+        phi, h, values = _bin(df, lambda df: df.min())
 
 
-    _plot_force_gmt(filename, theta, h, values, title=title)
+    _plot_force_gmt(filename, phi, h, values, title=title)
 
 
 
@@ -93,21 +95,21 @@ def plot_likelihood_force(filename, ds, sigma=1., title=None):
 
     if issubclass(type(ds), DataArray):
         da = ds.max(dim=('origin_idx', 'F0'))
-        lat = _to_lat(da.coords['h'])
-        lat = _to_lon(da.coords['theta'])
+        phi = da.coords['phi']
+        h = da.coords['h']
         values = da.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
         df = ds.reset_index()
         df['values'] /= df['values'].sum()
-        theta, h, values = _bin(df, lambda df: df.max())
+        phi, h, values = _bin(df, lambda df: df.max())
 
 
     values /= values.sum()
     values /= vw_area
 
-    _plot_force_gmt(filename, theta, h, values, title=title)
+    _plot_force_gmt(filename, phi, h, values, title=title)
 
 
 
@@ -146,20 +148,20 @@ def plot_marginal_force(filename, ds, sigma=1., title=None):
 
     if issubclass(type(ds), DataArray):
         da = ds.sum(dim=('origin_idx', 'F0'))
-        lat = _to_lat(da.coords['h'])
-        lat = _to_lon(da.coords['theta'])
+        phi = da.coords['phi']
+        h = da.coords['h']
         values = da.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
         df = ds.reset_index()
-        theta, h, values = _bin(df, lambda df: df.sum()/len(df))
+        phi, h, values = _bin(df, lambda df: df.sum()/len(df))
 
 
     values /= values.sum()
     values /= vw_area
 
-    _plot_force_gmt(filename, theta, h, values, title=title)
+    _plot_force_gmt(filename, phi, h, values, title=title)
 
 
 
@@ -176,34 +178,34 @@ def _check(ds):
 #
 
 
-def _bin(df, handle, npts_theta=60, npts_h=30):
+def _bin(df, handle, npts_phi=60, npts_h=30):
     """ Bins DataFrame into rectangular cells
     """
     # define centers of cells
-    centers_theta = open_interval(0., 360., npts_theta)
+    centers_phi = open_interval(0., 360., npts_phi)
     centers_h = open_interval(-1., +1., npts_h)
 
     # define corners of cells
-    theta = closed_interval(0., 360, npts_theta+1)
+    phi = closed_interval(0., 360, npts_phi+1)
     h = closed_interval(-1., +1., npts_h+1)
 
-    binned = np.empty((npts_h, npts_theta))
+    binned = np.empty((npts_h, npts_phi))
     for _i in range(npts_h):
-        for _j in range(npts_theta):
+        for _j in range(npts_phi):
             # which grid points lie within cell (i,j)?
             subset = df.loc[
-                df['theta'].between(theta[_j], theta[_j+1]) &
+                df['phi'].between(phi[_j], phi[_j+1]) &
                 df['h'].between(h[_i], h[_i+1])]
 
             if len(subset)==0:
                 print("Encountered empty bin\n"
-                      "theta: %f, %f\n"
+                      "phi: %f, %f\n"
                       "h: %f, %f\n" %
-                      (theta[_j], theta[_j+1], h[_i], h[_i+1]) )
+                      (phi[_j], phi[_j+1], h[_i], h[_i+1]) )
 
             binned[_i, _j] = handle(subset[0])
 
-    return centers_theta, centers_h, binned
+    return centers_phi, centers_h, binned
 
 
 
@@ -211,47 +213,10 @@ def _bin(df, handle, npts_theta=60, npts_h=30):
 # pyplot wrappers
 #
 
-def _plot_force(filename, theta, phi, values):
+def _plot_force(filename, phi, h, values):
     """ Plots misfit values on sphere (matplotlib implementation)
     """ 
-    fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
-
-    # pcolor requires corners of pixels
-    corners_v = _centers_to_edges(v)
-    corners_w = _centers_to_edges(w)
-
-    # `values` gets mapped to pixel colors
-    pyplot.pcolor(corners_v, corners_w, values, cmap=cmap)
-
-    # v and w have the following bounds
-    # (see https://doi.org/10.1093/gji/ggv262)
-    pyplot.xlim([-180., 180])
-    pyplot.ylim([-90., 90])
-
-    pyplot.xticks([], [])
-    pyplot.yticks([], [])
-
-    pyplot.colorbar(
-        orientation='horizontal',
-        ticks=[],
-        pad=0.,
-        )
-
-
-
-def _centers_to_edges(v):
-
-    if issubclass(type(v), DataArray):
-        v = v.values.copy()
-    else:
-        v = v.copy()
-
-    dv = (v[1]-v[0])
-    v -= dv/2
-    v = np.pad(v, (0, 1))
-    v[-1] = v[-2] + dv
-
-    return v
+    raise NotImplementedError
 
 
 
@@ -259,11 +224,21 @@ def _centers_to_edges(v):
 # GMT wrappers
 #
 
-def _plot_force_gmt(filename, theta, h, values, add_marker=True, title=''):
+
+def _wrap(angle_in_deg):
+    """ Wraps angle to (-180, 180)
+    """
+    angle_in_deg %= 360.
+    idx = np.where(angle_in_deg > 180.)
+    angle_in_deg[idx] -= 360.
+    return angle_in_deg
+
+
+def _plot_force_gmt(filename, phi, h, values, add_marker=True, title=''):
     """ Plots misfit values on sphere (GMT implementation)
     """
     lat = np.degrees(np.pi/2 - np.arccos(h))
-    lon = theta - 180.
+    lon = _wrap(phi + 90.)
 
     lon, lat = np.meshgrid(lon, lat)
     lon = lon.flatten()
@@ -303,7 +278,11 @@ def _plot_force_gmt(filename, theta, h, values, add_marker=True, title=''):
     else:
         marker_coords = "''"
 
-    parts=title.split('\n')
+    try:
+        parts = title.split('\n')
+    except:
+        parts = []
+
     if len(parts) >= 2:
         title = "'%s'" % parts[0]
         subtitle = "'%s'" % parts[1]

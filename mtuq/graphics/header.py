@@ -10,7 +10,7 @@ from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
 from mtuq.graphics.beachball import gray, plot_beachball
-from mtuq.util.lune import to_delta_gamma
+from mtuq.util.math import to_delta_gamma
 from obspy.core import AttribDict
 
 
