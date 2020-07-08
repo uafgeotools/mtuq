@@ -1,5 +1,9 @@
 
-import instaseis
+try:
+    import instaseis
+except:
+    pass
+
 import obspy
 import numpy as np
 

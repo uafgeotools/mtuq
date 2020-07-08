@@ -28,6 +28,14 @@ Install MTUQ:
    pip install -e .
 
 
+If `instaseis` installation fails, try:
+
+.. code::
+
+   CC=gfortran; pip install instaseis 
+
+
+
 Unpack seismic waveforms used by examples:
 
 .. code::
