@@ -253,7 +253,7 @@ def _to_dataarray(origins, sources, values):
          })
 
 
-def _to_dataframe(origins, sources, values, index_type=2):
+def _to_dataframe(origins, sources, values):
     """ Converts grid_search inputs to DataFrame
     """
     if len(origins)*len(sources) > 2.e6:
@@ -271,34 +271,21 @@ def _to_dataframe(origins, sources, values, index_type=2):
     for _i, coords in enumerate(sources.coords):
         source_coords += [list(np.tile(coords, len(origins)))]
 
-    if index_type==1:
-        # much too slow!
-        coords = [origin_idx, source_idx]
-        dims = ('origin_idx', 'source_idx')
-        coords += source_coords
-        dims += sources.dims
-        data = {0: values.flatten()}
-        index = pandas.MultiIndex.from_tuples(zip(*coords), names=dims)
-        return MTUQDataFrame(data=data, index=index)
+    coords = [origin_idx, source_idx]
+    dims = ('origin_idx', 'source_idx')
+    coords += source_coords
+    dims += sources.dims
+    data = {dims[_i]: coords[_i] for _i in range(len(dims))}
+    data.update({0: values.flatten()})
+    df = MTUQDataFrame(data=data)
+    return df.set_index(list(dims))
 
-    if index_type==2:
-        # faster but uglier
-        coords = [origin_idx, source_idx]
-        dims = ('origin_idx', 'source_idx')
-        coords += source_coords
-        dims += sources.dims
-        data = {dims[_i]: coords[_i] for _i in range(len(dims))}
-        data.update({0: values.flatten()})
-        df = MTUQDataFrame(data=data)
-        return df.set_index(list(dims))
-
-    #if index_type==3:
-    #    # even faster, but would require new MTUQDataFrame methods
-    #    coords = [origin_idx, source_idx]
-    #    dims = ('origin_idx', 'source_idx')
-    #    data = {dims[_i]: coords[_i] for _i in range(len(dims))}
-    #    data.update({0: values.flatten()})
-    #    df = MTUQDataFrame(data=data)
-    #    df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
-    #    return df.set_index(list(dims))
+    ## even faster, but would require new MTUQDataFrame methods
+    #coords = [origin_idx, source_idx]
+    #dims = ('origin_idx', 'source_idx')
+    #data = {dims[_i]: coords[_i] for _i in range(len(dims))}
+    #data.update({0: values.flatten()})
+    #df = MTUQDataFrame(data=data)
+    #df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
+    # return df.set_index(list(dims))
 

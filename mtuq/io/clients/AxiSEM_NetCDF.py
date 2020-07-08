@@ -78,16 +78,16 @@ class Client(ClientBase):
             receiver = _get_instaseis_receiver(station)
 
             for _i, force in enumerate([{'f_r': 1.}, {'f_t': 1.}, {'f_p': 1.}]):
-                stream += self.db.seismograms(
+                stream += self.db.get_seismograms(
                     source=_get_instaseis_source(origin, **force),
                     receiver=receiver,
                     components=['Z','R','T'],
                     kind='displacement',
                     kernelwidth=self.kernelwidth)
 
-                stream[-3].channel = "Z"+str(_i)
-                stream[-2].channel = "R"+str(_i)
-                stream[-1].channel = "T"+str(_i)
+                stream[-3].stats.channel = "Z"+str(_i)
+                stream[-2].stats.channel = "R"+str(_i)
+                stream[-1].stats.channel = "T"+str(_i)
             
 
         # what are the start and end times of the data?
@@ -102,7 +102,7 @@ class Client(ClientBase):
         dt_old = float(trace.stats.delta)
 
         for trace in stream:
-            trace.stats._component= trace.stats.channel[0]
+            trace.stats._component = trace.stats.channel[0]
 
             # resample Green's functions
             data_old = trace.data
@@ -118,18 +118,22 @@ class Client(ClientBase):
              ]
 
         return GreensTensor(traces=[trace for trace in stream],
-            station=station, origin=origin, tags=tags)
+            station=station, origin=origin, tags=tags,
+            include_mt=self.include_mt, include_force=self.include_force)
 
 
+
+#
+# utility functions
+#
 
 def _get_instaseis_source(origin, **kwargs):
     return instaseis.ForceSource(
         origin.latitude,
         origin.longitude,
         depth_in_m=origin.depth_in_m,
+        origin_time=origin.time,
         **kwargs)
-
-
 
 def _get_instaseis_receiver(station):
     return instaseis.Receiver(
@@ -137,6 +141,5 @@ def _get_instaseis_receiver(station):
         station.longitude,
         network=station.network,
         station=station.station,
-        location=station.location,
-        **kwargs)
+        location=station.location)
 
