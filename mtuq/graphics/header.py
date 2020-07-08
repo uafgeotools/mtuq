@@ -108,12 +108,15 @@ class Header(Base):
         self.misfit_sw = process_sw
         self.norm = misfit_bw.norm
 
-        self.bw_T_min = process_bw.freq_max**-1
-        self.bw_T_max = process_bw.freq_min**-1
-        self.sw_T_min = process_sw.freq_max**-1
-        self.sw_T_max = process_sw.freq_min**-1
-        self.bw_win_len = process_bw.window_length
-        self.sw_win_len = process_sw.window_length
+        if self.process_bw:
+            self.bw_T_min = process_bw.freq_max**-1
+            self.bw_T_max = process_bw.freq_min**-1
+            self.bw_win_len = process_bw.window_length
+
+        if self.process_sw:
+            self.sw_T_min = process_sw.freq_max**-1
+            self.sw_T_max = process_sw.freq_min**-1
+            self.sw_win_len = process_sw.window_length
 
 
     def add_beachball(self, ax, height, offset):
@@ -185,10 +188,17 @@ class Header(Base):
         # write text line #3
         px = px0
         py -= 0.175
-        line = 'passbands (s):  bw %.1f - %.1f ,  sw %.1f - %.1f   ' %\
-                (self.bw_T_min, self.bw_T_max, self.sw_T_min, self.sw_T_max)
-        line += 'win. len. (s):  bw %.1f ,  sw %.1f   ' %\
-                (self.bw_win_len, self.sw_win_len)
+
+        if self.process_bw and self.process_bw:
+            line = 'body waves:  %.1f - %.1f s passband, %.1f s window ;  '+\
+                   'surface waves: %.1f - %.1f s passband, %.1f s window ' %\
+                    (self.bw_T_min, self.bw_T_max, self.bw_win_len,
+                     self.sw_T_min, self.sw_T_max, self.sw_win_len)
+
+        elif self.process_sw:
+            line = '%.1f - %.1f s passband, %.1f s window ' %\
+                    (self.sw_T_min, self.sw_T_max, self.sw_win_len)
+
         _write_text(line, px, py, ax, fontsize=14)
 
 

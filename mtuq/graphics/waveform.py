@@ -270,6 +270,13 @@ def plot_data_greens(filename,
     model = _get_tag(greens_bw[0].tags, 'model')
     solver = _get_tag(greens_bw[0].tags, 'solver')
 
+    if _isempty(data_bw):
+        # will prevent body wave data processing from appearing in figure header
+        process_bw = None
+
+    if _isempty(data_sw):
+        raise Exception('Empty dataset')
+
     greens_bw = greens_bw.select(origin)
     greens_sw = greens_sw.select(origin)
     _set_components(data_bw, greens_bw)
