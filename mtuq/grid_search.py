@@ -273,7 +273,6 @@ def _to_dataframe(origins, sources, values):
     """
     if len(origins)*len(sources) > 2.e6:
         print("  pandas.DataFrame constructor might take a long time\n"
-              "  see mtuq.grid_search._to_dataframe\n"
               "  len(df) = %d\n" % (len(origins)*len(sources)))
 
     origin_idx = np.arange(len(origins), dtype='int')

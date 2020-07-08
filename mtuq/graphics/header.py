@@ -50,7 +50,7 @@ class Base(object):
         return ax
 
 
-    def write(self):
+    def write(self, *args, **kwargs):
         raise NotImplementedError("Must be implemented by subclass")
 
 
@@ -69,7 +69,7 @@ class SimpleHeader(Base):
         self.items = items
 
 
-    def write(self, height, offset):
+    def write(self, height, width, margin_left, margin_top):
         ax = self._get_axis(height)
 
         for item in self.items:
