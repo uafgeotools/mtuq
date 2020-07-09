@@ -227,7 +227,6 @@ def m_to_deg(distance_in_m):
     return kilometers2degrees(distance_in_m/1000., radius=6371.)
 
 
-
 def isempty(dataset):
     if len(dataset)==0:
         return True

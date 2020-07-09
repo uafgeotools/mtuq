@@ -8,7 +8,8 @@ import matplotlib.pyplot as pyplot
 import warnings
 
 from matplotlib.font_manager import FontProperties
-from mtuq.graphics.header import Header
+from mtuq.event import MomentTensor, Force
+from mtuq.graphics.header import MomentTensorHeader, ForceHeader
 from mtuq.util.signal import get_components
 from obspy import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
@@ -293,8 +294,14 @@ def plot_data_greens(filename,
     if 'header' in kwargs:
         header = kwargs.pop('header')
 
-    else:
-        header = Header(event_name,
+    elif type(source)==MomentTensor:
+        header = MomentTensorHeader(event_name,
+            process_bw, process_sw, misfit_bw, misfit_bw,
+            model, solver, source, source_dict, origin,
+            total_misfit_bw, total_misfit_sw)
+
+    elif type(source)==Force:
+        header = ForceHeader(event_name,
             process_bw, process_sw, misfit_bw, misfit_bw,
             model, solver, source, source_dict, origin,
             total_misfit_bw, total_misfit_sw)
