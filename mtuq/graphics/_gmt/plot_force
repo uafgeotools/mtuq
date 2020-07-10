@@ -66,6 +66,10 @@ gmt pscontour $in $proj_arg $area_arg -Ctmp.cpt -I -N -A- -O -K >> $ps
 add_marker $ps $proj_arg $area_arg "$marker_coords"
 
 
+# display reference points and arcs
+add_WSE_arcs_labels $ps $proj_arg $area_arg
+
+
 # convert PostScript
 custom_psclose $ps
 custom_psconvert $ps $out $fmt

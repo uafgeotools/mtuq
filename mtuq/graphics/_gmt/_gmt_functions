@@ -44,7 +44,7 @@ function add_marker {
 }
 
 
-function add_reference_arcs {
+function add_lune_arcs {
     ps=$1
     proj_arg=$2
     area_arg=$3
@@ -61,7 +61,69 @@ function add_reference_arcs {
 }
 
 
-function add_reference_points {
+function add_WSE_arcs {
+    ps=$1
+    proj_arg=$2
+    area_arg=$3
+
+    # east
+    (echo 90 90 ; echo 90 -90)  |\
+     gmt psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    # south
+    (echo 0 90 ; echo 0 -90)  |\
+     gmt psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    # west
+    (echo -90 90 ; echo -90 -90)  |\
+    gmt psxy -N -W2p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+}
+
+
+function add_WSE_arcs_labels {
+    ps=$1
+    proj_arg=$2
+    area_arg=$3
+
+    # east
+    (echo 90 90 ; echo 90 3.333)  |\
+     gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    (echo 90 -90 ; echo 90 -3.333)  |\
+     gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    echo " 90.0 0.0 E" |\
+    gmt pstext -F+f11p,,0/0/0/35+jCM -N $proj_arg $area_arg -O -K >> $ps
+
+
+    # south
+    (echo 0 90 ; echo 0 3.333)  |\
+     gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    (echo 0 -90 ; echo 0 -3.333)  |\
+     gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    echo " 0.0 0.0 S" |\
+    gmt pstext -F+f11p,,0/0/0/35+jCM -N $proj_arg $area_arg -O -K >> $ps
+
+
+    # west
+    (echo -90 90 ; echo -90 3.333)  |\
+    gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    (echo -90 -90 ; echo -90 -3.333)  |\
+    gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
+
+    echo " -90.0 0.0 W" |\
+    gmt pstext -F+f11p,,0/0/0/35+jCM -N $proj_arg $area_arg -O -K >> $ps
+
+
+}
+
+
+
+function add_lune_points {
     ps=$1
     proj_arg=$2
     area_arg=$3
@@ -93,7 +155,7 @@ function add_reference_points {
 }
 
 
-function add_reference_labels {
+function add_lune_labels {
     ps=$1
     proj_arg=$2
     area_arg=$3

@@ -69,9 +69,9 @@ add_marker $ps $proj_arg $area_arg "$marker_coords"
 
 
 # display reference points and arcs
-add_reference_arcs $ps $proj_arg $area_arg
-add_reference_points $ps $proj_arg $area_arg
-#add_reference_labels $ps $proj_arg $area_arg
+add_lune_arcs $ps $proj_arg $area_arg
+add_lune_points $ps $proj_arg $area_arg
+#add_lune_labels $ps $proj_arg $area_arg
 
 
 # convert PostScript
