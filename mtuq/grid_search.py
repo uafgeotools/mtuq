@@ -268,12 +268,13 @@ def _to_dataarray(origins, sources, values):
          })
 
 
-def _to_dataframe(origins, sources, values):
+def _to_dataframe(origins, sources, values, index_type=2):
     """ Converts grid_search inputs to DataFrame
     """
-    if len(origins)*len(sources) > 2.e6:
-        print("  pandas.DataFrame constructor might take a long time\n"
-              "  len(df) = %d\n" % (len(origins)*len(sources)))
+    if len(origins)*len(sources) > 1.e7:
+        print("  pandas indexing becomes very slow with >10 million rows\n"
+              "  consider using index_type=1 in mtuq.grid_search._to_dataframe\n"
+             )
 
     origin_idx = np.arange(len(origins), dtype='int')
     source_idx = np.arange(len(sources), dtype='int')
@@ -285,23 +286,18 @@ def _to_dataframe(origins, sources, values):
     for _i, coords in enumerate(sources.coords):
         source_coords += [list(np.tile(coords, len(origins)))]
 
+    # assemble coordinates
     coords = [origin_idx, source_idx]
     dims = ('origin_idx', 'source_idx')
-    coords += source_coords
-    dims += sources.dims
+    if index_type==2:
+        coords += source_coords
+        dims += sources.dims
+
+    # construct DataFrame
     data = {dims[_i]: coords[_i] for _i in range(len(dims))}
     data.update({0: values.flatten()})
     df = MTUQDataFrame(data=data)
-    return df.set_index(list(dims))
-
-    ## even faster, but would require new MTUQDataFrame methods
-    #coords = [origin_idx, source_idx]
-    #dims = ('origin_idx', 'source_idx')
-    #data = {dims[_i]: coords[_i] for _i in range(len(dims))}
-    #data.update({0: values.flatten()})
-    #df = MTUQDataFrame(data=data)
-    #df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
-    # return df.set_index(list(dims))
-
+    df = df.set_index(list(dims))
+    return df
 
 
