@@ -45,18 +45,18 @@ def plot_misfit_force(filename, ds, title=None):
 
 
     if issubclass(type(ds), DataArray):
-        da = ds.min(dim=('origin_idx', 'F0'))
-        phi = da.coords['phi']
-        h = da.coords['h']
-        values = da.values.transpose()
+        ds = ds.min(dim=('origin_idx', 'F0'))
+        phi = ds.coords['phi']
+        h = ds.coords['h']
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        phi, h, values = _bin(df, lambda df: df.min())
+        ds = ds.reset_index()
+        phi, h, values = _bin(ds, lambda ds: ds.min())
 
 
-    _plot_force_gmt(filename, phi, h, values, title=title)
+    _plot_force_gmt(filename, phi, h, values, figtype='misfit', title=title)
 
 
 
@@ -87,29 +87,24 @@ def plot_likelihood_force(filename, ds, sigma=1., title=None):
     ds = ds.copy()
 
 
-    # convert from misfit to likelihood
-    ds.values = np.exp(-ds.values/(2.*sigma**2))
-    ds.values /= ds.values.sum()
-
-
-
     if issubclass(type(ds), DataArray):
-        da = ds.max(dim=('origin_idx', 'F0'))
-        phi = da.coords['phi']
-        h = da.coords['h']
-        values = da.values.transpose()
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds.values /= ds.values.sum()
+        ds = ds.max(dim=('origin_idx', 'F0'))
+        phi = ds.coords['phi']
+        h = ds.coords['h']
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        df['values'] /= df['values'].sum()
-        phi, h, values = _bin(df, lambda df: df.max())
+        ds[0] = np.exp(-ds[0]/(2.*sigma**2))
+        ds = ds.reset_index()
+        phi, h, values = _bin(ds, lambda ds: ds.max())
 
 
     values /= values.sum()
-    values /= vw_area
 
-    _plot_force_gmt(filename, phi, h, values, title=title)
+    _plot_force_gmt(filename, phi, h, values, figtype='likelihood', title=title)
 
 
 
@@ -141,27 +136,23 @@ def plot_marginal_force(filename, ds, sigma=1., title=None):
     ds = ds.copy()
 
 
-    # convert from misfit to likelihood
-    ds.values = np.exp(-ds.values/(2.*sigma**2))
-    ds.values /= ds.values.sum()
-
-
     if issubclass(type(ds), DataArray):
-        da = ds.sum(dim=('origin_idx', 'F0'))
-        phi = da.coords['phi']
-        h = da.coords['h']
-        values = da.values.transpose()
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds.values /= ds.values.sum()
+        ds = ds.max(dim=('origin_idx', 'F0'))
+        phi = ds.coords['phi']
+        h = ds.coords['h']
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        phi, h, values = _bin(df, lambda df: df.sum()/len(df))
+        ds = np.exp(-ds/(2.*sigma**2))
+        #ds /= ds.sum()
+        ds = ds.reset_index()
+        phi, h, values = _bin(ds, lambda ds: ds.max())
 
 
-    values /= values.sum()
-    values /= vw_area
-
-    _plot_force_gmt(filename, phi, h, values, title=title)
+    _plot_force_gmt(filename, phi, h, values, figtype='likelihood', title=title)
 
 
 
@@ -234,7 +225,8 @@ def _wrap(angle_in_deg):
     return angle_in_deg
 
 
-def _plot_force_gmt(filename, phi, h, values, add_marker=True, title=''):
+def _plot_force_gmt(filename, phi, h, values, 
+    figtype='likelihood', add_marker=True, title=''):
     """ Plots misfit values on sphere (GMT implementation)
     """
     lat = np.degrees(np.pi/2 - np.arccos(h))
@@ -268,13 +260,18 @@ def _plot_force_gmt(filename, phi, h, values, add_marker=True, title=''):
     # prepare gmt input
     #
 
-    name, fmt = check_ext(filename)
+    name, filetype = check_ext(filename)
 
-    zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/100.)
+    zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/10.)
 
-    if add_marker:
+    if add_marker and figtype=='misfit':
         idx = values.argmin()
         marker_coords = "'%f %f'" % (lon[idx], lat[idx])
+
+    elif add_marker and figtype=='likelihood':
+        idx = values.argmax()
+        marker_coords = "'%f %f'" % (lon[idx], lat[idx])
+
     else:
         marker_coords = "''"
 
@@ -304,11 +301,12 @@ def _plot_force_gmt(filename, phi, h, values, add_marker=True, title=''):
     #
 
     if gmt_cmd():
-        _call("%s %s %s %s %s %s %s %s" %
+        _call("%s %s %s %s %s %s %s %s %s" %
            (fullpath('mtuq/graphics/_gmt/plot_force'),
             tmpname,
             filename,
-            fmt,
+            filetype,
+            figtype,
             zmin_zmax_dz,
             marker_coords,
             title,

@@ -87,10 +87,10 @@ function add_WSE_arcs_labels {
     area_arg=$3
 
     # east
-    (echo 90 90 ; echo 90 3.333)  |\
+    (echo 90 90 ; echo 90 3.5)  |\
      gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
 
-    (echo 90 -90 ; echo 90 -3.333)  |\
+    (echo 90 -90 ; echo 90 -3.5)  |\
      gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
 
     echo " 90.0 0.0 E" |\
@@ -98,10 +98,10 @@ function add_WSE_arcs_labels {
 
 
     # south
-    (echo 0 90 ; echo 0 3.333)  |\
+    (echo 0 90 ; echo 0 3.5)  |\
      gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
 
-    (echo 0 -90 ; echo 0 -3.333)  |\
+    (echo 0 -90 ; echo 0 -3.5)  |\
      gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
 
     echo " 0.0 0.0 S" |\
@@ -109,10 +109,10 @@ function add_WSE_arcs_labels {
 
 
     # west
-    (echo -90 90 ; echo -90 3.333)  |\
+    (echo -90 90 ; echo -90 3.5)  |\
     gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
 
-    (echo -90 -90 ; echo -90 -3.333)  |\
+    (echo -90 -90 ; echo -90 -3.5)  |\
     gmt psxy -N -W1.5p,0/0/0/35 $proj_arg $area_arg -O -K >> $ps
 
     echo " -90.0 0.0 W" |\

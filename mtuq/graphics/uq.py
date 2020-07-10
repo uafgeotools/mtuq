@@ -59,19 +59,18 @@ def plot_misfit(filename, ds, title=''):
 
 
     if issubclass(type(ds), DataArray):
-        da = ds
-        da = da.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        gamma = to_gamma(da.coords['v'])
-        delta = to_delta(da.coords['w'])
-        values = da.values.transpose()
+        ds = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(ds.coords['v'])
+        delta = to_delta(ds.coords['w'])
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        gamma, delta, values = _bin(df, lambda df: df.min())
+        ds = ds.reset_index()
+        gamma, delta, values = _bin(ds, lambda ds: ds.min())
 
 
-    _plot_lune_gmt(filename, gamma, delta, values, title=title)
+    _plot_lune_gmt(filename, gamma, delta, values, figtype='misfit', title=title)
 
 
 
@@ -114,26 +113,23 @@ def plot_likelihood(filename, ds, sigma=1., title=''):
     ds = ds.copy()
 
 
-    # convert from misfit to likelihood
-    ds.values = np.exp(-ds.values/(2.*sigma**2))
-
-
     if issubclass(type(ds), DataArray):
-        da = ds
-        da = da.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        gamma = to_gamma(da.coords['v'])
-        delta = to_delta(da.coords['w'])
-        values = da.values.transpose()
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(ds.coords['v'])
+        delta = to_delta(ds.coords['w'])
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        gamma, delta, values = _bin(df, lambda df: df.max())
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds = ds.reset_index()
+        gamma, delta, values = _bin(ds, lambda ds: ds.max())
 
 
     values /= values.sum()
 
-    _plot_lune_gmt(filename, gamma, delta, values, title=title)
+    _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
 
 
 
@@ -177,26 +173,23 @@ def plot_marginal(filename, ds, sigma=1., title=''):
     ds = ds.copy()
 
 
-    # convert from misfit to likelihood
-    ds.values = np.exp(-ds.values/(2.*sigma**2))
-
-
     if issubclass(type(ds), DataArray):
-        da = ds
-        da = da.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        gamma = to_gamma(da.coords['v'])
-        delta = to_delta(da.coords['w'])
-        values = da.values.transpose()
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds = ds.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(ds.coords['v'])
+        delta = to_delta(ds.coords['w'])
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        gamma, delta, values = _bin(df, lambda df: df.sum()/len(df), normalize=True)
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds = ds.reset_index()
+        gamma, delta, values = _bin(ds, lambda ds: ds.sum()/len(ds), normalize=True)
 
     values /= lune_det(delta, gamma)
     values /= values.sum()
 
-    _plot_lune_gmt(filename, gamma, delta, values, title=title)
+    _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
 
 
 
@@ -257,7 +250,8 @@ def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
 # GMT wrappers
 #
 
-def _plot_lune_gmt(filename, gamma, delta, values, add_marker=True, title=''):
+def _plot_lune_gmt(filename, gamma, delta, values, 
+    figtype='likelihood', add_marker=True, title=''):
     """ Plots misfit values on lune
     """
     gamma, delta = np.meshgrid(gamma, delta)
@@ -290,11 +284,16 @@ def _plot_lune_gmt(filename, gamma, delta, values, add_marker=True, title=''):
 
     name, fmt = check_ext(filename)
 
-    zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/100.)
+    zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/10.)
 
-    if add_marker:
+    if add_marker and figtype=='misfit':
         idx = values.argmin()
         marker_coords = "'%f %f'" % (gamma[idx], delta[idx])
+
+    elif add_marker and figtype=='likelihood':
+        idx = values.argmax()
+        marker_coords = "'%f %f'" % (gamma[idx], delta[idx])
+
     else:
         marker_coords = "''"
 
@@ -324,11 +323,12 @@ def _plot_lune_gmt(filename, gamma, delta, values, add_marker=True, title=''):
     #
 
     if gmt_cmd():
-        _call("%s %s %s %s %s %s %s %s" %
+        _call("%s %s %s %s %s %s %s %s %s" %
            (fullpath('mtuq/graphics/_gmt/plot_lune'),
             tmpname,
             filename,
             fmt,
+            figtype,
             zmin_zmax_dz,
             marker_coords,
             title,
