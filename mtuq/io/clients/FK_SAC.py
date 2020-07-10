@@ -10,6 +10,25 @@ from obspy.core import Stream
 from obspy.geodetics import gps2dist_azimuth
 
 
+# An FK simulation outputs 12 SAC files each with filename extensions
+# 0,1,2,3,4,5,6,7,8,9,a,b.  The SAC files ending in .2 and .9 contain 
+# only zero data, so we exclude them from the following list. 
+# The order of traces in the list is the order in which CAP stores
+# the time series.
+EXTENSIONS = [
+    '8','5',           # t
+    'b','7','4','1',   # r
+    'a','6','3','0',   # z
+    ]
+
+CHANNELS = [
+    'TSS', 'TDS',
+    'REP', 'RSS', 'RDS', 'RDD',
+    'ZEP', 'ZSS', 'ZDS', 'ZDD',
+    ]
+
+
+
 
 class Client(ClientBase):
     """  FK databaset client
@@ -38,12 +57,17 @@ class Client(ClientBase):
       software package.
 
     """
-    def __init__(self, path_or_url=None, model=None):
+    def __init__(self, path_or_url=None, model=None,
+        include_mt=True, include_force=False):
+
         if not path_or_url:
             raise Exception
 
         if not exists(path_or_url):
             raise Exception
+
+        if include_force:
+            raise NotImplementedError
 
         if not model:
             model = basename(path_or_url)
@@ -53,6 +77,10 @@ class Client(ClientBase):
 
         # model from which fk Green's functions were computed
         self.model = model
+
+        self.include_mt = include_mt
+        self.include_force = include_force
+
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
@@ -92,48 +120,33 @@ class Client(ClientBase):
         #dst = str(int(round(distance_in_m/1000.)))
         dst = str(int(np.ceil(distance_in_m/1000.)))
 
-        # An FK simulation outputs 12 SAC files each with filename extensions
-        # 0,1,2,3,4,5,6,7,8,9,a,b.  The SAC files ending in .2 and .9 contain 
-        # only zero data, so we exclude them from the following list. 
-        # The order of traces in the list is the order in which CAP stores
-        # the time series.
-        extensions = [
-            '8','5',           # t
-            'b','7','4','1',   # r
-            'a','6','3','0',   # z
-            ]
+        if self.include_mt:
 
-        channels = [
-            'TSS', 'TDS',
-            'REP', 'RSS', 'RDS', 'RDD',
-            'ZEP', 'ZSS', 'ZDS', 'ZDD',
-            ]
+            for _i, ext in enumerate(EXTENSIONS):
+                trace = obspy.read('%s/%s_%s/%s.grn.%s' %
+                    (self.path, self.model, dep, dst, ext),
+                    format='sac')[0]
 
-        for _i, ext in enumerate(extensions):
-            trace = obspy.read('%s/%s_%s/%s.grn.%s' %
-                (self.path, self.model, dep, dst, ext),
-                format='sac')[0]
-
-            trace.stats.channel = channels[_i]
-            trace.stats._component = channels[_i][0]
+                trace.stats.channel = CHANNELS[_i]
+                trace.stats._component = CHANNELS[_i][0]
 
 
-            # what are the start and end times of the Green's function?
-            t1_old = float(origin.time)+float(trace.stats.starttime)
-            t2_old = float(origin.time)+float(trace.stats.endtime)
-            dt_old = float(trace.stats.delta)
-            data_old = trace.data
+                # what are the start and end times of the Green's function?
+                t1_old = float(origin.time)+float(trace.stats.starttime)
+                t2_old = float(origin.time)+float(trace.stats.endtime)
+                dt_old = float(trace.stats.delta)
+                data_old = trace.data
 
-            # resample Green's function
-            data_new = resample(data_old, t1_old, t2_old, dt_old, 
-                                          t1_new, t2_new, dt_new)
-            trace.data = data_new
-            # convert from 10^-20 dyne to N^-1
-            trace.data *= 1.e-15
-            trace.stats.starttime = t1_new
-            trace.stats.delta = dt_new
+                # resample Green's function
+                data_new = resample(data_old, t1_old, t2_old, dt_old, 
+                                              t1_new, t2_new, dt_new)
+                trace.data = data_new
+                # convert from 10^-20 dyne to N^-1
+                trace.data *= 1.e-15
+                trace.stats.starttime = t1_new
+                trace.stats.delta = dt_new
 
-            traces += [trace]
+                traces += [trace]
 
         tags = [
             'model:%s' % self.model,
@@ -141,7 +154,9 @@ class Client(ClientBase):
              ]
 
         return GreensTensor(traces=[trace for trace in traces], 
-            station=station, origin=origin, tags=tags)
+            station=station, origin=origin, tags=tags,
+            include_mt=self.include_mt, include_force=self.include_force)
+
 
 
 
