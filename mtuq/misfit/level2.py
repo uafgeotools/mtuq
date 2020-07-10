@@ -42,6 +42,9 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     greens = _get_greens(greens, stations, components)
     sources = _to_array(sources)
 
+    # sanity checks
+    _check(data, greens, sources)
+
 
     #
     # cross-correlate data and synthetics
@@ -345,4 +348,26 @@ def _autocorr_2(greens, padding):
 
     return corr
 
+
+def _check(data, greens, sources):
+    # array shape sanity checks
+
+    if data.shape[0] != greens.shape[0]:
+        print('Number of stations (data): %d' % data.shape[0])
+        print('Number of stations (Green''s): %d' % data.shape[0])
+        raise TypeError('Inconsistent shape')
+
+    if data.shape[1] != greens.shape[1]:
+        print()
+        print('Number of components (data): %d' % data.shape[1])
+        print('Number of components (Green''s): %d' % data.shape[1])
+        print()
+        raise TypeError('Inconsistent shape')
+
+    if greens.shape[2] != sources.shape[1]:
+        print()
+        print('Number of Green''s functions in linear combination: %d' % greens.shape[2])
+        print('Number of weights in linear combination: %d' % sources.shape[1])
+        print()
+        raise TypeError('Inconsistent shape')
 

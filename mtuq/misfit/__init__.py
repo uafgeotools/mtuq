@@ -134,6 +134,9 @@ class Misfit(object):
                 "Consider using norm='hybrid', which is much faster than "
                 "norm='L1' but still robust against outliers.")
 
+        if type(time_shift_groups) not in (list, tuple):
+            raise TypeError
+
         for group in time_shift_groups:
             for component in group:
                 assert component in ['Z','R','T'],\
