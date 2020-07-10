@@ -122,4 +122,4 @@ if __name__=='__main__':
 
     plot_beachball('graphics_test_3.png', mt)
 
-    print('Finished\n')
+    print('\nFinished\n')

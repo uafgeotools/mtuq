@@ -833,7 +833,7 @@ Main_TestGraphics="""
 
     plot_beachball('graphics_test_3.png', mt)
 
-    print('Finished\\n')
+    print('\\nFinished\\n')
 """
 
 
@@ -898,7 +898,7 @@ WrapUp_GridSearch_DoubleCouple="""
 
         results.save(event_id+'DC.nc')
 
-        print('Finished\\n')
+        print('\\nFinished\\n')
 
 """
 
@@ -921,7 +921,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         misfit_vs_depth(event_id+'_misfit_vs_depth_sw.png',
             data_sw, misfit_sw, origins, grid, results_sw)
 
-        print('Finished\\n')
+        print('\\nFinished\\n')
 """
 
 
@@ -942,7 +942,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     results.save(event_id+'DC.nc')
 
-    print('Finished\\n')
+    print('\\nFinished\\n')
 
 """
 

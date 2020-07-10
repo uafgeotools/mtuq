@@ -227,4 +227,4 @@ if __name__=='__main__':
         misfit_vs_depth(event_id+'_misfit_vs_depth_sw.png',
             data_sw, misfit_sw, origins, grid, results_sw)
 
-        print('Finished\n')
+        print('\nFinished\n')

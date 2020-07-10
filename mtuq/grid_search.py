@@ -172,7 +172,7 @@ class MTUQDataArray(xarray.DataArray):
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to NetCDF file
         """
-        print('Saving NetCDF file: %s' % filename)
+        print('  saving NetCDF file: %s' % filename)
         self.to_netcdf(filename)
 
     def __repr__(self):
@@ -218,7 +218,7 @@ class MTUQDataFrame(pandas.DataFrame):
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file
         """
-        print('Saving HDF5 file: %s' % filename)
+        print('  saving HDF5 file: %s' % filename)
         df = pandas.DataFrame(self.values, index=self.index)
         df.to_hdf(filename, key='df', mode='w')
 

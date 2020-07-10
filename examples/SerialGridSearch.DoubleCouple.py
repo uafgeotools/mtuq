@@ -182,5 +182,5 @@ if __name__=='__main__':
 
     results.save(event_id+'DC.nc')
 
-    print('Finished\n')
+    print('\nFinished\n')
 

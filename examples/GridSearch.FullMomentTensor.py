@@ -203,5 +203,5 @@ if __name__=='__main__':
 
         results.save(event_id+'FMT.nc')
 
-        print('Finished\n')
+        print('\nFinished\n')
 
