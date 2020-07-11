@@ -21,7 +21,7 @@ from mtuq.util import fullpath
 from mtuq.util.math import to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit(filename, ds, title=''):
+def plot_misfit_mt(filename, ds, title=''):
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
@@ -74,7 +74,7 @@ def plot_misfit(filename, ds, title=''):
 
 
 
-def plot_likelihood(filename, ds, sigma=1., title=''):
+def plot_likelihood_mt(filename, ds, sigma=1., title=''):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -133,7 +133,7 @@ def plot_likelihood(filename, ds, sigma=1., title=''):
 
 
 
-def plot_marginal(filename, ds, sigma=1., title=''):
+def plot_marginal_mt(filename, ds, sigma=1., title=''):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -324,7 +324,7 @@ def _plot_lune_gmt(filename, gamma, delta, values,
 
     if gmt_cmd():
         _call("%s %s %s %s %s %s %s %s %s" %
-           (fullpath('mtuq/graphics/_gmt/plot_lune'),
+           (fullpath('mtuq/graphics/_gmt/plot_mt'),
             tmpname,
             filename,
             fmt,

@@ -25,6 +25,15 @@ def plot_misfit_dc(filename, ds):
             'plot_misfit_dc not implemented for irregularly-spaced grids')
 
 
+def plot_likelihood_dc():
+    raise NotImplementedError
+
+
+def plot_marginal_dc():
+    raise NotImplementedError
+
+
+
 def _marginal(da):
     if 'origin_idx' in da.dims:
         da = da.max(dim='origin_idx')
