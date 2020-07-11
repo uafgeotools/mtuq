@@ -1,6 +1,6 @@
 
 #
-# graphics/uq_force.py - uncertainty quantification of forces on the unit sphere
+# graphics/uq/force.py - uncertainty quantification of forces on the unit sphere
 #
 
 import numpy as np
@@ -229,16 +229,17 @@ def _plot_force_gmt(filename, phi, h, values,
     figtype='likelihood', add_marker=True, title=''):
     """ Plots misfit values on sphere (GMT implementation)
     """
-    lat = np.degrees(np.pi/2 - np.arccos(h))
-    lon = _wrap(phi + 90.)
 
-    lon, lat = np.meshgrid(lon, lat)
-    lon = lon.flatten()
-    lat = lat.flatten()
-    values = values.flatten()
+    mask = np.isnan(values)
+    if np.all(mask):
+        warnings.warn(
+            "Nothing to plot: all values are NaN",
+            Warning)
+        return
 
-    minval = values.min()
-    maxval = values.max()
+    masked = np.ma.array(values, mask=mask)
+    minval = masked.min()
+    maxval = masked.max()
 
     if minval==maxval:
         warnings.warn(
@@ -259,6 +260,13 @@ def _plot_force_gmt(filename, phi, h, values,
     #
     # prepare gmt input
     #
+
+    lat = np.degrees(np.pi/2 - np.arccos(h))
+    lon = _wrap(phi + 90.)
+    lon, lat = np.meshgrid(lon, lat)
+    lon = lon.flatten()
+    lat = lat.flatten()
+    values = values.flatten()
 
     name, filetype = check_ext(filename)
 

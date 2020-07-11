@@ -1,12 +1,11 @@
 
 #
-# graphics/uq.py - uncertainty quantification on the eigenvalue lune
+# graphics/uq/moment_tensor.py - uncertainty quantification on the eigenvalue lune
 #
 # For details about the eigenvalue lune, see 
 # Tape2012 - A geometric setting for moment tensors
 # (https://doi.org/10.1111/j.1365-246X.2012.05491.x)
 #
-
 
 import numpy as np
 import shutil
@@ -70,11 +69,11 @@ def plot_misfit_mt(filename, ds, title=''):
         gamma, delta, values = _bin(ds, lambda ds: ds.min())
 
 
-    _plot_lune_gmt(filename, gamma, delta, values, figtype='misfit', title=title)
+    _plot_mt_gmt(filename, gamma, delta, values, figtype='misfit', title=title)
 
 
 
-def plot_likelihood_mt(filename, ds, sigma=1., title=''):
+def plot_likelihood_mt(filename, ds, sigma=None, title=''):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -110,6 +109,7 @@ def plot_likelihood_mt(filename, ds, sigma=1., title=''):
       For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
 
     """
+    assert sigma is not None
     ds = ds.copy()
 
 
@@ -129,11 +129,11 @@ def plot_likelihood_mt(filename, ds, sigma=1., title=''):
 
     values /= values.sum()
 
-    _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
+    _plot_mt_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
 
 
 
-def plot_marginal_mt(filename, ds, sigma=1., title=''):
+def plot_marginal_mt(filename, ds, sigma=None, title=''):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -169,7 +169,7 @@ def plot_marginal_mt(filename, ds, sigma=1., title=''):
       For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
  
     """
-
+    assert sigma is not None
     ds = ds.copy()
 
 
@@ -189,7 +189,7 @@ def plot_marginal_mt(filename, ds, sigma=1., title=''):
     values /= lune_det(delta, gamma)
     values /= values.sum()
 
-    _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
+    _plot_mt_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
 
 
 
@@ -250,7 +250,7 @@ def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
 # GMT wrappers
 #
 
-def _plot_lune_gmt(filename, gamma, delta, values, 
+def _plot_mt_gmt(filename, gamma, delta, values, 
     figtype='likelihood', add_marker=True, title=''):
     """ Plots misfit values on lune
     """
@@ -259,8 +259,16 @@ def _plot_lune_gmt(filename, gamma, delta, values,
     gamma = gamma.flatten()
     values = values.flatten()
 
-    minval = values.min()
-    maxval = values.max()
+    mask = np.isnan(values)
+    if np.all(mask):
+        warnings.warn(
+            "Nothing to plot: all values are NaN",
+            Warning)
+        return
+
+    masked = np.ma.array(values, mask=mask)
+    minval = masked.min()
+    maxval = masked.max()
 
     if minval==maxval:
         warnings.warn(

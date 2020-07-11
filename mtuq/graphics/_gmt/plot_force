@@ -70,6 +70,10 @@ elif [ $figtype == 'likelihood' ]; then
 fi
 
 
+# display reference points and arcs
+add_WSE_arcs_labels $ps $proj_arg $area_arg
+
+
 # display colorbar
 #if [ true ]; then
 #    gmt psscale -Ctmp -Al -D1.2/0.6/1.2/0.1 -Ef0.5c -Bf1a1 -O -K >> $out
@@ -80,10 +84,6 @@ fi
 if [ true ]; then
     add_marker $ps $proj_arg $area_arg "$marker_coords"
 fi
-
-
-# display reference points and arcs
-add_WSE_arcs_labels $ps $proj_arg $area_arg
 
 
 # convert PostScript

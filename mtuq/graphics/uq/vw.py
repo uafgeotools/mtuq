@@ -1,9 +1,10 @@
 
 #
-# graphics/uq_vw.py - uncertainty quantification on the v-w rectangle
+# graphics/uq/vw.py - uncertainty quantification on the v-w rectangle
 #
 
 import numpy as np
+import warnings
 
 from matplotlib import pyplot
 from pandas import DataFrame
@@ -26,7 +27,7 @@ vw_area = (v_max-v_min)*(w_max-w_min)
 
 
 
-def plot_misfit_vw(filename, ds, title=None):
+def plot_misfit_vw(filename, ds, title=''):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -54,22 +55,22 @@ def plot_misfit_vw(filename, ds, title=None):
 
 
     if issubclass(type(ds), DataArray):
-        da = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        v = da.coords['v']
-        w = da.coords['w']
-        values = da.values.transpose()
+        ds = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        v = ds.coords['v']
+        w = ds.coords['w']
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        v, w, values = _bin(df, lambda df: df.min())
+        ds = ds.reset_index()
+        v, w, values = _bin(ds, lambda ds: ds.min())
 
 
     _plot_vw(filename, v, w, values, cmap='hot')
 
 
 
-def plot_likelihood_vw(filename, ds, sigma=1., title=None):
+def plot_likelihood_vw(filename, ds, sigma=None, title=''):
     """ Plots maximum likelihoods on `v-w` rectangle
 
 
@@ -92,37 +93,35 @@ def plot_likelihood_vw(filename, ds, sigma=1., title=None):
     `DataFrame`.)
 
     """
+    assert sigma is not None
     _check(ds)
     ds = ds.copy()
 
 
-    # convert from misfit to likelihood
-    ds.values = np.exp(-ds.values/(2.*sigma**2))
-    ds.values /= ds.values.sum()
-
-
-
     if issubclass(type(ds), DataArray):
-        da = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        v = da.coords['v']
-        w = da.coords['w']
-        values = da.values.transpose()
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds.values /= ds.values.sum()
+        ds = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        v = ds.coords['v']
+        w = ds.coords['w']
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        df['values'] /= df['values'].sum()
-        v, w, values = _bin(df, lambda df: df.max())
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds /= ds.sum()
+        ds = ds.reset_index()
+        v, w, values = _bin(ds, lambda ds: ds.max())
 
 
     values /= values.sum()
     values /= vw_area
 
-    _plot_vw(filename, v, w, values, cmap='hot_r')
+    _plot_vw(filename, v, w, values, title=title)
 
 
 
-def plot_marginal_vw(filename, ds, sigma=1., title=None):
+def plot_marginal_vw(filename, ds, sigma=None, title=''):
     """ Plots marginal likelihoods on `v-w` rectangle
 
 
@@ -146,31 +145,31 @@ def plot_marginal_vw(filename, ds, sigma=1., title=None):
 
 
     """
+    assert sigma is not None
     _check(ds)
     ds = ds.copy()
 
 
-    # convert from misfit to likelihood
-    ds.values = np.exp(-ds.values/(2.*sigma**2))
-    ds.values /= ds.values.sum()
-
-
     if issubclass(type(ds), DataArray):
-        da = ds.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        v = da.coords['v']
-        w = da.coords['w']
-        values = da.values.transpose()
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds.values /= ds.values.sum()
+        ds = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        v = ds.coords['v']
+        w = ds.coords['w']
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds /= ds.sum()
+        ds = ds.reset_index()
         v, w, values = _bin(df, lambda df: df.sum()/len(df))
 
 
     values /= values.sum()
     values /= vw_area
 
-    _plot_vw(filename, v, w, values, cmap='hot_r')
+    _plot_vw(filename, v, w, values, title=title)
 
 
 
@@ -216,12 +215,33 @@ def _bin(df, handle, npts_v=20, npts_w=40):
 # pyplot wrappers
 #
 
-def _plot_vw(filename, v, w, values, cmap='hot'):
+def _plot_vw(filename, v, w, values, figtype='likelihood', title=''):
     """ Creates `v-w` color plot 
 
     (Thinly wraps pyplot.pcolor)
 
     """ 
+    mask = np.isnan(values)
+    if np.all(mask):
+        warnings.warn(
+            "Nothing to plot: all values are NaN",
+            Warning)
+        return
+
+    masked = np.ma.array(values, mask=mask)
+    minval = masked.min()
+    maxval = masked.max()
+
+    if minval==maxval:
+        warnings.warn(
+            "Nothing to plot: all values are identical",
+            Warning)
+        return
+
+    if figtype=='likelihood':
+        cmap = 'hot_r'
+
+    # create figure
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
 
     # pcolor requires corners of pixels
@@ -238,6 +258,10 @@ def _plot_vw(filename, v, w, values, cmap='hot'):
 
     pyplot.xticks([], [])
     pyplot.yticks([], [])
+
+    if title:
+        fontdict = {'fontsize': 16}
+        pyplot.title(title, fontdict=fontdict)
 
     pyplot.colorbar(
         orientation='horizontal', 

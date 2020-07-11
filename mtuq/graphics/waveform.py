@@ -73,8 +73,6 @@ def plot_data_synthetics(filename,
     else:
         header_height = 0.
         header_width = 0.
-        header_margin_top = 0.
-        header_margin_bottom = 0.
 
     if station_labels:
         margin_left += 0.5

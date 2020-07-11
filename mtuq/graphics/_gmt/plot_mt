@@ -2,7 +2,7 @@
 
 
 # USAGE
-#   plot_lune in out filetype figtype range [marker] [title] [subtitle]
+#   plot_mt in out filetype figtype range [marker] [title] [subtitle]
 #
 #   Plots lon,lat,z values from ASCII file on eigenvalue lune
 #
@@ -17,7 +17,7 @@
 #    SUBTITLE - optional subtitle string
 #
 # EXAMPLE
-#    plot_lune likelihood.xyz likelihood.png PNG likelihood "-T0./1./0.01" "Maximum likelihood"
+#    plot_mt likelihood.xyz likelihood.png PNG likelihood "-T0./1./0.01" "Maximum likelihood"
 
 
 
@@ -29,7 +29,7 @@ source _gmt_functions
 
 # parse input arguments
 if [ $# -ne 8 ] ; then
-    echo "_plot_lune: too few input arguments"
+    echo "_plot_mt: too few input arguments"
     exit -1
 fi
 
@@ -71,6 +71,12 @@ elif [ $figtype == 'likelihood' ]; then
 fi
 
 
+# display reference points and arcs
+add_lune_arcs $ps $proj_arg $area_arg
+add_lune_points $ps $proj_arg $area_arg
+#add_lune_labels $ps $proj_arg $area_arg
+
+
 # display colorbar
 #if [ true ]; then
 #    gmt psscale -Ctmp -Al -D1.2/0.6/1.2/0.1 -Ef0.5c -Bf1a1 -O -K >> $out
@@ -83,19 +89,12 @@ if [ true ]; then
 fi
 
 
-# display reference points and arcs
-add_lune_arcs $ps $proj_arg $area_arg
-add_lune_points $ps $proj_arg $area_arg
-#add_lune_labels $ps $proj_arg $area_arg
-
-
 custom_psclose $ps
-echo " finished writing PostScript: $ps"
 
 
 # convert PostScript
 custom_psconvert $ps $out $filetype
-
+#echo "  finished writing image: $out"
 
 
 rm gmt*

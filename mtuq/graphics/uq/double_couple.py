@@ -1,5 +1,5 @@
 #
-# graphics/uq_dc.py - uncertainty quantification of double couple sources
+# graphics/uq/double_couple.py - uncertainty quantification of double couple sources
 #
 
 import numpy as np
@@ -54,6 +54,7 @@ def _marginal(da):
 
 
 def _plot_dc(filename, da):
+
     # prepare axes
     fig, axes = pyplot.subplots(2, 2, 
         figsize=(8., 6.),

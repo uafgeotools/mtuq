@@ -1,4 +1,12 @@
 
+try:
+    matplotlib.rc('font', family='sans-serif') 
+    matplotlib.rc('font', serif='Helvetica Neue') 
+except:
+    pass
+
+
+
 import shutil
 import subprocess
 
