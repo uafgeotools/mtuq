@@ -55,21 +55,24 @@ Data visualization
 ------------------
 
 ============================================================================================================  ============================================================================================================
-`mtuq.graphics.plot_data_synthetics <generated/mtuq.graphics.plot_data_synthetics.html>`_                      Compares data and synthetics
-`mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots focal mechansim (requires GMT)
+`mtuq.graphics.plot_data_synthetics <generated/mtuq.graphics.uq.moment_tensor.plot_data_synthetics.html>`_                      Compares data and synthetics
+`mtuq.graphics.plot_beachball <generated/mtuq.graphics.uq.moment_tensor.plot_beachball.html>`_                                  Plots focal mechansim (requires GMT)
 ============================================================================================================  ============================================================================================================
 
 
-Uncertainty quantification
---------------------------
+Uncertainty visualization
+-------------------------
 
 ============================================================================================================  ============================================================================================================
-`mtuq.graphics.plot_likelihood <generated/mtuq.graphics.plot_likelihood.html>`_                                Plots maximum likelihoods on lune (requires GMT)
-`mtuq.graphics.plot_marginal <generated/mtuq.graphics.plot_marginal.html>`_                                    Plots marginal likelihoods on lune (requires GMT)
-`mtuq.graphics.plot_misfit <generated/mtuq.graphics.plot_misfit.html>`_                                        Plots misfit on lune (requires GMT)
-`mtuq.graphics.plot_likelihood_vw <generated/mtuq.graphics.plot_likelihood_vw.html>`_                          Plots maximum likelihoods on `v-w` rectangle
-`mtuq.graphics.plot_marginal_vw <generated/mtuq.graphics.plot_marginal_vw.html>`_                              Plots marginal likelihoods on `v-w` rectangle
-`mtuq.graphics.plot_misfit_vw <generated/mtuq.graphics.plot_misfit_vw.html>`_                                  Plots misfit on `v-w` rectangle
+`mtuq.graphics.plot_likelihood_mt <generated/mtuq.graphics.uq.moment_tensor.plot_likelihood_mt.html>`_         Plots moment tensor likelihoods on lune (requires GMT)
+`mtuq.graphics.plot_marginal_mt <generated/mtuq.graphics.uq.moment_tensor.plot_marginal_mt.html>`_             Plots moment tensor marginals on lune (requires GMT)
+`mtuq.graphics.plot_misfit_mt <generated/mtuq.graphics.uq.moment_tensor.plot_misfit_mt.html>`_                 Plots moment tensor misfit on lune (requires GMT)
+`mtuq.graphics.plot_likelihood_vw <generated/mtuq.graphics.uq.vw.plot_likelihood_vw.html>`_                    Plots moment tensor likelihoods on `v-w` rectangle
+`mtuq.graphics.plot_marginal_vw <generated/mtuq.graphics.uq.vw.plot_marginal_vw.html>`_                        Plots moment tensor marginals on `v-w` rectangle
+`mtuq.graphics.plot_misfit_vw <generated/mtuq.graphics.uq.vw.plot_misfit_vw.html>`_                            Plots moment tensor misfit on `v-w` rectangle
+`mtuq.graphics.plot_likelihood_force <generated/mtuq.graphics.uq.force.plot_likelihood_force.html>`_           Plots force likelihoods on unit sphere (requires GMT)
+`mtuq.graphics.plot_marginal_force <generated/mtuq.graphics.uq.force.plot_marginal_force.html>`_               Plots force marginals on unit sphere (requires GMT)
+`mtuq.graphics.plot_misfit_force <generated/mtuq.graphics.uq.force.plot_misfit_force.html>`_                   Plots force misfit on unit sphere (requires GMT)
 ============================================================================================================  ============================================================================================================
 
 

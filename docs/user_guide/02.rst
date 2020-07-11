@@ -44,7 +44,7 @@ The starttime of each waveform must be early enough and the endtime late enough 
 
 
 Other file formats
------------------
+------------------
 
 Besides SAC files, many other file formats could be supported in principle.  By design, the functions `obspy.read` and `mtuq.read` share nearly the same input argument syntax, so new file format support could be added following functionality and syntax of `mtuq.io.readers.SAC`.
 

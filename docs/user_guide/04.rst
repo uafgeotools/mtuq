@@ -10,7 +10,7 @@ Filtering, windowing and other signal processing operations are essential for ma
 
 
 Using `mtuq.ProcesData`
-----------------------
+-----------------------
 TODO: Add text
 
 

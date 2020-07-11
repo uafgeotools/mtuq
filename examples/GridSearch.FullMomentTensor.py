@@ -5,7 +5,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit_mt
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -199,7 +199,7 @@ if __name__=='__main__':
 
         plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit(event_id+'FMT_misfit.png', results)
+        plot_misfit_mt(event_id+'FMT_misfit.png', results)
 
         results.save(event_id+'FMT.nc')
 
