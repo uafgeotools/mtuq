@@ -13,15 +13,15 @@ autogen
    mtuq.Station
    mtuq.graphics.plot_beachball
    mtuq.graphics.plot_data_synthetics
-   mtuq.graphics.uq.moment_tensor.plot_likelihood_mt
-   mtuq.graphics.uq.moment_tensor.plot_marginal_mt
-   mtuq.graphics.uq.moment_tensor.plot_misfit_mt
-   mtuq.graphics.uq.vw.plot_likelihood_vw
-   mtuq.graphics.uq.vw.plot_marginal_vw
-   mtuq.graphics.uq.vw.plot_misfit_vw
-   mtuq.graphics.uq.force.plot_likelihood_force
-   mtuq.graphics.uq.force.plot_marginal_force
-   mtuq.graphics.uq.force.plot_misfit_force
+   mtuq.graphics.plot_likelihood_lune
+   mtuq.graphics.plot_marginal_lune
+   mtuq.graphics.plot_misfit_lune
+   mtuq.graphics.plot_likelihood_vw
+   mtuq.graphics.plot_marginal_vw
+   mtuq.graphics.plot_misfit_vw
+   mtuq.graphics.plot_likelihood_force
+   mtuq.graphics.plot_marginal_force
+   mtuq.graphics.plot_misfit_force
    mtuq.grid.DoubleCoupleGridRandom
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom
