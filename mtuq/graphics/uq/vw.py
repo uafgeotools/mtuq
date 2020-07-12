@@ -9,6 +9,7 @@ import warnings
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
+from mtuq.graphics._gmt import _nothing_to_plot
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util.math import closed_interval, open_interval
 
@@ -66,7 +67,7 @@ def plot_misfit_vw(filename, ds, title=''):
         v, w, values = _bin(ds, lambda ds: ds.min())
 
 
-    _plot_vw(filename, v, w, values, title=title)
+    _plot_misfit_vw(filename, v, w, values, title=title)
 
 
 
@@ -117,7 +118,7 @@ def plot_likelihood_vw(filename, ds, sigma=None, title=''):
     values /= values.sum()
     values /= vw_area
 
-    _plot_vw(filename, v, w, values, title=title)
+    _plot_likelihood_vw(filename, v, w, values, title=title)
 
 
 
@@ -169,7 +170,7 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
     values /= values.sum()
     values /= vw_area
 
-    _plot_vw(filename, v, w, values, title=title)
+    _plot_likelihood_vw(filename, v, w, values, title=title)
 
 
 
@@ -215,33 +216,57 @@ def _bin(df, handle, npts_v=20, npts_w=40):
 # pyplot wrappers
 #
 
-def _plot_vw(filename, v, w, values, figtype='likelihood', 
+def _plot_misfit_vw(filename, v, w, values,
     add_colorbar=True, add_marker=True, title=''):
-    """ Creates `v-w` color plot 
 
-    (Thinly wraps pyplot.pcolor)
-
-    """ 
-    mask = np.isnan(values)
-    if np.all(mask):
-        warnings.warn(
-            "Nothing to plot: all values are NaN",
-            Warning)
+    if _nothing_to_plot(values):
         return
 
-    masked = np.ma.array(values, mask=mask)
-    minval = masked.min()
-    maxval = masked.max()
+    _plot_vw(v, w, values, 
+        add_colorbar=add_colorbar,
+        cmap='hot',
+        title=title)
 
-    if minval==maxval:
-        warnings.warn(
-            "Nothing to plot: all values are identical",
-            Warning)
+    if add_marker:
+        idx = np.unravel_index(values.argmin(), values.shape)
+        coords = v[idx[1]], w[idx[0]]
+
+        pyplot.scatter(*coords, s=250,
+            marker='o',
+            facecolors='none',
+            edgecolors=[0,1,0],
+            linewidths=1.75,
+            )
+
+    pyplot.savefig(filename)
+
+
+def _plot_likelihood_vw(filename, v, w, values,
+    add_colorbar=True, add_marker=True, title=''):
+
+    if _nothing_to_plot(values):
         return
 
-    if figtype=='likelihood':
-        cmap = 'hot_r'
+    _plot_vw(v, w, values, 
+        add_colorbar=add_colorbar,
+        cmap='hot_r',
+        title=title)
 
+    if add_marker:
+        idx = np.unravel_index(values.argmax(), values.shape)
+        coords = v[idx[1]], w[idx[0]]
+
+        pyplot.scatter(*coords, s=250,
+            marker='o', 
+            facecolors='none',
+            edgecolors=[0,1,0],
+            linewidths=1.75,
+            )
+
+    pyplot.savefig(filename)
+
+
+def _plot_vw(v, w, values, add_colorbar=False, cmap='hot', title=None):
     # create figure
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
 
@@ -267,28 +292,10 @@ def _plot_vw(filename, v, w, values, figtype='likelihood',
             pad=0.,
             )
 
-    if add_marker:
-        if figtype=='misfit':
-            idx = values.argmin()
-
-        elif figtype=='likelihood':
-            idx = values.argmax()
-
-        idx = np.unravel_index(idx, values.shape)
-        coords = v[idx[1]], w[idx[0]]
-
-        pyplot.scatter(*coords, s=250,
-            marker='o', 
-            facecolors='none',
-            edgecolors=[0,1,0],
-            linewidths=1.75,
-            )
-
     if title:
         fontdict = {'fontsize': 16}
         pyplot.title(title, fontdict=fontdict)
 
-    pyplot.savefig(filename)
 
 
 def _centers_to_edges(v):

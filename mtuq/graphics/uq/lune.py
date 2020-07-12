@@ -8,19 +8,16 @@
 #
 
 import numpy as np
-import shutil
-import subprocess
-import warnings
 
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics._gmt import gmt_cmd, gmt_not_found_warning, check_ext
-from mtuq.util import fullpath
+from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, \
+    gmt_plot_misfit_lune, gmt_plot_likelihood_lune
 from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit_lune(filename, ds, title=''):
+def plot_misfit_lune(filename, ds, add_colorbar=True, add_marker=True, title=''):
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
@@ -69,11 +66,13 @@ def plot_misfit_lune(filename, ds, title=''):
         gamma, delta, values = _bin(ds, lambda ds: ds.min())
 
 
-    _plot_lune_gmt(filename, gamma, delta, values, figtype='misfit', title=title)
+    gmt_plot_misfit_lune(filename, gamma, delta, values, 
+        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
 
-def plot_likelihood_lune(filename, ds, sigma=None, title=''):
+def plot_likelihood_lune(filename, ds, sigma=None, 
+    add_colorbar=True, add_marker=True, title=''):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -129,11 +128,14 @@ def plot_likelihood_lune(filename, ds, sigma=None, title=''):
 
     values /= values.sum()
 
-    _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
+    gmt_plot_likelihood_lune(filename, gamma, delta, values,
+        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
 
-def plot_marginal_lune(filename, ds, sigma=None, title=''):
+
+def plot_marginal_lune(filename, ds, sigma=None,
+    add_colorbar=True, add_marker=True, title=''):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -189,7 +191,8 @@ def plot_marginal_lune(filename, ds, sigma=None, title=''):
     #values /= lune_det(delta, gamma)
     values /= values.sum()
 
-    _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
+    gmt_plot_likelihood_lune(filename, gamma, delta, values,
+        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
 
@@ -243,111 +246,5 @@ def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
               binned[_i, _j] /= edges_w[_i+1] - edges_w[_i]
 
     return to_gamma(centers_v), to_delta(centers_w), binned
-
-
-
-#
-# GMT wrappers
-#
-
-def _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood',
-    add_colorbar=False, add_marker=True, title=''):
-    """ Plots misfit values on lune
-    """
-    gamma, delta = np.meshgrid(gamma, delta)
-    delta = delta.flatten()
-    gamma = gamma.flatten()
-    values = values.flatten()
-
-    mask = np.isnan(values)
-    if np.all(mask):
-        warnings.warn(
-            "Nothing to plot: all values are NaN",
-            Warning)
-        return
-
-    masked = np.ma.array(values, mask=mask)
-    minval = masked.min()
-    maxval = masked.max()
-
-    if minval==maxval:
-        warnings.warn(
-            "Nothing to plot: all values are identical",
-            Warning)
-        return
-
-    if maxval-minval < 1.e-6:
-        exp = -np.fix(np.log10(maxval-minval))
-        warnings.warn(
-           "Multiplying by 10^%d to avoid GMT plotting errors" % exp,
-           Warning)
-        values *= 10.**exp
-        minval *= 10.**exp
-        maxval *= 10.**exp
-
-
-    #
-    # prepare gmt input
-    #
-
-    name, fmt = check_ext(filename)
-
-    zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/10.)
-
-    if add_marker and figtype=='misfit':
-        idx = values.argmin()
-        marker_coords = "'%f %f'" % (gamma[idx], delta[idx])
-
-    elif add_marker and figtype=='likelihood':
-        idx = values.argmax()
-        marker_coords = "'%f %f'" % (gamma[idx], delta[idx])
-
-    else:
-        marker_coords = "''"
-
-    try:
-        parts=title.split('\n')
-    except:
-        parts=[]
-
-    if len(parts) >= 2:
-        title = "'%s'" % parts[0]
-        subtitle = "'%s'" % parts[1]
-    elif len(parts) == 1:
-        title = "'%s'" % parts[0]
-        subtitle = "''"
-    else:
-        title = "''"
-        subtitle = "''"
-
-
-    # FIXME: can GMT accept virtual files?
-    tmpname = 'tmp_'+name+'.txt'
-    np.savetxt(tmpname, np.column_stack([gamma, delta, values]))
-
-
-    #
-    # call gmt script
-    #
-
-    if gmt_cmd():
-        _call("%s %s %s %s %s %s %s %s %s" %
-           (fullpath('mtuq/graphics/_gmt/plot_lune'),
-            tmpname,
-            filename,
-            fmt,
-            figtype,
-            zmin_zmax_dz,
-            marker_coords,
-            title,
-            subtitle
-            ))
-    else:
-        gmt_not_found_warning(
-            tmpname)
-
-
-def _call(cmd):
-    subprocess.call(cmd, shell=True)
 
 

@@ -122,7 +122,6 @@ function add_WSE_arcs_labels {
 }
 
 
-
 function add_lune_points {
     ps=$1
     proj_arg=$2
@@ -156,6 +155,26 @@ function add_lune_points {
 
 
 function add_lune_labels {
+    ps=$1
+    proj_arg=$2
+    area_arg=$3
+
+    echo   0.0 -90.0 ISO   |\
+    gmt pstext -F+f10p+jCB -N $proj_arg $area_arg -O -K -D0p/-1  >> $ps
+
+    echo   0.0  90.0 ISO   |\
+    gmt pstext -F+f10p+jCB -N $proj_arg $area_arg -O -K -D0p/7.5p    >> $ps
+
+    echo -30.0   0.0 CLVD  |\
+    gmt pstext -F+f10p+jRM -N $proj_arg $area_arg -O -K -D-7.5p/0p >> $ps
+
+    echo  30.0   0.0 CLVD  |\
+    gmt pstext -F+f10p+jLM -N $proj_arg $area_arg -O -K -D7.5p/0p  >> $ps
+
+}
+
+
+function add_lune_labels_coords {
     ps=$1
     proj_arg=$2
     area_arg=$3
@@ -263,4 +282,12 @@ EOF
 }
 
 
+function idxmin {
+    echo $(gmt gmtinfo $1 -El | awk '{print $1, $2}')
+}
+    
+
+function idxmax {
+    echo $(gmt gmtinfo $1 -Eh | awk '{print $1, $2}')
+}
 

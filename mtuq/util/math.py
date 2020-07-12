@@ -30,6 +30,15 @@ def correlate(v1, v2):
         # for short traces, time-domain implementation is usually faster
         return np.correlate(v1, v2, 'valid')
 
+def wrap_180(angle_in_deg):
+    """ Wraps angle to (-180, 180)
+    """
+    angle_in_deg %= 360.
+    idx = np.where(angle_in_deg > 180.)
+    angle_in_deg[idx] -= 360.
+    return angle_in_deg
+
+
 
 #
 # set theoretic
