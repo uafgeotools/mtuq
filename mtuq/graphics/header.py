@@ -173,7 +173,7 @@ class MomentTensorHeader(Base):
         py -= 0.35
 
         line = '%s  %s  $M_w$ %.2f  Depth %d km' % (
-            _lat_lon(self.origin), self.event_name, self.magnitude, self.depth_in_km)
+            self.event_name, _lat_lon(self.origin), self.magnitude, self.depth_in_km)
         _write_bold(line, px, py, ax, fontsize=16.5)
 
 
@@ -260,7 +260,7 @@ class ForceHeader(Base):
         px += 0.0
         py -= 0.35
         line = '%s  %s  $F$ %.2e N   Depth %d km' % (
-            _lat_lon(self.origin), self.event_name, self.force_dict['F0'], self.depth_in_km)
+            self.event_name, _lat_lon(self.origin), self.force_dict['F0'], self.depth_in_km)
         _write_bold(line, px, py, ax, fontsize=16)
 
 

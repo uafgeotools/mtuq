@@ -60,9 +60,9 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``gather`` (`bool`):
-    If True, process 0 returns all results and any other processes `None`;
-    otherwise, results are divided evenly among processes. 
-    (Ignored outside MPI environment.)
+    If `True`, process 0 returns all results and any other processes `None`,
+    otherwise, results are divided evenly among processes
+    (ignored outside MPI environment)
 
 
     .. note:
