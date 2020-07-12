@@ -60,9 +60,9 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``gather`` (`bool`):
-    If True, process 0 returns all results and any other processes `None`;
-    otherwise, results are divided evenly among processes. 
-    (Ignored outside MPI environment.)
+    If `True`, process 0 returns all results and any other processes `None`,
+    otherwise, results are divided evenly among processes
+    (ignored outside MPI environment)
 
 
     .. note:
@@ -146,22 +146,49 @@ class MTUQDataArray(xarray.DataArray):
     """ Data structure for storing values on regularly-spaced grids
     """
 
-    def idxmin(self):
+    def idxmin(self, idx_type=None):
+        """ Returns origin index corresponding to minimum misfit
+        """
+        if idx_type is None:
+            return self._idxmin()
+
+        elif idx_type in ('origin', 'origin_idx'):
+            return int(self.idxmin()['origin_idx'])
+
+        elif idx_type in ('source', 'source_idx'):
+            shape = self._get_shape()
+            return np.unravel_index(self.argmin(), shape)[0]
+
+        else:
+            raise TypeError
+
+    def idxmax(self, idx_type=None):
+        """ Returns origin index corresponding to minimum misfit
+        """
+        if idx_type is None:
+            return self._idxmax()
+
+        elif idx_type in ('origin', 'origin_idx'):
+            return int(self.idxmax()['origin_idx'])
+
+        elif idx_type in ('source', 'source_idx'):
+            shape = self._get_shape()
+            return np.unravel_index(self.argmax(), shape)[0]
+
+        else:
+            raise TypeError
+
+    def _idxmin(self):
         """ Returns coordinates corresponding to minimum misfit
         """
         # idxmin has now been implemented in a beta version of xarray
-        return self.where(self==self.max(), drop=True).squeeze().coords
+        return self.where(self==self.min(), drop=True).squeeze().coords
 
-    def origin_idxmin(self):
-        """ Returns origin index corresponding to minimum misfit
+    def _idxmax(self):
+        """ Returns coordinates corresponding to minimum misfit
         """
-        return int(self.idxmin()['origin_idx'])
-
-    def source_idxmin(self):
-        """ Returns source index corresponding to minimum misfit
-        """
-        shape = self._get_shape()
-        return np.unravel_index(self.argmin(), shape)[0]
+        # idxmax has now been implemented in a beta version of xarray
+        return self.where(self==self.min(), drop=True).squeeze().coords
 
     def _get_shape(self):
         """ Private helper method
@@ -172,7 +199,7 @@ class MTUQDataArray(xarray.DataArray):
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to NetCDF file
         """
-        print('Saving NetCDF file: %s' % filename)
+        print('  saving NetCDF file: %s' % filename)
         self.to_netcdf(filename)
 
     def __repr__(self):
@@ -202,23 +229,44 @@ class MTUQDataArray(xarray.DataArray):
 class MTUQDataFrame(pandas.DataFrame):
     """ Data structure for storing values on irregularly-spaced grids
     """
-
-    def origin_idxmin(self):
+    def idxmin(self, idx_type=None):
         """ Returns origin index corresponding to minimum misfit
         """
-        df = self.reset_index()
-        return df['origin_idx'][df[0].idxmin()]
+        if idx_type is None:
+            return self[0].idxmin()
 
-    def source_idxmin(self):
-        """ Returns source index corresponding to minimum misfit
+        elif idx_type in ('origin', 'origin_idx'):
+            df = self.reset_index()
+            return df['origin_idx'][df[0].idxmin()]
+
+        elif idx_type in ('source', 'source_idx'):
+            df = self.reset_index()
+            return df['source_idx'][df[0].idxmin()]
+
+        else:
+            raise TypeError
+
+    def idxmax(self, idx_type=None):
+        """ Returns origin index corresponding to minimum misfit
         """
-        df = self.reset_index()
-        return df['source_idx'][df[0].idxmin()]
+        if idx_type is None:
+            return self[0].idxmax()
+
+        elif idx_type in ('origin', 'origin_idx'):
+            df = self.reset_index()
+            return df['origin_idx'][df[0].idxmax()]
+
+        elif idx_type in ('source', 'source_idx'):
+            df = self.reset_index()
+            return df['source_idx'][df[0].idxmax()]
+
+        else:
+            raise TypeError
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file
         """
-        print('Saving HDF5 file: %s' % filename)
+        print('  saving HDF5 file: %s' % filename)
         df = pandas.DataFrame(self.values, index=self.index)
         df.to_hdf(filename, key='df', mode='w')
 
@@ -268,13 +316,13 @@ def _to_dataarray(origins, sources, values):
          })
 
 
-def _to_dataframe(origins, sources, values):
+def _to_dataframe(origins, sources, values, index_type=2):
     """ Converts grid_search inputs to DataFrame
     """
-    if len(origins)*len(sources) > 2.e6:
-        print("  pandas.DataFrame constructor might take a long time\n"
-              "  see mtuq.grid_search._to_dataframe\n"
-              "  len(df) = %d\n" % (len(origins)*len(sources)))
+    if len(origins)*len(sources) > 1.e7:
+        print("  pandas indexing becomes very slow with >10 million rows\n"
+              "  consider using index_type=1 in mtuq.grid_search._to_dataframe\n"
+             )
 
     origin_idx = np.arange(len(origins), dtype='int')
     source_idx = np.arange(len(sources), dtype='int')
@@ -286,23 +334,18 @@ def _to_dataframe(origins, sources, values):
     for _i, coords in enumerate(sources.coords):
         source_coords += [list(np.tile(coords, len(origins)))]
 
+    # assemble coordinates
     coords = [origin_idx, source_idx]
     dims = ('origin_idx', 'source_idx')
-    coords += source_coords
-    dims += sources.dims
+    if index_type==2:
+        coords += source_coords
+        dims += sources.dims
+
+    # construct DataFrame
     data = {dims[_i]: coords[_i] for _i in range(len(dims))}
     data.update({0: values.flatten()})
     df = MTUQDataFrame(data=data)
-    return df.set_index(list(dims))
-
-    ## even faster, but would require new MTUQDataFrame methods
-    #coords = [origin_idx, source_idx]
-    #dims = ('origin_idx', 'source_idx')
-    #data = {dims[_i]: coords[_i] for _i in range(len(dims))}
-    #data.update({0: values.flatten()})
-    #df = MTUQDataFrame(data=data)
-    #df.attrs = {'source_dims': source_dims, 'sources_coords': sources_coords}
-    # return df.set_index(list(dims))
-
+    df = df.set_index(list(dims))
+    return df
 
 

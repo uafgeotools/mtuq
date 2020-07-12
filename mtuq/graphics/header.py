@@ -50,12 +50,12 @@ class Base(object):
         return ax
 
 
-    def write(self):
+    def write(self, *args, **kwargs):
         raise NotImplementedError("Must be implemented by subclass")
 
 
 
-class SimpleHeader(Base):
+class TextHeader(Base):
     """ Prints header text from a list ((xp, yp, text), ...)
     """
     def __init__(self, items):
@@ -69,7 +69,7 @@ class SimpleHeader(Base):
         self.items = items
 
 
-    def write(self, height, offset):
+    def write(self, height, width, margin_left, margin_top):
         ax = self._get_axis(height)
 
         for item in self.items:
@@ -82,7 +82,7 @@ class SimpleHeader(Base):
 
 
 
-class Header(Base):
+class MomentTensorHeader(Base):
     """ Stores information from a moment tensor inversion and writes UAF-style
     text to the top of a matplotlib figure
     """
@@ -108,15 +108,18 @@ class Header(Base):
         self.misfit_sw = process_sw
         self.norm = misfit_bw.norm
 
-        self.bw_T_min = process_bw.freq_max**-1
-        self.bw_T_max = process_bw.freq_min**-1
-        self.sw_T_min = process_sw.freq_max**-1
-        self.sw_T_max = process_sw.freq_min**-1
-        self.bw_win_len = process_bw.window_length
-        self.sw_win_len = process_sw.window_length
+        if self.process_bw:
+            self.bw_T_min = process_bw.freq_max**-1
+            self.bw_T_max = process_bw.freq_min**-1
+            self.bw_win_len = process_bw.window_length
+
+        if self.process_sw:
+            self.sw_T_min = process_sw.freq_max**-1
+            self.sw_T_max = process_sw.freq_min**-1
+            self.sw_win_len = process_sw.window_length
 
 
-    def add_beachball(self, ax, height, offset):
+    def display_source(self, ax, height, width, offset):
 
         #
         # If ObsPy plotted focal mechanisms correctly we could do the following
@@ -160,56 +163,155 @@ class Header(Base):
         """
         ax = self._get_axis(height)
 
-        px0 = (margin_left + 0.75*height)/width + 0.05
-        py0 = 0.8 - margin_top/height
+        self.display_source(ax, height, width, margin_left)
 
-        self.add_beachball(ax, height, margin_left)
-
+        px = 2.*margin_left + 0.75*height
+        py = height - margin_top
 
         # write text line #1
-        px = px0
-        py = py0
-        line = '%s  $M_w$ %.2f  Depth %d km  %s' % (
-            self.event_name, self.magnitude, self.depth_in_km, _lat_lon(self.origin))
-        _write_bold(line, px, py, ax, fontsize=16)
+        px += 0.
+        py -= 0.35
+
+        line = '%s  %s  $M_w$ %.2f  Depth %d km' % (
+            self.event_name, _lat_lon(self.origin), self.magnitude, self.depth_in_km)
+        _write_bold(line, px, py, ax, fontsize=16.5)
 
 
         # write text line #2
-        px = px0
-        py -= 0.175
-        line = u'Model %s   Solver %s   %s norm %.1e' % \
+        px += 0.
+        py -= 0.3
+
+        line = u'model: %s   solver: %s   misfit (%s): %.1e' % \
                 (self.model, self.solver, self.norm, self.best_misfit)
         _write_text(line, px, py, ax, fontsize=14)
 
 
         # write text line #3
-        px = px0
-        py -= 0.175
-        line = 'passbands (s):  bw %.1f - %.1f ,  sw %.1f - %.1f   ' %\
-                (self.bw_T_min, self.bw_T_max, self.sw_T_min, self.sw_T_max)
-        line += 'win. len. (s):  bw %.1f ,  sw %.1f   ' %\
-                (self.bw_win_len, self.sw_win_len)
+        px += 0.
+        py -= 0.3
+
+        if self.process_bw and self.process_bw:
+            line = ('body waves:  %.1f-%.1f s band, %.1f s window;  ' +\
+                    'surface waves: %.1f-%.1f s band, %.1f s window ') %\
+                    (self.bw_T_min, self.bw_T_max, self.bw_win_len,
+                     self.sw_T_min, self.sw_T_max, self.sw_win_len)
+
+        elif self.process_sw:
+            line = 'passband: %.1f-%.1f s,  window length: %.1f s ' %\
+                    (self.sw_T_min, self.sw_T_max, self.sw_win_len)
+
         _write_text(line, px, py, ax, fontsize=14)
 
 
         # write text line #4
-        px = px0
-        py -= 0.175
+        px += 0.
+        py -= 0.3
         line = _focal_mechanism(self.lune_dict)
-        line +=  _delta_gamma(self.lune_dict)
+        line +=  ',   '+_delta_gamma(self.lune_dict)
         _write_text(line, px, py, ax, fontsize=14)
+
+
+class ForceHeader(Base):
+    """ Stores information from a force inversion and writes UAF-style to the 
+    top of a matplotlib figure
+    """
+
+    def __init__(self, event_name, process_bw, process_sw, misfit_bw, misfit_sw,
+        model, solver, force, force_dict, origin, best_misfit_bw, best_misfit_sw):
+
+        self.event_name = event_name
+        self.depth_in_m = origin.depth_in_m
+        self.depth_in_km = origin.depth_in_m/1000.
+        self.model = model
+        self.solver = solver
+        self.force = force
+        self.force_dict = force_dict
+        self.origin = origin
+        self.best_misfit_bw = best_misfit_bw[0]*1.e10
+        self.best_misfit_sw = best_misfit_sw[0]*1.e10
+        self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
+
+        self.process_bw = process_bw
+        self.process_sw = process_sw
+        self.misfit_bw = process_bw
+        self.misfit_sw = process_sw
+        self.norm = misfit_bw.norm
+
+        if self.process_bw:
+            self.bw_T_min = process_bw.freq_max**-1
+            self.bw_T_max = process_bw.freq_min**-1
+            self.bw_win_len = process_bw.window_length
+
+        if self.process_sw:
+            self.sw_T_min = process_sw.freq_max**-1
+            self.sw_T_max = process_sw.freq_min**-1
+            self.sw_win_len = process_sw.window_length
+
+
+    def write(self, height, width, margin_left, margin_top):
+
+        ax = self._get_axis(height)
+
+        px = 2.*margin_left + 0.75*height
+        py = height - margin_top
+
+
+        # write text line #1
+        px += 0.0
+        py -= 0.35
+        line = '%s  %s  $F$ %.2e N   Depth %d km' % (
+            self.event_name, _lat_lon(self.origin), self.force_dict['F0'], self.depth_in_km)
+        _write_bold(line, px, py, ax, fontsize=16)
+
+
+        # write text line #2
+        px += 0.
+        py -= 0.3
+
+        line = u'model: %s   solver: %s   misfit (%s): %.1e' % \
+                (self.model, self.solver, self.norm, self.best_misfit)
+        _write_text(line, px, py, ax, fontsize=14)
+
+
+        # write text line #3
+        px += 0.
+        py -= 0.3
+
+        if self.process_bw and self.process_bw:
+            line = ('body waves:  %.1f-%.1f s band, %.1f s window;  ' +\
+                    'surface waves: %.1f-%.1f s band, %.1f s window ') %\
+                    (self.bw_T_min, self.bw_T_max, self.bw_win_len,
+                     self.sw_T_min, self.sw_T_max, self.sw_win_len)
+
+        elif self.process_sw:
+            line = 'passband: %.1f-%.1f s,  window length: %.1f s ' %\
+                    (self.sw_T_min, self.sw_T_max, self.sw_win_len)
+
+        _write_text(line, px, py, ax, fontsize=14)
+
+
+        # write text line #4
+        px += 0.0
+        py -= 0.3
+        line = _phi_theta(self.force_dict)
+        _write_text(line, px, py, ax, fontsize=14)
+
+
+    def display_source(self):
+        raise NotImplementedError
+
 
 
 def _lat_lon(origin):
     if origin.latitude >= 0:
-        latlon = '%.1f%s%s' % (+origin.latitude, u'\N{DEGREE SIGN}', 'N')
+        latlon = '%.2f%s%s' % (+origin.latitude, u'\N{DEGREE SIGN}', 'N')
     else:
-        latlon = '%.1f%s%s' % (-origin.latitude, u'\N{DEGREE SIGN}', 'S')
+        latlon = '%.2f%s%s' % (-origin.latitude, u'\N{DEGREE SIGN}', 'S')
 
     if origin.longitude > 0:
-        latlon += '% .1f%s%s' % (+origin.longitude, u'\N{DEGREE SIGN}', 'E')
+        latlon += '% .2f%s%s' % (+origin.longitude, u'\N{DEGREE SIGN}', 'E')
     else:
-        latlon += '% .1f%s%s' % (-origin.longitude, u'\N{DEGREE SIGN}', 'W')
+        latlon += '% .2f%s%s' % (-origin.longitude, u'\N{DEGREE SIGN}', 'W')
 
     return latlon
 
@@ -224,7 +326,7 @@ def _focal_mechanism(lune_dict):
 
     slip = lune_dict['sigma']
 
-    return ("strike  dip  slip:  %d  %d  %d;  " %
+    return ("strike  dip  slip:  %d  %d  %d" %
         (strike, dip, slip))
 
 
@@ -235,24 +337,33 @@ def _delta_gamma(lune_dict):
     except:
         delta, gamma = lune_dict['delta'], lune_dict['gamma']
 
-    return '  %s  %s:  %d  %d' % (u'\u03B3', u'\u03B4', delta, gamma)
+    return 'lune coords %s  %s:  %d  %d' % (u'\u03B3', u'\u03B4', delta, gamma)
+
+
+
+def _phi_theta(force_dict):
+    try:
+        phi, theta = force_dict['phi'], force_dict['theta']
+    except:
+        phi, h = force_dict['phi'], force_dict['h']
+        theta = np.degrees(np.arccos(h))
+
+    return '%s  %s:  %d  %d' % (u'\u03C6', u'\u03B8', phi, theta)
 
 
 def _write_text(text, x, y, ax, fontsize=12, **kwargs):
-    pyplot.text(x, y, text, fontsize=fontsize, transform=ax.transAxes,  **kwargs)
+    pyplot.text(x, y, text, fontsize=fontsize, **kwargs)
 
 
 def _write_bold(text, x, y, ax, fontsize=14):
     font = FontProperties()
     #font.set_weight('bold')
-    pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize,
-        transform=ax.transAxes)
+    pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize)
 
 
 def _write_italic(text, x, y, ax, fontsize=12):
     font = FontProperties()
     font.set_style('italic')
-    pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize,
-        transform=ax.transAxes)
+    pyplot.text(x, y, text, fontproperties=font, fontsize=fontsize)
 
 

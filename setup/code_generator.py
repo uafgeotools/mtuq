@@ -593,7 +593,7 @@ Main_GridSearch_DoubleCouple="""
         results = results_bw + results_sw
 
         # source index corresponding to minimum misfit
-        idx = results.source_idxmin()
+        idx = results.idxmin('source')
 
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
@@ -674,7 +674,7 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         results = results_bw + results_sw
 
         # source index corresponding to minimum misfit
-        idx = results.source_idxmin()
+        idx = results.idxmin('source')
 
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
@@ -729,7 +729,7 @@ Main2_SerialGridSearch_DoubleCouple="""
     results = results_bw + results_sw
 
     # source index corresponding to minimum misfit
-    idx = results.source_idxmin()
+    idx = results.idxmin('source')
 
     best_source = grid.get(idx)
     lune_dict = grid.get_dict(idx)
@@ -833,7 +833,7 @@ Main_TestGraphics="""
 
     plot_beachball('graphics_test_3.png', mt)
 
-    print('Finished\\n')
+    print('\\nFinished\\n')
 """
 
 
@@ -898,7 +898,7 @@ WrapUp_GridSearch_DoubleCouple="""
 
         results.save(event_id+'DC.nc')
 
-        print('Finished\\n')
+        print('\\nFinished\\n')
 
 """
 
@@ -921,7 +921,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         misfit_vs_depth(event_id+'_misfit_vs_depth_sw.png',
             data_sw, misfit_sw, origins, grid, results_sw)
 
-        print('Finished\\n')
+        print('\\nFinished\\n')
 """
 
 
@@ -942,7 +942,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     results.save(event_id+'DC.nc')
 
-    print('Finished\\n')
+    print('\\nFinished\\n')
 
 """
 
@@ -992,7 +992,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     results = results_bw + results_sw
 
-    idx = results.source_idxmin()
+    idx = results.idxmin('source')
     best_source = grid.get(idx)
 
     if run_figures:
@@ -1135,7 +1135,7 @@ if __name__=='__main__':
             'DoubleCoupleGridRegular',
             'FullMomentTensorGridSemiregular',
             'plot_misfit_dc',
-            'plot_misfit',
+            'plot_misfit_lune',
             ))
         file.write(Docstring_GridSearch_FullMomentTensor)
         file.write(Paths_Syngine)
@@ -1155,7 +1155,7 @@ if __name__=='__main__':
             'DC',
             'FMT',
             'plot_misfit_dc',
-            'plot_misfit',
+            'plot_misfit_lune',
             ))
 
 

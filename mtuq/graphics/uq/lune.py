@@ -1,27 +1,23 @@
 
 #
-# graphics/uq.py - uncertainty quantification on the eigenvalue lune
+# graphics/uq/lune.py - uncertainty quantification on the eigenvalue lune
 #
 # For details about the eigenvalue lune, see 
 # Tape2012 - A geometric setting for moment tensors
 # (https://doi.org/10.1111/j.1365-246X.2012.05491.x)
 #
 
-
 import numpy as np
-import shutil
-import subprocess
-import warnings
 
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics._gmt import gmt_cmd, gmt_not_found_warning, check_ext
-from mtuq.util import fullpath
-from mtuq.util.math import to_gamma, to_delta, to_v, to_w, semiregular_grid
+from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, \
+    gmt_plot_misfit_lune, gmt_plot_likelihood_lune
+from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit(filename, ds, title=''):
+def plot_misfit_lune(filename, ds, add_colorbar=True, add_marker=True, title=''):
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
@@ -59,23 +55,24 @@ def plot_misfit(filename, ds, title=''):
 
 
     if issubclass(type(ds), DataArray):
-        da = ds
-        da = da.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        gamma = to_gamma(da.coords['v'])
-        delta = to_delta(da.coords['w'])
-        values = da.values.transpose()
+        ds = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(ds.coords['v'])
+        delta = to_delta(ds.coords['w'])
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        gamma, delta, values = _bin(df, lambda df: df.min())
+        ds = ds.reset_index()
+        gamma, delta, values = _bin(ds, lambda ds: ds.min())
 
 
-    _plot_lune_gmt(filename, gamma, delta, values, title=title)
+    gmt_plot_misfit_lune(filename, gamma, delta, values, 
+        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
 
-def plot_likelihood(filename, ds, sigma=1., title=''):
+def plot_likelihood_lune(filename, ds, sigma=None, 
+    add_colorbar=True, add_marker=True, title=''):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -111,33 +108,34 @@ def plot_likelihood(filename, ds, sigma=1., title=''):
       For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
 
     """
+    assert sigma is not None
     ds = ds.copy()
 
 
-    # convert from misfit to likelihood
-    ds.values = np.exp(-ds.values/(2.*sigma**2))
-
-
     if issubclass(type(ds), DataArray):
-        da = ds
-        da = da.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        gamma = to_gamma(da.coords['v'])
-        delta = to_delta(da.coords['w'])
-        values = da.values.transpose()
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(ds.coords['v'])
+        delta = to_delta(ds.coords['w'])
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        gamma, delta, values = _bin(df, lambda df: df.max())
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds = ds.reset_index()
+        gamma, delta, values = _bin(ds, lambda ds: ds.max())
 
 
     values /= values.sum()
 
-    _plot_lune_gmt(filename, gamma, delta, values, title=title)
+    gmt_plot_likelihood_lune(filename, gamma, delta, values,
+        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
 
-def plot_marginal(filename, ds, sigma=1., title=''):
+
+def plot_marginal_lune(filename, ds, sigma=None,
+    add_colorbar=True, add_marker=True, title=''):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -173,30 +171,28 @@ def plot_marginal(filename, ds, sigma=1., title=''):
       For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
  
     """
-
+    assert sigma is not None
     ds = ds.copy()
 
 
-    # convert from misfit to likelihood
-    ds.values = np.exp(-ds.values/(2.*sigma**2))
-
-
     if issubclass(type(ds), DataArray):
-        da = ds
-        da = da.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        gamma = to_gamma(da.coords['v'])
-        delta = to_delta(da.coords['w'])
-        values = da.values.transpose()
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds = ds.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(ds.coords['v'])
+        delta = to_delta(ds.coords['w'])
+        values = ds.values.transpose()
 
 
     elif issubclass(type(ds), DataFrame):
-        df = ds.reset_index()
-        gamma, delta, values = _bin(df, lambda df: df.sum()/len(df), normalize=True)
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds = ds.reset_index()
+        gamma, delta, values = _bin(ds, lambda ds: ds.sum()/len(ds), normalize=True)
 
-    values /= lune_det(delta, gamma)
+    #values /= lune_det(delta, gamma)
     values /= values.sum()
 
-    _plot_lune_gmt(filename, gamma, delta, values, title=title)
+    gmt_plot_likelihood_lune(filename, gamma, delta, values,
+        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
 
@@ -250,96 +246,5 @@ def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
               binned[_i, _j] /= edges_w[_i+1] - edges_w[_i]
 
     return to_gamma(centers_v), to_delta(centers_w), binned
-
-
-
-#
-# GMT wrappers
-#
-
-def _plot_lune_gmt(filename, gamma, delta, values, add_marker=True, title=''):
-    """ Plots misfit values on lune
-    """
-    gamma, delta = np.meshgrid(gamma, delta)
-    delta = delta.flatten()
-    gamma = gamma.flatten()
-    values = values.flatten()
-
-    minval = values.min()
-    maxval = values.max()
-
-    if minval==maxval:
-        warnings.warn(
-            "Nothing to plot: all values are identical",
-            Warning)
-        return
-
-    if maxval-minval < 1.e-6:
-        exp = -np.fix(np.log10(maxval-minval))
-        warnings.warn(
-           "Multiplying by 10^%d to avoid GMT plotting errors" % exp,
-           Warning)
-        values *= 10.**exp
-        minval *= 10.**exp
-        maxval *= 10.**exp
-
-
-    #
-    # prepare gmt input
-    #
-
-    name, fmt = check_ext(filename)
-
-    zmin_zmax_dz = '%e/%e/%e' % (minval, maxval, (maxval-minval)/100.)
-
-    if add_marker:
-        idx = values.argmin()
-        marker_coords = "'%f %f'" % (gamma[idx], delta[idx])
-    else:
-        marker_coords = "''"
-
-    try:
-        parts=title.split('\n')
-    except:
-        parts=[]
-
-    if len(parts) >= 2:
-        title = "'%s'" % parts[0]
-        subtitle = "'%s'" % parts[1]
-    elif len(parts) == 1:
-        title = "'%s'" % parts[0]
-        subtitle = "''"
-    else:
-        title = "''"
-        subtitle = "''"
-
-
-    # FIXME: can GMT accept virtual files?
-    tmpname = 'tmp_'+name+'.txt'
-    np.savetxt(tmpname, np.column_stack([gamma, delta, values]))
-
-
-    #
-    # call gmt script
-    #
-
-    if gmt_cmd():
-        _call("%s %s %s %s %s %s %s %s" %
-           (fullpath('mtuq/graphics/_gmt/plot_lune'),
-            tmpname,
-            filename,
-            fmt,
-            zmin_zmax_dz,
-            marker_coords,
-            title,
-            subtitle
-            ))
-    else:
-        gmt_not_found_warning(
-            tmpname)
-
-
-def _call(cmd):
-    subprocess.call(cmd, shell=True)
 
 

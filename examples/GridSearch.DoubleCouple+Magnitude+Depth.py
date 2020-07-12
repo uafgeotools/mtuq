@@ -204,7 +204,7 @@ if __name__=='__main__':
         results = results_bw + results_sw
 
         # source index corresponding to minimum misfit
-        idx = results.source_idxmin()
+        idx = results.idxmin('source')
 
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
@@ -227,4 +227,4 @@ if __name__=='__main__':
         misfit_vs_depth(event_id+'_misfit_vs_depth_sw.png',
             data_sw, misfit_sw, origins, grid, results_sw)
 
-        print('Finished\n')
+        print('\nFinished\n')

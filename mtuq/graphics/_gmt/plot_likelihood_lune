@@ -1,0 +1,103 @@
+#!/bin/bash -e
+
+
+# USAGE
+#   plot_likelihood_lune in out filetype zmin zmax dz add_colorbar add_marker [title] [subtitle]
+#
+#   Plots lon,lat,z values from ASCII file on eigenvalue lune
+#
+# ARGUMENTS
+#    IN - name of ASCII file containing lon,lat,z values
+#    OUT - name of output image
+#    FILETYPE - format of output image (BMP,EPS,PDF,JPG,PNG,PPM,SVG,TIFF)
+#    ZMIN - colorbar minimum
+#    ZMAX - colorbar maximum
+#    DZ - colorbar increment
+#    ADD_COLORBAR - 0: no colobar 1: horizontal colorbar
+#    ADD_MARKER - 0: no marker, 1: marker
+#    TITLE - optional title string
+#    SUBTITLE - optional subtitle string
+#
+# EXAMPLE
+#    plot_likelihood_lune likelihood.xyz likelihood.png PNG 0. 1. 0.01 1 1 "Maximum likelihood" "Z component"
+
+
+
+# add mtuq/graphics/_gmt to the path
+export PATH=${PATH:+${PATH}:}$(dirname ${BASH_SOURCE[0]})
+source _gmt_functions
+
+
+# parse input arguments
+if [ $# -ne 10 ] ; then
+    echo "plot_likelihood_lune: bad input arguments"
+    exit -1
+fi
+
+in=$1
+out=$2
+filetype=$3
+zmin=$4
+zmax=$5
+dz=$6
+add_colorbar=$7
+add_marker=$8
+title="$9"
+subtitle="${10}"
+
+proj_arg="-JH0/3.4i"
+area_arg="-R-30/30/-90/90"
+range_arg="-T${zmin}/${zmax}/${dz}"
+
+ps="${out}.ps"
+
+
+# apply default settings
+gmt_settings
+
+
+# display background grid
+gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -K > $ps
+
+
+# plot misfit values
+gmt makecpt -Chot -G0.25/1. -Ic -D > tmp0_$out.cpt
+gmt makecpt -Ctmp0_$out.cpt -D $range_arg > tmp_$out.cpt
+gmt pscontour $in $proj_arg $area_arg -Ctmp_$out.cpt -I -N -A- -O -K >> $ps
+
+
+# display reference arcs
+add_lune_arcs $ps $proj_arg $area_arg
+
+
+# display title
+add_title $ps $proj_arg $area_arg "$title" "$subtitle"
+
+
+# display colorbar
+if [ $add_colorbar -eq 1 ]; then
+    # bottom left
+    #gmt psscale -Ctmp_$out.cpt -D2.8/0.5+w1/0.2 -Bf1 -O -K >> $ps
+    # bottom center
+    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h -Bf1 -O -K >> $ps
+fi
+
+
+# display marker
+if [ $add_marker -eq 1 ]; then
+    marker_coords="$(idxmax $in)"
+    add_marker $ps $proj_arg $area_arg "$marker_coords"
+fi
+
+
+custom_psclose $ps
+custom_psconvert $ps $out $filetype
+
+
+#echo "  finished writing: $out"
+
+
+rm tmp*$out*
+rm $ps
+
+

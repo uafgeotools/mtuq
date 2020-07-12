@@ -1,5 +1,5 @@
 #
-# graphics/uq_dc.py - uncertainty quantification of double couple sources
+# graphics/uq/double_couple.py - uncertainty quantification of double couple sources
 #
 
 import numpy as np
@@ -25,6 +25,15 @@ def plot_misfit_dc(filename, ds):
             'plot_misfit_dc not implemented for irregularly-spaced grids')
 
 
+def plot_likelihood_dc():
+    raise NotImplementedError
+
+
+def plot_marginal_dc():
+    raise NotImplementedError
+
+
+
 def _marginal(da):
     if 'origin_idx' in da.dims:
         da = da.max(dim='origin_idx')
@@ -45,6 +54,7 @@ def _marginal(da):
 
 
 def _plot_dc(filename, da):
+
     # prepare axes
     fig, axes = pyplot.subplots(2, 2, 
         figsize=(8., 6.),

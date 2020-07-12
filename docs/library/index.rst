@@ -46,7 +46,7 @@ Station and event structures
 `mtuq.Station <generated/mtuq.Station.html>`_                                                                  Station metdata object
 `mtuq.Origin <generated/mtuq.Origin.html>`_                                                                    Origin metdata object
 `mtuq.Wavelet <generated/mtuq.wavelet.Wavelet.html>`_                                                          Source wavelet or source-time function object
-`mtuq.Force <generated/mtuq.Force.html>`_                                                                      Force source
+`mt.uq.Force <generated/mtuq.Force.html>`_                                                                     Force source
 `mtuq.MomentTensor <generated/mtuq.MomentTensor.html>`_                                                        Moment tensor source
 ============================================================================================================  ============================================================================================================
 
@@ -60,28 +60,33 @@ Data visualization
 ============================================================================================================  ============================================================================================================
 
 
-Uncertainty quantification
---------------------------
+Uncertainty visualization
+-------------------------
 
 ============================================================================================================  ============================================================================================================
-`mtuq.graphics.plot_likelihood <generated/mtuq.graphics.plot_likelihood.html>`_                                Plots maximum likelihoods on lune (requires GMT)
-`mtuq.graphics.plot_marginal <generated/mtuq.graphics.plot_marginal.html>`_                                    Plots marginal likelihoods on lune (requires GMT)
-`mtuq.graphics.plot_misfit <generated/mtuq.graphics.plot_misfit.html>`_                                        Plots misfit on lune (requires GMT)
+`mtuq.graphics.plot_likelihood_lune <generated/mtuq.graphics.plot_likelihood_lune.html>`_                      Plots maximum likelihoods on lune (requires GMT)
+`mtuq.graphics.plot_marginal_lune <generated/mtuq.graphics.plot_marginal_lune.html>`_                          Plots marginal likelihoods on lune (requires GMT)
+`mtuq.graphics.plot_misfit_lune <generated/mtuq.graphics.plot_misfit_lune.html>`_                              Plots misfit on lune (requires GMT)
 `mtuq.graphics.plot_likelihood_vw <generated/mtuq.graphics.plot_likelihood_vw.html>`_                          Plots maximum likelihoods on `v-w` rectangle
 `mtuq.graphics.plot_marginal_vw <generated/mtuq.graphics.plot_marginal_vw.html>`_                              Plots marginal likelihoods on `v-w` rectangle
 `mtuq.graphics.plot_misfit_vw <generated/mtuq.graphics.plot_misfit_vw.html>`_                                  Plots misfit on `v-w` rectangle
+`mtuq.graphics.plot_likelihood_force <generated/mtuq.graphics.plot_likelihood_force.html>`_                    Plots force likelihoods on unit sphere (requires GMT)
+`mtuq.graphics.plot_marginal_force <generated/mtuq.graphics.plot_marginal_force.html>`_                        Plots force marginals on unit sphere (requires GMT)
+`mtuq.graphics.plot_misfit_force <generated/mtuq.graphics.plot_misfit_force.html>`_                            Plots force misfit on unit sphere (requires GMT)
 ============================================================================================================  ============================================================================================================
 
 
 
-Moment tensor grids
--------------------
+Moment tensor and force grids
+-----------------------------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.grid.FullMomentTensorGridRandom <generated/mtuq.grid.FullMomentTensorGridRandom.html>`_                  Grid with randomly-drawn full moment tensors
 `mtuq.grid.FullMomentTensorGridSemiregular <generated/mtuq.grid.FullMomentTensorGridSemiregular.html>`_        Grid with semiregularly-spaced full moment tensors
 `mtuq.grid.DoubleCoupleGridRandom <generated/mtuq.grid.DoubleCoupleGridRandom.html>`_                          Grid with randomly-drawn double couples
 `mtuq.grid.DoubleCoupleGridRegular <generated/mtuq.grid.DoubleCoupleGridRegular.html>`_                        Grid with regularly-spaced double couples
+`mtuq.grid.ForceGridRandom <generated/mtuq.grid.ForceGridRandom.html>`_                                        Grid with randomly-drawn forces
+`mtuq.grid.ForceGridRegular <generated/mtuq.grid.ForceGridRegular.html>`_                                      Grid with regularly-spaced forces
 ============================================================================================================  ============================================================================================================
 
 

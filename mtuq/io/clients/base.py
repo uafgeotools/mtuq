@@ -33,11 +33,12 @@ class Client(object):
         tensors = []
         for _i, origin in enumerate(origins):
             if verbose:
-                print("  Reading %d of %d" % (_i+1, ni))
-                print("  origin latitude: %.1f" % origin.latitude)
-                print("  origin longitude: %.1f" % origin.longitude)
-                print("  origin depth (km): %d" % int(origin.depth_in_m/1000.))
-                print("")
+                if len(origins) > 1:
+                    print("  reading %d of %d" % (_i+1, ni))
+                    print("  origin latitude: %.1f" % origin.latitude)
+                    print("  origin longitude: %.1f" % origin.longitude)
+                    print("  origin depth (km): %d" % int(origin.depth_in_m/1000.))
+                    print("")
 
             for _j, station in enumerate(stations):
                 tensors += [self._get_greens_tensor(station, origin)]

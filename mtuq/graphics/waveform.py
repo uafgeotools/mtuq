@@ -8,7 +8,8 @@ import matplotlib.pyplot as pyplot
 import warnings
 
 from matplotlib.font_manager import FontProperties
-from mtuq.graphics.header import Header
+from mtuq.event import MomentTensor, Force
+from mtuq.graphics.header import MomentTensorHeader, ForceHeader
 from mtuq.util.signal import get_components
 from obspy import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
@@ -53,11 +54,11 @@ def plot_data_synthetics(filename,
     # column 0 - station labels
     # columns 1,2 - body wave traces
     # columns 3,4,5 - surface wave traces
-    column_width_ratios = [0.1,0.4,0.4,1.,1.,1.]
+    column_width_ratios = [0.125,0.4,0.4,1.,1.,1.]
 
     # figure dimensions in inches
-    height = 1.4*nrows
-    width = 15.
+    height = 1.333*nrows
+    width = 12.
     margin_bottom = 0.25
     margin_top = 0.25
     margin_left = 0.25
@@ -72,8 +73,6 @@ def plot_data_synthetics(filename,
     else:
         header_height = 0.
         header_width = 0.
-        header_margin_top = 0.
-        header_margin_bottom = 0.
 
     if station_labels:
         margin_left += 0.5
@@ -85,8 +84,8 @@ def plot_data_synthetics(filename,
 
     # adjust dimensions if body waves absent
     if _isempty(data_bw):
-        width -= 4
-        column_width_ratios=[0.1,0.,0.,1.,1.,1.]
+        width -= 2.5
+        column_width_ratios=[0.125,0.,0.,1.,1.,1.]
     
 
     # initialize figure
@@ -266,10 +265,16 @@ def plot_data_greens(filename,
     Similar to plot_data_synthetics, except provides different input argument
     syntax
     """
-    event_name = filename.split('.')[0]
-    model = _get_tag(greens_bw[0].tags, 'model')
-    solver = _get_tag(greens_bw[0].tags, 'solver')
+    if _isempty(data_bw):
+        # will prevent body wave data processing from appearing in figure header
+        process_bw = None
 
+    if _isempty(data_sw):
+        raise Exception('Empty dataset')
+
+    #
+    # generate synthetics
+    #
     greens_bw = greens_bw.select(origin)
     greens_sw = greens_sw.select(origin)
     _set_components(data_bw, greens_bw)
@@ -283,11 +288,28 @@ def plot_data_greens(filename,
     total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
     total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
 
+    #
+    # prepare figure header
+    #
+    try:
+       event_name = getattr(origin, 'id')
+    except:
+        event_name = filename.split('.')[0]
+
+    model = _get_tag(greens_bw[0].tags, 'model')
+    solver = _get_tag(greens_bw[0].tags, 'solver')
+
     if 'header' in kwargs:
         header = kwargs.pop('header')
 
-    else:
-        header = Header(event_name,
+    elif type(source)==MomentTensor:
+        header = MomentTensorHeader(event_name,
+            process_bw, process_sw, misfit_bw, misfit_bw,
+            model, solver, source, source_dict, origin,
+            total_misfit_bw, total_misfit_sw)
+
+    elif type(source)==Force:
+        header = ForceHeader(event_name,
             process_bw, process_sw, misfit_bw, misfit_bw,
             model, solver, source, source_dict, origin,
             total_misfit_bw, total_misfit_sw)
@@ -363,15 +385,15 @@ def add_station_labels(ax, station, origin):
 
     # display station name
     label = '.'.join([station.network, station.station])
-    pyplot.text(-1.,0.50, label, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-1.,0.50, label, fontsize=11, transform=ax.transAxes)
 
     # display distance
     distance = '%d km' % round(distance_in_m/1000.)
-    pyplot.text(-1.,0.35, distance, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-1.,0.35, distance, fontsize=11, transform=ax.transAxes)
 
     # display azimuth
     azimuth =  '%d%s' % (round(azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(-1.,0.20, azimuth, fontsize=12, transform=ax.transAxes)
+    pyplot.text(-1.,0.20, azimuth, fontsize=11, transform=ax.transAxes)
 
 
 
@@ -387,7 +409,7 @@ def add_trace_labels(axis, dat, syn, total_misfit=1.):
     time_shift = 0.
     time_shift += getattr(syn, 'time_shift', np.nan)
     time_shift += getattr(dat, 'static_time_shift', 0)
-    axis.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=12)
+    axis.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=11)
 
     # display maximum cross-correlation coefficient
     Ns = np.dot(s,s)**0.5
@@ -395,18 +417,18 @@ def add_trace_labels(axis, dat, syn, total_misfit=1.):
     if Ns*Nd > 0.:
         max_cc = np.correlate(s, d, 'valid').max()
         max_cc /= (Ns*Nd)
-        axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=12)
+        axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=11)
     else:
         max_cc = np.nan
-        axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=12)
+        axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=11)
 
     # display percent of total misfit
     misfit = getattr(syn, 'misfit', np.nan)
     misfit /= total_misfit
     if misfit >= 0.1:
-        axis.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=12)
+        axis.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=11)
     else:
-        axis.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=12)
+        axis.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=11)
 
 
 def _set_components(data, greens):

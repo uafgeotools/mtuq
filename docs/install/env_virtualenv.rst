@@ -46,5 +46,5 @@ Unpack seismic waveforms used by examples:
 
 Finally, install GMT following these `instructions <https://github.com/GenericMappingTools/gmt/blob/master/INSTALL.md>`_.  
 
-(For an automated GMT installation procedure, consider `installing MTUQ under conda <https://uafgeotools.github.io/mtuq/install/env_conda.html>`_ instead.)
+(For an automated GMT installation, consider `installing MTUQ under conda <https://uafgeotools.github.io/mtuq/install/env_conda.html>`_ instead.)
 
