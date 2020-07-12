@@ -2,7 +2,7 @@
 
 
 # USAGE
-#   plot_mt in out filetype figtype range [marker] [title] [subtitle]
+#   plot_lune in out filetype figtype range [marker] [title] [subtitle]
 #
 #   Plots lon,lat,z values from ASCII file on eigenvalue lune
 #
@@ -17,7 +17,7 @@
 #    SUBTITLE - optional subtitle string
 #
 # EXAMPLE
-#    plot_mt likelihood.xyz likelihood.png PNG likelihood "-T0./1./0.01" "Maximum likelihood"
+#    plot_lune likelihood.xyz likelihood.png PNG likelihood "-T0./1./0.01" "Maximum likelihood"
 
 
 
@@ -29,7 +29,7 @@ source _gmt_functions
 
 # parse input arguments
 if [ $# -ne 8 ] ; then
-    echo "_plot_mt: too few input arguments"
+    echo "plot_lune: too few input arguments"
     exit -1
 fi
 

@@ -10,7 +10,7 @@ from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma
+from mtuq.util.math import closed_interval, open_interval
 
 
 #
@@ -66,7 +66,7 @@ def plot_misfit_vw(filename, ds, title=''):
         v, w, values = _bin(ds, lambda ds: ds.min())
 
 
-    _plot_vw(filename, v, w, values, cmap='hot')
+    _plot_vw(filename, v, w, values, title=title)
 
 
 
@@ -163,7 +163,7 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
         ds = np.exp(-ds/(2.*sigma**2))
         ds /= ds.sum()
         ds = ds.reset_index()
-        v, w, values = _bin(df, lambda df: df.sum()/len(df))
+        v, w, values = _bin(ds, lambda ds: ds.sum()/len(ds))
 
 
     values /= values.sum()
@@ -215,7 +215,8 @@ def _bin(df, handle, npts_v=20, npts_w=40):
 # pyplot wrappers
 #
 
-def _plot_vw(filename, v, w, values, figtype='likelihood', title=''):
+def _plot_vw(filename, v, w, values, figtype='likelihood', 
+    add_colorbar=True, add_marker=True, title=''):
     """ Creates `v-w` color plot 
 
     (Thinly wraps pyplot.pcolor)
@@ -259,15 +260,33 @@ def _plot_vw(filename, v, w, values, figtype='likelihood', title=''):
     pyplot.xticks([], [])
     pyplot.yticks([], [])
 
+    if add_colorbar:
+        pyplot.colorbar(
+            orientation='horizontal',
+            ticks=[],
+            pad=0.,
+            )
+
+    if add_marker:
+        if figtype=='misfit':
+            idx = values.argmin()
+
+        elif figtype=='likelihood':
+            idx = values.argmax()
+
+        idx = np.unravel_index(idx, values.shape)
+        coords = v[idx[1]], w[idx[0]]
+
+        pyplot.scatter(*coords, s=250,
+            marker='o', 
+            facecolors='none',
+            edgecolors=[0,1,0],
+            linewidths=1.75,
+            )
+
     if title:
         fontdict = {'fontsize': 16}
         pyplot.title(title, fontdict=fontdict)
-
-    pyplot.colorbar(
-        orientation='horizontal', 
-        ticks=[], 
-        pad=0.,
-        )
 
     pyplot.savefig(filename)
 

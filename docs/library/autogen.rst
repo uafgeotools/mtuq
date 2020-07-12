@@ -26,6 +26,8 @@ autogen
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom
    mtuq.grid.FullMomentTensorGridSemiregular
+   mtuq.grid.ForceGridRandom
+   mtuq.grid.ForceGridRegular
    mtuq.grid.Grid
    mtuq.grid.UnstructuredGrid
    mtuq.grid_search.grid_search

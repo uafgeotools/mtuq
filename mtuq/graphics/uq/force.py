@@ -225,8 +225,8 @@ def _wrap(angle_in_deg):
     return angle_in_deg
 
 
-def _plot_force_gmt(filename, phi, h, values, 
-    figtype='likelihood', add_marker=True, title=''):
+def _plot_force_gmt(filename, phi, h, values, figtype='likelihood',
+    add_colorbar=False, add_marker=True, title=''):
     """ Plots misfit values on sphere (GMT implementation)
     """
 

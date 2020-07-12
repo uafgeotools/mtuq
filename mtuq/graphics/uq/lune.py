@@ -1,6 +1,6 @@
 
 #
-# graphics/uq/moment_tensor.py - uncertainty quantification on the eigenvalue lune
+# graphics/uq/lune.py - uncertainty quantification on the eigenvalue lune
 #
 # For details about the eigenvalue lune, see 
 # Tape2012 - A geometric setting for moment tensors
@@ -17,10 +17,10 @@ from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics._gmt import gmt_cmd, gmt_not_found_warning, check_ext
 from mtuq.util import fullpath
-from mtuq.util.math import to_gamma, to_delta, to_v, to_w, semiregular_grid
+from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit_mt(filename, ds, title=''):
+def plot_misfit_lune(filename, ds, title=''):
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
@@ -69,11 +69,11 @@ def plot_misfit_mt(filename, ds, title=''):
         gamma, delta, values = _bin(ds, lambda ds: ds.min())
 
 
-    _plot_mt_gmt(filename, gamma, delta, values, figtype='misfit', title=title)
+    _plot_lune_gmt(filename, gamma, delta, values, figtype='misfit', title=title)
 
 
 
-def plot_likelihood_mt(filename, ds, sigma=None, title=''):
+def plot_likelihood_lune(filename, ds, sigma=None, title=''):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -129,11 +129,11 @@ def plot_likelihood_mt(filename, ds, sigma=None, title=''):
 
     values /= values.sum()
 
-    _plot_mt_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
+    _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
 
 
 
-def plot_marginal_mt(filename, ds, sigma=None, title=''):
+def plot_marginal_lune(filename, ds, sigma=None, title=''):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -186,10 +186,10 @@ def plot_marginal_mt(filename, ds, sigma=None, title=''):
         ds = ds.reset_index()
         gamma, delta, values = _bin(ds, lambda ds: ds.sum()/len(ds), normalize=True)
 
-    values /= lune_det(delta, gamma)
+    #values /= lune_det(delta, gamma)
     values /= values.sum()
 
-    _plot_mt_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
+    _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood', title=title)
 
 
 
@@ -250,8 +250,8 @@ def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
 # GMT wrappers
 #
 
-def _plot_mt_gmt(filename, gamma, delta, values, 
-    figtype='likelihood', add_marker=True, title=''):
+def _plot_lune_gmt(filename, gamma, delta, values, figtype='likelihood',
+    add_colorbar=False, add_marker=True, title=''):
     """ Plots misfit values on lune
     """
     gamma, delta = np.meshgrid(gamma, delta)
@@ -332,7 +332,7 @@ def _plot_mt_gmt(filename, gamma, delta, values,
 
     if gmt_cmd():
         _call("%s %s %s %s %s %s %s %s %s" %
-           (fullpath('mtuq/graphics/_gmt/plot_mt'),
+           (fullpath('mtuq/graphics/_gmt/plot_lune'),
             tmpname,
             filename,
             fmt,

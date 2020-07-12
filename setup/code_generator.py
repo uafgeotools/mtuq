@@ -1135,7 +1135,7 @@ if __name__=='__main__':
             'DoubleCoupleGridRegular',
             'FullMomentTensorGridSemiregular',
             'plot_misfit_dc',
-            'plot_misfit_mt',
+            'plot_misfit_lune',
             ))
         file.write(Docstring_GridSearch_FullMomentTensor)
         file.write(Paths_Syngine)
@@ -1155,7 +1155,7 @@ if __name__=='__main__':
             'DC',
             'FMT',
             'plot_misfit_dc',
-            'plot_misfit_mt',
+            'plot_misfit_lune',
             ))
 
 
