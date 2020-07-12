@@ -146,22 +146,49 @@ class MTUQDataArray(xarray.DataArray):
     """ Data structure for storing values on regularly-spaced grids
     """
 
-    def idxmin(self):
+    def idxmin(self, idx_type=None):
+        """ Returns origin index corresponding to minimum misfit
+        """
+        if idx_type is None:
+            return self._idxmin()
+
+        elif idx_type in ('origin', 'origin_idx'):
+            return int(self.idxmin()['origin_idx'])
+
+        elif idx_type in ('source', 'source_idx'):
+            shape = self._get_shape()
+            return np.unravel_index(self.argmin(), shape)[0]
+
+        else:
+            raise TypeError
+
+    def idxmax(self, idx_type=None):
+        """ Returns origin index corresponding to minimum misfit
+        """
+        if idx_type is None:
+            return self._idxmax()
+
+        elif idx_type in ('origin', 'origin_idx'):
+            return int(self.idxmax()['origin_idx'])
+
+        elif idx_type in ('source', 'source_idx'):
+            shape = self._get_shape()
+            return np.unravel_index(self.argmax(), shape)[0]
+
+        else:
+            raise TypeError
+
+    def _idxmin(self):
         """ Returns coordinates corresponding to minimum misfit
         """
         # idxmin has now been implemented in a beta version of xarray
-        return self.where(self==self.max(), drop=True).squeeze().coords
+        return self.where(self==self.min(), drop=True).squeeze().coords
 
-    def origin_idxmin(self):
-        """ Returns origin index corresponding to minimum misfit
+    def _idxmax(self):
+        """ Returns coordinates corresponding to minimum misfit
         """
-        return int(self.idxmin()['origin_idx'])
-
-    def source_idxmin(self):
-        """ Returns source index corresponding to minimum misfit
-        """
-        shape = self._get_shape()
-        return np.unravel_index(self.argmin(), shape)[0]
+        # idxmax has now been implemented in a beta version of xarray
+        return self.where(self==self.min(), drop=True).squeeze().coords
 
     def _get_shape(self):
         """ Private helper method
@@ -202,18 +229,39 @@ class MTUQDataArray(xarray.DataArray):
 class MTUQDataFrame(pandas.DataFrame):
     """ Data structure for storing values on irregularly-spaced grids
     """
-
-    def origin_idxmin(self):
+    def idxmin(self, idx_type=None):
         """ Returns origin index corresponding to minimum misfit
         """
-        df = self.reset_index()
-        return df['origin_idx'][df[0].idxmin()]
+        if idx_type is None:
+            return self[0].idxmin()
 
-    def source_idxmin(self):
-        """ Returns source index corresponding to minimum misfit
+        elif idx_type in ('origin', 'origin_idx'):
+            df = self.reset_index()
+            return df['origin_idx'][df[0].idxmin()]
+
+        elif idx_type in ('source', 'source_idx'):
+            df = self.reset_index()
+            return df['source_idx'][df[0].idxmin()]
+
+        else:
+            raise TypeError
+
+    def idxmax(self, idx_type=None):
+        """ Returns origin index corresponding to minimum misfit
         """
-        df = self.reset_index()
-        return df['source_idx'][df[0].idxmin()]
+        if idx_type is None:
+            return self[0].idxmax()
+
+        elif idx_type in ('origin', 'origin_idx'):
+            df = self.reset_index()
+            return df['origin_idx'][df[0].idxmax()]
+
+        elif idx_type in ('source', 'source_idx'):
+            df = self.reset_index()
+            return df['source_idx'][df[0].idxmax()]
+
+        else:
+            raise TypeError
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file

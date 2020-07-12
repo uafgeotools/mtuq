@@ -5,7 +5,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit_mt
+from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit_lune
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -179,7 +179,7 @@ if __name__=='__main__':
         results = results_bw + results_sw
 
         # source index corresponding to minimum misfit
-        idx = results.source_idxmin()
+        idx = results.idxmin('source')
 
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
@@ -199,7 +199,7 @@ if __name__=='__main__':
 
         plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit_mt(event_id+'FMT_misfit.png', results)
+        plot_misfit_lune(event_id+'FMT_misfit.png', results)
 
         results.save(event_id+'FMT.nc')
 
