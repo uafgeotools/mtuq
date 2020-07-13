@@ -46,7 +46,7 @@ Station and event structures
 `mtuq.Station <generated/mtuq.Station.html>`_                                                                  Station metdata object
 `mtuq.Origin <generated/mtuq.Origin.html>`_                                                                    Origin metdata object
 `mtuq.Wavelet <generated/mtuq.wavelet.Wavelet.html>`_                                                          Source wavelet or source-time function object
-`mt.uq.Force <generated/mtuq.Force.html>`_                                                                     Force source
+`mtuq.Force <generated/mtuq.Force.html>`_                                                                      Force source
 `mtuq.MomentTensor <generated/mtuq.MomentTensor.html>`_                                                        Moment tensor source
 ============================================================================================================  ============================================================================================================
 

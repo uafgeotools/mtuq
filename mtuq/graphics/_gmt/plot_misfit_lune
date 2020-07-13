@@ -19,7 +19,7 @@
 #    SUBTITLE - optional subtitle string
 #
 # EXAMPLE
-#    plot_misfit_lune likelihood.xyz likelihood.png PNG 0. 1. 0.01 1 1 "Maximum likelihood" "Z component"
+#    plot_misfit_lune misfit.xyz misfit.png PNG 0. 1. 0.01 1 1 "Misfit" "Z component"
 
 
 

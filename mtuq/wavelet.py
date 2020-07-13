@@ -29,8 +29,10 @@ class Wavelet(object):
 
     .. code::
 
+       wavelet = SimpleGaussian()
+
        t = np.linspace(-5,. +5., 101)
-       y = SimpleGaussian().evaluate(t)
+       y = wavelet.evaluate(t)
 
     Or we can convolve it with an ObsPy trace:
 
@@ -38,7 +40,7 @@ class Wavelet(object):
 
        from obspy import read
        trace = read('http://examples.obspy.org/exaple_data.sac')[0]
-       convolved_trace = SimpleGaussian().convolve(trace)
+       convolved_trace = wavelet.convolve(trace)
 
     """
     def evaluate(self, t):
