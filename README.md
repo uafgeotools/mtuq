@@ -3,29 +3,26 @@
 MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, drawing on ObsPy and instaseis data structures.
 
 
-## Solvers
-
-Interfaces are provided for modern solvers, including AxiSEM and SPECFEM3D, 
-and legacy solves, including FK.
-
-[Utilities](https://uafgeotools.github.io/mtuq/library/index.html#data-i-o)
-are included for working with AxiSEM, SPECFEM3D, and FK databases as well as
-downloading AxiSEM synthetics from remote syngine databases.
-
-
 ## Misfit evaluation
 
 Waveform difference and cross-correlation time-shift [misfit evaluation](https://uafgeotools.github.io/mtuq/library/index.html#data-processing-and-inversion) 
 on body-wave and surface-wave windows is implemented in C-accelerated Python.
 
-A separate easy-to-read pure Python implementation is also included for 
-checking the correctness of the accelerated version.
+These misfit functions can be used with [mtuq.grid_search](https://uafgeotools.github.io/mtuq/library/generated/mtuq.grid_search.grid_search.html), which automatically partitions the grid over multiple MPI processes if invoked from an MPI environment.  For efficient and unbiased unceratinty quantification, [uniform grids](https://uafgeotools.github.io/mtuq/library/index.html#moment-tensor-and-force-grids) can be used for the grid search, drawing from [Tape2015](https://academic.oup.com/gji/article/202/3/2074/613765).
+
+Alternatively, MTUQ misfit functions can be used as a starting point for Bayesian uncertianty quantification using _pymc_ or other MCMC libraries.
+
+
+## Solver interfaces
+
+[Data I/O functions](https://uafgeotools.github.io/mtuq/library/index.html#data-i-o)
+are included for reading AxiSEM, SPECFEM3D, and FK Green's functions as well as
+downloading Green's functions from remote syngine databases.
 
 
 ## Visualization
 
-Includes moment tensor [uncertainty quantification](https://uafgeotools.github.io/mtuq/library/index.html#uncertainty-quantification) on the eigenvalue lune and
-v-w rectangle, with matplotlib and Generic Mapping Tools plotting functions.
+[Visualization utilities]([https://uafgeotools.github.io/mtuq/library/index.html#uncertainty-quantification) are included for both the [eigenvalue lune](https://onlinelibrary.wiley.com/doi/10.1111/j.1365-246X.2012.05491.x) and [v-w rectangle](https://academic.oup.com/gji/article/202/3/2074/613765), with both matplotlib and Generic Mapping Tools backends.
 
 
 ## Testing
@@ -43,9 +40,7 @@ The package has been tested against [legacy Perl/C codes](https://github.com/uaf
 
 
 
-## User guide
-
-[Learning Python and ObsPy](https://uafgeotools.github.io/mtuq/user_guide/01.html)
+## Documentation
 
 [Acquiring seismic data](https://uafgeotools.github.io/mtuq/user_guide/02.html)
 
