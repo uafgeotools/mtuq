@@ -31,23 +31,23 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``data`` (`mtuq.dataset.Dataset`):
-    The observed data that will be compared with synthetic data
+    The observed data to be compared with synthetic data
 
 
     ``greens`` (`mtuq.greens_tensor.GreensTensorList`):
-    Green's functions that will be used to generate synthetic data
+    Green's functions used to generate synthetic data
 
 
     ``misfit`` (`mtuq.misfit.Misfit` or some other function):
-    Implements norm of data and synthetics
+    Misfit function
 
 
     ``origins`` (`list` of `mtuq.source.Origin` objects)
-    Origins that will be used to generate synthetics
+    Origins to be searched over
 
 
     ``sources`` (`mtuq.grid.Grid` or `mtuq.grid.UnstructuredGrid`):
-    Source mechanisms that will be used to generate synthetics
+    Source mechanisms to be searched over
 
 
     ``msg_interval`` (`int`):
