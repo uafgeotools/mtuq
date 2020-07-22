@@ -21,10 +21,13 @@ from mtuq.event import Origin, Force, MomentTensor
 from mtuq.station import Station
 from mtuq.wavelet import Wavelet
 
-from mtuq.grid_search import grid_search
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
+
+# commented out because of name conflict
+#from mtuq.grid_search import grid_search
+
 
 
 #

@@ -1,6 +1,6 @@
 # mtuq
 
-MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, drawing on ObsPy and instaseis data structures.
+MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, drawing on ObsPy, instaseis, xarray and pandas data structures.
 
 
 ## Misfit evaluation
@@ -8,9 +8,9 @@ MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification fro
 Waveform difference and cross-correlation time-shift [misfit evaluation](https://uafgeotools.github.io/mtuq/library/index.html#data-processing-and-inversion) 
 on body-wave and surface-wave windows is implemented in C-accelerated Python.
 
-These misfit functions can be used with [mtuq.grid_search](https://uafgeotools.github.io/mtuq/library/generated/mtuq.grid_search.grid_search.html), which automatically partitions the grid over multiple MPI processes if invoked from an MPI environment.  For efficient and unbiased unceratinty quantification, [uniform grids](https://uafgeotools.github.io/mtuq/library/index.html#moment-tensor-and-force-grids) can be used for the grid search, drawing from [Tape2015](https://academic.oup.com/gji/article/202/3/2074/613765).
+These misfit functions can be used with [mtuq.grid_search](https://uafgeotools.github.io/mtuq/library/generated/mtuq.grid_search.grid_search.html), which automatically partitions the grid over multiple MPI processes if invoked from an MPI environment.  For efficient and unbiased uncertainty quantification, [uniform grids](https://uafgeotools.github.io/mtuq/library/index.html#moment-tensor-and-force-grids) can be used for the grid search, drawing from [Tape2015](https://academic.oup.com/gji/article/202/3/2074/613765).
 
-Alternatively, MTUQ misfit functions can be used as a starting point for Bayesian uncertianty quantification using _pymc_ or other MCMC libraries.
+Alternatively, MTUQ misfit functions can be used as a starting point for Bayesian uncertainty quantification using pymc or other MCMC libraries.
 
 
 ## Solver interfaces
@@ -22,7 +22,7 @@ downloading Green's functions from remote syngine databases.
 
 ## Visualization
 
-[Visualization utilities]([https://uafgeotools.github.io/mtuq/library/index.html#uncertainty-quantification) are included for both the [eigenvalue lune](https://onlinelibrary.wiley.com/doi/10.1111/j.1365-246X.2012.05491.x) and [v-w rectangle](https://academic.oup.com/gji/article/202/3/2074/613765), with both matplotlib and Generic Mapping Tools backends.
+[Visualization utilities](https://uafgeotools.github.io/mtuq/library/index.html#uncertainty-visualization) are included for both the [eigenvalue lune](https://onlinelibrary.wiley.com/doi/10.1111/j.1365-246X.2012.05491.x) and [v-w rectangle](https://academic.oup.com/gji/article/202/3/2074/613765), with matplotlib and Generic Mapping Tools graphics backends.
 
 
 ## Testing

@@ -35,9 +35,9 @@ autogen
    mtuq.grid_search.MTUQDataFrame
    mtuq.Force
    mtuq.MomentTensor
-   mtuq.wavelet.Wavelet
-   mtuq.process_data.ProcessData
-   mtuq.misfit.Misfit
+   mtuq.Wavelet
+   mtuq.ProcessData
+   mtuq.Misfit
    mtuq.download_greens_tensors
    mtuq.open_db
    mtuq.read
