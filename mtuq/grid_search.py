@@ -144,10 +144,18 @@ def _grid_search_serial(data, greens, misfit, origins, sources,
 
 class MTUQDataArray(xarray.DataArray):
     """ Data structure for storing values on regularly-spaced grids
+
+    .. note::
+
+        Besides the methods below, `MTUQDataArray` includes many useful methods
+        inherited from ``xarray.DataArray``. See 
+        `xarray documentation <http://xarray.pydata.org/en/stable/generated/xarray.DataArray.html>`_ 
+        for more information.
+
     """
 
     def idxmin(self, idx_type=None):
-        """ Returns origin index corresponding to minimum misfit
+        """ Returns coordinates corresponding to minimum misfit
         """
         if idx_type is None:
             return self._idxmin()
@@ -163,7 +171,7 @@ class MTUQDataArray(xarray.DataArray):
             raise TypeError
 
     def idxmax(self, idx_type=None):
-        """ Returns origin index corresponding to minimum misfit
+        """ Returns coordinates corresponding to maximum misfit
         """
         if idx_type is None:
             return self._idxmax()
@@ -179,13 +187,13 @@ class MTUQDataArray(xarray.DataArray):
             raise TypeError
 
     def _idxmin(self):
-        """ Returns coordinates corresponding to minimum misfit
+        """ idxmin helper function
         """
         # idxmin has now been implemented in a beta version of xarray
         return self.where(self==self.min(), drop=True).squeeze().coords
 
     def _idxmax(self):
-        """ Returns coordinates corresponding to minimum misfit
+        """ idxmax helper function
         """
         # idxmax has now been implemented in a beta version of xarray
         return self.where(self==self.min(), drop=True).squeeze().coords
@@ -228,9 +236,17 @@ class MTUQDataArray(xarray.DataArray):
 
 class MTUQDataFrame(pandas.DataFrame):
     """ Data structure for storing values on irregularly-spaced grids
+
+    .. note::
+
+        Besides the methods below, `MTUQDataFrame` includes many useful methods
+        inherited from ``pandas.DataFrame``. See 
+        `pandas documentation <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html>`_
+        for more information.
+
     """
     def idxmin(self, idx_type=None):
-        """ Returns origin index corresponding to minimum misfit
+        """ Returns coordinates corresponding to minimum misfit
         """
         if idx_type is None:
             return self[0].idxmin()
@@ -247,7 +263,7 @@ class MTUQDataFrame(pandas.DataFrame):
             raise TypeError
 
     def idxmax(self, idx_type=None):
-        """ Returns origin index corresponding to minimum misfit
+        """ Returns coordinates corresponding to maximum misfit
         """
         if idx_type is None:
             return self[0].idxmax()

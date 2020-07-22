@@ -241,7 +241,7 @@ def _parse_filetype(filename):
 
     else:
         warnings.warn('Unrecognized extension: defaulting to PNG')
-        return filename, 'PNG'
+        return 'PNG'
 
 
 
