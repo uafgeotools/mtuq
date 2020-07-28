@@ -7,7 +7,9 @@ import numpy as np
 import matplotlib.pyplot as pyplot
 import warnings
 
+from collections import defaultdict
 from matplotlib.font_manager import FontProperties
+from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
 from mtuq.graphics.header import MomentTensorHeader, ForceHeader
 from mtuq.util.signal import get_components
@@ -36,10 +38,18 @@ def plot_data_synthetics(filename,
 
     """ Creates CAP-style data/synthetics figure
     """
-    if _isempty(data_bw):
-        pass
+    # body wave datasets can be empty
+    if not data_bw:
+        data_bw = _empty_dataset()
 
+    if not synthetics_bw:
+        synthetics_bw = _empty_dataset()
+
+    # surface wave datasets must be nonempty
     if _isempty(data_sw):
+        raise Exception('Empty dataset')
+
+    if _isempty(synthetics_sw):
         raise Exception('Empty dataset')
 
     # how many stations have at least one trace?
@@ -118,19 +128,9 @@ def plot_data_synthetics(filename,
         header.write(header_height, header_width,
             header_margin_left, header_margin_top)
 
-
     # determine maximum trace amplitudes
-    max_amplitude_bw = 0.
-    if data_bw.max() > max_amplitude_bw:
-        max_amplitude_bw = data_bw.max()
-    if synthetics_bw.max() > max_amplitude_bw:
-        max_amplitude_bw = synthetics_bw.max()
-
-    max_amplitude_sw = 0.
-    if data_sw.max() > max_amplitude_sw:
-        max_amplitude_sw = data_sw.max()
-    if synthetics_sw.max() > max_amplitude_sw:
-        max_amplitude_sw = synthetics_sw.max()
+    max_amplitude_bw = _max(data_bw, synthetics_bw)
+    max_amplitude_sw = _max(data_sw, synthetics_sw)
 
 
     #
@@ -452,6 +452,9 @@ def _time_stats(trace):
 
 
 def _count(datasets):
+    # remove any `None`s from list 
+    datasets = list(filter(None, datasets))
+
     # counts number of nonempty streams in dataset(s)
     count = 0
     for streams in zip(*datasets):
@@ -463,18 +466,45 @@ def _count(datasets):
 
 
 def _isempty(dataset):
-    return bool(_count([dataset])==0)
+    if not dataset:
+        return True
+    else:
+        return bool(_count([dataset])==0)
+
+
+class EmptyDataset(defaultdict):
+    def max(self):
+        return 0.
+
+
+def _empty_dataset():
+    return EmptyDataset(Stream)
 
 
 def _max(dat, syn):
-    if type(dat)==Trace:
+    if type(dat)==type(syn)==Trace:
         return max(
             abs(dat.max()),
             abs(syn.max()))
-    elif type(dat)==Stream:
+
+    elif type(dat)==type(syn)==Stream:
         return max(
             max(map(abs, dat.max())),
             max(map(abs, syn.max())))
+
+    elif type(dat)==type(syn)==Dataset:
+        return max(
+            abs(dat.max()),
+            abs(syn.max()))
+
+    elif type(dat) in (Dataset, EmptyDataset) and\
+        type(syn) in (Dataset, EmptyDataset):
+        return max(
+            abs(dat.max()),
+            abs(syn.max()))
+
+    else:
+        raise TypeError
 
 
 
