@@ -296,8 +296,8 @@ def plot_data_greens(filename,
     except:
         event_name = filename.split('.')[0]
 
-    model = _get_tag(greens_bw[0].tags, 'model')
-    solver = _get_tag(greens_bw[0].tags, 'solver')
+    model = _get_tag(greens_sw[0].tags, 'model')
+    solver = _get_tag(greens_sw[0].tags, 'solver')
 
     if 'header' in kwargs:
         header = kwargs.pop('header')
