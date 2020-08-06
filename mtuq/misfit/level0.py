@@ -68,7 +68,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                     corr += np.correlate(s[_k].data, d[_k].data, 'valid')
 
                 npts_shift = padding_left - corr.argmax()
-                time_shift = npts_shift*dt
+                time_shift = npts_shift*dt - (time_shift_min + time_shift_max)
 
                 # what start and stop indices will correctly shift synthetics
                 # relative to data?
