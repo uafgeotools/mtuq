@@ -58,28 +58,25 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                 _, indices = list_intersect_with_indices(
                     components, group)
 
-                npts_shift = helpers[_j].get_time_shift(source, indices)
-                time_shift = npts_shift*dt
-
-                # what start and stop indices will correctly shift synthetics
-                # relative to data?
-                start = padding_left - npts_shift
-                stop = npts + padding_left - npts_shift
+                ic = helpers[_j].get_time_shift(source, indices)
 
                 for _k in indices:
                     misfit = 0.
 
                     if norm=='L1':
+                        start = ic
+                        stop = start + npts
+
                         misfit = dt * helpers[_j].get_L1_norm(
-                            source, int(_k), start, stop)
+                            source, _k, start, stop)
 
                     elif norm=='L2':
                         misfit = dt * helpers[_j].get_L2_norm(
-                            source, int(_k), int(npts_shift+padding_left))
+                            source, _k, ic)
 
                     elif norm=='hybrid':
                         misfit = dt * helpers[_j].get_L2_norm(
-                            source, int(_k), int(npts_shift+padding_left))**0.5
+                            source, _k, ic)**0.5
 
                     results[_i] += d[_k].weight * misfit
 
@@ -106,6 +103,7 @@ class Helper(object):
         misfit += self.d_d[index]
 
         # s^2 contribution
+        _  = np.dot(self.g_g[index, it, :, :], source)
         misfit += np.dot(np.dot(self.g_g[index, it, :, :], source), source)
 
         # -2sd contribution
@@ -160,15 +158,14 @@ class Helper(object):
         generated from the given source
         """
         cc = self.g_d
-        cc_sum = self.cc_sum
 
-        padding_left = (len(self.cc_sum)-1)/2
+        cc_sum = self.cc_sum
         cc_sum[:] = 0.
 
         for _i in indices:
             cc_sum += np.dot(source, cc[_i, :, :])
 
-        return cc_sum.argmax() - padding_left
+        return cc_sum.argmax()
 
 
     def __init__(self, d, g, norm, time_shift_min, time_shift_max, debug=False):
@@ -186,9 +183,9 @@ class Helper(object):
 
         npts, dt = get_time_sampling(d)
 
-        padding_left = int(-time_shift_min/dt)
-        padding_right = int(+time_shift_max/dt)
-        npts_padding = padding_left+padding_right
+        self.padding_left = int(+time_shift_max/dt)
+        self.padding_right = int(-time_shift_min/dt)
+        npts_padding = self.padding_left+self.padding_right
 
         ncomp = len(components)
 

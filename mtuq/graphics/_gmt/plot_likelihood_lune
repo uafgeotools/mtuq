@@ -79,7 +79,7 @@ if [ $add_colorbar -eq 1 ]; then
     # bottom left
     #gmt psscale -Ctmp_$out.cpt -D2.8/0.5+w1/0.2 -Bf1 -O -K >> $ps
     # bottom center
-    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h -Bf1 -O -K >> $ps
+    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h -Baf1+l"Likelihood" -O -K >> $ps
 fi
 
 
