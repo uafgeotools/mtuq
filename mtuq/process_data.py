@@ -56,6 +56,9 @@ class ProcessData(object):
     - ``'highpass'``
       Butterworth-Highpass (uses `obspy.signal.filter.highpass`)
 
+    - ``None``
+      no filter will be applied
+
 
     ``pick_type`` (`str`)
 
@@ -81,13 +84,8 @@ class ProcessData(object):
     - ``'surface_wave'``
       chooses window starttime after S arrival
 
-
-    ``window_length`` (`float`)
-    window length in seconds
-
-
-    ``padding`` (`list`)
-    padding length in seconds
+    - ``None``
+      no window will be applied
 
 
     ``apply_statics`` (`bool`)
@@ -114,6 +112,11 @@ class ProcessData(object):
     ``freq`` (`float`)
     Required for `filter_type=lowpass` or `filter_type=highpass`
 
+    ``window_length`` (`float`)
+    window length in seconds
+
+    ``padding`` (`list`)
+    amount by which Green's functions will be padded relative to data
 
     ``taup_model`` (`str`)
     Name of ObsPy TauP model, required for `pick_type=taup`
@@ -143,20 +146,25 @@ class ProcessData(object):
          capuaf_file=None,
          **parameters):
 
+        if not filter_type:
+            print("WARNING No filter will be applied")
 
-        if filter_type is None:
-            raise Exception("Undefined parameter: filter_type")
+        if not window_type:
+            print("WARNING No window will be applied")
 
-        if window_type is None:
-            raise Exception("Undefined parameter: window_type")
-
-        if pick_type is None:
+        if window_type and not pick_type:
             raise Exception("Undefined parameter: pick_type")
 
+        if filter_type:
+            filter_type = filter_type.lower()
 
-        self.filter_type = filter_type.lower()
-        self.window_type = window_type.lower()
+        if window_type:
+            filter_type = filter_type.lower()
+
+        self.filter_type = filter_type
+        self.window_type = window_type
         self.pick_type = pick_type
+
         self.window_length = window_length
         self.padding = padding
         self.taup_model = taup_model
@@ -218,7 +226,11 @@ class ProcessData(object):
         # check window parameters
         #
         #
-        if self.window_type == 'body_wave':
+        if not self.window_type:
+             # nothing to check now
+             pass
+
+        elif self.window_type == 'body_wave':
              # nothing to check now
              pass
 
@@ -230,10 +242,12 @@ class ProcessData(object):
              raise ValueError('Bad parameter: window_type')
 
 
-        if self.window_length is None:
-             raise ValueError('Bad parameter: window_length')
+        if self.window_type:
+            if self.window_length is None:
+                 raise ValueError('Bad parameter: window_length')
 
-        assert self.window_length > 0
+            assert self.window_length > 0
+
 
         if self.padding is None:
              self.padding = (0., 0.)
@@ -242,7 +256,11 @@ class ProcessData(object):
         #
         # check phase pick parameters
         #
-        if self.pick_type == 'taup':
+        if not self.pick_type:
+             # nothing to check now
+             pass
+
+        elif self.pick_type == 'taup':
             assert self.taup_model is not None
             self._taup = taup.TauPyModel(self.taup_model)
 
@@ -481,14 +499,21 @@ class ProcessData(object):
                 starttime = picks['P'] - 0.4*self.window_length
                 endtime = starttime + self.window_length
 
+                starttime += float(origin.time)
+                endtime += float(origin.time)
+
             elif self.window_type == 'surface_wave':
                 # reproduces CAPUAF surface wave window
                 starttime = picks['S'] - 0.3*self.window_length
                 endtime = starttime + self.window_length
 
-            starttime += float(origin.time)
-            endtime += float(origin.time)
+                starttime += float(origin.time)
+                endtime += float(origin.time)
 
+
+            else:
+                starttime = trace.stats.starttime
+                endtime = trace.stats.endtime
 
             #
             # part 4b: apply statics
@@ -549,7 +574,8 @@ class ProcessData(object):
             #
 
             # cuts trace and adjusts metadata
-            cut(trace, starttime, endtime)
+            if self.window_type is not None:
+                cut(trace, starttime, endtime)
 
             taper(trace.data)
 
