@@ -2,7 +2,9 @@
 import obspy
 import numpy as np
 
+from glob import glob
 from obspy.core import Stream
+from os.path import basename
 from mtuq.greens_tensor._benchmark_3D_solver import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
@@ -57,6 +59,7 @@ class Client(ClientBase):
                  include_mt=True, include_force=False):
 
         self.path = path_or_url
+        self.model = model
 
         self.include_mt = include_mt
         self.include_force = include_force
@@ -64,14 +67,19 @@ class Client(ClientBase):
         self._tree1 = self._parse1()
         self._tree2 = dict()
 
+        self._prefix1 = 'depth_in_m'
+        self._prefix2 = 'offset_in_m'
+
 
     def _parse1(self):
-        keys = [basename(item) for items in sorted(glob(self.path+'/*'))]
+        wildcard = self.path+'/*'
+        keys = [basename(item).split('-')[1] for item in sorted(glob(wildcard))]
         vals = [float(key) for key in keys]
         return dict(zip(keys, vals))
 
     def _parse2(self, depth):
-        keys = [basename(item) for items in sorted(glob(self.path+'/*/'+depth))]
+        wildcard = self.path+'/'+self._prefix1+'-'+depth+'/*'
+        keys = [basename(item).split('-')[1] for item in sorted(glob(wildcard))]
         vals = [float(key) for key in keys]
         return dict(zip(keys, vals))
 
@@ -91,12 +99,13 @@ class Client(ClientBase):
 
         # find nearest available offset
         keys = list(tree2[depth_key].keys())
-        vals = list(tree2[depth_key].vals())
+        vals = list(tree2[depth_key].values())
         idxmin = np.argmin(np.abs(np.array(vals) - offset))
         offset_key = keys[idxmin]
         offset_val = vals[idxmin]
 
-        return '%s/%s/%s/' % (self.path, depth_key, offset_key)
+        return '%s/%s-%s/%s-%s/' %\
+            (self.path, self._prefix1, depth_key, self._prefix2, offset_key)
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
@@ -120,11 +129,16 @@ class Client(ClientBase):
 
         traces = []
 
-        distance_in_m, _, _ = gps2dist_azimuth(
-            origin.latitude,
-            origin.longitude,
-            station.latitude,
-            station.longitude)
+        #distance_in_m, _, _ = gps2dist_azimuth(
+        #    origin.latitude,
+        #    origin.longitude,
+        #    station.latitude,
+        #    station.longitude)
+
+        distance_in_m = np.linalg.norm(np.array([
+            station.offset_x_in_m,
+            station.offset_y_in_m]))
+
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
@@ -136,11 +150,15 @@ class Client(ClientBase):
 
         if self.include_mt:
             for _i, ext in enumerate(EXTENSIONS):
-                trace = obspy.read('%s/%s' %  (path, ext),
-                    format='sac')[0]
+                #trace = obspy.read('%s/%s' %  (path, ext),
+                #    format='sac')[0]
 
-                trace.stats.channel = CHANNELS[_i]
-                trace.stats._component = CHANNELS[_i][0]
+                from obspy.core import Stats, Trace
+                fromfile = np.loadtxt('%s/%s' %  (path, ext))
+                t, data = fromfile[:,0], fromfile[:,1]
+                trace = Trace(data, header=Stats({'starttime':t[0], 'npts':len(t), 'delta':t[1]-t[0]}))
+                trace.stats.channel = ext
+                trace.stats._component = ext[0]
 
                 # what are the start and end times of the Green's function?
                 t1_old = float(origin.time)+float(trace.stats.starttime)
@@ -153,7 +171,6 @@ class Client(ClientBase):
                                               t1_new, t2_new, dt_new)
                 trace.data = data_new
                 # convert from 10^-20 dyne to N^-1
-                trace.data *= 1.e-15
                 trace.stats.starttime = t1_new
                 trace.stats.delta = dt_new
 
@@ -167,5 +184,4 @@ class Client(ClientBase):
         return GreensTensor(traces=[trace for trace in traces],
             station=station, origin=origin, tags=tags,
             include_mt=self.include_mt, include_force=self.include_force)
-
 

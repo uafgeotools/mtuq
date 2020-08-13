@@ -76,8 +76,8 @@ class GreensTensor(GreensTensorBase):
                 array[_i, _j+5, :] =  RDS * np.sin(phi)
 
             elif component=='T':
-                Grr = self.select(channel="T.Mrt")[0].data
-                Gtt = self.select(channel="T.Mtp")[0].data
+                Grt = self.select(channel="T.Mrt")[0].data
+                Gtp = self.select(channel="T.Mtp")[0].data
 
                 TSS = -Grt
                 TDS = -Gtp
