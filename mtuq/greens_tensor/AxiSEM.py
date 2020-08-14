@@ -57,7 +57,8 @@ class GreensTensor(GreensTensorBase):
         phi = np.deg2rad(self.azimuth)
         _j = 0
 
-        # the mathematical formulas here are based on Minson & Dreger 2008
+        # these formulas are from Minson and Dregor 2008
+
         for _i, component in enumerate(self.components):
             if component=='Z':
                 ZSS = +self.select(channel="ZSS")[0].data

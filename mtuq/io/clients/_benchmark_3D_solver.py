@@ -169,8 +169,12 @@ class Client(ClientBase):
                 # resample Green's function
                 data_new = resample(data_old, t1_old, t2_old, dt_old,
                                               t1_new, t2_new, dt_new)
+
+                # convert to Newtons
+                # FIXME: is this the correct scaling?
+                #data_new *= 1.e-10
+
                 trace.data = data_new
-                # convert from 10^-20 dyne to N^-1
                 trace.stats.starttime = t1_new
                 trace.stats.delta = dt_new
 

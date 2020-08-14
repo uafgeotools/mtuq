@@ -85,7 +85,7 @@ class ProcessData(object):
       chooses window starttime after S arrival
 
     - ``None``
-      no window will be applied
+      no windows will be applied
 
 
     ``apply_statics`` (`bool`)
@@ -150,7 +150,7 @@ class ProcessData(object):
             print("WARNING No filter will be applied")
 
         if not window_type:
-            print("WARNING No window will be applied")
+            print("WARNING No windows will be applied")
 
         if window_type and not pick_type:
             raise Exception("Undefined parameter: pick_type")
@@ -182,7 +182,11 @@ class ProcessData(object):
         # check filter parameters
         #
 
-        if self.filter_type == 'bandpass':
+        if not self.filter_type:
+            # nothing to check
+            pass
+
+        elif self.filter_type == 'bandpass':
             # allow filter corners to be specified in terms of either period [s]
             # or frequency [Hz]
             if 'period_min' in parameters and 'period_max' in parameters:
