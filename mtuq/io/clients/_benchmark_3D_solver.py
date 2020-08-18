@@ -4,6 +4,7 @@ import numpy as np
 
 from glob import glob
 from obspy.core import Stream
+from obspy.geodetics import gps2dist_azimuth
 from os.path import basename
 from mtuq.greens_tensor._benchmark_3D_solver import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
@@ -129,15 +130,18 @@ class Client(ClientBase):
 
         traces = []
 
-        #distance_in_m, _, _ = gps2dist_azimuth(
-        #    origin.latitude,
-        #    origin.longitude,
-        #    station.latitude,
-        #    station.longitude)
+        try:
+            distance_in_m = np.linalg.norm(np.array([
+                station.offset_x_in_m,
+                station.offset_y_in_m]))
 
-        distance_in_m = np.linalg.norm(np.array([
-            station.offset_x_in_m,
-            station.offset_y_in_m]))
+        except:
+            distance_in_m, _, _ = gps2dist_azimuth(
+                origin.latitude,
+                origin.longitude,
+                station.latitude,
+                station.longitude)
+
 
 
         # what are the start and end times of the data?
@@ -153,12 +157,18 @@ class Client(ClientBase):
                 #trace = obspy.read('%s/%s' %  (path, ext),
                 #    format='sac')[0]
 
+                channel = ext
+                component = ext[0]
+
                 from obspy.core import Stats, Trace
                 fromfile = np.loadtxt('%s/%s' %  (path, ext))
                 t, data = fromfile[:,0], fromfile[:,1]
                 trace = Trace(data, header=Stats({'starttime':t[0], 'npts':len(t), 'delta':t[1]-t[0]}))
-                trace.stats.channel = ext
-                trace.stats._component = ext[0]
+                #if component in ['R', 'T', 'E', 'N', '1', '2']:
+                #    trace.data *= -1.
+
+                trace.stats.channel = channel
+                trace.stats._component = component
 
                 # what are the start and end times of the Green's function?
                 t1_old = float(origin.time)+float(trace.stats.starttime)

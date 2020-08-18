@@ -43,13 +43,21 @@ class GreensTensor(GreensTensorBase):
                 Grr = self.select(channel="Z.Mrr")[0].data
                 Gtt = self.select(channel="Z.Mtt")[0].data
                 Gpp = self.select(channel="Z.Mpp")[0].data
-                Grp = self.select(channel="Z.Mrp")[0].data
+                Grt = self.select(channel="Z.Mrt")[0].data
 
-                ZSS = Gtt - Grr
-                ZDS = Grp
-                ZDD = Grr + Gtt - 2.*Gpp
-                ZEP = Grr + Gtt + Gpp
+                # convert from up-south-east to north-east-down
+                G0 = Gtt
+                G1 = Gpp
+                G2 = Grr
+                G4 = Grt
 
+                # derived by setting phi=0 in Minson & Dregor 2008 formulas
+                ZSS = G0 - G1
+                ZDS = G4
+                ZDD = 2.*G2 - G0 - G1
+                ZEP = G0 + G1 + G2
+
+                # Minson & Dregor 2008 formulas
                 array[_i, _j+0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 array[_i, _j+1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 array[_i, _j+2, :] =  ZDD/3. + ZEP/3.
@@ -61,13 +69,21 @@ class GreensTensor(GreensTensorBase):
                 Grr = self.select(channel="R.Mrr")[0].data
                 Gtt = self.select(channel="R.Mtt")[0].data
                 Gpp = self.select(channel="R.Mpp")[0].data
-                Grp = self.select(channel="R.Mrp")[0].data
+                Grt = self.select(channel="R.Mrp")[0].data
 
-                RSS = Gtt - Grr
-                RDS = Grp
-                RDD = Grr + Gtt - 2.*Gpp
-                REP = Grr + Gtt + Gpp
+                # convert from up-south-east to north-east-down
+                G0 = Gtt
+                G1 = Gpp
+                G2 = Grr
+                G4 = Grt
 
+                # derived by setting phi=0 in Minson & Dregor 2008 formulas
+                RSS = G0 - G1
+                RDS = G4
+                RDD = 2.*G2 - G0 - G1
+                REP = G0 + G1 + G2
+
+                # Minson & Dregor 2008 formulas
                 array[_i, _j+0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 array[_i, _j+1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 array[_i, _j+2, :] =  RDD/3. + REP/3.
@@ -79,8 +95,12 @@ class GreensTensor(GreensTensorBase):
                 Grt = self.select(channel="T.Mrt")[0].data
                 Gtp = self.select(channel="T.Mtp")[0].data
 
-                TSS = -Grt
-                TDS = -Gtp
+                # convert from up-south-east to north-east-down
+                G3 = -Gtp
+                G5 = -Grt
+
+                TSS = -G3
+                TDS = -G5
 
                 array[_i, _j+0, :] = TSS/2. * np.sin(2*phi)
                 array[_i, _j+1, :] = -TSS/2. * np.sin(2*phi)
