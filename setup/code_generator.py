@@ -921,11 +921,8 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
-        misfit_vs_depth(event_id+'_misfit_vs_depth_bw.png',
-            data_bw, misfit_bw, origins, grid, results_bw)
-
-        misfit_vs_depth(event_id+'_misfit_vs_depth_sw.png',
-            data_sw, misfit_sw, origins, grid, results_sw)
+        plot_misfit_depth(event_id+'_misfit_depth.png',
+            results, origins, grid, event_id)
 
         print('\\nFinished\\n')
 """
@@ -1115,7 +1112,7 @@ if __name__=='__main__':
             replace(
             Imports,
             'plot_beachball',
-            'misfit_vs_depth',
+            'plot_misfit_depth',
             ))
         file.write(Docstring_GridSearch_DoubleCoupleMagnitudeDepth)
         file.write(PathsComments)
@@ -1228,7 +1225,7 @@ if __name__=='__main__':
             replace(
             Imports,
             'plot_beachball',
-            'misfit_vs_depth',
+            'plot_misfit_depth',
             ))
         file.write(Docstring_TestGridSearch_DoubleCoupleMagnitudeDepth)
         file.write(ArgparseDefinitions)
