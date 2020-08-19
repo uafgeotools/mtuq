@@ -165,7 +165,7 @@ def to_xyz(F0, phi, h):
     """
     # spherical coordinates in "physics convention"
     r = F0
-    phi = phi
+    phi = np.radians(phi)
     theta = np.arccos(h)
 
     x = F0*np.sin(phi)*np.cos(theta)
@@ -183,7 +183,7 @@ def to_rtp(F0, phi, h):
     """
     # spherical coordinates in "physics convention"
     r = F0
-    phi = phi
+    phi = np.radians(phi)
     theta = np.arccos(h)
 
     x = F0*np.sin(phi)*np.cos(theta)
