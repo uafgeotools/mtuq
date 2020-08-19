@@ -155,15 +155,18 @@ def plot_data_synthetics(filename,
         stream_dat = data_bw[_i]
         stream_syn = synthetics_bw[_i]
 
-        for dat, syn in zip(stream_dat, stream_syn):
+        for dat in stream_dat:
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
-            # skip bad traces
-            if component != syn.stats.channel[-1].upper():
-                warnings.warn('Mismatched components, skipping...')
+            if not weight:
                 continue
-            elif weight==0.:
+
+            # skip missing components
+            try:
+                syn = stream_syn.select(component=component)[0]
+            except:
+                warnings.warn('Missing component, skipping...')
                 continue
 
             # plot traces
@@ -200,15 +203,18 @@ def plot_data_synthetics(filename,
         stream_dat = data_sw[_i]
         stream_syn = synthetics_sw[_i]
 
-        for dat, syn in zip(stream_dat, stream_syn):
+        for dat in stream_dat:
             component = dat.stats.channel[-1].upper()
             weight = getattr(dat, 'weight', 1.)
 
-            # skip bad traces
-            if component != syn.stats.channel[-1].upper():
-                warnings.warn('Mismatched components, skipping...')
+            if not weight:
                 continue
-            elif weight==0.:
+
+            # skip missing components
+            try:
+                syn = stream_syn.select(component=component)[0]
+            except:
+                warnings.warn('Missing component, skipping...')
                 continue
 
             # plot traces
@@ -432,9 +438,10 @@ def add_trace_labels(axis, dat, syn, total_misfit=1.):
 
 
 def _set_components(data, greens):
-    for _i, stream in enumerate(data):
-        components = get_components(stream)
-        greens[_i]._set_components(components)
+    if not _isempty(data):
+        for _i, stream in enumerate(data):
+            components = get_components(stream)
+            greens[_i]._set_components(components)
 
 
 #
