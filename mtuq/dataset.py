@@ -3,7 +3,7 @@ import obspy
 import numpy as np
 import warnings
 
-from copy import copy
+from copy import copy, deepcopy
 from mtuq.event import Origin
 from mtuq.station import Station
 from obspy import Stream
@@ -235,4 +235,15 @@ class Dataset(list):
            if tag in stream.tags:
                stream.tags.remove(tag)
 
+
+    def __copy__(self):
+        try:
+            new_id = self.id+'_copy'
+        except:
+            new_id = None
+
+        new_ds = type(self)(id=new_id)
+        for stream in self:
+            new_ds.append(deepcopy(stream))
+        return new_ds
 
