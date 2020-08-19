@@ -209,6 +209,12 @@ if __name__=='__main__':
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
 
+        # origin index corresponding to minimum misfit
+        idx = results.idxmin('origin')
+
+        best_origin = origins[idx]
+
+
 
     #
     # Saving results
