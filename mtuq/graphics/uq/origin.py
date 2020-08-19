@@ -1,0 +1,255 @@
+
+#
+# graphics/uq/origin.py - uncertainty quantification of source origin
+#
+
+import numpy as np
+import warnings
+
+from matplotlib import pyplot
+from pandas import DataFrame
+from xarray import DataArray
+from mtuq.graphics._gmt import _nothing_to_plot
+from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
+from mtuq.util.math import closed_interval, open_interval
+
+
+def plot_misfit_depth(filename, ds, origins, sources, title=''):
+    """ Plots misfit versus depth
+
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
+
+    ``title`` (`str`):
+    Optional figure title
+
+
+    .. rubric :: Usage
+
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
+
+    """
+    depths = _get_depths(origins)
+
+    _check(ds)
+    ds = ds.copy()
+
+
+    if issubclass(type(ds), DataArray):
+        values, indices = _min_dataarray(ds)
+        best_sources = None #_get_sources(sources, indices)
+
+
+    elif issubclass(type(ds), DataFrame):
+        values, indices = _min_dataframe(ds)
+        best_sources = None #_get_sources(sources, indices)
+
+
+    _plot_depth(filename, depths, values, indices, 
+        title=title, xlabel='auto', ylabel='Misfit')
+
+
+
+def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
+    """ Plots marginal likelihood versus depth
+
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
+
+    ``title`` (`str`):
+    Optional figure title
+
+
+    .. rubric :: Usage
+
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
+
+    """
+    assert sigma is not None
+
+    depths = _get_depths(origins)
+
+    _check(ds)
+    ds = ds.copy()
+
+
+    if issubclass(type(ds), DataArray):
+        ds.values = np.exp(-ds.values/(2.*sigma**2))
+        ds.values /= ds.values.sum()
+
+        values, indices = _min_dataarray(ds)
+        best_sources = None #_get_sources(sources, indices)
+
+
+    elif issubclass(type(ds), DataFrame):
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds /= ds.sum()
+
+        values, indices = _min_dataframe(ds)
+        best_sources = None #_get_sources(sources, indices)
+
+    values /= values.sum()
+
+    _plot_depth(filename, depths, values, indices, 
+        title=title, xlabel='auto', ylabel='Likelihood')
+
+
+
+def plot_marginal_depth(filename, ds, origins, sources, sigma=None, title=''):
+    """ Plots marginal likelihoods on `v-w` rectangle
+
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    data structure containing moment tensors and corresponding misfit values
+
+    ``title`` (`str`):
+    Optional figure title
+
+
+    .. rubric :: Usage
+
+    Moment tensors and corresponding misfit values must be given in the format
+    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
+    `DataFrame`.)
+
+
+    """
+    assert sigma is not None
+
+    depths = _get_depths(origins)
+
+    _check(ds)
+    ds = ds.copy()
+
+
+    if issubclass(type(ds), DataArray):
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds /= ds.sum()
+
+        values, indices = _max_dataarray(ds)
+        best_sources = None #_get_sources(sources, indices)
+
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
+        ds = np.exp(-ds/(2.*sigma**2))
+        ds /= ds.sum()
+
+        values, indices = _min_dataframe(ds)
+        best_sources = None #_get_sources(sources, indices)
+
+    values /= values.sum()
+
+    _plot_depth(filename, depths, values, indices, 
+        title=title, xlabel='auto', ylabel='Likelihood')
+
+
+
+#
+# utility functions
+#
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
+
+
+def _get_depths(origins):
+    depths = []
+    for origin in origins:
+        depths += [float(origin.depth_in_m)]
+    return np.array(depths)
+
+
+def _get_sources(sources, indices):
+    return [sources.get(index) for index in indices]
+
+
+def _min_dataarray(ds):
+    values, indices = [], []
+
+    for _i in range(ds.shape[-1]):
+        sliced = ds[:,:,:,:,:,:,_i]
+        values += [float(sliced.min())]
+        indices += [sliced.where(sliced==sliced.min(), drop=True).squeeze().coords]
+
+    return np.array(values), indices
+
+
+def _max_dataarray(ds):
+    raise NotImplementedError
+
+def _sum_dataarray(ds):
+    raise NotImplementedError
+
+def _min_dataframe(ds):
+    raise NotImplementedError
+
+def _max_dataframe(ds):
+    raise NotImplementedError
+
+def _sum_dataframe(ds):
+    raise NotImplementedError
+
+
+
+
+#
+# pyplot wrappers
+#
+
+def _plot_depth(filename, depths, values, best_sources, title='',
+    xlabel='auto', ylabel='', show_magnitudes=False, show_beachballs=False):
+
+    if xlabel=='auto' and ((depths.max()-depths.min()) < 10000.):
+       xlabel = 'Depth (m)'
+
+    if xlabel=='auto' and ((depths.max()-depths.min()) >= 10000.):
+       depths /= 1000.
+       xlabel = 'Depth (km)'
+
+    figsize = (6., 4.)
+    pyplot.figure(figsize=figsize)
+
+    pyplot.plot(depths, values, 'k-')
+
+    if show_magnitudes:
+        raise NotImplementedError
+
+    if show_beachballs:
+        raise NotImplementedError
+
+    if xlabel:
+         pyplot.xlabel(xlabel)
+
+    if ylabel:
+         pyplot.ylabel(ylabel)
+
+    if title:
+        pyplot.title(title)
+
+    pyplot.savefig(filename)
+
+
