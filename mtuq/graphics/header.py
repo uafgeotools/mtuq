@@ -83,40 +83,64 @@ class TextHeader(Base):
 
 
 class MomentTensorHeader(Base):
-    """ Stores information from a moment tensor inversion and writes UAF-style
-    text to the top of a matplotlib figure
+    """ Writes UAF-style moment tensor inversion summary to the top of a 
+    matplotlib figure
     """
     def __init__(self, event_name, process_bw, process_sw, misfit_bw, misfit_sw,
         model, solver, mt, lune_dict, origin, best_misfit_bw, best_misfit_sw):
 
         self.event_name = event_name
+        self.origin = origin
         self.magnitude = mt.magnitude()
-        self.depth_in_m = origin.depth_in_m
-        self.depth_in_km = origin.depth_in_m/1000.
+
+        depth_in_m = origin.depth_in_m
+        depth_in_km = origin.depth_in_m/1000.
+        if depth_in_m <= 1000.:
+            self.depth_str = '%s m' % depth_in_m
+        else:
+            self.depth_str = '%s km' % depth_in_km
+
         self.model = model
         self.solver = solver
+
         self.mt = mt
         self.lune_dict = lune_dict
-        self.origin = origin
+
+        self.process_bw = process_bw
+        self.process_sw = process_sw
+
+        self.misfit_bw = process_bw
+        self.misfit_sw = process_sw
+        self.norm = misfit_bw.norm
         self.best_misfit_bw = best_misfit_bw[0]*1.e10
         self.best_misfit_sw = best_misfit_sw[0]*1.e10
         self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
 
-        self.process_bw = process_bw
-        self.process_sw = process_sw
-        self.misfit_bw = process_bw
-        self.misfit_sw = process_sw
-        self.norm = misfit_bw.norm
+        if not process_bw:
+            pass
+        if not process_sw:
+            raise Excpetion()
 
-        if self.process_bw:
-            self.bw_T_min = process_bw.freq_max**-1
-            self.bw_T_max = process_bw.freq_min**-1
-            self.bw_win_len = process_bw.window_length
+        if process_sw.freq_max > 1.:
+            units = 'Hz'
+        else:
+            units = 's'
 
-        if self.process_sw:
-            self.sw_T_min = process_sw.freq_max**-1
-            self.sw_T_max = process_sw.freq_min**-1
-            self.sw_win_len = process_sw.window_length
+        if process_bw and units=='Hz':
+            self.passband_bw = '%.1f - %.1f Hz' %\
+                (process_bw.freq_min, process_bw.freq_max)
+
+        elif process_bw and units=='s':
+            self.passband_bw = '%.1f - %.1f s' %\
+                (process_bw.freq_max**-1, process_bw.freq_min**-1)
+
+        if process_sw and units=='Hz':
+            self.passband_sw = '%.1f - %.1f Hz' %\
+                (process_sw.freq_min, process_sw.freq_max)
+
+        elif process_sw and units=='s':
+            self.passband_sw = '%.1f - %.1f s' %\
+                (process_sw.freq_max**-1, process_sw.freq_min**-1)
 
 
     def display_source(self, ax, height, width, offset):
@@ -169,17 +193,17 @@ class MomentTensorHeader(Base):
         py = height - margin_top
 
         # write text line #1
-        px += 0.
+        px += 0.00
         py -= 0.35
 
-        line = '%s  %s  $M_w$ %.2f  Depth %d km' % (
-            self.event_name, _lat_lon(self.origin), self.magnitude, self.depth_in_km)
+        line = '%s  %s  $M_w$ %.2f  Depth %s' % (
+            self.event_name, _lat_lon(self.origin), self.magnitude, self.depth_str)
         _write_bold(line, px, py, ax, fontsize=16.5)
 
 
         # write text line #2
-        px += 0.
-        py -= 0.3
+        px += 0.00
+        py -= 0.30
 
         line = u'model: %s   solver: %s   misfit (%s): %.1e' % \
                 (self.model, self.solver, self.norm, self.best_misfit)
@@ -187,65 +211,89 @@ class MomentTensorHeader(Base):
 
 
         # write text line #3
-        px += 0.
-        py -= 0.3
+        px += 0.00
+        py -= 0.30
 
         if self.process_bw and self.process_bw:
-            line = ('body waves:  %.1f-%.1f s band, %.1f s window;  ' +\
-                    'surface waves: %.1f-%.1f s band, %.1f s window ') %\
-                    (self.bw_T_min, self.bw_T_max, self.bw_win_len,
-                     self.sw_T_min, self.sw_T_max, self.sw_win_len)
+            line = ('body waves:  %s (%.1f s window);  ' +\
+                    'surface waves: %s (%.1f s window') %\
+                    (self.passband_bw, self.process_bw.window_length,
+                     self.passband_sw, self.process_sw.window_length)
 
         elif self.process_sw:
-            line = 'passband: %.1f-%.1f s,  window length: %.1f s ' %\
-                    (self.sw_T_min, self.sw_T_max, self.sw_win_len)
+            line = 'passband: %s,  window length: %.1f s ' %\
+                    (self.passband_sw, self.process_sw.window_length)
 
         _write_text(line, px, py, ax, fontsize=14)
 
 
         # write text line #4
-        px += 0.
-        py -= 0.3
+        px += 0.00
+        py -= 0.30
+
         line = _focal_mechanism(self.lune_dict)
         line +=  ',   '+_delta_gamma(self.lune_dict)
         _write_text(line, px, py, ax, fontsize=14)
 
 
 class ForceHeader(Base):
-    """ Stores information from a force inversion and writes UAF-style to the 
-    top of a matplotlib figure
+    """ Writes force inversion summary to the top of a matplotlib figure
     """
 
     def __init__(self, event_name, process_bw, process_sw, misfit_bw, misfit_sw,
         model, solver, force, force_dict, origin, best_misfit_bw, best_misfit_sw):
 
         self.event_name = event_name
-        self.depth_in_m = origin.depth_in_m
-        self.depth_in_km = origin.depth_in_m/1000.
+        self.origin = origin
+
+        depth_in_m = origin.depth_in_m
+        depth_in_km = origin.depth_in_m/1000.
+        if depth_in_m <= 1000.:
+            self.depth_str = '%s m' % depth_in_m
+        else:
+            self.depth_str = '%s km' % depth_in_km
+
         self.model = model
         self.solver = solver
+
         self.force = force
         self.force_dict = force_dict
-        self.origin = origin
+
+        self.process_bw = process_bw
+        self.process_sw = process_sw
+
+        self.misfit_bw = process_bw
+        self.misfit_sw = process_sw
+        self.norm = misfit_bw.norm
         self.best_misfit_bw = best_misfit_bw[0]*1.e10
         self.best_misfit_sw = best_misfit_sw[0]*1.e10
         self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
 
-        self.process_bw = process_bw
-        self.process_sw = process_sw
-        self.misfit_bw = process_bw
-        self.misfit_sw = process_sw
-        self.norm = misfit_bw.norm
+        if not process_bw:
+            pass
+        if not process_sw:
+            raise Excpetion()
 
-        if self.process_bw:
-            self.bw_T_min = process_bw.freq_max**-1
-            self.bw_T_max = process_bw.freq_min**-1
-            self.bw_win_len = process_bw.window_length
+        if process_sw.freq_max > 1.:
+            units = 'Hz'
+        else:
+            units = 's'
 
-        if self.process_sw:
-            self.sw_T_min = process_sw.freq_max**-1
-            self.sw_T_max = process_sw.freq_min**-1
-            self.sw_win_len = process_sw.window_length
+        if process_bw and units=='Hz':
+            self.passband_bw = '%.1f - %.1f Hz' %\
+                (process_bw.freq_min, process_bw.freq_max)
+
+        elif process_bw and units=='s':
+            self.passband_bw = '%.1f - %.1f s' %\
+                (process_bw.freq_max**-1, process_bw.freq_min**-1)
+
+        if process_sw and units=='Hz':
+            self.passband_sw = '%.1f - %.1f Hz' %\
+                (process_sw.freq_min, process_sw.freq_max)
+
+        elif process_sw and units=='s':
+            self.passband_sw = '%.1f - %.1f s' %\
+                (process_sw.freq_max**-1, process_sw.freq_min**-1)
 
 
     def write(self, height, width, margin_left, margin_top):
@@ -257,16 +305,17 @@ class ForceHeader(Base):
 
 
         # write text line #1
-        px += 0.0
+        px += 0.00
         py -= 0.35
-        line = '%s  %s  $F$ %.2e N   Depth %d km' % (
-            self.event_name, _lat_lon(self.origin), self.force_dict['F0'], self.depth_in_km)
+
+        line = '%s  %s  $F$ %.2e N   Depth %s' % (
+            self.event_name, _lat_lon(self.origin), self.force_dict['F0'], self.depth_str)
         _write_bold(line, px, py, ax, fontsize=16)
 
 
         # write text line #2
-        px += 0.
-        py -= 0.3
+        px += 0.00
+        py -= 0.30
 
         line = u'model: %s   solver: %s   misfit (%s): %.1e' % \
                 (self.model, self.solver, self.norm, self.best_misfit)
@@ -274,25 +323,26 @@ class ForceHeader(Base):
 
 
         # write text line #3
-        px += 0.
-        py -= 0.3
+        px += 0.00
+        py -= 0.30
 
         if self.process_bw and self.process_bw:
-            line = ('body waves:  %.1f-%.1f s band, %.1f s window;  ' +\
-                    'surface waves: %.1f-%.1f s band, %.1f s window ') %\
-                    (self.bw_T_min, self.bw_T_max, self.bw_win_len,
-                     self.sw_T_min, self.sw_T_max, self.sw_win_len)
+            line = ('body waves:  %s (%.1f s window);  ' +\
+                    'surface waves: %s (%.1f s window) ') %\
+                    (self.passband_bw, self.process_bw.window_length,
+                     self.passband_sw, self.process_sw.window_length)
 
         elif self.process_sw:
-            line = 'passband: %.1f-%.1f s,  window length: %.1f s ' %\
-                    (self.sw_T_min, self.sw_T_max, self.sw_win_len)
+            line = 'passband: %s,  window length: %.1f s ' %\
+                    (self.passband_sw, self.process_sw.window_length)
 
         _write_text(line, px, py, ax, fontsize=14)
 
 
         # write text line #4
-        px += 0.0
-        py -= 0.3
+        px += 0.00
+        py -= 0.30
+
         line = _phi_theta(self.force_dict)
         _write_text(line, px, py, ax, fontsize=14)
 
