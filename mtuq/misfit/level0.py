@@ -90,7 +90,10 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                     elif norm=='hybrid':
                         misfit = np.sqrt(np.sum(r**2))*dt
 
-                    results[_i] += d[_k].weight * misfit
+                    try:
+                        results[_i] += d[_k].weight * misfit
+                    except:
+                        results[_i] += misfit
 
                     if set_attributes:
                         d[_k].misfit = misfit

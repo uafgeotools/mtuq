@@ -161,7 +161,7 @@ class MTUQDataArray(xarray.DataArray):
             return self._idxmin()
 
         elif idx_type in ('origin', 'origin_idx'):
-            return int(self.idxmin()['origin_idx'])
+            return int(self._idxmin()['origin_idx'])
 
         elif idx_type in ('source', 'source_idx'):
             shape = self._get_shape()
@@ -177,7 +177,7 @@ class MTUQDataArray(xarray.DataArray):
             return self._idxmax()
 
         elif idx_type in ('origin', 'origin_idx'):
-            return int(self.idxmax()['origin_idx'])
+            return int(self._idxmax()['origin_idx'])
 
         elif idx_type in ('source', 'source_idx'):
             shape = self._get_shape()
@@ -189,14 +189,28 @@ class MTUQDataArray(xarray.DataArray):
     def _idxmin(self):
         """ idxmin helper function
         """
-        # idxmin has now been implemented in a beta version of xarray
-        return self.where(self==self.min(), drop=True).squeeze().coords
+        # something similar to this has now been implemented in a beta version 
+        # of xarray
+        da = self.where(self==self.min(), drop=True).squeeze()
+        if da.size > 1:
+            warn("No unique global minimum\n")
+            return da[0].coords
+        else:
+            return da.coords
+            
 
     def _idxmax(self):
         """ idxmax helper function
         """
-        # idxmax has now been implemented in a beta version of xarray
-        return self.where(self==self.min(), drop=True).squeeze().coords
+        # something similar to this has now been implemented in a beta version 
+        # of xarray
+        da = self.where(self==self.max(), drop=True).squeeze()
+        if da.size > 1:
+            warn("No unique global maximum\n")
+            return da[0].coords
+        else:
+            return da.coords
+
 
     def _get_shape(self):
         """ Private helper method

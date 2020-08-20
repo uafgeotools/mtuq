@@ -83,7 +83,7 @@ def read(path='', format='', **kwargs):
 
 
 #
-# ensures MPI calls will continue to work, even if users create bound methods
+# ensures MPI will work, even if users create bound methods
 #
 
 import copyreg

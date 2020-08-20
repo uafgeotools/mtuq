@@ -1,5 +1,6 @@
 
 import numpy as np
+import warnings
 
 from copy import copy
 from mtuq.event import Origin
@@ -239,13 +240,22 @@ class GreensTensorList(list):
         """ Selects `GreensTensors` that match the given station or origin
         """
         if type(selector) is Station:
-            return self.__class__(id=self.id, tensors=filter(
+            selected = self.__class__(id=self.id, tensors=filter(
                 lambda tensor: tensor.station==selector, self))
 
         elif type(selector) is Origin:
-            return self.__class__(id=self.id, tensors=filter(
+            selected = self.__class__(id=self.id, tensors=filter(
                 lambda tensor: tensor.origin==selector, self))
 
+        else:
+            raise TypeError("Bad selector: %s" % type(selector).__name__)
+
+        if len(selected)==0:
+            if len(self) > 0:
+                warnings.warn("Nothing found matching given selector "
+                    "(%s)\n"  % type(selector).__name__)
+
+        return selected
 
 
     def get_synthetics(self, *args, **kwargs):
