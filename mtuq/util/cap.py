@@ -7,10 +7,11 @@
 import csv
 import numpy as np
 import obspy
+
 from collections import defaultdict
 from copy import deepcopy
 from mtuq.event import MomentTensor
-from mtuq.util import AttribDict
+from mtuq.util import AttribDict, warn
 from mtuq.wavelet import EarthquakeTrapezoid
 
 
@@ -140,7 +141,7 @@ def remove_unused_stations(dataset, filename):
             used+=[id]
 
     if len(used)==0:
-        warnings.warn(
+        warn(
             "No data selected. Please check that the current dataset matches "
             "the station codes in column 1 of the CAPUAF weight file and that "
             "columns 3-7 contain at least one nonzero weight.")

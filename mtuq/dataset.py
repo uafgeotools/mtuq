@@ -1,11 +1,11 @@
 
 import obspy
 import numpy as np
-import warnings
 
 from copy import copy, deepcopy
 from mtuq.event import Origin
 from mtuq.station import Station
+from mtuq.util import warn
 from obspy import Stream
 from obspy.geodetics import gps2dist_azimuth
 
@@ -58,9 +58,9 @@ class Dataset(list):
             stream.tags = list()
 
         if not hasattr(stream, 'station'):
-            warnings.warn("Stream lacks station metadata")
+            warn("Stream lacks station metadata")
         elif not hasattr(stream, 'origin'):
-            warnings.warn("Stream lacks origin metadata")
+            warn("Stream lacks origin metadata")
         else:
             (stream.distance_in_m, stream.azimuth, _) =\
                 gps2dist_azimuth(
@@ -205,7 +205,7 @@ class Dataset(list):
 
             if getattr(self, '_warnings', True):
                 if stream.origin!=self[0].origin:
-                    warnings.warn(
+                    warn(
                         "Different streams in the Dataset correpond to "
                         "different events.\n\n"
                         "This may be intentional. Feel free to disable this "

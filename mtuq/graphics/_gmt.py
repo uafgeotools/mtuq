@@ -2,8 +2,8 @@
 import numpy as np
 import shutil
 import subprocess
-import warnings
-from mtuq.util import fullpath
+
+from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180
 from os.path import splitext
 
@@ -29,7 +29,7 @@ def gmt_major_version():
 
 
 def gmt_not_found_warning(filename):
-    warnings.warn("""
+    warn("""
         WARNING
 
         Generic Mapping Tools executables not found on system path.
@@ -167,7 +167,7 @@ def _call(shell_script, filename, lon, lat, values,
 def _nothing_to_plot(values):
     mask = np.isnan(values)
     if np.all(mask):
-        warnings.warn(
+        warn(
             "Nothing to plot: all values are NaN",
             Warning)
         return True
@@ -177,7 +177,7 @@ def _nothing_to_plot(values):
     maxval = masked.max()
 
     if minval==maxval:
-        warnings.warn(
+        warn(
             "Nothing to plot: all values are identical",
             Warning)
         return True
@@ -195,7 +195,7 @@ def _parse_values(lon, lat, values):
 
     if maxval-minval < 1.e-6:
         exp = -np.fix(np.log10(maxval-minval))
-        warnings.warn(
+        warn(
            "Multiplying by 10^%d to avoid GMT plotting errors" % exp,
            Warning)
         values *= 10.**exp
@@ -240,7 +240,7 @@ def _parse_filetype(filename):
         return ext.upper()
 
     else:
-        warnings.warn('Unrecognized extension: defaulting to PNG')
+        warn('Unrecognized extension: defaulting to PNG')
         return 'PNG'
 
 

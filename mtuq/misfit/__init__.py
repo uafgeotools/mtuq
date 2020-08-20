@@ -1,6 +1,5 @@
 
 import numpy as np
-import warnings
 
 from mtuq.misfit import level0, level1, level2
 from mtuq.util import Null, iterable, warn
@@ -130,7 +129,7 @@ class Misfit(object):
             ValueError("Bad input argument: time_shift_max")
 
         if norm=='L1':
-            warnings.warn(
+            warn(
                 "Consider using norm='hybrid', which is much faster than "
                 "norm='L1' but still robust against outliers.")
 

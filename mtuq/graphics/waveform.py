@@ -5,13 +5,13 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
-import warnings
 
 from collections import defaultdict
 from matplotlib.font_manager import FontProperties
 from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
 from mtuq.graphics.header import MomentTensorHeader, ForceHeader
+from mtuq.util import warn
 from mtuq.util.signal import get_components
 from obspy import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
@@ -166,7 +166,7 @@ def plot_data_synthetics(filename,
             try:
                 syn = stream_syn.select(component=component)[0]
             except:
-                warnings.warn('Missing component, skipping...')
+                warn('Missing component, skipping...')
                 continue
 
             # plot traces
@@ -214,7 +214,7 @@ def plot_data_synthetics(filename,
             try:
                 syn = stream_syn.select(component=component)[0]
             except:
-                warnings.warn('Missing component, skipping...')
+                warn('Missing component, skipping...')
                 continue
 
             # plot traces
