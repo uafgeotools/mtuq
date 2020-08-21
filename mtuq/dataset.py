@@ -100,7 +100,7 @@ class Dataset(list):
             Although ``apply`` returns a new `Dataset`, contents of the
             original `Dataset` may still be overwritten, depending on
             the function. To preserve the original, consider making a 
-            `deepcopy` first.
+            `copy` first.
 
 
         """
@@ -125,7 +125,7 @@ class Dataset(list):
             Although ``map`` returns a new `Dataset`, contents of the
             original `Dataset` may still be overwritten, depending on
             the function. To preserve the original, consider making a 
-            `deepcopy` first.
+            `copy` first.
 
         """
         processed = []

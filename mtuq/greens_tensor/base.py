@@ -2,7 +2,7 @@
 import numpy as np
 import warnings
 
-from copy import copy
+from copy import copy, deepcopy
 from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
@@ -293,7 +293,7 @@ class GreensTensorList(list):
             Although ``apply`` returns a new `GreensTensorList`, contents of the
             original `GreensTensorList` may still be overwritten, depending on
             the function. To preserve the original, consider making a 
-            `deepcopy` first.
+            `copy` first.
 
         """
         processed = []
@@ -316,7 +316,7 @@ class GreensTensorList(list):
             Although ``map`` returns a new `GreensTensorList`, contents of the
             original `GreensTensorList` may still be overwritten, depending on
             the function. To preserve the original, consider making a 
-            `deepcopy` first.
+            `copy` first.
 
         """
         processed = []
@@ -382,5 +382,17 @@ class GreensTensorList(list):
         """ Sorts in-place using the python built-in "sort"
         """
         self.sort(key=function, reverse=reverse)
+
+
+    def __copy__(self):
+        try:
+            new_id = self.id+'_copy'
+        except:
+            new_id = None
+
+        new_ds = type(self)(id=new_id)
+        for stream in self:
+            new_ds.append(deepcopy(stream))
+        return new_ds
 
 

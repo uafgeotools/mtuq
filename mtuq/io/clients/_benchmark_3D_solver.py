@@ -8,6 +8,7 @@ from obspy.geodetics import gps2dist_azimuth
 from os.path import basename
 from mtuq.greens_tensor._benchmark_3D_solver import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
+from mtuq.util import warn
 from mtuq.util.signal import resample
 
 
@@ -132,8 +133,10 @@ class Client(ClientBase):
 
         try:
             distance_in_m = np.linalg.norm(np.array([
-                station.offset_x_in_m,
-                station.offset_y_in_m]))
+                station.offset_x_in_m - origin.offset_x_in_m,
+                station.offset_y_in_m - origin.offset_y_in_m]))
+
+            warn("Using x,y coordinate system")
 
         except:
             distance_in_m, _, _ = gps2dist_azimuth(
@@ -142,6 +145,7 @@ class Client(ClientBase):
                 station.latitude,
                 station.longitude)
 
+            warn("Using lat,lon coordinate system")
 
 
         # what are the start and end times of the data?
