@@ -16,9 +16,9 @@ from mtuq.util import fullpath, warn
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_xy(filename, ds, origins, sources, title='', labeltype='latlot',
+def plot_misfit_xy(filename, ds, origins, sources, title='', labeltype='latlon',
     add_colorbar=False, add_marker=True):
-    """ Plots misfit versus depth
+    """ Plots misfit versus hypocenter position
 
 
     .. rubric :: Input arguments
@@ -56,18 +56,12 @@ def plot_misfit_xy(filename, ds, origins, sources, title='', labeltype='latlot',
         best_sources = _get_sources(sources, indices)
 
 
-    _plot_xy(filename, x, y, values, title, labeltype)
-
-    try:
-        _plot_xy_mt_gmt(filename, x, y, best_sources, labeltype)
-    except:
-        warn('_plot_xy_mt_gmt failed')
-        _plot_xy_mt_gmt(filename+'_mt', x, y, best_sources, labeltype) # debugging- get traceback
+    _plot_misfit_xy(filename, x, y, values, title, labeltype)
 
 
-
-def plot_misfit_depth(filename, ds, origins, sources, title=''):
-    """ Plots misfit versus depth
+def plot_mt_xy(filename, ds, origins, sources, title='', labeltype='latlon',
+    add_colorbar=False, add_marker=True):
+    """ Plots focal mechanism versus hypocenter position
 
 
     .. rubric :: Input arguments
@@ -89,7 +83,7 @@ def plot_misfit_depth(filename, ds, origins, sources, title=''):
     `DataFrame`.)
 
     """
-    depths = _get_depths(origins)
+    x, y = _get_xy(origins)
 
     _check(ds)
     ds = ds.copy()
@@ -105,116 +99,7 @@ def plot_misfit_depth(filename, ds, origins, sources, title=''):
         best_sources = _get_sources(sources, indices)
 
 
-    _plot_depth(filename, depths, values, indices,
-        title, xlabel='auto', ylabel='Misfit')
-
-
-
-def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
-    """ Plots marginal likelihood versus depth
-
-
-    .. rubric :: Input arguments
-
-    ``filename`` (`str`):
-    Name of output image file
-
-    ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
-
-    ``title`` (`str`):
-    Optional figure title
-
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-    """
-    assert sigma is not None
-
-    depths = _get_depths(origins)
-
-    _check(ds)
-    ds = ds.copy()
-
-
-    if issubclass(type(ds), DataArray):
-        ds.values = np.exp(-ds.values/(2.*sigma**2))
-        ds.values /= ds.values.sum()
-
-        values, indices = _min_dataarray(ds)
-        best_sources = _get_sources(sources, indices)
-
-
-    elif issubclass(type(ds), DataFrame):
-        ds = np.exp(-ds/(2.*sigma**2))
-        ds /= ds.sum()
-
-        values, indices = _min_dataframe(ds)
-        best_sources = _get_sources(sources, indices)
-
-    values /= values.sum()
-
-    _plot_depth(filename, depths, values, indices, 
-        title=title, xlabel='auto', ylabel='Likelihood')
-
-
-
-def plot_marginal_depth(filename, ds, origins, sources, sigma=None, title=''):
-    """ Plots marginal likelihoods on `v-w` rectangle
-
-
-    .. rubric :: Input arguments
-
-    ``filename`` (`str`):
-    Name of output image file
-
-    ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
-
-    ``title`` (`str`):
-    Optional figure title
-
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-
-    """
-    assert sigma is not None
-
-    depths = _get_depths(origins)
-
-    _check(ds)
-    ds = ds.copy()
-
-
-    if issubclass(type(ds), DataArray):
-        ds = np.exp(-ds/(2.*sigma**2))
-        ds /= ds.sum()
-
-        values, indices = _max_dataarray(ds)
-        best_sources = _get_sources(sources, indices)
-
-    elif issubclass(type(ds), DataFrame):
-        raise NotImplementedError
-        ds = np.exp(-ds/(2.*sigma**2))
-        ds /= ds.sum()
-
-        values, indices = _min_dataframe(ds)
-        best_sources = _get_sources(sources, indices)
-
-    values /= values.sum()
-
-    _plot_depth(filename, depths, values, indices, 
-        title=title, xlabel='auto', ylabel='Likelihood')
-
+    _plot_mt_xy_gmt(filename, x, y, best_sources, title, labeltype)
 
 
 #
@@ -250,9 +135,9 @@ def _get_sources(sources, indices):
 def _min_dataarray(ds):
     values, indices = [], []
     for _i in range(ds.shape[-1]):
-        sliced = ds[:,:,:,:,:,:,_i]
-        values += [sliced.min()]
-        indices += [int(sliced.argmin())]
+        sliced = ds[:,:,:,:,:,:,_i]#.squeeze()
+        values += [sliced.values.min()]
+        indices += [int(sliced.values.argmin())]
     return np.array(values), indices
 
 
@@ -282,40 +167,7 @@ def _sum_dataframe(ds):
 # pyplot wrappers
 #
 
-def _plot_depth(filename, depths, values, best_sources, title='',
-    xlabel='auto', ylabel='', show_magnitudes=False, show_beachballs=False):
-
-    if xlabel=='auto' and ((depths.max()-depths.min()) < 10000.):
-       xlabel = 'Depth (m)'
-
-    if xlabel=='auto' and ((depths.max()-depths.min()) >= 10000.):
-       depths /= 1000.
-       xlabel = 'Depth (km)'
-
-    figsize = (6., 4.)
-    pyplot.figure(figsize=figsize)
-
-    pyplot.plot(depths, values, 'k-')
-
-    if show_magnitudes:
-        raise NotImplementedError
-
-    if show_beachballs:
-        raise NotImplementedError
-
-    if xlabel:
-         pyplot.xlabel(xlabel)
-
-    if ylabel:
-         pyplot.ylabel(ylabel)
-
-    if title:
-        pyplot.title(title)
-
-    pyplot.savefig(filename)
-
-
-def _plot_xy(filename, x, y, values, title='', labeltype='latlot',
+def _plot_misfit_xy(filename, x, y, values, title='', labeltype='latlon',
     add_colorbar=False, add_marker=True, cmap='hot'):
 
     xlabel, ylabel = _get_labeltype(x, y, labeltype)
@@ -361,15 +213,14 @@ def _plot_xy(filename, x, y, values, title='', labeltype='latlot',
 # gmt wrappers
 #
 
-def _plot_xy_mt_gmt(filename, x, y, sources, title='',
+def _plot_mt_xy_gmt(filename, x, y, sources, title='',
     labeltype='latlon', show_magnitudes=False, show_beachballs=True):
 
     filetype = _parse_filetype(filename)
     title, subtitle = _parse_title(title)
     xlabel, ylabel = _get_labeltype(x, y, labeltype)
 
-    xmin, xmax = x.min(), x.max()
-    ymin, ymax = y.min(), y.max()
+    xmin, xmax, ymin, ymax = _get_limits(x, y) 
 
 
     assert len(x)==len(y)==len(sources), ValueError
@@ -389,11 +240,16 @@ def _plot_xy_mt_gmt(filename, x, y, sources, title='',
 
     mt_array = None
     if show_beachballs:
-        mt_array = np.zeros((len(sources), 9))
+        mt_array = np.zeros((len(sources), 12))
         for _i, source in enumerate(sources):
             mt_array[_i, 0] = x[_i]
             mt_array[_i, 1] = y[_i]
-            mt_array[_i, 3:] = source.as_vector()
+            mt_array[_i, 3:9] = source.as_vector()
+
+        mt_array[:,9] = 25.
+        mt_array[:,10] = 0.
+        mt_array[:,11] = 0.
+
 
     if mt_array is not None:
         mt_file = 'tmp_mt_'+filename+'.txt'
@@ -409,8 +265,8 @@ def _plot_xy_mt_gmt(filename, x, y, sources, title='',
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %s %s %f %f %f %f %s %s" %
-           (fullpath('mtuq/graphics/_gmt/plot_xy_mt'),
+        subprocess.call("%s %s %s %s %s %s %f %f %f %f '%s' '%s' %s %s" %
+           (fullpath('mtuq/graphics/_gmt/plot_mt_xy'),
             filename,
             filetype,
             mt_file,
@@ -418,6 +274,8 @@ def _plot_xy_mt_gmt(filename, x, y, sources, title='',
             '0',
             xmin, xmax,
             ymin, ymax,
+            xlabel,
+            ylabel,
             title,
             subtitle
             ),
@@ -435,11 +293,19 @@ def _get_labeltype(x,y,labeltype):
     if labeltype=='offset' and ((x.max()-x.min()) >= 10000.):
        x /= 1000.
        y /= 1000.
-       xlabel = 'X offset (km)'
-       ylabel = 'Y offset (km)'
+       xlabel = 'E-W offset (km)'
+       ylabel = 'N-S offset (km)'
     elif labeltype=='offset' and ((x.max()-x.min()) < 10000.):
-       xlabel = 'X offset (m)'
-       ylabel = 'Y offset (m)'
+       xlabel = 'E-W offset (m)'
+       ylabel = 'N-S offset (m)'
 
     return xlabel,ylabel
+
+
+def _get_limits(x,y):
+
+    xmin, xmax = x.min(), x.max()
+    ymin, ymax = y.min(), y.max()
+
+    return xmin, xmax, ymin, ymax
 

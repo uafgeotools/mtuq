@@ -16,55 +16,6 @@ from mtuq.util import fullpath, warn
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_xy(filename, ds, origins, sources, title='', labeltype='latlot',
-    add_colorbar=False, add_marker=True):
-    """ Plots misfit versus depth
-
-
-    .. rubric :: Input arguments
-
-    ``filename`` (`str`):
-    Name of output image file
-
-    ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
-
-    ``title`` (`str`):
-    Optional figure title
-
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-    """
-    x, y = _get_xy(origins)
-
-    _check(ds)
-    ds = ds.copy()
-
-
-    if issubclass(type(ds), DataArray):
-        values, indices = _min_dataarray(ds)
-        best_sources = _get_sources(sources, indices)
-
-
-    elif issubclass(type(ds), DataFrame):
-        values, indices = _min_dataframe(ds)
-        best_sources = _get_sources(sources, indices)
-
-
-    _plot_xy(filename, x, y, values, title, labeltype)
-
-    try:
-        _plot_xy_mt_gmt(filename, x, y, best_sources, labeltype)
-    except:
-        warn('_plot_xy_mt_gmt failed')
-        _plot_xy_mt_gmt(filename+'_mt', x, y, best_sources, labeltype) # debugging- get traceback
-
-
 
 def plot_misfit_depth(filename, ds, origins, sources, title=''):
     """ Plots misfit versus depth
@@ -315,7 +266,7 @@ def _plot_depth(filename, depths, values, best_sources, title='',
     pyplot.savefig(filename)
 
 
-def _plot_xy(filename, x, y, values, title='', labeltype='latlot',
+def _plot_misfit_xy(filename, x, y, values, title='', labeltype='latlon',
     add_colorbar=False, add_marker=True, cmap='hot'):
 
     xlabel, ylabel = _get_labeltype(x, y, labeltype)
@@ -356,90 +307,4 @@ def _plot_xy(filename, x, y, values, title='', labeltype='latlot',
 
     pyplot.savefig(filename)
 
-
-#
-# gmt wrappers
-#
-
-def _plot_xy_mt_gmt(filename, x, y, sources, title='',
-    labeltype='latlon', show_magnitudes=False, show_beachballs=True):
-
-    filetype = _parse_filetype(filename)
-    title, subtitle = _parse_title(title)
-    xlabel, ylabel = _get_labeltype(x, y, labeltype)
-
-    xmin, xmax = x.min(), x.max()
-    ymin, ymax = y.min(), y.max()
-
-
-    assert len(x)==len(y)==len(sources), ValueError
-
-    ux = np.unique(x)
-    uy = np.unique(y)
-    if len(ux)*len(uy)!=len(sources):
-        warn('Irregular x-y grid')
-
-    mw_array = None
-    if show_magnitudes:
-        mw_array = np.zeros((len(sources), 3))
-        for _i, source in enumerate(sources):
-            mw_array[_i, 0] = x[_i]
-            mw_array[_i, 1] = y[_i]
-            mw_array = source.magnitude()
-
-    mt_array = None
-    if show_beachballs:
-        mt_array = np.zeros((len(sources), 9))
-        for _i, source in enumerate(sources):
-            mt_array[_i, 0] = x[_i]
-            mt_array[_i, 1] = y[_i]
-            mt_array[_i, 3:] = source.as_vector()
-
-    if mt_array is not None:
-        mt_file = 'tmp_mt_'+filename+'.txt'
-        np.savetxt(mt_file, mt_array)
-    else:
-        mt_file = "''"
-
-    if mw_array is not None:
-        mw_file = 'tmp_mw_'+filename+'.txt'
-        np.savetxt(mw_file, mw_array)
-    else:
-        mw_file = "''"
-
-    # call bash script
-    if exists_gmt():
-        subprocess.call("%s %s %s %s %s %s %f %f %f %f %s %s" %
-           (fullpath('mtuq/graphics/_gmt/plot_xy_mt'),
-            filename,
-            filetype,
-            mt_file,
-            mw_file,
-            '0',
-            xmin, xmax,
-            ymin, ymax,
-            title,
-            subtitle
-            ),
-            shell=True)
-    else:
-        gmt_not_found_warning(
-            ascii_data)
-
-
-def _get_labeltype(x,y,labeltype):
-    if labeltype=='latlon':
-       xlabel = None
-       ylabel = None
-
-    if labeltype=='offset' and ((x.max()-x.min()) >= 10000.):
-       x /= 1000.
-       y /= 1000.
-       xlabel = 'X offset (km)'
-       ylabel = 'Y offset (km)'
-    elif labeltype=='offset' and ((x.max()-x.min()) < 10000.):
-       xlabel = 'X offset (m)'
-       ylabel = 'Y offset (m)'
-
-    return xlabel,ylabel
 
