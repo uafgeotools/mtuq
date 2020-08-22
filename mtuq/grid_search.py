@@ -4,7 +4,8 @@ import pandas
 import xarray
 
 from mtuq.grid import Grid, UnstructuredGrid
-from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback
+from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback,\
+    dataarray_idxmin, dataarray_idxmax
 from os.path import splitext
 from xarray.core.formatting import unindexed_dims_repr
 
@@ -158,10 +159,10 @@ class MTUQDataArray(xarray.DataArray):
         """ Returns coordinates corresponding to minimum misfit
         """
         if idx_type is None:
-            return self._idxmin()
+            return dataarray_idxmin(self)
 
         elif idx_type in ('origin', 'origin_idx'):
-            return int(self._idxmin()['origin_idx'])
+            return int(dataarray_idxmin(self)['origin_idx'])
 
         elif idx_type in ('source', 'source_idx'):
             shape = self._get_shape()
@@ -174,10 +175,10 @@ class MTUQDataArray(xarray.DataArray):
         """ Returns coordinates corresponding to maximum misfit
         """
         if idx_type is None:
-            return self._idxmax()
+            return dataarray_idxmax(self)
 
         elif idx_type in ('origin', 'origin_idx'):
-            return int(self._idxmax()['origin_idx'])
+            return int(dataarray_idxmax(self)['origin_idx'])
 
         elif idx_type in ('source', 'source_idx'):
             shape = self._get_shape()
@@ -185,32 +186,6 @@ class MTUQDataArray(xarray.DataArray):
 
         else:
             raise TypeError
-
-    def _idxmin(self):
-        """ idxmin helper function
-        """
-        # something similar to this has now been implemented in a beta version 
-        # of xarray
-        da = self.where(self==self.min(), drop=True).squeeze()
-        if da.size > 1:
-            warn("No unique global minimum\n")
-            return da[0].coords
-        else:
-            return da.coords
-            
-
-    def _idxmax(self):
-        """ idxmax helper function
-        """
-        # something similar to this has now been implemented in a beta version 
-        # of xarray
-        da = self.where(self==self.max(), drop=True).squeeze()
-        if da.size > 1:
-            warn("No unique global maximum\n")
-            return da[0].coords
-        else:
-            return da.coords
-
 
     def _get_shape(self):
         """ Private helper method

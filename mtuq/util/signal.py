@@ -88,11 +88,14 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
 
     if nt_new==nt_old:
         return adjusted
+    elif dt_new > dt_old:
+        return downsample(adjusted, dt_old, dt_new, nt_old, nt_new)
     else:
-        return _resample_trace(adjusted, dt_old, dt_new)
+        return upsample(adjusted, dt_old, dt_new, nt_old, nt_new)
 
 
 def _resample_trace(data, dt_old, dt_new):
+    # sometimes returns a result that is one sample too short
     from obspy.core.trace import Trace
     trace = Trace(data, {'npts': len(data), 'delta':dt_old})
     trace.resample(dt_new**-1)
@@ -100,7 +103,6 @@ def _resample_trace(data, dt_old, dt_new):
 
 
 def downsample(data, dt_old, dt_new, nt_old, nt_new):
-    # deprecated in favor of _resample_trace
     filtered = lowpass(data, freq=dt_new**-1, df=dt_old**-1, zerophase=True)
     t1, t2 = 0., nt_new*dt_new
     t_old = np.linspace(t1, t2, nt_old+1)
@@ -109,7 +111,6 @@ def downsample(data, dt_old, dt_new, nt_old, nt_new):
 
 
 def upsample(dt_old, dt_new, nt_old, nt_new):
-    # deprecated in favor of _resample_trace
     t1, t2 = 0., nt_new*dt_new
     t_old = np.linspace(t1, t2, nt_old+1)
     t_new = np.linspace(t1, t2, nt_new+1)
