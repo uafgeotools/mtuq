@@ -183,8 +183,8 @@ class Helper(object):
 
         npts, dt = get_time_sampling(d)
 
-        self.padding_left = int(+time_shift_max/dt)
-        self.padding_right = int(-time_shift_min/dt)
+        self.padding_left = int(round(+time_shift_max/dt))
+        self.padding_right = int(round(-time_shift_min/dt))
         npts_padding = self.padding_left+self.padding_right
 
         ncomp = len(components)

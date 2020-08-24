@@ -102,8 +102,8 @@ def _get_time_sampling(dataset):
 
 
 def _get_padding(time_shift_min, time_shift_max, dt):
-    padding_left = int(+time_shift_max/dt)
-    padding_right = int(-time_shift_min/dt)
+    padding_left = int(round(+time_shift_max/dt))
+    padding_right = int(round(-time_shift_min/dt))
     return [padding_left, padding_right]
 
 

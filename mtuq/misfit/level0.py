@@ -46,8 +46,8 @@ def misfit(data, greens, sources, norm, time_shift_groups,
             npts = d[0].data.size
             dt = d[0].stats.delta
 
-            padding_left = int(+time_shift_max/dt)
-            padding_right = int(-time_shift_min/dt)
+            padding_left = int(round(+time_shift_max/dt))
+            padding_right = int(round(-time_shift_min/dt))
             npts_padding = padding_left + padding_right
 
             # array to hold cross correlations
