@@ -55,6 +55,8 @@ def plot_data_synthetics(filename,
     # how many stations have at least one trace?
     nstations = _count([data_bw, data_sw])
 
+    if nstations < 2:
+        raise Exception('Not enough stations')
 
     # dimensions of subplot array
     nrows = nstations

@@ -65,11 +65,11 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
 
     if t1_old <= t1_new <= t2_new <= t2_old:
         # cut both ends
-        adjusted[0:nt] = data[i1:i1+nt]
+        adjusted[0:nt] = data[-i1:nt-i1]
 
     elif t1_old <= t1_new <= t2_old <= t2_new:
         # cut left, pad right
-        adjusted[0:nt+i2] = data[i1:]
+        adjusted[0:nt+i2] = data[-i1:]
 
     elif t1_new <= t1_old <= t2_new <= t2_old:
         # pad left, cut right
