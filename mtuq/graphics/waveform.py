@@ -5,6 +5,7 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
+import warnings
 
 from collections import defaultdict
 from matplotlib.font_manager import FontProperties
@@ -291,10 +292,14 @@ def plot_data_greens(filename,
     synthetics_bw = greens_bw.get_synthetics(source)
     synthetics_sw = greens_sw.get_synthetics(source)
 
-    # besides calculating misfit, these commands set the trace attributes used
-    # to align data and synthetics in the waveform plots
-    total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
-    total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
+    with warnings.catch_warnings():
+        # supress warnings for empty body wave dataset
+        warnings.filterwarnings('ignore')
+
+        # besides calculating misfit, these commands set the trace attributes
+        # used to align data and synthetics in the waveform plots
+        total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
+        total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
 
     #
     # prepare figure header
@@ -396,7 +401,13 @@ def add_station_labels(ax, station, origin):
     pyplot.text(-1.,0.50, label, fontsize=11, transform=ax.transAxes)
 
     # display distance
-    distance = '%d km' % round(distance_in_m/1000.)
+    if distance_in_m > 10000:
+        distance = '%d km' % round(distance_in_m/1000.)
+    elif distance_in_m > 1000:
+        distance = '%.1f km' % (distance_in_m/1000.)
+    else:
+        distance = '%.2f km' % (distance_in_m/1000.)
+
     pyplot.text(-1.,0.35, distance, fontsize=11, transform=ax.transAxes)
 
     # display azimuth

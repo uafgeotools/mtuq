@@ -78,7 +78,10 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                         misfit = dt * helpers[_j].get_L2_norm(
                             source, _k, ic)**0.5
 
-                    results[_i] += d[_k].weight * misfit
+                    try:
+                        results[_i] += d[_k].weight * misfit
+                    except:
+                        results[_i] += misfit
 
     return results
 
@@ -149,7 +152,6 @@ class Helper(object):
             self.source = source
             self.synthetics = self.greens.get_synthetics(source)
         return self.synthetics
-
 
 
     def get_time_shift(self, source, indices):

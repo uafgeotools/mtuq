@@ -253,6 +253,10 @@ class ProcessData(object):
             assert self.window_length > 0
 
 
+        if self.padding:
+            assert self.window_type is not None
+
+
         if self.padding is None:
              self.padding = (0., 0.)
 
