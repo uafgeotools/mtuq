@@ -183,7 +183,7 @@ def _nothing_to_plot(values):
         return True
 
 
-def _parse_values(lon, lat, values):
+def _parse_values(lon, lat, values, normalize=True):
     lon, lat = np.meshgrid(lon, lat)
     lat = lat.flatten()
     lon = lon.flatten()
@@ -193,7 +193,10 @@ def _parse_values(lon, lat, values):
     minval = masked.min()
     maxval = masked.max()
 
-    if maxval-minval < 1.e-6:
+    if normalize:
+        values /= maxval
+
+    elif maxval-minval < 1.e-6:
         exp = -np.fix(np.log10(maxval-minval))
         warn(
            "Multiplying by 10^%d to avoid GMT plotting errors" % exp,

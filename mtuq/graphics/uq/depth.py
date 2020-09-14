@@ -234,7 +234,8 @@ def _sum_dataframe(ds):
 #
 
 def _plot_depth(filename, depths, values, best_sources, title='',
-    xlabel='auto', ylabel='', show_magnitudes=False, show_beachballs=False):
+    xlabel='auto', ylabel='', show_magnitudes=False, show_beachballs=False,
+    fontsize=16., normalize=False):
 
     if xlabel=='auto' and ((depths.max()-depths.min()) < 10000.):
        xlabel = 'Depth (m)'
@@ -243,7 +244,10 @@ def _plot_depth(filename, depths, values, best_sources, title='',
        depths /= 1000.
        xlabel = 'Depth (km)'
 
-    figsize = (6., 4.)
+    if normalize:
+        values /= values.max()
+
+    figsize = (6., 6.)
     pyplot.figure(figsize=figsize)
 
     pyplot.plot(depths, values, 'k-')
@@ -255,13 +259,13 @@ def _plot_depth(filename, depths, values, best_sources, title='',
         raise NotImplementedError
 
     if xlabel:
-         pyplot.xlabel(xlabel)
+         pyplot.xlabel(xlabel, fontsize=fontsize)
 
     if ylabel:
-         pyplot.ylabel(ylabel)
+         pyplot.ylabel(ylabel, fontsize=fontsize)
 
     if title:
-        pyplot.title(title)
+        pyplot.title(title, fontsize=fontsize)
 
     pyplot.savefig(filename)
 
