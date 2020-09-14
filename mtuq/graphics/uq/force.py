@@ -5,7 +5,6 @@
 
 import numpy as np
 import subprocess
-import warnings
 
 from matplotlib import pyplot
 from pandas import DataFrame

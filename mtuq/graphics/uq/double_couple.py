@@ -3,11 +3,11 @@
 #
 
 import numpy as np
-import warnings
 
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
+from mtuq.util import warn
 from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma
 
 
@@ -21,8 +21,7 @@ def plot_misfit_dc(filename, ds):
         _plot_dc(filename, _marginal(ds))
         
     elif issubclass(type(ds), DataFrame):
-        warnings.warn(
-            'plot_misfit_dc not implemented for irregularly-spaced grids')
+        warn('plot_misfit_dc not implemented for irregularly-spaced grids')
 
 
 def plot_likelihood_dc():

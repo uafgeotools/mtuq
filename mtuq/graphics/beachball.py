@@ -19,8 +19,9 @@ import matplotlib.pyplot as pyplot
 import numpy as np
 import shutil
 import subprocess
-import warnings
+
 from mtuq.event import MomentTensor
+from mtuq.util import warn
 
 
 def plot_beachball(filename, mt):
@@ -82,7 +83,7 @@ def beachball_gmt(filename, mt):
 def beachball_obspy(filename, mt):
     """ Plots focal mechanism using ObsPy
     """
-    warnings.warn("""
+    warn("""
         WARNING
 
         Generic Mapping Tools (>=6.0.0) executables not found on system path.

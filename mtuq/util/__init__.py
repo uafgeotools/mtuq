@@ -222,3 +222,28 @@ class ProgressCallback(object):
 
 
 
+def dataarray_idxmin(da):
+    """ idxmin helper function
+    """
+    # something similar to this has now been implemented in a beta version 
+    # of xarray
+    da = da.where(da==da.min(), drop=True).squeeze()
+    if da.size > 1:
+        warn("No unique global minimum\n")
+        return da[0].coords
+    else:
+        return da.coords
+
+
+def dataarray_idxmax(da):
+    """ idxmax helper function
+    """
+    # something similar to this has now been implemented in a beta version 
+    # of xarray
+    da = da.where(da==da.max(), drop=True).squeeze()
+    if da.size > 1:
+        warn("No unique global maximum\n")
+        return da[0].coords
+    else:
+        return da.coords
+

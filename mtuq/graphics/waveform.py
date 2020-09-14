@@ -12,6 +12,7 @@ from matplotlib.font_manager import FontProperties
 from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
 from mtuq.graphics.header import MomentTensorHeader, ForceHeader
+from mtuq.util import warn
 from mtuq.util.signal import get_components
 from obspy import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
@@ -55,6 +56,8 @@ def plot_data_synthetics(filename,
     # how many stations have at least one trace?
     nstations = _count([data_bw, data_sw])
 
+    if nstations < 2:
+        raise Exception('Not enough stations')
 
     # dimensions of subplot array
     nrows = nstations
@@ -166,7 +169,7 @@ def plot_data_synthetics(filename,
             try:
                 syn = stream_syn.select(component=component)[0]
             except:
-                warnings.warn('Missing component, skipping...')
+                warn('Missing component, skipping...')
                 continue
 
             # plot traces
@@ -214,7 +217,7 @@ def plot_data_synthetics(filename,
             try:
                 syn = stream_syn.select(component=component)[0]
             except:
-                warnings.warn('Missing component, skipping...')
+                warn('Missing component, skipping...')
                 continue
 
             # plot traces
@@ -286,13 +289,18 @@ def plot_data_greens(filename,
     _set_components(data_bw, greens_bw)
     _set_components(data_sw, greens_sw)
 
-    synthetics_bw = greens_bw.get_synthetics(source)
-    synthetics_sw = greens_sw.get_synthetics(source)
+    synthetics_bw = greens_bw.get_synthetics(source, inplace=True)
+    synthetics_sw = greens_sw.get_synthetics(source, inplace=True)
 
-    # besides calculating misfit, these commands set the trace attributes used
-    # to align data and synthetics in the waveform plots
-    total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
-    total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
+    with warnings.catch_warnings():
+        # supress warnings for empty body wave dataset
+        warnings.filterwarnings('ignore')
+
+        # besides calculating misfit, these commands set the trace attributes
+        # used to align data and synthetics in the waveform plots
+        total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
+        total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
+
 
     #
     # prepare figure header
@@ -394,7 +402,13 @@ def add_station_labels(ax, station, origin):
     pyplot.text(-1.,0.50, label, fontsize=11, transform=ax.transAxes)
 
     # display distance
-    distance = '%d km' % round(distance_in_m/1000.)
+    if distance_in_m > 10000:
+        distance = '%d km' % round(distance_in_m/1000.)
+    elif distance_in_m > 1000:
+        distance = '%.1f km' % (distance_in_m/1000.)
+    else:
+        distance = '%.2f km' % (distance_in_m/1000.)
+
     pyplot.text(-1.,0.35, distance, fontsize=11, transform=ax.transAxes)
 
     # display azimuth
@@ -438,10 +452,12 @@ def add_trace_labels(axis, dat, syn, total_misfit=1.):
 
 
 def _set_components(data, greens):
-    if not _isempty(data):
-        for _i, stream in enumerate(data):
-            components = get_components(stream)
-            greens[_i]._set_components(components)
+    if len(data) == 0:
+        return
+
+    for _i, stream in enumerate(data):
+        components = get_components(stream)
+        greens[_i]._set_components(components)
 
 
 #

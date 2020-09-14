@@ -65,11 +65,11 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
 
     if t1_old <= t1_new <= t2_new <= t2_old:
         # cut both ends
-        adjusted[0:nt] = data[i1:i1+nt]
+        adjusted[0:nt] = data[-i1:nt-i1]
 
     elif t1_old <= t1_new <= t2_old <= t2_new:
         # cut left, pad right
-        adjusted[0:nt+i2] = data[i1:]
+        adjusted[0:nt+i2] = data[-i1:]
 
     elif t1_new <= t1_old <= t2_new <= t2_old:
         # pad left, cut right
@@ -88,11 +88,14 @@ def resample(data, t1_old, t2_old, dt_old, t1_new, t2_new, dt_new):
 
     if nt_new==nt_old:
         return adjusted
+    elif dt_new > dt_old:
+        return downsample(adjusted, dt_old, dt_new, nt_old, nt_new)
     else:
-        return _resample_trace(adjusted, dt_old, dt_new)
+        return upsample(adjusted, dt_old, dt_new, nt_old, nt_new)
 
 
 def _resample_trace(data, dt_old, dt_new):
+    # sometimes returns a result that is one sample too short
     from obspy.core.trace import Trace
     trace = Trace(data, {'npts': len(data), 'delta':dt_old})
     trace.resample(dt_new**-1)
@@ -100,7 +103,6 @@ def _resample_trace(data, dt_old, dt_new):
 
 
 def downsample(data, dt_old, dt_new, nt_old, nt_new):
-    # deprecated in favor of _resample_trace
     filtered = lowpass(data, freq=dt_new**-1, df=dt_old**-1, zerophase=True)
     t1, t2 = 0., nt_new*dt_new
     t_old = np.linspace(t1, t2, nt_old+1)
@@ -108,12 +110,11 @@ def downsample(data, dt_old, dt_new, nt_old, nt_new):
     return np.interp(t_new, t_old, filtered)
 
 
-def upsample(dt_old, dt_new, nt_old, nt_new):
-    # deprecated in favor of _resample_trace
+def upsample(data, dt_old, dt_new, nt_old, nt_new):
     t1, t2 = 0., nt_new*dt_new
     t_old = np.linspace(t1, t2, nt_old+1)
     t_new = np.linspace(t1, t2, nt_new+1)
-    return np.interp(t_new, t_old, filtered)
+    return np.interp(t_new, t_old, data)
 
 
 def pad(trace, padding):

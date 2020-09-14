@@ -147,10 +147,10 @@ class ProcessData(object):
          **parameters):
 
         if not filter_type:
-            print("WARNING No filter will be applied")
+            warn("No filter will be applied")
 
         if not window_type:
-            print("WARNING No windows will be applied")
+            warn("No windows will be applied")
 
         if window_type and not pick_type:
             raise Exception("Undefined parameter: pick_type")
@@ -251,6 +251,10 @@ class ProcessData(object):
                  raise ValueError('Bad parameter: window_length')
 
             assert self.window_length > 0
+
+
+        if self.padding:
+            assert self.window_type is not None
 
 
         if self.padding is None:

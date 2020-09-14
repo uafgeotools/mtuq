@@ -40,14 +40,14 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                 continue
 
             # generate synthetics
-            s = greens[_j].get_synthetics(source)
+            s = greens[_j].get_synthetics(source, inplace=True)
 
             # time sampling scheme
             npts = d[0].data.size
             dt = d[0].stats.delta
 
-            padding_left = int(+time_shift_max/dt)
-            padding_right = int(-time_shift_min/dt)
+            padding_left = int(round(+time_shift_max/dt))
+            padding_right = int(round(-time_shift_min/dt))
             npts_padding = padding_left + padding_right
 
             # array to hold cross correlations
@@ -90,7 +90,10 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                     elif norm=='hybrid':
                         misfit = np.sqrt(np.sum(r**2))*dt
 
-                    results[_i] += d[_k].weight * misfit
+                    try:
+                        results[_i] += d[_k].weight * misfit
+                    except:
+                        results[_i] += misfit
 
                     if set_attributes:
                         d[_k].misfit = misfit

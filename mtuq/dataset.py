@@ -1,11 +1,11 @@
 
 import obspy
 import numpy as np
-import warnings
 
 from copy import copy, deepcopy
 from mtuq.event import Origin
 from mtuq.station import Station
+from mtuq.util import warn
 from obspy import Stream
 from obspy.geodetics import gps2dist_azimuth
 
@@ -23,6 +23,7 @@ class Dataset(list):
         Datasets (see ``mtuq.io.readers``).
 
     """
+
     def __init__(self, streams=[], id=None, tags=[]):
         """ Constructor method
         """
@@ -39,29 +40,35 @@ class Dataset(list):
     def append(self, stream):
         """ Appends stream to Dataset
         """
+        _warnings = getattr(self, '_warnings', False)
+
         assert issubclass(type(stream), Stream),\
             ValueError("Only Streams can be appended to a Dataset")
 
         # create unique identifier
-        try:
+        if hasattr(stream, 'station'):
             stream.id = '.'.join([
                 stream.station.network,
                 stream.station.station,
                 stream.station.location])
-        except:
+        elif len(stream) > 0:
             stream.id = '.'.join([
                 stream[0].stats.network,
                 stream[0].stats.station,
                 stream[0].stats.location])
+        else:
+            stream.id = ''
 
         if not hasattr(stream, 'tags'):
             stream.tags = list()
 
-        if not hasattr(stream, 'station'):
-            warnings.warn("Stream lacks station metadata")
-        elif not hasattr(stream, 'origin'):
-            warnings.warn("Stream lacks origin metadata")
-        else:
+        if not hasattr(stream, 'station') and _warnings:
+            warn("Stream lacks station metadata")
+
+        if not hasattr(stream, 'origin') and _warnings:
+            warn("Stream lacks origin metadata")
+
+        if hasattr(stream, 'station') and hasattr(stream, 'origin'):
             (stream.distance_in_m, stream.azimuth, _) =\
                 gps2dist_azimuth(
                     stream.origin.latitude,
@@ -100,7 +107,7 @@ class Dataset(list):
             Although ``apply`` returns a new `Dataset`, contents of the
             original `Dataset` may still be overwritten, depending on
             the function. To preserve the original, consider making a 
-            `deepcopy` first.
+            `copy` first.
 
 
         """
@@ -125,7 +132,7 @@ class Dataset(list):
             Although ``map`` returns a new `Dataset`, contents of the
             original `Dataset` may still be overwritten, depending on
             the function. To preserve the original, consider making a 
-            `deepcopy` first.
+            `copy` first.
 
         """
         processed = []
@@ -205,7 +212,7 @@ class Dataset(list):
 
             if getattr(self, '_warnings', True):
                 if stream.origin!=self[0].origin:
-                    warnings.warn(
+                    warn(
                         "Different streams in the Dataset correpond to "
                         "different events.\n\n"
                         "This may be intentional. Feel free to disable this "

@@ -78,7 +78,10 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                         misfit = dt * helpers[_j].get_L2_norm(
                             source, _k, ic)**0.5
 
-                    results[_i] += d[_k].weight * misfit
+                    try:
+                        results[_i] += d[_k].weight * misfit
+                    except:
+                        results[_i] += misfit
 
     return results
 
@@ -151,7 +154,6 @@ class Helper(object):
         return self.synthetics
 
 
-
     def get_time_shift(self, source, indices):
         """ 
         Finds optimal time shift between the given data and synthetics
@@ -183,8 +185,8 @@ class Helper(object):
 
         npts, dt = get_time_sampling(d)
 
-        self.padding_left = int(+time_shift_max/dt)
-        self.padding_right = int(-time_shift_min/dt)
+        self.padding_left = int(round(+time_shift_max/dt))
+        self.padding_right = int(round(-time_shift_min/dt))
         npts_padding = self.padding_left+self.padding_right
 
         ncomp = len(components)
