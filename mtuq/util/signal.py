@@ -110,11 +110,11 @@ def downsample(data, dt_old, dt_new, nt_old, nt_new):
     return np.interp(t_new, t_old, filtered)
 
 
-def upsample(dt_old, dt_new, nt_old, nt_new):
+def upsample(data, dt_old, dt_new, nt_old, nt_new):
     t1, t2 = 0., nt_new*dt_new
     t_old = np.linspace(t1, t2, nt_old+1)
     t_new = np.linspace(t1, t2, nt_new+1)
-    return np.interp(t_new, t_old, filtered)
+    return np.interp(t_new, t_old, data)
 
 
 def pad(trace, padding):
