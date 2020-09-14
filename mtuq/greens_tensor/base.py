@@ -102,30 +102,18 @@ class GreensTensor(Stream):
 
         .. note:
 
-            Every time ``get_synthetics`` is called, the numeric trace data 
-            gets overwritten. Every time ``_set_components`` is called, the 
-            traces get overwritten.  The stream itself never gets overwritten.
+            Every time ``get_synthetics(inplace=True)`` is called, the numeric 
+            trace data get overwritten. Every time ``_set_components`` is 
+            called, the traces get overwritten.  The stream itself never gets
+            overwritten.
         """
-        # allocate array to hold linear combination time series
-        nt = len(self[0].data)
-        nc = len(self.components)
-        nr = 0
-        if self.include_mt:
-            nr += 6
-        if self.include_force:
-            nr+= 3
+        nc, nr, nt = self._get_shape()
+
+        # allocate NuPy array to hold Green's function time series
         self._array = np.zeros((nc, nr, nt))
 
-        # allocate obspy structures to hold synthetics
-        self._synthetics = Stream()
-        self._synthetics.station = self.station
-        self._synthetics.origin = self.origin
-        for component in self.components:
-            # add stats object
-            stats = self.station.copy()
-            stats.update({'npts': nt, 'channel': component})
-            # add trace object
-            self._synthetics += Trace(np.zeros(nt), stats)
+        # allocate ObsPy structures to hold synthetics
+        self._synthetics = self._allocate_stream()
 
 
     def _precompute(self):
@@ -137,7 +125,35 @@ class GreensTensor(Stream):
         raise NotImplementedError("Must be implemented by subclass.")
 
 
-    def get_synthetics(self, source, components=None):
+    def _get_shape(self):
+        nt = len(self[0].data)
+        nc = len(self.components)
+        nr = 0
+
+        if self.include_mt:
+            nr += 6
+        if self.include_force:
+            nr+= 3
+
+        return nc, nr, nt
+
+
+    def _allocate_stream(self):
+        nc, nr, nt = self._get_shape()
+
+        stream = Stream()
+        for component in self.components:
+            # add stats object
+            stats = self.station.copy()
+            stats.update({'npts': nt, 'channel': component})
+            # add trace object
+            stream += Trace(np.zeros(nt), stats)
+
+        return stream
+
+
+
+    def get_synthetics(self, source, components=None, inplace=False):
         """ Generates synthetics through a linear combination of time series
 
         Returns an ObsPy stream
@@ -164,7 +180,11 @@ class GreensTensor(Stream):
         # arrays used in linear combination
         source = source.as_vector()
         array = self._array
-        synthetics = self._synthetics
+
+        if inplace:
+            synthetics = self._synthetics
+        else:
+            synthetics = self._allocate_stream()
 
         for _i, component in enumerate(self.components):
             # Even with careful attention to index order, np.dot is very slow.

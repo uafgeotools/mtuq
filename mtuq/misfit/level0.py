@@ -40,7 +40,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                 continue
 
             # generate synthetics
-            s = greens[_j].get_synthetics(source)
+            s = greens[_j].get_synthetics(source, inplace=True)
 
             # time sampling scheme
             npts = d[0].data.size

@@ -289,8 +289,8 @@ def plot_data_greens(filename,
     _set_components(data_bw, greens_bw)
     _set_components(data_sw, greens_sw)
 
-    synthetics_bw = greens_bw.get_synthetics(source)
-    synthetics_sw = greens_sw.get_synthetics(source)
+    synthetics_bw = greens_bw.get_synthetics(source, inplace=True)
+    synthetics_sw = greens_sw.get_synthetics(source, inplace=True)
 
     with warnings.catch_warnings():
         # supress warnings for empty body wave dataset
@@ -300,6 +300,7 @@ def plot_data_greens(filename,
         # used to align data and synthetics in the waveform plots
         total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
         total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
+
 
     #
     # prepare figure header

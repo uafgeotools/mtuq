@@ -23,6 +23,7 @@ class Dataset(list):
         Datasets (see ``mtuq.io.readers``).
 
     """
+
     def __init__(self, streams=[], id=None, tags=[]):
         """ Constructor method
         """
@@ -39,29 +40,35 @@ class Dataset(list):
     def append(self, stream):
         """ Appends stream to Dataset
         """
+        _warnings = getattr(self, '_warnings', False)
+
         assert issubclass(type(stream), Stream),\
             ValueError("Only Streams can be appended to a Dataset")
 
         # create unique identifier
-        try:
+        if hasattr(stream, 'station'):
             stream.id = '.'.join([
                 stream.station.network,
                 stream.station.station,
                 stream.station.location])
-        except:
+        elif len(stream) > 0:
             stream.id = '.'.join([
                 stream[0].stats.network,
                 stream[0].stats.station,
                 stream[0].stats.location])
+        else:
+            stream.id = ''
 
         if not hasattr(stream, 'tags'):
             stream.tags = list()
 
-        if not hasattr(stream, 'station'):
+        if not hasattr(stream, 'station') and _warnings:
             warn("Stream lacks station metadata")
-        elif not hasattr(stream, 'origin'):
+
+        if not hasattr(stream, 'origin') and _warnings:
             warn("Stream lacks origin metadata")
-        else:
+
+        if hasattr(stream, 'station') and hasattr(stream, 'origin'):
             (stream.distance_in_m, stream.azimuth, _) =\
                 gps2dist_azimuth(
                     stream.origin.latitude,
