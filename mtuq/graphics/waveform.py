@@ -452,10 +452,12 @@ def add_trace_labels(axis, dat, syn, total_misfit=1.):
 
 
 def _set_components(data, greens):
-    if not _isempty(data):
-        for _i, stream in enumerate(data):
-            components = get_components(stream)
-            greens[_i]._set_components(components)
+    if len(data) == 0:
+        return
+
+    for _i, stream in enumerate(data):
+        components = get_components(stream)
+        greens[_i]._set_components(components)
 
 
 #
