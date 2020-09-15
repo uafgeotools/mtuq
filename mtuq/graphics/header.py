@@ -96,9 +96,12 @@ class MomentTensorHeader(Base):
         depth_in_m = origin.depth_in_m
         depth_in_km = origin.depth_in_m/1000.
         if depth_in_m <= 1000.:
-            self.depth_str = '%s m' % depth_in_m
+            self.depth_str = '%.0f m' % depth_in_m
+        elif depth_in_km <= 100.:
+            self.depth_str = '%.1f km' % depth_in_km
         else:
-            self.depth_str = '%s km' % depth_in_km
+            self.depth_str = '%.0f km' % depth_in_km
+
 
         self.model = model
         self.solver = solver
@@ -216,7 +219,7 @@ class MomentTensorHeader(Base):
 
         if self.process_bw and self.process_bw:
             line = ('body waves:  %s (%.1f s window);  ' +\
-                    'surface waves: %s (%.1f s window') %\
+                    'surface waves: %s (%.1f s window)') %\
                     (self.passband_bw, self.process_bw.window_length,
                      self.passband_sw, self.process_sw.window_length)
 
@@ -249,9 +252,11 @@ class ForceHeader(Base):
         depth_in_m = origin.depth_in_m
         depth_in_km = origin.depth_in_m/1000.
         if depth_in_m <= 1000.:
-            self.depth_str = '%s m' % depth_in_m
+            self.depth_str = '%.0f m' % depth_in_m
+        elif depth_in_km <= 100.:
+            self.depth_str = '%.1f km' % depth_in_km
         else:
-            self.depth_str = '%s km' % depth_in_km
+            self.depth_str = '%.0f km' % depth_in_km
 
         self.model = model
         self.solver = solver
