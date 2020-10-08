@@ -884,9 +884,18 @@ Main_TestMisfit="""
     results_2 = misfit_bw(
         data_bw, greens_bw, grid, optimization_level=2)
 
-    print('  optimization level 0:', results_0.min())
-    print('  optimization level 1:', results_1.min())
-    print('  optimization level 2:', results_2.min())
+    print('  optimization level:  0\\n', 
+          '  argmin:  %d\\n' % results_0.min(), 
+          '  min:     %e\\n\\n' % results_0.min())
+
+    print('  optimization level:  1\\n', 
+          '  argmin:  %d\\n' % results_1.min(), 
+          '  min:     %e\\n\\n' % results_1.min())
+
+    print('  optimization level:  2\\n', 
+          '  argmin:  %d\\n' % results_2.min(), 
+          '  min:     %e\\n\\n' % results_2.min())
+
     print('')
 
 
@@ -901,10 +910,18 @@ Main_TestMisfit="""
     results_2 = misfit_sw(
         data_sw, greens_sw, grid, optimization_level=2)
 
-    print('  optimization level 0:', results_0.min())
-    print('  optimization level 1:', results_1.min())
-    print('  optimization level 2:', results_2.min())
-    print('')
+    print('  optimization level:  0\\n', 
+          '  argmin:  %d\\n' % results_0.min(), 
+          '  min:     %e\\n\\n' % results_0.min())
+
+    print('  optimization level:  1\\n', 
+          '  argmin:  %d\\n' % results_1.min(), 
+          '  min:     %e\\n\\n' % results_1.min())
+
+    print('  optimization level:  2\\n', 
+          '  argmin:  %d\\n' % results_2.min(), 
+          '  min:     %e\\n\\n' % results_2.min())
+
 
 """
 
