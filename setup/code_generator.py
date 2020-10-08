@@ -126,8 +126,32 @@ if __name__=='__main__':
 Docstring_TestMisfit="""
 if __name__=='__main__':
     #
-    # Tests misfit functions
+    # Checks the correctness of the fast (optimized) misfit function
+    # implementations against a simple pure Python implementation
     #
+    # In the code, these implementations correspond to the following
+    #
+    #   optimization_level=0: simple pure Python
+    #   optimization_level=1: fast pure Python
+    #   optimization_level=2: fast Python/C
+    #
+    # (Note that the `optimization_level` keyword argument does not correspond
+    # at all to C compiler optimization flags.  For example, the NumPy binaries
+    # called by the simple pure Python misfit function are probably compiled 
+    # using a nonzero optimization level?)
+    #
+    # In our own tests, we observe that the two pure Python implementations 
+    # agree almost exactly.
+    #
+    # However, the pure Python and Python/C results may differ by as much as 
+    # 0.1 percent, presumably as a result of differences in the way that
+    # floating-point error accumulates in the sum over residuals.
+    # Further work is required to better understand this issue.
+    #
+    # Possibly relevant is the fact that C extensions are compiled with
+    # `-Ofast` flag, as specified in `setup.py`.
+    #
+
 """
 
 
@@ -860,9 +884,18 @@ Main_TestMisfit="""
     results_2 = misfit_bw(
         data_bw, greens_bw, grid, optimization_level=2)
 
-    print(results_0.max())
-    print(results_1.max())
-    print(results_2.max())
+    print('  optimization level:  0\\n', 
+          '  argmin:  %d\\n' % results_0.min(), 
+          '  min:     %e\\n\\n' % results_0.min())
+
+    print('  optimization level:  1\\n', 
+          '  argmin:  %d\\n' % results_1.min(), 
+          '  min:     %e\\n\\n' % results_1.min())
+
+    print('  optimization level:  2\\n', 
+          '  argmin:  %d\\n' % results_2.min(), 
+          '  min:     %e\\n\\n' % results_2.min())
+
     print('')
 
 
@@ -877,10 +910,18 @@ Main_TestMisfit="""
     results_2 = misfit_sw(
         data_sw, greens_sw, grid, optimization_level=2)
 
-    print(results_0.max())
-    print(results_1.max())
-    print(results_2.max())
-    print('')
+    print('  optimization level:  0\\n', 
+          '  argmin:  %d\\n' % results_0.min(), 
+          '  min:     %e\\n\\n' % results_0.min())
+
+    print('  optimization level:  1\\n', 
+          '  argmin:  %d\\n' % results_1.min(), 
+          '  min:     %e\\n\\n' % results_1.min())
+
+    print('  optimization level:  2\\n', 
+          '  argmin:  %d\\n' % results_2.min(), 
+          '  min:     %e\\n\\n' % results_2.min())
+
 
 """
 
@@ -1250,7 +1291,7 @@ if __name__=='__main__':
             replace(
             Imports,
             ))
-        file.write(Docstring_TestGridSearch_DoubleCoupleMagnitudeDepth)
+        file.write(Docstring_TestMisfit)
         file.write(ArgparseDefinitions)
         file.write(Paths_FK)
         file.write(

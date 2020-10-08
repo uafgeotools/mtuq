@@ -30,7 +30,9 @@ def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
 
     .. rubric :: Usage
 
-    Use ``get(i)`` to return the i-th moment tensor as a vector
+    Use ``get(i)`` to return the i-th moment tensor as a `MomentTensor` object
+
+    Use ``get(i).as_vector()`` to return the i-th moment tensor as a vector
     `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
 
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
@@ -72,7 +74,9 @@ def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20, tightness
 
     .. rubric :: Usage
 
-    Use ``get(i)`` to return the i-th moment tensor as a vector
+    Use ``get(i)`` to return the i-th moment tensor as a `MomentTensor` object
+
+    Use ``get(i).as_vector()`` to return the i-th moment tensor as a vector
     `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
 
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
@@ -100,7 +104,9 @@ def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
 
     .. rubric :: Usage
 
-    Use ``get(i)`` to return the i-th moment tensor as a vector
+    Use ``get(i)`` to return the i-th moment tensor as a `MomentTensor` object
+
+    Use ``get(i).as_vector()`` to return the i-th moment tensor as a vector
     `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
 
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary
@@ -135,7 +141,9 @@ def DoubleCoupleGridRegular(magnitudes=[1.], npts_per_axis=40):
 
     .. rubric :: Usage
 
-    Use ``get(i)`` to return the i-th moment tensor as a vector
+    Use ``get(i)`` to return the i-th moment tensor as a `MomentTensor` object
+
+    Use ``get(i).as_vector()`` to return the i-th moment tensor as a vector
     `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
 
     Use ``get_dict(i)`` to return the i-th moment tensor as dictionary

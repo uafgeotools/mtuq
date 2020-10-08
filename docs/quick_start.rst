@@ -20,15 +20,15 @@ Serial example
 
 The simplest example is `SerialGridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  After running the script, users can check their output against this `expected result <https://github.com/rmodrak/mtbench/blob/figures/Silwal2016_syngine/20090407201255351.png>`_.
 
-Because the serial example lacks MPI directives, it is more readable more than the others.  A typical runtime is about 60 seconds.  For faster results, `GridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple.py>`_ runs the same inversion in parallel.
+A typical runtime is about 60 seconds.  For faster results, `GridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple.py>`_ runs the same inversion in parallel.
 
 
 Parallel examples
 -----------------
 
-All the other examples contain MPI directives for faster evaluation on parallel systems.
+All the other examples include MPI parallelization for faster evaluation on parallel systems.
 
-To see if MPI executables and libraries are present in your environment, start by checking if `mpirun` is on the system path.  If necessary, ask a system administrator for assistance installing or configuring MPI.
+To see if MPI executables and libraries are present, start by checking if `mpirun` is on the system path.  If necessary, ask a system administrator for assistance installing or configuring MPI.
 
 If MPI is present, run the parallel examples as follows:
 
@@ -37,7 +37,7 @@ If MPI is present, run the parallel examples as follows:
    mpirun -n <nproc> python ./<name_of_example>
 
 
-If MPI is not present, users can still run any example by invoking it directly, but any parallelization speedup will be lost.
+Note that the examples will still work if invoked without `mpirun`, but running times will be longer.
 
 
 

@@ -1,6 +1,6 @@
 # mtuq
 
-MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, drawing on ObsPy, instaseis, xarray and pandas data structures.
+MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, including full moment tensor and double couple cases.
 
 
 ## Misfit evaluation

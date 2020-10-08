@@ -8,7 +8,7 @@ import numpy as np
 import time
 from copy import deepcopy
 from mtuq.misfit.level1 import correlate
-from mtuq.util.math import to_mij, to_xyz
+from mtuq.util.math import to_mij, to_rtp
 from mtuq.util.signal import get_components, get_time_sampling
 from mtuq.misfit import c_ext_L2
 
@@ -244,7 +244,7 @@ def _to_array(sources):
             ))
 
     elif _type(dims)=='Force':
-        return np.ascontiguousarray(to_xyz(
+        return np.ascontiguousarray(to_rtp(
             df['F0'].to_numpy(),
             df['phi'].to_numpy(),
             df['h'].to_numpy(),
