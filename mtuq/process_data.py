@@ -248,7 +248,7 @@ class ProcessData(object):
 
         if self.window_type:
             if self.window_length is None:
-                 raise ValueError('Bad parameter: window_length')
+                 raise ValueError('Must be defined: window_length')
 
             assert self.window_length > 0
 
