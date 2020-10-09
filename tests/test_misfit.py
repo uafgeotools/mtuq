@@ -17,30 +17,29 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 if __name__=='__main__':
     #
     # Checks the correctness of the fast (optimized) misfit function
-    # implementations against a simple pure Python implementation
-    #
-    # In the code, these implementations correspond to the following
+    # implementations against a simple pure Python implementation.
+    # These implementations correspond to:
     #
     #   optimization_level=0: simple pure Python
     #   optimization_level=1: fast pure Python
     #   optimization_level=2: fast Python/C
     #
-    # (Note that the `optimization_level` keyword argument does not correspond
-    # at all to C compiler optimization flags.  For example, the NumPy binaries
-    # called by the simple pure Python misfit function are probably compiled 
-    # using a nonzero optimization level?)
-    #
-    # In our own tests, we observe that the two pure Python implementations 
-    # agree almost exactly.
-    #
-    # However, the pure Python and Python/C results may differ by as much as 
-    # 0.1 percent, presumably as a result of differences in the way that
-    # floating-point error accumulates in the sum over residuals.
-    # Further work is required to better understand this issue.
+    # In running the test in our environment, we observe that the two pure 
+    # Python implementations agree almost exactly.  On the other hand, the
+    # pure Python and Python/C results differ by as much as 0.1 percent, 
+    # presumably as a result of differences in the way that floating-point
+    # error accumulates in the sum over residuals. Further work is required to 
+    # understand this better
     #
     # Possibly relevant is the fact that C extensions are compiled with
     # `-Ofast` flag, as specified in `setup.py`.
     #
+    # Note that the `optimization_level` keyword argument does not correspond
+    # at all to C compiler optimization flags.  For example, the NumPy binaries
+    # called by the simple pure Python misfit function are probably compiled 
+    # using a nonzero optimization level?
+    #
+
 
 
     # by default, the script runs with figure generation and error checking
