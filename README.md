@@ -1,6 +1,10 @@
 # mtuq
 
-MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data, including full moment tensor and double couple cases.
+MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data.  
+
+Use cases include full moment tensor anaysis, constrained moment tensor analysis, and many other cases involving hypocenter, depth, wavelet, and force parameters.
+
+To provide these capbilities, MTUQ draws heavily on ObsPy, instaseis, and pandas data structures.
 
 
 ## Misfit evaluation
@@ -45,6 +49,8 @@ The package has been tested against [legacy Perl/C codes](https://github.com/uaf
 [Acquiring seismic data](https://uafgeotools.github.io/mtuq/user_guide/02.html)
 
 [Acquiring Green's functions](https://uafgeotools.github.io/mtuq/user_guide/03.html)
+
+[Data processing](https://uafgeotools.github.io/mtuq/user_guide/04.html)
 
 [Library reference](https://uafgeotools.github.io/mtuq/library/index.html)
 
