@@ -2,15 +2,13 @@
 Acquiring Green's functions
 ===========================
 
-The response of a medium to an impulsive source is called a Green's function.  This page describes the role of Green's functions in source inversions and the types of Green's functions supported by MTUQ, as well as how they can be obtained.
+The response of a medium to an impulsive source is called a Green's function.  This page describes the role of Green's functions in source inversions, the types of Green's functions supported by MTUQ, and how these types can be obtained.
 
 
 Role of Green's functions
 -------------------------
 
-Green's functions describe the response of a medium to simple impulsive sources.  By combining these simple impulse responses, it is possible to obtain synthetics from much more complex sources.
-
-In practice, Green's functions are useful because they provide computaional savings.  It's generally less expensive to generate synthetics by combining Green's functions than it is to perform on-the-fly wavefield simulations.
+By combining Green's functions (which represent the medium response to simple impulsive sources), it is possible to obtain synthetics from any source, however complex. This type of linear combination is useful because it provides computaional savings: it's generally less expensive to generate synthetics by combining Green's functions than it is to perform on-the-fly wavefield simulations.
 
 
 `GreensTensor` objects
