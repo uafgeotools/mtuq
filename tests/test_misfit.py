@@ -173,15 +173,15 @@ if __name__=='__main__':
         data_bw, greens_bw, grid, optimization_level=2)
 
     print('  optimization level:  0\n', 
-          '  argmin:  %d\n' % results_0.min(), 
+          '  argmin:  %d\n' % results_0.argmin(), 
           '  min:     %e\n\n' % results_0.min())
 
     print('  optimization level:  1\n', 
-          '  argmin:  %d\n' % results_1.min(), 
+          '  argmin:  %d\n' % results_1.argmin(), 
           '  min:     %e\n\n' % results_1.min())
 
     print('  optimization level:  2\n', 
-          '  argmin:  %d\n' % results_2.min(), 
+          '  argmin:  %d\n' % results_2.argmin(), 
           '  min:     %e\n\n' % results_2.min())
 
     print('')
@@ -199,15 +199,15 @@ if __name__=='__main__':
         data_sw, greens_sw, grid, optimization_level=2)
 
     print('  optimization level:  0\n', 
-          '  argmin:  %d\n' % results_0.min(), 
+          '  argmin:  %d\n' % results_0.argmin(), 
           '  min:     %e\n\n' % results_0.min())
 
     print('  optimization level:  1\n', 
-          '  argmin:  %d\n' % results_1.min(), 
+          '  argmin:  %d\n' % results_1.argmin(), 
           '  min:     %e\n\n' % results_1.min())
 
     print('  optimization level:  2\n', 
-          '  argmin:  %d\n' % results_2.min(), 
+          '  argmin:  %d\n' % results_2.argmin(), 
           '  min:     %e\n\n' % results_2.min())
 
 
