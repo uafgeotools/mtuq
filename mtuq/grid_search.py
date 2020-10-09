@@ -24,8 +24,8 @@ def grid_search(data, greens, misfit, origins, sources,
     `misfit(data, greens.select(origin), source)` over all origins and sources.
 
     If `origins` and `sources` are regularly-spaced, returns an `MTUQDataArray`
-    containing misfit values and corresponding grid points, otherwise, returns
-    an `MTUQDataFrame`.
+    containing misfit values and corresponding grid points. Otherwise, 
+    an `MTUQDataFrame` is returned.
 
 
     .. rubric :: Input arguments
@@ -61,8 +61,8 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``gather`` (`bool`):
-    If `True`, process 0 returns all results and any other processes `None`,
-    otherwise, results are divided evenly among processes
+    If `True`, process 0 returns all results and any other processes return
+    `None`.  Otherwise, results are divided evenly among processes.
     (ignored outside MPI environment)
 
 

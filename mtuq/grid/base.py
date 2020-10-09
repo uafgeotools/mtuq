@@ -51,15 +51,15 @@ class Grid(object):
     Individual grid points can be accessed through the ``get`` and ``get_dict``
     methods.  
 
-    ``get(i)`` returns the i-th grid point as a NumPy array.
+    ``get(i)`` returns the `i`-th grid point as a NumPy array.
 
     If a ``callback`` function is given when creating a grid, then ``get`` 
-    returns the result of applying the callback to the i-th grid point.  This
+    returns the result of applying the callback to the `i`-th grid point.  This
     behavior can be overridden by supplying a callback function as a keyword
     argument to ``get`` itself.  If ``callback`` is ``None``, then no function 
     is applied.
 
-    ``get_dict(i)`` returns the i-th grid point as a dictionary of coordinate
+    ``get_dict(i)`` returns the `i`-th grid point as a dictionary of coordinate
     axis names and coordinate values without applying any callback.
 
     """
@@ -136,13 +136,13 @@ class Grid(object):
 
 
     def get(self, i, **kwargs):
-        """ Returns `i-th` grid point
+        """ Returns `i`-th grid point
 
         .. rubric:: callback functions
 
         If a ``callback`` function was given when creating a grid, then 
         ``get`` returns the result of applying the callback to the 
-        i-th grid point.  This behavior can be overridden by supplying a 
+        `i`-th grid point.  This behavior can be overridden by supplying a 
         callback function as a keyword argument to ``get`` itself.  
         If ``callback`` is ``None``, then no function is applied.
         """
@@ -167,7 +167,7 @@ class Grid(object):
 
 
     def get_dict(self, i):
-        """ Returns `i-th` grid point grid as a dictionary of parameter names 
+        """ Returns `i`-th grid point grid as a dictionary of parameter names 
         and values
         """
         keys = self.dims
@@ -248,15 +248,15 @@ class UnstructuredGrid(object):
     Individual grid points can be accessed through the ``get`` and ``get_dict``
     methods.  
 
-    ``get(i)`` returns the i-th grid point as a NumPy array.
+    ``get(i)`` returns the `i`-th grid point as a NumPy array.
 
     If a ``callback`` function is given when creating an unstructured grid, then
-    ``get`` returns the result of applying the callback to the i-th grid point.
+    ``get`` returns the result of applying the callback to the `i`-th grid point.
     This behavior can be overridden by supplying a callback function as a
     keyword argument to ``get`` itself.  If ``callback`` is ``None``, then no 
     function is applied.
 
-    ``get_dict(i)`` returns the i-th grid point as a dictionary of coordinate
+    ``get_dict(i)`` returns the `i`-th grid point as a dictionary of coordinate
     axis names and coordinate values without applying any callback.
 
 
@@ -320,13 +320,13 @@ class UnstructuredGrid(object):
 
 
     def get(self, i, **kwargs):
-        """ Returns `i-th` grid point
+        """ Returns `i`-th grid point
 
         .. rubric:: callback functions
 
         If a ``callback`` function was given when creating a grid, then 
         ``get`` returns the result of applying the callback to the 
-        i-th grid point.  This behavior can be overridden by supplying a 
+        `i`-th grid point.  This behavior can be overridden by supplying a 
         callback function as a keyword argument to ``get`` itself.  
         If ``callback`` is ``None``, then no function is applied.
 
@@ -351,7 +351,7 @@ class UnstructuredGrid(object):
 
 
     def get_dict(self, i):
-        """ Returns `i-th` grid point as a dictionary of parameter names and
+        """ Returns `i`-th grid point as a dictionary of parameter names and
         values
         """
         keys = self.dims

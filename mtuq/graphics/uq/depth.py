@@ -186,14 +186,6 @@ def _get_depths(origins):
     return np.array(depths)
 
 
-def _get_xy(origins):
-    x, y = [], []
-    for origin in origins:
-        x += [float(origin.offset_x_in_m)]
-        y += [float(origin.offset_y_in_m)]
-    return np.array(x), np.array(y)
-
-
 def _get_sources(sources, indices):
     return [sources.get(index) for index in indices]
 
@@ -266,48 +258,6 @@ def _plot_depth(filename, depths, values, best_sources, title='',
 
     if title:
         pyplot.title(title, fontsize=fontsize)
-
-    pyplot.savefig(filename)
-
-
-def _plot_misfit_xy(filename, x, y, values, title='', labeltype='latlon',
-    add_colorbar=False, add_marker=True, cmap='hot'):
-
-    xlabel, ylabel = _get_labeltype(x, y, labeltype)
-
-    assert len(x)==len(y)==len(values), ValueError
-
-    ux = np.unique(x)
-    uy = np.unique(y)
-    if len(ux)*len(uy)!=len(values):
-        warn('Irregular x-y misfit grid')
-
-    figsize = (6., 6.)
-    pyplot.figure(figsize=figsize)
-
-    pyplot.tricontourf(x, y, values, 100, cmap=cmap)
-
-    if add_marker:
-        idx = values.argmin()
-        coords = x[idx], y[idx]
-
-        pyplot.scatter(*coords, s=250,
-            marker='o',
-            facecolors='none',
-            edgecolors=[0,1,0],
-            linewidths=1.75,
-            )
-
-    if xlabel:
-         pyplot.xlabel(xlabel)
-
-    if ylabel:
-         pyplot.ylabel(ylabel)
-
-    if title:
-        pyplot.title(title)
-
-    pyplot.gca().axis('square')
 
     pyplot.savefig(filename)
 

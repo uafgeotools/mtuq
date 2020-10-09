@@ -20,6 +20,7 @@ User guide
    user_guide/01
    user_guide/02
    user_guide/03
+   user_guide/04
    library/index
 
 
