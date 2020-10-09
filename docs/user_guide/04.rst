@@ -22,7 +22,7 @@ In the first step, the user supplies parameters to create a data processing func
 
 .. code::
 
-    process_data = ProcessData(parameters)
+    process_data = ProcessData(**parameters)
 
 In the second step, an ObsPy stream is given as input and a processed stream returned as output:
 
@@ -31,7 +31,7 @@ In the second step, an ObsPy stream is given as input and a processed stream ret
     processed_stream = process_data(stream)
 
 
-Data processing can also be applied to an entire ``Dataset`` at once:
+Data processing can also be applied to an entire `Dataset` at once:
 
 .. code::
 
@@ -41,7 +41,7 @@ Data processing can also be applied to an entire ``Dataset`` at once:
         processed_data += processed_stream
 
 
-Or, even more succinctly, an entire ``Dataset`` can be processed by:
+Or, more succinctly, an entire `Dataset` can be processed by:
 
 .. code::
 
