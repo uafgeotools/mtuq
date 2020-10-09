@@ -31,12 +31,12 @@ def ForceGridRegular(magnitudes_in_N=1., npts_per_axis=80):
 
     .. rubric :: Usage
 
-    Use ``get(i)`` to return the i-th force as a `Force` object
+    Use ``get(i)`` to return the `i`-th force as a `Force` object
 
-    Use ``get(i).as_vector()`` to return the i-th force as a NumPy array
+    Use ``get(i).as_vector()`` to return the `i`-th force as a NumPy array
     `Fr, Ft, Fp`
 
-    Use ``get_dict(i)`` to return the i-th force as dictionary
+    Use ``get_dict(i)`` to return the `i`-th force as dictionary
     of parameters `F0, phi, h`
 
     """
@@ -59,12 +59,12 @@ def ForceGridRandom(magnitudes_in_N=1., npts=10000):
 
     .. rubric :: Usage
 
-    Use ``get(i)`` to return the i-th force as a `Force` object
+    Use ``get(i)`` to return the `i`-th force as a `Force` object
 
-    Use ``get(i).as_vector()`` to return the i-th force as a NumPy array
+    Use ``get(i).as_vector()`` to return the `i`-th force as a NumPy array
     `Fr, Ft, Fp`
 
-    Use ``get_dict(i)`` to return the i-th force as dictionary
+    Use ``get_dict(i)`` to return the `i`-th force as dictionary
     of parameters `F0, phi, h`
 
     """

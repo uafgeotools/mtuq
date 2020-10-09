@@ -167,7 +167,7 @@ class Grid(object):
 
 
     def get_dict(self, i):
-        """ Returns ``i`-th` grid point grid as a dictionary of parameter names 
+        """ Returns `i`-th grid point grid as a dictionary of parameter names 
         and values
         """
         keys = self.dims
