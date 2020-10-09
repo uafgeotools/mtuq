@@ -2,7 +2,7 @@
 
 MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data.  
 
-Use cases include full moment tensor anaysis, constrained moment tensor analysis, and many other cases involving hypocenter, depth, wavelet, and force parameters.
+Use cases include full moment tensor anaysis, constrained moment tensor analysis, and many other possibilities involving moment tensor, force, hypocenter, depth, and wavelet parameters.
 
 To provide these capbilities, MTUQ draws heavily on ObsPy, instaseis, and pandas data structures.
 
