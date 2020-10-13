@@ -304,8 +304,6 @@ def _is_mpi_env():
 def _to_dataarray(origins, sources, values):
     """ Converts grid_search inputs to DataArray
     """
-    from mtuq.grid import Grid
-
     origin_dims = ('origin_idx',)
     origin_coords = [np.arange(len(origins))]
     origin_shape = (len(origins),)
