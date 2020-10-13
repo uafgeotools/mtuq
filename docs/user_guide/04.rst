@@ -45,7 +45,7 @@ Or, more succinctly, an entire `Dataset` can be processed by:
 
 .. code::
 
-    processed_dataset = dataset.map(function)
+    processed_dataset = dataset.map(process_data)
 
 
 
