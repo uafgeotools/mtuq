@@ -14,7 +14,7 @@ from mtuq.util.signal import cut, get_arrival, m_to_deg
  
 
 class ProcessData(object):
-    """ Performs filtering, windowing and other operations on seismic data
+    """ An attempt at a one-size-fits-all data processing class
 
     .. rubric :: Usage
 

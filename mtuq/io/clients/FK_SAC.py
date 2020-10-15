@@ -31,7 +31,7 @@ CHANNELS = [
 
 
 class Client(ClientBase):
-    """  FK databaset client
+    """  FK database client
 
     .. rubric:: Usage
 

@@ -17,7 +17,7 @@ from mtuq.util.signal import get_distance_in_deg, resample
 
 class Client(ClientBase):
     """ 
-    AxiSEM NetCDF database client (based on instaseis)
+    AxiSEM NetCDF database client (based on `instaseis <https://instaseis.net/>`_)
 
 
     .. rubric:: Usage

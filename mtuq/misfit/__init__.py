@@ -23,13 +23,13 @@ class Misfit(object):
     .. code::
 
         function_handle = Misfit(**parameters)
-        results = function_handle(data, greens, sources)
+        values = function_handle(data, greens, sources)
 
     In the first step, the user supplies parameters such as the type of norm
     (see below for detailed argument descriptions).
 
     In the second step, the user supplies data, Green's functions, and sources.
-    Synthetics are then generated and compared with data, and an array of 
+    Synthetics are then generated and compared with data, and a NumPy array of 
     misfit values is returned of the same length as `sources`.
 
 
