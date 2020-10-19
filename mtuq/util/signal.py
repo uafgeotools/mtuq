@@ -151,6 +151,16 @@ def check_time_sampling(stream):
 
 
 def check_padding(dataset, time_shift_min, time_shift_max):
+    # For greatest accuracy, Green's functions must be longer than data
+    # (i.e., Green's functions must begin +time_shift_max before data and
+    # end -time_shift_min after data.) 
+    #
+    # To achieve this, users can supply left and right padding lengths
+    # via the `padding` parameter when calling `mtuq.ProcessData`.
+    #
+    # If padding lengths were not supplied, then Green's functions will be
+    # padded with zeros, which may result in less accurate time shifts
+
     for stream in dataset:
         _, dt = get_time_sampling(stream)
 
