@@ -26,13 +26,16 @@ def misfit(data, greens, sources, norm, time_shift_groups,
         greens[_j]._set_components(get_components(d))
 
     #
-    # begin iterating over sources
+    # iterate over sources
     #
     for _i, source in enumerate(sources):
 
         # optional progress message
         msg_handle()
 
+        #
+        # iterate over stations
+        #
         for _j, d in enumerate(data):
 
             components = greens[_j].components
@@ -53,9 +56,6 @@ def misfit(data, greens, sources, norm, time_shift_groups,
             # array to hold cross correlations
             corr = np.zeros(npts_padding+1)
 
-            #
-            # evaluate misfit for all components at given station
-            # 
             for group in time_shift_groups:
                 # Finds the time-shift between data and synthetics that yields
                 # the maximum cross-correlation value across all components in 
