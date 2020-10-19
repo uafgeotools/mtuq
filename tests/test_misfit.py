@@ -42,17 +42,6 @@ if __name__=='__main__':
 
 
 
-    # by default, the script runs with figure generation and error checking
-    # turned on
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--no_checks', action='store_true')
-    parser.add_argument('--no_figures', action='store_true')
-    args = parser.parse_args()
-    run_checks = (not args.no_checks)
-    run_figures = (not args.no_figures)
-
-
     path_greens=  fullpath('data/tests/benchmark_cap/greens/scak')
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
@@ -185,6 +174,8 @@ if __name__=='__main__':
 
     print('')
 
+    assert results_0.argmin()==results_1.argmin()==results_2.argmin()
+
 
     print('Evaluating surface wave misfit...\n')
 
@@ -208,5 +199,7 @@ if __name__=='__main__':
     print('  optimization level:  2\n', 
           '  argmin:  %d\n' % results_2.argmin(), 
           '  min:     %e\n\n' % results_2.min())
+
+    assert results_0.argmin()==results_1.argmin()==results_2.argmin()
 
 
