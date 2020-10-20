@@ -12,7 +12,7 @@ import numpy as np
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, \
+from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning, \
     gmt_plot_misfit_lune, gmt_plot_likelihood_lune
 from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular_grid
 

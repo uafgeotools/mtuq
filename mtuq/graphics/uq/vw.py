@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics._gmt import _nothing_to_plot
+from mtuq.graphics.uq._gmt import _nothing_to_plot
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util.math import closed_interval, open_interval
 

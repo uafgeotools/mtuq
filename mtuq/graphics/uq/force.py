@@ -10,7 +10,7 @@ from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 
-from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, \
+from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning, \
     gmt_plot_misfit_force, gmt_plot_likelihood_force
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath
