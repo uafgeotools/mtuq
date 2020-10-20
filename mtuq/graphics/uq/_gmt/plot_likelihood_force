@@ -48,7 +48,6 @@ subtitle="${10}"
 proj_arg="-JH0/6i"
 area_arg="-R-180/180/-90/90"
 range_arg="-T${zmin}/${zmax}/${dz}"
-echo $range_arg
 
 ps="${out}.ps"
 
@@ -75,10 +74,14 @@ add_WSE_arcs_labels $ps $proj_arg $area_arg
 add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 
 
+# optional colorbar label
+colorbar_label_str=""
+colorbar_label_arg=$( get_colorbar_label_arg "$colorbar_label_str" )
+
+
 # display colorbar
-gmt gmtset FONT_ANNOT 6p
 if [ $add_colorbar -eq 1 ]; then
-    gmt psscale -Ctmp_$out.cpt -D2.25/-0.333+w1.5/0.175+h -Baf1+l"Likelihood" -O -K >> $ps
+    gmt psscale -Ctmp_$out.cpt -D2.25/-0.333+w1.5/0.175+h -Baf1"${colorbar_label_arg}" -O -K >> $ps
 fi
 
 

@@ -243,7 +243,7 @@ function add_title {
 }
 
 
-function get_fmt_arg {
+function get_image_format_arg {
     case $1 in
        BMP) echo -Tb;;
        EPS) echo -Te;;
@@ -257,12 +257,21 @@ function get_fmt_arg {
 }
 
 
+function get_colorbar_label_arg {
+    if [ ! -z "$label" ]; then
+        echo "+l${1}"
+    else
+        echo ""
+    fi
+
+}
+
 function custom_psconvert {
     in=$1
     out=$2
     fmt=$3
 
-    fmt_arg=$(get_fmt_arg $fmt)
+    fmt_arg=$(get_image_format_arg $fmt)
     gmt psconvert ${in} -F${out} -A $fmt_arg
 
 }

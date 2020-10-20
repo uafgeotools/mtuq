@@ -73,9 +73,14 @@ add_WSE_arcs_labels $ps $proj_arg $area_arg
 add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 
 
+# optional colorbar label
+colorbar_label_str=""
+colorbar_label_arg=$( get_colorbar_label_arg "$colorbar_label_str" )
+
+
 # display colorbar
 if [ $add_colorbar -eq 1 ]; then
-    gmt psscale -Ctmp_$out.cpt -D2.25/-0.333+w1.5/0.175+h -Bf1 -O -K >> $ps
+    gmt psscale -Ctmp_$out.cpt -D2.25/-0.333+w1.5/0.175+h -Baf1"${colorbar_label_arg}" -O -K >> $ps
 fi
 
 

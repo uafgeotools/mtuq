@@ -2,7 +2,7 @@
 
 
 # USAGE
-#   plot_likelihood_lune in out filetype zmin zmax dz add_colorbar add_marker [title] [subtitle]
+#   plot_misfit_lune in out filetype zmin zmax dz add_colorbar add_marker [title] [subtitle]
 #
 #   Plots lon,lat,z values from ASCII file on eigenvalue lune
 #
@@ -19,7 +19,7 @@
 #    SUBTITLE - optional subtitle string
 #
 # EXAMPLE
-#    plot_likelihood_lune likelihood.xyz likelihood.png PNG 0. 1. 0.01 1 1 "Maximum likelihood" "Z component"
+#    plot_misfit_lune misfit.xyz misfit.png PNG 0. 1. 0.01 1 1 "Misfit" "Z component"
 
 
 
@@ -30,7 +30,7 @@ source _gmt_functions
 
 # parse input arguments
 if [ $# -ne 10 ] ; then
-    echo "plot_likelihood_lune: bad input arguments"
+    echo "plot_misfit_lune: bad input arguments"
     exit -1
 fi
 
@@ -61,8 +61,7 @@ gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -K > $ps
 
 
 # plot misfit values
-gmt makecpt -Chot -G0.25/1. -Ic -D > tmp0_$out.cpt
-gmt makecpt -Ctmp0_$out.cpt -D $range_arg > tmp_$out.cpt
+gmt makecpt -Cpanoply -D $range_arg > tmp_$out.cpt
 gmt pscontour $in $proj_arg $area_arg -Ctmp_$out.cpt -I -N -A- -O -K >> $ps
 
 
@@ -74,18 +73,20 @@ add_lune_arcs $ps $proj_arg $area_arg
 add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 
 
+# optional colorbar label
+colorbar_label_str=""
+colorbar_label_arg=$( get_colorbar_label_arg "$colorbar_label_str" )
+
+
 # display colorbar
 if [ $add_colorbar -eq 1 ]; then
-    # bottom left
-    #gmt psscale -Ctmp_$out.cpt -D2.8/0.5+w1/0.2 -Bf1 -O -K >> $ps
-    # bottom center
-    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h -Baf1+l"Likelihood" -O -K >> $ps
+    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h -Baf1"$colorbar_label_arg" -O -K >> $ps
 fi
 
 
 # display marker
 if [ $add_marker -eq 1 ]; then
-    marker_coords="$(idxmax $in)"
+    marker_coords="$(idxmin $in)"
     add_marker $ps $proj_arg $area_arg "$marker_coords"
 fi
 
