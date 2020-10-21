@@ -32,13 +32,6 @@ def plot_misfit_force(filename, ds, add_colorbar=True, add_marker=True, title=No
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Forces and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
     """
     _check(ds)
     ds = ds.copy()
@@ -77,13 +70,6 @@ def plot_likelihood_force(filename, ds, sigma=None,
 
     ``title`` (`str`):
     Optional figure title
-
-
-    .. rubric :: Usage
-
-    Forces and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
 
     """
     _check(ds)
@@ -129,13 +115,6 @@ def plot_marginal_force(filename, ds, sigma=None,
     Optional figure title
 
 
-    .. rubric :: Usage
-
-    Forces and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-
     """
     _check(ds)
     ds = ds.copy()
@@ -162,17 +141,13 @@ def plot_marginal_force(filename, ds, sigma=None,
 
 
 
+# utility functions
+
 def _check(ds):
     """ Checks data structures
     """
     if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
-
-
-
-#
-# utilities for irregularly-spaced grids
-#
 
 
 def _bin(df, handle, npts_phi=60, npts_h=30):

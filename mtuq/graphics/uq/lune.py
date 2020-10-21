@@ -14,10 +14,18 @@ from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning, \
     gmt_plot_misfit_lune, gmt_plot_likelihood_lune
+from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit_lune(filename, ds, add_colorbar=True, add_marker=True, title=''):
+def plot_misfit_lune(filename, ds, 
+    title='',
+    callback=None,
+    add_colorbar=True, 
+    add_marker=True,
+    colorbar_label=None, 
+    show_beachballs=False):
+
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
 
@@ -27,32 +35,14 @@ def plot_misfit_lune(filename, ds, add_colorbar=True, add_marker=True, title='')
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
+    Data structure containing moment tensors and corresponding misfit values
 
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-
-    .. note ::
-
-      This utility requires Generic Mapping Tools >=5.
-
-      To display information about supported image formats:
-      `gmt psconvert --help`.
-
-      For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
-
-
     """
+    _check(ds)
     ds = ds.copy()
-
 
     if issubclass(type(ds), DataArray):
         ds = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
@@ -60,11 +50,12 @@ def plot_misfit_lune(filename, ds, add_colorbar=True, add_marker=True, title='')
         delta = to_delta(ds.coords['w'])
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
         gamma, delta, values = _bin(ds, lambda ds: ds.min())
 
+    if callback:
+        values = callback()
 
     gmt_plot_misfit_lune(filename, gamma, delta, values, 
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)
@@ -90,27 +81,11 @@ def plot_likelihood_lune(filename, ds, sigma=None,
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-
-    .. note ::
-
-      This utility requires Generic Mapping Tools >=5.
-
-      To display information about supported image formats:
-      `gmt psconvert --help`.
-
-      For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
-
     """
     assert sigma is not None
-    ds = ds.copy()
 
+    _check(ds)
+    ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
@@ -119,19 +94,15 @@ def plot_likelihood_lune(filename, ds, sigma=None,
         delta = to_delta(ds.coords['w'])
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = np.exp(-ds/(2.*sigma**2))
         ds = ds.reset_index()
         gamma, delta, values = _bin(ds, lambda ds: ds.max())
 
-
     values /= values.sum()
 
     gmt_plot_likelihood_lune(filename, gamma, delta, values,
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)
-
-
 
 
 def plot_marginal_lune(filename, ds, sigma=None,
@@ -153,27 +124,11 @@ def plot_marginal_lune(filename, ds, sigma=None,
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-        
-    .. note ::
-
-      This utility requires Generic Mapping Tools >=5.
-
-      To display information about supported image formats:
-      `gmt psconvert --help`.
-
-      For a matplotlib-only alternative: `mtuq.graphics.plot_misfit_vw`.
- 
     """
     assert sigma is not None
-    ds = ds.copy()
 
+    _check(ds)
+    ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
@@ -181,7 +136,6 @@ def plot_marginal_lune(filename, ds, sigma=None,
         gamma = to_gamma(ds.coords['v'])
         delta = to_delta(ds.coords['w'])
         values = ds.values.transpose()
-
 
     elif issubclass(type(ds), DataFrame):
         ds = np.exp(-ds/(2.*sigma**2))
@@ -196,9 +150,14 @@ def plot_marginal_lune(filename, ds, sigma=None,
 
 
 
-#
-# utilities for irregularly-spaced grids
-#
+# utility functions
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
+
 
 def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
     """ Bins DataFrame into rectangular cells

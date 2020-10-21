@@ -43,12 +43,6 @@ def plot_misfit_vw(filename, ds, title=''):
     Optional figure title
 
 
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
     """
     _check(ds)
     ds = ds.copy()
@@ -85,12 +79,6 @@ def plot_likelihood_vw(filename, ds, sigma=None, title=''):
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
 
     """
     assert sigma is not None
@@ -137,13 +125,6 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
     Optional figure title
 
 
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-
     """
     assert sigma is not None
     _check(ds)
@@ -170,44 +151,6 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
     values /= vw_area
 
     _plot_likelihood_vw(filename, v, w, values, title=title)
-
-
-
-def _check(ds):
-    """ Checks data structures
-    """
-    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
-        raise TypeError("Unexpected grid format")
-
-
-
-#
-# utilities for irregularly-spaced grids
-#
-
-
-def _bin(df, handle, npts_v=20, npts_w=40):
-    """ Bins DataFrame into rectangular cells
-    """
-    # define centers of cells
-    centers_v = open_interval(-1./3., 1./3., npts_v)
-    centers_w = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
-
-    # define corners of cells
-    v = closed_interval(-1./3., 1./3., npts_v+1)
-    w = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w+1)
-
-    binned = np.empty((npts_w, npts_v))
-    for _i in range(npts_w):
-        for _j in range(npts_v):
-            # which grid points lie within cell (i,j)?
-            subset = df.loc[
-                df['v'].between(v[_j], v[_j+1]) &
-                df['w'].between(w[_i], w[_i+1])]
-
-            binned[_i, _j] = handle(subset[0])
-
-    return centers_v, centers_w, binned
 
 
 
@@ -297,8 +240,40 @@ def _plot_vw(v, w, values, add_colorbar=False, cmap='hot', title=None):
 
 
 
-def _centers_to_edges(v):
+# utility functions
 
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
+
+
+def _bin(df, handle, npts_v=20, npts_w=40):
+    """ Bins DataFrame into rectangular cells
+    """
+    # define centers of cells
+    centers_v = open_interval(-1./3., 1./3., npts_v)
+    centers_w = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
+
+    # define corners of cells
+    v = closed_interval(-1./3., 1./3., npts_v+1)
+    w = closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w+1)
+
+    binned = np.empty((npts_w, npts_v))
+    for _i in range(npts_w):
+        for _j in range(npts_v):
+            # which grid points lie within cell (i,j)?
+            subset = df.loc[
+                df['v'].between(v[_j], v[_j+1]) &
+                df['w'].between(w[_i], w[_i+1])]
+
+            binned[_i, _j] = handle(subset[0])
+
+    return centers_v, centers_w, binned
+
+
+def _centers_to_edges(v):
     if issubclass(type(v), DataArray):
         v = v.values.copy()
     else:
@@ -310,5 +285,4 @@ def _centers_to_edges(v):
     v[-1] = v[-2] + dv
 
     return v
-
 
