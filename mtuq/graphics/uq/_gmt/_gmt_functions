@@ -257,14 +257,35 @@ function get_image_format_arg {
 }
 
 
-function get_colorbar_label_arg {
-    if [ ! -z "$1" ]; then
-        echo "+l${1}"
-    else
+function get_colorbar_arg1 {
+    # constructs the main colorbar label
+
+    label=$1
+
+    colorbar_arg1="-Bxaf1"
+
+    if [ ! -z "$label" ]; then
+        colorbar_arg1="${colorbar_arg1}+l${label}"
+    fi
+
+    echo "$colorbar_arg1"
+
+}
+
+
+function get_colorbar_arg2 {
+    # constructs scaling factor 10^exp
+
+    exp=$1
+
+    if [ $exp -ne 0 ]; then
+        echo "-By+l\226 10@+${exp}@+"
+     else
         echo ""
     fi
 
 }
+
 
 function custom_psconvert {
     in=$1

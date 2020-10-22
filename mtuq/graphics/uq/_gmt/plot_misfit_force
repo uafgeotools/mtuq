@@ -2,12 +2,12 @@
 
 
 # USAGE
-#   plot_misfit_force in out filetype zmin zmax dz add_colorbar add_marker [title] [subtitle]
+#   plot_misfit_force in out filetype zmin zmax dz exp add_colorbar add_marker [title] [subtitle]
 #
-#   Plots lon,lat,z values from ASCII file on eigenvalue lune
+#   Plots lon,lat,msifit values from ASCII file on eigenvalue lune
 #
 # ARGUMENTS
-#    IN - name of ASCII file containing lon,lat,z values
+#    IN - name of ASCII file containing lon,lat,misfit values
 #    OUT - name of output image
 #    FILETYPE - format of output image (BMP,EPS,PDF,JPG,PNG,PPM,SVG,TIFF)
 #    ZMIN - colorbar minimum
@@ -19,7 +19,7 @@
 #    SUBTITLE - optional subtitle string
 #
 # EXAMPLE
-#    plot_misfit_force misfit.xyz misfit.png PNG 0. 1. 0.01 1 1 "Misfit" "Z component"
+#    plot_misfit_force misfit.xyz misfit.png PNG 0. 1. 0.01 0 1 1 "Misfit" "Z component"
 
 
 
@@ -29,7 +29,7 @@ source _gmt_functions
 
 
 # parse input arguments
-if [ $# -ne 10 ] ; then
+if [ $# -ne 11 ] ; then
     echo "plot_misfit_force: bad input arguments"
     exit -1
 fi
@@ -40,10 +40,13 @@ filetype=$3
 zmin=$4
 zmax=$5
 dz=$6
-add_colorbar=$7
-add_marker=$8
-title="$9"
-subtitle="${10}"
+exp=$7
+add_colorbar=$8
+add_marker=$9
+title="${10}"
+subtitle="${11}"
+colorbar_label=""
+
 
 proj_arg="-JH0/6i"
 area_arg="-R-180/180/-90/90"
@@ -73,14 +76,13 @@ add_WSE_arcs_labels $ps $proj_arg $area_arg
 add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 
 
-# optional colorbar label
-colorbar_label_str=""
-colorbar_label_arg=$( get_colorbar_label_arg "$colorbar_label_str" )
-
-
 # display colorbar
+if [ $add_colorbar -ne 0 ]; then
+    arg1=$( get_colorbar_arg1 "$colorbar_label" )
+    arg2=$( get_colorbar_arg2 $exp )
+fi
 if [ $add_colorbar -eq 1 ]; then
-    gmt psscale -Ctmp_$out.cpt -D2.25/-0.333+w1.5/0.175+h -Baf1"${colorbar_label_arg}" -O -K >> $ps
+    gmt psscale -Ctmp_$out.cpt -D2.25/-0.333+w1.5/0.175+h "$arg1" "$arg2" -O -K >> $ps
 fi
 
 

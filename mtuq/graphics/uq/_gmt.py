@@ -16,15 +16,16 @@ def gmt_plot_misfit_lune(filename, lon, lat, values, **kwargs):
     if _nothing_to_plot(values):
         return
 
-    lon, lat, values = _parse_values(lon, lat, values)
-    values /= values.max()
+    lon, lat =  _parse_lonlat(lon,lat)
+    values, zmin, zmax, exp = _parse_values(values)
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_misfit_lune'),
         filename, 
         lon, lat, values, 
-        zmin=values.min(),
-        zmax=values.max(), 
-        dz=(values.max()-values.min())/20.,
+        zmin=zmin,
+        zmax=zmax,
+        dz=(zmax-zmin)/20.,
+        exp=exp,
         **kwargs)
 
 
@@ -33,14 +34,16 @@ def gmt_plot_likelihood_lune(filename, lon, lat, values, **kwargs):
     if _nothing_to_plot(values):
         return
 
-    lon, lat, values = _parse_values(lon, lat, values)
+    lon, lat =  _parse_lonlat(lon,lat)
+    values, zmin, zmax, exp = _parse_values(values)
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_likelihood_lune'),
         filename, 
         lon, lat, values,
-        zmin=values.min(),
-        zmax=values.max(), 
-        dz=(values.max()-values.min())/10.,
+        zmin=zmin,
+        zmax=zmax,
+        dz=(zmax-zmin)/10.,
+        exp=exp,
         **kwargs)
 
 
@@ -52,15 +55,16 @@ def gmt_plot_misfit_force(filename, phi, h, values, **kwargs):
     lat = np.degrees(np.pi/2 - np.arccos(h))
     lon = wrap_180(phi + 90.)
 
-    lon, lat, values = _parse_values(lon, lat, values)
-    values /= values.max()
+    lon, lat =  _parse_lonlat(lon,lat)
+    values, zmin, zmax, exp = _parse_values(values)
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_misfit_force'),
         filename,
         lon, lat, values,
-        zmin=values.min(),
-        zmax=values.max(),
-        dz=(values.max()-values.min())/20.,
+        zmin=zmin,
+        zmax=zmax,
+        dz=(zmax-zmin)/20.,
+        exp=exp,
         **kwargs)
 
 
@@ -72,19 +76,21 @@ def gmt_plot_likelihood_force(filename, phi, h, values, **kwargs):
     lat = np.degrees(np.pi/2 - np.arccos(h))
     lon = wrap_180(phi + 90.)
 
-    lon, lat, values = _parse_values(lon, lat, values)
+    lon, lat =  _parse_lonlat(lon,lat)
+    values, zmin, zmax, exp = _parse_values(values)
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_likelihood_force'),
         filename,
         lon, lat, values,
-        zmin=values.min(),
-        zmax=values.max(),
-        dz=(values.max()-values.min())/10.,
+        zmin=zmin,
+        zmax=zmax,
+        dz=(zmax-zmin)/10.,
+        exp=exp,
         **kwargs)
 
 
 def _call(shell_script, filename, lon, lat, values,
-    zmin=None, zmax=None, dz=None,
+    zmin=None, zmax=None, dz=None, exp=0,
     add_colorbar=False, add_marker=True, title=''):
 
     filetype = _parse_filetype(filename)
@@ -96,7 +102,7 @@ def _call(shell_script, filename, lon, lat, values,
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %e %e %e %s %s %s %s" %
+        subprocess.call("%s %s %s %s %e %e %e %d %s %s %s %s" %
            (shell_script,
             ascii_data,
             filename,
@@ -104,6 +110,7 @@ def _call(shell_script, filename, lon, lat, values,
             zmin,
             zmax,
             dz,
+            exp,
             int(bool(add_colorbar)),
             int(bool(add_marker)),
             title,
@@ -139,27 +146,36 @@ def _nothing_to_plot(values):
         return True
 
 
-def _parse_values(lon, lat, values, normalize=True):
+def _parse_lonlat(lon, lat):
+
     lon, lat = np.meshgrid(lon, lat)
     lat = lat.flatten()
     lon = lon.flatten()
-    values = values.flatten()
+    return lon, lat
 
+
+def _parse_values(values):
+
+    values = values.flatten()
     masked = np.ma.array(values, mask=np.isnan(values))
+
     minval = masked.min()
     maxval = masked.max()
+    exp = np.floor(np.log10(np.max(np.abs(masked))))
 
-    if maxval-minval < 1.e-6:
-        exp = -np.fix(np.log10(maxval-minval))
-        warn(
-           "Multiplying by 10^%d to avoid GMT plotting errors" % exp,
-           Warning)
-        values *= 10.**exp
+    if -1 <= exp <= 2:
+        return masked, minval, maxval, 0
 
-    return lon, lat, masked
+    else:
+        masked /= 10**exp
+        minval /= 10**exp
+        maxval /= 10**exp
+        return masked, minval, maxval, exp
+
 
 
 def _parse_title(title):
+
     try:
         parts=title.split('\n')
     except:

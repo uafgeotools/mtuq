@@ -2,7 +2,14 @@
 
 
 # USAGE
-#   plot_likelihood_lune likelihood.xyz likelihood.png PNG 0. 1. 0.01 1 1 "Maximum likelihood" "Z component"
+#   plot_likelihood_lune in out filetype zmin zmax dz exp add_colorbar add_marker [title] [subtitle]
+#
+#   Plots lon,lat,likelihood values from ASCII file on eigenvalue lune
+
+
+# EXAMPLE
+#    plot_likelihood_lune likelihood.xyz likelihood.png PNG 0. 1. 0.01 0 1 1 "Likelihood" "Z component"
+
 
 
 
@@ -12,7 +19,7 @@ source _gmt_functions
 
 
 # parse input arguments
-if [ $# -ne 10 ] ; then
+if [ $# -ne 11 ] ; then
     echo "plot_likelihood_lune: bad input arguments"
     exit -1
 fi
@@ -23,10 +30,12 @@ filetype=$3
 zmin=$4
 zmax=$5
 dz=$6
-add_colorbar=$7
-add_marker=$8
-title="$9"
-subtitle="${10}"
+exp=$7
+add_colorbar=$8
+add_marker=$9
+title="${10}"
+subtitle="${11}"
+colorbar_label=""
 
 proj_arg="-JH0/3.4i"
 area_arg="-R-30/30/-90/90"
@@ -57,17 +66,17 @@ add_lune_arcs $ps $proj_arg $area_arg
 add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 
 
-# optional colorbar label
-colorbar_label_str=""
-colorbar_label_arg=$( get_colorbar_label_arg "$colorbar_label_str" )
-
-
 # display colorbar
+if [ $add_colorbar -ne 0 ]; then
+    arg1=$( get_colorbar_arg1 "$colorbar_label" )
+    arg2=$( get_colorbar_arg2 $exp )
+fi
 if [ $add_colorbar -eq 1 ]; then
-    # bottom left
-    #gmt psscale -Ctmp_$out.cpt -D2.8/0.5+w1/0.2 -Bf1 -O -K >> $ps
     # bottom center
-    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h -Baf1"${colorbar_label_arg}" -O -K >> $ps
+    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
+#elif [ $add_colorbar -eq 2 ]; then
+#    # bottom left
+#    gmt psscale -Ctmp_$out.cpt -D2.8/0.5+w1/0.2 -Bf1 -O -K >> $ps
 fi
 
 
