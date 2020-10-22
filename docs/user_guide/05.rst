@@ -5,7 +5,7 @@ Uncertainty visualization
 
 MTUQ provides utilities for visualizing full moment tensor, double couple, force, hypocenter, and depth uncertainties.
 
-Brief descriptions of all these visualization utilities can accessed through the library reference links below.
+Brief descriptions of all these plotting functions can accessed through the library reference links below.
 
 
 Passing misfit values 

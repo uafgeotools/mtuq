@@ -41,7 +41,7 @@ Data processing can also be applied to an entire `Dataset` at once:
         processed_data += processed_stream
 
 
-Or, more succinctly, an entire `Dataset` can be processed by:
+Or, more succinctly:
 
 .. code::
 
@@ -54,7 +54,7 @@ Time discretization requirements
 
 To make meaningful comparisons betweeen data and synthetics, windows must of course be chosen to include body wave and/or surface wave phases of interest.
 
-Besides this one obvious requirement, two additional conditions turn out to be important for numerical efficiency and software engineering robustness:
+Two additional conditions turn out to be useful for numerical efficiency and software engineering robustness:
 
 1. all traces must have the same sampling rate and number of samples
 2. all traces common to the same station must have the same startime and endtime
