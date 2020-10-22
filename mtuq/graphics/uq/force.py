@@ -17,7 +17,8 @@ from mtuq.util import fullpath
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_force(filename, ds, add_colorbar=True, add_marker=True, title=None):
+def plot_misfit_force(filename, ds, callback=None, title='', 
+    add_colorbar=True, add_marker=True, colorbar_label=''):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -36,18 +37,18 @@ def plot_misfit_force(filename, ds, add_colorbar=True, add_marker=True, title=No
     _check(ds)
     ds = ds.copy()
 
-
     if issubclass(type(ds), DataArray):
         ds = ds.min(dim=('origin_idx', 'F0'))
         phi = ds.coords['phi']
         h = ds.coords['h']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
         phi, h, values = _bin(ds, lambda ds: ds.min())
 
+    if callback:
+        values = callback(values)
 
     gmt_plot_misfit_force(filename, phi, h, values, 
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)
@@ -75,7 +76,6 @@ def plot_likelihood_force(filename, ds, sigma=None,
     _check(ds)
     ds = ds.copy()
 
-
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
         ds.values /= ds.values.sum()
@@ -84,14 +84,12 @@ def plot_likelihood_force(filename, ds, sigma=None,
         h = ds.coords['h']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds[0] = np.exp(-ds[0]/(2.*sigma**2))
         ds = ds.reset_index()
         phi, h, values = _bin(ds, lambda ds: ds.max())
 
-
-    values /= values.sum()
+    values /= 4.*np.pi*values.sum()
 
     gmt_plot_likelihood_force(filename, phi, h, values,
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)
@@ -119,7 +117,6 @@ def plot_marginal_force(filename, ds, sigma=None,
     _check(ds)
     ds = ds.copy()
 
-
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
         ds.values /= ds.values.sum()
@@ -128,13 +125,13 @@ def plot_marginal_force(filename, ds, sigma=None,
         h = ds.coords['h']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = np.exp(-ds/(2.*sigma**2))
         #ds /= ds.sum()
         ds = ds.reset_index()
-        phi, h, values = _bin(ds, lambda ds: ds.max())
+        phi, h, values = _bin(ds, lambda ds: ds.sum()/len(ds), normalize=True)
 
+    values /= 4.*np.pi*values.sum()
 
     gmt_plot_likelihood_force(filename, phi, h, values,
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)

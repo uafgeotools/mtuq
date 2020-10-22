@@ -27,7 +27,7 @@ vw_area = (v_max-v_min)*(w_max-w_min)
 
 
 
-def plot_misfit_vw(filename, ds, title=''):
+def plot_misfit_vw(filename, ds, callback=None, title=''):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -46,18 +46,18 @@ def plot_misfit_vw(filename, ds, title=''):
     _check(ds)
     ds = ds.copy()
 
-
     if issubclass(type(ds), DataArray):
         ds = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
         v = ds.coords['v']
         w = ds.coords['w']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
         v, w, values = _bin(ds, lambda ds: ds.min())
 
+    if callback:
+        values = callback(values)
 
     _plot_misfit_vw(filename, v, w, values, title=title)
 
@@ -80,9 +80,9 @@ def plot_likelihood_vw(filename, ds, sigma=None, title=''):
 
     """
     assert sigma is not None
+
     _check(ds)
     ds = ds.copy()
-
 
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
@@ -92,13 +92,11 @@ def plot_likelihood_vw(filename, ds, sigma=None, title=''):
         w = ds.coords['w']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = np.exp(-ds/(2.*sigma**2))
         ds /= ds.sum()
         ds = ds.reset_index()
         v, w, values = _bin(ds, lambda ds: ds.max())
-
 
     values /= values.sum()
     values /= vw_area
@@ -122,12 +120,11 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
     ``title`` (`str`):
     Optional figure title
 
-
     """
     assert sigma is not None
+
     _check(ds)
     ds = ds.copy()
-
 
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
@@ -137,13 +134,11 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
         w = ds.coords['w']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = np.exp(-ds/(2.*sigma**2))
         ds /= ds.sum()
         ds = ds.reset_index()
         v, w, values = _bin(ds, lambda ds: ds.sum()/len(ds))
-
 
     values /= values.sum()
     values /= vw_area

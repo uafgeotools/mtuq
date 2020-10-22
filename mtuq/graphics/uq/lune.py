@@ -18,12 +18,8 @@ from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit_lune(filename, ds, 
-    title='',
-    callback=None,
-    add_colorbar=True, 
-    add_marker=True,
-    colorbar_label=None, 
+def plot_misfit_lune(filename, ds, callback=None, title='',
+    add_colorbar=True, add_marker=True, colorbar_label='', 
     show_beachballs=False):
 
     """ Plots misfit values on eigenvalue lune (requires GMT)
@@ -55,15 +51,14 @@ def plot_misfit_lune(filename, ds,
         gamma, delta, values = _bin(ds, lambda ds: ds.min())
 
     if callback:
-        values = callback()
+        values = callback(values)
 
     gmt_plot_misfit_lune(filename, gamma, delta, values, 
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
-
-def plot_likelihood_lune(filename, ds, sigma=None, 
-    add_colorbar=True, add_marker=True, title=''):
+def plot_likelihood_lune(filename, ds, sigma=None, title='',
+    add_colorbar=True, add_marker=True, colorbar_label=''):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -99,14 +94,17 @@ def plot_likelihood_lune(filename, ds, sigma=None,
         ds = ds.reset_index()
         gamma, delta, values = _bin(ds, lambda ds: ds.max())
 
-    values /= values.sum()
+    #values /= lune_det(delta, gamma)
+
+    area = (2./3.)*np.pi
+    values /= area*values.sum()
 
     gmt_plot_likelihood_lune(filename, gamma, delta, values,
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
-def plot_marginal_lune(filename, ds, sigma=None,
-    add_colorbar=True, add_marker=True, title=''):
+def plot_marginal_lune(filename, ds, sigma=None, title='',
+    add_colorbar=True, add_marker=True, colorbar_label=''):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -143,7 +141,9 @@ def plot_marginal_lune(filename, ds, sigma=None,
         gamma, delta, values = _bin(ds, lambda ds: ds.sum()/len(ds), normalize=True)
 
     #values /= lune_det(delta, gamma)
-    values /= values.sum()
+
+    area = (2./3.)*np.pi
+    values /= area*values.sum()
 
     gmt_plot_likelihood_lune(filename, gamma, delta, values,
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)
