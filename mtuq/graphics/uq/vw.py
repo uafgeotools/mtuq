@@ -42,7 +42,6 @@ def plot_misfit_vw(filename, ds, title=''):
     ``title`` (`str`):
     Optional figure title
 
-
     """
     _check(ds)
     ds = ds.copy()
@@ -78,7 +77,6 @@ def plot_likelihood_vw(filename, ds, sigma=None, title=''):
 
     ``title`` (`str`):
     Optional figure title
-
 
     """
     assert sigma is not None
@@ -230,7 +228,6 @@ def _plot_vw(v, w, values, add_colorbar=False, cmap='hot', title=None):
     if add_colorbar:
         pyplot.colorbar(
             orientation='horizontal',
-            ticks=[],
             pad=0.,
             )
 

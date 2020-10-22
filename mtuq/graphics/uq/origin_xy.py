@@ -32,13 +32,6 @@ def plot_misfit_xy(filename, ds, origins, sources, title='', labeltype='latlon',
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
     """
     x, y = _get_xy(origins)
 
@@ -74,13 +67,6 @@ def plot_mt_xy(filename, ds, origins, sources, title='', labeltype='latlon',
 
     ``title`` (`str`):
     Optional figure title
-
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
 
     """
     x, y = _get_xy(origins)

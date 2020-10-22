@@ -32,13 +32,6 @@ def plot_misfit_depth(filename, ds, origins, sources, title=''):
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
     """
     depths = _get_depths(origins)
 
@@ -75,13 +68,6 @@ def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
 
     ``title`` (`str`):
     Optional figure title
-
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
 
     """
     assert sigma is not None
@@ -128,14 +114,6 @@ def plot_marginal_depth(filename, ds, origins, sources, sigma=None, title=''):
 
     ``title`` (`str`):
     Optional figure title
-
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
 
     """
     assert sigma is not None
