@@ -18,7 +18,7 @@ from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit_lune(filename, ds, title='',
+def plot_misfit_lune(filename, ds, misfit_callback=None, title='',
     colorbar_type=1, marker_type=1, colorbar_label='', 
     show_beachballs=False):
 
@@ -32,6 +32,9 @@ def plot_misfit_lune(filename, ds, title='',
 
     ``ds`` (`DataArray` or `DataFrame`):
     Data structure containing moment tensors and corresponding misfit values
+
+    ``misfit_callback`` (func)
+    User-supplied function applied to misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -49,6 +52,9 @@ def plot_misfit_lune(filename, ds, title='',
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
         gamma, delta, values = _bin(ds, lambda ds: ds.min())
+
+    if misfit_callback:
+        values = misfit_callback(values)
 
     gmt_plot_misfit_lune(filename, gamma, delta, values, 
         colorbar_type=colorbar_type, marker_type=marker_type, title=title)

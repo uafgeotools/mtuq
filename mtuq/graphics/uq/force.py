@@ -17,7 +17,7 @@ from mtuq.util import fullpath
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_force(filename, ds, title='', 
+def plot_misfit_force(filename, ds, misfit_callback=None, title='', 
     colorbar_type=1, marker_type=1, colorbar_label=''):
     """ Plots misfit values on `v-w` rectangle
 
@@ -29,6 +29,9 @@ def plot_misfit_force(filename, ds, title='',
 
     ``ds`` (`DataArray` or `DataFrame`):
     data structure containing forces and corresponding misfit values
+
+    ``misfit_callback`` (func)
+    User-supplied function applied to misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -46,6 +49,9 @@ def plot_misfit_force(filename, ds, title='',
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
         phi, h, values = _bin(ds, lambda ds: ds.min())
+
+    if misfit_callback:
+        values = misfit_callback(values)
 
     gmt_plot_misfit_force(filename, phi, h, values, 
         colorbar_type=colorbar_type, marker_type=marker_type, title=title)

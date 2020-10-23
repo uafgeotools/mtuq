@@ -27,7 +27,7 @@ vw_area = (v_max-v_min)*(w_max-w_min)
 
 
 
-def plot_misfit_vw(filename, ds, title=''):
+def plot_misfit_vw(filename, ds, misfit_callback=None, title=''):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -38,6 +38,9 @@ def plot_misfit_vw(filename, ds, title=''):
 
     ``ds`` (`DataArray` or `DataFrame`):
     data structure containing moment tensors and corresponding misfit values
+
+    ``misfit_callback`` (func)
+    User-supplied function applied to misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -55,6 +58,9 @@ def plot_misfit_vw(filename, ds, title=''):
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
         v, w, values = _bin(ds, lambda ds: ds.min())
+
+    if misfit_callback:
+        values = misfit_callback(values)
 
     _plot_misfit_vw(filename, v, w, values, title=title)
 
