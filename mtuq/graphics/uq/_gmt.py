@@ -7,7 +7,7 @@ from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
     gmt_formats
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180
-from os.path import splitext
+from os.path import basename, splitext
 
 
 
@@ -93,6 +93,8 @@ def _call(shell_script, filename, lon, lat, values,
     zmin=None, zmax=None, dz=None, exp=0,
     colorbar_type=0, marker_type=0, title=''):
 
+    print('  calling GMT script: %s' % basename(shell_script))
+
     filetype = _parse_filetype(filename)
     title, subtitle = _parse_title(title)
 
@@ -111,8 +113,8 @@ def _call(shell_script, filename, lon, lat, values,
             zmax,
             dz,
             exp,
-            int(bool(colorbar_type)),
-            int(bool(marker_type)),
+            int(colorbar_type),
+            int(marker_type),
             title,
             subtitle
             ),
