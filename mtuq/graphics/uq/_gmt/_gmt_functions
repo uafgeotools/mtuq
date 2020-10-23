@@ -281,7 +281,7 @@ function get_colorbar_arg2 {
     if [ $exp -ne 0 ]; then
         echo "-By+l\226 10@+${exp}@+"
      else
-        echo ""
+        echo "-By+l "
     fi
 
 }

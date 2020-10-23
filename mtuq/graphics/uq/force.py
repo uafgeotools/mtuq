@@ -17,7 +17,7 @@ from mtuq.util import fullpath
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_force(filename, ds, callback=None, title='', 
+def plot_misfit_force(filename, ds, title='', 
     add_colorbar=True, add_marker=True, colorbar_label=''):
     """ Plots misfit values on `v-w` rectangle
 
@@ -47,16 +47,13 @@ def plot_misfit_force(filename, ds, callback=None, title='',
         ds = ds.reset_index()
         phi, h, values = _bin(ds, lambda ds: ds.min())
 
-    if callback:
-        values = callback(values)
-
     gmt_plot_misfit_force(filename, phi, h, values, 
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)
 
 
 
-def plot_likelihood_force(filename, ds, sigma=None,
-    add_colorbar=True, add_marker=True, title=''):
+def plot_likelihood_force(filename, ds, sigma=None, title='',
+    add_colorbar=True, add_marker=True, colorbar_label=''):
 
     """ Plots maximum likelihoods on `v-w` rectangle
 
@@ -96,8 +93,8 @@ def plot_likelihood_force(filename, ds, sigma=None,
 
 
 
-def plot_marginal_force(filename, ds, sigma=None,
-    add_colorbar=True, add_marker=True, title=''):
+def plot_marginal_force(filename, ds, sigma=None, title='',
+    add_colorbar=True, add_marker=True, colorbar_marker=''):
     """ Plots marginal likelihoods on `v-w` rectangle
 
 

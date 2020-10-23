@@ -27,7 +27,7 @@ vw_area = (v_max-v_min)*(w_max-w_min)
 
 
 
-def plot_misfit_vw(filename, ds, callback=None, title=''):
+def plot_misfit_vw(filename, ds, title=''):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -56,11 +56,7 @@ def plot_misfit_vw(filename, ds, callback=None, title=''):
         ds = ds.reset_index()
         v, w, values = _bin(ds, lambda ds: ds.min())
 
-    if callback:
-        values = callback(values)
-
     _plot_misfit_vw(filename, v, w, values, title=title)
-
 
 
 def plot_likelihood_vw(filename, ds, sigma=None, title=''):
@@ -102,7 +98,6 @@ def plot_likelihood_vw(filename, ds, sigma=None, title=''):
     values /= vw_area
 
     _plot_likelihood_vw(filename, v, w, values, title=title)
-
 
 
 def plot_marginal_vw(filename, ds, sigma=None, title=''):

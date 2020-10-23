@@ -16,7 +16,7 @@ from mtuq.util import fullpath, warn
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_xy(filename, ds, origins, sources, callback=None, title='', 
+def plot_misfit_xy(filename, ds, origins, sources, title='', 
     labeltype='latlon', add_colorbar=False, add_marker=True):
     """ Plots misfit versus hypocenter position
 
@@ -45,9 +45,6 @@ def plot_misfit_xy(filename, ds, origins, sources, callback=None, title='',
     elif issubclass(type(ds), DataFrame):
         values, indices = _min_dataframe(ds)
         best_sources = _get_sources(sources, indices)
-
-    if callback:
-        values = callback(values)
 
     _plot_misfit_xy(filename, x, y, values, title, labeltype)
 

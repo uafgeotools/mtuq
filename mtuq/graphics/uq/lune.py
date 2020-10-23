@@ -18,7 +18,7 @@ from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular_grid
 
 
-def plot_misfit_lune(filename, ds, callback=None, title='',
+def plot_misfit_lune(filename, ds, title='',
     add_colorbar=True, add_marker=True, colorbar_label='', 
     show_beachballs=False):
 
@@ -49,9 +49,6 @@ def plot_misfit_lune(filename, ds, callback=None, title='',
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
         gamma, delta, values = _bin(ds, lambda ds: ds.min())
-
-    if callback:
-        values = callback(values)
 
     gmt_plot_misfit_lune(filename, gamma, delta, values, 
         add_colorbar=add_colorbar, add_marker=add_marker, title=title)

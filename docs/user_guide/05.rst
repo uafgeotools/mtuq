@@ -56,26 +56,6 @@ Some utilities then take these misfit values and convert on-the-fly to maximum o
 
 
 
-Applying custom forumlas to misfit values
------------------------------------------
-
-
-Use the following callback to convert L1 misfit values to variance reduction values:
-
-.. code ::
-
-   lambda misfit_L1 : 100.*(1 - (misfit_L1/L1_norm_of_data)**2)
-
-
-Use the following callback to convert L2 misfit values to variance reduction values:
-
-.. code ::
-
-   lambda misfit_L2 : 100.*(1 - (misfit_L2/L2_norm_of_data))
-
-
-
-
 Output image formats
 --------------------
 
