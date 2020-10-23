@@ -147,13 +147,13 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
 #
 
 def _plot_misfit_vw(filename, v, w, values,
-    add_colorbar=True, add_marker=True, title=''):
+    colorbar_type=1, add_marker=True, title=''):
 
     if _nothing_to_plot(values):
         return
 
     _plot_vw(v, w, values, 
-        add_colorbar=add_colorbar,
+        colorbar_type=colorbar_type,
         cmap='hot',
         title=title)
 
@@ -172,13 +172,13 @@ def _plot_misfit_vw(filename, v, w, values,
 
 
 def _plot_likelihood_vw(filename, v, w, values,
-    add_colorbar=True, add_marker=True, title=''):
+    colorbar_type=1, add_marker=True, title=''):
 
     if _nothing_to_plot(values):
         return
 
     _plot_vw(v, w, values, 
-        add_colorbar=add_colorbar,
+        colorbar_type=colorbar_type,
         cmap='hot_r',
         title=title)
 
@@ -196,7 +196,7 @@ def _plot_likelihood_vw(filename, v, w, values,
     pyplot.savefig(filename)
 
 
-def _plot_vw(v, w, values, add_colorbar=False, cmap='hot', title=None):
+def _plot_vw(v, w, values, colorbar_type=0, cmap='hot', title=None):
     # create figure
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
 
@@ -215,7 +215,7 @@ def _plot_vw(v, w, values, add_colorbar=False, cmap='hot', title=None):
     pyplot.xticks([], [])
     pyplot.yticks([], [])
 
-    if add_colorbar:
+    if colorbar_type:
         pyplot.colorbar(
             orientation='horizontal',
             pad=0.,

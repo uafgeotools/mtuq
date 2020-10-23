@@ -2,7 +2,7 @@
 
 
 # USAGE
-#   plot_misfit_force in out filetype zmin zmax dz exp add_colorbar add_marker [title] [subtitle]
+#   plot_misfit_force in out filetype zmin zmax dz colorbar_exp colorbar_type add_marker [title] [subtitle]
 #
 #   Plots lon,lat,msifit values from ASCII file on eigenvalue lune
 #
@@ -13,7 +13,7 @@
 #    ZMIN - colorbar minimum
 #    ZMAX - colorbar maximum
 #    DZ - colorbar increment
-#    ADD_COLORBAR - 0: no colobar 1: horizontal colorbar
+#    colorbar_type - 0: no colobar 1: horizontal colorbar
 #    ADD_MARKER - 0: no marker, 1: marker
 #    TITLE - optional title string
 #    SUBTITLE - optional subtitle string
@@ -40,8 +40,8 @@ filetype=$3
 zmin=$4
 zmax=$5
 dz=$6
-exp=$7
-add_colorbar=$8
+colorbar_exp=$7
+colorbar_type=$8
 add_marker=$9
 title="${10}"
 subtitle="${11}"
@@ -77,11 +77,11 @@ add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 
 
 # display colorbar
-if [ $add_colorbar -ne 0 ]; then
+if [ $colorbar_type -ne 0 ]; then
     arg1=$( get_colorbar_arg1 "$colorbar_label" )
-    arg2=$( get_colorbar_arg2 $exp )
+    arg2=$( get_colorbar_arg2 $colorbar_exp )
 fi
-if [ $add_colorbar -eq 1 ]; then
+if [ $colorbar_type -eq 1 ]; then
     gmt psscale -Ctmp_$out.cpt -D2.25/-0.333+w1.5/0.175+h "$arg1" "$arg2" -O -K >> $ps
 fi
 
