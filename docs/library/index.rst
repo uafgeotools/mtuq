@@ -93,7 +93,7 @@ Moment tensor and force grids
 Grid base classes
 -----------------
 .. note::
-   These base classes can be used for specialized uses cases not covered by any of the above grids
+   These base classes can be used for specialized uses cases not covered by the above grids
 
 ============================================================================================================  ============================================================================================================
 `mtuq.grid.Grid <generated/mtuq.grid.Grid.html>`_                                                              Grid defined by values on axes
