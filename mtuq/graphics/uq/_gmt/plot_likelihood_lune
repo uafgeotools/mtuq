@@ -81,9 +81,8 @@ fi
 
 
 # display marker
-if [ $marker_type -eq 1 ]; then
-    marker_coords="$(idxmax $in)"
-    add_marker $ps $proj_arg $area_arg "$marker_coords"
+if [ $marker_type -ne 0 ]; then
+    add_marker $marker_type "$in" "$ps" $proj_arg $area_arg
 fi
 
 

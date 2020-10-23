@@ -54,7 +54,6 @@ range_arg="-T${zmin}/${zmax}/${dz}"
 
 ps="${out}.ps"
 
-
 # apply default settings
 gmt_settings
 
@@ -89,13 +88,10 @@ if [ $colorbar_type -eq 1 ]; then
 #    gmt psscale -Ctmp_$out.cpt -D2.8/0.5+w1/0.2 -Bf1 -O -K >> $ps
 fi
 
-
 # display marker
-if [ $marker_type -eq 1 ]; then
-    marker_coords="$(idxmin $in)"
-    add_marker $ps $proj_arg $area_arg "$marker_coords"
+if [ $marker_type -ne 0 ]; then
+    add_marker $marker_type "$in" "$ps" $proj_arg $area_arg
 fi
-
 
 custom_psclose $ps
 custom_psconvert $ps $out $filetype
@@ -106,5 +102,6 @@ custom_psconvert $ps $out $filetype
 
 rm tmp*$out*
 rm $ps
+
 
 
