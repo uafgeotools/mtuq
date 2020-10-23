@@ -22,8 +22,14 @@ class Client(object):
         Returns a ``GreensTensorList`` in which each element corresponds to the
         a (station, origin) pair from the given lists
 
-        :param stations: List of ``mtuq.Station`` objects
-        :param origins: List of ``mtuq.Origin`` objects
+        .. rubric :: Input arguments
+
+        ``stations`` (`list` of `mtuq.Station` objects)
+
+        ``origins`` (`list` of `mtuq.Origin` objects)
+
+        ``verbose`` (`bool`)
+
         """
         origins = iterable(origins)
         stations = iterable(stations)

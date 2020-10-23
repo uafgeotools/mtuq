@@ -10,14 +10,15 @@ from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 
-from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, \
+from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning, \
     gmt_plot_misfit_force, gmt_plot_likelihood_force
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_force(filename, ds, add_colorbar=True, add_marker=True, title=None):
+def plot_misfit_force(filename, ds, misfit_callback=None, title='', 
+    colorbar_type=1, marker_type=1, colorbar_label=''):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -29,20 +30,15 @@ def plot_misfit_force(filename, ds, add_colorbar=True, add_marker=True, title=No
     ``ds`` (`DataArray` or `DataFrame`):
     data structure containing forces and corresponding misfit values
 
+    ``misfit_callback`` (func)
+    User-supplied function applied to misfit values
+
     ``title`` (`str`):
     Optional figure title
-
-
-    .. rubric :: Usage
-
-    Forces and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
 
     """
     _check(ds)
     ds = ds.copy()
-
 
     if issubclass(type(ds), DataArray):
         ds = ds.min(dim=('origin_idx', 'F0'))
@@ -50,19 +46,20 @@ def plot_misfit_force(filename, ds, add_colorbar=True, add_marker=True, title=No
         h = ds.coords['h']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
         phi, h, values = _bin(ds, lambda ds: ds.min())
 
+    if misfit_callback:
+        values = misfit_callback(values)
 
     gmt_plot_misfit_force(filename, phi, h, values, 
-        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
+        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
 
 
-def plot_likelihood_force(filename, ds, sigma=None,
-    add_colorbar=True, add_marker=True, title=''):
+def plot_likelihood_force(filename, ds, sigma=None, title='',
+    colorbar_type=1, marker_type=2, colorbar_label=''):
 
     """ Plots maximum likelihoods on `v-w` rectangle
 
@@ -78,17 +75,9 @@ def plot_likelihood_force(filename, ds, sigma=None,
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Forces and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
     """
     _check(ds)
     ds = ds.copy()
-
 
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
@@ -98,22 +87,20 @@ def plot_likelihood_force(filename, ds, sigma=None,
         h = ds.coords['h']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds[0] = np.exp(-ds[0]/(2.*sigma**2))
         ds = ds.reset_index()
         phi, h, values = _bin(ds, lambda ds: ds.max())
 
-
-    values /= values.sum()
+    values /= 4.*np.pi*values.sum()
 
     gmt_plot_likelihood_force(filename, phi, h, values,
-        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
+        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
 
 
-def plot_marginal_force(filename, ds, sigma=None,
-    add_colorbar=True, add_marker=True, title=''):
+def plot_marginal_force(filename, ds, sigma=None, title='',
+    colorbar_type=1, marker_type=2, colorbar_label=''):
     """ Plots marginal likelihoods on `v-w` rectangle
 
 
@@ -129,17 +116,9 @@ def plot_marginal_force(filename, ds, sigma=None,
     Optional figure title
 
 
-    .. rubric :: Usage
-
-    Forces and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-
     """
     _check(ds)
     ds = ds.copy()
-
 
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
@@ -149,30 +128,26 @@ def plot_marginal_force(filename, ds, sigma=None,
         h = ds.coords['h']
         values = ds.values.transpose()
 
-
     elif issubclass(type(ds), DataFrame):
         ds = np.exp(-ds/(2.*sigma**2))
         #ds /= ds.sum()
         ds = ds.reset_index()
-        phi, h, values = _bin(ds, lambda ds: ds.max())
+        phi, h, values = _bin(ds, lambda ds: ds.sum()/len(ds), normalize=True)
 
+    values /= 4.*np.pi*values.sum()
 
     gmt_plot_likelihood_force(filename, phi, h, values,
-        add_colorbar=add_colorbar, add_marker=add_marker, title=title)
+        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
 
+
+# utility functions
 
 def _check(ds):
     """ Checks data structures
     """
     if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
-
-
-
-#
-# utilities for irregularly-spaced grids
-#
 
 
 def _bin(df, handle, npts_phi=60, npts_h=30):

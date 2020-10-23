@@ -23,13 +23,13 @@ class Misfit(object):
     .. code::
 
         function_handle = Misfit(**parameters)
-        results = function_handle(data, greens, sources)
+        values = function_handle(data, greens, sources)
 
     In the first step, the user supplies parameters such as the type of norm
     (see below for detailed argument descriptions).
 
     In the second step, the user supplies data, Green's functions, and sources.
-    Synthetics are then generated and compared with data, and an array of 
+    Synthetics are then generated and compared with data, and a NumPy array of 
     misfit values is returned of the same length as `sources`.
 
 
@@ -110,14 +110,6 @@ class Misfit(object):
         ):
         """ Function handle constructor
         """
-        # L2 norm 
-        # r1**2 + r1**2 + ... 
-
-        # L1 norm
-        # |r1| + |r2| + ...
-
-        # hybrid norm
-        # (r11**2 + r12**2 + ...)**0.5 + (r21**2 + r22**2 + ...)**0.5 + ...
 
         if norm.lower()=='hybrid':
             norm = 'hybrid'
@@ -131,7 +123,8 @@ class Misfit(object):
         if norm=='L1':
             warn(
                 "Consider using norm='hybrid', which is much faster than "
-                "norm='L1' but still robust against outliers.")
+                "norm='L1' but still robust against outliers."
+                )
 
         if type(time_shift_groups) not in (list, tuple):
             raise TypeError
@@ -155,26 +148,14 @@ class Misfit(object):
         # makes things work if just a single source is given
         sources = iterable(sources)
 
+        # Checks that dataset is nonempty
         if isempty(data):
-            warn(
-                "Empty data set. No misfit evaluations will be carried out",
-                Warning)
-
+            warn("Empty data set. No misfit evaluations will be carried out")
             return np.zeros((len(sources), 1))
 
-
-        # For greatest accuracy, Green's functions must be longer than data
-        # (i.e., Green's functions must begin +time_shift_max before data and
-        # end -time_shift_min after data.) 
-        #
-        # To achieve this, users can supply left and right padding lengths
-        # via the `padding` parameter when calling `mtuq.ProcessData`.
-        #
-        # If padding lengths were not supplied, then Green's functions may be
-        # padded with zeros, which may result in slightly less accurate time 
-        # shifts
+        # Checks that optional Green's function padding is consistent with time 
+        # shift bounds
         check_padding(greens, self.time_shift_min, self.time_shift_max)
-
 
         if optimization_level==0 or set_attributes:
             return level0.misfit(

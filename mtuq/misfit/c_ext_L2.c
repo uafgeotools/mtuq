@@ -145,7 +145,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   }
 
   //
-  // Begin iterating over sources
+  // Iterate over sources
   //
 
   for(isrc=0; isrc<NSRC; ++isrc) {

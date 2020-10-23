@@ -9,7 +9,7 @@ import subprocess
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning,\
+from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning,\
     _parse_filetype, _parse_title
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath, warn
@@ -17,7 +17,7 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 
-def plot_misfit_depth(filename, ds, origins, sources, title=''):
+def plot_misfit_depth(filename, ds, origins, sources, misfit_callback=None, title=''):
     """ Plots misfit versus depth
 
 
@@ -29,15 +29,11 @@ def plot_misfit_depth(filename, ds, origins, sources, title=''):
     ``ds`` (`DataArray` or `DataFrame`):
     data structure containing moment tensors and corresponding misfit values
 
+    ``misfit_callback`` (func)
+    User-supplied function applied to misfit values
+
     ``title`` (`str`):
     Optional figure title
-
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
 
     """
     depths = _get_depths(origins)
@@ -45,16 +41,16 @@ def plot_misfit_depth(filename, ds, origins, sources, title=''):
     _check(ds)
     ds = ds.copy()
 
-
     if issubclass(type(ds), DataArray):
         values, indices = _min_dataarray(ds)
         best_sources = _get_sources(sources, indices)
-
 
     elif issubclass(type(ds), DataFrame):
         values, indices = _min_dataframe(ds)
         best_sources = _get_sources(sources, indices)
 
+    if misfit_callback:
+        values = misfit_callback(values)
 
     _plot_depth(filename, depths, values, indices,
         title, xlabel='auto', ylabel='Misfit')
@@ -76,13 +72,6 @@ def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
     """
     assert sigma is not None
 
@@ -91,14 +80,12 @@ def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
     _check(ds)
     ds = ds.copy()
 
-
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
         ds.values /= ds.values.sum()
 
         values, indices = _min_dataarray(ds)
         best_sources = _get_sources(sources, indices)
-
 
     elif issubclass(type(ds), DataFrame):
         ds = np.exp(-ds/(2.*sigma**2))
@@ -129,14 +116,6 @@ def plot_marginal_depth(filename, ds, origins, sources, sigma=None, title=''):
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
-
     """
     assert sigma is not None
 
@@ -144,7 +123,6 @@ def plot_marginal_depth(filename, ds, origins, sources, sigma=None, title=''):
 
     _check(ds)
     ds = ds.copy()
-
 
     if issubclass(type(ds), DataArray):
         ds = np.exp(-ds/(2.*sigma**2))

@@ -14,7 +14,7 @@ from mtuq.misfit import c_ext_L2
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
-    time_shift_min, time_shift_max, msg_handle):
+    time_shift_min, time_shift_max, msg_handle, debug_level=0):
     """
     Data misfit function (fast Python/C version)
 
@@ -71,8 +71,6 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     #
     # call C extension
     #
-
-    debug_level = 0
 
     start_time = time.time()
 
@@ -136,10 +134,9 @@ def _get_greens(greens, stations, components):
 
 
 def _get_data(data, stations, components):
-    #Collects numeric trace data from all streams as a single NumPy array
-
-    #Compared with iterating over streams and traces, provides a potentially
-    #faster way of accessing numeric trace data
+    # Collects numeric trace data from all streams as a single NumPy array;
+    # compared with iterating over streams and traces, provides a potentially
+    # faster way of accessing numeric trace data
 
     #.. warning::
 
@@ -229,6 +226,30 @@ def _get_groups(groups, components):
     return array
 
 
+def _check(data, greens, sources):
+    # array shape sanity checks
+
+    if data.shape[0] != greens.shape[0]:
+        print()
+        print('Number of stations (data): %d' % data.shape[0])
+        print('Number of stations (Green''s): %d' % data.shape[0])
+        print()
+        raise TypeError('Inconsistent shape')
+
+    if data.shape[1] != greens.shape[1]:
+        print()
+        print('Number of components (data): %d' % data.shape[1])
+        print('Number of components (Green''s): %d' % data.shape[1])
+        print()
+        raise TypeError('Inconsistent shape')
+
+    if greens.shape[2] != sources.shape[1]:
+        print()
+        print('Number of Green''s functions in linear combination: %d' % greens.shape[2])
+        print('Number of weights in linear combination: %d' % sources.shape[1])
+        print()
+
+
 def _to_array(sources):
     dims = sources.dims
     df = sources.to_dataframe()
@@ -270,7 +291,7 @@ def _type(dims):
 
 
 #
-# optimized cross-correlation functions
+# cross-correlation utilities
 #
 
 def _corr_1_2(data, greens, padding):
@@ -348,26 +369,4 @@ def _autocorr_2(greens, padding):
 
     return corr
 
-
-def _check(data, greens, sources):
-    # array shape sanity checks
-
-    if data.shape[0] != greens.shape[0]:
-        print('Number of stations (data): %d' % data.shape[0])
-        print('Number of stations (Green''s): %d' % data.shape[0])
-        raise TypeError('Inconsistent shape')
-
-    if data.shape[1] != greens.shape[1]:
-        print()
-        print('Number of components (data): %d' % data.shape[1])
-        print('Number of components (Green''s): %d' % data.shape[1])
-        print()
-        raise TypeError('Inconsistent shape')
-
-    if greens.shape[2] != sources.shape[1]:
-        print()
-        print('Number of Green''s functions in linear combination: %d' % greens.shape[2])
-        print('Number of weights in linear combination: %d' % sources.shape[1])
-        print()
-        raise TypeError('Inconsistent shape')
 

@@ -17,7 +17,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
     See ``mtuq/misfit/__init__.py`` for more information
     """
-    results = np.zeros((len(sources), 1))
+    values = np.zeros((len(sources), 1))
 
     #
     # initialize Green's function machinery
@@ -26,13 +26,16 @@ def misfit(data, greens, sources, norm, time_shift_groups,
         greens[_j]._set_components(get_components(d))
 
     #
-    # begin iterating over sources
+    # iterate over sources
     #
     for _i, source in enumerate(sources):
 
         # optional progress message
         msg_handle()
 
+        #
+        # iterate over stations
+        #
         for _j, d in enumerate(data):
 
             components = greens[_j].components
@@ -53,9 +56,6 @@ def misfit(data, greens, sources, norm, time_shift_groups,
             # array to hold cross correlations
             corr = np.zeros(npts_padding+1)
 
-            #
-            # evaluate misfit for all components at given station
-            # 
             for group in time_shift_groups:
                 # Finds the time-shift between data and synthetics that yields
                 # the maximum cross-correlation value across all components in 
@@ -82,26 +82,26 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
                     # sum the resulting residuals
                     if norm=='L1':
-                        misfit = np.sum(abs(r))*dt
+                        value = np.sum(abs(r))*dt
 
                     elif norm=='L2':
-                        misfit = np.sum(r**2)*dt
+                        value = np.sum(r**2)*dt
 
                     elif norm=='hybrid':
-                        misfit = np.sqrt(np.sum(r**2))*dt
+                        value = np.sqrt(np.sum(r**2))*dt
 
                     try:
-                        results[_i] += d[_k].weight * misfit
+                        values[_i] += d[_k].weight * value
                     except:
-                        results[_i] += misfit
+                        values[_i] += value
 
                     if set_attributes:
-                        d[_k].misfit = misfit
-                        s[_k].misfit = misfit
+                        d[_k].misfit = value
+                        s[_k].misfit = value
                         s[_k].time_shift = time_shift
                         s[_k].start = start
                         s[_k].stop = stop
 
-    return results
+    return values
 
 

@@ -14,21 +14,21 @@ from mtuq.util.signal import check_components, check_time_sampling
 
 def read(filenames, station_id_list=None, event_id=None, tags=[]):
     """ 
-    Reads SAC files and returns MTUQ Dataset
+    Reads SAC files and returns an `mtuq.Dataset`
 
     .. rubric :: Parameters
 
-    ``filenames`` (`str` or `list`)
+    ``filenames`` (`str` or `list`):
     Wildcard string or list of filenames
 
-    ``station_id_list`` (`list`)
+    ``station_id_list`` (`list`):
     Any traces not from one of the listed stations will be excluded
 
-    ``event_id`` (`str`)
-    Identifier to be suppplied to the MTUQ Dataset
+    ``event_id`` (`str`):
+    Identifier to be suppplied to the Dataset
 
-    ``tags`` (`list`)
-    Tags to be supplied to the MTUQ Dataset
+    ``tags`` (`list`):
+    Tags to be supplied to the Dataset
 
     """
     # read traces one at a time

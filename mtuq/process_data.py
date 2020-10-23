@@ -14,7 +14,7 @@ from mtuq.util.signal import cut, get_arrival, m_to_deg
  
 
 class ProcessData(object):
-    """ Performs filtering, windowing and other operations on seismic data
+    """ An attempt at a one-size-fits-all data processing class
 
     .. rubric :: Usage
 
@@ -374,13 +374,19 @@ class ProcessData(object):
             raise Exception('Missing tags attribute')
         tags = traces.tags
 
+        if 'units:m' in tags:
+            # nothing to do
+            pass
 
-        if 'units:cm' in tags:
+        elif 'units:cm' in tags:
             # convert to meters
             for trace in traces:
                 trace.data *= 1.e-2
             index = tags.index('units:cm')
             tags[index] = 'units:m'
+
+        else:
+            warn('Units not specified.')
 
 
         #

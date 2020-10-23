@@ -2,7 +2,7 @@
 
 
 # USAGE
-#   plot_mt_xy in out filetype zmin zmax dz add_colorbar add_marker [title] [subtitle]
+#   plot_mt_xy out filetype mt_file mw_file xmin xmax ymin ymax xlabel ylabel [title] [subtitle]
 #
 #   Plots lon,lat,z values from ASCII file on eigenvalue lune
 #
@@ -20,8 +20,6 @@
 #    TITLE - optional title string
 #    SUBTITLE - optional subtitle string
 #
-# EXAMPLE
-#    plot_mt_xy misfit.xyz misfit.png PNG 0. 1. 0.01 1 1 "Misfit" "Z component"
 
 
 

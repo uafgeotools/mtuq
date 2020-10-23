@@ -2,24 +2,25 @@
 
 
 # USAGE
-#   plot_misfit_lune in out filetype zmin zmax dz add_colorbar add_marker [title] [subtitle]
+#   plot_misfit_lune in out filetype zmin zmax dz colorbar_exp colorbar_type marker_type [title] [subtitle]
 #
-#   Plots lon,lat,z values from ASCII file on eigenvalue lune
+#   Plots lon,lat,misfit values from ASCII file on eigenvalue lune
 #
 # ARGUMENTS
-#    IN - name of ASCII file containing lon,lat,z values
+#    IN - name of ASCII file containing lon,lat,misfit values
 #    OUT - name of output image
 #    FILETYPE - format of output image (BMP,EPS,PDF,JPG,PNG,PPM,SVG,TIFF)
 #    ZMIN - colorbar minimum
 #    ZMAX - colorbar maximum
 #    DZ - colorbar increment
-#    ADD_COLORBAR - 0: no colobar 1: horizontal colorbar
-#    ADD_MARKER - 0: no marker, 1: marker
+#    COLORBAR_EXP - color scaling factor 10**exp
+#    COLORBAR_TYPE - 0: no colobar 1: horizontal colorbar
+#    MARKER_TYPE - 0: no marker, 1: marker
 #    TITLE - optional title string
 #    SUBTITLE - optional subtitle string
 #
 # EXAMPLE
-#    plot_misfit_lune misfit.xyz misfit.png PNG 0. 1. 0.01 1 1 "Misfit" "Z component"
+#    plot_misfit_lune misfit.xyz misfit.png PNG 0. 1. 0.01 0 1 1 "Misfit" "Z component"
 
 
 
@@ -29,7 +30,7 @@ source _gmt_functions
 
 
 # parse input arguments
-if [ $# -ne 10 ] ; then
+if [ $# -ne 11 ] ; then
     echo "plot_misfit_lune: bad input arguments"
     exit -1
 fi
@@ -40,17 +41,18 @@ filetype=$3
 zmin=$4
 zmax=$5
 dz=$6
-add_colorbar=$7
-add_marker=$8
-title="$9"
-subtitle="${10}"
+colorbar_exp=$7
+colorbar_type=$8
+marker_type=$9
+title="${10}"
+subtitle="${11}"
+colorbar_label=""
 
 proj_arg="-JH0/3.4i"
 area_arg="-R-30/30/-90/90"
 range_arg="-T${zmin}/${zmax}/${dz}"
 
 ps="${out}.ps"
-
 
 # apply default settings
 gmt_settings
@@ -74,20 +76,22 @@ add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 
 
 # display colorbar
-if [ $add_colorbar -eq 1 ]; then
-    # bottom left
-    #gmt psscale -Ctmp_$out.cpt -D2.8/0.5+w1/0.2 -Bf1 -O -K >> $ps
-    # bottom center
-    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h -Baf -O -K >> $ps
+if [ $colorbar_type -ne 0 ]; then
+    arg1=$( get_colorbar_arg1 "$colorbar_label" )
+    arg2=$( get_colorbar_arg2 $colorbar_exp )
 fi
-
+if [ $colorbar_type -eq 1 ]; then
+    # bottom center
+    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
+#elif [ $colorbar_type -eq 2 ]; then
+#    # bottom left
+#    gmt psscale -Ctmp_$out.cpt -D2.8/0.5+w1/0.2 -Bf1 -O -K >> $ps
+fi
 
 # display marker
-if [ $add_marker -eq 1 ]; then
-    marker_coords="$(idxmin $in)"
-    add_marker $ps $proj_arg $area_arg "$marker_coords"
+if [ $marker_type -ne 0 ]; then
+    add_marker $marker_type "$in" "$ps" $proj_arg $area_arg
 fi
-
 
 custom_psclose $ps
 custom_psconvert $ps $out $filetype
@@ -98,5 +102,6 @@ custom_psconvert $ps $out $filetype
 
 rm tmp*$out*
 rm $ps
+
 
 

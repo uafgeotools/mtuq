@@ -15,6 +15,7 @@ def plot_misfit_dc(filename, ds):
     """ Plots misfit over strike, dip, and slip
     (matplotlib implementation)
     """
+    _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
@@ -98,4 +99,10 @@ def _plot_dc(filename, da):
 
     pyplot.savefig(filename)
 
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
 

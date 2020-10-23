@@ -334,6 +334,15 @@ def plot_data_greens(filename,
         header=header, **kwargs)
 
 
+def plot_time_shifts(data, stations, origin):
+    raise NotImplementedError
+
+
+def compute_time_shifts(data, greens, misfit, stations, origin, source):
+    raise NotImplementedError
+
+
+
 
 #
 # functions that act on individual axes

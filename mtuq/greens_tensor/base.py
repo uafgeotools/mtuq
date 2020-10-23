@@ -70,8 +70,8 @@ class GreensTensor(Stream):
 
 
     def _set_components(self, components):
-        """ This method gets called before or during ``get_synthetics`` to 
-        specify which components are returned
+        """ Gets called before or during `get_synthetics` to specify which
+        components are returned
 
         .. note:
 
@@ -126,6 +126,8 @@ class GreensTensor(Stream):
 
 
     def _get_shape(self):
+        """ Returns shape of NumPy array used by `get_synthetics`
+        """
         nt = len(self[0].data)
         nc = len(self.components)
         nr = 0
@@ -139,6 +141,8 @@ class GreensTensor(Stream):
 
 
     def _allocate_stream(self):
+        """ Allocates ObsPy stream used by `get_synthetics`
+        """
         nc, nr, nt = self._get_shape()
 
         stream = Stream()

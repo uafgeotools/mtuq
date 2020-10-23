@@ -29,13 +29,16 @@ function gmt_settings {
 
 
 function add_marker {
-    ps=$1
-    proj_arg=$2
-    area_arg=$3
-    coords="$4"
+    marker_type=$1
+    in="$2"
+    ps="$3"
+    proj_arg=$4
+    area_arg=$5
 
-    if [ -z "$coords" ]; then
-        return
+    if [ $marker_type -eq 1 ]; then
+        coords="$(idxmin $in)"
+    elif [ $marker_type -eq 2 ]; then
+        coords="$(idxmax $in)"
     fi
 
     echo $coords |\
@@ -243,7 +246,7 @@ function add_title {
 }
 
 
-function get_fmt_arg {
+function get_image_format_arg {
     case $1 in
        BMP) echo -Tb;;
        EPS) echo -Te;;
@@ -257,12 +260,42 @@ function get_fmt_arg {
 }
 
 
+function get_colorbar_arg1 {
+    # constructs the main colorbar label
+
+    label=$1
+
+    colorbar_arg1="-Bxaf1"
+
+    if [ ! -z "$label" ]; then
+        colorbar_arg1="${colorbar_arg1}+l${label}"
+    fi
+
+    echo "$colorbar_arg1"
+
+}
+
+
+function get_colorbar_arg2 {
+    # constructs scaling factor 10^exp
+
+    exp=$1
+
+    if [ $exp -ne 0 ]; then
+        echo "-By+l\226 10@+${exp}@+"
+     else
+        echo "-By+l "
+    fi
+
+}
+
+
 function custom_psconvert {
     in=$1
     out=$2
     fmt=$3
 
-    fmt_arg=$(get_fmt_arg $fmt)
+    fmt_arg=$(get_image_format_arg $fmt)
     gmt psconvert ${in} -F${out} -A $fmt_arg
 
 }

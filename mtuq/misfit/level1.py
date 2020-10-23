@@ -18,7 +18,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     See ``mtuq/misfit/__init__.py`` for more information
     """
     helpers = []
-    results = np.zeros((len(sources), 1))
+    values = np.zeros((len(sources), 1))
 
     #
     # initialize Green's function machinery
@@ -29,7 +29,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                            time_shift_min, time_shift_max)]
 
     #
-    # begin iterating over sources
+    # iterate over sources
     #
     for _i, source in enumerate(sources):
         source = source.as_vector()
@@ -37,6 +37,9 @@ def misfit(data, greens, sources, norm, time_shift_groups,
         # optional progress message
         msg_handle()
 
+        #
+        # iterate over stations
+        #
         for _j, d in enumerate(data):
             components = greens[_j].components
             if not components:
@@ -48,9 +51,6 @@ def misfit(data, greens, sources, norm, time_shift_groups,
             padding_right = int(-time_shift_min/dt)
 
 
-            #
-            # evaluate misfit for all components at given station
-            # 
             for group in time_shift_groups:
                 # Finds the time-shift between data and synthetics that yields
                 # the maximum cross-correlation value across all components in 
@@ -61,29 +61,29 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                 ic = helpers[_j].get_time_shift(source, indices)
 
                 for _k in indices:
-                    misfit = 0.
+                    value = 0.
 
                     if norm=='L1':
                         start = ic
                         stop = start + npts
 
-                        misfit = dt * helpers[_j].get_L1_norm(
+                        value = dt * helpers[_j].get_L1_norm(
                             source, _k, start, stop)
 
                     elif norm=='L2':
-                        misfit = dt * helpers[_j].get_L2_norm(
+                        value = dt * helpers[_j].get_L2_norm(
                             source, _k, ic)
 
                     elif norm=='hybrid':
-                        misfit = dt * helpers[_j].get_L2_norm(
+                        value = dt * helpers[_j].get_L2_norm(
                             source, _k, ic)**0.5
 
                     try:
-                        results[_i] += d[_k].weight * misfit
+                        values[_i] += d[_k].weight * value
                     except:
-                        results[_i] += misfit
+                        values[_i] += value
 
-    return results
+    return values
 
 
 

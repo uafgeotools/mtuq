@@ -3,6 +3,8 @@ import numpy as np
 import pandas
 import xarray
 
+from collections.abc import Iterable
+from mtuq.event import Origin
 from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback,\
     dataarray_idxmin, dataarray_idxmax
@@ -31,23 +33,23 @@ def grid_search(data, greens, misfit, origins, sources,
     .. rubric :: Input arguments
 
 
-    ``data`` (`mtuq.dataset.Dataset`):
+    ``data`` (`mtuq.Dataset`):
     The observed data to be compared with synthetic data
 
 
-    ``greens`` (`mtuq.greens_tensor.GreensTensorList`):
+    ``greens`` (`mtuq.GreensTensorList`):
     Green's functions used to generate synthetic data
 
 
-    ``misfit`` (`mtuq.misfit.Misfit` or some other function):
+    ``misfit`` (`mtuq.Misfit` or some other function):
     Misfit function
 
 
-    ``origins`` (`list` of `mtuq.source.Origin` objects)
+    ``origins`` (`list` of `mtuq.Origin` objects):
     Origins to be searched over
 
 
-    ``sources`` (`mtuq.grid.Grid` or `mtuq.grid.UnstructuredGrid`):
+    ``sources`` (`mtuq.Grid` or `mtuq.UnstructuredGrid`):
     Source mechanisms to be searched over
 
 
@@ -74,25 +76,27 @@ def grid_search(data, greens, misfit, origins, sources,
       reduces to ``_grid_search_serial``.
 
     """
-
     origins = iterable(origins)
+    for origin in origins:
+        assert type(origin) is Origin
+
     if type(sources) not in (Grid, UnstructuredGrid):
         raise TypeError
-    subsets = None
-    subset = None
 
-
+    _subset = None
     if _is_mpi_env():
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         iproc, nproc = comm.rank, comm.size
+
         if nproc > sources.size:
             raise Exception('Number of CPU cores exceeds size of grid')
 
         # partition grid and scatter across processes
+        _subsets = None
         if iproc == 0:
-            subsets = sources.partition(nproc)
-        subset = comm.scatter(subsets, root=0)
+            _subsets = sources.partition(nproc)
+        _subset = comm.scatter(_subsets, root=0)
         if iproc != 0:
             timed = False
             msg_interval = 0
@@ -100,7 +104,7 @@ def grid_search(data, greens, misfit, origins, sources,
 
     # evaluate misfit over origins and sources
     values = _grid_search_serial(
-        data, greens, misfit, origins, subset or sources, timed=timed, 
+        data, greens, misfit, origins, _subset or sources, timed=timed, 
         msg_interval=msg_interval)
 
     if _is_mpi_env() and gather:
@@ -304,8 +308,6 @@ def _is_mpi_env():
 def _to_dataarray(origins, sources, values):
     """ Converts grid_search inputs to DataArray
     """
-    from mtuq.grid import Grid
-
     origin_dims = ('origin_idx',)
     origin_coords = [np.arange(len(origins))]
     origin_shape = (len(origins),)

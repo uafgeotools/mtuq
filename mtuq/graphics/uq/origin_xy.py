@@ -9,15 +9,15 @@ import subprocess
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning,\
+from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning,\
     _parse_filetype, _parse_title
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath, warn
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_xy(filename, ds, origins, sources, title='', labeltype='latlon',
-    add_colorbar=False, add_marker=True):
+def plot_misfit_xy(filename, ds, origins, sources, title='', 
+    labeltype='latlon', colorbar_type=0, marker_type=1):
     """ Plots misfit versus hypocenter position
 
 
@@ -32,35 +32,24 @@ def plot_misfit_xy(filename, ds, origins, sources, title='', labeltype='latlon',
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
     """
     x, y = _get_xy(origins)
 
     _check(ds)
     ds = ds.copy()
 
-
     if issubclass(type(ds), DataArray):
         values, indices = _min_dataarray(ds)
         best_sources = _get_sources(sources, indices)
-
 
     elif issubclass(type(ds), DataFrame):
         values, indices = _min_dataframe(ds)
         best_sources = _get_sources(sources, indices)
 
-
     _plot_misfit_xy(filename, x, y, values, title, labeltype)
 
 
-def plot_mt_xy(filename, ds, origins, sources, title='', labeltype='latlon',
-    add_colorbar=False, add_marker=True):
+def plot_mt_xy(filename, ds, origins, sources, title='', labeltype='latlon'):
     """ Plots focal mechanism versus hypocenter position
 
 
@@ -75,29 +64,19 @@ def plot_mt_xy(filename, ds, origins, sources, title='', labeltype='latlon',
     ``title`` (`str`):
     Optional figure title
 
-
-    .. rubric :: Usage
-
-    Moment tensors and corresponding misfit values must be given in the format
-    returned by `mtuq.grid_search` (in other words, as a `DataArray` or 
-    `DataFrame`.)
-
     """
     x, y = _get_xy(origins)
 
     _check(ds)
     ds = ds.copy()
 
-
     if issubclass(type(ds), DataArray):
         values, indices = _min_dataarray(ds)
         best_sources = _get_sources(sources, indices)
 
-
     elif issubclass(type(ds), DataFrame):
         values, indices = _min_dataframe(ds)
         best_sources = _get_sources(sources, indices)
-
 
     _plot_mt_xy_gmt(filename, x, y, best_sources, title, labeltype)
 
@@ -168,7 +147,7 @@ def _sum_dataframe(ds):
 #
 
 def _plot_misfit_xy(filename, x, y, values, title='', labeltype='latlon',
-    add_colorbar=False, add_marker=True, cmap='hot'):
+    colorbar_type=0, marker_type=1, cmap='hot'):
 
     xlabel, ylabel = _get_labeltype(x, y, labeltype)
 
@@ -184,7 +163,7 @@ def _plot_misfit_xy(filename, x, y, values, title='', labeltype='latlon',
 
     pyplot.tricontourf(x, y, values, 100, cmap=cmap)
 
-    if add_marker:
+    if marker_type:
         idx = values.argmin()
         coords = x[idx], y[idx]
 

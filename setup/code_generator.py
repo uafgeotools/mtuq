@@ -897,6 +897,8 @@ Main_TestMisfit="""
 
     print('')
 
+    assert results_0.argmin()==results_1.argmin()==results_2.argmin()
+
 
     print('Evaluating surface wave misfit...\\n')
 
@@ -920,6 +922,8 @@ Main_TestMisfit="""
     print('  optimization level:  2\\n', 
           '  argmin:  %d\\n' % results_2.argmin(), 
           '  min:     %e\\n\\n' % results_2.min())
+
+    assert results_0.argmin()==results_1.argmin()==results_2.argmin()
 
 
 """
@@ -1291,7 +1295,6 @@ if __name__=='__main__':
             Imports,
             ))
         file.write(Docstring_TestMisfit)
-        file.write(ArgparseDefinitions)
         file.write(Paths_FK)
         file.write(
             replace(

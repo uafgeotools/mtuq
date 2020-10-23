@@ -17,7 +17,7 @@ from mtuq.util.signal import get_distance_in_deg, resample
 
 class Client(ClientBase):
     """ 
-    AxiSEM NetCDF database client (based on instaseis)
+    AxiSEM NetCDF database client (based on `instaseis <https://instaseis.net/>`_)
 
 
     .. rubric:: Usage
@@ -59,8 +59,13 @@ class Client(ClientBase):
         Returns a ``GreensTensorList`` in which each element corresponds to a
         (station, origin) pair from the given lists
 
-        :param stations: List of ``mtuq.Station`` objects
-        :param origins: List of ``mtuq.Origin`` objects
+        .. rubric :: Input arguments
+
+        ``stations`` (`list` of `mtuq.Station` objects)
+
+        ``origins`` (`list` of `mtuq.Origin` objects)
+
+        ``verbose`` (`bool`)
         """
         return super(Client, self).get_greens_tensors(stations, origins, verbose)
 
