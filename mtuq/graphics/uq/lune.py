@@ -19,7 +19,7 @@ from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular
 
 
 def plot_misfit_lune(filename, ds, title='',
-    colorbar_type=1, add_marker=True, colorbar_label='', 
+    colorbar_type=1, marker_type=1, colorbar_label='', 
     show_beachballs=False):
 
     """ Plots misfit values on eigenvalue lune (requires GMT)
@@ -51,11 +51,11 @@ def plot_misfit_lune(filename, ds, title='',
         gamma, delta, values = _bin(ds, lambda ds: ds.min())
 
     gmt_plot_misfit_lune(filename, gamma, delta, values, 
-        colorbar_type=colorbar_type, add_marker=add_marker, title=title)
+        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
 
 def plot_likelihood_lune(filename, ds, sigma=None, title='',
-    colorbar_type=1, add_marker=True, colorbar_label=''):
+    colorbar_type=1, marker_type=2, colorbar_label=''):
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -97,11 +97,11 @@ def plot_likelihood_lune(filename, ds, sigma=None, title='',
     values /= area*values.sum()
 
     gmt_plot_likelihood_lune(filename, gamma, delta, values,
-        colorbar_type=colorbar_type, add_marker=add_marker, title=title)
+        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
 
 def plot_marginal_lune(filename, ds, sigma=None, title='',
-    colorbar_type=1, add_marker=True, colorbar_label=''):
+    colorbar_type=1, marker_type=2, colorbar_label=''):
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -143,7 +143,7 @@ def plot_marginal_lune(filename, ds, sigma=None, title='',
     values /= area*values.sum()
 
     gmt_plot_likelihood_lune(filename, gamma, delta, values,
-        colorbar_type=colorbar_type, add_marker=add_marker, title=title)
+        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
 
 

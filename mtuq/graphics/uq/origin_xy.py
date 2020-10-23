@@ -17,7 +17,7 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 def plot_misfit_xy(filename, ds, origins, sources, title='', 
-    labeltype='latlon', colorbar_type=0, add_marker=True):
+    labeltype='latlon', colorbar_type=0, marker_type=1):
     """ Plots misfit versus hypocenter position
 
 
@@ -49,8 +49,7 @@ def plot_misfit_xy(filename, ds, origins, sources, title='',
     _plot_misfit_xy(filename, x, y, values, title, labeltype)
 
 
-def plot_mt_xy(filename, ds, origins, sources, title='', labeltype='latlon',
-    colorbar_type=0, add_marker=True):
+def plot_mt_xy(filename, ds, origins, sources, title='', labeltype='latlon'):
     """ Plots focal mechanism versus hypocenter position
 
 
@@ -148,7 +147,7 @@ def _sum_dataframe(ds):
 #
 
 def _plot_misfit_xy(filename, x, y, values, title='', labeltype='latlon',
-    colorbar_type=0, add_marker=True, cmap='hot'):
+    colorbar_type=0, marker_type=1, cmap='hot'):
 
     xlabel, ylabel = _get_labeltype(x, y, labeltype)
 
@@ -164,7 +163,7 @@ def _plot_misfit_xy(filename, x, y, values, title='', labeltype='latlon',
 
     pyplot.tricontourf(x, y, values, 100, cmap=cmap)
 
-    if add_marker:
+    if marker_type:
         idx = values.argmin()
         coords = x[idx], y[idx]
 

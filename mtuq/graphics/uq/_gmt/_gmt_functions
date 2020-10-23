@@ -28,6 +28,24 @@ function gmt_settings {
 }
 
 
+function add_marker_beta {
+    marker_type=$1
+    in=$2
+    out=$3
+    proj_arg=$4
+    area_arg=$5
+    coords="$6"
+
+    if [ -z "$coords" ]; then
+        return
+    fi
+
+    echo $coords |\
+    gmt psxy -N -Sc23p -W2.0p,0/255/0 $proj_arg $area_arg -O -K >> $ps
+
+}
+
+
 function add_marker {
     ps=$1
     proj_arg=$2

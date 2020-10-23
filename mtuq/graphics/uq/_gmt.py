@@ -91,7 +91,7 @@ def gmt_plot_likelihood_force(filename, phi, h, values, **kwargs):
 
 def _call(shell_script, filename, lon, lat, values,
     zmin=None, zmax=None, dz=None, exp=0,
-    colorbar_type=0, add_marker=True, title=''):
+    colorbar_type=0, marker_type=0, title=''):
 
     filetype = _parse_filetype(filename)
     title, subtitle = _parse_title(title)
@@ -112,7 +112,7 @@ def _call(shell_script, filename, lon, lat, values,
             dz,
             exp,
             int(bool(colorbar_type)),
-            int(bool(add_marker)),
+            int(bool(marker_type)),
             title,
             subtitle
             ),

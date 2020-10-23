@@ -2,7 +2,7 @@
 
 
 # USAGE
-#   plot_misfit_force in out filetype zmin zmax dz colorbar_exp colorbar_type add_marker [title] [subtitle]
+#   plot_misfit_force in out filetype zmin zmax dz colorbar_exp colorbar_type marker_type [title] [subtitle]
 #
 #   Plots lon,lat,msifit values from ASCII file on eigenvalue lune
 #
@@ -13,8 +13,9 @@
 #    ZMIN - colorbar minimum
 #    ZMAX - colorbar maximum
 #    DZ - colorbar increment
-#    colorbar_type - 0: no colobar 1: horizontal colorbar
-#    ADD_MARKER - 0: no marker, 1: marker
+#    COLORBAR_EXP - color scaling factor 10**exp
+#    COLORBAR_TYPE - 0: no colobar 1: horizontal colorbar
+#    MARKER_TYPE - 0: no marker, 1: marker
 #    TITLE - optional title string
 #    SUBTITLE - optional subtitle string
 #
@@ -42,7 +43,7 @@ zmax=$5
 dz=$6
 colorbar_exp=$7
 colorbar_type=$8
-add_marker=$9
+marker_type=$9
 title="${10}"
 subtitle="${11}"
 colorbar_label=""
@@ -87,7 +88,7 @@ fi
 
 
 # display marker
-if [ $add_marker -eq 1 ]; then
+if [ $marker_type -eq 1 ]; then
     marker_coords="$(idxmin $in)"
     add_marker $ps $proj_arg $area_arg "$marker_coords"
 fi

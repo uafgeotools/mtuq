@@ -147,7 +147,7 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
 #
 
 def _plot_misfit_vw(filename, v, w, values,
-    colorbar_type=1, add_marker=True, title=''):
+    colorbar_type=1, marker_type=1, title=''):
 
     if _nothing_to_plot(values):
         return
@@ -157,7 +157,7 @@ def _plot_misfit_vw(filename, v, w, values,
         cmap='hot',
         title=title)
 
-    if add_marker:
+    if marker_type:
         idx = np.unravel_index(values.argmin(), values.shape)
         coords = v[idx[1]], w[idx[0]]
 
@@ -169,10 +169,11 @@ def _plot_misfit_vw(filename, v, w, values,
             )
 
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 def _plot_likelihood_vw(filename, v, w, values,
-    colorbar_type=1, add_marker=True, title=''):
+    colorbar_type=1, marker_type=2, title=''):
 
     if _nothing_to_plot(values):
         return
@@ -182,7 +183,7 @@ def _plot_likelihood_vw(filename, v, w, values,
         cmap='hot_r',
         title=title)
 
-    if add_marker:
+    if marker_type:
         idx = np.unravel_index(values.argmax(), values.shape)
         coords = v[idx[1]], w[idx[0]]
 
