@@ -37,7 +37,7 @@ def plot_data_synthetics(filename,
         station_labels=True, 
         trace_labels=True):
 
-    """ Creates CAP-style data/synthetics figure
+    """ Creates CAPUAF-style data/synthetics figure
     """
     # body wave datasets can be empty
     if not data_bw:
@@ -269,7 +269,7 @@ def plot_data_greens(filename,
         source_dict,
         **kwargs):
 
-    """ Creates CAP-style data/synthetics figure
+    """ Creates CAPUAF-style data/synthetics figure
 
     Similar to plot_data_synthetics, except provides different input argument
     syntax
@@ -427,7 +427,7 @@ def add_station_labels(ax, station, origin):
 
 
 def add_trace_labels(axis, dat, syn, total_misfit=1.):
-    """ Adds CAP-style annotations to current axes
+    """ Adds CAPUAF-style annotations to current axes
     """
     ymin = axis.get_ylim()[0]
 

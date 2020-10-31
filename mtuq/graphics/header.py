@@ -218,8 +218,8 @@ class MomentTensorHeader(Base):
         py -= 0.30
 
         if self.process_bw and self.process_bw:
-            line = ('body waves:  %s (%.1f s window);  ' +\
-                    'surface waves: %s (%.1f s window)') %\
+            line = ('body waves:  %s (%.1f s),  ' +\
+                    'surface waves: %s (%.1f s)') %\
                     (self.passband_bw, self.process_bw.window_length,
                      self.passband_sw, self.process_sw.window_length)
 
@@ -332,7 +332,7 @@ class ForceHeader(Base):
         py -= 0.30
 
         if self.process_bw and self.process_bw:
-            line = ('body waves:  %s (%.1f s);  ' +\
+            line = ('body waves:  %s (%.1f s),  ' +\
                     'surface waves: %s (%.1f s) ') %\
                     (self.passband_bw, self.process_bw.window_length,
                      self.passband_sw, self.process_sw.window_length)
