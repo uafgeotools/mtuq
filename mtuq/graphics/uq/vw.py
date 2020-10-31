@@ -198,6 +198,8 @@ def _plot_likelihood_vw(filename, v, w, values,
             facecolors='none',
             edgecolors=[0,1,0],
             linewidths=1.75,
+            clip_on=False,
+            zorder=100,
             )
 
     pyplot.savefig(filename)
