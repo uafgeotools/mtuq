@@ -168,9 +168,9 @@ def to_xyz(F0, phi, h):
     phi = np.radians(phi)
     theta = np.arccos(h)
 
-    x = F0*np.sin(phi)*np.cos(theta)
-    y = F0*np.sin(phi)*np.sin(theta)
-    z = F0*np.cos(phi)
+    x = F0*np.sin(theta)*np.cos(phi)
+    y = F0*np.sin(theta)*np.sin(phi)
+    z = F0*np.cos(theta)
 
     if type(F0) is np.ndarray:
         return np.column_stack([x, y, z])
@@ -186,9 +186,9 @@ def to_rtp(F0, phi, h):
     phi = np.radians(phi)
     theta = np.arccos(h)
 
-    x = F0*np.sin(phi)*np.cos(theta)
-    y = F0*np.sin(phi)*np.sin(theta)
-    z = F0*np.cos(phi)
+    x = F0*np.sin(theta)*np.cos(phi)
+    y = F0*np.sin(theta)*np.sin(phi)
+    z = F0*np.cos(theta)
 
     if type(F0) is np.ndarray:
         return np.column_stack([z, -y, x,])
