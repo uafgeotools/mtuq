@@ -225,10 +225,12 @@ def _plot_vw(v, w, values, colorbar_type=0, cmap='hot', title=None):
     pyplot.yticks([], [])
 
     if colorbar_type:
-        pyplot.colorbar(
+        cbar = pyplot.colorbar(
             orientation='horizontal',
             pad=0.,
             )
+
+        cbar.formatter.set_powerlimits((-2, 2))
 
     if title:
         fontdict = {'fontsize': 16}
