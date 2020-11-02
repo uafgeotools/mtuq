@@ -265,7 +265,7 @@ function get_colorbar_arg1 {
 
     label=$1
 
-    colorbar_arg1="-Bxaf1"
+    colorbar_arg1="-Bxa"
 
     if [ ! -z "$label" ]; then
         colorbar_arg1="${colorbar_arg1}+l${label}"
