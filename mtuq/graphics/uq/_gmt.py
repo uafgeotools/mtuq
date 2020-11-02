@@ -7,11 +7,11 @@ from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
     gmt_formats
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180
-from os.path import basename, splitext
+from os.path import basename, exists, splitext
 
 
 
-def gmt_plot_misfit_lune(filename, lon, lat, values, **kwargs):
+def gmt_plot_misfit_lune(filename, lon, lat, values, colormap='panoply', **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -22,14 +22,15 @@ def gmt_plot_misfit_lune(filename, lon, lat, values, **kwargs):
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
         filename, 
         lon, lat, values, 
-        minval=minval,
-        maxval=maxval,
-        dz=(maxval-minval)/20.,
-        exp=exp,
+        z_min=minval,
+        z_max=maxval,
+        z_exp=exp,
+        cpt_name=colormap,
+        cpt_step=(maxval-minval)/20.,
         **kwargs)
 
 
-def gmt_plot_likelihood_lune(filename, lon, lat, values, **kwargs):
+def gmt_plot_likelihood_lune(filename, lon, lat, values, colormap='hot', **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -40,14 +41,15 @@ def gmt_plot_likelihood_lune(filename, lon, lat, values, **kwargs):
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
         filename, 
         lon, lat, values,
-        minval=minval,
-        maxval=maxval,
-        dz=(maxval-minval)/10.,
-        exp=exp,
+        z_min=minval,
+        z_max=maxval,
+        z_exp=exp,
+        cpt_name=colormap,
+        cpt_step=(maxval-minval)/10.,
         **kwargs)
 
 
-def gmt_plot_misfit_force(filename, phi, h, values, **kwargs):
+def gmt_plot_misfit_force(filename, phi, h, values, colormap='panoply', **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -61,14 +63,15 @@ def gmt_plot_misfit_force(filename, phi, h, values, **kwargs):
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
         filename,
         lon, lat, values,
-        minval=minval,
-        maxval=maxval,
-        dz=(maxval-minval)/20.,
-        exp=exp,
+        z_min=minval,
+        z_max=maxval,
+        z_exp=exp,
+        cpt_name=colormap,
+        cpt_step=(maxval-minval)/20.,
         **kwargs)
 
 
-def gmt_plot_likelihood_force(filename, phi, h, values, **kwargs):
+def gmt_plot_likelihood_force(filename, phi, h, values, colormap='hot', **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -82,15 +85,17 @@ def gmt_plot_likelihood_force(filename, phi, h, values, **kwargs):
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
         filename,
         lon, lat, values,
-        minval=minval,
-        maxval=maxval,
-        dz=(maxval-minval)/10.,
-        exp=exp,
+        z_min=minval,
+        z_max=maxval,
+        z_exp=exp,
+        cpt_name=colormap,
+        cpt_step=(maxval-minval)/10.,
         **kwargs)
 
 
 def _call(shell_script, filename, lon, lat, values,
-    minval=None, maxval=None, dz=None, exp=0,
+    z_min=None, z_max=None, z_exp=0, 
+    cpt_name='panoply', cpt_step=None, cpt_reverse=False,
     colorbar_type=0, marker_type=0, title=''):
 
     print('  calling GMT script: %s' % basename(shell_script))
@@ -102,17 +107,24 @@ def _call(shell_script, filename, lon, lat, values,
     ascii_data = 'tmp_'+filename+'.txt'
     _savetxt(ascii_data, lon, lat, values)
 
+    cpt_local = fullpath('mtuq/graphics/_gmt/cpt', cpt_name+'.cpt')
+
+    if exists(cpt_local):
+       cpt_name = cpt_local
+
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %e %e %e %d %s %s %s %s" %
+        subprocess.call("%s %s %s %s %e %e %d %e %s %d %d %d %s %s" %
            (shell_script,
             ascii_data,
             filename,
             filetype,
-            minval,
-            maxval,
-            dz,
-            exp,
+            z_min,
+            z_max,
+            z_exp,
+            cpt_step,
+            cpt_name,
+            int(bool(cpt_reverse)),
             int(colorbar_type),
             int(marker_type),
             title,

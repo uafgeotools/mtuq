@@ -6,10 +6,18 @@ import shutil
 import subprocess
 
 from matplotlib.colors import LinearSegmentedColormap, hsv_to_rgb, Normalize
-from mtuq.graphics._gmtcolors import GMTCOLORS
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180
 from os.path import splitext
+
+
+gmt_colors = {
+    # Name:  (R   G   B)
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+    'yellow': (255, 255, 0),
+    'red': (255, 0, 0),
+    }
 
 
 gmt_formats = [
@@ -99,7 +107,7 @@ def _parse_cpt(cpt, name, color_model='RGB', N=256):
             b.append(float(fields[3]))
             xi = 4
         except ValueError:
-            r_, g_, b_ = GMTCOLORS[fields[1]]
+            r_, g_, b_ = gmt_colors[fields[1]]
             r.append(float(r_))
             g.append(float(g_))
             b.append(float(b_))
@@ -112,7 +120,7 @@ def _parse_cpt(cpt, name, color_model='RGB', N=256):
         g.append(float(fields[xi + 2]))
         b.append(float(fields[xi + 3]))
     except ValueError:
-        r_, g_, b_ = GMTCOLORS[fields[-1]]
+        r_, g_, b_ = gmt_colors[fields[-1]]
         r.append(float(r_))
         g.append(float(g_))
         b.append(float(b_))

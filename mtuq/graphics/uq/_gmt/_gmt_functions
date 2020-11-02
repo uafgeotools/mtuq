@@ -260,6 +260,20 @@ function get_image_format_arg {
 }
 
 
+function get_cpt_args {
+
+    cpt_name=$1
+    cpt_reverse=$2
+
+    if [ $cpt_reverse -ne 0 ]; then
+        echo "-C${cpt_name} -Ic"
+    else
+        echo "-C${cpt_name}"
+    fi
+
+}
+
+
 function get_colorbar_arg1 {
     # constructs the main colorbar label
 

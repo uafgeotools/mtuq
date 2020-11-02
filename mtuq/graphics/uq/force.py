@@ -18,7 +18,7 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 def plot_misfit_force(filename, ds, misfit_callback=None, title='', 
-    colorbar_type=1, marker_type=1, colorbar_label=''):
+    colormap='panoply', colormap_reverse=False, colorbar_type=1, marker_type=1):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -54,12 +54,11 @@ def plot_misfit_force(filename, ds, misfit_callback=None, title='',
         values = misfit_callback(values)
 
     gmt_plot_misfit_force(filename, phi, h, values, 
-        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
-
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
 
 def plot_likelihood_force(filename, ds, sigma=None, title='',
-    colorbar_type=1, marker_type=2, colorbar_label=''):
+    colormap='hot_r', colorbar_type=1, marker_type=2):
 
     """ Plots maximum likelihoods on `v-w` rectangle
 
@@ -95,12 +94,11 @@ def plot_likelihood_force(filename, ds, sigma=None, title='',
     values /= 4.*np.pi*values.sum()
 
     gmt_plot_likelihood_force(filename, phi, h, values,
-        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
-
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
 
 def plot_marginal_force(filename, ds, sigma=None, title='',
-    colorbar_type=1, marker_type=2, colorbar_label=''):
+    colormap='hot_r', colorbar_type=1, marker_type=2):
     """ Plots marginal likelihoods on `v-w` rectangle
 
 
@@ -137,11 +135,8 @@ def plot_marginal_force(filename, ds, sigma=None, title='',
     values /= 4.*np.pi*values.sum()
 
     gmt_plot_likelihood_force(filename, phi, h, values,
-        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type, title=title)
 
-
-
-# utility functions
 
 def _check(ds):
     """ Checks data structures
@@ -178,6 +173,5 @@ def _bin(df, handle, npts_phi=60, npts_h=30):
             binned[_i, _j] = handle(subset[0])
 
     return centers_phi, centers_h, binned
-
 
 
