@@ -11,6 +11,7 @@ from mtuq.graphics._gmt import read_cpt
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath, warn
 from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma
+from os.path import exists
 
 
 def plot_misfit_dc(filename, ds, title='',
@@ -22,7 +23,7 @@ def plot_misfit_dc(filename, ds, title='',
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        _plot_dc(filename, _squeeze(ds), cmap=cmap_panoply)
+        _plot_dc(filename, _squeeze(ds), cmap='panoply')
         
     elif issubclass(type(ds), DataFrame):
         warn('plot_misfit_dc not implemented for irregularly-spaced grids')
@@ -36,7 +37,7 @@ def plot_likelihood_dc(filename, ds, sigma=None, title=''):
 
     if issubclass(type(ds), DataArray):
         ds.values = np.exp(-ds.values/(2.*sigma**2))
-        _plot_dc(filename, _squeeze(ds), cmap=cmap_hot,
+        _plot_dc(filename, _squeeze(ds), cmap='hot',
                  colorbar_type=colorbar_type, marker_type=marker_type)
 
     elif issubclass(type(ds), DataFrame):
@@ -76,7 +77,7 @@ def _check(ds):
 # matplotlib backend
 #
 
-def _plot_dc(filename, da, colorbar_type=1, marker_type=1, **kwargs):
+def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs):
     # FIXME: do labels correspond to the correct axes ?!
 
     # prepare axes
@@ -88,6 +89,9 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, **kwargs):
         wspace=0.4,
         hspace=0.4,
         )
+
+    if exists(_local_path(cmap)):
+       cmap = read_cpt(_local_path(cmap))
 
     # upper left panel
     marginal = da.min(dim=('sigma'))
@@ -155,7 +159,6 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, **kwargs):
     pyplot.savefig(filename)
 
 
-
 def _add_marker(axis, coords):
     axis.scatter(*coords, s=250,
         marker='o',
@@ -179,7 +182,7 @@ def _minmax(x, y, values):
 
 axis_label_kwargs = {
     'fontsize': 14
-}
+    }
 
 
 kappa_ticks = [0, 45, 90, 135, 180, 225, 270, 315, 360]
@@ -192,11 +195,6 @@ theta_ticks = [np.cos(np.radians(tick)) for tick in [0, 15, 30, 45, 60, 75, 90]]
 theta_ticklabels = ['0', '', '30', '', '60', '', '90']
 
 
-try:
-    cmap_hot = read_cpt(fullpath('mtuq/graphics/_gmt/cpt/hot.cpt'))
-    cmap_hot_r = read_cpt(fullpath('mtuq/graphics/_gmt/cpt/hot_r.cpt'))
-    cmap_panoply = read_cpt(fullpath('mtuq/graphics/_gmt/cpt/panoply.cpt'))
-except:
-    pass
-
+def _local_path(name):
+    return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
 

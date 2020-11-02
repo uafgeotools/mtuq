@@ -8,9 +8,12 @@ import numpy as np
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
+from mtuq.graphics._gmt import read_cpt
 from mtuq.graphics.uq._gmt import _nothing_to_plot
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
+from mtuq.util import fullpath
 from mtuq.util.math import closed_interval, open_interval
+from os.path import exists
 
 
 #
@@ -224,6 +227,9 @@ def _plot_vw(v, w, values, colorbar_type=0, cmap='hot', title=None):
     pyplot.xticks([], [])
     pyplot.yticks([], [])
 
+    if exists(_local_path(cmap)):
+       cmap = read_cpt(_local_path(cmap))
+
     if colorbar_type:
         cbar = pyplot.colorbar(
             orientation='horizontal',
@@ -236,9 +242,6 @@ def _plot_vw(v, w, values, colorbar_type=0, cmap='hot', title=None):
         fontdict = {'fontsize': 16}
         pyplot.title(title, fontdict=fontdict)
 
-
-
-# utility functions
 
 def _check(ds):
     """ Checks data structures
@@ -283,4 +286,9 @@ def _centers_to_edges(v):
     v[-1] = v[-2] + dv
 
     return v
+
+
+def _local_path(name):
+    return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
+
 
