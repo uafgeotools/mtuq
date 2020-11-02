@@ -17,14 +17,14 @@ def gmt_plot_misfit_lune(filename, lon, lat, values, **kwargs):
         return
 
     lon, lat =  _parse_lonlat(lon,lat)
-    values, zmin, zmax, exp = _parse_values(values)
+    values, minval, maxval, exp = _parse_values(values)
 
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_misfit_lune'),
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
         filename, 
         lon, lat, values, 
-        zmin=zmin,
-        zmax=zmax,
-        dz=(zmax-zmin)/20.,
+        minval=minval,
+        maxval=maxval,
+        dz=(maxval-minval)/20.,
         exp=exp,
         **kwargs)
 
@@ -35,14 +35,14 @@ def gmt_plot_likelihood_lune(filename, lon, lat, values, **kwargs):
         return
 
     lon, lat =  _parse_lonlat(lon,lat)
-    values, zmin, zmax, exp = _parse_values(values)
+    values, minval, maxval, exp = _parse_values(values)
 
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_likelihood_lune'),
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
         filename, 
         lon, lat, values,
-        zmin=zmin,
-        zmax=zmax,
-        dz=(zmax-zmin)/10.,
+        minval=minval,
+        maxval=maxval,
+        dz=(maxval-minval)/10.,
         exp=exp,
         **kwargs)
 
@@ -56,14 +56,14 @@ def gmt_plot_misfit_force(filename, phi, h, values, **kwargs):
     lon = wrap_180(phi + 90.)
 
     lon, lat =  _parse_lonlat(lon,lat)
-    values, zmin, zmax, exp = _parse_values(values)
+    values, minval, maxval, exp = _parse_values(values)
 
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_misfit_force'),
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
         filename,
         lon, lat, values,
-        zmin=zmin,
-        zmax=zmax,
-        dz=(zmax-zmin)/20.,
+        minval=minval,
+        maxval=maxval,
+        dz=(maxval-minval)/20.,
         exp=exp,
         **kwargs)
 
@@ -77,20 +77,20 @@ def gmt_plot_likelihood_force(filename, phi, h, values, **kwargs):
     lon = wrap_180(phi + 90.)
 
     lon, lat =  _parse_lonlat(lon,lat)
-    values, zmin, zmax, exp = _parse_values(values)
+    values, minval, maxval, exp = _parse_values(values)
 
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_likelihood_force'),
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
         filename,
         lon, lat, values,
-        zmin=zmin,
-        zmax=zmax,
-        dz=(zmax-zmin)/10.,
+        minval=minval,
+        maxval=maxval,
+        dz=(maxval-minval)/10.,
         exp=exp,
         **kwargs)
 
 
 def _call(shell_script, filename, lon, lat, values,
-    zmin=None, zmax=None, dz=None, exp=0,
+    minval=None, maxval=None, dz=None, exp=0,
     colorbar_type=0, marker_type=0, title=''):
 
     print('  calling GMT script: %s' % basename(shell_script))
@@ -109,8 +109,8 @@ def _call(shell_script, filename, lon, lat, values,
             ascii_data,
             filename,
             filetype,
-            zmin,
-            zmax,
+            minval,
+            maxval,
             dz,
             exp,
             int(colorbar_type),
@@ -223,4 +223,4 @@ def _savetxt(filename, gamma, delta, values):
     # FIXME: can GMT accept virtual files?
     np.savetxt(filename, np.column_stack([gamma, delta, values]))
 
-
+#
