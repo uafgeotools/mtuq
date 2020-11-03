@@ -175,8 +175,9 @@ if __name__=='__main__':
     print('Saving results...\n')
 
     plot_data_greens(event_id+'DC_waveforms.png', 
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+        [data_bw, data_sw], [greens_bw, greens_sw], 
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        stations, origin, best_source, lune_dict)
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 

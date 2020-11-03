@@ -70,12 +70,14 @@ if True:
 
 
     misfit_bw = Misfit(
+        norm='L2',
         time_shift_min=-2.,
         time_shift_max=+2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
+        norm='L2',
         time_shift_min=-10.,
         time_shift_max=+10.,
         time_shift_groups=['ZR','T'],

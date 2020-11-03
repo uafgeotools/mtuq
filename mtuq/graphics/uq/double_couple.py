@@ -101,7 +101,7 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     minmax1 = _minmax(x, y, marginal)
 
     axis = axes[0][0]
-    axis.pcolor(x, y, marginal.values, shading='auto', **kwargs)
+    axis.pcolor(x, y, marginal.values, shading='auto', cmap=cmap, **kwargs)
 
     axis.set_xlabel('Dip', **axis_label_kwargs)
     axis.set_xticks(theta_ticks)
@@ -119,7 +119,7 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     minmax2 = _minmax(x, y, marginal)
 
     axis = axes[0][1]
-    axis.pcolor(x, y, marginal.values, shading='auto', **kwargs)
+    axis.pcolor(x, y, marginal.values, shading='auto', cmap=cmap, **kwargs)
 
     axis.set_xlabel('Slip', **axis_label_kwargs)
     axis.set_xticks(sigma_ticks)
@@ -137,7 +137,7 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     minmax3 = _minmax(x, y, marginal.T)
 
     axis = axes[1][1]
-    axes[1][1].pcolor(x, y, marginal.values.T, shading='auto', **kwargs)
+    axes[1][1].pcolor(x, y, marginal.values.T, shading='auto', cmap=cmap, **kwargs)
 
     axis.set_xlabel('Slip', **axis_label_kwargs)
     axis.set_xticks(sigma_ticks)

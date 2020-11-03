@@ -18,7 +18,7 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 def plot_misfit_force(filename, ds, misfit_callback=None, title='', 
-    colormap='panoply', colormap_reverse=False, colorbar_type=1, marker_type=1):
+    colormap='panoply', colorbar_type=1, marker_type=1):
     """ Plots misfit values on `v-w` rectangle
 
 
@@ -53,8 +53,8 @@ def plot_misfit_force(filename, ds, misfit_callback=None, title='',
     if misfit_callback:
         values = misfit_callback(values)
 
-    gmt_plot_misfit_force(filename, phi, h, values, 
-        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type, title=title)
+    gmt_plot_misfit_force(filename, phi, h, values, title=title, 
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 
 def plot_likelihood_force(filename, ds, sigma=None, title='',
@@ -93,8 +93,8 @@ def plot_likelihood_force(filename, ds, sigma=None, title='',
 
     values /= 4.*np.pi*values.sum()
 
-    gmt_plot_likelihood_force(filename, phi, h, values,
-        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type, title=title)
+    gmt_plot_likelihood_force(filename, phi, h, values, title=title,
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 
 def plot_marginal_force(filename, ds, sigma=None, title='',
@@ -134,8 +134,8 @@ def plot_marginal_force(filename, ds, sigma=None, title='',
 
     values /= 4.*np.pi*values.sum()
 
-    gmt_plot_likelihood_force(filename, phi, h, values,
-        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type, title=title)
+    gmt_plot_likelihood_force(filename, phi, h, values, title=title,
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 
 def _check(ds):

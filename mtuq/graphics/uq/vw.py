@@ -170,7 +170,7 @@ def _plot_misfit_vw(filename, v, w, values,
         idx = np.unravel_index(values.argmin(), values.shape)
         coords = v[idx[1]], w[idx[0]]
 
-        pyplot.scatter(*coords, s=250,
+        pyplot.scatter(*coords, s=333,
             marker='o',
             facecolors='none',
             edgecolors=[0,1,0],
@@ -196,7 +196,7 @@ def _plot_likelihood_vw(filename, v, w, values,
         idx = np.unravel_index(values.argmax(), values.shape)
         coords = v[idx[1]], w[idx[0]]
 
-        pyplot.scatter(*coords, s=250,
+        pyplot.scatter(*coords, s=333,
             marker='o', 
             facecolors='none',
             edgecolors=[0,1,0],

@@ -851,14 +851,16 @@ Main_TestGraphics="""
     print('Figure 1 of 3\\n')
 
     plot_data_greens('graphics_test_1.png',
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, mt, header=False)
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [process_bw, process_sw], [misfit_bw, misfit_sw],
+        stations, origin, mt, header=False)
 
     print('Figure 2 of 3\\n')
 
     plot_data_greens('graphics_test_2.png',
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, mt, header=False)
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [process_bw, process_sw], [misfit_bw, misfit_sw],
+        stations, origin, mt, header=False)
 
     print('Figure 3 of 3\\n')
 
@@ -941,8 +943,9 @@ WrapUp_GridSearch_DoubleCouple="""
         print('Savings results...\\n')
 
         plot_data_greens(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            [data_bw, data_sw], [greens_bw, greens_sw], 
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -964,8 +967,9 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         print('Saving results...\\n')
 
         plot_data_greens(event_id+'_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
+            [data_bw, data_sw], [greens_bw, greens_sw], 
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            stations, best_origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
             results, origins, grid, event_id)
@@ -982,8 +986,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     print('Saving results...\\n')
 
     plot_data_greens(event_id+'DC_waveforms.png', 
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+        [data_bw, data_sw], [greens_bw, greens_sw], 
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        stations, origin, best_source, lune_dict)
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -1000,8 +1005,9 @@ WrapUp_TestGridSearch_DoubleCouple="""
     if run_figures:
 
         plot_data_greens(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            [data_bw, data_sw], [greens_bw, greens_sw], 
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
