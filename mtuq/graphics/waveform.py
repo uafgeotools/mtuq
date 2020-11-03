@@ -384,7 +384,7 @@ def _plot_ZRT(axes, ic, dat, syn, component,
         ylim = [-1.5*max_stream, +1.5*max_stream]
         axis.set_ylim(*ylim)
     elif normalize=='maximum_amplitude':
-        ylim = [-max_amplitude, +max_amplitude]
+        ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
         axis.set_ylim(*ylim)
 
     if trace_labels:
@@ -434,12 +434,13 @@ def _plot(axis, dat, syn, label=None):
     d = dat.data
     s = syn.data
 
-    # ``clip_on=False`` and ``zorder=10`` should prevent the plotted data from
-    # getting "clipped", but this doesn't seem to be happening
     axis.plot(t, d, 'k', linewidth=1.5,
         clip_on=False, zorder=10)
     axis.plot(t, s[start:stop], 'r', linewidth=1.25, 
         clip_on=False, zorder=10)
+
+    # prevents traces from getting clipped
+    axis.patch.set_alpha(0.)
 
 
 def _add_component_labels1(axes, body_wave_labels=True, surface_wave_labels=True):
@@ -514,7 +515,6 @@ def _add_station_labels(ax, station, origin):
     # display azimuth
     azimuth =  '%d%s' % (round(azimuth), u'\N{DEGREE SIGN}')
     pyplot.text(0.2,0.20, azimuth, fontsize=11, transform=ax.transAxes)
-
 
 
 def _add_trace_labels(axis, dat, syn, total_misfit=1.):
