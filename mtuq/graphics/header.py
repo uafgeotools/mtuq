@@ -103,7 +103,7 @@ class MomentTensorHeader(Base):
 
         depth_in_m = origin.depth_in_m
         depth_in_km = origin.depth_in_m/1000.
-        if depth_in_m <= 1000.:
+        if depth_in_m < 1000.:
             self.depth_str = '%.0f m' % depth_in_m
         elif depth_in_km <= 100.:
             self.depth_str = '%.1f km' % depth_in_km
@@ -266,7 +266,7 @@ class ForceHeader(Base):
 
         depth_in_m = origin.depth_in_m
         depth_in_km = origin.depth_in_m/1000.
-        if depth_in_m <= 1000.:
+        if depth_in_m < 1000.:
             self.depth_str = '%.0f m' % depth_in_m
         elif depth_in_km <= 100.:
             self.depth_str = '%.1f km' % depth_in_km
