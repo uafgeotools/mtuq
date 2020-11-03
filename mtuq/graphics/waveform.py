@@ -359,8 +359,9 @@ def _initialize(nrows=None, ncolumns=None, column_width_ratios=None,
 
 
 def _plot_ZRT(axes, ic, dat, syn, component, 
-    trace_labels=False, normalize='maximum_amplitude', 
-    total_misfit=1., max_amplitude=1.):
+    normalize='maximum_amplitude', trace_labels=False,
+    max_amplitude=1., total_misfit=1.):
+
     # plot traces
     if component=='Z':
         axis = axes[ic+0]
@@ -391,8 +392,9 @@ def _plot_ZRT(axes, ic, dat, syn, component,
 
 
 def _plot_ZR(axes, ic, dat, syn, component, 
-    trace_labels=False, normalize='maximum_amplitude', 
-    total_misfit=1., max_amplitude=1.):
+    normalize='maximum_amplitude', trace_labels=False,
+    max_amplitude=1., total_misfit=1.):
+
     # plot traces
     if component=='Z':
         axis = axes[ic+0]
