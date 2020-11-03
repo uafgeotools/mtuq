@@ -1108,8 +1108,8 @@ Main_BenchmarkCAP="""
             data_bw, data_sw, greens_bw, greens_sw, mt)
 
         if run_figures:
-            plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
-                cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+            plot_waveforms2('cap_vs_mtuq_'+str(_i)+'.png',
+                [cap_bw, cap_sw], [mtuq_bw, mtuq_sw], 
                 stations, origin, trace_labels=False)
 
         if run_checks:
@@ -1124,8 +1124,8 @@ Main_BenchmarkCAP="""
         cap_sw, cap_bw = get_data_cap(
             data_bw, data_sw, paths[0], name)
 
-        plot_data_synthetics('cap_vs_mtuq_data.png',
-            cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+        plot_waveforms2('cap_vs_mtuq_data.png',
+            [cap_bw, cap_sw], [mtuq_bw, mtuq_sw], 
             stations, origin, trace_labels=False, normalize=False)
 
     print('\\nSUCCESS\\n')
@@ -1341,7 +1341,7 @@ if __name__=='__main__':
             'syngine',
             'fk',
             'plot_data_greens',
-            'plot_data_synthetics',
+            'plot_waveforms2',
             ))
         file.write(Docstring_BenchmarkCAP)
         file.write(ArgparseDefinitions)
