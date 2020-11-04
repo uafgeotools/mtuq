@@ -18,7 +18,7 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 def plot_misfit_force(filename, ds, misfit_callback=None, title='', 
-    colormap='panoply', colorbar_type=1, marker_type=1):
+    colormap='viridis', colorbar_type=1, marker_type=1):
     """ Plots misfit values on `v-w` rectangle
 
 

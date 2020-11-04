@@ -45,7 +45,7 @@ def gmt_plot_likelihood_lune(filename, lon, lat, values, colormap='hot', **kwarg
         z_max=maxval,
         z_exp=exp,
         cpt_name=colormap,
-        cpt_step=(maxval-minval)/10.,
+        cpt_step=(maxval-minval)/20.,
         **kwargs)
 
 
@@ -89,7 +89,7 @@ def gmt_plot_likelihood_force(filename, phi, h, values, colormap='hot', **kwargs
         z_max=maxval,
         z_exp=exp,
         cpt_name=colormap,
-        cpt_step=(maxval-minval)/10.,
+        cpt_step=(maxval-minval)/20.,
         **kwargs)
 
 

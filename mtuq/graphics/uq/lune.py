@@ -19,7 +19,7 @@ from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular
 
 
 def plot_misfit_lune(filename, ds, misfit_callback=None, title='',
-    colormap='panoply', colormap_reverse=False, colorbar_type=1, marker_type=1):
+    colormap='viridis', colormap_reverse=False, colorbar_type=1, marker_type=1):
 
     """ Plots misfit values on eigenvalue lune (requires GMT)
 

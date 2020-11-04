@@ -23,7 +23,7 @@ def plot_misfit_dc(filename, ds, title='',
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        _plot_dc(filename, _squeeze(ds), cmap='panoply')
+        _plot_dc(filename, _squeeze(ds), cmap='viridis')
         
     elif issubclass(type(ds), DataFrame):
         warn('plot_misfit_dc not implemented for irregularly-spaced grids')

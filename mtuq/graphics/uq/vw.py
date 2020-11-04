@@ -208,7 +208,7 @@ def _plot_likelihood_vw(filename, v, w, values,
     pyplot.savefig(filename)
 
 
-def _plot_vw(v, w, values, colorbar_type=0, cmap='hot', title=None):
+def _plot_vw(v, w, values, colorbar_type=0, cmap='hot_r', title=None):
     # create figure
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
 
