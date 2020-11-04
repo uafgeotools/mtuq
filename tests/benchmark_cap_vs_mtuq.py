@@ -4,7 +4,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import MomentTensor
-from mtuq.graphics import plot_data_synthetics, plot_beachball, plot_misfit_dc
+from mtuq.graphics import plot_waveforms2, plot_beachball, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -127,12 +127,14 @@ if __name__=='__main__':
 
 
     misfit_bw = Misfit(
+        norm='L2',
         time_shift_min=-2.,
         time_shift_max=0.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
+        norm='L2',
         time_shift_min=-10.,
         time_shift_max=0.,
         time_shift_groups=['ZR','T'],
@@ -209,8 +211,8 @@ if __name__=='__main__':
             data_bw, data_sw, greens_bw, greens_sw, mt)
 
         if run_figures:
-            plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
-                cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+            plot_waveforms2('cap_vs_mtuq_'+str(_i)+'.png',
+                [cap_bw, cap_sw], [mtuq_bw, mtuq_sw], 
                 stations, origin, trace_labels=False)
 
         if run_checks:
@@ -225,8 +227,8 @@ if __name__=='__main__':
         cap_sw, cap_bw = get_data_cap(
             data_bw, data_sw, paths[0], name)
 
-        plot_data_synthetics('cap_vs_mtuq_data.png',
-            cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+        plot_waveforms2('cap_vs_mtuq_data.png',
+            [cap_bw, cap_sw], [mtuq_bw, mtuq_sw], 
             stations, origin, trace_labels=False, normalize=False)
 
     print('\nSUCCESS\n')

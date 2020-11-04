@@ -355,12 +355,14 @@ MisfitComments="""
 
 MisfitDefinitions="""
     misfit_bw = Misfit(
+        norm='L2',
         time_shift_min=-2.,
         time_shift_max=+2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
+        norm='L2',
         time_shift_min=-10.,
         time_shift_max=+10.,
         time_shift_groups=['ZR','T'],
@@ -849,14 +851,16 @@ Main_TestGraphics="""
     print('Figure 1 of 3\\n')
 
     plot_data_greens('graphics_test_1.png',
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, mt, header=False)
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [process_bw, process_sw], [misfit_bw, misfit_sw],
+        stations, origin, mt, header=False)
 
     print('Figure 2 of 3\\n')
 
     plot_data_greens('graphics_test_2.png',
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, mt, header=False)
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [process_bw, process_sw], [misfit_bw, misfit_sw],
+        stations, origin, mt, header=False)
 
     print('Figure 3 of 3\\n')
 
@@ -939,8 +943,9 @@ WrapUp_GridSearch_DoubleCouple="""
         print('Savings results...\\n')
 
         plot_data_greens(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            [data_bw, data_sw], [greens_bw, greens_sw], 
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -962,8 +967,9 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         print('Saving results...\\n')
 
         plot_data_greens(event_id+'_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
+            [data_bw, data_sw], [greens_bw, greens_sw], 
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            stations, best_origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
             results, origins, grid, event_id)
@@ -980,8 +986,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     print('Saving results...\\n')
 
     plot_data_greens(event_id+'DC_waveforms.png', 
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+        [data_bw, data_sw], [greens_bw, greens_sw], 
+        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        stations, origin, best_source, lune_dict)
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -998,8 +1005,9 @@ WrapUp_TestGridSearch_DoubleCouple="""
     if run_figures:
 
         plot_data_greens(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            [data_bw, data_sw], [greens_bw, greens_sw], 
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -1100,8 +1108,8 @@ Main_BenchmarkCAP="""
             data_bw, data_sw, greens_bw, greens_sw, mt)
 
         if run_figures:
-            plot_data_synthetics('cap_vs_mtuq_'+str(_i)+'.png',
-                cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+            plot_waveforms2('cap_vs_mtuq_'+str(_i)+'.png',
+                [cap_bw, cap_sw], [mtuq_bw, mtuq_sw], 
                 stations, origin, trace_labels=False)
 
         if run_checks:
@@ -1116,8 +1124,8 @@ Main_BenchmarkCAP="""
         cap_sw, cap_bw = get_data_cap(
             data_bw, data_sw, paths[0], name)
 
-        plot_data_synthetics('cap_vs_mtuq_data.png',
-            cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
+        plot_waveforms2('cap_vs_mtuq_data.png',
+            [cap_bw, cap_sw], [mtuq_bw, mtuq_sw], 
             stations, origin, trace_labels=False, normalize=False)
 
     print('\\nSUCCESS\\n')
@@ -1333,7 +1341,7 @@ if __name__=='__main__':
             'syngine',
             'fk',
             'plot_data_greens',
-            'plot_data_synthetics',
+            'plot_waveforms2',
             ))
         file.write(Docstring_BenchmarkCAP)
         file.write(ArgparseDefinitions)

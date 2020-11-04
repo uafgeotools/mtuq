@@ -86,8 +86,16 @@ class MomentTensorHeader(Base):
     """ Writes UAF-style moment tensor inversion summary to the top of a 
     matplotlib figure
     """
-    def __init__(self, event_name, process_bw, process_sw, misfit_bw, misfit_sw,
-        model, solver, mt, lune_dict, origin, best_misfit_bw, best_misfit_sw):
+    def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
+        best_misfit_bw, best_misfit_sw, model, solver, mt, lune_dict, origin,
+        event_name=None):
+
+        if not event_name:
+           # YYYY-MM-DDTHH:MM:SS.??????Z
+           event_name = '%s' % origin.time
+
+           # trim of fraction of second
+           event_name = event_name[:-8]
 
         self.event_name = event_name
         self.origin = origin
@@ -95,7 +103,7 @@ class MomentTensorHeader(Base):
 
         depth_in_m = origin.depth_in_m
         depth_in_km = origin.depth_in_m/1000.
-        if depth_in_m <= 1000.:
+        if depth_in_m < 1000.:
             self.depth_str = '%.0f m' % depth_in_m
         elif depth_in_km <= 100.:
             self.depth_str = '%.1f km' % depth_in_km
@@ -112,11 +120,10 @@ class MomentTensorHeader(Base):
         self.process_bw = process_bw
         self.process_sw = process_sw
 
-        self.misfit_bw = process_bw
-        self.misfit_sw = process_sw
-        self.norm = misfit_bw.norm
-        self.best_misfit_bw = best_misfit_bw[0]*1.e10
-        self.best_misfit_sw = best_misfit_sw[0]*1.e10
+        self.norm = misfit_sw.norm
+
+        self.best_misfit_bw = best_misfit_bw
+        self.best_misfit_sw = best_misfit_sw
         self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
 
         if not process_bw:
@@ -218,8 +225,8 @@ class MomentTensorHeader(Base):
         py -= 0.30
 
         if self.process_bw and self.process_bw:
-            line = ('body waves:  %s (%.1f s window);  ' +\
-                    'surface waves: %s (%.1f s window)') %\
+            line = ('body waves:  %s (%.1f s),  ' +\
+                    'surface waves: %s (%.1f s)') %\
                     (self.passband_bw, self.process_bw.window_length,
                      self.passband_sw, self.process_sw.window_length)
 
@@ -243,15 +250,23 @@ class ForceHeader(Base):
     """ Writes force inversion summary to the top of a matplotlib figure
     """
 
-    def __init__(self, event_name, process_bw, process_sw, misfit_bw, misfit_sw,
-        model, solver, force, force_dict, origin, best_misfit_bw, best_misfit_sw):
+    def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
+        best_misfit_bw, best_misfit_sw, model, solver, force, force_dict, origin,
+        event_name=None):
+
+        if not event_name:
+           # YYYY-MM-DDTHH:MM:SS.??????Z
+           event_name = '%s' % origin.time
+
+           # trim of fraction of second
+           event_name = event_name[:-8]
 
         self.event_name = event_name
         self.origin = origin
 
         depth_in_m = origin.depth_in_m
         depth_in_km = origin.depth_in_m/1000.
-        if depth_in_m <= 1000.:
+        if depth_in_m < 1000.:
             self.depth_str = '%.0f m' % depth_in_m
         elif depth_in_km <= 100.:
             self.depth_str = '%.1f km' % depth_in_km
@@ -267,11 +282,10 @@ class ForceHeader(Base):
         self.process_bw = process_bw
         self.process_sw = process_sw
 
-        self.misfit_bw = process_bw
-        self.misfit_sw = process_sw
-        self.norm = misfit_bw.norm
-        self.best_misfit_bw = best_misfit_bw[0]*1.e10
-        self.best_misfit_sw = best_misfit_sw[0]*1.e10
+        self.norm = misfit_sw.norm
+
+        self.best_misfit_bw = best_misfit_bw
+        self.best_misfit_sw = best_misfit_sw
         self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
 
         if not process_bw:
@@ -332,7 +346,7 @@ class ForceHeader(Base):
         py -= 0.30
 
         if self.process_bw and self.process_bw:
-            line = ('body waves:  %s (%.1f s);  ' +\
+            line = ('body waves:  %s (%.1f s),  ' +\
                     'surface waves: %s (%.1f s) ') %\
                     (self.passband_bw, self.process_bw.window_length,
                      self.passband_sw, self.process_sw.window_length)

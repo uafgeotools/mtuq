@@ -19,8 +19,7 @@ from mtuq.util.math import lune_det, to_gamma, to_delta, to_v, to_w, semiregular
 
 
 def plot_misfit_lune(filename, ds, misfit_callback=None, title='',
-    colorbar_type=1, marker_type=1, colorbar_label='', 
-    show_beachballs=False):
+    colormap='viridis', colormap_reverse=False, colorbar_type=1, marker_type=1):
 
     """ Plots misfit values on eigenvalue lune (requires GMT)
 
@@ -56,12 +55,13 @@ def plot_misfit_lune(filename, ds, misfit_callback=None, title='',
     if misfit_callback:
         values = misfit_callback(values)
 
-    gmt_plot_misfit_lune(filename, gamma, delta, values, 
-        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
+    gmt_plot_misfit_lune(filename, gamma, delta, values, title=title,
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 
 def plot_likelihood_lune(filename, ds, sigma=None, title='',
-    colorbar_type=1, marker_type=2, colorbar_label=''):
+    colormap='hot_r', colorbar_type=1, marker_type=2):
+
     """ Plots maximum likelihoods on eigenvalue lune (requires GMT)
 
 
@@ -102,12 +102,13 @@ def plot_likelihood_lune(filename, ds, sigma=None, title='',
     area = (2./3.)*np.pi
     values /= area*values.sum()
 
-    gmt_plot_likelihood_lune(filename, gamma, delta, values,
-        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
+    gmt_plot_likelihood_lune(filename, gamma, delta, values, title=title,
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 
 def plot_marginal_lune(filename, ds, sigma=None, title='',
-    colorbar_type=1, marker_type=2, colorbar_label=''):
+    colormap='hot_r', colorbar_type=1, marker_type=2):
+
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
     
     
@@ -148,12 +149,10 @@ def plot_marginal_lune(filename, ds, sigma=None, title='',
     area = (2./3.)*np.pi
     values /= area*values.sum()
 
-    gmt_plot_likelihood_lune(filename, gamma, delta, values,
-        colorbar_type=colorbar_type, marker_type=marker_type, title=title)
+    gmt_plot_likelihood_lune(filename, gamma, delta, values, title=title,
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 
-
-# utility functions
 
 def _check(ds):
     """ Checks data structures

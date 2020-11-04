@@ -71,12 +71,14 @@ if __name__=='__main__':
     #
 
     misfit_bw = Misfit(
+        norm='L2',
         time_shift_min=-2.,
         time_shift_max=+2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
+        norm='L2',
         time_shift_min=-10.,
         time_shift_max=+10.,
         time_shift_groups=['ZR','T'],
@@ -224,8 +226,9 @@ if __name__=='__main__':
         print('Saving results...\n')
 
         plot_data_greens(event_id+'_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
+            [data_bw, data_sw], [greens_bw, greens_sw], 
+            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+            stations, best_origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
             results, origins, grid, event_id)

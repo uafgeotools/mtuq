@@ -58,12 +58,14 @@ if __name__=='__main__':
 
 
     misfit_bw = Misfit(
+        norm='L2',
         time_shift_min=-2.,
         time_shift_max=+2.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
+        norm='L2',
         time_shift_min=-10.,
         time_shift_max=+10.,
         time_shift_groups=['ZR','T'],
@@ -109,14 +111,16 @@ if __name__=='__main__':
     print('Figure 1 of 3\n')
 
     plot_data_greens('graphics_test_1.png',
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, mt, header=False)
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [process_bw, process_sw], [misfit_bw, misfit_sw],
+        stations, origin, mt, header=False)
 
     print('Figure 2 of 3\n')
 
     plot_data_greens('graphics_test_2.png',
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, mt, header=False)
+        [data_bw, data_sw], [greens_bw, greens_sw],
+        [process_bw, process_sw], [misfit_bw, misfit_sw],
+        stations, origin, mt, header=False)
 
     print('Figure 3 of 3\n')
 

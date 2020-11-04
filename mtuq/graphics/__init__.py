@@ -21,5 +21,12 @@ from mtuq.graphics.uq.origin_xy import\
     plot_misfit_xy, plot_mt_xy
 
 from mtuq.graphics.waveform import\
-    plot_data_synthetics, plot_data_greens
+    plot_waveforms1, plot_waveforms2, plot_data_greens
+
+
+
+# use Arial, if available
+import matplotlib
+matplotlib.rcParams['font.sans-serif'] = "Arial"
+matplotlib.rcParams['font.family'] = "sans-serif"
 

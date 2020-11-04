@@ -8,9 +8,12 @@ import numpy as np
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
+from mtuq.graphics._gmt import read_cpt
 from mtuq.graphics.uq._gmt import _nothing_to_plot
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
+from mtuq.util import fullpath
 from mtuq.util.math import closed_interval, open_interval
+from os.path import exists
 
 
 #
@@ -167,7 +170,7 @@ def _plot_misfit_vw(filename, v, w, values,
         idx = np.unravel_index(values.argmin(), values.shape)
         coords = v[idx[1]], w[idx[0]]
 
-        pyplot.scatter(*coords, s=250,
+        pyplot.scatter(*coords, s=333,
             marker='o',
             facecolors='none',
             edgecolors=[0,1,0],
@@ -193,17 +196,19 @@ def _plot_likelihood_vw(filename, v, w, values,
         idx = np.unravel_index(values.argmax(), values.shape)
         coords = v[idx[1]], w[idx[0]]
 
-        pyplot.scatter(*coords, s=250,
+        pyplot.scatter(*coords, s=333,
             marker='o', 
             facecolors='none',
             edgecolors=[0,1,0],
             linewidths=1.75,
+            clip_on=False,
+            zorder=100,
             )
 
     pyplot.savefig(filename)
 
 
-def _plot_vw(v, w, values, colorbar_type=0, cmap='hot', title=None):
+def _plot_vw(v, w, values, colorbar_type=0, cmap='hot_r', title=None):
     # create figure
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
 
@@ -222,19 +227,21 @@ def _plot_vw(v, w, values, colorbar_type=0, cmap='hot', title=None):
     pyplot.xticks([], [])
     pyplot.yticks([], [])
 
+    if exists(_local_path(cmap)):
+       cmap = read_cpt(_local_path(cmap))
+
     if colorbar_type:
-        pyplot.colorbar(
+        cbar = pyplot.colorbar(
             orientation='horizontal',
             pad=0.,
             )
+
+        cbar.formatter.set_powerlimits((-2, 2))
 
     if title:
         fontdict = {'fontsize': 16}
         pyplot.title(title, fontdict=fontdict)
 
-
-
-# utility functions
 
 def _check(ds):
     """ Checks data structures
@@ -279,4 +286,9 @@ def _centers_to_edges(v):
     v[-1] = v[-2] + dv
 
     return v
+
+
+def _local_path(name):
+    return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
+
 
