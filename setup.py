@@ -89,7 +89,6 @@ setup(
         "pandas", "xarray", 
         "retry", 
         "flake8>=3.0", "pytest", "nose",
-        "sphinx", "sphinx-bootstrap-theme"
     ],
     ext_modules = [
         Extension(
