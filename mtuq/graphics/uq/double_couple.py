@@ -101,7 +101,8 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     minmax1 = _minmax(x, y, marginal)
 
     axis = axes[0][0]
-    axis.pcolor(x, y, marginal.values, shading='auto', cmap=cmap, **kwargs)
+
+    _pcolor(axis, x, y, marginal.values, cmap, **kwargs)
 
     axis.set_xlabel('Dip', **axis_label_kwargs)
     axis.set_xticks(theta_ticks)
@@ -119,7 +120,8 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     minmax2 = _minmax(x, y, marginal)
 
     axis = axes[0][1]
-    axis.pcolor(x, y, marginal.values, shading='auto', cmap=cmap, **kwargs)
+
+    _pcolor(axis, x, y, marginal.values, cmap, **kwargs)
 
     axis.set_xlabel('Slip', **axis_label_kwargs)
     axis.set_xticks(sigma_ticks)
@@ -137,7 +139,8 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     minmax3 = _minmax(x, y, marginal.T)
 
     axis = axes[1][1]
-    axes[1][1].pcolor(x, y, marginal.values.T, shading='auto', cmap=cmap, **kwargs)
+
+    _pcolor(axis, x, y, marginal.values.T, cmap, **kwargs)
 
     axis.set_xlabel('Slip', **axis_label_kwargs)
     axis.set_xticks(sigma_ticks)
@@ -185,6 +188,14 @@ axis_label_kwargs = {
     }
 
 
+def _pcolor(axis, x, y, values, cmap, **kwargs):
+    # workaround matplotlib compatibility issue
+    try:
+        axis.pcolor(x, y, values, cmap=cmap, shading='auto',  **kwargs)
+    except:
+        axis.pcolor(x, y, values, cmap=cmap, **kwargs)
+
+
 kappa_ticks = [0, 45, 90, 135, 180, 225, 270, 315, 360]
 kappa_ticklabels = ['0', '', '90', '', '180', '', '270', '', '360']
 
@@ -197,4 +208,5 @@ theta_ticklabels = ['0', '', '30', '', '60', '', '90']
 
 def _local_path(name):
     return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
+
 

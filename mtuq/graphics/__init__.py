@@ -24,9 +24,14 @@ from mtuq.graphics.waveform import\
     plot_waveforms1, plot_waveforms2, plot_data_greens
 
 
-
-# use Arial, if available
-import matplotlib
-matplotlib.rcParams['font.sans-serif'] = "Arial"
-matplotlib.rcParams['font.family'] = "sans-serif"
+# use Helvetica if available
+for fontname in ['Helvetica', 'Arial']:
+    try:
+        from matplotlib.font_manager import find_font
+        find_font(fontname, fallback_to_default=False)
+        matplotlib.rcParams['font.sans-serif'] = fontname
+        matplotlib.rcParams['font.family'] = "sans-serif"
+        break        
+    except:
+        continue
 
