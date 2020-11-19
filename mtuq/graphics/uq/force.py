@@ -137,8 +137,8 @@ def plot_marginal_force(filename, ds, sigma=None, title='',
     gmt_plot_likelihood_force(filename, phi, h, values, title=title,
         colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
-def plot_force_amplitude(filename, ds, source_dict, ud_min=None, ud_max=None ,
-    title='', colormap='viridis', colorbar_type=1, marker_type=1):
+def plot_force_amplitude(filename, ds, source_dict, title='',
+    colormap='viridis', colorbar_type=1, marker_type=1):
     """ Plots force amplitude values on the unit sphere
 
 
@@ -156,12 +156,6 @@ def plot_force_amplitude(filename, ds, source_dict, ud_min=None, ud_max=None ,
 
     ``title`` (`str`):
     Optional figure title
-
-    ``ud_min`` (float32):
-    Optional user-defined minimum bound for the colorbar plot
-
-    ``ud_max`` (float32):
-    Optional user-defined maximum bound for the colorbar plot
 
     """
     _check(ds)
@@ -182,8 +176,8 @@ def plot_force_amplitude(filename, ds, source_dict, ud_min=None, ud_max=None ,
     normalized_force_map=np.log(force_map / source_dict['F0']).transpose()
 
     gmt_plot_misfit_force(filename, phi, h, normalized_force_map,
-        ud_min, ud_max, title=title, colormap=colormap,
-        colorbar_type=colorbar_type, marker_type=marker_type)
+        title=title, colormap=colormap, colorbar_type=colorbar_type,
+        marker_type=marker_type)
 
 def _check(ds):
     """ Checks data structures
