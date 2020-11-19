@@ -17,9 +17,9 @@ from mtuq.util import fullpath
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_force(filename, ds, misfit_callback=None, title='', 
+def plot_misfit_force(filename, ds, misfit_callback=None, title='',
     colormap='viridis', colorbar_type=1, marker_type=1):
-    """ Plots misfit values on `v-w` rectangle
+    """ Plots misfit values on the unit sphere
 
 
     .. rubric :: Input arguments
@@ -53,14 +53,14 @@ def plot_misfit_force(filename, ds, misfit_callback=None, title='',
     if misfit_callback:
         values = misfit_callback(values)
 
-    gmt_plot_misfit_force(filename, phi, h, values, title=title, 
+    gmt_plot_misfit_force(filename, phi, h, values, title=title,
         colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 
 def plot_likelihood_force(filename, ds, sigma=None, title='',
     colormap='hot_r', colorbar_type=1, marker_type=2):
 
-    """ Plots maximum likelihoods on `v-w` rectangle
+    """ Plots maximum likelihoods on the unit sphere
 
 
     .. rubric :: Input arguments
@@ -99,7 +99,7 @@ def plot_likelihood_force(filename, ds, sigma=None, title='',
 
 def plot_marginal_force(filename, ds, sigma=None, title='',
     colormap='hot_r', colorbar_type=1, marker_type=2):
-    """ Plots marginal likelihoods on `v-w` rectangle
+    """ Plots marginal likelihoods on the unit sphere
 
 
     .. rubric :: Input arguments
@@ -137,6 +137,53 @@ def plot_marginal_force(filename, ds, sigma=None, title='',
     gmt_plot_likelihood_force(filename, phi, h, values, title=title,
         colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
+def plot_force_amplitude(filename, ds, source_dict, ud_min=None, ud_max=None ,
+    title='', colormap='viridis', colorbar_type=1, marker_type=1):
+    """ Plots force amplitude values on the unit sphere
+
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray`):
+    Data structure containing forces and corresponding misfit values.
+    Only supporting DataArray at the moment
+
+    ``source_dict`` (`DataArray`):
+    Solution's source dictionary used to define the optimal F0 value.
+
+    ``title`` (`str`):
+    Optional figure title
+
+    ``ud_min`` (float32):
+    Optional user-defined minimum bound for the colorbar plot
+
+    ``ud_max`` (float32):
+    Optional user-defined maximum bound for the colorbar plot
+
+    """
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        phi = ds.coords['phi']
+        h = ds.coords['h']
+
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
+
+    force_map = np.empty((ds.phi.size, ds.h.size))
+    for iphi in range(ds.phi.size):
+        for ih in range(ds.h.size):
+            idx = ds[:,iphi,ih,:].values.argmin()
+            force_map[iphi, ih] = ds.coords['F0'][idx]
+    normalized_force_map=np.log(force_map / source_dict['F0']).transpose()
+
+    gmt_plot_misfit_force(filename, phi, h, normalized_force_map,
+        ud_min, ud_max, title=title, colormap=colormap,
+        colorbar_type=colorbar_type, marker_type=marker_type)
 
 def _check(ds):
     """ Checks data structures
@@ -173,5 +220,3 @@ def _bin(df, handle, npts_phi=60, npts_h=30):
             binned[_i, _j] = handle(subset[0])
 
     return centers_phi, centers_h, binned
-
-
