@@ -175,9 +175,15 @@ def plot_force_amplitude(filename, ds, source_dict, title='',
             force_map[iphi, ih] = ds.coords['F0'][idx]
     normalized_force_map=np.log(force_map / source_dict['F0']).transpose()
 
+    global_min_lon = source_dict['phi']
+    if global_min_lon >= 360:
+        global_min_lon -= 360
+    global_min_lon += 90
+    global_min_lat = (np.rad2deg(np.arccos(source_dict['h']))-90)*-1
+
     gmt_plot_misfit_force(filename, phi, h, normalized_force_map,
         title=title, colormap=colormap, colorbar_type=colorbar_type,
-        marker_type=marker_type)
+        marker_type=marker_type, global_min_lon=global_min_lon, global_min_lat=global_min_lat)
 
 def _check(ds):
     """ Checks data structures
