@@ -29,6 +29,23 @@ def gmt_plot_misfit_lune(filename, lon, lat, values, colormap='panoply', **kwarg
         cpt_step=(maxval-minval)/20.,
         **kwargs)
 
+def gmt_plot_misfit_mt_lune(filename, lon, lat, values, colormap='panoply', **kwargs):
+
+    if _nothing_to_plot(values):
+        return
+
+    lon, lat =  _parse_lonlat(lon,lat)
+    values, minval, maxval, exp = _parse_values(values)
+
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune_mt'),
+        filename,
+        lon, lat, values,
+        z_min=minval,
+        z_max=maxval,
+        z_exp=exp,
+        cpt_name=colormap,
+        cpt_step=(maxval-minval)/20.,
+        **kwargs)
 
 def gmt_plot_likelihood_lune(filename, lon, lat, values, colormap='hot', **kwargs):
 

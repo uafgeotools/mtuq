@@ -2,7 +2,7 @@
 #
 # graphics/uq/lune.py - uncertainty quantification on the eigenvalue lune
 #
-# For details about the eigenvalue lune, see 
+# For details about the eigenvalue lune, see
 # Tape2012 - A geometric setting for moment tensors
 # (https://doi.org/10.1111/j.1365-246X.2012.05491.x)
 #
@@ -59,6 +59,51 @@ def plot_misfit_lune(filename, ds, misfit_callback=None, title='',
         colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 
+def plot_misfit_mt_lune(filename, ds, misfit_callback=None, title='',
+    colormap='viridis', colormap_reverse=False, colorbar_type=1, marker_type=1):
+
+    """ Plots misfit values on eigenvalue lune (requires GMT)
+
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``misfit_callback`` (func)
+    User-supplied function applied to misfit values
+
+    ``title`` (`str`):
+    Optional figure title
+
+    """
+    _check(ds)
+    ds = ds.copy()
+    ds_for_plotting = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        ds = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        gamma = to_gamma(ds.coords['v'])
+        delta = to_delta(ds.coords['w'])
+        values = ds.values.transpose()
+
+
+        _write_gmt_mt_params('coords.txt', ds_for_plotting, values)
+
+
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
+
+    if misfit_callback:
+        values = misfit_callback(values)
+
+    gmt_plot_misfit_mt_lune(filename, gamma, delta, values, title=title,
+        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
+
+
 def plot_likelihood_lune(filename, ds, sigma=None, title='',
     colormap='hot_r', colorbar_type=1, marker_type=2):
 
@@ -110,8 +155,8 @@ def plot_marginal_lune(filename, ds, sigma=None, title='',
     colormap='hot_r', colorbar_type=1, marker_type=2):
 
     """ Plots marginal likelihoods on eigenvalue lune (requires GMT)
-    
-    
+
+
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
@@ -122,7 +167,7 @@ def plot_marginal_lune(filename, ds, sigma=None, title='',
 
     ``sigma`` (`float`):
     Standard deviation applied to misfit values
-        
+
     ``title`` (`str`):
     Optional figure title
 
@@ -208,4 +253,34 @@ def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
 
     return to_gamma(centers_v), to_delta(centers_w), binned
 
+def _write_gmt_mt_params(filename, ds, misfit_values):
+    """ Write full moment tensor parameters for GMT psmeca in a temporary file
+    """
 
+    normalized_values = misfit_values.T.flatten() - np.min(misfit_values)
+    normalized_values /= np.max(normalized_values)
+
+    nv, nw = len(ds.coords['v']), len(ds.coords['w'])
+    best_orientation=np.empty((nv*nw, 12))
+    id = 0
+    for iv in range(len(ds.coords['v'])):
+        for iw in range(len(ds.coords['w'])):
+            idx = np.unravel_index(np.argmin(ds[:,iv,iw,:,:,:,0], axis=None), np.shape(ds[:,iv,iw,:,:,:,0]))
+            best_orientation[id, 0] = to_gamma(ds.coords['v'][iv])
+            best_orientation[id, 1] = to_delta(ds.coords['w'][iw])
+            best_orientation[id, 2] = normalized_values[id]
+            rho, v, w, kappa, sigma, h = ds['rho'][idx[0]],\
+                                        ds['v'][iv],\
+                                        ds['w'][iw],\
+                                        ds['kappa'][idx[1]],\
+                                        ds['sigma'][idx[2]],\
+                                        ds['h'][idx[3]]
+            mt = to_mij(rho, v, w, kappa, sigma, h)
+            exponent = np.max([int(str(mt[i]).split('e+')[1]) for i in range(len(mt))])
+            scaled_mt = mt/10**(exponent)
+
+            best_orientation[id, 3:9] = scaled_mt
+            best_orientation[id, 9] = exponent+7
+            best_orientation[id, 10:12] = 0, 0
+            id += 1
+    np.savetxt(filename, best_orientation[0::2,:], fmt='%.4f')

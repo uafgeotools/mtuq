@@ -43,11 +43,25 @@ function add_marker {
         coords="$(idxmax $in)"
     elif [ $marker_type -eq 3 ]; then
         coords=$global_min_lon' '$global_min_lat
-        echo $coords > coords.txt        
+        echo $coords > coords.txt
     fi
 
     echo $coords |\
-    gmt psxy -N -Sc23p -W2.0p,0/255/0 $proj_arg $area_arg -O -K >> $ps
+    gmt psxy -N -Sc23p -W2.0p,255/0/0 $proj_arg $area_arg -O -K >> $ps
+
+}
+
+
+function add_moment_tensor {
+    in="$1"
+    ps="$2"
+    proj_arg=$3
+    area_arg=$4
+    global_min_lon=$6
+    global_min_lat=$7
+
+    # echo '-28.38700851 -53.67895694 0.0 -2.79390961 -4.75160722 -6.42436871 -3.18078715 -1.71229474 1.11411645 22 0 0' > coord.txt
+    gmt psmeca coords.txt -N -Sm0.2 $proj_arg $area_arg -Z'viridis' -O -K >> $ps
 
 }
 

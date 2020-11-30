@@ -138,7 +138,7 @@ def plot_marginal_force(filename, ds, sigma=None, title='',
         colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
 
 def plot_force_amplitude(filename, ds, source_dict, title='',
-    colormap='viridis', colorbar_type=1, marker_type=1):
+    colormap='viridis', colorbar_type=1, marker_type=3):
     """ Plots force amplitude values on the unit sphere
 
 
@@ -175,6 +175,9 @@ def plot_force_amplitude(filename, ds, source_dict, title='',
             force_map[iphi, ih] = ds.coords['F0'][idx]
     normalized_force_map=np.log(force_map / source_dict['F0']).transpose()
 
+    #
+    # Computes global minimum map coordinates
+    #
     global_min_lon = source_dict['phi']
     if global_min_lon >= 360:
         global_min_lon -= 360
