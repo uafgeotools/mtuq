@@ -29,6 +29,7 @@ def gmt_plot_misfit_lune(filename, lon, lat, values, colormap='panoply', **kwarg
         cpt_step=(maxval-minval)/20.,
         **kwargs)
 
+
 def gmt_plot_misfit_mt_lune(filename, lon, lat, values, colormap='panoply', **kwargs):
 
     if _nothing_to_plot(values):

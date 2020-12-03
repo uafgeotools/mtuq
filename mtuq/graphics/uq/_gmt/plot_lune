@@ -19,7 +19,7 @@ source _gmt_functions
 
 
 # parse input arguments
-if [ $# -ne 13 ] ; then
+if [ $# -lt 13 ] ; then
     echo "plot_lune: bad input arguments"
     exit -1
 fi
@@ -94,5 +94,3 @@ custom_psconvert $ps $out $filetype
 
 rm tmp*$out*
 rm $ps
-
-

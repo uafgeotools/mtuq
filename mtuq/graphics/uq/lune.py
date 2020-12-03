@@ -276,7 +276,7 @@ def _write_gmt_mt_params(filename, ds_for_plotting, misfit_values):
                                         ds_for_plotting['sigma'][idx[2]],\
                                         ds_for_plotting['h'][idx[3]]
             mt = to_mij(rho, v, w, kappa, sigma, h)
-            exponent = np.max([int(str(mt[i]).split('e+')[1]) for i in range(len(mt))])
+            exponent = np.max([int('{:.2e}'.format(mt[i]).split('e+')[1]) for i in range(len(mt))])
             scaled_mt = mt/10**(exponent)
 
             best_orientation[id, 3:9] = scaled_mt
