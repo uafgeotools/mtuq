@@ -37,6 +37,8 @@ colorbar_type=${10}
 marker_type=${11}
 title="${12}"
 subtitle="${13}"
+global_min_lon=${14}
+global_min_lat=${15}
 colorbar_label=""
 
 proj_arg="-JH0/3.4i"
@@ -80,8 +82,10 @@ fi
 
 
 # display marker
-if [ $marker_type -ne 0 ]; then
+if [ $marker_type -ne 0 -a $marker_type -ne 3 ]; then
     add_marker $marker_type "$in" "$ps" $proj_arg $area_arg
+elif [ $marker_type -eq 3 ]; then
+        add_marker $marker_type "$in" "$ps" $proj_arg $area_arg $global_min_lon $global_min_lat
 fi
 
 
