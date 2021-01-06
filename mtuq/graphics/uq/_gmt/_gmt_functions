@@ -57,9 +57,9 @@ function add_moment_tensor {
     ps="$2"
     proj_arg=$3
     area_arg=$4
-    global_min_lon=$6
-    global_min_lat=$7
-    cpt_name=$8
+    cpt_name=$5
+
+    echo $in $ps $proj_arg $area_arg $cpt_name
 
     gmt psmeca tmp_FMT_coords.txt -N -Sm0.2 $proj_arg $area_arg -Z$cpt_name -O -K >> $ps
 

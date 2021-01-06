@@ -46,6 +46,7 @@ area_arg="-R-30/30/-90/90"
 
 ps="${out}.ps"
 
+echo $cpt_name
 
 # apply default settings
 gmt_settings
