@@ -82,7 +82,7 @@ fi
 
 # display marker
 if [ $marker_type -ne 0 ]; then
-    add_moment_tensor "$in" "$ps" $proj_arg $area_arg
+    add_moment_tensor "$in" "$ps" $proj_arg $area_arg $cpt_name
     add_marker $marker_type "$in" "$ps" $proj_arg $area_arg
 fi
 
