@@ -91,7 +91,7 @@ def plot_misfit_mt_lune(filename, ds, misfit_callback=None, title='',
         values = ds.values.transpose()
 
 
-        _write_gmt_mt_params('coords.txt', ds_for_plotting, values)
+        _write_gmt_mt_params('tmp_FMT_coords.txt', ds_for_plotting, values)
 
     gmt_plot_misfit_mt_lune(filename, gamma, delta, values, title=title,
         colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
