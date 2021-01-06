@@ -303,8 +303,8 @@ def _write_gmt_mt_params(filename, ds_for_plotting, misfit_values):
     id = 0
     for iv in range(len(ds_for_plotting.coords['v'])):
         for iw in range(len(ds_for_plotting.coords['w'])):
-            idx = np.unravel_index(np.argmin(ds_for_plotting[:,iv,iw,:,:,:,0], axis=None), np.shape(ds_for_plotting[:,iv,iw,:,:,:,0]))
-            random_dip_perturbation = np.random.uniform(0.1,0.2)
+            idx = np.unravel_index(np.argmin(ds_for_plotting[:,iv,iw,:,:,:,0].values, axis=None), np.shape(ds_for_plotting[:,iv,iw,:,:,:,0]))
+            random_dip_perturbation = np.random.uniform(0.2,0.4)
             best_orientation[id, 0] = to_gamma(ds_for_plotting.coords['v'][iv])
             best_orientation[id, 1] = to_delta(ds_for_plotting.coords['w'][iw])
             best_orientation[id, 2] = normalized_values[id]
@@ -314,8 +314,8 @@ def _write_gmt_mt_params(filename, ds_for_plotting, misfit_values):
                                         ds_for_plotting['kappa'][idx[1]],\
                                         ds_for_plotting['sigma'][idx[2]],\
                                         ds_for_plotting['h'][idx[3]]
-            if sigma > (-90.0 + 0.2):
-                sigma += random_dip_perturbation
+            if sigma > (-90.0 + 0.4):
+                sigma -= random_dip_perturbation
             mt = to_mij(rho, v, w, kappa, sigma, h)
             exponent = np.max([int('{:.2e}'.format(mt[i]).split('e+')[1]) for i in range(len(mt))])
             scaled_mt = mt/10**(exponent)
@@ -334,6 +334,6 @@ def _extract_magnitude_map(ds):
     best_magnitude_map=np.empty((nv,nw))
     for iv in range(len(ds.coords['v'])):
         for iw in range(len(ds.coords['w'])):
-            magnitude_idx = np.unravel_index(np.argmin(ds[:,iv,iw,:,:,:,0], axis=None), np.shape(ds[:,iv,iw,:,:,:,0]))[0]
+            magnitude_idx = np.unravel_index(np.argmin(ds[:,iv,iw,:,:,:,0].values, axis=None), np.shape(ds[:,iv,iw,:,:,:,0]))[0]
             best_magnitude_map[iv, iw] = to_Mw(ds['rho'][magnitude_idx].values) - M0
     return(best_magnitude_map.T)
