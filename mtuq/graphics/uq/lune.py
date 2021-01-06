@@ -137,7 +137,6 @@ def plot_magnitude_lune(filename, ds, source_dict, misfit_callback=None, title='
     global_min_lon = to_gamma(source_dict['v'])
     global_min_lat = to_delta(source_dict['w'])
 
-    print(global_min_lon, global_min_lat)
     gmt_plot_misfit_lune(filename, gamma, delta, values, title=title,
         colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type, global_min_lon=global_min_lon, global_min_lat=global_min_lat)
 
