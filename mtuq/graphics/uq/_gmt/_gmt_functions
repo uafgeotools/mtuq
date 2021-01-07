@@ -43,7 +43,6 @@ function add_marker {
         coords="$(idxmax $in)"
     elif [ $marker_type -eq 3 ]; then
         coords=$global_min_lon' '$global_min_lat
-        echo $coords > tmp_FMT_coords.txt
     fi
 
     echo $coords |\
