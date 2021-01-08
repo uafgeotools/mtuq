@@ -62,7 +62,8 @@ def plot_misfit_lune(filename, ds, misfit_callback=None, title='',
 def plot_misfit_mt_lune(filename, ds, misfit_callback=None, title='',
     colormap='viridis', colormap_reverse=False, colorbar_type=1, marker_type=1):
 
-    """ Plots misfit values on eigenvalue lune (requires GMT)
+    """ Plots misfit values and best fitting moment tensors on eigenvalue lune
+    (requires GMT)
 
 
     .. rubric :: Input arguments
@@ -70,7 +71,7 @@ def plot_misfit_mt_lune(filename, ds, misfit_callback=None, title='',
     ``filename`` (`str`):
     Name of output image file
 
-    ``ds`` (`DataArray` or `DataFrame`):
+    ``ds`` (`DataArray`):
     Data structure containing moment tensors and corresponding misfit values
 
     ``misfit_callback`` (func)
@@ -90,8 +91,12 @@ def plot_misfit_mt_lune(filename, ds, misfit_callback=None, title='',
         delta = to_delta(ds.coords['w'])
         values = ds.values.transpose()
 
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
 
-        _write_gmt_mt_params('tmp_FMT_coords.txt', ds_for_plotting, values)
+
+    _write_gmt_mt_params('tmp_FMT_coords.txt', ds_for_plotting, values)
+
 
     gmt_plot_misfit_mt_lune(filename, gamma, delta, values, title=title,
         colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
@@ -99,7 +104,7 @@ def plot_misfit_mt_lune(filename, ds, misfit_callback=None, title='',
 def plot_magnitude_lune(filename, ds, source_dict, misfit_callback=None, title='',
     colormap='viridis', colormap_reverse=False, colorbar_type=1, marker_type=3):
 
-    """ Plots misfit values on eigenvalue lune (requires GMT)
+    """ Plots magnitude values on eigenvalue lune (requires GMT)
 
 
     .. rubric :: Input arguments
@@ -107,7 +112,7 @@ def plot_magnitude_lune(filename, ds, source_dict, misfit_callback=None, title='
     ``filename`` (`str`):
     Name of output image file
 
-    ``ds`` (`DataArray` or `DataFrame`):
+    ``ds`` (`DataArray`):
     Data structure containing moment tensors and corresponding misfit values
 
     ``misfit_callback`` (func)
@@ -120,10 +125,8 @@ def plot_magnitude_lune(filename, ds, source_dict, misfit_callback=None, title='
     _check(ds)
     ds = ds.copy()
 
-    values = _extract_magnitude_map(ds)
-
     if issubclass(type(ds), DataArray):
-        ds = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+        values = _extract_magnitude_map(ds)
         gamma = to_gamma(ds.coords['v'])
         delta = to_delta(ds.coords['w'])
 
@@ -290,8 +293,11 @@ def _bin(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
 
     return to_gamma(centers_v), to_delta(centers_w), binned
 
+
 def _write_gmt_mt_params(filename, ds_for_plotting, misfit_values):
-    """ Write full moment tensor parameters for GMT psmeca in a temporary file
+    """ Write full moment tensor parameters for GMT psmeca function in a
+    temporary file. This temporary file is used in the plot_lune_mt GMT script
+    before being removed from the working directory.
     """
 
     normalized_values = misfit_values.T.flatten() - np.min(misfit_values)
@@ -303,7 +309,6 @@ def _write_gmt_mt_params(filename, ds_for_plotting, misfit_values):
     for iv in range(len(ds_for_plotting.coords['v'])):
         for iw in range(len(ds_for_plotting.coords['w'])):
             idx = np.unravel_index(np.argmin(ds_for_plotting[:,iv,iw,:,:,:,0].values, axis=None), np.shape(ds_for_plotting[:,iv,iw,:,:,:,0]))
-            random_dip_perturbation = np.random.uniform(0.2,0.4)
             best_orientation[id, 0] = to_gamma(ds_for_plotting.coords['v'][iv])
             best_orientation[id, 1] = to_delta(ds_for_plotting.coords['w'][iw])
             best_orientation[id, 2] = normalized_values[id]
@@ -313,6 +318,9 @@ def _write_gmt_mt_params(filename, ds_for_plotting, misfit_values):
                                         ds_for_plotting['kappa'][idx[1]],\
                                         ds_for_plotting['sigma'][idx[2]],\
                                         ds_for_plotting['h'][idx[3]]
+
+            # Adding a random negative perturbation to the dip, to avoid GMT plotting bug.
+            random_dip_perturbation = np.random.uniform(0.2,0.4)
             if sigma > (-90.0 + 0.4):
                 sigma -= random_dip_perturbation
             mt = to_mij(rho, v, w, kappa, sigma, h)
@@ -325,8 +333,11 @@ def _write_gmt_mt_params(filename, ds_for_plotting, misfit_values):
             id += 1
     np.savetxt(filename, best_orientation[:,:], fmt='%.4f')
 
+
 def _extract_magnitude_map(ds):
-    """ Extract and returns the best moment tensor maganitude map to be plotted in "plot_magnitude_lune".
+    """ Extract and returns the optimal magnitude map to be plotted in
+    "plot_magnitude_lune". For each location on the lune, the displayed
+    magnitude corresponds to the best fitting moment tensor at this location.
     """
     M0 = to_Mw(ds.idxmin()['rho'].values)
     nv, nw = len(ds.coords['v']), len(ds.coords['w'])
