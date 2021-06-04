@@ -20,7 +20,7 @@ from mtuq.graphics.uq.origin_depth import\
 from mtuq.graphics.uq.origin_xy import\
     plot_misfit_xy, plot_mt_xy
 
-from mtuq.graphics.waveform import\
+from mtuq.graphics.waveforms import\
     plot_waveforms1, plot_waveforms2, plot_data_greens1, plot_data_greens2
 
 
