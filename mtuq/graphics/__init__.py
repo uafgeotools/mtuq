@@ -21,7 +21,7 @@ from mtuq.graphics.uq.origin_xy import\
     plot_misfit_xy, plot_mt_xy
 
 from mtuq.graphics.waveform import\
-    plot_waveforms1, plot_waveforms2, plot_data_greens
+    plot_waveforms1, plot_waveforms2, plot_data_greens1, plot_data_greens2
 
 
 # use Helvetica if available
