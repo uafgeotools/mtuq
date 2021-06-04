@@ -139,7 +139,7 @@ if __name__=='__main__':
     data_sw = data.map(process_sw)
 
 
-    print('Reading Green''s functions...\n')
+    print('Reading Greens functions...\n')
     greens = download_greens_tensors(stations, origin, model)
 
 

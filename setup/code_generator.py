@@ -654,11 +654,11 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data_sw = data.map(process_sw)
 
 
-        print('Reading Green''s functions...\\n')
+        print('Reading Greens functions...\\n')
         greens = download_greens_tensors(stations, origins, model)
 
 
-        print('Processing Green''s functions...\\n')
+        print('Processing Greens functions...\\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
@@ -734,7 +734,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     data_sw = data.map(process_sw)
 
 
-    print('Reading Green''s functions...\\n')
+    print('Reading Greens functions...\\n')
     greens = download_greens_tensors(stations, origin, model)
 
 
@@ -788,7 +788,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     data_sw = data.map(process_sw)
 
 
-    print('Reading Green''s functions...\\n')
+    print('Reading Greens functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
 
@@ -834,7 +834,7 @@ Main_TestGraphics="""
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print('Reading Green''s functions...\\n')
+    print('Reading Greens functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
@@ -1082,7 +1082,7 @@ Main_BenchmarkCAP="""
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print('Reading Green''s functions...\\n')
+    print('Reading Greens functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 

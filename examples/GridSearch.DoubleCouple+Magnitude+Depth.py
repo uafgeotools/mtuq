@@ -161,11 +161,11 @@ if __name__=='__main__':
         data_sw = data.map(process_sw)
 
 
-        print('Reading Green''s functions...\n')
+        print('Reading Greens functions...\n')
         greens = download_greens_tensors(stations, origins, model)
 
 
-        print('Processing Green''s functions...\n')
+        print('Processing Greens functions...\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
