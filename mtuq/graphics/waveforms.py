@@ -314,11 +314,6 @@ def plot_data_greens2(filename,
 
 
 
-def plot_time_shifts(data, stations, origin):
-    raise NotImplementedError
-
-
-
 #
 # low-level plotting utilities
 #
