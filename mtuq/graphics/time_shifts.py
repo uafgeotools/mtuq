@@ -1,4 +1,3 @@
-
 import os
 
 from matplotlib import pyplot
@@ -7,13 +6,45 @@ from os.path import join
 from mtuq.graphics.waveforms import _set_components, _prepare_synthetics
 
 
-MARKERSIZE=14
+def plot_time_shifts(filename, data, greens, component, misfit, stations, origin, source,
+    backend='matplotlib'):
 
-
-def plot_time_shifts(dirname, data, greens, misfit, stations, origin, source, components=['Z','R','T'], format='png', backend='matplotlib'):
-
-    """ Creates "spider plots" showing how time shifts vary geographically
+    """ For a given component, creates a "spider plot" showing how 
+    time shifts vary geographically
     """
+    if backend.lower()=='gmt':
+        raise NotImplementedError
+
+    # prepare synthetics
+    greens = greens.select(origin)
+    _set_components(data, greens)
+    synthetics, _ = _prepare_synthetics(data, greens, misfit, source)
+
+    # collect time shifts
+    time_shifts, indices = _collect_time_shifts(synthetics, component)
+
+    if len(indices)==0:
+        warning("Component not present in dataset: cannot create time shift plot")
+        return
+
+    _save_figure(filename,
+        time_shifts, [stations[_i] for _i in indices], origin, source)
+
+
+def plot_time_shifts_ZRT(dirname, data, greens, misfit, stations, origin, source,
+     format='png', backend='matplotlib'):
+
+    """ For components `'Z','R','T'`, creates "spider plots" showing how 
+    time shifts vary geographically
+
+    Within the specified directory, a separate PNG figure will be created for 
+    each component. 
+
+    Any components not present in the data will be skipped.
+
+    """
+    if backend.lower()=='gmt':
+        raise NotImplementedError
 
     try:
         os.mkdir(dirname)
@@ -25,7 +56,8 @@ def plot_time_shifts(dirname, data, greens, misfit, stations, origin, source, co
     _set_components(data, greens)
     synthetics, _ = _prepare_synthetics(data, greens, misfit, source)
 
-    for component in components:
+    for component in ('Z','R','T'):
+        filename = join(dirname, component+'.'+format)
 
         # collect time shifts
         time_shifts, indices = _collect_time_shifts(synthetics, component)
@@ -33,22 +65,13 @@ def plot_time_shifts(dirname, data, greens, misfit, stations, origin, source, co
         if len(indices)==0:
             continue
 
-        if backend.lower()=='gmt':
-            raise NotImplementedError
-
-        else:
-            # generate figure
-            pyplot.figure()
-            _display_source(source, origin)
-            _display_time_shifts(stations, origin, time_shifts, indices)
-            filename = join(dirname, component+'.'+format)
-            pyplot.savefig(filename)
-            pyplot.close()
-
+        _save_figure(filename,
+            time_shifts, [stations[_i] for _i in indices], origin, source)
 
 
 def _collect_time_shifts(synthetics, component):
-    # iterates over Dataset to collect time shifts
+    """ Collects time shifts by interating over data structure
+    """
     time_shifts = []
     indices = []
 
@@ -77,16 +100,46 @@ def _collect_time_shifts(synthetics, component):
     return time_shifts, indices
 
 
-def _display_source(source, origin):
-    pyplot.plot(origin.longitude, origin.latitude,
-        marker='o', markersize=MARKERSIZE)
+def _save_figure(filename, time_shifts, stations, origin, source, 
+    cmap='seismic', station_marker_size=80, source_marker_size=15):
 
+    """ Creates the actual "spider plot"
+    """
+    #
+    # TODO - replace generic source marker with beachball
+    #
 
-def _display_time_shifts(stations, origin, vals, indices):
-    lat = [stations[_i].latitude for _i in indices]
-    lon = [stations[_i].longitude for _i in indices]
+    pyplot.figure()
 
-    pyplot.scatter(lon, lat, c=vals, cmap='seismic', 
-        marker='^', s=MARKERSIZE)
+    # plot "spider lines"
+    for station in stations:
+        pyplot.plot(
+            [origin.longitude, station.longitude],
+            [origin.latitude, station.latitude],
+            marker=None,
+            color='black',
+            linestyle='-',
+            linewidth=0.5,
+            )
 
+    # plot stations
+    pyplot.scatter(
+        [station.longitude for station in stations],
+        [station.latitude for station in stations], 
+        s=station_marker_size,
+        c=time_shifts, 
+        cmap=cmap, 
+        marker='^',
+        )
+
+    # plot origin
+    pyplot.plot(
+        origin.longitude, 
+        origin.latitude,
+        marker='o', 
+        markersize=source_marker_size,
+        )
+
+    pyplot.savefig(filename)
+    pyplot.close()
 

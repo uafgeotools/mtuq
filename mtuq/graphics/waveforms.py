@@ -689,7 +689,4 @@ def _get_tag(tags, pattern):
     else:
         return None
 
-def compute_time_shifts(data, greens, misfit, stations, origin, source):
-    raise NotImplementedError
-
 
