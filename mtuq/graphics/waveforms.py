@@ -122,7 +122,7 @@ def plot_waveforms2(filename,
         trace_labels=True):
 
     """ Creates data/synthetics comparison figure with 5 columns 
-   (P_Z, P_R, Raleigh_Z, Rayleigh_R, Love_T)
+   (P-wave Z, P-wave R, Raleigh Z, Rayleigh R, Love T)
     """
     # how many stations have at least one trace?
     nstations = _count([data_bw, data_sw])
@@ -222,8 +222,7 @@ def plot_waveforms2(filename,
     pyplot.close()
 
 
-
-def plot_data_greens(filename, 
+def plot_data_greens1(filename,
         data,
         greens,
         process_data,
@@ -234,83 +233,89 @@ def plot_data_greens(filename,
         source_dict,
         **kwargs):
 
-    """ Creates data/synthetics comparison figure
+    """ Creates data/synthetics comparison figure with 3 columns (Z, R, T)
 
-    Similar to plot_waveforms, except provides different input argument syntax
+    Different input arguments, same result as plot_waveforms1
     """
-    if type(data) is Dataset:
-        ndatasets = 1
-        data = [data]
-        greens = [greens]
-        process_data = [process_data]
-        misfit = [misfit]
 
-    else:
-        ndatasets = len(data)
-        assert len(greens)==len(process_data)==len(misfit)==ndatasets
-
-    #
     # prepare synthetics
-    #
-    synthetics = []
-    total_misfit = []
+    greens_sw = greens_sw.select(origin)
+    _set_components(data_sw, greens_sw)
+    synthetics_sw, total_misfit_sw = _prepare_synthetics(
+        data_sw, greens_sw, misfit_sw, source)
 
-    for _i in range(ndatasets):
-        # generate synthetics for given source
-        greens[_i] = greens[_i].select(origin)
-        _set_components(data[_i], greens[_i])
-        synthetics += [greens[_i].get_synthetics(source, inplace=True)]
-
-        # besides calculating misfit, these commands set the trace attributes
-        # used to align data and synthetics in the waveform plots
-        total_misfit += [misfit[_i](data[_i], greens[_i], source, set_attributes=True)]
-
-    #
     # prepare figure header
-    #
-    try:
-       event_name = getattr(origin, 'id')
-    except:
-        event_name = filename.split('.')[0]
-
-    model = _get_tag(greens[0][0].tags, 'model')
-    solver = _get_tag(greens[0][0].tags, 'solver')
-
     if 'header' in kwargs:
         header = kwargs.pop('header')
 
-    elif type(source)==MomentTensor:
-        header = MomentTensorHeader(
-            *_header_args(process_data, misfit, total_misfit),
-            model, solver, source, source_dict, origin)
+    else:
+        model = _get_tag(greens_sw[0].tags, 'model')
+        solver = _get_tag(greens_sw[0].tags, 'solver')
 
-    elif type(source)==Force:
-        header = ForceHeader(
-            *_header_args(process_data, misfit, total_misfit),
-            model, solver, source, source_dict, origin)
+        header = _prepare_header(
+            model, solver, source, source_dict, origin,
+            process_data, misfit, total_misfit)
 
-    #
-    # plot waveforms
-    #
-    if ndatasets==1:
-        plot_waveforms1(filename,
-            data[0], synthetics[0], stations, origin,
-            total_misfit=total_misfit[0], header=header, **kwargs)
-
-    if ndatasets==2:
-        plot_waveforms2(filename,
-            data[0], data[1], synthetics[0], synthetics[1], stations, origin,
-            total_misfit_bw=total_misfit[0], total_misfit_sw=total_misfit[1],
-            header=header, **kwargs)
+    plot_waveforms1(filename,
+        data, synthetics, stations, origin,
+        header=header, total_misfit=total_misfit, **kwargs)
 
 
-def plot_time_shifts(data, stations, origin):
-    raise NotImplementedError
+def plot_data_greens2(filename,
+        data_bw,
+        data_sw,
+        greens_bw,
+        greens_sw,
+        process_data_bw,
+        process_data_sw,
+        misfit_bw,
+        misfit_sw,
+        stations,
+        origin,
+        source,
+        source_dict,
+        **kwargs):
+
+    """ Creates data/synthetics comparison figure with 5 columns 
+    (P wave Z, P wave R, Raleigh Z, Rayleigh R, Love T)
+
+    Different input arguments, same result as plot_waveforms2
+    """
+
+    # prepare body wave synthetics
+    greens_bw = greens_bw.select(origin)
+    _set_components(data_bw, greens_bw)
+    synthetics_bw, total_misfit_bw = _prepare_synthetics(
+        data_bw, greens_bw, misfit_bw, source)
+
+    # prepare surface wave synthetics
+    greens_sw = greens_sw.select(origin)
+    _set_components(data_sw, greens_sw)
+    synthetics_sw, total_misfit_sw = _prepare_synthetics(
+        data_sw, greens_sw, misfit_sw, source)
+
+    # prepare figure header
+    if 'header' in kwargs:
+        header = kwargs.pop('header')
+
+    else:
+        model = _get_tag(greens_sw[0].tags, 'model')
+        solver = _get_tag(greens_sw[0].tags, 'solver')
+
+        header = _prepare_header(
+            model, solver, source, source_dict, origin,
+            process_data_bw, process_data_sw,
+            misfit_bw, misfit_sw, total_misfit_bw, total_misfit_sw)
+
+    plot_waveforms2(filename,
+        data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
+        total_misfit_bw=total_misfit_bw, total_misfit_sw=total_misfit_sw,
+        header=header, **kwargs)
 
 
 
 #
-# low-level plotting functions
+# low-level plotting utilities
 #
 
 
@@ -625,17 +630,32 @@ def _hide_axes(axes):
             col.get_yaxis().set_ticks([])
 
 
-def _header_args(process_data, misfit, total_misfit):
-    # creates argument used by Header
+def _prepare_synthetics(data, greens, misfit, source):
+        synthetics = greens.get_synthetics(source, inplace=True)
 
-    if len(misfit)==1:
-        return [None, *process_data, None, *misfit, 0., *total_misfit]
+        # besides calculating misfit, these commands set the trace attributes
+        # used to align data and synthetics in the waveform plots
+        total_misfit = misfit(data, greens, source, set_attributes=True)
 
-    elif len(misfit)==2:
-        return [*process_data, *misfit, *total_misfit]
+        return synthetics, total_misfit
+
+
+def _prepare_header(model, solver, source, source_dict, origin, *args):
+    # prepares figure header
+
+    if len(args)==3:
+        args = [None, args[0], None, args[1], 0., args[2]]
+
+    if type(source)==MomentTensor:
+        return MomentTensorHeader(
+            *args, model, solver, source, source_dict, origin)
+
+    elif type(source)==Force:
+        return ForceHeader(
+            *args, model, solver, source, source_dict, origin)
 
     else:
-        raise ValueError
+        raise TypeError
 
 
 def get_column_widths(data_bw, data_sw, width=1.):
@@ -668,8 +688,5 @@ def _get_tag(tags, pattern):
             return parts[1]
     else:
         return None
-
-def compute_time_shifts(data, greens, misfit, stations, origin, source):
-    raise NotImplementedError
 
 

@@ -6,7 +6,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit_dc
+from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -654,11 +654,11 @@ Main_GridSearch_DoubleCoupleMagnitudeDepth="""
         data_sw = data.map(process_sw)
 
 
-        print('Reading Green''s functions...\\n')
+        print('Reading Greens functions...\\n')
         greens = download_greens_tensors(stations, origins, model)
 
 
-        print('Processing Green''s functions...\\n')
+        print('Processing Greens functions...\\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
@@ -734,7 +734,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     data_sw = data.map(process_sw)
 
 
-    print('Reading Green''s functions...\\n')
+    print('Reading Greens functions...\\n')
     greens = download_greens_tensors(stations, origin, model)
 
 
@@ -788,7 +788,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     data_sw = data.map(process_sw)
 
 
-    print('Reading Green''s functions...\\n')
+    print('Reading Greens functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
 
@@ -834,7 +834,7 @@ Main_TestGraphics="""
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print('Reading Green''s functions...\\n')
+    print('Reading Greens functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
@@ -850,16 +850,16 @@ Main_TestGraphics="""
 
     print('Figure 1 of 3\\n')
 
-    plot_data_greens('graphics_test_1.png',
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [process_bw, process_sw], [misfit_bw, misfit_sw],
+    plot_data_greens2('graphics_test_1.png',
+        data_bw, data_sw, greens_bw, greens_sw,
+        process_bw, process_sw, misfit_bw, misfit_sw,
         stations, origin, mt, header=False)
 
     print('Figure 2 of 3\\n')
 
-    plot_data_greens('graphics_test_2.png',
-        [data_bw, data_sw], [greens_bw, greens_sw],
-        [process_bw, process_sw], [misfit_bw, misfit_sw],
+    plot_data_greens2('graphics_test_2.png',
+        data_bw, data_sw, greens_bw, greens_sw,
+        process_bw, process_sw, misfit_bw, misfit_sw,
         stations, origin, mt, header=False)
 
     print('Figure 3 of 3\\n')
@@ -942,9 +942,9 @@ WrapUp_GridSearch_DoubleCouple="""
     if comm.rank==0:
         print('Savings results...\\n')
 
-        plot_data_greens(event_id+'DC_waveforms.png',
-            [data_bw, data_sw], [greens_bw, greens_sw], 
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        plot_data_greens2(event_id+'DC_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, 
+            process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
@@ -966,9 +966,9 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     if comm.rank==0:
         print('Saving results...\\n')
 
-        plot_data_greens(event_id+'_waveforms.png',
-            [data_bw, data_sw], [greens_bw, greens_sw], 
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        plot_data_greens2(event_id+'_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, 
+            process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, best_origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
@@ -985,9 +985,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
-    plot_data_greens(event_id+'DC_waveforms.png', 
-        [data_bw, data_sw], [greens_bw, greens_sw], 
-        [process_bw, process_sw], [misfit_bw, misfit_sw], 
+    plot_data_greens2(event_id+'DC_waveforms.png', 
+        data_bw, data_sw, greens_bw, greens_sw, 
+        process_bw, process_sw, misfit_bw, misfit_sw, 
         stations, origin, best_source, lune_dict)
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
@@ -1004,9 +1004,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 WrapUp_TestGridSearch_DoubleCouple="""
     if run_figures:
 
-        plot_data_greens(event_id+'DC_waveforms.png',
-            [data_bw, data_sw], [greens_bw, greens_sw], 
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        plot_data_greens2(event_id+'DC_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, 
+            process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
@@ -1082,7 +1082,7 @@ Main_BenchmarkCAP="""
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print('Reading Green''s functions...\\n')
+    print('Reading Greens functions...\\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
@@ -1340,7 +1340,7 @@ if __name__=='__main__':
             'MomentTensor',
             'syngine',
             'fk',
-            'plot_data_greens',
+            'plot_data_greens2',
             'plot_waveforms2',
             ))
         file.write(Docstring_BenchmarkCAP)

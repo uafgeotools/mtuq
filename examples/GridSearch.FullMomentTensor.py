@@ -5,7 +5,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_beachball, plot_misfit_lune
+from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -195,9 +195,9 @@ if __name__=='__main__':
     if comm.rank==0:
         print('Savings results...\n')
 
-        plot_data_greens(event_id+'FMT_waveforms.png',
-            [data_bw, data_sw], [greens_bw, greens_sw], 
-            [process_bw, process_sw], [misfit_bw, misfit_sw], 
+        plot_data_greens2(event_id+'FMT_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, 
+            process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'FMT_beachball.png', best_source)

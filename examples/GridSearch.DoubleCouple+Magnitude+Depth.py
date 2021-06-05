@@ -5,7 +5,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_misfit_depth, plot_misfit_dc
+from mtuq.graphics import plot_data_greens2, plot_misfit_depth, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -18,13 +18,13 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 if __name__=='__main__':
     #
     # Carries out grid search over source orientation, magnitude, and depth
-    #
+    #   
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
     #
     # This is the most complicated example. For a much simpler one, see
     # SerialGridSearch.DoubleCouple.py
-    #
+    #   
 
 
     #
@@ -108,7 +108,7 @@ if __name__=='__main__':
 
     depths = np.array(
          # depth in meters
-        [25000, 30000, 35000, 40000,
+        [25000, 30000, 35000, 40000,                    
          45000, 50000, 55000, 60000])
 
     origins = []
@@ -124,8 +124,8 @@ if __name__=='__main__':
 
     magnitudes = np.array(
          # moment magnitude (Mw)
-        [4.3, 4.4, 4.5,
-         4.6, 4.7, 4.8])
+        [4.3, 4.4, 4.5,     
+         4.6, 4.7, 4.8]) 
 
     grid = DoubleCoupleGridRegular(
         npts_per_axis=30,
@@ -146,10 +146,10 @@ if __name__=='__main__':
 
     if rank==0:
         print('Reading data...\n')
-        data = read(path_data, format='sac',
+        data = read(path_data, format='sac', 
             event_id=event_id,
             station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity'])
+            tags=['units:cm', 'type:velocity']) 
 
 
         data.sort_by_distance()
@@ -161,11 +161,11 @@ if __name__=='__main__':
         data_sw = data.map(process_sw)
 
 
-        print('Reading Green''s functions...\n')
+        print('Reading Greens functions...\n')
         greens = download_greens_tensors(stations, origins, model)
 
 
-        print('Processing Green''s functions...\n')
+        print('Processing Greens functions...\n')
         greens.convolve(wavelet)
         greens_bw = greens.map(process_bw)
         greens_sw = greens.map(process_sw)
@@ -225,12 +225,12 @@ if __name__=='__main__':
     if comm.rank==0:
         print('Saving results...\n')
 
-        plot_data_greens(event_id+'_waveforms.png',
-            [data_bw, data_sw], [greens_bw, greens_sw],
-            [process_bw, process_sw], [misfit_bw, misfit_sw],
+        plot_data_greens2(event_id+'_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, 
+            process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, best_origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
-            results, origins, grid, title='event_id')
+            results, origins, grid, event_id)
 
         print('\nFinished\n')

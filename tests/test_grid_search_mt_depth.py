@@ -4,7 +4,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens, plot_misfit_depth, plot_misfit_dc
+from mtuq.graphics import plot_data_greens2, plot_misfit_depth, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -130,7 +130,7 @@ if __name__=='__main__':
     data_sw = data.map(process_sw)
 
 
-    print('Reading Green''s functions...\n')
+    print('Reading Greens functions...\n')
     db = open_db(path_greens, format='FK', model=model)
     greens = db.get_greens_tensors(stations, origins)
 

@@ -2,6 +2,9 @@
 from mtuq.graphics.beachball import\
     plot_beachball, misfit_vs_depth
 
+from mtuq.graphics.time_shifts import\
+    plot_time_shifts, plot_time_shifts_ZRT
+
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune, plot_misfit_mt_lune, plot_magnitude_lune
 
@@ -20,8 +23,8 @@ from mtuq.graphics.uq.origin_depth import\
 from mtuq.graphics.uq.origin_xy import\
     plot_misfit_xy, plot_mt_xy
 
-from mtuq.graphics.waveform import\
-    plot_waveforms1, plot_waveforms2, plot_data_greens
+from mtuq.graphics.waveforms import\
+    plot_waveforms1, plot_waveforms2, plot_data_greens1, plot_data_greens2
 
 
 # use Helvetica if available
