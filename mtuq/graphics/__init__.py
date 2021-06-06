@@ -14,8 +14,8 @@ from mtuq.graphics.uq.double_couple import\
 from mtuq.graphics.uq.vw import\
     plot_misfit_vw, plot_likelihood_vw, plot_marginal_vw
 
-from mtuq.graphics.uq.force import\
-    plot_misfit_force, plot_likelihood_force, plot_marginal_force, plot_force_amplitude
+#from mtuq.graphics.uq.force import\
+#    plot_misfit_force, plot_likelihood_force, plot_marginal_force
 
 from mtuq.graphics.uq.origin_depth import\
     plot_misfit_depth, plot_likelihood_depth, plot_marginal_depth
