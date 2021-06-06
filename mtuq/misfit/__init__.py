@@ -71,9 +71,8 @@ class Misfit(object):
 
     .. rubric:: Optimization Levels
 
-    Misfit evaluation is the most complex and computationally expensive task
-    performed by this software. As a result we offer three different
-    implementations:
+    Because misfit evaluation is computationally expensive task with the 
+    greatest potential complexity, we offer three different implementations:
 
     - a readable pure Python version (``mtuq.misfit.level0``)
 
@@ -83,13 +82,13 @@ class Misfit(object):
 
 
     While the same in terms of input argument syntax, these three versions
-    differ in terms of performance:
+    differ in terms of code complexity and performance:
 
     - ``level0`` provides a reference for understanding what the code is doing
       and for checking the correctness of the fast implementations
 
     - ``level1`` is an optimized pure Python implementation which provides 
-      significant computational savings when `len(sources)` > 100. This
+      significant computational savings for `len(sources)` > 100. This
       version is the closest to `ZhuHelmberger1996`'s original C software.
 
     - ``level2`` is an optimized Python/C++ implementation, in which a Python 

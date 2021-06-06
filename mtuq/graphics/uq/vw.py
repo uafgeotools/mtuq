@@ -17,7 +17,7 @@ from os.path import exists
 
 
 #
-# For details about the  rectangle:`v-w` rectangle rectangle, see 
+# For details about the `v-w` rectangle see 
 # Tape2015 - A uniform parameterization of moment tensors
 # (https://doi.org/10.1093/gji/ggv262)
 #
