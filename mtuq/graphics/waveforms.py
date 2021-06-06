@@ -239,18 +239,18 @@ def plot_data_greens1(filename,
     """
 
     # prepare synthetics
-    greens_sw = greens_sw.select(origin)
-    _set_components(data_sw, greens_sw)
-    synthetics_sw, total_misfit_sw = _prepare_synthetics(
-        data_sw, greens_sw, misfit_sw, source)
+    greens = greens.select(origin)
+    _set_components(data, greens)
+    synthetics, total_misfit = _prepare_synthetics(
+        data, greens, misfit, source)
 
     # prepare figure header
     if 'header' in kwargs:
         header = kwargs.pop('header')
 
     else:
-        model = _get_tag(greens_sw[0].tags, 'model')
-        solver = _get_tag(greens_sw[0].tags, 'solver')
+        model = _get_tag(greens[0].tags, 'model')
+        solver = _get_tag(greens[0].tags, 'solver')
 
         header = _prepare_header(
             model, solver, source, source_dict, origin,

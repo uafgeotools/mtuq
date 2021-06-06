@@ -24,7 +24,7 @@ def plot_time_shifts(filename, data, greens, component, misfit, stations, origin
     time_shifts, indices = _collect_time_shifts(synthetics, component)
 
     if len(indices)==0:
-        warning("Component not present in dataset: cannot create time shift plot")
+        warning("Component not present in dataset")
         return
 
     _save_figure(filename,
@@ -38,9 +38,7 @@ def plot_time_shifts_ZRT(dirname, data, greens, misfit, stations, origin, source
     time shifts vary geographically
 
     Within the specified directory, a separate PNG figure will be created for 
-    each component. 
-
-    Any components not present in the data will be skipped.
+    each component. Any components not present in the data will be skipped.
 
     """
     if backend.lower()=='gmt':
@@ -106,7 +104,9 @@ def _save_figure(filename, time_shifts, stations, origin, source,
     """ Creates the actual "spider plot"
     """
     #
-    # TODO - replace generic source marker with beachball
+    # TODO 
+    #   - replace generic source marker with beachball
+    #   - implement alternative GMT version
     #
 
     pyplot.figure()
