@@ -5,7 +5,7 @@ import xarray
 
 from collections.abc import Iterable
 from mtuq.event import Origin
-from mtuq.grid import Grid, UnstructuredGrid
+from mtuq.grid import DataFrame, DataArray, Grid, UnstructuredGrid
 from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback,\
     dataarray_idxmin, dataarray_idxmax
 from os.path import splitext
