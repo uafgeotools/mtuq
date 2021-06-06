@@ -71,18 +71,19 @@ class Misfit(object):
 
     .. rubric:: Optimization Levels
 
-    Because misfit evaluation is computationally expensive task with the 
-    greatest potential complexity, we offer three different implementations:
+    Because misfit evaluation is our most computationally expensive task with 
+    the greatest code optimization complexity, we offer three different 
+    implementations:
 
     - a readable pure Python version (``mtuq.misfit.level0``)
 
     - a fast pure Python version (``mtuq.misfit.level1``)
 
-    - a very fast Python/C++ version (``mtuq.misfit.level2``)
+    - a very fast Python/C version (``mtuq.misfit.level2``)
 
 
-    While the same in terms of input argument syntax, these three versions
-    differ in terms of code complexity and performance:
+    Despite having the same input argument syntax, these three versions
+    differ significantly in terms of code complexity and performance:
 
     - ``level0`` provides a reference for understanding what the code is doing
       and for checking the correctness of the fast implementations
@@ -91,13 +92,20 @@ class Misfit(object):
       significant computational savings for `len(sources)` > 100. This
       version is the closest to `ZhuHelmberger1996`'s original C software.
 
-    - ``level2`` is an optimized Python/C++ implementation, in which a Python 
-      wrapper is used to combine obspy traces into multidimensional arrays.
-      These arrays are passed to a C++ extension module, which does the
+    - ``level2`` is an optimized Python/C implementation, in which a Python 
+      wrapper is used to combine ObsPy traces into multidimensional arrays.
+      These arrays are passed to a C extension module, which does the
       main computational work. Unlike the other two versions, this 
-      implementation requires that all obspy Traces have the same time
-      discretization
-      
+      implementation requires that all ObsPy traces have the same time
+      discretization.
+
+
+    .. note:: 
+
+      During installation, C extension modules are aumotically compiled by
+      `build_ext.sh` using compiler flags given in `setup.py`.  For performance
+      tuning or compiler troubleshooting, users may wish to modify the
+      `get_compier_args` function in `setup.py`.
 
     """
 
