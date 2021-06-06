@@ -12,7 +12,8 @@ from mtuq.graphics._gmt import read_cpt
 from mtuq.graphics.uq._gmt import _nothing_to_plot
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath
-from mtuq.util.math import closed_interval, open_interval
+from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
+    to_v, to_w, to_gamma, to_delta
 from os.path import exists
 
 
@@ -60,7 +61,7 @@ def plot_misfit_vw(filename, ds, misfit_callback=None, title=''):
 
     elif issubclass(type(ds), DataFrame):
         ds = ds.reset_index()
-        v, w, values = _bin(ds, lambda ds: ds.min())
+        v, w, values = vw_bin_regular(ds, lambda ds: ds.min())
 
     if misfit_callback:
         values = misfit_callback(values)
@@ -101,7 +102,7 @@ def plot_likelihood_vw(filename, ds, sigma=None, title=''):
         ds = np.exp(-ds/(2.*sigma**2))
         ds /= ds.sum()
         ds = ds.reset_index()
-        v, w, values = _bin(ds, lambda ds: ds.max())
+        v, w, values = vw_bin_regular(ds, lambda ds: ds.max())
 
     values /= values.sum()
     values /= vw_area
@@ -142,7 +143,7 @@ def plot_marginal_vw(filename, ds, sigma=None, title=''):
         ds = np.exp(-ds/(2.*sigma**2))
         ds /= ds.sum()
         ds = ds.reset_index()
-        v, w, values = _bin(ds, lambda ds: ds.sum()/len(ds))
+        v, w, values = vw_bin_regular(ds, lambda ds: ds.sum()/len(ds))
 
     values /= values.sum()
     values /= vw_area
@@ -243,14 +244,59 @@ def _plot_vw(v, w, values, colorbar_type=0, cmap='hot_r', title=None):
         pyplot.title(title, fontdict=fontdict)
 
 
-def _check(ds):
-    """ Checks data structures
+def vw_bin_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
+    """ Bins irregularly-spaced moment tensors into rectangular v,w cells
     """
-    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
-        raise TypeError("Unexpected grid format")
+    # at which points will we plot values?
+    centers_v, centers_w = semiregular_grid(
+        npts_v, npts_w, tightness=tightness)
+
+    # what cell edges correspond to the above centers?
+    centers_gamma = to_gamma(centers_v)
+    edges_gamma = np.array(centers_gamma[:-1] + centers_gamma[1:])/2.
+    edges_v = to_v(edges_gamma)
+
+    centers_delta = to_delta(centers_w)
+    edges_delta = np.array(centers_delta[:-1] + centers_delta[1:])/2.
+    edges_w = to_w(edges_delta)
+
+    edges_v = np.pad(edges_v, 1)
+    edges_v[0] = -1./3.
+    edges_v[-1] = +1./3.
+
+    edges_w = np.pad(edges_w, 1)
+    edges_w[0] = -3.*np.pi/8.
+    edges_w[-1] = +3.*np.pi/8
 
 
-def _bin(df, handle, npts_v=20, npts_w=40):
+    # bin grid points into cells
+    binned = np.empty((npts_w, npts_v))
+    binned[:] = np.nan
+    for _i in range(npts_w):
+        for _j in range(npts_v):
+            # which grid points lie within cell (i,j)?
+            subset = df.loc[
+                df['v'].between(edges_v[_j], edges_v[_j+1]) &
+                df['w'].between(edges_w[_i], edges_w[_i+1])]
+
+            if len(subset)==0:
+                print("Encountered empty bin")
+
+            binned[_i, _j] = handle(subset[0])
+
+            if normalize:
+              # normalize by area of cell
+              binned[_i, _j] /= edges_v[_j+1] - edges_v[_j]
+              binned[_i, _j] /= edges_w[_i+1] - edges_w[_i]
+
+    return DataArray(
+        dims=('v', 'w'),
+        coords=(centers_v, centers_w),
+        data=binned.transpose()
+        )
+
+
+def vw_bin_regular(df, handle, npts_v=20, npts_w=40):
     """ Bins DataFrame into rectangular cells
     """
     # define centers of cells
@@ -272,6 +318,13 @@ def _bin(df, handle, npts_v=20, npts_w=40):
             binned[_i, _j] = handle(subset[0])
 
     return centers_v, centers_w, binned
+
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
 
 
 def _centers_to_edges(v):

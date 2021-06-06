@@ -13,12 +13,11 @@ from xarray import DataArray
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import dataarray_idxmin, dataarray_idxmax
 
-from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning, \
-    gmt_plot_misfit_lune, gmt_plot_likelihood_lune, gmt_plot_misfit_mt_lune
-from mtuq.graphics.uq.vw import _bin
+from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning,\
+    gmt_plot_misfit_lune, gmt_plot_likelihood_lune
+from mtuq.graphics.uq.vw import vw_bin_semiregular
 from mtuq.util import warn
-from mtuq.util.math import apply_cov, lune_det, to_gamma, to_delta, to_v, to_w, \
-    semiregular_grid, to_mij, to_Mw
+from mtuq.util.math import lune_det, to_gamma, to_delta, to_mij, to_Mw
 
 gmt_plot_lune = gmt_plot_misfit_lune
 
@@ -212,14 +211,14 @@ def calculate_marginals(ds, sigma):
 def extract_misfit_unstruct(df, **kwargs):
     df = df.copy()
     df = df.reset_index()
-    return _bin(df, lambda df: df.min(), **kwargs)
+    return vw_bin_semiregular(df, lambda df: df.min(), **kwargs)
 
 
 def calculate_likelihoods_unstruct(df, var, **kwargs):
     df = df.copy()
     df = np.exp(-df/(2.*var))
     df = df.reset_index()
-    return _bin(df, lambda df: df.max(), **kwargs)
+    return vw_bin_semiregular(df, lambda df: df.max(), **kwargs)
 
 
 def calculate_marginals_unstruct(df, var, **kwargs):
