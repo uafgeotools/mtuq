@@ -11,44 +11,7 @@ from os.path import basename, exists, splitext
 
 
 
-def gmt_plot_misfit_lune(filename, lon, lat, values, colormap='panoply', **kwargs):
-
-    if _nothing_to_plot(values):
-        return
-
-    lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
-
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
-
-
-def gmt_plot_misfit_mt_lune(filename, lon, lat, values, colormap='panoply', **kwargs):
-
-    if _nothing_to_plot(values):
-        return
-
-    lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
-
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune_mt'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
-
-def gmt_plot_likelihood_lune(filename, lon, lat, values, colormap='hot', **kwargs):
+def gmt_plot_lune(filename, lon, lat, values, colormap='viridis', **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -114,7 +77,7 @@ def gmt_plot_likelihood_force(filename, phi, h, values, colormap='hot', **kwargs
 def _call(shell_script, filename, lon, lat, values,
     z_min=None, z_max=None, z_exp=0,
     cpt_name='panoply', cpt_step=None, cpt_reverse=False,
-    colorbar_type=0, marker_type=0, title='', global_min_lon=None, global_min_lat=None):
+    colorbar_type=1, marker_type=1, title='', global_min_lon=None, global_min_lat=None, **kwargs):
 
     print('  calling GMT script: %s' % basename(shell_script))
 

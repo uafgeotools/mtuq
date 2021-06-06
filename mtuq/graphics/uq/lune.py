@@ -10,8 +10,7 @@ import xarray
 
 from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
-from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning,\
-    gmt_plot_misfit_lune, gmt_plot_likelihood_lune
+from mtuq.graphics.uq._gmt import gmt_plot_lune
 from mtuq.util import warn
 from mtuq.util.math import lune_det, to_gamma, to_delta
 
@@ -19,9 +18,6 @@ from mtuq.graphics.uq.vw import\
     calculate_misfit, calculate_misfit_unstruct,\
     calculate_likelihoods, calculate_likelihoods_unstruct,\
     calculate_marginals, calculate_marginals_unstruct
-
-gmt_plot_lune = gmt_plot_misfit_lune
-
 
 
 def plot_misfit_lune(filename, ds, **kwargs):
