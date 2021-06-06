@@ -5,7 +5,6 @@
 
 import numpy as np
 import matplotlib.pyplot as pyplot
-import warnings
 
 from collections import defaultdict
 from matplotlib.font_manager import FontProperties

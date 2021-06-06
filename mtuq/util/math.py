@@ -54,7 +54,7 @@ def apply_cov(C, r):
     if type(C) not in [np.array, float]:
         raise Exception
 
-    ndim = getattr(C, 'ndim', 0):
+    ndim = getattr(C, 'ndim', 0)
 
     if ndim not in [0,1,2]:
         raise Exception
@@ -64,7 +64,7 @@ def apply_cov(C, r):
         return np.dot(r, np.dot(Cinv, r))
 
     else:
-        return np.sum(r.^2/C)
+        return np.sum(r**2/C)
 
 
 #

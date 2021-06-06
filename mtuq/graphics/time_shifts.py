@@ -4,6 +4,7 @@ from matplotlib import pyplot
 from os.path import join
 
 from mtuq.graphics.waveforms import _set_components, _prepare_synthetics
+from mtuq.util import warn
 
 
 def plot_time_shifts(filename, data, greens, component, misfit, stations, origin, source,
@@ -24,7 +25,7 @@ def plot_time_shifts(filename, data, greens, component, misfit, stations, origin
     time_shifts, indices = _collect_time_shifts(synthetics, component)
 
     if len(indices)==0:
-        warning("Component not present in dataset")
+        warn("Component not present in dataset")
         return
 
     _save_figure(filename,
