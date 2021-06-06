@@ -6,7 +6,7 @@ from mtuq.graphics.time_shifts import\
     plot_time_shifts, plot_time_shifts_ZRT
 
 from mtuq.graphics.uq.lune import\
-    plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune, plot_misfit_mt_lune, plot_magnitude_lune
+    plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune
 
 from mtuq.graphics.uq.double_couple import\
     plot_misfit_dc, plot_likelihood_dc, plot_marginal_dc
