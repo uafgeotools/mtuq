@@ -6,31 +6,32 @@ import subprocess
 from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
     gmt_formats
 from mtuq.util import fullpath, warn
-from mtuq.util.math import wrap_180
+from mtuq.util.math import wrap_180, to_delta, to_gamma
 from os.path import basename, exists, splitext
 
 
 
-def gmt_plot_lune(filename, lon, lat, values, colormap='viridis', **kwargs):
+def gmt_plot_lune(filename, lon, lat, values, best_vw=None, mt_array=None, 
+    **kwargs):
 
     if _nothing_to_plot(values):
         return
 
     lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
+
+    if best_vw:
+        marker_coords = [
+            to_gamma(best_vw[0]),
+            to_delta(best_vw[1])]
+    else:
+        marker_coords = None
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
+        filename, lon, lat, values, supplemental_data=mt_array, 
+        marker_coords=marker_coords, **kwargs)
 
 
-def gmt_plot_misfit_force(filename, phi, h, values, colormap='panoply', **kwargs):
+def gmt_plot_force(filename, phi, h, values, best_rtp=None, **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -39,84 +40,68 @@ def gmt_plot_misfit_force(filename, phi, h, values, colormap='panoply', **kwargs
     lon = wrap_180(phi + 90.)
 
     lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
 
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
+    if best_rtp:
+        raise NotImplementedError
+    else:
+        marker_coords = None
+
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'), 
+        filename, lon, lat, values, supplemental_data=None,
         **kwargs)
 
 
-def gmt_plot_likelihood_force(filename, phi, h, values, colormap='hot', **kwargs):
-
-    if _nothing_to_plot(values):
-        return
-
-    lat = np.degrees(np.pi/2 - np.arccos(h))
-    lon = wrap_180(phi + 90.)
-
-    lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
-
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
-
-
-def _call(shell_script, filename, lon, lat, values,
-    z_min=None, z_max=None, z_exp=0,
-    cpt_name='panoply', cpt_step=None, cpt_reverse=False,
-    colorbar_type=1, marker_type=1, title='', global_min_lon=None, global_min_lat=None, **kwargs):
+def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
+    title='', colormap='viridis', flip_cpt=False, marker_coords=None, marker_type=0):
 
     print('  calling GMT script: %s' % basename(shell_script))
 
     filetype = _parse_filetype(filename)
+
+    values, minval, maxval, exp = _parse_values(values)
+
+    cpt_name = _parse_cpt(colormap)
+    cpt_step=(maxval-minval)/20.
+
     title, subtitle = _parse_title(title)
 
-    # write lon,lat,val ASCII table
-    ascii_data = 'tmp_'+filename+'.txt'
-    _savetxt(ascii_data, lon, lat, values)
 
-    cpt_local = fullpath('mtuq/graphics/_gmt/cpt', cpt_name+'.cpt')
+    # write ASCII data
+    ascii_file_1 = 'tmp_'+filename+'_ascii1.txt'
+    ascii_file_2 = 'tmp_'+filename+'_ascii2.txt'
+    marker_coords_file = 'tmp_'+filename+'_marker_coords.txt'
 
-    if exists(cpt_local):
-       cpt_name = cpt_local
+    _savetxt(ascii_file_1, lon, lat, values)
+
+    if supplemental_data:
+        _savetxt(ascii_file_2, lon, lat, supplemental_data)
+
+    if marker_coords:
+        _savetxt(marker_coords_file, *marker_coords)
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %e %e %d %e %s %d %d %d %s %s %s %s" %
+        subprocess.call("%s %s %s %s %s %e %e %d %e %s %d %s %d %s %s" %
            (shell_script,
-            ascii_data,
             filename,
             filetype,
-            z_min,
-            z_max,
-            z_exp,
+            ascii_file_1,
+            ascii_file_2,
+            minval,
+            maxval,
+            exp,
             cpt_step,
             cpt_name,
-            int(bool(cpt_reverse)),
-            int(colorbar_type),
+            int(bool(flip_cpt)),
+            marker_coords_file,
             int(marker_type),
             title,
             subtitle,
-            global_min_lon,
-            global_min_lat
             ),
             shell=True)
     else:
         gmt_not_found_warning(
-            ascii_data)
+            values_ascii)
 
 
 
@@ -170,7 +155,6 @@ def _parse_values(values):
         return masked, minval, maxval, exp
 
 
-
 def _parse_title(title):
 
     try:
@@ -213,9 +197,17 @@ def _parse_filetype(filename):
         return 'PNG'
 
 
+def _parse_cpt(cpt_name):
+    cpt_local = fullpath('mtuq/graphics/_gmt/cpt', cpt_name+'.cpt')
+    if exists(cpt_local):
+       return cpt_local
+    else:
+       return cpt_name
 
-def _savetxt(filename, gamma, delta, values):
+
+
+def _savetxt(filename, *args):
     # FIXME: can GMT accept virtual files?
-    np.savetxt(filename, np.column_stack([gamma, delta, values]))
+    np.savetxt(filename, np.column_stack(args))
 
 #
