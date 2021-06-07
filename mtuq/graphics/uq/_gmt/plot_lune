@@ -69,11 +69,6 @@ gmt pscontour $ascii_data $proj_arg $area_arg -Ctmp_$out.cpt -I -N -A- -O -K >> 
 
 # plot focal mechanisms tradeoffs
 if [ -f $supplemental_data ]; then
-    #cat $supplemental_data
-    #sleep 2
-    echo "gmt psmeca $supplemental_data -N -Sm0.2 $proj_arg $area_arg -Z$cpt_name -O -K >> $ps"
-    sleep 2
-
     gmt psmeca $supplemental_data -N -Sm0.2 $proj_arg $area_arg -Z$cpt_name -O -K >> $ps
 fi
 
