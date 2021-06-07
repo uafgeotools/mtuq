@@ -90,7 +90,7 @@ add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 if [ $colorbar_type -ne 0 ]; then
     arg1=$( get_colorbar_arg1 "$colorbar_label" )
     arg2=$( get_colorbar_arg2 $value_exp )
-    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
+    gmt psscale -Ctmp_$out.cpt -D0.7/-0.4+w2.0/0.2+h "$arg1" "$arg2" -O -K >> $ps
 fi
 
 
@@ -100,7 +100,7 @@ if [ -f $marker_coords ]; then
 
 
 elif [ $marker_type -ne 0 ]; then
-    add_marker $marker_type "$in" "$ps" $proj_arg $area_arg
+    add_marker $marker_type "$ascii_data" "$ps" $proj_arg $area_arg
 fi
 
 

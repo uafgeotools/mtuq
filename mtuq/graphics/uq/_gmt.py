@@ -17,7 +17,7 @@ def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None,
     if _nothing_to_plot(values):
         return
 
-    lon, lat =  _parse_lonlat(lon,lat)
+    lon, lat =  _parse_coords(lon,lat)
 
 
     marker_coords = None
@@ -33,7 +33,7 @@ def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None,
         marker_coords=marker_coords, **kwargs)
 
 
-def gmt_plot_force(filename, phi, h, values, best_rtp=None, **kwargs):
+def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -41,12 +41,11 @@ def gmt_plot_force(filename, phi, h, values, best_rtp=None, **kwargs):
     lat = np.degrees(np.pi/2 - np.arccos(h))
     lon = wrap_180(phi + 90.)
 
-    lon, lat =  _parse_lonlat(lon,lat)
+    lon, lat =  _parse_coords(lon,lat)
 
-    if best_rtp:
+    marker_coords = None
+    if best_force is not None:
         raise NotImplementedError
-    else:
-        marker_coords = None
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'), 
         filename, lon, lat, values, supplemental_data=None,
@@ -130,7 +129,7 @@ def _nothing_to_plot(values):
         return True
 
 
-def _parse_lonlat(lon, lat):
+def _parse_coords(lon, lat):
 
     lon, lat = np.meshgrid(lon, lat)
     lat = lat.flatten()
@@ -246,4 +245,5 @@ def _parse_lune_array(lune_array):
 def _savetxt(filename, *args):
     # FIXME: can GMT accept virtual files?
     np.savetxt(filename, np.column_stack(args), fmt='%.3e')
+
 
