@@ -1,87 +1,14 @@
 
 
-Visualization gallery
-=====================
+Visualization galleries
+=======================
 
-MTUQ can be used to carry out grid searches over various source parameters, including moment tensors, double couples, and forces.
+MTUQ can be used to carry out grid searches over moment tensors, double couples, and forces. In each of these cases, the output of `mtuq.grid_search` is a data structure that can be passed directly to various visualization functions, some of which are illustrated here:
+ 
 
-In each of these cases, the output of `mtuq.grid_search` is a data structure that can be passed directly to various visualization functions.
+.. toctree::
+   :maxdepth: 1
 
-Some of the most commonly-used visualization functions are illustrated below.
-
-
-Plotting moment tensor results
-------------------------------
-
-Suppose we are running a moment tensor grid search:
-
-.. code::
-
-    ds = grid_search(data, greens, stations, origins, sources)
-
-
-After the grid search finishes, the data structure ``ds`` will contain all the moment tensors and corresponding misfit values.
-
-
-Misfit values
-"""""""""""""
-
-To plot the misfit values returned by the grid search, simply pass ``ds`` to a plotting utility as follows:
-
-.. code::
-
-    from mtuq.graphics import plot_misfit_lune
-    plot_misfit_lune(filename, ds)
-
-
-Maximum likelihoods
-"""""""""""""""""""
-
-If a data variance estimate ``var`` is available, then misfit values can be converted to likelihood values.  
-In the following approach, a two-dimensional likelihood surface is obtained by maximimizing over orientiation and magnitude parameters:
-
-.. code::
-
-    from mtuq.graphics import plot_likelihood_lune
-    plot_likelihood_lune(filename, ds, var)
-
-
-Marginal likelihoods
-""""""""""""""""""""
-An alternative approach is integrate over orientiation and magnitude parameters, giving marginal likelihoods.  In this case, it is natural to use the `v,w` parameterization:
-
-.. code::
-
-    from mtuq.graphics import plot_marginal_vw
-    plot_marginal_vw(filename, ds, var)
-
-
-Tradeoffs between source type and orientation
-"""""""""""""""""""""""""""""""""""""""""""""
-
-.. code::
-
-    plot_misfit_lune(filename, ds, show_tradeoffs=True)
-
-
-
-Tradeoffs between source type and magnitude
-"""""""""""""""""""""""""""""""""""""""""""
-
-.. code::
-
-    from mtuq.graphics import plot_magnitude_tradeoffs_lune
-    plot_magnitude_tradeoffs_lune(filename, ds)
-
-
-
-
-Plotting force results
-----------------------
-
-
-Creating custom plotting functions
-----------------------------------
-
-
+   gallery_mt
+   gallery_force
 
