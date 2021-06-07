@@ -64,16 +64,15 @@ class Misfit(object):
 
     .. note:: 
 
-      In our convention, a positive time shift means synthetics are arriving 
-      too early and need to be shifted forward in time to match the observed
-      data. 
+      *Convention* : A positive time shift means synthetics are arriving too 
+      early and need to be shifted forward in time to match the observed data.
 
 
     .. rubric:: Optimization Levels
 
-    Because misfit evaluation is our most computationally expensive task with 
-    the greatest code optimization complexity, we offer three different 
-    implementations:
+    Because misfit evaluation is our most computationally expensive task, we 
+    have implemented three different version (each with different tradeoffs 
+    between code complexity and performance):
 
     - a readable pure Python version (``mtuq.misfit.level0``)
 
@@ -82,8 +81,8 @@ class Misfit(object):
     - a very fast Python/C version (``mtuq.misfit.level2``)
 
 
-    Despite having the same input argument syntax, these three versions
-    differ significantly in terms of code complexity and performance:
+    While having exactly the same input argument syntax, these three versions
+    differ in the following ways:
 
     - ``level0`` provides a reference for understanding what the code is doing
       and for checking the correctness of the fast implementations
