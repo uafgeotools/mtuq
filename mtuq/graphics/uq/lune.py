@@ -71,7 +71,7 @@ def plot_likelihood_lune(filename, ds, var, **kwargs):
 
     """
     _defaults(kwargs, {
-        'colormap': 'hot',
+        'colormap': 'hot_r',
         })
 
     _check(ds)
@@ -105,7 +105,7 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
     See _plot_lune for keyword argument descriptions
     """
     _defaults(kwargs, {
-        'colormap': 'hot',
+        'colormap': 'hot_r',
         })
 
     _check(ds)

@@ -44,6 +44,7 @@ def plot_misfit_vw(filename, ds, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'viridis',
+        'marker_type': 1,
         })
 
     _check(ds)
@@ -77,7 +78,8 @@ def plot_likelihood_vw(filename, ds, var, **kwargs):
 
     """
     _defaults(kwargs, {
-        'colormap': 'hot',
+        'colormap': 'hot_r',
+        'marker_type': 2,
         })
 
     _check(ds)
@@ -112,7 +114,8 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 
     """
     _defaults(kwargs, {
-        'colormap': 'hot',
+        'colormap': 'hot_r',
+        'marker_type': 2,
         })
 
     _check(ds)
@@ -134,6 +137,9 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 
 def _plot_vw(filename, da,
     colormap='viridis', colorbar_type=1, marker_type=1, title=''):
+
+    if marker_type not in [0,1,2]:
+        raise ValueError
 
     v = da.coords['v']
     w = da.coords['w']
@@ -174,9 +180,13 @@ def _plot_vw(filename, da,
         fontdict = {'fontsize': 16}
         pyplot.title(title, fontdict=fontdict)
 
-    if marker_type:
-        idx = np.unravel_index(da.values.argmin(), da.values.shape)
-        coords = v[idx[0]], w[idx[1]]
+    if marker_type > 0:
+        if marker_type==1:
+            idx = np.unravel_index(da.values.argmin(), da.values.shape)
+            coords = v[idx[0]], w[idx[1]]
+        elif marker_type==2:
+            idx = np.unravel_index(da.values.argmax(), da.values.shape)
+            coords = v[idx[0]], w[idx[1]]
 
         pyplot.scatter(*coords, s=333,
             marker='o',
@@ -200,7 +210,7 @@ def calculate_misfit(da):
 
     return misfit.assign_attrs({
         'best_mt': _best_mt(da),
-        'best_vw': _best_vw(da),
+        'best_vw': _min_vw(da),
         'mt_array': _mt_array(da),
         })
 
@@ -218,7 +228,7 @@ def calculate_likelihoods(da, var):
 
     return likelihoods.assign_attrs({
         'best_mt': _best_mt(da),
-        'best_vw': _best_vw(da),
+        'best_vw': _min_vw(da),
         'mt_array': _mt_array(da),
         'likelihood_max': likelihoods.max(),
         'likelihood_vw': dataarray_idxmax(likelihoods).values(),
@@ -239,7 +249,7 @@ def calculate_marginals(da, var):
 
     return marginals.assign_attrs({
         'best_mt': _best_mt(da),
-        'best_vw': _best_vw(da),
+        'best_vw': _min_vw(da),
         'mt_array': _mt_array(da),
         'marginal_max': marginals.max(),
         'marginal_vw': dataarray_idxmax(marginals).values(),
@@ -283,13 +293,22 @@ def _best_mt(da):
     return to_mij(*lune_vals)
 
 
-def _best_vw(da):
+def _min_vw(da):
     """ Returns overall best v,w
     """
     da = dataarray_idxmin(da)
     lune_keys = ['v', 'w']
     lune_vals = [da[key].values for key in lune_keys]
     return lune_vals
+
+def _max_vw(da):
+    """ Returns overall best v,w
+    """
+    da = dataarray_idxmax(da)
+    lune_keys = ['v', 'w']
+    lune_vals = [da[key].values for key in lune_keys]
+    return lune_vals
+
 
 
 #
@@ -302,7 +321,7 @@ def calculate_misfit_unstruct(df, **kwargs):
     da = vw_bin_semiregular(df, lambda df: df.min(), **kwargs)
 
     return da.assign_attrs({
-        'best_vw': dataarray_idxmin(da).values(),
+        'best_vw':  _min_vw(da),
         })
 
 
@@ -317,8 +336,8 @@ def calculate_likelihoods_unstruct(df, var, **kwargs):
 
     return da.assign_attrs({
         'likelihood_max': da.max(),
-        'likelihood_vw': dataarray_idxmax(da).values(),
-        'best_vw': dataarray_idxmax(da).values(),
+        'likelihood_vw': _max_vw(da),
+        'best_vw': _max_vw(da),
         })
 
 
@@ -333,12 +352,12 @@ def calculate_marginals_unstruct(df, var, **kwargs):
 
     return da.assign_attrs({
         'marginal_max': da.max(),
-        'marginal_vw': dataarray_idxmax(da).values(),
+        'marginal_vw': _max_vw(da),
         })
 
 
 #
-# for binning irregularly-spaced moment tensors into v,w rectangles
+# bins irregularly-spaced moment tensors into v,w rectangles
 #
 
 def vw_bin_regular(df, handle, npts_v=20, npts_w=40):
