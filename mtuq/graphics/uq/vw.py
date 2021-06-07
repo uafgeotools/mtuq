@@ -260,7 +260,7 @@ def _lune_array(da):
     """ For each point on lune, collects best-fitting moment tensor
     """
     #
-    # TODO - generalize for multiple orgins
+    # TODO - generalize for multiple origins
     #
     origin_idx = 0
 

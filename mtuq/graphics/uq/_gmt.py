@@ -45,11 +45,11 @@ def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
 
     marker_coords = None
     if best_force is not None:
-        raise NotImplementedError
+        marker_coords = _parse_force(best_force)
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'), 
         filename, lon, lat, values, supplemental_data=None,
-        **kwargs)
+       marker_coords=marker_coords, **kwargs)
 
 
 def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
@@ -206,9 +206,24 @@ def _parse_cpt(cpt_name):
        return cpt_name
 
 
+def _parse_force(force):
+    phi = force[0]
+    if phi + 90 > 180.:
+        lon = phi - 270.
+    else:
+        lon = phi + 90.
+
+    h = force[1]
+    lat = np.degrees(np.pi/2 - np.arccos(h))
+
+    return [lon, lat]
+
+
 def _parse_vw(vw):
-    return [to_gamma(vw[0]),
-            to_delta(vw[1])]
+    lon = to_gamma(vw[0])
+    lat = to_delta(vw[1])
+
+    return [lon, lat]
 
 
 def _parse_lune_array(lune_array):

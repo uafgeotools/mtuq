@@ -10,6 +10,7 @@ from matplotlib import pyplot
 from mtuq.graphics.uq._gmt import gmt_plot_force
 from mtuq.grid_search import DataFrame, DataArray, MTUQDataArray, MTUQDataFrame
 from mtuq.util import warn
+from mtuq.util import dataarray_idxmin, dataarray_idxmax
 from mtuq.util.math import closed_interval, open_interval
 
 
@@ -137,7 +138,7 @@ def _plot_force(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
     best_force = None
     if show_best:
         if 'best_force' in da.attrs:
-            best_vw = da.attrs['best_force']
+            best_force = da.attrs['best_force']
         else:
             warn("Best-fitting force not given")
 
@@ -158,8 +159,9 @@ def calculate_misfit(da):
     """
     misfit = da.min(dim=('origin_idx', 'F0'))
 
-    return misfit#.assign_attrs({
-        #})
+    return misfit.assign_attrs({
+        'best_force': _min_force(da)
+        })
 
 
 def calculate_likelihoods(da, var):
@@ -172,8 +174,9 @@ def calculate_likelihoods(da, var):
     likelihoods = likelihoods.max(dim=('origin_idx', 'F0'))
     likelihoods.values /= 4.*np.pi*likelihoods.values.sum()
 
-    return likelihoods#.assign_attrs({
-        #})
+    return likelihoods.assign_attrs({
+        'best_force': _max_force(da)
+        })
 
 
 def calculate_marginals(da, var):
@@ -187,8 +190,28 @@ def calculate_marginals(da, var):
     marginals = likelihoods.sum(dim=('origin_idx', 'F0'))
     marginals.values /= 4.*np.pi*marginals.values.sum()
 
-    return marginals#.assign_attrs({
-        #})
+    return marginals.assign_attrs({
+        'best_force': _max_force(da)
+        })
+
+
+def _min_force(da):
+    """ Returns force corresponding to minimum overall value
+    """
+    da = dataarray_idxmin(da)
+    keys = ['phi', 'h']
+    vals = [da[key].values for key in keys]
+    return vals
+
+
+def _max_force(da):
+    """ Returns force corresponding to maximum overall value
+    """
+    da = dataarray_idxmax(da)
+    keys = ['phi', 'h']
+    vals = [da[key].values for key in keys]
+    return vals
+
 
 
 #
@@ -200,8 +223,9 @@ def calculate_misfit_unstruct(df, **kwargs):
     df = df.reset_index()
     da = _bin(df, lambda df: df.min(), **kwargs)
 
-    return da#.assign_attrs({
-        #})
+    return da.assign_attrs({
+        'best_force': _min_force(da)
+        })
 
 
 def calculate_likelihoods_unstruct(df, var, **kwargs):
@@ -212,8 +236,9 @@ def calculate_likelihoods_unstruct(df, var, **kwargs):
     da = _bin(df, lambda df: df.max(), **kwargs)
     da.values /= 4.*np.pi*da.values.sum()
 
-    return da#.assign_attrs({
-        #})
+    return da.assign_attrs({
+        'best_force': _max_force(da)
+        })
 
 
 def calculate_marginals_unstruct(df, var, **kwargs):
@@ -224,8 +249,9 @@ def calculate_marginals_unstruct(df, var, **kwargs):
     da = _bin(df, lambda df: df.sum()/len(df))
     da.values /= 4.*np.pi*da.values.sum()
 
-    return da#.assign_attrs({
-        #})
+    return da.assign_attrs({
+        'best_force': _max_force(da)
+        })
 
 
 #
