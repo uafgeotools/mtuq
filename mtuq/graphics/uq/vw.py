@@ -211,7 +211,7 @@ def calculate_misfit(da):
     return misfit.assign_attrs({
         'best_mt': _best_mt(da),
         'best_vw': _min_vw(da),
-        'mt_array': _mt_array(da),
+        'lune_array': _lune_array(da),
         })
 
 
@@ -229,7 +229,7 @@ def calculate_likelihoods(da, var):
     return likelihoods.assign_attrs({
         'best_mt': _best_mt(da),
         'best_vw': _min_vw(da),
-        'mt_array': _mt_array(da),
+        'lune_array': _lune_array(da),
         'likelihood_max': likelihoods.max(),
         'likelihood_vw': dataarray_idxmax(likelihoods).values(),
         })
@@ -250,13 +250,13 @@ def calculate_marginals(da, var):
     return marginals.assign_attrs({
         'best_mt': _best_mt(da),
         'best_vw': _min_vw(da),
-        'mt_array': _mt_array(da),
+        'lune_array': _lune_array(da),
         'marginal_max': marginals.max(),
         'marginal_vw': dataarray_idxmax(marginals).values(),
         })
 
 
-def _mt_array(da):
+def _lune_array(da):
     """ For each point on lune, collects best-fitting moment tensor
     """
     #
@@ -267,21 +267,21 @@ def _mt_array(da):
     nv = len(da.coords['v'])
     nw = len(da.coords['w'])
 
-    mt_array = np.empty((nv,nw,6))
+    lune_array = np.empty((nv*nw,6))
     for iv in range(nv):
         for iw in range(nw):
             sliced = da[:,iv,iw,:,:,:,origin_idx]
             argmin = np.argmin(sliced.values, axis=None)
             idx = np.unravel_index(argmin, np.shape(sliced))
 
-            mt_array[iv,iw,0] = da['rho'][idx[0]]
-            mt_array[iv,iw,1] = da['v'][iv]
-            mt_array[iv,iw,2] = da['w'][iw]
-            mt_array[iv,iw,3] = da['kappa'][idx[1]]
-            mt_array[iv,iw,4] = da['sigma'][idx[2]]
-            mt_array[iv,iw,5] = da['h'][idx[3]]
+            lune_array[nw*iv+iw,0] = da['rho'][idx[0]]
+            lune_array[nw*iv+iw,1] = da['v'][iv]
+            lune_array[nw*iv+iw,2] = da['w'][iw]
+            lune_array[nw*iv+iw,3] = da['kappa'][idx[1]]
+            lune_array[nw*iv+iw,4] = da['sigma'][idx[2]]
+            lune_array[nw*iv+iw,5] = da['h'][idx[3]]
 
-    return mt_array
+    return lune_array
 
 
 def _best_mt(da):

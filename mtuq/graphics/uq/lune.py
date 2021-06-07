@@ -142,7 +142,7 @@ def _plot_lune(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
 
 
     best_vw = None
-    mt_array = None
+    lune_array = None
 
     if show_best:
         if 'best_vw' in da.attrs:
@@ -151,10 +151,10 @@ def _plot_lune(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
             warn("Best-fitting moment tensor not given")
 
     if show_tradeoffs:
-        if 'mt_array' in da.attrs:
-            mt_array = da.attrs['mt_array']
+        if 'lune_array' in da.attrs:
+            lune_array = da.attrs['lune_array']
         else:
-            warn("Tradeoffs not given")
+            warn("Focal mechanism tradeoffs not given")
 
 
     gmt_plot_lune(filename, 
@@ -162,7 +162,7 @@ def _plot_lune(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
         to_delta(da.coords['w']),
         da.values.transpose(), 
         best_vw=best_vw,
-        mt_array=mt_array,
+        lune_array=lune_array,
         **kwargs)
 
 

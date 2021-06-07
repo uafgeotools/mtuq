@@ -6,12 +6,12 @@ import subprocess
 from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
     gmt_formats
 from mtuq.util import fullpath, warn
-from mtuq.util.math import wrap_180, to_delta, to_gamma
+from mtuq.util.math import wrap_180, to_delta, to_gamma, to_mij
 from os.path import basename, exists, splitext
 
 
 
-def gmt_plot_lune(filename, lon, lat, values, best_vw=None, mt_array=None, 
+def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None, 
     **kwargs):
 
     if _nothing_to_plot(values):
@@ -19,15 +19,17 @@ def gmt_plot_lune(filename, lon, lat, values, best_vw=None, mt_array=None,
 
     lon, lat =  _parse_lonlat(lon,lat)
 
-    if best_vw:
-        marker_coords = [
-            to_gamma(best_vw[0]),
-            to_delta(best_vw[1])]
-    else:
-        marker_coords = None
+
+    marker_coords = None
+    supplemental_data = None
+    if best_vw is not None:
+        marker_coords = _parse_vw(best_vw)
+    if lune_array is not None:
+        supplemental_data = _parse_lune_array(lune_array)
+
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
-        filename, lon, lat, values, supplemental_data=mt_array, 
+        filename, lon, lat, values, supplemental_data=supplemental_data,
         marker_coords=marker_coords, **kwargs)
 
 
@@ -73,10 +75,10 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
 
     _savetxt(ascii_file_1, lon, lat, values)
 
-    if supplemental_data:
-        _savetxt(ascii_file_2, lon, lat, supplemental_data)
+    if supplemental_data is not None:
+        _savetxt(ascii_file_2, supplemental_data)
 
-    if marker_coords:
+    if marker_coords is not None:
         _savetxt(marker_coords_file, *marker_coords)
 
     # call bash script
@@ -205,9 +207,43 @@ def _parse_cpt(cpt_name):
        return cpt_name
 
 
+def _parse_vw(vw):
+    return [to_gamma(vw[0]),
+            to_delta(vw[1])]
+
+
+def _parse_lune_array(lune_array):
+    # converts from a N x 6 table of lune parameters to the N x 12 format expected by psmeca
+
+    dummy_value = 0.
+
+    N = lune_array.shape[0]
+
+    gmt_array = np.empty((N,12))
+    for _i in range(N):
+
+        rho,v,w,kappa,sigma,h = lune_array[_i,:]
+
+        # adding a random negative perturbation to the dip, to avoid GMT plotting bug
+        perturb = np.random.uniform(0.2,0.4)
+        if sigma > (-90.0 + 0.4):
+            sigma -= perturb
+
+        mt = to_mij(rho, v, w, kappa, sigma, h)
+        exponent = np.max([int('{:.2e}'.format(mt[i]).split('e+')[1]) for i in range(len(mt))])
+        scaled_mt = mt/10**(exponent)
+
+        gmt_array[_i, 0] = to_gamma(v)
+        gmt_array[_i, 1] = to_delta(w)
+        gmt_array[_i, 2] = dummy_value
+        gmt_array[_i, 3:9] = scaled_mt
+        gmt_array[_i, 9] = exponent+7
+        gmt_array[_i, 10:] = 0
+
+    return gmt_array
+
 
 def _savetxt(filename, *args):
     # FIXME: can GMT accept virtual files?
-    np.savetxt(filename, np.column_stack(args))
+    np.savetxt(filename, np.column_stack(args), fmt='%.3e')
 
-#
