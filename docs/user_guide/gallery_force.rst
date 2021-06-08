@@ -3,14 +3,14 @@
 Plotting force results
 ----------------------
 
-Suppose we are running a force search:
+Suppose we are running a force grid search:
 
 .. code::
 
     ds = grid_search(data, greens, stations, origins, sources)
 
 
-After the grid search finishes, the data structure `ds` will contain all the forces and corresponding misfit values.
+After the above command finishes, the data structure `ds` will contain all the forces and corresponding misfit values.
 
 For a grid of regulary-spaced forces, `ds` may look something like:
 
@@ -37,7 +37,7 @@ For a grid of regulary-spaced forces, `ds` may look something like:
 Misfit values
 """""""""""""
 
-To plot the misfit values returned by the grid search, simply pass `ds` to a plotting utility as follows:
+To plot the misfit values returned by the grid search, we can pass `ds` to a plotting utility as follows:
 
 .. code::
 
@@ -52,7 +52,7 @@ Maximum likelihoods
 """""""""""""""""""
 
 If a data variance estimate `var` is available, then misfit values can be converted to likelihood values.  
-In the following approach, a two-dimensional likelihood surface is obtained by maximimizing magnitude:
+In the following approach, a two-dimensional likelihood surface is obtained by maximimizing over magnitude:
 
 .. code::
 

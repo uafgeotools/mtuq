@@ -15,5 +15,3 @@ git add -A
 git commit -m "Added website"
 git push -f origin gh-pages
 
-
-

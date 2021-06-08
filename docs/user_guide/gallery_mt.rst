@@ -10,7 +10,7 @@ Suppose we are running a moment tensor grid search:
     ds = grid_search(data, greens, stations, origins, sources)
 
 
-After the above command finishes, the data structure `ds` will hold moment tensors and corresponding misfit values.  
+After the above command finishes, the data structure `ds` will hold all the moment tensors and corresponding misfit values.  
 
 For a grid of regulary-spaced moment tensors, `ds` may look something like:
 
