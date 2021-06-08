@@ -12,7 +12,7 @@ Suppose we are running a moment tensor grid search:
 
 After the above command finishes, the data structure `ds` will hold moment tensors and corresponding misfit values.  
 
-If reguarly-spaced moment tensors were chosen for `sources`, then `ds` will look something like:
+For a grid of regulary-spaced moment tensors, `ds` may look something like:
 
 .. code::
 
@@ -56,7 +56,7 @@ Maximum likelihoods
 """""""""""""""""""
 
 If a data variance estimate `var` is available, then misfit values can be converted to likelihood values.  
-In the following approach, a two-dimensional maximum likelihood surface is obtained by maximimizing over orientiation and magnitude parameters at each source type:
+In the following approach, a two-dimensional maximum likelihood surface is obtained by maximimizing over orientiation and magnitude parameters:
 
 .. code::
 
@@ -70,7 +70,7 @@ In the following approach, a two-dimensional maximum likelihood surface is obtai
 Marginal likelihoods
 """"""""""""""""""""
 
-An alternative approach for visualizing likelihood is integrate over orientiation and magnitude parameters, giving a two-dimensional marginal distribution.  In this case, it is natural to use the so-called v,w parameterization, as follows:
+An alternative for visualizing likelihood is integrate over orientiation and magnitude parameters, giving a two-dimensional marginal distribution.  In this case, it is natural to use the so-called v,w parameterization, as follows:
 
 .. code::
 
@@ -85,7 +85,7 @@ An alternative approach for visualizing likelihood is integrate over orientiatio
 Tradeoffs between source type and orientation
 """""""""""""""""""""""""""""""""""""""""""""
 
-To see how the orientation of the best-fitting moment tensor varies with respect to source type, we can add the `show_tradeoffs=True` option to any of the lune plotting utilities as follows:
+To see how the orientation of the best-fitting moment tensor varies with respect to source type, we can add the `show_tradeoffs=True` option to any of the plotting utilities as follows:
 
 .. code::
 
@@ -101,12 +101,16 @@ To see how the orientation of the best-fitting moment tensor varies with respect
 Tradeoffs between source type and magnitude
 """""""""""""""""""""""""""""""""""""""""""
 
-To see how the magnitude of the best-fitting moment tensor varies with respect to source type, we can use the following utility:
+To see how the magnitude of the best-fitting moment tensor varies with respect to source type, we can use the following:
 
 .. code::
 
-    from mtuq.graphics.uq.lune import plot_magnitude_tradeoffs
-    plot_magnitude_tradeoffs_lune(filename, ds)
+    from mtuq.graphics import plot_mt_tradeoffs
+    plot_mt_tradeoffs(filename, ds)
+
+.. image:: images/20090407201255351_Mw_tradeoffs.png
+  :width: 100 
+
 
 
 
@@ -115,5 +119,5 @@ Source code
 
 [`script to reproduce above figures <https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/code/gallery_mt.py>`_]
 
-Because it uses the same data as `mtuq/examples`, users should be able to run the script immediately after `installing MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_.
+Users can run the script immediately after `installing MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_, without any additional setup.
 
