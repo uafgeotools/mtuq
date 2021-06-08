@@ -17,16 +17,20 @@ from mtuq.util.math import closed_interval, open_interval
 def plot_misfit_force(filename, ds, **kwargs):
     """ Plots misfit values with respect to force orientation (requires GMT)
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensors and corresponding misfit values
+    Data structure containing forces and corresponding misfit values
 
 
-    See _plot_force for keyword argument descriptions
+    .. rubric :: Optional input arguments
+
+    For optional argument descpritions, 
+    `see here <mtuq.graphics._plot_force.html>`_
+
 
     """
     _defaults(kwargs, {
@@ -49,21 +53,26 @@ def plot_likelihood_force(filename, ds, var, **kwargs):
     """ Plots maximum likelihood values with respect to force orientation 
     (requires GMT)
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensors and corresponding misfit values
+    Data structure containing forces and corresponding misfit values
 
     ``var`` (`float` or `array`):
     Data variance
 
 
-    See _plot_force for keyword argument descriptions
+    .. rubric :: Optional input arguments
+
+    For optional argument descpritions, 
+    `see here <mtuq.graphics._plot_force.html>`_
+
 
     """
+
     _defaults(kwargs, {
         'colormap': 'hot_r',
         })
@@ -84,19 +93,22 @@ def plot_marginal_force(filename, ds, var, **kwargs):
     """ Plots marginal likelihood values with respect to force orientation 
     (requires GMT)
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensors and corresponding misfit values
+    Data structure containing forces and corresponding misfit values
 
     ``var`` (`float` or `array`):
     Data variance
 
 
-    See _plot_force for keyword argument descriptions
+    .. rubric :: Optional input arguments
+
+    For optional argument descpritions, 
+    `see here <mtuq.graphics._plot_force.html>`_
 
     """
     _defaults(kwargs, {
@@ -116,22 +128,23 @@ def plot_marginal_force(filename, ds, var, **kwargs):
 
 
 def plot_force_tradeoffs(filename, ds, **kwargs):
-    """ Plots marginal likelihood values with respect to force orientation 
+    """ Plots magnitude of best-fitting force with respect to force orientation 
     (requires GMT)
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    Data structure containing moment tensors and corresponding misfit values
-
-    ``var`` (`float` or `array`):
-    Data variance
+    Data structure containing forces and corresponding misfit values
 
 
-    See _plot_force for keyword argument descriptions
+    .. rubric :: Optional input arguments
+
+    For optional argument descpritions, 
+    `see here <mtuq.graphics._plot_force.html>`_
+
 
     """
     _defaults(kwargs, {
@@ -157,13 +170,17 @@ def plot_force_tradeoffs(filename, ds, **kwargs):
 def _plot_force(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
     """ Plots values with respect to force orientation (requires GMT)
 
-    .. rubric :: Input arguments
+    .. rubric :: Keyword arguments
 
-    ``filename`` (`str`):
-    Name of output image file
+    ``colormap`` (`str`)
+    Color palette used for plotting values 
+    (choose from GMT or MTUQ built-ins)
 
-    ``ds`` (`DataArray`):
-    DataArray containing `v,w` values and corresponding misfit values
+    ``show_best`` (`bool`):
+    Show orientation of best-fitting force
+
+    ``title`` (`str`)
+    Optional figure title
 
     """
     if not issubclass(type(da), DataArray):

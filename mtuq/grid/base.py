@@ -219,7 +219,7 @@ class Grid(object):
 
 class UnstructuredGrid(object):
     """ 
-    An unstructured grid is defined by lists of individual coordinate points, 
+    An `UnstructuredGrid` is defined by lists of individual coordinate points, 
     which can be irregularly spaced
 
     .. rubric:: Example
