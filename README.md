@@ -31,7 +31,7 @@ downloading Green's functions from remote syngine databases.
 
 ## Testing
 
-The package has been tested against [legacy Perl/C codes](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) as well as [published inversions](https://github.com/rmodrak/mtbench).
+The package has been tested against [legacy Perl/C codes](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) as well as [published studies](https://github.com/rmodrak/mtbench).
 
 
 
@@ -51,6 +51,8 @@ The package has been tested against [legacy Perl/C codes](https://github.com/uaf
 [Acquiring Green's functions](https://uafgeotools.github.io/mtuq/user_guide/03.html)
 
 [Data processing](https://uafgeotools.github.io/mtuq/user_guide/04.html)
+
+[Visualization galleries](https://uafgeotools.github.io/mtuq/user_guide/05.html)
 
 [Library reference](https://uafgeotools.github.io/mtuq/library/index.html)
 

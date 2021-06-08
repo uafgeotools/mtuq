@@ -16,12 +16,14 @@ autogen
    mtuq.graphics.plot_likelihood_lune
    mtuq.graphics.plot_marginal_lune
    mtuq.graphics.plot_misfit_lune
+   mtuq.graphics._plot_lune
    mtuq.graphics.plot_likelihood_vw
    mtuq.graphics.plot_marginal_vw
    mtuq.graphics.plot_misfit_vw
    mtuq.graphics.plot_likelihood_force
    mtuq.graphics.plot_marginal_force
    mtuq.graphics.plot_misfit_force
+   mtuq.graphics._plot_force
    mtuq.grid.DoubleCoupleGridRandom
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom

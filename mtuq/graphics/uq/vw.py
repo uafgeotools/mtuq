@@ -1,26 +1,23 @@
 
 #
-# graphics/uq/vw.py - uncertainty quantification on the v-w rectangle
-#
-
-import numpy as np
-
-from matplotlib import pyplot
-from pandas import DataFrame
-from xarray import DataArray
-from mtuq.graphics._gmt import read_cpt
-from mtuq.graphics.uq._gmt import _nothing_to_plot
-from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util import fullpath
-from mtuq.util.math import closed_interval, open_interval
-from os.path import exists
-
-
-#
-# For details about the  rectangle:`v-w` rectangle rectangle, see 
+# For details about the v,w rectangle see 
 # Tape2015 - A uniform parameterization of moment tensors
 # (https://doi.org/10.1093/gji/ggv262)
 #
+
+import numpy as np
+import pandas
+import xarray
+
+from matplotlib import pyplot
+from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
+from mtuq.graphics._gmt import read_cpt
+from mtuq.graphics.uq._gmt import _nothing_to_plot
+from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath
+from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
+    to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
+from os.path import exists
+
 
 v_min = -1./3.
 v_max = +1./3.
@@ -30,8 +27,75 @@ vw_area = (v_max-v_min)*(w_max-w_min)
 
 
 
-def plot_misfit_vw(filename, ds, misfit_callback=None, title=''):
-    """ Plots misfit values on `v-w` rectangle
+def plot_misfit_vw(filename, ds, **kwargs):
+    """ Plots misfit values on v,w rectangle
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+
+    See _plot_vw for keyword argument descriptions
+
+    """
+    _defaults(kwargs, {
+        'colormap': 'viridis',
+        'marker_type': 1,
+        })
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        misfit = calculate_misfit(ds)
+
+    elif issubclass(type(ds), DataFrame):
+        misfit = calculate_misfit_unstruct(ds)
+
+    _plot_vw(filename, misfit, **kwargs)
+
+
+def plot_likelihood_vw(filename, ds, var, **kwargs):
+    """ Plots maximum likelihood values on v,w rectangle
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``var`` (`float` or `array`):
+    Data variance
+
+
+    See _plot_vw for keyword argument descriptions
+
+    """
+    _defaults(kwargs, {
+        'colormap': 'hot_r',
+        'marker_type': 2,
+        })
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        likelihoods = calculate_likelihoods(ds, var)
+
+    elif issubclass(type(ds), DataFrame):
+        likelihoods = calculate_likelihoods_unstruct(ds, var)
+
+    _plot_vw(filename, likelihoods, **kwargs)
+
+
+def plot_marginal_vw(filename, ds, var, **kwargs):
+    """ Plots marginal likelihoods on v,w rectangle
 
 
     .. rubric :: Input arguments
@@ -40,176 +104,50 @@ def plot_misfit_vw(filename, ds, misfit_callback=None, title=''):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
+    Data structure containing moment tensors and corresponding misfit values
 
-    ``misfit_callback`` (func)
-    User-supplied function applied to misfit values
-
-    ``title`` (`str`):
-    Optional figure title
-
-    """
-    _check(ds)
-    ds = ds.copy()
-
-    if issubclass(type(ds), DataArray):
-        ds = ds.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        v = ds.coords['v']
-        w = ds.coords['w']
-        values = ds.values.transpose()
-
-    elif issubclass(type(ds), DataFrame):
-        ds = ds.reset_index()
-        v, w, values = _bin(ds, lambda ds: ds.min())
-
-    if misfit_callback:
-        values = misfit_callback(values)
-
-    _plot_misfit_vw(filename, v, w, values, title=title)
+    ``var`` (`float` or `array`):
+    Data variance
 
 
-def plot_likelihood_vw(filename, ds, sigma=None, title=''):
-    """ Plots maximum likelihoods on `v-w` rectangle
-
-
-    .. rubric :: Input arguments
-
-    ``filename`` (`str`):
-    Name of output image file
-
-    ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
-
-    ``title`` (`str`):
-    Optional figure title
+    See _plot_vw for keyword argument descriptions
 
     """
-    assert sigma is not None
+    _defaults(kwargs, {
+        'colormap': 'hot_r',
+        'marker_type': 2,
+        })
 
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        ds.values = np.exp(-ds.values/(2.*sigma**2))
-        ds.values /= ds.values.sum()
-        ds = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        v = ds.coords['v']
-        w = ds.coords['w']
-        values = ds.values.transpose()
+        marginals = calculate_marginals(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        ds = np.exp(-ds/(2.*sigma**2))
-        ds /= ds.sum()
-        ds = ds.reset_index()
-        v, w, values = _bin(ds, lambda ds: ds.max())
+        marginals = calculate_marginals_unstruct(ds, var)
 
-    values /= values.sum()
-    values /= vw_area
-
-    _plot_likelihood_vw(filename, v, w, values, title=title)
-
-
-def plot_marginal_vw(filename, ds, sigma=None, title=''):
-    """ Plots marginal likelihoods on `v-w` rectangle
-
-
-    .. rubric :: Input arguments
-
-    ``filename`` (`str`):
-    Name of output image file
-
-    ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
-
-    ``title`` (`str`):
-    Optional figure title
-
-    """
-    assert sigma is not None
-
-    _check(ds)
-    ds = ds.copy()
-
-    if issubclass(type(ds), DataArray):
-        ds.values = np.exp(-ds.values/(2.*sigma**2))
-        ds.values /= ds.values.sum()
-        ds = ds.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
-        v = ds.coords['v']
-        w = ds.coords['w']
-        values = ds.values.transpose()
-
-    elif issubclass(type(ds), DataFrame):
-        ds = np.exp(-ds/(2.*sigma**2))
-        ds /= ds.sum()
-        ds = ds.reset_index()
-        v, w, values = _bin(ds, lambda ds: ds.sum()/len(ds))
-
-    values /= values.sum()
-    values /= vw_area
-
-    _plot_likelihood_vw(filename, v, w, values, title=title)
+    _plot_vw(filename, marginals, **kwargs)
 
 
 
 #
-# pyplot wrappers
+# matplotlib backend
 #
 
-def _plot_misfit_vw(filename, v, w, values,
-    colorbar_type=1, marker_type=1, title=''):
+def _plot_vw(filename, da,
+    colormap='viridis', colorbar_type=1, marker_type=1, title=''):
+
+    if marker_type not in [0,1,2]:
+        raise ValueError
+
+    v = da.coords['v']
+    w = da.coords['w']
+    values = da.values
 
     if _nothing_to_plot(values):
         return
 
-    _plot_vw(v, w, values, 
-        colorbar_type=colorbar_type,
-        cmap='hot',
-        title=title)
-
-    if marker_type:
-        idx = np.unravel_index(values.argmin(), values.shape)
-        coords = v[idx[1]], w[idx[0]]
-
-        pyplot.scatter(*coords, s=333,
-            marker='o',
-            facecolors='none',
-            edgecolors=[0,1,0],
-            linewidths=1.75,
-            )
-
-    pyplot.savefig(filename)
-    pyplot.close()
-
-
-def _plot_likelihood_vw(filename, v, w, values,
-    colorbar_type=1, marker_type=2, title=''):
-
-    if _nothing_to_plot(values):
-        return
-
-    _plot_vw(v, w, values, 
-        colorbar_type=colorbar_type,
-        cmap='hot_r',
-        title=title)
-
-    if marker_type:
-        idx = np.unravel_index(values.argmax(), values.shape)
-        coords = v[idx[1]], w[idx[0]]
-
-        pyplot.scatter(*coords, s=333,
-            marker='o', 
-            facecolors='none',
-            edgecolors=[0,1,0],
-            linewidths=1.75,
-            clip_on=False,
-            zorder=100,
-            )
-
-    pyplot.savefig(filename)
-
-
-def _plot_vw(v, w, values, colorbar_type=0, cmap='hot_r', title=None):
-    # create figure
     fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
 
     # pcolor requires corners of pixels
@@ -217,7 +155,7 @@ def _plot_vw(v, w, values, colorbar_type=0, cmap='hot_r', title=None):
     corners_w = _centers_to_edges(w)
 
     # `values` gets mapped to pixel colors
-    pyplot.pcolor(corners_v, corners_w, values, cmap=cmap)
+    pyplot.pcolor(corners_v, corners_w, values.transpose(), cmap=colormap)
 
     # v and w have the following bounds
     # (see https://doi.org/10.1093/gji/ggv262)
@@ -227,8 +165,8 @@ def _plot_vw(v, w, values, colorbar_type=0, cmap='hot_r', title=None):
     pyplot.xticks([], [])
     pyplot.yticks([], [])
 
-    if exists(_local_path(cmap)):
-       cmap = read_cpt(_local_path(cmap))
+    if exists(_local_path(colormap)):
+       cmap = read_cpt(_local_path(colormap))
 
     if colorbar_type:
         cbar = pyplot.colorbar(
@@ -242,16 +180,214 @@ def _plot_vw(v, w, values, colorbar_type=0, cmap='hot_r', title=None):
         fontdict = {'fontsize': 16}
         pyplot.title(title, fontdict=fontdict)
 
+    if marker_type > 0:
+        if marker_type==1:
+            idx = np.unravel_index(da.values.argmin(), da.values.shape)
+            coords = v[idx[0]], w[idx[1]]
+        elif marker_type==2:
+            idx = np.unravel_index(da.values.argmax(), da.values.shape)
+            coords = v[idx[0]], w[idx[1]]
 
-def _check(ds):
-    """ Checks data structures
+        pyplot.scatter(*coords, s=333,
+            marker='o',
+            facecolors='none',
+            edgecolors=[0,1,0],
+            linewidths=1.75,
+            )
+
+    pyplot.savefig(filename)
+    pyplot.close()
+
+
+#
+# for extracting misfit or likelihood from regularly-spaced grids
+#
+
+def calculate_misfit(da):
+    """ For each source type, extracts minimum misfit
     """
-    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
-        raise TypeError("Unexpected grid format")
+    misfit = da.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+
+    return misfit.assign_attrs({
+        'best_mt': _best_mt(da),
+        'best_vw': _min_vw(da),
+        'lune_array': _lune_array(da),
+        })
 
 
-def _bin(df, handle, npts_v=20, npts_w=40):
-    """ Bins DataFrame into rectangular cells
+def calculate_likelihoods(da, var):
+    """ For each source type, calculates maximum likelihood value
+    """
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
+
+    likelihoods = likelihoods.max(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+    likelihoods.values /= likelihoods.values.sum()
+    likelihoods /= vw_area
+
+    return likelihoods.assign_attrs({
+        'best_mt': _best_mt(da),
+        'best_vw': _min_vw(da),
+        'lune_array': _lune_array(da),
+        'likelihood_max': likelihoods.max(),
+        'likelihood_vw': dataarray_idxmax(likelihoods).values(),
+        })
+
+
+def calculate_marginals(da, var):
+    """ For each source type, calculates marginal likelihood value
+    """
+
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
+
+    marginals = likelihoods.sum(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+    marginals.values /= marginals.values.sum()
+    marginals /= vw_area
+
+    return marginals.assign_attrs({
+        'best_mt': _best_mt(da),
+        'best_vw': _min_vw(da),
+        'lune_array': _lune_array(da),
+        'marginal_max': marginals.max(),
+        'marginal_vw': dataarray_idxmax(marginals).values(),
+        })
+
+
+def calculate_magnitudes(da):
+    """ For each source type, calculates magnitude of best-fitting moment tensor
+    """
+    v = da.coords['v']
+    w = da.coords['w']
+
+    nv = len(v)
+    nw = len(w)
+
+    misfit = da.min(dim=('origin_idx', 'kappa', 'sigma', 'h'))
+    magnitudes = np.empty((nv,nw))
+
+    for iv in range(nv):
+        for iw in range(nw):
+            sliced = misfit[:,iv,iw]
+            argmin = np.argmin(sliced.values, axis=None)
+            magnitudes[iv,iw] = to_Mw(da['rho'][argmin])
+
+    magnitudes = DataArray(
+        dims=('v','w'),
+        coords=(v,w),
+        data=magnitudes
+        )
+
+    return magnitudes.assign_attrs({
+        'best_mt': _best_mt(da),
+        'best_vw': _min_vw(da),
+        'lune_array': _lune_array(da),
+        })
+
+
+def _lune_array(da):
+    """ For each source type, returns best-fitting moment tensor
+    """
+    nv = len(da.coords['v'])
+    nw = len(da.coords['w'])
+
+    lune_array = np.empty((nv*nw,6))
+    for iv in range(nv):
+        for iw in range(nw):
+            sliced = da[:,iv,iw,:,:,:,:]
+            argmin = np.argmin(sliced.values, axis=None)
+            idx = np.unravel_index(argmin, np.shape(sliced))
+
+            lune_array[nw*iv+iw,0] = da['rho'][idx[0]]
+            lune_array[nw*iv+iw,1] = da['v'][iv]
+            lune_array[nw*iv+iw,2] = da['w'][iw]
+            lune_array[nw*iv+iw,3] = da['kappa'][idx[1]]
+            lune_array[nw*iv+iw,4] = da['sigma'][idx[2]]
+            lune_array[nw*iv+iw,5] = da['h'][idx[3]]
+
+    return lune_array
+
+
+def _best_mt(da):
+    """ Returns overall best-fitting moment tensor
+    """
+    da = dataarray_idxmin(da)
+    lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
+    lune_vals = [da[key].values for key in lune_keys]
+    return to_mij(*lune_vals)
+
+
+def _min_vw(da):
+    """ Returns overall best v,w
+    """
+    da = dataarray_idxmin(da)
+    lune_keys = ['v', 'w']
+    lune_vals = [da[key].values for key in lune_keys]
+    return lune_vals
+
+def _max_vw(da):
+    """ Returns overall best v,w
+    """
+    da = dataarray_idxmax(da)
+    lune_keys = ['v', 'w']
+    lune_vals = [da[key].values for key in lune_keys]
+    return lune_vals
+
+
+
+#
+# for extracting misfit or likelihood from irregularly-spaced grids
+#
+
+def calculate_misfit_unstruct(df, **kwargs):
+    df = df.copy()
+    df = df.reset_index()
+    da = vw_bin_semiregular(df, lambda df: df.min(), **kwargs)
+
+    return da.assign_attrs({
+        'best_vw':  _min_vw(da),
+        })
+
+
+def calculate_likelihoods_unstruct(df, var, **kwargs):
+    df = df.copy()
+    df = np.exp(-df/(2.*var))
+    df = df.reset_index()
+
+    da = vw_bin_semiregular(df, lambda df: df.max(), **kwargs)
+    da.values /= da.values.sum()
+    da.values /= vw_area
+
+    return da.assign_attrs({
+        'likelihood_max': da.max(),
+        'likelihood_vw': _max_vw(da),
+        'best_vw': _max_vw(da),
+        })
+
+
+def calculate_marginals_unstruct(df, var, **kwargs):
+    df = df.copy()
+    df = np.exp(-df/(2.*var))
+    df = df.reset_index()
+
+    da = vw_bin_semiregular(df, lambda df: df.sum()/len(df))
+    da.values /= da.values.sum()
+    da.values /= vw_area
+
+    return da.assign_attrs({
+        'marginal_max': da.max(),
+        'marginal_vw': _max_vw(da),
+        })
+
+
+#
+# bins irregularly-spaced moment tensors into v,w rectangles
+#
+
+def vw_bin_regular(df, handle, npts_v=20, npts_w=40):
+    """ Bins irregularly-spaced moment tensors into square v,w cells
     """
     # define centers of cells
     centers_v = open_interval(-1./3., 1./3., npts_v)
@@ -271,7 +407,63 @@ def _bin(df, handle, npts_v=20, npts_w=40):
 
             binned[_i, _j] = handle(subset[0])
 
-    return centers_v, centers_w, binned
+    return DataArray(
+        dims=('v', 'w'),
+        coords=(centers_v, centers_w),
+        data=binned.transpose()
+        )
+
+
+def vw_bin_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
+    """ Bins irregularly-spaced moment tensors into rectangular v,w cells
+    """
+    # at which points will we plot values?
+    centers_v, centers_w = semiregular_grid(
+        npts_v, npts_w, tightness=tightness)
+
+    # what cell edges correspond to the above centers?
+    centers_gamma = to_gamma(centers_v)
+    edges_gamma = np.array(centers_gamma[:-1] + centers_gamma[1:])/2.
+    edges_v = to_v(edges_gamma)
+
+    centers_delta = to_delta(centers_w)
+    edges_delta = np.array(centers_delta[:-1] + centers_delta[1:])/2.
+    edges_w = to_w(edges_delta)
+
+    edges_v = np.pad(edges_v, 1)
+    edges_v[0] = -1./3.
+    edges_v[-1] = +1./3.
+
+    edges_w = np.pad(edges_w, 1)
+    edges_w[0] = -3.*np.pi/8.
+    edges_w[-1] = +3.*np.pi/8
+
+
+    # bin grid points into cells
+    binned = np.empty((npts_w, npts_v))
+    binned[:] = np.nan
+    for _i in range(npts_w):
+        for _j in range(npts_v):
+            # which grid points lie within cell (i,j)?
+            subset = df.loc[
+                df['v'].between(edges_v[_j], edges_v[_j+1]) &
+                df['w'].between(edges_w[_i], edges_w[_i+1])]
+
+            if len(subset)==0:
+                print("Encountered empty bin")
+
+            binned[_i, _j] = handle(subset[0])
+
+            if normalize:
+              # normalize by area of cell
+              binned[_i, _j] /= edges_v[_j+1] - edges_v[_j]
+              binned[_i, _j] /= edges_w[_i+1] - edges_w[_i]
+
+    return DataArray(
+        dims=('v', 'w'),
+        coords=(centers_v, centers_w),
+        data=binned.transpose()
+        )
 
 
 def _centers_to_edges(v):
@@ -287,6 +479,23 @@ def _centers_to_edges(v):
 
     return v
 
+
+
+#
+# utility functions
+#
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
+
+
+def _defaults(kwargs, defaults):
+    for key in defaults:
+        if key not in kwargs:
+           kwargs[key] = defaults[key]
 
 def _local_path(name):
     return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')

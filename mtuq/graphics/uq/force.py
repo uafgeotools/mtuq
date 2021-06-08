@@ -4,196 +4,340 @@
 #
 
 import numpy as np
-import subprocess
 
 from matplotlib import pyplot
-from pandas import DataFrame
-from xarray import DataArray
 
-from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning, \
-    gmt_plot_misfit_force, gmt_plot_likelihood_force
-from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util import fullpath
+from mtuq.graphics.uq._gmt import gmt_plot_force
+from mtuq.grid_search import DataFrame, DataArray, MTUQDataArray, MTUQDataFrame
+from mtuq.util import warn
+from mtuq.util import dataarray_idxmin, dataarray_idxmax
 from mtuq.util.math import closed_interval, open_interval
 
 
-def plot_misfit_force(filename, ds, misfit_callback=None, title='',
-    colormap='viridis', colorbar_type=1, marker_type=1):
-    """ Plots misfit values on the unit sphere
+def plot_misfit_force(filename, ds, **kwargs):
+    """ Plots misfit values with respect to force orientation (requires GMT)
 
-
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing forces and corresponding misfit values
+    Data structure containing forces and corresponding misfit values
 
-    ``misfit_callback`` (func)
-    User-supplied function applied to misfit values
 
-    ``title`` (`str`):
-    Optional figure title
+    .. rubric :: Optional input arguments
+
+    For optional argument descpritions, 
+    `see here <mtuq.graphics._plot_force.html>`_
+
 
     """
+    _defaults(kwargs, {
+        'colormap': 'viridis',
+        })
+
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        ds = ds.min(dim=('origin_idx', 'F0'))
-        phi = ds.coords['phi']
-        h = ds.coords['h']
-        values = ds.values.transpose()
+        misfit = calculate_misfit(ds)
 
     elif issubclass(type(ds), DataFrame):
-        ds = ds.reset_index()
-        phi, h, values = _bin(ds, lambda ds: ds.min())
+        misfit = calculate_misfit_unstruct(ds)
 
-    if misfit_callback:
-        values = misfit_callback(values)
-
-    gmt_plot_misfit_force(filename, phi, h, values, title=title,
-        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
+    _plot_force(filename, misfit, **kwargs)
 
 
-def plot_likelihood_force(filename, ds, sigma=None, title='',
-    colormap='hot_r', colorbar_type=1, marker_type=2):
+def plot_likelihood_force(filename, ds, var, **kwargs):
+    """ Plots maximum likelihood values with respect to force orientation 
+    (requires GMT)
 
-    """ Plots maximum likelihoods on the unit sphere
-
-
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing forces and corresponding misfit values
+    Data structure containing forces and corresponding misfit values
 
-    ``title`` (`str`):
-    Optional figure title
+    ``var`` (`float` or `array`):
+    Data variance
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descpritions, 
+    `see here <mtuq.graphics._plot_force.html>`_
+
 
     """
+
+    _defaults(kwargs, {
+        'colormap': 'hot_r',
+        })
+
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        ds.values = np.exp(-ds.values/(2.*sigma**2))
-        ds.values /= ds.values.sum()
-        ds = ds.max(dim=('origin_idx', 'F0'))
-        phi = ds.coords['phi']
-        h = ds.coords['h']
-        values = ds.values.transpose()
+        likelihoods = calculate_likelihoods(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        ds[0] = np.exp(-ds[0]/(2.*sigma**2))
-        ds = ds.reset_index()
-        phi, h, values = _bin(ds, lambda ds: ds.max())
+        likelihoods = calculate_likelihoods_unstruct(ds, var)
 
-    values /= 4.*np.pi*values.sum()
-
-    gmt_plot_likelihood_force(filename, phi, h, values, title=title,
-        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
+    _plot_force(filename, likelihoods, **kwargs)
 
 
-def plot_marginal_force(filename, ds, sigma=None, title='',
-    colormap='hot_r', colorbar_type=1, marker_type=2):
-    """ Plots marginal likelihoods on the unit sphere
+def plot_marginal_force(filename, ds, var, **kwargs):
+    """ Plots marginal likelihood values with respect to force orientation 
+    (requires GMT)
 
-
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing forces and corresponding misfit values
+    Data structure containing forces and corresponding misfit values
 
-    ``title`` (`str`):
-    Optional figure title
+    ``var`` (`float` or `array`):
+    Data variance
 
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descpritions, 
+    `see here <mtuq.graphics._plot_force.html>`_
 
     """
+    _defaults(kwargs, {
+        'colormap': 'hot_r',
+        })
+
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        ds.values = np.exp(-ds.values/(2.*sigma**2))
-        ds.values /= ds.values.sum()
-        ds = ds.max(dim=('origin_idx', 'F0'))
-        phi = ds.coords['phi']
-        h = ds.coords['h']
-        values = ds.values.transpose()
+        marginals = calculate_marginals(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        ds = np.exp(-ds/(2.*sigma**2))
-        #ds /= ds.sum()
-        ds = ds.reset_index()
-        phi, h, values = _bin(ds, lambda ds: ds.sum()/len(ds), normalize=True)
+        marginals = calculate_marginals_unstruct(ds, var)
 
-    values /= 4.*np.pi*values.sum()
-
-    gmt_plot_likelihood_force(filename, phi, h, values, title=title,
-        colormap=colormap, colorbar_type=colorbar_type, marker_type=marker_type)
-
-def plot_force_amplitude(filename, ds, source_dict, title='',
-    colormap='viridis', colorbar_type=1, marker_type=3):
-    """ Plots force amplitude values on the unit sphere
+    _plot_force(filename, marginals, **kwargs)
 
 
-    .. rubric :: Input arguments
+def plot_force_tradeoffs(filename, ds, **kwargs):
+    """ Plots magnitude of best-fitting force with respect to force orientation 
+    (requires GMT)
+
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
-    ``ds`` (`DataArray`):
-    Data structure containing forces and corresponding misfit values.
-    Only supporting DataArray at the moment
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing forces and corresponding misfit values
 
-    ``source_dict`` (`DataArray`):
-    Solution's source dictionary used to define the optimal F0 value.
 
-    ``title`` (`str`):
-    Optional figure title
+    .. rubric :: Optional input arguments
+
+    For optional argument descpritions, 
+    `see here <mtuq.graphics._plot_force.html>`_
+
 
     """
+    _defaults(kwargs, {
+        'colormap': 'gray',
+        })
+
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        phi = ds.coords['phi']
-        h = ds.coords['h']
+        marginals = calculate_magnitudes(ds)
 
     elif issubclass(type(ds), DataFrame):
         raise NotImplementedError
 
-    force_map = np.empty((ds.phi.size, ds.h.size))
-    for iphi in range(ds.phi.size):
-        for ih in range(ds.h.size):
-            idx = ds[:,iphi,ih,:].values.argmin()
-            force_map[iphi, ih] = ds.coords['F0'][idx]
-    normalized_force_map=np.log(force_map / source_dict['F0']).transpose()
+    _plot_force(filename, marginals, **kwargs)
 
-    #
-    # Computes global minimum map coordinates
-    #
-    global_min_lon = source_dict['phi']
-    if global_min_lon >= 360:
-        global_min_lon -= 360
-    global_min_lon += 90
-    global_min_lat = (np.rad2deg(np.arccos(source_dict['h']))-90)*-1
 
-    gmt_plot_misfit_force(filename, phi, h, normalized_force_map,
-        title=title, colormap=colormap, colorbar_type=colorbar_type,
-        marker_type=marker_type, global_min_lon=global_min_lon, global_min_lat=global_min_lat)
+#
+# backend
+#
 
-def _check(ds):
-    """ Checks data structures
+def _plot_force(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
+    """ Plots values with respect to force orientation (requires GMT)
+
+    .. rubric :: Keyword arguments
+
+    ``colormap`` (`str`)
+    Color palette used for plotting values 
+    (choose from GMT or MTUQ built-ins)
+
+    ``show_best`` (`bool`):
+    Show orientation of best-fitting force
+
+    ``title`` (`str`)
+    Optional figure title
+
     """
-    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
-        raise TypeError("Unexpected grid format")
+    if not issubclass(type(da), DataArray):
+        raise Exception()
 
+
+    best_force = None
+    if show_best:
+        if 'best_force' in da.attrs:
+            best_force = da.attrs['best_force']
+        else:
+            warn("Best-fitting force not given")
+
+    gmt_plot_force(filename,
+        da.coords['phi'],
+        da.coords['h'], 
+        da.values.transpose(),
+        best_force=best_force,
+        **kwargs)
+
+
+#
+# for extracting misfit or likelihood from regularly-spaced grids
+#
+
+def calculate_misfit(da):
+    """ For each point on lune, extracts minimum misfit
+    """
+    misfit = da.min(dim=('origin_idx', 'F0'))
+
+    return misfit.assign_attrs({
+        'best_force': _min_force(da)
+        })
+
+
+def calculate_likelihoods(da, var):
+    """ For each point on lune, calculates maximum likelihood value
+    """
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
+
+    likelihoods = likelihoods.max(dim=('origin_idx', 'F0'))
+    likelihoods.values /= 4.*np.pi*likelihoods.values.sum()
+
+    return likelihoods.assign_attrs({
+        'best_force': _max_force(likelihoods)
+        })
+
+
+def calculate_marginals(da, var):
+    """ For each point on lune, calculates marginal likelihood value
+    """
+
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
+
+    marginals = likelihoods.sum(dim=('origin_idx', 'F0'))
+    marginals.values /= 4.*np.pi*marginals.values.sum()
+
+    return marginals.assign_attrs({
+        'best_force': _max_force(da)
+        })
+
+
+def calculate_magnitudes(da):
+    """ For each source type, calculates magnitude of best-fitting moment tensor
+    """
+    phi = da.coords['phi']
+    h = da.coords['h']
+
+    nphi = len(phi)
+    nh = len(h)
+
+    misfit = da.min(dim=('origin_idx'))
+    magnitudes = np.empty((nphi,nh))
+
+    for ip in range(nphi):
+        for ih in range(nh):
+            sliced = misfit[:,ip,ih]
+            argmin = np.argmin(sliced.values, axis=None)
+            magnitudes[ip,ih] = da['F0'][argmin]
+
+    magnitudes = DataArray(
+        dims=('phi','h'),
+        coords=(phi,h),
+        data=magnitudes
+        )
+
+    return magnitudes.assign_attrs({
+        'best_force': _min_force(da)
+        })
+
+
+def _min_force(da):
+    """ Returns force corresponding to minimum overall value
+    """
+    da = dataarray_idxmin(da)
+    keys = ['phi', 'h']
+    vals = [da[key].values for key in keys]
+    return vals
+
+
+def _max_force(da):
+    """ Returns force corresponding to maximum overall value
+    """
+    da = dataarray_idxmax(da)
+    keys = ['phi', 'h']
+    vals = [da[key].values for key in keys]
+    return vals
+
+
+
+#
+# for extracting misfit or likelihood from irregularly-spaced grids
+#
+
+def calculate_misfit_unstruct(df, **kwargs):
+    df = df.copy()
+    df = df.reset_index()
+    da = _bin(df, lambda df: df.min(), **kwargs)
+
+    return da.assign_attrs({
+        'best_force': _min_force(da)
+        })
+
+
+def calculate_likelihoods_unstruct(df, var, **kwargs):
+    df = df.copy()
+    df = np.exp(-df/(2.*var))
+    df = df.reset_index()
+
+    da = _bin(df, lambda df: df.max(), **kwargs)
+    da.values /= 4.*np.pi*da.values.sum()
+
+    return da.assign_attrs({
+        'best_force': _max_force(da)
+        })
+
+
+def calculate_marginals_unstruct(df, var, **kwargs):
+    df = df.copy()
+    df = np.exp(-df/(2.*var))
+    df = df.reset_index()
+
+    da = _bin(df, lambda df: df.sum()/len(df))
+    da.values /= 4.*np.pi*da.values.sum()
+
+    return da.assign_attrs({
+        'best_force': _max_force(da)
+        })
+
+
+#
+# bins irregularly-spaced forces into phi,h rectangles
+#
 
 def _bin(df, handle, npts_phi=60, npts_h=30):
     """ Bins DataFrame into rectangular cells
@@ -222,4 +366,27 @@ def _bin(df, handle, npts_phi=60, npts_h=30):
 
             binned[_i, _j] = handle(subset[0])
 
-    return centers_phi, centers_h, binned
+    return DataArray(
+        dims=('phi', 'h'),
+        coords=(centers_phi, centers_h),
+        data=binned.transpose()
+        )
+
+
+
+#
+# utility functions
+#
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
+
+
+def _defaults(kwargs, defaults):
+    for key in defaults:
+        if key not in kwargs:
+           kwargs[key] = defaults[key]
+

@@ -21,6 +21,7 @@ User guide
    user_guide/02
    user_guide/03
    user_guide/04
+   user_guide/05
    library/index
 
 

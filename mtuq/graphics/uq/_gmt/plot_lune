@@ -1,16 +1,9 @@
 #!/bin/bash -e
 
-
-# USAGE
-#   plot_lune in out filetype zmin zmax z_inc colorbar_exp colorbar_type marker_type [title] [subtitle]
 #
-#   Plots lon,lat,likelihood values from ASCII file on eigenvalue lune
-
-
-# EXAMPLE
-#    plot_lune likelihood.xyz likelihood.png PNG 0. 1. 0.01 0 1 1 "Likelihood" "Z component"
-
-
+# PLOT_LUNE
+#    plots values from ASCII file on eigenvalue lune
+#
 
 
 # add mtuq/graphics/_gmt to the path
@@ -19,32 +12,42 @@ source _gmt_functions
 
 
 # parse input arguments
-if [ $# -lt 13 ] ; then
+if [ $# -lt 14 ] ; then
     echo "plot_lune: bad input arguments"
     exit -1
 fi
 
-in=$1
-out=$2
-filetype=$3
-z_min=$4
-z_max=$5
-z_exp=$6
-cpt_step=$7
-cpt_name=$8
-cpt_reverse=$9
-colorbar_type=${10}
-marker_type=${11}
-title="${12}"
-subtitle="${13}"
-global_min_lon=${14}
-global_min_lat=${15}
+# output file
+filename=$1
+filetype=$2
+
+# ASCII input files
+ascii_data=$3
+supplemental_data=$4
+
+# colorbar
+value_min=$5
+value_max=$6
+value_exp=$7
+cpt_step=$8
+cpt_name=$9
+flip_cpt=${10}
+colorbar_type=1
 colorbar_label=""
+
+# markers
+marker_coords=${11}
+marker_type=${12}
+
+title="${13}"
+subtitle="${15}"
 
 proj_arg="-JH0/3.4i"
 area_arg="-R-30/30/-90/90"
 
+out=${filename}
 ps="${out}.ps"
+
 
 # apply default settings
 gmt_settings
@@ -55,13 +58,19 @@ gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -K > $ps
 
 
 # generate color palette
-cpt_args=$( get_cpt_args $cpt_name $cpt_reverse )
-range_arg="-T${z_min}/${z_max}/${cpt_step}"
+cpt_args=$( get_cpt_args $cpt_name $flip_cpt )
+range_arg="-T${value_min}/${value_max}/${cpt_step}"
 gmt makecpt $cpt_args -D $range_arg > tmp_$out.cpt
 
 
 # plot misfit values
-gmt pscontour $in $proj_arg $area_arg -Ctmp_$out.cpt -I -N -A- -O -K >> $ps
+gmt pscontour $ascii_data $proj_arg $area_arg -Ctmp_$out.cpt -I -N -A- -O -K >> $ps
+
+
+# plot focal mechanisms tradeoffs
+if [ -f $supplemental_data ]; then
+    gmt psmeca $supplemental_data -N -Sm0.2 $proj_arg $area_arg -Z$cpt_name -O -K >> $ps
+fi
 
 
 # display reference arcs
@@ -75,16 +84,18 @@ add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 # display colorbar
 if [ $colorbar_type -ne 0 ]; then
     arg1=$( get_colorbar_arg1 "$colorbar_label" )
-    arg2=$( get_colorbar_arg2 $z_exp )
-    gmt psscale -Ctmp_$out.cpt -D1.0/-0.4+w1.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
+    arg2=$( get_colorbar_arg2 $value_exp )
+    gmt psscale -Ctmp_$out.cpt -D0.7/-0.4+w2.0/0.2+h "$arg1" "$arg2" -O -K >> $ps
 fi
 
 
-# display marker
-if [ $marker_type -ne 0 -a $marker_type -ne 3 ]; then
-    add_marker $marker_type "$in" "$ps" $proj_arg $area_arg
-elif [ $marker_type -eq 3 ]; then
-        add_marker $marker_type "$in" "$ps" $proj_arg $area_arg $global_min_lon $global_min_lat
+# read marker coordinates from marker_coords file, if it exists
+if [ -f $marker_coords ]; then
+    add_markers_from_file "$marker_coords" "$ps" $proj_arg $area_arg
+
+
+elif [ $marker_type -ne 0 ]; then
+    add_marker $marker_type "$ascii_data" "$ps" $proj_arg $area_arg
 fi
 
 
@@ -97,3 +108,5 @@ custom_psconvert $ps $out $filetype
 
 rm tmp*$out*
 rm $ps
+
+

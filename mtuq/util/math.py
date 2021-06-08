@@ -30,6 +30,7 @@ def correlate(v1, v2):
         # for short traces, time-domain implementation is usually faster
         return np.correlate(v1, v2, 'valid')
 
+
 def wrap_180(angle_in_deg):
     """ Wraps angle to (-180, 180)
     """
@@ -38,6 +39,32 @@ def wrap_180(angle_in_deg):
     angle_in_deg[idx] -= 360.
     return angle_in_deg
 
+
+#
+# statistical
+#
+
+def apply_cov(C, r):
+    """ Applies covariance matrix to residuals vector
+    """
+    #
+    # TODO - more robust for different array types, more efficient
+    #
+
+    if type(C) not in [np.array, float]:
+        raise Exception
+
+    ndim = getattr(C, 'ndim', 0)
+
+    if ndim not in [0,1,2]:
+        raise Exception
+
+    if ndim==2:
+        Cinv = np.linalg.inv(C)
+        return np.dot(r, np.dot(Cinv, r))
+
+    else:
+        return np.sum(r**2/C)
 
 
 #

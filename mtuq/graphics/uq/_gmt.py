@@ -6,68 +6,34 @@ import subprocess
 from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
     gmt_formats
 from mtuq.util import fullpath, warn
-from mtuq.util.math import wrap_180
+from mtuq.util.math import wrap_180, to_delta, to_gamma, to_mij
 from os.path import basename, exists, splitext
 
 
 
-def gmt_plot_misfit_lune(filename, lon, lat, values, colormap='panoply', **kwargs):
+def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None, 
+    **kwargs):
 
     if _nothing_to_plot(values):
         return
 
-    lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
+    lon, lat =  _parse_coords(lon,lat)
+
+
+    marker_coords = None
+    supplemental_data = None
+    if best_vw is not None:
+        marker_coords = _parse_vw(best_vw)
+    if lune_array is not None:
+        supplemental_data = _parse_lune_array(lune_array)
+
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
+        filename, lon, lat, values, supplemental_data=supplemental_data,
+        marker_coords=marker_coords, **kwargs)
 
 
-def gmt_plot_misfit_mt_lune(filename, lon, lat, values, colormap='panoply', **kwargs):
-
-    if _nothing_to_plot(values):
-        return
-
-    lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
-
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune_mt'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
-
-def gmt_plot_likelihood_lune(filename, lon, lat, values, colormap='hot', **kwargs):
-
-    if _nothing_to_plot(values):
-        return
-
-    lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
-
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
-
-
-def gmt_plot_misfit_force(filename, phi, h, values, colormap='panoply', **kwargs):
+def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -75,85 +41,68 @@ def gmt_plot_misfit_force(filename, phi, h, values, colormap='panoply', **kwargs
     lat = np.degrees(np.pi/2 - np.arccos(h))
     lon = wrap_180(phi + 90.)
 
-    lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
+    lon, lat =  _parse_coords(lon,lat)
 
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
+    marker_coords = None
+    if best_force is not None:
+        marker_coords = _parse_force(best_force)
+
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'), 
+        filename, lon, lat, values, supplemental_data=None,
+       marker_coords=marker_coords, **kwargs)
 
 
-def gmt_plot_likelihood_force(filename, phi, h, values, colormap='hot', **kwargs):
-
-    if _nothing_to_plot(values):
-        return
-
-    lat = np.degrees(np.pi/2 - np.arccos(h))
-    lon = wrap_180(phi + 90.)
-
-    lon, lat =  _parse_lonlat(lon,lat)
-    values, minval, maxval, exp = _parse_values(values)
-
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
-        filename,
-        lon, lat, values,
-        z_min=minval,
-        z_max=maxval,
-        z_exp=exp,
-        cpt_name=colormap,
-        cpt_step=(maxval-minval)/20.,
-        **kwargs)
-
-
-def _call(shell_script, filename, lon, lat, values,
-    z_min=None, z_max=None, z_exp=0,
-    cpt_name='panoply', cpt_step=None, cpt_reverse=False,
-    colorbar_type=0, marker_type=0, title='', global_min_lon=None, global_min_lat=None):
+def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
+    title='', colormap='viridis', flip_cpt=False, marker_coords=None, marker_type=0):
 
     print('  calling GMT script: %s' % basename(shell_script))
 
     filetype = _parse_filetype(filename)
+
+    values, minval, maxval, exp = _parse_values(values)
+
+    cpt_name = _parse_cpt(colormap)
+    cpt_step=(maxval-minval)/20.
+
     title, subtitle = _parse_title(title)
 
-    # write lon,lat,val ASCII table
-    ascii_data = 'tmp_'+filename+'.txt'
-    _savetxt(ascii_data, lon, lat, values)
 
-    cpt_local = fullpath('mtuq/graphics/_gmt/cpt', cpt_name+'.cpt')
+    # write ASCII data
+    ascii_file_1 = 'tmp_'+filename+'_ascii1.txt'
+    ascii_file_2 = 'tmp_'+filename+'_ascii2.txt'
+    marker_coords_file = 'tmp_'+filename+'_marker_coords.txt'
 
-    if exists(cpt_local):
-       cpt_name = cpt_local
+    _savetxt(ascii_file_1, lon, lat, values)
+
+    if supplemental_data is not None:
+        _savetxt(ascii_file_2, supplemental_data)
+
+    if marker_coords is not None:
+        _savetxt(marker_coords_file, *marker_coords)
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %e %e %d %e %s %d %d %d %s %s %s %s" %
+        subprocess.call("%s %s %s %s %s %e %e %d %e %s %d %s %d %s %s" %
            (shell_script,
-            ascii_data,
             filename,
             filetype,
-            z_min,
-            z_max,
-            z_exp,
+            ascii_file_1,
+            ascii_file_2,
+            minval,
+            maxval,
+            exp,
             cpt_step,
             cpt_name,
-            int(bool(cpt_reverse)),
-            int(colorbar_type),
+            int(bool(flip_cpt)),
+            marker_coords_file,
             int(marker_type),
             title,
             subtitle,
-            global_min_lon,
-            global_min_lat
             ),
             shell=True)
     else:
         gmt_not_found_warning(
-            ascii_data)
+            values_ascii)
 
 
 
@@ -180,7 +129,7 @@ def _nothing_to_plot(values):
         return True
 
 
-def _parse_lonlat(lon, lat):
+def _parse_coords(lon, lat):
 
     lon, lat = np.meshgrid(lon, lat)
     lat = lat.flatten()
@@ -205,7 +154,6 @@ def _parse_values(values):
         minval /= 10**exp
         maxval /= 10**exp
         return masked, minval, maxval, exp
-
 
 
 def _parse_title(title):
@@ -250,9 +198,67 @@ def _parse_filetype(filename):
         return 'PNG'
 
 
+def _parse_cpt(cpt_name):
+    cpt_local = fullpath('mtuq/graphics/_gmt/cpt', cpt_name+'.cpt')
+    if exists(cpt_local):
+       return cpt_local
+    else:
+       return cpt_name
 
-def _savetxt(filename, gamma, delta, values):
+
+def _parse_force(force):
+    phi = force[0]
+    if phi + 90 > 180.:
+        lon = phi - 270.
+    else:
+        lon = phi + 90.
+
+    h = force[1]
+    lat = np.degrees(np.pi/2 - np.arccos(h))
+
+    return [lon, lat]
+
+
+def _parse_vw(vw):
+    lon = to_gamma(vw[0])
+    lat = to_delta(vw[1])
+
+    return [lon, lat]
+
+
+def _parse_lune_array(lune_array):
+    # converts from a N x 6 table of lune parameters to the N x 12 format expected by psmeca
+
+    dummy_value = 0.
+
+    N = lune_array.shape[0]
+
+    gmt_array = np.empty((N,12))
+    for _i in range(N):
+
+        rho,v,w,kappa,sigma,h = lune_array[_i,:]
+
+        # adding a random negative perturbation to the dip, to avoid GMT plotting bug
+        perturb = np.random.uniform(0.2,0.4)
+        if sigma > (-90.0 + 0.4):
+            sigma -= perturb
+
+        mt = to_mij(rho, v, w, kappa, sigma, h)
+        exponent = np.max([int('{:.2e}'.format(mt[i]).split('e+')[1]) for i in range(len(mt))])
+        scaled_mt = mt/10**(exponent)
+
+        gmt_array[_i, 0] = to_gamma(v)
+        gmt_array[_i, 1] = to_delta(w)
+        gmt_array[_i, 2] = dummy_value
+        gmt_array[_i, 3:9] = scaled_mt
+        gmt_array[_i, 9] = exponent+7
+        gmt_array[_i, 10:] = 0
+
+    return gmt_array
+
+
+def _savetxt(filename, *args):
     # FIXME: can GMT accept virtual files?
-    np.savetxt(filename, np.column_stack([gamma, delta, values]))
+    np.savetxt(filename, np.column_stack(args), fmt='%.3e')
 
-#
+

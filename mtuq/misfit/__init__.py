@@ -64,41 +64,47 @@ class Misfit(object):
 
     .. note:: 
 
-      In our convention, a positive time shift means synthetics are arriving 
-      too early and need to be shifted forward in time to match the observed
-      data. 
+      *Convention* : A positive time shift means synthetics are arriving too 
+      early and need to be shifted forward in time to match the observed data.
 
 
     .. rubric:: Optimization Levels
 
-    Misfit evaluation is the most complex and computationally expensive task
-    performed by this software. As a result we offer three different
-    implementations:
+    Because misfit evaluation is our most computationally expensive task, we 
+    have implemented three different version (each with different tradeoffs 
+    between code complexity and performance):
 
     - a readable pure Python version (``mtuq.misfit.level0``)
 
     - a fast pure Python version (``mtuq.misfit.level1``)
 
-    - a very fast Python/C++ version (``mtuq.misfit.level2``)
+    - a very fast Python/C version (``mtuq.misfit.level2``)
 
 
-    While the same in terms of input argument syntax, these three versions
-    differ in terms of performance:
+    While having exactly the same input argument syntax, these three versions
+    differ in the following ways:
 
     - ``level0`` provides a reference for understanding what the code is doing
       and for checking the correctness of the fast implementations
 
     - ``level1`` is an optimized pure Python implementation which provides 
-      significant computational savings when `len(sources)` > 100. This
+      significant computational savings for `len(sources)` > 100. This
       version is the closest to `ZhuHelmberger1996`'s original C software.
 
-    - ``level2`` is an optimized Python/C++ implementation, in which a Python 
-      wrapper is used to combine obspy traces into multidimensional arrays.
-      These arrays are passed to a C++ extension module, which does the
+    - ``level2`` is an optimized Python/C implementation, in which a Python 
+      wrapper is used to combine ObsPy traces into multidimensional arrays.
+      These arrays are passed to a C extension module, which does the
       main computational work. Unlike the other two versions, this 
-      implementation requires that all obspy Traces have the same time
-      discretization
-      
+      implementation requires that all ObsPy traces have the same time
+      discretization.
+
+
+    .. note:: 
+
+      During installation, C extension modules are aumotically compiled by
+      `build_ext.sh` using compiler flags given in `setup.py`.  For performance
+      tuning or compiler troubleshooting, users may wish to modify the
+      `get_compier_args` function in `setup.py`.
 
     """
 
