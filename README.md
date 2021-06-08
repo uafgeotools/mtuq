@@ -52,6 +52,8 @@ The package has been tested against [legacy Perl/C codes](https://github.com/uaf
 
 [Data processing](https://uafgeotools.github.io/mtuq/user_guide/04.html)
 
+[Visualization galleries](https://uafgeotools.github.io/mtuq/user_guide/05.html)
+
 [Library reference](https://uafgeotools.github.io/mtuq/library/index.html)
 
 
