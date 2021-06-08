@@ -115,6 +115,41 @@ def plot_marginal_force(filename, ds, var, **kwargs):
     _plot_force(filename, marginals, **kwargs)
 
 
+def plot_force_tradeoffs(filename, ds, **kwargs):
+    """ Plots marginal likelihood values with respect to force orientation 
+    (requires GMT)
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``var`` (`float` or `array`):
+    Data variance
+
+
+    See _plot_force for keyword argument descriptions
+
+    """
+    _defaults(kwargs, {
+        'colormap': 'gray',
+        })
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        marginals = calculate_magnitudes(ds)
+
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
+
+    _plot_force(filename, marginals, **kwargs)
+
+
 #
 # backend
 #
@@ -175,7 +210,7 @@ def calculate_likelihoods(da, var):
     likelihoods.values /= 4.*np.pi*likelihoods.values.sum()
 
     return likelihoods.assign_attrs({
-        'best_force': _max_force(da)
+        'best_force': _max_force(likelihoods)
         })
 
 
@@ -192,6 +227,35 @@ def calculate_marginals(da, var):
 
     return marginals.assign_attrs({
         'best_force': _max_force(da)
+        })
+
+
+def calculate_magnitudes(da):
+    """ For each source type, calculates magnitude of best-fitting moment tensor
+    """
+    phi = da.coords['phi']
+    h = da.coords['h']
+
+    nphi = len(phi)
+    nh = len(h)
+
+    misfit = da.min(dim=('origin_idx'))
+    magnitudes = np.empty((nphi,nh))
+
+    for ip in range(nphi):
+        for ih in range(nh):
+            sliced = misfit[:,ip,ih]
+            argmin = np.argmin(sliced.values, axis=None)
+            magnitudes[ip,ih] = da['F0'][argmin]
+
+    magnitudes = DataArray(
+        dims=('phi','h'),
+        coords=(phi,h),
+        data=magnitudes
+        )
+
+    return magnitudes.assign_attrs({
+        'best_force': _min_force(da)
         })
 
 

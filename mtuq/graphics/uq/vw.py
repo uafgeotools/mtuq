@@ -15,7 +15,7 @@ from mtuq.graphics._gmt import read_cpt
 from mtuq.graphics.uq._gmt import _nothing_to_plot
 from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath
 from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
-    to_v, to_w, to_gamma, to_delta, to_mij
+    to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
 from os.path import exists
 
 
@@ -204,7 +204,7 @@ def _plot_vw(filename, da,
 #
 
 def calculate_misfit(da):
-    """ For each point on lune, extracts minimum misfit
+    """ For each source type, extracts minimum misfit
     """
     misfit = da.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
 
@@ -216,7 +216,7 @@ def calculate_misfit(da):
 
 
 def calculate_likelihoods(da, var):
-    """ For each point on lune, calculates maximum likelihood value
+    """ For each source type, calculates maximum likelihood value
     """
     likelihoods = da.copy()
     likelihoods.values = np.exp(-likelihoods.values/(2.*var))
@@ -236,7 +236,7 @@ def calculate_likelihoods(da, var):
 
 
 def calculate_marginals(da, var):
-    """ For each point on lune, calculates marginal likelihood value
+    """ For each source type, calculates marginal likelihood value
     """
 
     likelihoods = da.copy()
@@ -256,21 +256,47 @@ def calculate_marginals(da, var):
         })
 
 
-def _lune_array(da):
-    """ For each point on lune, collects best-fitting moment tensor
+def calculate_magnitudes(da):
+    """ For each source type, calculates magnitude of best-fitting moment tensor
     """
-    #
-    # TODO - generalize for multiple origins
-    #
-    origin_idx = 0
+    v = da.coords['v']
+    w = da.coords['w']
 
+    nv = len(v)
+    nw = len(w)
+
+    misfit = da.min(dim=('origin_idx', 'kappa', 'sigma', 'h'))
+    magnitudes = np.empty((nv,nw))
+
+    for iv in range(nv):
+        for iw in range(nw):
+            sliced = misfit[:,iv,iw]
+            argmin = np.argmin(sliced.values, axis=None)
+            magnitudes[iv,iw] = to_Mw(da['rho'][argmin])
+
+    magnitudes = DataArray(
+        dims=('v','w'),
+        coords=(v,w),
+        data=magnitudes
+        )
+
+    return magnitudes.assign_attrs({
+        'best_mt': _best_mt(da),
+        'best_vw': _min_vw(da),
+        'lune_array': _lune_array(da),
+        })
+
+
+def _lune_array(da):
+    """ For each source type, returns best-fitting moment tensor
+    """
     nv = len(da.coords['v'])
     nw = len(da.coords['w'])
 
     lune_array = np.empty((nv*nw,6))
     for iv in range(nv):
         for iw in range(nw):
-            sliced = da[:,iv,iw,:,:,:,origin_idx]
+            sliced = da[:,iv,iw,:,:,:,:]
             argmin = np.argmin(sliced.values, axis=None)
             idx = np.unravel_index(argmin, np.shape(sliced))
 

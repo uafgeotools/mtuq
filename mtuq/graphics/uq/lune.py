@@ -17,7 +17,8 @@ from mtuq.util.math import lune_det, to_gamma, to_delta
 from mtuq.graphics.uq.vw import\
     calculate_misfit, calculate_misfit_unstruct,\
     calculate_likelihoods, calculate_likelihoods_unstruct,\
-    calculate_marginals, calculate_marginals_unstruct
+    calculate_marginals, calculate_marginals_unstruct,\
+    calculate_magnitudes
 
 
 def plot_misfit_lune(filename, ds, **kwargs):
@@ -119,6 +120,35 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
 
     _plot_lune(filename, marginals, **kwargs)
 
+
+def plot_mt_tradeoffs(filename, ds, **kwargs):
+    """ Plots magnitudes of best-fitting moment tensors (requires GMT)
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+
+    See _plot_lune for keyword argument descriptions
+    """
+    _defaults(kwargs, {
+        'colormap': 'gray',
+        })
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        marginals = calculate_magnitudes(ds)
+
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
+
+    _plot_lune(filename, marginals, **kwargs)
 
 
 #
