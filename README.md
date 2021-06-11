@@ -21,7 +21,7 @@ Alternatively, MTUQ misfit functions can be used as a starting point for Bayesia
 
 [Data I/O functions](https://uafgeotools.github.io/mtuq/library/index.html#data-i-o)
 are included for reading AxiSEM, SPECFEM3D, and FK Green's functions as well as
-downloading Green's functions from remote syngine databases.
+downloading Green's functions from remote [syngine](http://ds.iris.edu/ds/products/syngine/) databases.
 
 
 ## Visualization

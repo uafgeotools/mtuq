@@ -54,11 +54,6 @@ if __name__=='__main__':
         )
 
 
-    #
-    # For our objective function, we will use a sum of body and surface wave
-    # contributions
-    #
-
     misfit_sw = Misfit(
         norm='L2',
         time_shift_min=-10.,
@@ -67,17 +62,8 @@ if __name__=='__main__':
         )
 
 
-    #
-    # User-supplied weights control how much each station contributes to the
-    # objective function
-    #
-
     station_id_list = parse_station_codes(path_weights)
 
-
-    #
-    # Next, we specify the moment tensor grid and source-time function
-    #
 
     grid = ForceGridRegular(
         npts_per_axis=25,
@@ -87,11 +73,6 @@ if __name__=='__main__':
     wavelet = Trapezoid(
         magnitude=4.5)
 
-
-    #
-    # Origin time and location will be fixed. For an example in which they 
-    # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
-    #
 
     origin = Origin({
         'time': '2009-04-07T20:12:55.000000Z',
@@ -174,13 +155,11 @@ if __name__=='__main__':
 
     if comm.rank==0:
 
-        print(results)
-
         plot_misfit_force(event_id+'_misfit_force.png', 
             results, title='L2 misfit')
 
         plot_force_tradeoffs(event_id+'_force_tradeoffs.png',
-            results, title='Magnitude (N)')
+            results, title='Magnitude tradeoffs')
 
 
         print('Plotting likelihoods...\n')

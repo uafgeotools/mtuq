@@ -9,9 +9,9 @@ Acquiring and quality control checking seismic data can be one of the most chall
 Data acquisition clients
 ------------------------
 
-`ObsPy FDSN clients <https://docs.obspy.org/packages/obspy.clients.fdsn.html>`_ provide a way of programmatically downloading waveforms from `IRIS <https://www.iris.edu>`_.
+`ObsPy FDSN clients <https://docs.obspy.org/packages/obspy.clients.fdsn.html>`_ provide a way of programmatically downloading waveforms from `IRIS <https://www.iris.edu>`_. `PySEP <https://github.com/uafgeotools/pysep>`_ is a wrapper around an Obspy FDSN client and our preferred data acquisition tool.  
 
-`PySEP <https://github.com/uafgeotools/pysep>`_ is a wrapper around an Obspy FDSN client our preferred data acquisition tool.  Besides downloading waveforms through ObsPy calls, PySEP performs data processing and quality control, ensuring that the data processing and time discretization requirements below are satisfied.  
+Besides downloading waveforms through ObsPy calls, PySEP performs data processing and quality control, ensuring that the data processing and time discretization requirements below are satisfied.  
 
 Additionally, PySEP generates "weight files" that can optionally be used by `mtuq.process_data` to control the relative contribution of different stations to the data misfit function.
 
