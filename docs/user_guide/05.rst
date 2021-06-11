@@ -3,7 +3,9 @@
 Visualization galleries
 =======================
 
-MTUQ can be used to carry out grid searches over moment tensors, double couples, and forces. In each of these cases, the output of `mtuq.grid_search` is a data structure that can be passed directly to various visualization functions, some of which are illustrated here:
+As described previously, MTUQ can be used to carry out grid searches over moment tensors, double couples, and forces. 
+
+The output of `mtuq.grid_search` in each of these cases is a data structure that can be passed directly to visualization functions.  Specific examples are given below.
  
 
 .. toctree::

@@ -181,7 +181,7 @@ def _plot_lune(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
     ``show_best`` (`bool`):
     Show where best-fitting moment tensor falls on lune
 
-    ``show_best`` (`bool`):
+    ``show_tradeoffs`` (`bool`):
     Show how focal mechanism trades off with lune coordinates
 
     ``title`` (`str`)

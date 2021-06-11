@@ -207,7 +207,7 @@ def _plot_force(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
 #
 
 def calculate_misfit(da):
-    """ For each point on lune, extracts minimum misfit
+    """ For each force orientation, extracts minimum misfit
     """
     misfit = da.min(dim=('origin_idx', 'F0'))
 
@@ -217,7 +217,7 @@ def calculate_misfit(da):
 
 
 def calculate_likelihoods(da, var):
-    """ For each point on lune, calculates maximum likelihood value
+    """ For each force orientation, calculates maximum likelihood value
     """
     likelihoods = da.copy()
     likelihoods.values = np.exp(-likelihoods.values/(2.*var))
@@ -232,7 +232,7 @@ def calculate_likelihoods(da, var):
 
 
 def calculate_marginals(da, var):
-    """ For each point on lune, calculates marginal likelihood value
+    """ For each force orientation, calculates marginal likelihood value
     """
 
     likelihoods = da.copy()

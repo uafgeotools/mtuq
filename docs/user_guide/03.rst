@@ -8,15 +8,18 @@ The response of a medium to an impulsive source is called a Green's function.  T
 Role of Green's functions
 -------------------------
 
-By combining Green's functions (which represent the medium response to simple impulsive sources), it is possible to obtain synthetics from any source, however complex. This type of linear combination is useful because it provides computaional savings: it's generally less expensive to generate synthetics by combining Green's functions than it is to perform on-the-fly wavefield simulations.
+By combining Green's functions, it is possible to obtain synthetics from any moment tensor or force source.  Synthetics can then be compared with data to determine a best-fitting source.
+
+Generating synthetics through linear combinations of Green's functions is useful because it provides computaional savings.  It is much  more cost effective to compute Green's functions (an up-front cost, indepdent of the number of sources) than it is to perform an on-the-fly wavefield simulation for each new source.
+
 
 
 `GreensTensor` objects
 ----------------------
 
-`GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to an entire set of Green's functions needed to describe the medium response between a given station and origin.  
+`GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to a set of Green's functions describing the medium response between a given station and origin.  
 
-Methods built into the `GreensTensor` class allow data processing and synthetics generation.  In particular, the `get_synthetics <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.get_synthetics.html#mtuq.GreensTensor.get_synthetics>`_ method accepts a `MomentTensor` and returns traces representing the response at the given station.
+Methods built into the `GreensTensor` class allow data processing and synthetics generation.  In particular, the `get_synthetics <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.get_synthetics.html#mtuq.GreensTensor.get_synthetics>`_ method accepts a `MomentTensor` or `Force` and returns traces representing the response at the given station.
 
 
 
@@ -24,7 +27,7 @@ Methods built into the `GreensTensor` class allow data processing and synthetics
 Downloading precomputed Green's functions
 -----------------------------------------
 
-One of the easiest ways to acquire Green's functions is to download them using `syngine <http://ds.iris.edu/ds/products/syngine/>`_, a webservice that hosts Green's functions from the following 1D Earth models: PREM, AK135, and iasp91.
+An easy ways to acquire Green's functions is to download them from `syngine <http://ds.iris.edu/ds/products/syngine/>`_, a webservice that hosts Green's functions from the following 1D Earth models: PREM, AK135, and iasp91.
 
 To download AK135 Green's functions and generate MTUQ `GreenTensor` objects:
 
@@ -33,7 +36,7 @@ To download AK135 Green's functions and generate MTUQ `GreenTensor` objects:
    from mtuq import download_greens_functions
    greens_tensors = download_greens_functions(stations, origins, model="ak135f_2s")
 
-Besides providing only a handful of Earth models, another limitation of syngine is that Green's functions can be downloaded only on a station-by-station basis, not over the whole Earth.  As described below, an alternative method for acquiring Green's functions, which completely avoids these limitations, is to perform your own Green's functions simulations.
+A limitation of syngine is that Green's functions can be downloaded only on a station-by-station basis, not over an entire subset of Earth.  An alternative for acquiring Green's functions, which avoids this limitation, is to perform your own Green's functions simulations.
 
 
 
@@ -43,7 +46,7 @@ Computing Green's functions from 1D Earth models
 
 MTUQ supports the following 1D Green's functions formats: AxiSEM (preferred) and FK.
 
-`AxiSEM <https://github.com/geodynamics/axisem>`_ simulates wave propagation in radially-symmeric Earth models using a spectral-element method.  To generate synthetics in a format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://geodynamics.org/cig/software/axisem/axisem-manual.pdf>`_  under "Output wavefields in NetCDF formated needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
+`AxiSEM <https://github.com/geodynamics/axisem>`_ performs spectral element wave simulations in radially-symmeric Earth models.  To generate synthetics in a format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://geodynamics.org/cig/software/axisem/axisem-manual.pdf>`_  under "Output wavefields in NetCDF formated needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
 
 To open an AxiSEM database client in MTUQ:
 

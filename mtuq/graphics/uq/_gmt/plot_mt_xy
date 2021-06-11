@@ -4,8 +4,6 @@
 # USAGE
 #   plot_mt_xy out filetype mt_file mw_file xmin xmax ymin ymax xlabel ylabel [title] [subtitle]
 #
-#   Plots lon,lat,z values from ASCII file on eigenvalue lune
-#
 # ARGUMENTS
 #    OUT - name of output image
 #    FILETYPE - format of output image (BMP,EPS,PDF,JPG,PNG,PPM,SVG,TIFF)
