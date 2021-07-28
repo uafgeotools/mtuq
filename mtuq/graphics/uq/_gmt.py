@@ -82,7 +82,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %s %e %e %d %e %s %d %s %d %s %s" %
+        subprocess.call("%s %s %s %s %s %f %f %d %e %s %d %s %d %s %s" %
            (shell_script,
             filename,
             filetype,
