@@ -1,14 +1,14 @@
 
 import obspy
 import numpy as np
-from mtuq.io.clients import fk_sac, axisem_netcdf, syngine
+from mtuq.io.clients import FK_SAC, AxiSEM_NetCDF, SPECFEM3D_SAC, syngine
 
 from matplotlib import pyplot
 from os import getenv
 from os.path import basename, join
 from obspy import UTCDateTime
 from mtuq.process_data import ProcessData
-from mtuq.event import Origin
+from mtuq.event import Origin, MomentTensor
 from mtuq.station import Station
 from mtuq.util import fullpath
 
@@ -36,6 +36,7 @@ if __name__=='__main__':
 
     include_axisem = True
     include_fk = True
+    include_specfem3d = False
     include_syngine = False
 
     grid = [
@@ -50,6 +51,7 @@ if __name__=='__main__':
        ]
     M0 = 1.e15 # units: Newton-meter
     for mt in grid: mt *= M0
+    grid = [MomentTensor(mt) for mt in grid]
 
 
     origin_time = UTCDateTime(
@@ -393,11 +395,12 @@ if __name__=='__main__':
     #    wget()
     #    unpack(path_greens_fk)
 
-    path_greens_axisem = '/home/rmodrak/data/axisem/ak135f_scak-2s'
+    path_greens_axisem = '/store/wf/instaseis_databases/scak_ak135f-2s'
     #if not exists(path_greens_axisem)
     #    wget()
     #    unpack(path_greens_fk)
 
+    path_greens_specfem3d = '/home/rmodrak/data/greens/SPECFEM3D_GLOBE/Silwal2016/1D_ak135f_no_mud'
 
     #
     # specify data processing
@@ -437,7 +440,7 @@ if __name__=='__main__':
     if include_axisem:
         print("Reading AxiSEM Greens's functions...")
         model = 'ak135'
-        client_axisem = axisem_netcdf.Client(path_greens_axisem)
+        client_axisem = AxiSEM_NetCDF.Client(path_greens_axisem)
         greens_axisem = client_axisem.get_greens_tensors(stations, origin)
         greens_axisem = process_data(greens_axisem)
 
@@ -445,9 +448,17 @@ if __name__=='__main__':
     if include_fk:
         print("Reading FK Greens's functions...")
         model = 'scak'
-        client_fk = fk_sac.Client(path_greens_fk)
+        client_fk = FK_SAC.Client(path_greens_fk)
         greens_fk = client_fk.get_greens_tensors(stations, origin)
         greens_fk = process_data(greens_fk)
+
+
+    if include_specfem3d:
+        print("Reading SPECFEM3D/3D_GLOBE Greens's functions...")
+        model = 'scak'
+        client_specfem3d = SPECFEM3D_SAC.Client(path_greens_specfem3d)
+        greens_specfem3d = client_specfem3d.get_greens_tensors(stations, origin)
+        greens_specfem3d = process_data(greens_specfem3d)
 
 
     if include_syngine:
@@ -472,6 +483,8 @@ if __name__=='__main__':
                 synthetics += [greens_axisem[key].get_synthetics(mt)[_i]]
             if include_fk:
                 synthetics += [greens_fk[key].get_synthetics(mt)[_i]]
+            if include_specfem3d:
+                synthetics += [greens_specfem3d[key].get_synthetics(mt)[_i]]
             if include_syngine:
                 synthetics += [greens_syngine[key].get_synthetics(mt)[_i]]
 
