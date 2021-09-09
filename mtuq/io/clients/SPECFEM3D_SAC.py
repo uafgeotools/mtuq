@@ -3,7 +3,7 @@ import obspy
 import numpy as np
 
 from obspy.core import Stream
-from mtuq.greens_tensor.syngine import GreensTensor 
+from mtuq.greens_tensor.SPECFEM3D import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
 
@@ -58,6 +58,10 @@ class Client(ClientBase):
 
         self.path = path_or_url
 
+        if not model:
+            model = path_or_url
+        self.model = model
+
         self.include_mt = include_mt
         self.include_force = include_force
 
@@ -92,7 +96,8 @@ class Client(ClientBase):
             for suffix in SUFFIXES:
                 trace = obspy.read(
                     self.path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
-                trace.component = suffix
+                trace.stats.channel = suffix
+                trace.stats._component = suffix[0]
                 stream += trace
 
         if self.include_force:

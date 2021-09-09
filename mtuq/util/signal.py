@@ -1,5 +1,6 @@
 
 import numpy as np
+from copy import copy
 from mtuq.util.math import isclose
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 from obspy.signal.filter import highpass, lowpass
@@ -103,10 +104,19 @@ def _resample_trace(data, dt_old, dt_new):
 
 
 def downsample(data, dt_old, dt_new, nt_old, nt_new):
-    filtered = lowpass(data, freq=dt_new**-1, df=dt_old**-1, zerophase=True)
+    freq = dt_new**-1
+
+    freq_nyquist = 0.5*dt_old**-1
+
+    if freq > 0.999*freq_nyquist:
+        freq = 0.999*freq_nyquist
+
+    filtered = lowpass(data, freq=freq, df=dt_old**-1, zerophase=True)
+
     t1, t2 = 0., nt_new*dt_new
     t_old = np.linspace(t1, t2, nt_old+1)
     t_new = np.linspace(t1, t2, nt_new+1)
+
     return np.interp(t_new, t_old, filtered)
 
 
