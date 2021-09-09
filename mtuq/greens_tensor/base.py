@@ -420,3 +420,9 @@ class GreensTensorList(list):
         return new_ds
 
 
+
+    def write(self, filename):
+        with open(filename, "wb") as file:
+           pickle.dump(self, file)
+
+

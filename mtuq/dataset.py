@@ -1,6 +1,7 @@
 
 import obspy
 import numpy as np
+import pickle
 
 from copy import copy, deepcopy
 from mtuq.event import Origin
@@ -253,4 +254,9 @@ class Dataset(list):
         for stream in self:
             new_ds.append(deepcopy(stream))
         return new_ds
+
+
+    def write(self, filename):
+        with open(filename, "wb") as file:
+           pickle.dump(self, file)
 
