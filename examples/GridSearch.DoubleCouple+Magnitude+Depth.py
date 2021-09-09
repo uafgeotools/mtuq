@@ -135,16 +135,15 @@ if __name__=='__main__':
         magnitude=4.5)
 
 
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+
+
     #
     # The main I/O work starts now
     #
 
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    rank = comm.rank
-    nproc = comm.Get_size()
-
-    if rank==0:
+    if comm.rank==0:
         print('Reading data...\n')
         data = read(path_data, format='sac', 
             event_id=event_id,
@@ -163,7 +162,6 @@ if __name__=='__main__':
 
         print('Reading Greens functions...\n')
         greens = download_greens_tensors(stations, origins, model)
-
 
         print('Processing Greens functions...\n')
         greens.convolve(wavelet)
@@ -190,19 +188,19 @@ if __name__=='__main__':
     # The main computational work starts now
     #
 
-    if rank==0:
+    if comm.rank==0:
         print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origins, grid)
 
-    if rank==0:
+    if comm.rank==0:
         print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origins, grid)
 
-    if rank==0:
+    if comm.rank==0:
         results = results_bw + results_sw
 
 
@@ -224,7 +222,7 @@ if __name__=='__main__':
 
         print('Generating figures...\n')
 
-        plot_data_greens2(event_id+'_waveforms.png',
+        plot_data_greens2(event_id+DC'_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, 
             process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, best_origin, best_source, lune_dict)
@@ -235,9 +233,9 @@ if __name__=='__main__':
 
         print('Saving results...\n')
 
-        os.makedirs(event_id+'_waveforms', exist_ok=True)
-        data_bw.write(event_id+'_waveforms/bw.p')
-        data_sw.write(event_id+'_waveforms/sw.p')
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+        data_bw.write(event_id+'DC_waveforms/bw.p')
+        data_sw.write(event_id+'DC_waveforms/sw.p')
 
         results.save(event_id+'DC.nc')
 

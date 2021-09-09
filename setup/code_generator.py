@@ -391,6 +391,9 @@ OriginComments="""
     # Origin time and location will be fixed. For an example in which they 
     # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
     #
+    # See also Dataset.get_origins(), which attempts to create Origin objects
+    # from ObsPy metadata
+    #
 """
 
 
@@ -548,7 +551,7 @@ Grid_BenchmarkCAP="""
 """
 
 
-Main_GridSearch_DoubleCouple="""
+Main_GridSearch="""
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
 
@@ -615,87 +618,6 @@ Main_GridSearch_DoubleCouple="""
         data_sw, greens_sw, misfit_sw, origin, grid)
 
     if comm.rank==0:
-        results = results_bw + results_sw
-
-        # source index corresponding to minimum misfit
-        idx = results.idxmin('source')
-
-        best_source = grid.get(idx)
-        lune_dict = grid.get_dict(idx)
-
-
-"""
-
-
-Main_GridSearch_DoubleCoupleMagnitudeDepth="""
-    #
-    # The main I/O work starts now
-    #
-
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    rank = comm.rank
-    nproc = comm.Get_size()
-
-    if rank==0:
-        print('Reading data...\\n')
-        data = read(path_data, format='sac', 
-            event_id=event_id,
-            station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity']) 
-
-
-        data.sort_by_distance()
-        stations = data.get_stations()
-
-
-        print('Processing data...\\n')
-        data_bw = data.map(process_bw)
-        data_sw = data.map(process_sw)
-
-
-        print('Reading Greens functions...\\n')
-        greens = download_greens_tensors(stations, origins, model)
-
-
-        print('Processing Greens functions...\\n')
-        greens.convolve(wavelet)
-        greens_bw = greens.map(process_bw)
-        greens_sw = greens.map(process_sw)
-
-
-    else:
-        stations = None
-        data_bw = None
-        data_sw = None
-        greens_bw = None
-        greens_sw = None
-
-
-    stations = comm.bcast(stations, root=0)
-    data_bw = comm.bcast(data_bw, root=0)
-    data_sw = comm.bcast(data_sw, root=0)
-    greens_bw = comm.bcast(greens_bw, root=0)
-    greens_sw = comm.bcast(greens_sw, root=0)
-
-
-    #
-    # The main computational work starts now
-    #
-
-    if rank==0:
-        print('Evaluating body wave misfit...\\n')
-
-    results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, grid)
-
-    if rank==0:
-        print('Evaluating surface wave misfit...\\n')
-
-    results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, grid)
-
-    if rank==0:
         results = results_bw + results_sw
 
 
@@ -943,9 +865,9 @@ WrapUp_GridSearch_DoubleCouple="""
 
         print('Saving results...\\n')
 
-        os.makedirs(event_id+'_waveforms', exist_ok=True)
-        data_bw.write(event_id+'_waveforms/bw.p')
-        data_sw.write(event_id+'_waveforms/sw.p')
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+        data_bw.write(event_id+'DC_waveforms/bw.p')
+        data_sw.write(event_id+'DC_waveforms/sw.p')
 
         results.save(event_id+'DC.nc')
 
@@ -972,7 +894,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Generating figures...\\n')
 
-        plot_data_greens2(event_id+'_waveforms.png',
+        plot_data_greens2(event_id+DC'_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, 
             process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, best_origin, best_source, lune_dict)
@@ -983,9 +905,9 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Saving results...\\n')
 
-        os.makedirs(event_id+'_waveforms', exist_ok=True)
-        data_bw.write(event_id+'_waveforms/bw.p')
-        data_sw.write(event_id+'_waveforms/sw.p')
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+        data_bw.write(event_id+'DC_waveforms/bw.p')
+        data_sw.write(event_id+'DC_waveforms/sw.p')
 
         results.save(event_id+'DC.nc')
 
@@ -1018,9 +940,9 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
-    os.makedirs(event_id+'_waveforms', exist_ok=True)
-    data_bw.write(event_id+'_waveforms/bw.p')
-    data_sw.write(event_id+'_waveforms/sw.p')
+    os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+    data_bw.write(event_id+'DC_waveforms/bw.p')
+    data_sw.write(event_id+'DC_waveforms/sw.p')
 
     results.save(event_id+'DC.nc')
 
@@ -1182,7 +1104,7 @@ if __name__=='__main__':
         file.write(Grid_DoubleCouple)
         file.write(OriginComments)
         file.write(OriginDefinitions)
-        file.write(Main_GridSearch_DoubleCouple)
+        file.write(Main_GridSearch)
         file.write(WrapUp_GridSearch_DoubleCouple)
 
 
@@ -1206,7 +1128,12 @@ if __name__=='__main__':
         file.write(OriginsComments)
         file.write(OriginsDefinitions)
         file.write(Grid_DoubleCoupleMagnitudeDepth)
-        file.write(Main_GridSearch_DoubleCoupleMagnitudeDepth)
+        file.write(
+            replace(
+            Main_GridSearch,
+            'origin',
+            'origins',
+            ))
         file.write(WrapUp_GridSearch_DoubleCoupleMagnitudeDepth)
 
 
@@ -1231,7 +1158,7 @@ if __name__=='__main__':
         file.write(Grid_FullMomentTensor)
         file.write(OriginComments)
         file.write(OriginDefinitions)
-        file.write(Main_GridSearch_DoubleCouple)
+        file.write(Main_GridSearch)
         file.write(
             replace(
             WrapUp_GridSearch_DoubleCouple,

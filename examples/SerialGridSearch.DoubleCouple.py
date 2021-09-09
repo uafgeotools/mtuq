@@ -109,6 +109,9 @@ if __name__=='__main__':
     # Origin time and location will be fixed. For an example in which they 
     # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
     #
+    # See also Dataset.get_origins(), which attempts to create Origin objects
+    # from ObsPy metadata
+    #
 
     origin = Origin({
         'time': '2009-04-07T20:12:55.000000Z',
@@ -185,9 +188,9 @@ if __name__=='__main__':
 
     print('Saving results...\n')
 
-    os.makedirs(event_id+'_waveforms', exist_ok=True)
-    data_bw.write(event_id+'_waveforms/bw.p')
-    data_sw.write(event_id+'_waveforms/sw.p')
+    os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+    data_bw.write(event_id+'DC_waveforms/bw.p')
+    data_sw.write(event_id+'DC_waveforms/sw.p')
 
     results.save(event_id+'DC.nc')
 
