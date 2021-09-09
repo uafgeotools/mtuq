@@ -205,32 +205,41 @@ if __name__=='__main__':
     if rank==0:
         results = results_bw + results_sw
 
-        # source index corresponding to minimum misfit
-        idx = results.idxmin('source')
-
-        best_source = grid.get(idx)
-        lune_dict = grid.get_dict(idx)
-
-        # origin index corresponding to minimum misfit
-        idx = results.idxmin('origin')
-
-        best_origin = origins[idx]
-
 
 
     #
-    # Saving results
+    # Analyzing results
     #
 
     if comm.rank==0:
-        print('Saving results...\n')
+
+        # source corresponding to minimum misfit
+        idx = results.idxmin('source')
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
+
+        # origin corresponding to minimum misfit
+        best_origin = origins[results.idxmin('origin')]
+
+
+        print('Generating figures...\n')
 
         plot_data_greens2(event_id+'_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, 
             process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, best_origin, best_source, lune_dict)
 
-        plot_misfit_depth(event_id+'_misfit_depth.png',
-            results, origins, grid, event_id)
+        #plot_misfit_depth(event_id+'_misfit_depth.png',
+        #    results, origins, grid, event_id)
+
+
+        print('Saving results...\n')
+
+        os.makedirs(event_id+'_waveforms', exist_ok=True)
+        data_bw.write(event_id+'_waveforms/bw.p')
+        data_sw.write(event_id+'_waveforms/sw.p')
+
+        results.save(event_id+'DC.nc')
+
 
         print('\nFinished\n')

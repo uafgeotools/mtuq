@@ -161,18 +161,17 @@ if __name__=='__main__':
 
     results = results_bw + results_sw
 
-    # source index corresponding to minimum misfit
-    idx = results.idxmin('source')
 
+    #
+    # Analyzing results
+    #
+
+    idx = results.idxmin('source')
     best_source = grid.get(idx)
     lune_dict = grid.get_dict(idx)
 
 
-    #
-    # Saving results
-    #
-
-    print('Saving results...\n')
+    print('Generating figures...\n')
 
     plot_data_greens2(event_id+'DC_waveforms.png', 
         data_bw, data_sw, greens_bw, greens_sw, 
@@ -183,7 +182,14 @@ if __name__=='__main__':
 
     plot_misfit_dc(event_id+'DC_misfit.png', results)
 
+
+    print('Saving results...\n')
+
+    os.makedirs(event_id+'_waveforms', exist_ok=True)
+    data_bw.write(event_id+'_waveforms/bw.p')
+    data_sw.write(event_id+'_waveforms/sw.p')
+
     results.save(event_id+'DC.nc')
 
-    print('\nFinished\n')
 
+    print('\nFinished\n')

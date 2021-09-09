@@ -189,11 +189,17 @@ if __name__=='__main__':
 
 
     #
-    # Saving results
+    # Analyzing results
     #
 
     if comm.rank==0:
-        print('Savings results...\n')
+
+        idx = results.idxmin('source')
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
+
+
+        print('Generating figures...\n')
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, 
@@ -204,7 +210,14 @@ if __name__=='__main__':
 
         plot_misfit_lune(event_id+'FMT_misfit.png', results)
 
+
+        print('Saving results...\n')
+
+        os.makedirs(event_id+'_waveforms', exist_ok=True)
+        data_bw.write(event_id+'_waveforms/bw.p')
+        data_sw.write(event_id+'_waveforms/sw.p')
+
         results.save(event_id+'FMT.nc')
 
-        print('\nFinished\n')
 
+        print('\nFinished\n')
