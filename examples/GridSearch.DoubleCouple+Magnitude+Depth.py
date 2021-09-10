@@ -239,8 +239,8 @@ if __name__=='__main__':
             process_bw, process_sw, misfit_bw, misfit_sw, 
             stations, best_origin, best_source, lune_dict)
 
-        #plot_misfit_depth(event_id+'_misfit_depth.png',
-        #    results, origins, grid, event_id)
+        plot_misfit_depth(event_id+'_misfit_depth.png',
+            results, origins, grid)
 
 
         print('Saving results...\n')

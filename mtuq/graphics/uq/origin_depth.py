@@ -17,7 +17,7 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 
-def plot_misfit_depth(filename, ds, origins, sources, misfit_callback=None, title=''):
+def plot_misfit_depth(filename, ds, origins, sources, title=''):
     """ Plots misfit versus depth
 
 
@@ -28,9 +28,6 @@ def plot_misfit_depth(filename, ds, origins, sources, misfit_callback=None, titl
 
     ``ds`` (`DataArray` or `DataFrame`):
     data structure containing moment tensors and corresponding misfit values
-
-    ``misfit_callback`` (func)
-    User-supplied function applied to misfit values
 
     ``title`` (`str`):
     Optional figure title
@@ -48,9 +45,6 @@ def plot_misfit_depth(filename, ds, origins, sources, misfit_callback=None, titl
     elif issubclass(type(ds), DataFrame):
         values, indices = _min_dataframe(ds)
         best_sources = _get_sources(sources, indices)
-
-    if misfit_callback:
-        values = misfit_callback(values)
 
     _plot_depth(filename, depths, values, indices,
         title, xlabel='auto', ylabel='Misfit')
