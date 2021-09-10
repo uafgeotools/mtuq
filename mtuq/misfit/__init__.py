@@ -1,6 +1,7 @@
 
 import numpy as np
 
+from copy import deepcopy
 from mtuq.misfit import level0, level1, level2
 from mtuq.util import Null, iterable, warn
 from mtuq.util.math import isclose, list_intersect_with_indices
@@ -179,4 +180,37 @@ class Misfit(object):
                 data, greens, sources, self.norm, self.time_shift_groups,
                 self.time_shift_min, self.time_shift_max, progress_handle)
 
+
+    def collect_attributes(self, data, greens, source):
+        """ Collects time shifts and other attributes assigned to traces
+        """
+        # Checks that dataset is nonempty
+        if isempty(data):
+            warn("Empty data set. No attributes will be returned")
+            return []
+
+        # Checks that optional Green's function padding is consistent with time 
+        # shift bounds
+        check_padding(greens, self.time_shift_min, self.time_shift_max)
+
+        synthetics = greens.get_synthetics(
+            source, components=data.get_components(), mode='map', inplace=True)
+
+        # Attaches attributes to synthetics
+        _ = level0.misfit(
+            data, greens, iterable(source), self.norm, self.time_shift_groups,
+            self.time_shift_min, self.time_shift_max, msg_handle=Null(),
+            set_attributes=True)
+
+        # Collects attributes
+        attrs = []
+        for stream in synthetics:
+            attrs += [{}]
+            for trace in stream:
+                component = trace.stats.channel[-1]
+                if component in attrs[-1]:
+                    print('Warning multiple traces for same component')
+                attrs[-1][component] = trace.attrs
+
+        return deepcopy(attrs)
 
