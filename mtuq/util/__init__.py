@@ -110,9 +110,23 @@ def fullpath(*args):
     return join(basepath(), *args)
 
 
+class Encoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(Encoder, self).default(obj)
+
+
 def save_json(filename, data):
+    if type(data) == AttribDict:
+        data = {key: data[key] for key in data}
+
     with open(filename, 'w', encoding='utf-8') as file:
-        json.dump(data, file, ensure_ascii=False, indent=4)
+        json.dump(data, file, cls=Encoder, ensure_ascii=False, indent=4)
 
 
 def timer(func):
