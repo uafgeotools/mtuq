@@ -3,7 +3,7 @@ from mtuq.graphics.beachball import\
     plot_beachball, misfit_vs_depth
 
 from mtuq.graphics.time_shifts import\
-    plot_time_shifts, plot_time_shifts_ZRT
+    plot_time_shifts
 
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune,\

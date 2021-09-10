@@ -216,6 +216,10 @@ class Force(object):
            self._array, 'USE', convention.upper())
 
 
+    def to_lune(self):
+        raise NotImplementedError
+
+
 class CompositeSource(object):
     def __init__(self, sources):
         """ Constructor method
