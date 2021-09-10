@@ -93,6 +93,20 @@ class MomentTensor(object):
             #    asarray(array), convention, 'USE')
 
 
+    def as_dict(self):
+        """ Returns dictionary in `up-south-east` convention
+        """
+        array = self._array
+        return {
+            'Mrr': array[0],
+            'Mtt': array[1],
+            'Mpp': array[2],
+            'Mrt': array[3],
+            'Mrp': array[4],
+            'Mtp': array[5],
+            }
+
+
     def as_vector(self):
         """ Returns 1D NumPy array in `up-south-east` convention
         """

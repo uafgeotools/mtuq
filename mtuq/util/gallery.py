@@ -9,7 +9,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath
+from mtuq.util import fullpath, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
@@ -23,8 +23,8 @@ if True:
     # and functions listed in __all__
     #
     # Note that some I/O and data processing are involved in creating the
-    # example data, so importing this module may take a few seconds longer than
-    # most other modules
+    # example data, so importing this module may significantly longer than
+    # other modules
     #
     
     __all__ = [

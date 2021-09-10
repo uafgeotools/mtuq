@@ -5,6 +5,7 @@ from retry import retry
 
 import copy
 import csv
+import json
 import time
 import numpy as np
 import obspy
@@ -107,6 +108,11 @@ def fullpath(*args):
     """ Prepends MTUQ base diretory to given path
     """
     return join(basepath(), *args)
+
+
+def save_json(filename, data):
+    with open(filename, 'w', encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False, indent=4)
 
 
 def timer(func):

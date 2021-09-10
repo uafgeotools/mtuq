@@ -10,7 +10,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath
+from mtuq.util import fullpath, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
@@ -110,7 +110,7 @@ if __name__=='__main__':
     # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
     #
     # See also Dataset.get_origins(), which attempts to create Origin objects
-    # from ObsPy metadata
+    # from waveform metadata
     #
 
     origin = Origin({
@@ -200,7 +200,9 @@ if __name__=='__main__':
 
         idx = results.idxmin('source')
         best_source = grid.get(idx)
+
         lune_dict = grid.get_dict(idx)
+        mt_dict = grid.get(idx).as_dict()
 
 
         print('Generating figures...\n')
@@ -217,9 +219,13 @@ if __name__=='__main__':
 
         print('Saving results...\n')
 
-        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
-        data_bw.write(event_id+'DC_waveforms/bw.p')
-        data_sw.write(event_id+'DC_waveforms/sw.p')
+        os.makedirs(event_id+'DC_solution', exist_ok=True)
+        save_json(event_id+'DC_solution/mt.json', best_source.as_dict())
+        save_json(event_id+'DC_solution/lune.json', lune_dict)
+
+        os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
+        data_bw.write(event_id+'DC_waveforms/data/bw.p')
+        data_sw.write(event_id+'DC_waveforms/data/sw.p')
 
         results.save(event_id+'DC.nc')
 
