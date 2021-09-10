@@ -55,6 +55,15 @@ class Origin(obspy.core.AttribDict):
             return True
 
 
+    def as_dict(self):
+        return {
+            'time': self.time.isoformat(), 
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'depth_in_m': self.depth_in_m,
+            }
+
+
 class MomentTensor(object):
     """ Moment tensor object
 

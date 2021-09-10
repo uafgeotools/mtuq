@@ -428,8 +428,8 @@ OriginsDefinitions="""
 
     depths = np.array(
          # depth in meters
-        [25000, 30000, 35000, 40000,                    
-         45000, 50000, 55000, 60000])
+        [25000., 30000., 35000., 40000.,                    
+         45000., 50000., 55000., 60000.])
 
     origins = []
     for depth in depths:
@@ -889,13 +889,14 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
     if comm.rank==0:
 
+        # origin corresponding to minimum misfit
+        best_origin = origins[results.idxmin('origin')]
+
         # source corresponding to minimum misfit
         idx = results.idxmin('source')
         best_source = grid.get(idx)
 
-        # origin corresponding to minimum misfit
-        best_origin = origins[results.idxmin('origin')]
-
+        origin_dict = best_origin.as_dict()
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
@@ -914,6 +915,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         print('Saving results...\\n')
 
         os.makedirs(event_id+'DC_solution', exist_ok=True)
+        save_json(event_id+'DC_solution/origin.json', origin_dict)
         save_json(event_id+'DC_solution/mt.json', mt_dict)
         save_json(event_id+'DC_solution/lune.json', lune_dict)
 
