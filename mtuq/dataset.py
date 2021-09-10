@@ -178,6 +178,17 @@ class Dataset(list):
         self.sort(key=function, reverse=reverse)
 
 
+    def get_components(self):
+        """ Returns `list` of components from all streams
+        """
+        components = []
+        for stream in self:
+            components += [[]]
+            for trace in stream:
+                components[-1] += [trace.stats.channel[-1].upper()]
+        return components
+
+
     def get_stations(self):
         """ Returns station metadata from all streams as a `list` of
         `mtuq.station.Stations` objects
