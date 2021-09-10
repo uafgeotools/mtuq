@@ -211,14 +211,25 @@ if __name__=='__main__':
 
         # origin corresponding to minimum misfit
         best_origin = origins[results.idxmin('origin')]
+        origin_dict = best_origin.as_dict()
 
         # source corresponding to minimum misfit
         idx = results.idxmin('source')
         best_source = grid.get(idx)
-
-        origin_dict = best_origin.as_dict()
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
+
+        components_bw = data_bw.get_components()
+        components_sw = data_sw.get_components()
+
+        greens_bw = greens_bw.select(best_origin)
+        greens_sw = greens_sw.select(best_origin)
+
+        # synthetics corresponding to minimum misfit
+        synthetics_bw = greens_bw.get_synthetics(
+            best_source, components_bw, mode='map')
+        synthetics_sw = greens_sw.get_synthetics(
+            best_source, components_sw, mode='map')
 
 
         print('Generating figures...\n')
@@ -241,6 +252,10 @@ if __name__=='__main__':
         os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
         data_bw.write(event_id+'DC_waveforms/data/bw.p')
         data_sw.write(event_id+'DC_waveforms/data/sw.p')
+
+        os.makedirs(event_id+'DC_waveforms/synthetics', exist_ok=True)
+        synthetics_bw.write(event_id+'DC_waveforms/synthetics/bw.p')
+        synthetics_sw.write(event_id+'DC_waveforms/synthetics/sw.p')
 
         results.save(event_id+'DC.nc')
 
