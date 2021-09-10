@@ -237,11 +237,13 @@ def plot_data_greens1(filename,
     Different input arguments, same result as plot_waveforms1
     """
 
-    # prepare synthetics
-    greens = greens.select(origin)
-    _set_components(data, greens)
-    synthetics, total_misfit = _prepare_synthetics(
-        data, greens, misfit, source)
+    # prepare synthetic waveforms
+    components = data.get_components()
+
+    synthetics = greens.select(origin).get_synthetics(
+        source, components, mode='map', inplace=True)
+
+    total_misfit = misfit(data, greens, source, set_attributes=True)
 
     # prepare figure header
     if 'header' in kwargs:
@@ -281,17 +283,19 @@ def plot_data_greens2(filename,
     Different input arguments, same result as plot_waveforms2
     """
 
-    # prepare body wave synthetics
-    greens_bw = greens_bw.select(origin)
-    _set_components(data_bw, greens_bw)
-    synthetics_bw, total_misfit_bw = _prepare_synthetics(
-        data_bw, greens_bw, misfit_bw, source)
+    # prepare synthetic waveforms
+    components_bw = data_bw.get_components()
+    components_sw = data_sw.get_components()
 
-    # prepare surface wave synthetics
-    greens_sw = greens_sw.select(origin)
-    _set_components(data_sw, greens_sw)
-    synthetics_sw, total_misfit_sw = _prepare_synthetics(
-        data_sw, greens_sw, misfit_sw, source)
+    synthetics_bw = greens_bw.select(origin).get_synthetics(
+        source, components_bw, mode='map', inplace=True)
+
+    synthetics_sw = greens_sw.select(origin).get_synthetics(
+        source, components_sw, mode='map', inplace=True)
+
+    total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
+    total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
+
 
     # prepare figure header
     if 'header' in kwargs:
@@ -559,15 +563,6 @@ def _add_trace_labels(axis, dat, syn, total_misfit=1.):
 # utility functions
 #
 
-def _set_components(data, greens):
-    if len(data) == 0:
-        return
-
-    for _i, stream in enumerate(data):
-        components = get_components(stream)
-        greens[_i]._set_components(components)
-
-
 def _time_stats(trace):
     # returns time scheme
     return (
@@ -627,16 +622,6 @@ def _hide_axes(axes):
             col.spines['left'].set_visible(False)
             col.get_xaxis().set_ticks([])
             col.get_yaxis().set_ticks([])
-
-
-def _prepare_synthetics(data, greens, misfit, source):
-        synthetics = greens.get_synthetics(source, inplace=True)
-
-        # besides calculating misfit, these commands set the trace attributes
-        # used to align data and synthetics in the waveform plots
-        total_misfit = misfit(data, greens, source, set_attributes=True)
-
-        return synthetics, total_misfit
 
 
 def _prepare_header(model, solver, source, source_dict, origin, *args):

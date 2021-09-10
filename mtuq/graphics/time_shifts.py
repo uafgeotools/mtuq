@@ -3,36 +3,10 @@ import os
 from matplotlib import pyplot
 from os.path import join
 
-from mtuq.graphics.waveforms import _set_components, _prepare_synthetics
 from mtuq.util import warn
 
 
-def plot_time_shifts(filename, data, greens, component, misfit, stations, origin, source,
-    backend='matplotlib'):
-
-    """ For a given component, creates a "spider plot" showing how 
-    time shifts vary geographically
-    """
-    if backend.lower()=='gmt':
-        raise NotImplementedError
-
-    # prepare synthetics
-    greens = greens.select(origin)
-    _set_components(data, greens)
-    synthetics, _ = _prepare_synthetics(data, greens, misfit, source)
-
-    # collect time shifts
-    time_shifts, indices = _collect_time_shifts(synthetics, component)
-
-    if len(indices)==0:
-        warn("Component not present in dataset")
-        return
-
-    _save_figure(filename,
-        time_shifts, [stations[_i] for _i in indices], origin, source)
-
-
-def plot_time_shifts_ZRT(dirname, data, greens, misfit, stations, origin, source,
+def plot_time_shifts(dirname, data, greens, components, misfit, stations, origin, source,
      format='png', backend='matplotlib'):
 
     """ For components `'Z','R','T'`, creates "spider plots" showing how 
@@ -55,7 +29,7 @@ def plot_time_shifts_ZRT(dirname, data, greens, misfit, stations, origin, source
     _set_components(data, greens)
     synthetics, _ = _prepare_synthetics(data, greens, misfit, source)
 
-    for component in ('Z','R','T'):
+    for component in components:
         filename = join(dirname, component+'.'+format)
 
         # collect time shifts
