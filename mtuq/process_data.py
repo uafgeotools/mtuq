@@ -388,6 +388,9 @@ class ProcessData(object):
         else:
             warn('Units not specified.')
 
+        for trace in traces:
+            trace.attrs = AttribDict()
+
 
         #
         # part 1: filter traces
@@ -451,7 +454,7 @@ class ProcessData(object):
                     weight = None
 
                 if weight:
-                    setattr(trace, 'weight', weight)
+                    trace.attrs.weight = weight
                 else:
                     traces.remove(trace)
 
@@ -579,8 +582,8 @@ class ProcessData(object):
                 starttime -= self.padding[0]
                 endtime += self.padding[1]
 
-                setattr(trace, 'npts_left', int(round(abs(self.padding[0])/dt)))
-                setattr(trace, 'npts_right', int(round(abs(self.padding[1])/dt)))
+                trace.attrs.npts_left = int(round(abs(self.padding[0])/dt))
+                trace.attrs.npts_right = int(round(abs(self.padding[1])/dt))
 
 
             #

@@ -6,6 +6,7 @@ See ``mtuq/misfit/__init__.py`` for more information
 
 import numpy as np
 
+from mtuq.util import AttribDict
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
 
@@ -96,11 +97,12 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                         values[_i] += value
 
                     if set_attributes:
-                        d[_k].misfit = value
-                        s[_k].misfit = value
-                        s[_k].time_shift = time_shift
-                        s[_k].start = start
-                        s[_k].stop = stop
+                        s[_k].attrs = AttribDict()
+
+                        s[_k].attrs.misfit = value
+                        s[_k].attrs.time_shift = time_shift
+                        s[_k].attrs.start = start
+                        s[_k].attrs.stop = stop
 
     return values
 
