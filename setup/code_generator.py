@@ -617,10 +617,6 @@ Main_GridSearch="""
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, grid)
 
-    if comm.rank==0:
-        results = results_bw + results_sw
-
-
 """
 
 
@@ -667,8 +663,6 @@ Main2_SerialGridSearch_DoubleCouple="""
 
     print('Evaluating surface wave misfit...\\n')
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
-
-    results = results_bw + results_sw
 
 """
 
@@ -839,13 +833,16 @@ Main_TestMisfit="""
 
 
 
-WrapUp_GridSearch_DoubleCouple="""
+WrapUp_GridSearch="""
     #
     # Analyzing results
     #
 
     if comm.rank==0:
 
+        results = results_bw + results_sw
+
+        # source corresponding to minimum misfit
         idx = results.idxmin('source')
         best_source = grid.get(idx)
 
@@ -867,9 +864,8 @@ WrapUp_GridSearch_DoubleCouple="""
 
         print('Saving results...\\n')
 
-        os.makedirs(event_id+'DC_solution', exist_ok=True)
-        save_json(event_id+'DC_solution/mt.json', best_source.as_dict())
-        save_json(event_id+'DC_solution/lune.json', lune_dict)
+        save_json(event_id+'DC_mt.json', mt_dict)
+        save_json(event_id+'DC_lune.json', lune_dict)
 
         os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
         data_bw.write(event_id+'DC_waveforms/data/bw.p')
@@ -888,6 +884,8 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
 
     if comm.rank==0:
+
+        results = results_bw + results_sw
 
         # origin corresponding to minimum misfit
         best_origin = origins[results.idxmin('origin')]
@@ -914,10 +912,9 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Saving results...\\n')
 
-        os.makedirs(event_id+'DC_solution', exist_ok=True)
-        save_json(event_id+'DC_solution/origin.json', origin_dict)
-        save_json(event_id+'DC_solution/mt.json', mt_dict)
-        save_json(event_id+'DC_solution/lune.json', lune_dict)
+        save_json(event_id+'DC_mt.json', mt_dict)
+        save_json(event_id+'DC_lune.json', lune_dict)
+        save_json(event_id+'DC_origin.json', origin_dict)
 
         os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
         data_bw.write(event_id+'DC_waveforms/data/bw.p')
@@ -934,6 +931,8 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     #
     # Analyzing results
     #
+
+    results = results_bw + results_sw
 
     # source corresponding to minimum misfit
     idx = results.idxmin('source')
@@ -957,9 +956,8 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
-    os.makedirs(event_id+'DC_solution', exist_ok=True)
-    save_json(event_id+'DC_solution/mt.json', mt_dict)
-    save_json(event_id+'DC_solution/lune.json', lune_dict)
+    save_json(event_id+'DC_mt.json', mt_dict)
+    save_json(event_id+'DC_lune.json', lune_dict)
 
     os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
     data_bw.write(event_id+'DC_waveforms/data/bw.p')
@@ -973,6 +971,16 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCouple="""
+
+    results = results_bw + results_sw
+
+    # source corresponding to minimum misfit
+    idx = results.idxmin('source')
+    best_source = grid.get(idx)
+
+    lune_dict = grid.get_dict(idx)
+    mt_dict = grid.get(idx).as_dict()
+
     if run_figures:
 
         plot_data_greens2(event_id+'DC_waveforms.png',
@@ -1126,7 +1134,7 @@ if __name__=='__main__':
         file.write(OriginComments)
         file.write(OriginDefinitions)
         file.write(Main_GridSearch)
-        file.write(WrapUp_GridSearch_DoubleCouple)
+        file.write(WrapUp_GridSearch)
 
 
     with open('examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
@@ -1182,7 +1190,7 @@ if __name__=='__main__':
         file.write(Main_GridSearch)
         file.write(
             replace(
-            WrapUp_GridSearch_DoubleCouple,
+            WrapUp_GridSearch,
             'DC',
             'FMT',
             'plot_misfit_dc',

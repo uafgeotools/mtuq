@@ -151,8 +151,16 @@ if __name__=='__main__':
     print('Evaluating surface wave misfit...\n')
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid, 0)
 
+
+
     results = results_bw + results_sw
 
+    # source corresponding to minimum misfit
+    idx = results.idxmin('source')
+    best_source = grid.get(idx)
+
+    lune_dict = grid.get_dict(idx)
+    mt_dict = grid.get(idx).as_dict()
 
     if run_figures:
 

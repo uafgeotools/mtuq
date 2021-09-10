@@ -162,12 +162,12 @@ if __name__=='__main__':
     print('Evaluating surface wave misfit...\n')
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
 
-    results = results_bw + results_sw
-
 
     #
     # Analyzing results
     #
+
+    results = results_bw + results_sw
 
     # source corresponding to minimum misfit
     idx = results.idxmin('source')
@@ -191,9 +191,8 @@ if __name__=='__main__':
 
     print('Saving results...\n')
 
-    os.makedirs(event_id+'DC_solution', exist_ok=True)
-    save_json(event_id+'DC_solution/mt.json', mt_dict)
-    save_json(event_id+'DC_solution/lune.json', lune_dict)
+    save_json(event_id+'DC_mt.json', mt_dict)
+    save_json(event_id+'DC_lune.json', lune_dict)
 
     os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
     data_bw.write(event_id+'DC_waveforms/data/bw.p')
