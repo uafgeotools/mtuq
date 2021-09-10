@@ -10,7 +10,7 @@ Role of Green's functions
 
 By combining Green's functions, it is possible to obtain synthetics from any moment tensor or force source.  Synthetics can then be compared with data to determine a best-fitting source.
 
-Generating synthetics through linear combinations of Green's functions is useful because it provides computaional savings.  It is much  more cost effective to compute Green's functions (an up-front cost, indepdent of the number of sources) than it is to perform an on-the-fly wavefield simulation for each new source.
+Generating synthetics through linear combinations of Green's functions is useful because it provides computational savings.  It is more cost effective to compute Green's functions (an up-front expense, independent of the number of sources) than it is to perform an on-the-fly wavefield simulation for each new source.
 
 
 
