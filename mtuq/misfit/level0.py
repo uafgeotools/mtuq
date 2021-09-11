@@ -104,6 +104,11 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                         s[_k].attrs.start = start
                         s[_k].attrs.stop = stop
 
+                        s_max = s[_k].data[start:stop].max()
+                        d_max = d[_k].data.max()
+                        s[_k].attrs.amplitude_ratio = s_max/d_max
+
+
     return values
 
 
