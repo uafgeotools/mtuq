@@ -250,7 +250,7 @@ if __name__=='__main__':
 
         plot_data_greens2(event_id+'DC_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
             results, origins, grid)
