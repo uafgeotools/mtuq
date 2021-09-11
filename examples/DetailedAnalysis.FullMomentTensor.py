@@ -5,8 +5,8 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens2, plot_misfit_depth, plot_misfit_dc
-from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune
+from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
@@ -17,20 +17,13 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over source orientation, magnitude, and depth
-    #   
+    # Carries out grid search over all moment tensor parameters except
+    # magnitude 
+    #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
-    #
-    # This is the most complicated example. For a much simpler one, see
-    # SerialGridSearch.DoubleCouple.py
+    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
     #   
 
-
-    #
-    # We will investigate the source process of an Mw~4 earthquake using data
-    # from a regional seismic array
-    #
 
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
@@ -94,45 +87,32 @@ if __name__=='__main__':
 
 
     #
-    # We will search over a range of depths about the catalog origin
+    # Next, we specify the moment tensor grid and source-time function
     #
 
+    grid = FullMomentTensorGridSemiregular(
+        npts_per_axis=15,
+        magnitudes=[4.5])
 
-    catalog_origin = Origin({
+    wavelet = Trapezoid(
+        magnitude=4.5)
+
+
+    #
+    # Origin time and location will be fixed. For an example in which they 
+    # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
+    #
+    # See also Dataset.get_origins(), which attempts to create Origin objects
+    # from waveform metadata
+    #
+
+    origin = Origin({
         'time': '2009-04-07T20:12:55.000000Z',
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
         'id': '20090407201255351'
         })
-
-    depths = np.array(
-         # depth in meters
-        [25000., 30000., 35000., 40000.,                    
-         45000., 50000., 55000., 60000.])
-
-    origins = []
-    for depth in depths:
-        origins += [catalog_origin.copy()]
-        setattr(origins[-1], 'depth_in_m', depth)
-
-
-
-    #
-    # Next, we specify the moment tensor grid and source-time function
-    #
-
-    magnitudes = np.array(
-         # moment magnitude (Mw)
-        [4.3, 4.4, 4.5,     
-         4.6, 4.7, 4.8]) 
-
-    grid = DoubleCoupleGridRegular(
-        npts_per_axis=30,
-        magnitudes=magnitudes)
-
-    wavelet = Trapezoid(
-        magnitude=4.5)
 
 
     from mpi4py import MPI
@@ -161,7 +141,7 @@ if __name__=='__main__':
 
 
         print('Reading Greens functions...\n')
-        greens = download_greens_tensors(stations, origins, model)
+        greens = download_greens_tensors(stations, origin, model)
 
         print('Processing Greens functions...\n')
         greens.convolve(wavelet)
@@ -192,13 +172,13 @@ if __name__=='__main__':
         print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, grid)
+        data_bw, greens_bw, misfit_bw, origin, grid)
 
     if comm.rank==0:
         print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, grid)
+        data_sw, greens_sw, misfit_sw, origin, grid)
 
 
     #
@@ -209,10 +189,6 @@ if __name__=='__main__':
 
         results = results_bw + results_sw
 
-        # origin corresponding to minimum misfit
-        best_origin = origins[results.idxmin('origin')]
-        origin_dict = best_origin.as_dict()
-
         # source corresponding to minimum misfit
         idx = results.idxmin('source')
         best_source = grid.get(idx)
@@ -222,9 +198,6 @@ if __name__=='__main__':
         components_bw = data_bw.get_components()
         components_sw = data_sw.get_components()
 
-        greens_bw = greens_bw.select(best_origin)
-        greens_sw = greens_sw.select(best_origin)
-
         # synthetics corresponding to minimum misfit
         synthetics_bw = greens_bw.get_synthetics(
             best_source, components_bw, mode='map')
@@ -232,32 +205,52 @@ if __name__=='__main__':
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
 
+        # time shifts corresponding to minimum misfit
+        attrs_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        attrs_sw = misfit_sw.collect_attributes(
+            data_sw, greens_sw, best_source)
+
 
         print('Generating figures...\n')
 
-        plot_data_greens2(event_id+'DC_waveforms.png',
+        plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
-        plot_misfit_depth(event_id+'_misfit_depth.png',
-            results, origins, grid)
+        plot_beachball(event_id+'FMT_beachball.png', best_source)
+
+        plot_misfit_lune(event_id+'DC_misfit.png', results)
 
 
         print('Saving results...\n')
 
-        save_json(event_id+'DC_mt.json', mt_dict)
-        save_json(event_id+'DC_lune.json', lune_dict)
-        save_json(event_id+'DC_origin.json', origin_dict)
+        os.makedirs(event_id+'FMT/waveforms/data', exist_ok=True)
+        os.makedirs(event_id+'FMT/waveforms/synthetics', exist_ok=True)
 
-        os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
-        data_bw.write(event_id+'DC_waveforms/data/bw.p')
-        data_sw.write(event_id+'DC_waveforms/data/sw.p')
+        os.makedirs(event_id+'FMT/misfit/bw', exist_ok=True)
+        os.makedirs(event_id+'FMT/misfit/sw', exist_ok=True)
 
-        os.makedirs(event_id+'DC_waveforms/synthetics', exist_ok=True)
-        synthetics_bw.write(event_id+'DC_waveforms/synthetics/bw.p')
-        synthetics_sw.write(event_id+'DC_waveforms/synthetics/sw.p')
+        save_json(event_id+'FMT_mt.json', mt_dict)
+        save_json(event_id+'FMT_lune.json', lune_dict)
 
-        results.save(event_id+'DC.nc')
+        data_bw.write(event_id+'FMT/waveforms/data/bw.p')
+        data_sw.write(event_id+'FMT/waveforms/data/sw.p')
 
+        synthetics_bw.write(event_id+'FMT/waveforms/synthetics/bw.p')
+        synthetics_sw.write(event_id+'FMT/waveforms/synthetics/sw.p')
+
+        results_bw.save(event_id+'FMT/misfit/bw.nc')
+        results_sw.save(event_id+'FMT/misfit/sw.nc')
+
+        for _i, station in enumerate(stations):
+            for key in attrs_bw[_i]:
+                filename = event_id+'FMT/misfit/bw/'+station.id+key
+                save_json(filename, attrs_bw[_i][key])
+
+            for key in attrs_sw[_i]:
+                filename = event_id+'FMT/misfit/sw/'+station.id+key
+                save_json(filename, attrs_sw[_i][key])
 
         print('\nFinished\n')

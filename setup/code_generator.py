@@ -832,6 +832,84 @@ Main_TestMisfit="""
 """
 
 
+WrapUp_DetailedAnalysis_FullMomentTensor="""
+    #
+    # Analyzing results
+    #
+
+    if comm.rank==0:
+
+        results = results_bw + results_sw
+
+        # source corresponding to minimum misfit
+        idx = results.idxmin('source')
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
+        mt_dict = grid.get(idx).as_dict()
+
+        components_bw = data_bw.get_components()
+        components_sw = data_sw.get_components()
+
+        # synthetics corresponding to minimum misfit
+        synthetics_bw = greens_bw.get_synthetics(
+            best_source, components_bw, mode='map')
+
+        synthetics_sw = greens_sw.get_synthetics(
+            best_source, components_sw, mode='map')
+
+        # time shifts corresponding to minimum misfit
+        attrs_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        attrs_sw = misfit_sw.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+
+        print('Generating figures...\\n')
+
+        plot_data_greens2(event_id+'FMT_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+
+        plot_beachball(event_id+'FMT_beachball.png', best_source)
+
+        plot_misfit_lune(event_id+'DC_misfit.png', results)
+
+
+        print('Saving results...\\n')
+
+        os.makedirs(event_id+'FMT/waveforms/data', exist_ok=True)
+        os.makedirs(event_id+'FMT/waveforms/synthetics', exist_ok=True)
+
+        os.makedirs(event_id+'FMT/misfit/bw', exist_ok=True)
+        os.makedirs(event_id+'FMT/misfit/sw', exist_ok=True)
+
+        save_json(event_id+'FMT_mt.json', mt_dict)
+        save_json(event_id+'FMT_lune.json', lune_dict)
+
+        data_bw.write(event_id+'FMT/waveforms/data/bw.p')
+        data_sw.write(event_id+'FMT/waveforms/data/sw.p')
+
+        synthetics_bw.write(event_id+'FMT/waveforms/synthetics/bw.p')
+        synthetics_sw.write(event_id+'FMT/waveforms/synthetics/sw.p')
+
+        results_bw.save(event_id+'FMT/misfit/bw.nc')
+        results_sw.save(event_id+'FMT/misfit/sw.nc')
+
+        for _i, station in enumerate(stations):
+            for key in attrs_bw[_i]:
+                filename = event_id+'FMT/misfit/bw/'+station.id+key
+                save_json(filename, attrs_bw[_i][key])
+
+            for key in attrs_sw[_i]:
+                filename = event_id+'FMT/misfit/sw/'+station.id+key
+                save_json(filename, attrs_sw[_i][key])
+
+        print('\\nFinished\\n')
+"""
+
+
+
 
 WrapUp_GridSearch="""
     #
@@ -854,6 +932,7 @@ WrapUp_GridSearch="""
         # synthetics corresponding to minimum misfit
         synthetics_bw = greens_bw.get_synthetics(
             best_source, components_bw, mode='map')
+
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
 
@@ -861,9 +940,8 @@ WrapUp_GridSearch="""
         print('Generating figures...\\n')
 
         plot_data_greens2(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, 
-            process_bw, process_sw, misfit_bw, misfit_sw, 
-            stations, origin, best_source, lune_dict)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -918,6 +996,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         # synthetics corresponding to minimum misfit
         synthetics_bw = greens_bw.get_synthetics(
             best_source, components_bw, mode='map')
+
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
 
@@ -925,9 +1004,8 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         print('Generating figures...\\n')
 
         plot_data_greens2(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, 
-            process_bw, process_sw, misfit_bw, misfit_sw, 
-            stations, best_origin, best_source, lune_dict)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
             results, origins, grid)
@@ -973,16 +1051,16 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     # synthetics corresponding to minimum misfit
     synthetics_bw = greens_bw.get_synthetics(
         best_source, components_bw, mode='map')
+
     synthetics_sw = greens_sw.get_synthetics(
         best_source, components_sw, mode='map')
 
 
     print('Generating figures...\\n')
 
-    plot_data_greens2(event_id+'DC_waveforms.png', 
-        data_bw, data_sw, greens_bw, greens_sw, 
-        process_bw, process_sw, misfit_bw, misfit_sw, 
-        stations, origin, best_source, lune_dict)
+    plot_data_greens2(event_id+'DC_waveforms.png',
+        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+        misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -1023,9 +1101,8 @@ WrapUp_TestGridSearch_DoubleCouple="""
     if run_figures:
 
         plot_data_greens2(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, 
-            process_bw, process_sw, misfit_bw, misfit_sw, 
-            stations, origin, best_source, lune_dict)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -1155,6 +1232,31 @@ if __name__=='__main__':
     import os
     from mtuq.util import basepath, replace
     os.chdir(basepath())
+
+
+    with open('examples/DetailedAnalysis.FullMomentTensor.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
+        file.write(
+            replace(
+            Imports,
+            'DoubleCoupleGridRegular',
+            'FullMomentTensorGridSemiregular',
+            'plot_misfit_dc',
+            'plot_misfit_lune',
+            ))
+        file.write(Docstring_GridSearch_FullMomentTensor)
+        file.write(Paths_Syngine)
+        file.write(DataProcessingComments)
+        file.write(DataProcessingDefinitions)
+        file.write(MisfitComments)
+        file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(Grid_FullMomentTensor)
+        file.write(OriginComments)
+        file.write(OriginDefinitions)
+        file.write(Main_GridSearch)
+        file.write(WrapUp_DetailedAnalysis_FullMomentTensor)
 
 
     with open('examples/GridSearch.DoubleCouple.py', 'w') as file:

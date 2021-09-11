@@ -6,6 +6,7 @@
 #
 
 FILENAMES="\
+    ../examples/DetailedAnalysis.FullMomentTensor.py\
     ../examples/GridSearch.DoubleCouple.py\
     ../examples/GridSearch.DoubleCouple+Magnitude+Depth.py\
     ../examples/GridSearch.FullMomentTensor.py\
