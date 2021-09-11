@@ -858,11 +858,17 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             best_source, components_sw, mode='map')
 
         # time shifts and other attributes corresponding to minimum misfit
-        attrs_bw = misfit_bw.collect_attributes(
+        list_bw = misfit_bw.collect_attributes(
             data_bw, greens_bw, best_source)
 
-        attrs_sw = misfit_sw.collect_attributes(
+        list_sw = misfit_sw.collect_attributes(
             data_sw, greens_sw, best_source)
+
+        dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_sw = {station.id: list_sw[_i] 
+            for _i,station in enumerate(stations)}
 
 
         print('Generating figures...\\n')
@@ -884,55 +890,47 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             title='Surface wave misfit (%s)' % misfit_sw.norm)
 
 
-        from mtuq.graphics import plot_time_shifts, plot_amplitude_ratios
-
         plot_time_shifts(event_id+'FMT_time_shifts/bw',
-            attrs_bw, stations, origin, best_source)
+            list_bw, stations, origin, best_source)
 
         plot_time_shifts(event_id+'FMT_time_shifts/sw',
-            attrs_sw, stations, origin, best_source)
+            list_sw, stations, origin, best_source)
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/bw',
-            attrs_bw, stations, origin, best_source)
+            list_bw, stations, origin, best_source)
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/sw',
-            attrs_sw, stations, origin, best_source)
+            list_sw, stations, origin, best_source)
 
 
         print('\\nSaving results...\\n')
 
-        save_json(event_id+'FMT_mt.json', mt_dict)
-        save_json(event_id+'FMT_lune.json', lune_dict)
+        # save best-fitting source
+        save_json(event_id+'DC_mt.json', mt_dict)
+        save_json(event_id+'DC_lune.json', lune_dict)
 
 
-        os.makedirs(event_id+'FMT_waveforms', exist_ok=True)
+        # save time shifts and other attributes
+        os.makedirs(event_id+'DC_attrs', exist_ok=True)
 
-        data_bw.write(event_id+'FMT_waveforms/dat_bw.p')
-        data_sw.write(event_id+'FMT_waveforms/dat_sw.p')
-
-        synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
-        synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
+        save_json(event_id+'DC_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC_attrs/sw.json', dict_sw)
 
 
-        os.makedirs(event_id+'FMT_misfit', exist_ok=True)
+        # save processed waveforms as binary files
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
 
-        results_bw.save(event_id+'FMT_misfit/bw.nc')
-        results_sw.save(event_id+'FMT_misfit/sw.nc')
+        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
 
+        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
 
-        os.makedirs(event_id+'FMT_attrs/bw', exist_ok=True)
-        os.makedirs(event_id+'FMT_attrs/sw', exist_ok=True)
+        results.save(event_id+'DC_misfit.nc')
 
-        for _i, station in enumerate(stations):
-            for key in attrs_bw[_i]:
-                filename = event_id+'FMT_attrs/bw/'+station.id+key
-                save_json(filename, attrs_bw[_i][key])
-
-            for key in attrs_sw[_i]:
-                filename = event_id+'FMT_attrs/sw/'+station.id+key
-                save_json(filename, attrs_sw[_i][key])
 
         print('\\nFinished\\n')
+
 """
 
 
@@ -963,6 +961,19 @@ WrapUp_GridSearch="""
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
 
+        # time shifts and other attributes corresponding to minimum misfit
+        list_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        list_sw = misfit_sw.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_sw = {station.id: list_sw[_i] 
+            for _i,station in enumerate(stations)}
+
 
         print('Generating figures...\\n')
 
@@ -977,21 +988,32 @@ WrapUp_GridSearch="""
 
         print('Saving results...\\n')
 
+        # save best-fitting source
         save_json(event_id+'DC_mt.json', mt_dict)
         save_json(event_id+'DC_lune.json', lune_dict)
 
-        os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
-        data_bw.write(event_id+'DC_waveforms/data/bw.p')
-        data_sw.write(event_id+'DC_waveforms/data/sw.p')
 
-        os.makedirs(event_id+'DC_waveforms/synthetics', exist_ok=True)
-        synthetics_bw.write(event_id+'DC_waveforms/synthetics/bw.p')
-        synthetics_sw.write(event_id+'DC_waveforms/synthetics/sw.p')
+        # save time shifts and other attributes
+        os.makedirs(event_id+'DC_attrs', exist_ok=True)
 
-        results.save(event_id+'DC.nc')
+        save_json(event_id+'DC_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+
+
+        # save processed waveforms as binary files
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+
+        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+
+        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+
+        results.save(event_id+'DC_misfit.nc')
 
 
         print('\\nFinished\\n')
+
 """
 
 
@@ -1027,6 +1049,19 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
 
+        # time shifts and other attributes corresponding to minimum misfit
+        list_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        list_sw = misfit_sw.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_sw = {station.id: list_sw[_i] 
+            for _i,station in enumerate(stations)}
+
 
         print('Generating figures...\\n')
 
@@ -1040,22 +1075,32 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Saving results...\\n')
 
+        # save best-fitting source
         save_json(event_id+'DC_mt.json', mt_dict)
         save_json(event_id+'DC_lune.json', lune_dict)
-        save_json(event_id+'DC_origin.json', origin_dict)
 
-        os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
-        data_bw.write(event_id+'DC_waveforms/data/bw.p')
-        data_sw.write(event_id+'DC_waveforms/data/sw.p')
 
-        os.makedirs(event_id+'DC_waveforms/synthetics', exist_ok=True)
-        synthetics_bw.write(event_id+'DC_waveforms/synthetics/bw.p')
-        synthetics_sw.write(event_id+'DC_waveforms/synthetics/sw.p')
+        # save time shifts and other attributes
+        os.makedirs(event_id+'DC_attrs', exist_ok=True)
 
-        results.save(event_id+'DC.nc')
+        save_json(event_id+'DC_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+
+
+        # save processed waveforms as binary files
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+
+        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+
+        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+
+        results.save(event_id+'DC_misfit.nc')
 
 
         print('\\nFinished\\n')
+
 """
 
 
@@ -1082,6 +1127,19 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     synthetics_sw = greens_sw.get_synthetics(
         best_source, components_sw, mode='map')
 
+    # time shifts and other attributes corresponding to minimum misfit
+    list_bw = misfit_bw.collect_attributes(
+        data_bw, greens_bw, best_source)
+
+    list_sw = misfit_sw.collect_attributes(
+        data_sw, greens_sw, best_source)
+
+    dict_bw = {station.id: list_bw[_i] 
+        for _i,station in enumerate(stations)}
+
+    dict_sw = {station.id: list_sw[_i] 
+        for _i,station in enumerate(stations)}
+
 
     print('Generating figures...\\n')
 
@@ -1096,21 +1154,32 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
+    # save best-fitting source
     save_json(event_id+'DC_mt.json', mt_dict)
     save_json(event_id+'DC_lune.json', lune_dict)
 
-    os.makedirs(event_id+'DC_waveforms/data', exist_ok=True)
-    data_bw.write(event_id+'DC_waveforms/data/bw.p')
-    data_sw.write(event_id+'DC_waveforms/data/sw.p')
 
-    os.makedirs(event_id+'DC_waveforms/synthetics', exist_ok=True)
-    synthetics_bw.write(event_id+'DC_waveforms/synthetics/bw.p')
-    synthetics_sw.write(event_id+'DC_waveforms/synthetics/sw.p')
+    # save time shifts and other attributes
+    os.makedirs(event_id+'DC_attrs', exist_ok=True)
 
-    results.save(event_id+'DC.nc')
+    save_json(event_id+'DC_attrs/bw.json', dict_bw)
+    save_json(event_id+'DC_attrs/sw.json', dict_sw)
+
+
+    # save processed waveforms as binary files
+    os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+
+    data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+    data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+
+    synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+    synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+
+    results.save(event_id+'DC_misfit.nc')
 
 
     print('\\nFinished\\n')
+
 """
 
 
@@ -1269,7 +1338,7 @@ if __name__=='__main__':
             'DoubleCoupleGridRegular',
             'FullMomentTensorGridSemiregular',
             'plot_misfit_dc',
-            'plot_misfit_lune',
+            'plot_misfit_lune,\\\n    plot_time_shifts, plot_amplitude_ratios',
             ))
         file.write(Docstring_GridSearch_FullMomentTensor)
         file.write(Paths_Syngine)

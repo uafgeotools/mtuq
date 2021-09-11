@@ -205,6 +205,19 @@ if __name__=='__main__':
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
 
+        # time shifts and other attributes corresponding to minimum misfit
+        list_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        list_sw = misfit_sw.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_sw = {station.id: list_sw[_i] 
+            for _i,station in enumerate(stations)}
+
 
         print('Generating figures...\n')
 
@@ -219,18 +232,29 @@ if __name__=='__main__':
 
         print('Saving results...\n')
 
+        # save best-fitting source
         save_json(event_id+'FMT_mt.json', mt_dict)
         save_json(event_id+'FMT_lune.json', lune_dict)
 
-        os.makedirs(event_id+'FMT_waveforms/data', exist_ok=True)
-        data_bw.write(event_id+'FMT_waveforms/data/bw.p')
-        data_sw.write(event_id+'FMT_waveforms/data/sw.p')
 
-        os.makedirs(event_id+'FMT_waveforms/synthetics', exist_ok=True)
-        synthetics_bw.write(event_id+'FMT_waveforms/synthetics/bw.p')
-        synthetics_sw.write(event_id+'FMT_waveforms/synthetics/sw.p')
+        # save time shifts and other attributes
+        os.makedirs(event_id+'FMT_attrs', exist_ok=True)
 
-        results.save(event_id+'FMT.nc')
+        save_json(event_id+'FMT_attrs/bw.json', dict_bw)
+        save_json(event_id+'FMT_attrs/sw.json', dict_sw)
+
+
+        # save processed waveforms as binary files
+        os.makedirs(event_id+'FMT_waveforms', exist_ok=True)
+
+        data_bw.write(event_id+'FMT_waveforms/dat_bw.p')
+        data_sw.write(event_id+'FMT_waveforms/dat_sw.p')
+
+        synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
+
+        results.save(event_id+'FMT_misfit.nc')
 
 
         print('\nFinished\n')
+
