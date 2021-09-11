@@ -205,7 +205,7 @@ if __name__=='__main__':
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
 
-        # time shifts corresponding to minimum misfit
+        # time shifts and other attributes corresponding to minimum misfit
         attrs_bw = misfit_bw.collect_attributes(
             data_bw, greens_bw, best_source)
 
@@ -216,41 +216,62 @@ if __name__=='__main__':
         print('Generating figures...\n')
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit_lune(event_id+'DC_misfit.png', results)
+        plot_misfit_lune(event_id+'FMT_misfit.png', results)
+
+        os.makedirs(event_id+'FMT_misfit', exist_ok=True)
+
+        plot_misfit_lune(event_id+'FMT_misfit/bw.png', results_bw,
+            title='Body wave misfit (%s)' % misfit_bw.norm)
+
+        plot_misfit_lune(event_id+'FMT_misfit/sw.png', results_sw,
+            title='Surface wave misfit (%s)' % misfit_sw.norm)
+
+
+        from mtuq.graphics import plot_time_shifts, plot_amplitude_ratios
+
+        plot_time_shifts(event_id+'FMT_time_shifts/bw',
+            attrs_bw, stations, origin, best_source)
+
+        plot_time_shifts(event_id+'FMT_time_shifts/sw',
+            attrs_sw, stations, origin, best_source)
+
+        plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/bw',
+            attrs_bw, stations, origin, best_source)
+
+        plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/sw',
+            attrs_sw, stations, origin, best_source)
 
 
         print('Saving results...\n')
 
-        os.makedirs(event_id+'FMT/waveforms/data', exist_ok=True)
-        os.makedirs(event_id+'FMT/waveforms/synthetics', exist_ok=True)
-
-        os.makedirs(event_id+'FMT/misfit/bw', exist_ok=True)
-        os.makedirs(event_id+'FMT/misfit/sw', exist_ok=True)
-
         save_json(event_id+'FMT_mt.json', mt_dict)
         save_json(event_id+'FMT_lune.json', lune_dict)
 
-        data_bw.write(event_id+'FMT/waveforms/data/bw.p')
-        data_sw.write(event_id+'FMT/waveforms/data/sw.p')
+        os.makedirs(event_id+'FMT_waveforms', exist_ok=True)
+        data_bw.write(event_id+'FMT_waveforms/dat_bw.p')
+        data_sw.write(event_id+'FMT_waveforms/dat_sw.p')
+        synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
 
-        synthetics_bw.write(event_id+'FMT/waveforms/synthetics/bw.p')
-        synthetics_sw.write(event_id+'FMT/waveforms/synthetics/sw.p')
+        os.makedirs(event_id+'FMT_misfit', exist_ok=True)
+        results_bw.save(event_id+'FMT_misfit/bw.nc')
+        results_sw.save(event_id+'FMT_misfit/sw.nc')
 
-        results_bw.save(event_id+'FMT/misfit/bw.nc')
-        results_sw.save(event_id+'FMT/misfit/sw.nc')
+        os.makedirs(event_id+'FMT_attrs/bw', exist_ok=True)
+        os.makedirs(event_id+'FMT_attrs/sw', exist_ok=True)
 
         for _i, station in enumerate(stations):
             for key in attrs_bw[_i]:
-                filename = event_id+'FMT/misfit/bw/'+station.id+key
+                filename = event_id+'FMT_attrs/bw/'+station.id+key
                 save_json(filename, attrs_bw[_i][key])
 
             for key in attrs_sw[_i]:
-                filename = event_id+'FMT/misfit/sw/'+station.id+key
+                filename = event_id+'FMT_attrs/sw/'+station.id+key
                 save_json(filename, attrs_sw[_i][key])
 
         print('\nFinished\n')
