@@ -164,7 +164,7 @@ if __name__=='__main__':
 
 
     #
-    # Analyzing results
+    # Generate figures and save results
     #
 
     results = results_bw + results_sw

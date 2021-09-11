@@ -834,7 +834,7 @@ Main_TestMisfit="""
 
 WrapUp_DetailedAnalysis_FullMomentTensor="""
     #
-    # Analyzing results
+    # Generate figures and save results
     #
 
     if comm.rank==0:
@@ -940,7 +940,7 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
 
 WrapUp_GridSearch="""
     #
-    # Analyzing results
+    # Generate figures and save results
     #
 
     if comm.rank==0:
@@ -997,7 +997,7 @@ WrapUp_GridSearch="""
 
 WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
-    # Analyzing results
+    # Generate figures and save results
     #
 
     if comm.rank==0:
@@ -1061,7 +1061,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 WrapUp_SerialGridSearch_DoubleCouple="""
     #
-    # Analyzing results
+    # Generate figures and save results
     #
 
     results = results_bw + results_sw

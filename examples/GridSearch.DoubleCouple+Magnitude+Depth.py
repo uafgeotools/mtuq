@@ -202,7 +202,7 @@ if __name__=='__main__':
 
 
     #
-    # Analyzing results
+    # Generate figures and save results
     #
 
     if comm.rank==0:
