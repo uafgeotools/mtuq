@@ -18,6 +18,24 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 """
 
 
+Docstring_DetailedAnalysis_FullMomentTensor="""
+if __name__=='__main__':
+    #
+    # Carries out grid search over all moment tensor parameters except
+    # magnitude and peforms detailed analysis of
+    #
+    # - body wave, Rayleigh wave and Love wave data variance
+    # - maximum likelihood surfaces
+    # - marginal likelihood surfaces
+    # - geographic variation of time shifts and amplitude ratios
+    #
+    # USAGE
+    #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
+    #   
+
+"""
+
+
 Docstring_GridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
@@ -440,6 +458,36 @@ OriginsDefinitions="""
 """
 
 
+MisfitDefinitions_DetailedAnalysis="""
+    #
+    # For our objective function, we will use a sum of body and surface wave
+    # contributions
+    #
+
+    misfit_bw = Misfit(
+        norm='L2',
+        time_shift_min=-2.,
+        time_shift_max=+2.,
+        time_shift_groups=['ZR'],
+        )
+
+    misfit_rayleigh = Misfit(
+        norm='L2',
+        time_shift_min=-10.,
+        time_shift_max=+10.,
+        time_shift_groups=['ZR'],
+        )
+
+    misfit_love = Misfit(
+        norm='L2',
+        time_shift_min=-10.,
+        time_shift_max=+10.,
+        time_shift_groups=['T'],
+        )
+
+"""
+
+
 Grid_DoubleCouple="""
     #
     # Next, we specify the moment tensor grid and source-time function
@@ -834,12 +882,23 @@ Main_TestMisfit="""
 
 WrapUp_DetailedAnalysis_FullMomentTensor="""
     #
-    # Generate figures and save results
+    # Data variance estimation and likelihood analysis
     #
 
     if comm.rank==0:
 
-        results = results_bw + results_sw
+        # TODO - replace dummy values
+        dummy_bw = 1.e-10
+        dummy_rayleigh = 1.e-10
+        dummy_love = 1.e-10
+
+        results = results_bw + results_rayleigh + results_love
+
+    #
+    # Generate figures and save results
+    #
+
+    if comm.rank==0:
 
         # source corresponding to minimum misfit
         idx = results.idxmin('source')
@@ -861,40 +920,80 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         list_bw = misfit_bw.collect_attributes(
             data_bw, greens_bw, best_source)
 
-        list_sw = misfit_sw.collect_attributes(
+        list_rayleigh = misfit_rayleigh.collect_attributes(
             data_sw, greens_sw, best_source)
 
+        list_love = misfit_love.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        list_sw = [{**list_rayleigh[_i], **list_love[_i]}
+            for _i in range(len(stations))]
+
         dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_rayleigh = {station.id: list_rayleigh[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_love = {station.id: list_love[_i] 
             for _i,station in enumerate(stations)}
 
         dict_sw = {station.id: list_sw[_i] 
             for _i,station in enumerate(stations)}
 
 
-        print('Generating figures...\\n')
 
-        plot_data_greens2(event_id+'FMT_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+        print('Plotting observed and synthetic waveforms...\\n')
 
         plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit_lune(event_id+'FMT_misfit.png', results)
+        plot_data_greens2(event_id+'FMT_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
+            misfit_bw, misfit_rayleigh, stations, origin, best_source, lune_dict)
+
+
+        print('Plotting misfit surfaces...\\n')
 
         os.makedirs(event_id+'FMT_misfit', exist_ok=True)
 
         plot_misfit_lune(event_id+'FMT_misfit/bw.png', results_bw,
             title='Body wave misfit (%s)' % misfit_bw.norm)
 
-        plot_misfit_lune(event_id+'FMT_misfit/sw.png', results_sw,
-            title='Surface wave misfit (%s)' % misfit_sw.norm)
+        plot_misfit_lune(event_id+'FMT_misfit/sw.png', results_rayleigh,
+            title='Rayleigh wave misfit (%s)' % misfit_rayleigh.norm)
 
+        plot_misfit_lune(event_id+'FMT_misfit/love.png', results_love,
+            title='Love wave misfit (%s)' % misfit_love.norm)
+
+        print()
+
+
+        print('Plotting maximum likelihood surfaces...\\n')
+
+        os.makedirs(event_id+'FMT_likelihood', exist_ok=True)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/bw.png', results_bw,
+            var=dummy_bw, title='Body wave likelihood\\n(sigma = %.3e)' % dummy_bw)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/rayleigh.png', results_rayleigh,
+            var=dummy_rayleigh, title='Rayleigh wave likelihood\\n(sigma = %.3e)' % dummy_rayleigh)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/love.png', results_love,
+            var=dummy_love, title='Love wave likelihood\\n(sigma = %.3e)' % dummy_love)
+
+        print()
+
+
+        print('Plotting time shift geographic variation...\\n')
 
         plot_time_shifts(event_id+'FMT_time_shifts/bw',
             list_bw, stations, origin, best_source)
 
         plot_time_shifts(event_id+'FMT_time_shifts/sw',
             list_sw, stations, origin, best_source)
+
+
+        print('Plotting amplitude ratio geographic variation...\\n')
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/bw',
             list_bw, stations, origin, best_source)
@@ -1338,20 +1437,43 @@ if __name__=='__main__':
             'DoubleCoupleGridRegular',
             'FullMomentTensorGridSemiregular',
             'plot_misfit_dc',
-            'plot_misfit_lune,\\\n    plot_time_shifts, plot_amplitude_ratios',
+            (
+            'plot_misfit_lune,\\\n'+
+            '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
+            '    plot_time_shifts, plot_amplitude_ratios'
+            ),
             ))
-        file.write(Docstring_GridSearch_FullMomentTensor)
+        file.write(Docstring_DetailedAnalysis_FullMomentTensor)
         file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
-        file.write(MisfitDefinitions)
+        file.write(MisfitDefinitions_DetailedAnalysis)
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
         file.write(Grid_FullMomentTensor)
         file.write(OriginComments)
         file.write(OriginDefinitions)
-        file.write(Main_GridSearch)
+        file.write(
+            replace(
+            Main_GridSearch,
+            'surface wave',
+            'Rayleigh wave',
+            'results_sw',
+            'results_rayleigh',
+            'misfit_sw',
+            'misfit_rayleigh',
+            ))
+        file.write(
+"""
+    if comm.rank==0:
+        print('Evaluating Love wave misfit...\\n')
+
+    results_love = grid_search(
+        data_sw, greens_sw, misfit_love, origin, grid)
+
+"""
+        )
         file.write(WrapUp_DetailedAnalysis_FullMomentTensor)
 
 
