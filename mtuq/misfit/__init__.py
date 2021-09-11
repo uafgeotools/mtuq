@@ -210,7 +210,8 @@ class Misfit(object):
                 component = trace.stats.channel[-1]
                 if component in attrs[-1]:
                     print('Warning multiple traces for same component')
-                attrs[-1][component] = trace.attrs
+                if hasattr(trace, 'attrs'):
+                    attrs[-1][component] = trace.attrs
 
         return deepcopy(attrs)
 

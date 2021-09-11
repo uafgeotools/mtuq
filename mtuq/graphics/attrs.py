@@ -7,11 +7,11 @@ from mtuq.util import warn
 
 
 def plot_time_shifts(*args, **kwargs):
-    """ For the given components, creates "spider plots" showing how 
-    time shifts vary geographically
+    """ Creates "spider plots" showing how time shifts vary geographically
 
     Within the specified directory, a separate PNG figure will be created for 
-    each component. Any components not present in the data will be skipped.
+    each given component. Any components not present in the data will be 
+    skipped.
 
     """
     kwargs.update({'attr_key': 'time_shift'})
@@ -19,11 +19,11 @@ def plot_time_shifts(*args, **kwargs):
 
 
 def plot_amplitude_ratios(*args, **kwargs):
-    """ For the given components, creates "spider plots" showing how 
-    amplitude ratios vary geographically
+    """ Creates "spider plots" showing how amplitude ratios vary geographically
 
     Within the specified directory, a separate PNG figure will be created for 
-    each component. Any components not present in the data will be skipped.
+    each given component. Any components not present in the data will be 
+    skipped.
 
     """
     kwargs.update({'attr_key': 'amplitude_ratio'})
