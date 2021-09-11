@@ -899,20 +899,26 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             attrs_sw, stations, origin, best_source)
 
 
-        print('Saving results...\\n')
+        print('\\nSaving results...\\n')
 
         save_json(event_id+'FMT_mt.json', mt_dict)
         save_json(event_id+'FMT_lune.json', lune_dict)
 
+
         os.makedirs(event_id+'FMT_waveforms', exist_ok=True)
+
         data_bw.write(event_id+'FMT_waveforms/dat_bw.p')
         data_sw.write(event_id+'FMT_waveforms/dat_sw.p')
+
         synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
         synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
 
+
         os.makedirs(event_id+'FMT_misfit', exist_ok=True)
+
         results_bw.save(event_id+'FMT_misfit/bw.nc')
         results_sw.save(event_id+'FMT_misfit/sw.nc')
+
 
         os.makedirs(event_id+'FMT_attrs/bw', exist_ok=True)
         os.makedirs(event_id+'FMT_attrs/sw', exist_ok=True)
