@@ -9,7 +9,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath
+from mtuq.util import fullpath, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
@@ -151,21 +151,22 @@ if __name__=='__main__':
     print('Evaluating surface wave misfit...\n')
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid, 0)
 
+
+
     results = results_bw + results_sw
 
-    # source index corresponding to minimum misfit
+    # source corresponding to minimum misfit
     idx = results.idxmin('source')
-
     best_source = grid.get(idx)
-    lune_dict = grid.get_dict(idx)
 
+    lune_dict = grid.get_dict(idx)
+    mt_dict = grid.get(idx).as_dict()
 
     if run_figures:
 
         plot_data_greens2(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, 
-            process_bw, process_sw, misfit_bw, misfit_sw, 
-            stations, origin, best_source, lune_dict)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 

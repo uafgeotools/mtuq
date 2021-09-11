@@ -84,7 +84,7 @@ def plot_waveforms1(filename,
 
         for dat in stream_dat:
             component = dat.stats.channel[-1].upper()
-            weight = getattr(dat, 'weight', 1.)
+            weight = getattr(dat.attrs, 'weight', 1.)
 
             if not weight:
                 continue
@@ -174,7 +174,7 @@ def plot_waveforms2(filename,
 
         for dat in stream_dat:
             component = dat.stats.channel[-1].upper()
-            weight = getattr(dat, 'weight', 1.)
+            weight = getattr(dat.attrs, 'weight', 1.)
 
             if not weight:
                 continue
@@ -199,7 +199,7 @@ def plot_waveforms2(filename,
 
         for dat in stream_dat:
             component = dat.stats.channel[-1].upper()
-            weight = getattr(dat, 'weight', 1.)
+            weight = getattr(dat.attrs, 'weight', 1.)
 
             if not weight:
                 continue
@@ -237,11 +237,13 @@ def plot_data_greens1(filename,
     Different input arguments, same result as plot_waveforms1
     """
 
-    # prepare synthetics
-    greens = greens.select(origin)
-    _set_components(data, greens)
-    synthetics, total_misfit = _prepare_synthetics(
-        data, greens, misfit, source)
+    # prepare synthetic waveforms
+    components = data.get_components()
+
+    synthetics = greens.select(origin).get_synthetics(
+        source, components, mode='map', inplace=True)
+
+    total_misfit = misfit(data, greens, source, set_attributes=True)
 
     # prepare figure header
     if 'header' in kwargs:
@@ -281,17 +283,19 @@ def plot_data_greens2(filename,
     Different input arguments, same result as plot_waveforms2
     """
 
-    # prepare body wave synthetics
-    greens_bw = greens_bw.select(origin)
-    _set_components(data_bw, greens_bw)
-    synthetics_bw, total_misfit_bw = _prepare_synthetics(
-        data_bw, greens_bw, misfit_bw, source)
+    # prepare synthetic waveforms
+    components_bw = data_bw.get_components()
+    components_sw = data_sw.get_components()
 
-    # prepare surface wave synthetics
-    greens_sw = greens_sw.select(origin)
-    _set_components(data_sw, greens_sw)
-    synthetics_sw, total_misfit_sw = _prepare_synthetics(
-        data_sw, greens_sw, misfit_sw, source)
+    synthetics_bw = greens_bw.select(origin).get_synthetics(
+        source, components_bw, mode='map', inplace=True)
+
+    synthetics_sw = greens_sw.select(origin).get_synthetics(
+        source, components_sw, mode='map', inplace=True)
+
+    total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
+    total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
+
 
     # prepare figure header
     if 'header' in kwargs:
@@ -431,8 +435,8 @@ def _plot(axis, dat, syn, label=None):
     """
     t1,t2,nt,dt = _time_stats(dat)
 
-    start = getattr(syn, 'start', 0)
-    stop = getattr(syn, 'stop', len(syn.data))
+    start = getattr(syn.attrs, 'start', 0)
+    stop = getattr(syn.attrs, 'stop', len(syn.data))
 
     t = np.linspace(0,t2-t1,nt,dt)
     d = dat.data
@@ -531,8 +535,8 @@ def _add_trace_labels(axis, dat, syn, total_misfit=1.):
 
     # display cross-correlation time shift
     time_shift = 0.
-    time_shift += getattr(syn, 'time_shift', np.nan)
-    time_shift += getattr(dat, 'static_time_shift', 0)
+    time_shift += getattr(syn.attrs, 'time_shift', np.nan)
+    time_shift += getattr(dat.attrs, 'static_time_shift', 0)
     axis.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=11)
 
     # display maximum cross-correlation coefficient
@@ -547,7 +551,7 @@ def _add_trace_labels(axis, dat, syn, total_misfit=1.):
         axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=11)
 
     # display percent of total misfit
-    misfit = getattr(syn, 'misfit', np.nan)
+    misfit = getattr(syn.attrs, 'misfit', np.nan)
     misfit /= total_misfit
     if misfit >= 0.1:
         axis.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=11)
@@ -558,15 +562,6 @@ def _add_trace_labels(axis, dat, syn, total_misfit=1.):
 #
 # utility functions
 #
-
-def _set_components(data, greens):
-    if len(data) == 0:
-        return
-
-    for _i, stream in enumerate(data):
-        components = get_components(stream)
-        greens[_i]._set_components(components)
-
 
 def _time_stats(trace):
     # returns time scheme
@@ -629,16 +624,6 @@ def _hide_axes(axes):
             col.get_yaxis().set_ticks([])
 
 
-def _prepare_synthetics(data, greens, misfit, source):
-        synthetics = greens.get_synthetics(source, inplace=True)
-
-        # besides calculating misfit, these commands set the trace attributes
-        # used to align data and synthetics in the waveform plots
-        total_misfit = misfit(data, greens, source, set_attributes=True)
-
-        return synthetics, total_misfit
-
-
 def _prepare_header(model, solver, source, source_dict, origin, *args):
     # prepares figure header
 
@@ -655,29 +640,6 @@ def _prepare_header(model, solver, source, source_dict, origin, *args):
 
     else:
         raise TypeError
-
-
-def get_column_widths(data_bw, data_sw, width=1.):
-    # creates argument used by pyplot.subplot
-
-    for _i, stream in enumerate(data_bw):
-        if len(stream) > 0:
-            break
-    for _j, stream in enumerate(data_sw):
-        if len(stream) > 0:
-            break
-
-    stats_bw = data_bw[_i][0].stats
-    stats_sw = data_sw[_j][0].stats
-    len_bw = stats_bw.endtime-stats_bw.starttime
-    len_sw = stats_sw.endtime-stats_sw.starttime
-
-    width *= (2*len_bw+3*len_sw)**-1
-    len_bw *= width
-    len_sw *= width
-
-    return\
-        [len_bw, len_bw, len_sw, len_sw, len_sw]
 
 
 def _get_tag(tags, pattern):

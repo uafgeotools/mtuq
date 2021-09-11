@@ -55,6 +55,15 @@ class Origin(obspy.core.AttribDict):
             return True
 
 
+    def as_dict(self):
+        return {
+            'time': self.time.isoformat(), 
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'depth_in_m': self.depth_in_m,
+            }
+
+
 class MomentTensor(object):
     """ Moment tensor object
 
@@ -91,6 +100,20 @@ class MomentTensor(object):
 
             #self._array = _change_convention_mt(asarray(array),
             #    asarray(array), convention, 'USE')
+
+
+    def as_dict(self):
+        """ Returns dictionary in `up-south-east` convention
+        """
+        array = self._array
+        return {
+            'Mrr': array[0],
+            'Mtt': array[1],
+            'Mpp': array[2],
+            'Mrt': array[3],
+            'Mrp': array[4],
+            'Mtp': array[5],
+            }
 
 
     def as_vector(self):
@@ -191,6 +214,10 @@ class Force(object):
         """
         return _change_convention_force(
            self._array, 'USE', convention.upper())
+
+
+    def to_lune(self):
+        raise NotImplementedError
 
 
 class CompositeSource(object):

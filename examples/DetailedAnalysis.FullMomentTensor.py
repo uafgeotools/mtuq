@@ -5,8 +5,10 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_dc
-from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune,\
+    plot_likelihood_lune, plot_marginal_vw,\
+    plot_time_shifts, plot_amplitude_ratios
+from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
@@ -17,20 +19,18 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over 64,000 double-couple moment tensors
+    # Carries out grid search over all moment tensor parameters except
+    # magnitude and peforms detailed analysis of
+    #
+    # - body wave, Rayleigh wave and Love wave data variance
+    # - maximum likelihood surfaces
+    # - marginal likelihood surfaces
+    # - geographic variation of time shifts and amplitude ratios
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.py
-    #
-    # For a simpler example, see SerialGridSearch.DoubleCouple.py, 
-    # which runs the same inversion in serial
-    #
+    #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
+    #   
 
-
-    #
-    # We will investigate the source process of an Mw~4 earthquake using data
-    # from a regional seismic array
-    #
 
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
@@ -70,6 +70,11 @@ if __name__=='__main__':
     # contributions
     #
 
+    #
+    # For our objective function, we will use a sum of body and surface wave
+    # contributions
+    #
+
     misfit_bw = Misfit(
         norm='L2',
         time_shift_min=-2.,
@@ -77,11 +82,18 @@ if __name__=='__main__':
         time_shift_groups=['ZR'],
         )
 
-    misfit_sw = Misfit(
+    misfit_rayleigh = Misfit(
         norm='L2',
         time_shift_min=-10.,
         time_shift_max=+10.,
-        time_shift_groups=['ZR','T'],
+        time_shift_groups=['ZR'],
+        )
+
+    misfit_love = Misfit(
+        norm='L2',
+        time_shift_min=-10.,
+        time_shift_max=+10.,
+        time_shift_groups=['T'],
         )
 
 
@@ -97,8 +109,8 @@ if __name__=='__main__':
     # Next, we specify the moment tensor grid and source-time function
     #
 
-    grid = DoubleCoupleGridRegular(
-        npts_per_axis=40,
+    grid = FullMomentTensorGridSemiregular(
+        npts_per_axis=15,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -182,19 +194,37 @@ if __name__=='__main__':
         data_bw, greens_bw, misfit_bw, origin, grid)
 
     if comm.rank==0:
-        print('Evaluating surface wave misfit...\n')
+        print('Evaluating Rayleigh wave misfit...\n')
 
-    results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origin, grid)
+    results_rayleigh = grid_search(
+        data_sw, greens_sw, misfit_rayleigh, origin, grid)
 
+
+    if comm.rank==0:
+        print('Evaluating Love wave misfit...\n')
+
+    results_love = grid_search(
+        data_sw, greens_sw, misfit_love, origin, grid)
+
+
+    #
+    # Data variance estimation and likelihood analysis
+    #
+
+    if comm.rank==0:
+
+        # TODO - replace dummy values
+        dummy_bw = 1.e-10
+        dummy_rayleigh = 1.e-10
+        dummy_love = 1.e-10
+
+        results = results_bw + results_rayleigh + results_love
 
     #
     # Generate figures and save results
     #
 
     if comm.rank==0:
-
-        results = results_bw + results_sw
 
         # source corresponding to minimum misfit
         idx = results.idxmin('source')
@@ -216,28 +246,89 @@ if __name__=='__main__':
         list_bw = misfit_bw.collect_attributes(
             data_bw, greens_bw, best_source)
 
-        list_sw = misfit_sw.collect_attributes(
+        list_rayleigh = misfit_rayleigh.collect_attributes(
             data_sw, greens_sw, best_source)
 
+        list_love = misfit_love.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        list_sw = [{**list_rayleigh[_i], **list_love[_i]}
+            for _i in range(len(stations))]
+
         dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_rayleigh = {station.id: list_rayleigh[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_love = {station.id: list_love[_i] 
             for _i,station in enumerate(stations)}
 
         dict_sw = {station.id: list_sw[_i] 
             for _i,station in enumerate(stations)}
 
 
-        print('Generating figures...\n')
 
-        plot_data_greens2(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+        print('Plotting observed and synthetic waveforms...\n')
 
-        plot_beachball(event_id+'DC_beachball.png', best_source)
+        plot_beachball(event_id+'FMT_beachball.png', best_source)
 
-        plot_misfit_dc(event_id+'DC_misfit.png', results)
+        plot_data_greens2(event_id+'FMT_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
+            misfit_bw, misfit_rayleigh, stations, origin, best_source, lune_dict)
 
 
-        print('Saving results...\n')
+        print('Plotting misfit surfaces...\n')
+
+        os.makedirs(event_id+'FMT_misfit', exist_ok=True)
+
+        plot_misfit_lune(event_id+'FMT_misfit/bw.png', results_bw,
+            title='Body wave misfit (%s)' % misfit_bw.norm)
+
+        plot_misfit_lune(event_id+'FMT_misfit/sw.png', results_rayleigh,
+            title='Rayleigh wave misfit (%s)' % misfit_rayleigh.norm)
+
+        plot_misfit_lune(event_id+'FMT_misfit/love.png', results_love,
+            title='Love wave misfit (%s)' % misfit_love.norm)
+
+        print()
+
+
+        print('Plotting maximum likelihood surfaces...\n')
+
+        os.makedirs(event_id+'FMT_likelihood', exist_ok=True)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/bw.png', results_bw,
+            var=dummy_bw, title='Body wave likelihood\n(sigma = %.3e)' % dummy_bw)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/rayleigh.png', results_rayleigh,
+            var=dummy_rayleigh, title='Rayleigh wave likelihood\n(sigma = %.3e)' % dummy_rayleigh)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/love.png', results_love,
+            var=dummy_love, title='Love wave likelihood\n(sigma = %.3e)' % dummy_love)
+
+        print()
+
+
+        print('Plotting time shift geographic variation...\n')
+
+        plot_time_shifts(event_id+'FMT_time_shifts/bw',
+            list_bw, stations, origin, best_source)
+
+        plot_time_shifts(event_id+'FMT_time_shifts/sw',
+            list_sw, stations, origin, best_source)
+
+
+        print('Plotting amplitude ratio geographic variation...\n')
+
+        plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/bw',
+            list_bw, stations, origin, best_source)
+
+        plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/sw',
+            list_sw, stations, origin, best_source)
+
+
+        print('\nSaving results...\n')
 
         # save best-fitting source
         save_json(event_id+'DC_mt.json', mt_dict)

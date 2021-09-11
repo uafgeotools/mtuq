@@ -47,6 +47,7 @@ area_arg="-R-30/30/-90/90"
 
 out=${filename}
 ps="${out}.ps"
+tmp=tmp_${out//\//__}
 
 
 # apply default settings
@@ -60,11 +61,10 @@ gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -K > $ps
 # generate color palette
 cpt_args=$( get_cpt_args $cpt_name $flip_cpt )
 range_arg="-T${value_min}/${value_max}/${cpt_step}"
-gmt makecpt $cpt_args -D $range_arg > tmp_$out.cpt
-
+gmt makecpt $cpt_args -D $range_arg > $tmp.cpt
 
 # plot misfit values
-gmt pscontour $ascii_data $proj_arg $area_arg -Ctmp_$out.cpt -I -N -A- -O -K >> $ps
+gmt pscontour $ascii_data $proj_arg $area_arg -C$tmp.cpt -I -N -A- -O -K >> $ps
 
 
 # plot focal mechanisms tradeoffs
@@ -85,7 +85,7 @@ add_title $ps $proj_arg $area_arg "$title" "$subtitle"
 if [ $colorbar_type -ne 0 ]; then
     arg1=$( get_colorbar_arg1 "$colorbar_label" )
     arg2=$( get_colorbar_arg2 $value_exp )
-    gmt psscale -Ctmp_$out.cpt -D0.7/-0.4+w2.0/0.2+h "$arg1" "$arg2" -O -K >> $ps
+    gmt psscale -C$tmp.cpt -D0.7/-0.4+w2.0/0.2+h "$arg1" "$arg2" -O -K >> $ps
 fi
 
 
@@ -106,7 +106,7 @@ custom_psconvert $ps $out $filetype
 #echo "  finished writing: $out"
 
 
-rm tmp*$out*
+rm $tmp*
 rm $ps
 
 

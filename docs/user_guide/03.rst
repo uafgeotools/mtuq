@@ -10,7 +10,7 @@ Role of Green's functions
 
 By combining Green's functions, it is possible to obtain synthetics from any moment tensor or force source.  Synthetics can then be compared with data to determine a best-fitting source.
 
-Generating synthetics through linear combinations of Green's functions is useful because it provides computaional savings.  It is much  more cost effective to compute Green's functions (an up-front cost, indepdent of the number of sources) than it is to perform an on-the-fly wavefield simulation for each new source.
+Generating synthetics through linear combinations of Green's functions is useful because it provides computational savings.  It is more cost effective to compute Green's functions (an up-front expense, independent of the number of sources) than it is to perform an on-the-fly wavefield simulation for each new source.
 
 
 
@@ -130,6 +130,8 @@ Green's function conventions
 A variety of Green's function conventions exist.  Figuring out which are used in a particular application can be challenging because it depends on
 
 - the type of medium under consideration (for example, acoustic media require fewer independent Green's functions than elastic media)
+
+- the symmetry of the medium (for example, 1D media require fewer independent Green's functions than 3D media)
 
 - the choice of local Cartesian basis conventions (for example, some authors employ `up-south-east`, others `north-east-down`; see `ObsPy documentation <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_ for more information)
 

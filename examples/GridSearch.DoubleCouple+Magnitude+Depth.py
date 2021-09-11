@@ -10,7 +10,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath
+from mtuq.util import fullpath, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
@@ -108,8 +108,8 @@ if __name__=='__main__':
 
     depths = np.array(
          # depth in meters
-        [25000, 30000, 35000, 40000,                    
-         45000, 50000, 55000, 60000])
+        [25000., 30000., 35000., 40000.,                    
+         45000., 50000., 55000., 60000.])
 
     origins = []
     for depth in depths:
@@ -135,16 +135,15 @@ if __name__=='__main__':
         magnitude=4.5)
 
 
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+
+
     #
     # The main I/O work starts now
     #
 
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    rank = comm.rank
-    nproc = comm.Get_size()
-
-    if rank==0:
+    if comm.rank==0:
         print('Reading data...\n')
         data = read(path_data, format='sac', 
             event_id=event_id,
@@ -163,7 +162,6 @@ if __name__=='__main__':
 
         print('Reading Greens functions...\n')
         greens = download_greens_tensors(stations, origins, model)
-
 
         print('Processing Greens functions...\n')
         greens.convolve(wavelet)
@@ -190,47 +188,99 @@ if __name__=='__main__':
     # The main computational work starts now
     #
 
-    if rank==0:
+    if comm.rank==0:
         print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
         data_bw, greens_bw, misfit_bw, origins, grid)
 
-    if rank==0:
+    if comm.rank==0:
         print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origins, grid)
 
-    if rank==0:
-        results = results_bw + results_sw
-
-        # source index corresponding to minimum misfit
-        idx = results.idxmin('source')
-
-        best_source = grid.get(idx)
-        lune_dict = grid.get_dict(idx)
-
-        # origin index corresponding to minimum misfit
-        idx = results.idxmin('origin')
-
-        best_origin = origins[idx]
-
-
 
     #
-    # Saving results
+    # Generate figures and save results
     #
 
     if comm.rank==0:
-        print('Saving results...\n')
 
-        plot_data_greens2(event_id+'_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, 
-            process_bw, process_sw, misfit_bw, misfit_sw, 
-            stations, best_origin, best_source, lune_dict)
+        results = results_bw + results_sw
+
+        # origin corresponding to minimum misfit
+        best_origin = origins[results.idxmin('origin')]
+        origin_dict = best_origin.as_dict()
+
+        # source corresponding to minimum misfit
+        idx = results.idxmin('source')
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
+        mt_dict = grid.get(idx).as_dict()
+
+        components_bw = data_bw.get_components()
+        components_sw = data_sw.get_components()
+
+        greens_bw = greens_bw.select(best_origin)
+        greens_sw = greens_sw.select(best_origin)
+
+        # synthetics corresponding to minimum misfit
+        synthetics_bw = greens_bw.get_synthetics(
+            best_source, components_bw, mode='map')
+
+        synthetics_sw = greens_sw.get_synthetics(
+            best_source, components_sw, mode='map')
+
+        # time shifts and other attributes corresponding to minimum misfit
+        list_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        list_sw = misfit_sw.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_sw = {station.id: list_sw[_i] 
+            for _i,station in enumerate(stations)}
+
+
+        print('Generating figures...\n')
+
+        plot_data_greens2(event_id+'DC_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
-            results, origins, grid, event_id)
+            results, origins, grid)
+
+
+        print('Saving results...\n')
+
+        # save best-fitting source
+        save_json(event_id+'DC_mt.json', mt_dict)
+        save_json(event_id+'DC_lune.json', lune_dict)
+
+
+        # save time shifts and other attributes
+        os.makedirs(event_id+'DC_attrs', exist_ok=True)
+
+        save_json(event_id+'DC_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+
+
+        # save processed waveforms as binary files
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+
+        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+
+        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+
+        results.save(event_id+'DC_misfit.nc')
+
 
         print('\nFinished\n')
+

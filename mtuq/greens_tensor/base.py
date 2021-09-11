@@ -282,7 +282,7 @@ class GreensTensorList(list):
         return selected
 
 
-    def get_synthetics(self, *args, **kwargs):
+    def get_synthetics(self, source, components=None, mode='apply', **kwargs):
         """ Generates synthetics through a linear combination of time series
 
         Returns an MTUQ `Dataset`
@@ -297,11 +297,22 @@ class GreensTensorList(list):
         ``Z``, ``R``, ``T``. (Defaults to ``['Z', 'R', 'T']``.)
         
         """
+        if mode=='map':
+            synthetics = Dataset()
+            for _i, tensor in enumerate(self):
+                synthetics.append(
+                    tensor.get_synthetics(source, components=components[_i], **kwargs))
+            return synthetics
 
-        synthetics = Dataset()
-        for tensor in self:
-            synthetics.append(tensor.get_synthetics(*args, **kwargs))
-        return synthetics
+        elif mode=='apply':
+            synthetics = Dataset()
+            for tensor in self:
+                synthetics.append(
+                    tensor.get_synthetics(source, components=components, **kwargs))
+            return synthetics
+
+        else:
+            raise ValueError
 
 
     # the next three methods can be used to apply signal processing or other
@@ -418,5 +429,11 @@ class GreensTensorList(list):
         for stream in self:
             new_ds.append(deepcopy(stream))
         return new_ds
+
+
+
+    def write(self, filename):
+        with open(filename, "wb") as file:
+           pickle.dump(self, file)
 
 

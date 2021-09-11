@@ -68,9 +68,9 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
 
 
     # write ASCII data
-    ascii_file_1 = 'tmp_'+filename+'_ascii1.txt'
-    ascii_file_2 = 'tmp_'+filename+'_ascii2.txt'
-    marker_coords_file = 'tmp_'+filename+'_marker_coords.txt'
+    ascii_file_1 = _safename('tmp_'+filename+'_ascii1.txt')
+    ascii_file_2 = _safename('tmp_'+filename+'_ascii2.txt')
+    marker_coords_file = _safename('tmp_'+filename+'_marker_coords.txt')
 
     _savetxt(ascii_file_1, lon, lat, values)
 
@@ -255,6 +255,10 @@ def _parse_lune_array(lune_array):
         gmt_array[_i, 10:] = 0
 
     return gmt_array
+
+
+def _safename(filename):
+    return filename.replace('/', '__')
 
 
 def _savetxt(filename, *args):

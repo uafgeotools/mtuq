@@ -11,9 +11,27 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath
+from mtuq.util import fullpath, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
+
+"""
+
+
+Docstring_DetailedAnalysis_FullMomentTensor="""
+if __name__=='__main__':
+    #
+    # Carries out grid search over all moment tensor parameters except
+    # magnitude and peforms detailed analysis of
+    #
+    # - body wave, Rayleigh wave and Love wave data variance
+    # - maximum likelihood surfaces
+    # - marginal likelihood surfaces
+    # - geographic variation of time shifts and amplitude ratios
+    #
+    # USAGE
+    #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
+    #   
 
 """
 
@@ -164,8 +182,8 @@ if True:
     # and functions listed in __all__
     #
     # Note that some I/O and data processing are involved in creating the
-    # example data, so importing this module may take a few seconds longer than
-    # most other modules
+    # example data, so importing this module may significantly longer than
+    # other modules
     #
     
     __all__ = [
@@ -391,6 +409,9 @@ OriginComments="""
     # Origin time and location will be fixed. For an example in which they 
     # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
     #
+    # See also Dataset.get_origins(), which attempts to create Origin objects
+    # from waveform metadata
+    #
 """
 
 
@@ -425,14 +446,44 @@ OriginsDefinitions="""
 
     depths = np.array(
          # depth in meters
-        [25000, 30000, 35000, 40000,                    
-         45000, 50000, 55000, 60000])
+        [25000., 30000., 35000., 40000.,                    
+         45000., 50000., 55000., 60000.])
 
     origins = []
     for depth in depths:
         origins += [catalog_origin.copy()]
         setattr(origins[-1], 'depth_in_m', depth)
 
+
+"""
+
+
+MisfitDefinitions_DetailedAnalysis="""
+    #
+    # For our objective function, we will use a sum of body and surface wave
+    # contributions
+    #
+
+    misfit_bw = Misfit(
+        norm='L2',
+        time_shift_min=-2.,
+        time_shift_max=+2.,
+        time_shift_groups=['ZR'],
+        )
+
+    misfit_rayleigh = Misfit(
+        norm='L2',
+        time_shift_min=-10.,
+        time_shift_max=+10.,
+        time_shift_groups=['ZR'],
+        )
+
+    misfit_love = Misfit(
+        norm='L2',
+        time_shift_min=-10.,
+        time_shift_max=+10.,
+        time_shift_groups=['T'],
+        )
 
 """
 
@@ -548,7 +599,7 @@ Grid_BenchmarkCAP="""
 """
 
 
-Main_GridSearch_DoubleCouple="""
+Main_GridSearch="""
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
 
@@ -614,102 +665,6 @@ Main_GridSearch_DoubleCouple="""
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, grid)
 
-    if comm.rank==0:
-        results = results_bw + results_sw
-
-        # source index corresponding to minimum misfit
-        idx = results.idxmin('source')
-
-        best_source = grid.get(idx)
-        lune_dict = grid.get_dict(idx)
-
-
-"""
-
-
-Main_GridSearch_DoubleCoupleMagnitudeDepth="""
-    #
-    # The main I/O work starts now
-    #
-
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    rank = comm.rank
-    nproc = comm.Get_size()
-
-    if rank==0:
-        print('Reading data...\\n')
-        data = read(path_data, format='sac', 
-            event_id=event_id,
-            station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity']) 
-
-
-        data.sort_by_distance()
-        stations = data.get_stations()
-
-
-        print('Processing data...\\n')
-        data_bw = data.map(process_bw)
-        data_sw = data.map(process_sw)
-
-
-        print('Reading Greens functions...\\n')
-        greens = download_greens_tensors(stations, origins, model)
-
-
-        print('Processing Greens functions...\\n')
-        greens.convolve(wavelet)
-        greens_bw = greens.map(process_bw)
-        greens_sw = greens.map(process_sw)
-
-
-    else:
-        stations = None
-        data_bw = None
-        data_sw = None
-        greens_bw = None
-        greens_sw = None
-
-
-    stations = comm.bcast(stations, root=0)
-    data_bw = comm.bcast(data_bw, root=0)
-    data_sw = comm.bcast(data_sw, root=0)
-    greens_bw = comm.bcast(greens_bw, root=0)
-    greens_sw = comm.bcast(greens_sw, root=0)
-
-
-    #
-    # The main computational work starts now
-    #
-
-    if rank==0:
-        print('Evaluating body wave misfit...\\n')
-
-    results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, grid)
-
-    if rank==0:
-        print('Evaluating surface wave misfit...\\n')
-
-    results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, grid)
-
-    if rank==0:
-        results = results_bw + results_sw
-
-        # source index corresponding to minimum misfit
-        idx = results.idxmin('source')
-
-        best_source = grid.get(idx)
-        lune_dict = grid.get_dict(idx)
-
-        # origin index corresponding to minimum misfit
-        idx = results.idxmin('origin')
-
-        best_origin = origins[idx]
-
-
 """
 
 
@@ -756,14 +711,6 @@ Main2_SerialGridSearch_DoubleCouple="""
 
     print('Evaluating surface wave misfit...\\n')
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
-
-    results = results_bw + results_sw
-
-    # source index corresponding to minimum misfit
-    idx = results.idxmin('source')
-
-    best_source = grid.get(idx)
-    lune_dict = grid.get_dict(idx)
 
 """
 
@@ -933,25 +880,236 @@ Main_TestMisfit="""
 """
 
 
-
-WrapUp_GridSearch_DoubleCouple="""
+WrapUp_DetailedAnalysis_FullMomentTensor="""
     #
-    # Saving results
+    # Data variance estimation and likelihood analysis
     #
 
     if comm.rank==0:
-        print('Savings results...\\n')
+
+        # TODO - replace dummy values
+        dummy_bw = 1.e-10
+        dummy_rayleigh = 1.e-10
+        dummy_love = 1.e-10
+
+        results = results_bw + results_rayleigh + results_love
+
+    #
+    # Generate figures and save results
+    #
+
+    if comm.rank==0:
+
+        # source corresponding to minimum misfit
+        idx = results.idxmin('source')
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
+        mt_dict = grid.get(idx).as_dict()
+
+        components_bw = data_bw.get_components()
+        components_sw = data_sw.get_components()
+
+        # synthetics corresponding to minimum misfit
+        synthetics_bw = greens_bw.get_synthetics(
+            best_source, components_bw, mode='map')
+
+        synthetics_sw = greens_sw.get_synthetics(
+            best_source, components_sw, mode='map')
+
+        # time shifts and other attributes corresponding to minimum misfit
+        list_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        list_rayleigh = misfit_rayleigh.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        list_love = misfit_love.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        list_sw = [{**list_rayleigh[_i], **list_love[_i]}
+            for _i in range(len(stations))]
+
+        dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_rayleigh = {station.id: list_rayleigh[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_love = {station.id: list_love[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_sw = {station.id: list_sw[_i] 
+            for _i,station in enumerate(stations)}
+
+
+
+        print('Plotting observed and synthetic waveforms...\\n')
+
+        plot_beachball(event_id+'FMT_beachball.png', best_source)
+
+        plot_data_greens2(event_id+'FMT_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
+            misfit_bw, misfit_rayleigh, stations, origin, best_source, lune_dict)
+
+
+        print('Plotting misfit surfaces...\\n')
+
+        os.makedirs(event_id+'FMT_misfit', exist_ok=True)
+
+        plot_misfit_lune(event_id+'FMT_misfit/bw.png', results_bw,
+            title='Body wave misfit (%s)' % misfit_bw.norm)
+
+        plot_misfit_lune(event_id+'FMT_misfit/sw.png', results_rayleigh,
+            title='Rayleigh wave misfit (%s)' % misfit_rayleigh.norm)
+
+        plot_misfit_lune(event_id+'FMT_misfit/love.png', results_love,
+            title='Love wave misfit (%s)' % misfit_love.norm)
+
+        print()
+
+
+        print('Plotting maximum likelihood surfaces...\\n')
+
+        os.makedirs(event_id+'FMT_likelihood', exist_ok=True)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/bw.png', results_bw,
+            var=dummy_bw, title='Body wave likelihood\\n(sigma = %.3e)' % dummy_bw)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/rayleigh.png', results_rayleigh,
+            var=dummy_rayleigh, title='Rayleigh wave likelihood\\n(sigma = %.3e)' % dummy_rayleigh)
+
+        plot_likelihood_lune(event_id+'FMT_likelihood/love.png', results_love,
+            var=dummy_love, title='Love wave likelihood\\n(sigma = %.3e)' % dummy_love)
+
+        print()
+
+
+        print('Plotting time shift geographic variation...\\n')
+
+        plot_time_shifts(event_id+'FMT_time_shifts/bw',
+            list_bw, stations, origin, best_source)
+
+        plot_time_shifts(event_id+'FMT_time_shifts/sw',
+            list_sw, stations, origin, best_source)
+
+
+        print('Plotting amplitude ratio geographic variation...\\n')
+
+        plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/bw',
+            list_bw, stations, origin, best_source)
+
+        plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/sw',
+            list_sw, stations, origin, best_source)
+
+
+        print('\\nSaving results...\\n')
+
+        # save best-fitting source
+        save_json(event_id+'DC_mt.json', mt_dict)
+        save_json(event_id+'DC_lune.json', lune_dict)
+
+
+        # save time shifts and other attributes
+        os.makedirs(event_id+'DC_attrs', exist_ok=True)
+
+        save_json(event_id+'DC_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+
+
+        # save processed waveforms as binary files
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+
+        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+
+        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+
+        results.save(event_id+'DC_misfit.nc')
+
+
+        print('\\nFinished\\n')
+
+"""
+
+
+
+
+WrapUp_GridSearch="""
+    #
+    # Generate figures and save results
+    #
+
+    if comm.rank==0:
+
+        results = results_bw + results_sw
+
+        # source corresponding to minimum misfit
+        idx = results.idxmin('source')
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
+        mt_dict = grid.get(idx).as_dict()
+
+        components_bw = data_bw.get_components()
+        components_sw = data_sw.get_components()
+
+        # synthetics corresponding to minimum misfit
+        synthetics_bw = greens_bw.get_synthetics(
+            best_source, components_bw, mode='map')
+
+        synthetics_sw = greens_sw.get_synthetics(
+            best_source, components_sw, mode='map')
+
+        # time shifts and other attributes corresponding to minimum misfit
+        list_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        list_sw = misfit_sw.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_sw = {station.id: list_sw[_i] 
+            for _i,station in enumerate(stations)}
+
+
+        print('Generating figures...\\n')
 
         plot_data_greens2(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, 
-            process_bw, process_sw, misfit_bw, misfit_sw, 
-            stations, origin, best_source, lune_dict)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
         plot_misfit_dc(event_id+'DC_misfit.png', results)
 
-        results.save(event_id+'DC.nc')
+
+        print('Saving results...\\n')
+
+        # save best-fitting source
+        save_json(event_id+'DC_mt.json', mt_dict)
+        save_json(event_id+'DC_lune.json', lune_dict)
+
+
+        # save time shifts and other attributes
+        os.makedirs(event_id+'DC_attrs', exist_ok=True)
+
+        save_json(event_id+'DC_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+
+
+        # save processed waveforms as binary files
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+
+        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+
+        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+
+        results.save(event_id+'DC_misfit.nc')
+
 
         print('\\nFinished\\n')
 
@@ -960,41 +1118,164 @@ WrapUp_GridSearch_DoubleCouple="""
 
 WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
     #
-    # Saving results
+    # Generate figures and save results
     #
 
     if comm.rank==0:
-        print('Saving results...\\n')
 
-        plot_data_greens2(event_id+'_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, 
-            process_bw, process_sw, misfit_bw, misfit_sw, 
-            stations, best_origin, best_source, lune_dict)
+        results = results_bw + results_sw
+
+        # origin corresponding to minimum misfit
+        best_origin = origins[results.idxmin('origin')]
+        origin_dict = best_origin.as_dict()
+
+        # source corresponding to minimum misfit
+        idx = results.idxmin('source')
+        best_source = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
+        mt_dict = grid.get(idx).as_dict()
+
+        components_bw = data_bw.get_components()
+        components_sw = data_sw.get_components()
+
+        greens_bw = greens_bw.select(best_origin)
+        greens_sw = greens_sw.select(best_origin)
+
+        # synthetics corresponding to minimum misfit
+        synthetics_bw = greens_bw.get_synthetics(
+            best_source, components_bw, mode='map')
+
+        synthetics_sw = greens_sw.get_synthetics(
+            best_source, components_sw, mode='map')
+
+        # time shifts and other attributes corresponding to minimum misfit
+        list_bw = misfit_bw.collect_attributes(
+            data_bw, greens_bw, best_source)
+
+        list_sw = misfit_sw.collect_attributes(
+            data_sw, greens_sw, best_source)
+
+        dict_bw = {station.id: list_bw[_i] 
+            for _i,station in enumerate(stations)}
+
+        dict_sw = {station.id: list_sw[_i] 
+            for _i,station in enumerate(stations)}
+
+
+        print('Generating figures...\\n')
+
+        plot_data_greens2(event_id+'DC_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
         plot_misfit_depth(event_id+'_misfit_depth.png',
-            results, origins, grid, event_id)
+            results, origins, grid)
+
+
+        print('Saving results...\\n')
+
+        # save best-fitting source
+        save_json(event_id+'DC_mt.json', mt_dict)
+        save_json(event_id+'DC_lune.json', lune_dict)
+
+
+        # save time shifts and other attributes
+        os.makedirs(event_id+'DC_attrs', exist_ok=True)
+
+        save_json(event_id+'DC_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+
+
+        # save processed waveforms as binary files
+        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+
+        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+
+        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+
+        results.save(event_id+'DC_misfit.nc')
+
 
         print('\\nFinished\\n')
+
 """
 
 
 WrapUp_SerialGridSearch_DoubleCouple="""
     #
-    # Saving results
+    # Generate figures and save results
     #
 
-    print('Saving results...\\n')
+    results = results_bw + results_sw
 
-    plot_data_greens2(event_id+'DC_waveforms.png', 
-        data_bw, data_sw, greens_bw, greens_sw, 
-        process_bw, process_sw, misfit_bw, misfit_sw, 
-        stations, origin, best_source, lune_dict)
+    # source corresponding to minimum misfit
+    idx = results.idxmin('source')
+    best_source = grid.get(idx)
+    lune_dict = grid.get_dict(idx)
+    mt_dict = grid.get(idx).as_dict()
+
+    components_bw = data_bw.get_components()
+    components_sw = data_sw.get_components()
+
+    # synthetics corresponding to minimum misfit
+    synthetics_bw = greens_bw.get_synthetics(
+        best_source, components_bw, mode='map')
+
+    synthetics_sw = greens_sw.get_synthetics(
+        best_source, components_sw, mode='map')
+
+    # time shifts and other attributes corresponding to minimum misfit
+    list_bw = misfit_bw.collect_attributes(
+        data_bw, greens_bw, best_source)
+
+    list_sw = misfit_sw.collect_attributes(
+        data_sw, greens_sw, best_source)
+
+    dict_bw = {station.id: list_bw[_i] 
+        for _i,station in enumerate(stations)}
+
+    dict_sw = {station.id: list_sw[_i] 
+        for _i,station in enumerate(stations)}
+
+
+    print('Generating figures...\\n')
+
+    plot_data_greens2(event_id+'DC_waveforms.png',
+        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+        misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
     plot_misfit_dc(event_id+'DC_misfit.png', results)
 
-    results.save(event_id+'DC.nc')
+
+    print('Saving results...\\n')
+
+    # save best-fitting source
+    save_json(event_id+'DC_mt.json', mt_dict)
+    save_json(event_id+'DC_lune.json', lune_dict)
+
+
+    # save time shifts and other attributes
+    os.makedirs(event_id+'DC_attrs', exist_ok=True)
+
+    save_json(event_id+'DC_attrs/bw.json', dict_bw)
+    save_json(event_id+'DC_attrs/sw.json', dict_sw)
+
+
+    # save processed waveforms as binary files
+    os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+
+    data_bw.write(event_id+'DC_waveforms/dat_bw.p')
+    data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+
+    synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
+    synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+
+    results.save(event_id+'DC_misfit.nc')
+
 
     print('\\nFinished\\n')
 
@@ -1002,12 +1283,21 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
 
 WrapUp_TestGridSearch_DoubleCouple="""
+
+    results = results_bw + results_sw
+
+    # source corresponding to minimum misfit
+    idx = results.idxmin('source')
+    best_source = grid.get(idx)
+
+    lune_dict = grid.get_dict(idx)
+    mt_dict = grid.get(idx).as_dict()
+
     if run_figures:
 
         plot_data_greens2(event_id+'DC_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, 
-            process_bw, process_sw, misfit_bw, misfit_sw, 
-            stations, origin, best_source, lune_dict)
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png', best_source)
 
@@ -1139,6 +1429,54 @@ if __name__=='__main__':
     os.chdir(basepath())
 
 
+    with open('examples/DetailedAnalysis.FullMomentTensor.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
+        file.write(
+            replace(
+            Imports,
+            'DoubleCoupleGridRegular',
+            'FullMomentTensorGridSemiregular',
+            'plot_misfit_dc',
+            (
+            'plot_misfit_lune,\\\n'+
+            '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
+            '    plot_time_shifts, plot_amplitude_ratios'
+            ),
+            ))
+        file.write(Docstring_DetailedAnalysis_FullMomentTensor)
+        file.write(Paths_Syngine)
+        file.write(DataProcessingComments)
+        file.write(DataProcessingDefinitions)
+        file.write(MisfitComments)
+        file.write(MisfitDefinitions_DetailedAnalysis)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(Grid_FullMomentTensor)
+        file.write(OriginComments)
+        file.write(OriginDefinitions)
+        file.write(
+            replace(
+            Main_GridSearch,
+            'surface wave',
+            'Rayleigh wave',
+            'results_sw',
+            'results_rayleigh',
+            'misfit_sw',
+            'misfit_rayleigh',
+            ))
+        file.write(
+"""
+    if comm.rank==0:
+        print('Evaluating Love wave misfit...\\n')
+
+    results_love = grid_search(
+        data_sw, greens_sw, misfit_love, origin, grid)
+
+"""
+        )
+        file.write(WrapUp_DetailedAnalysis_FullMomentTensor)
+
+
     with open('examples/GridSearch.DoubleCouple.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(Imports)
@@ -1154,8 +1492,8 @@ if __name__=='__main__':
         file.write(Grid_DoubleCouple)
         file.write(OriginComments)
         file.write(OriginDefinitions)
-        file.write(Main_GridSearch_DoubleCouple)
-        file.write(WrapUp_GridSearch_DoubleCouple)
+        file.write(Main_GridSearch)
+        file.write(WrapUp_GridSearch)
 
 
     with open('examples/GridSearch.DoubleCouple+Magnitude+Depth.py', 'w') as file:
@@ -1178,7 +1516,12 @@ if __name__=='__main__':
         file.write(OriginsComments)
         file.write(OriginsDefinitions)
         file.write(Grid_DoubleCoupleMagnitudeDepth)
-        file.write(Main_GridSearch_DoubleCoupleMagnitudeDepth)
+        file.write(
+            replace(
+            Main_GridSearch,
+            'origin',
+            'origins',
+            ))
         file.write(WrapUp_GridSearch_DoubleCoupleMagnitudeDepth)
 
 
@@ -1203,10 +1546,10 @@ if __name__=='__main__':
         file.write(Grid_FullMomentTensor)
         file.write(OriginComments)
         file.write(OriginDefinitions)
-        file.write(Main_GridSearch_DoubleCouple)
+        file.write(Main_GridSearch)
         file.write(
             replace(
-            WrapUp_GridSearch_DoubleCouple,
+            WrapUp_GridSearch,
             'DC',
             'FMT',
             'plot_misfit_dc',
