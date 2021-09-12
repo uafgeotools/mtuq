@@ -3,10 +3,10 @@ import numpy as np
 
 from copy import deepcopy
 from mtuq.misfit.waveform import level0, level1, level2
+from mtuq.misfit.waveform._stats import estimate_sigma, calculate_norm_data
 from mtuq.util import Null, iterable, warn
 from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import check_padding, get_components, isempty
-
 
 
 class Misfit(object):
