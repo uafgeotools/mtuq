@@ -91,7 +91,7 @@ if __name__=='__main__':
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=15,
+        npts_per_axis=12,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(

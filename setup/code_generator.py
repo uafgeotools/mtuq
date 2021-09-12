@@ -539,7 +539,7 @@ Grid_FullMomentTensor="""
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=15,
+        npts_per_axis=12,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -919,24 +919,33 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             misfit_love.time_shift_min, misfit_love.time_shift_max)
 
 
-        print('  Body wave variance:  %.3e' %
+        print()
+
+        print('Body wave variance:  %.3e' %
             sigma_bw**2)
-        print('  Rayleigh variance:   %.3e' %
+        print('Rayleigh variance:   %.3e' %
             sigma_rayleigh**2)
-        print('  Love variance:       %.3e' %
+        print('Love variance:       %.3e' %
             sigma_love**2)
 
-        print('\\n')
+        print()
 
 
-        # maximum likelihood surface
-        likelihoods = _vw_product(
+        print('Likelihood analysis...\\n')
+
+        likelihoods, mle, marginal_vw = likelihood_analysis(
+            (results_bw, sigma_bw**2),
+            (results_rayleigh, sigma_rayleigh**2),
+            (results_love, sigma_love**2))
+
+        # maximum likelihood vw surface
+        likelihoods_vw = product_vw(
             calculate_likelihoods(results_bw, sigma_bw**2),
             calculate_likelihoods(results_rayleigh, sigma_rayleigh**2),
             calculate_likelihoods(results_love, sigma_love**2))
 
-        # marginal likelihood surface
-        marginals = _vw_product(
+        # marginal likelihood vw surface
+        marginals_vw = product_vw(
             calculate_marginals(results_bw, sigma_bw**2),
             calculate_marginals(results_rayleigh, sigma_rayleigh**2),
             calculate_marginals(results_love, sigma_love**2))
@@ -1026,7 +1035,7 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             title='Love waves')
 
         _plot_lune(event_id+'FMT_likelihood/all.png',
-            likelihoods, colormap='hot_r',
+            likelihoods_vw, colormap='hot_r',
             title='All data categories')
 
         print()
@@ -1049,7 +1058,7 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             title='Love waves')
 
         _plot_vw(event_id+'FMT_marginal/all.png',
-            marginals, colormap='hot_r',
+            marginals_vw, colormap='hot_r',
             title='All data categories')
 
 
@@ -1077,6 +1086,11 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         save_json(event_id+'FMT_mt.json', mt_dict)
         save_json(event_id+'FMT_lune.json', lune_dict)
 
+        os.makedirs(event_id+'FMT_stats', exist_ok=True)
+
+        save_json(event_id+'FMT_stats/marginal_vw.json', marginal_vw)
+        save_json(event_id+'FMT_stats/mle.json', mle)
+
 
         # save time shifts and other attributes
         os.makedirs(event_id+'FMT_attrs', exist_ok=True)
@@ -1099,7 +1113,6 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         results_bw.save(event_id+'FMT_misfit/bw.nc')
         results_rayleigh.save(event_id+'FMT_misfit/rayleigh.nc')
         results_love.save(event_id+'FMT_misfit/love.nc')
-        results_sum.save(event_id+'FMT_misfit/sum.nc')
 
 
         print('\\nFinished\\n')
@@ -1525,7 +1538,7 @@ if __name__=='__main__':
             '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
             '    calculate_likelihoods, calculate_marginals,\\\n'+
             '    plot_time_shifts, plot_amplitude_ratios,\\\n'+
-            '    _plot_lune, _plot_vw, _vw_product'
+            '    _plot_lune, _plot_vw, product_vw, likelihood_analysis'
             ),
             'from mtuq.misfit import Misfit',
             'from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data'
