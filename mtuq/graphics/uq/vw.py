@@ -9,6 +9,7 @@ import numpy as np
 import pandas
 import xarray
 
+from functools import reduce
 from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.graphics._gmt import read_cpt
@@ -209,7 +210,7 @@ def calculate_misfit(da):
     misfit = da.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
 
     return misfit.assign_attrs({
-        'best_mt': _best_mt(da),
+        'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
         })
@@ -227,7 +228,7 @@ def calculate_likelihoods(da, var):
     likelihoods /= vw_area
 
     return likelihoods.assign_attrs({
-        'best_mt': _best_mt(da),
+        'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
         'likelihood_max': likelihoods.max(),
@@ -248,7 +249,7 @@ def calculate_marginals(da, var):
     marginals /= vw_area
 
     return marginals.assign_attrs({
-        'best_mt': _best_mt(da),
+        'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
         'marginal_max': marginals.max(),
@@ -281,7 +282,7 @@ def calculate_magnitudes(da):
         )
 
     return magnitudes.assign_attrs({
-        'best_mt': _best_mt(da),
+        'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
         })
@@ -310,8 +311,8 @@ def _lune_array(da):
     return lune_array
 
 
-def _best_mt(da):
-    """ Returns overall best-fitting moment tensor
+def _min_mt(da):
+    """ Returns moment tensor vector corresponding to mininum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
@@ -319,8 +320,17 @@ def _best_mt(da):
     return to_mij(*lune_vals)
 
 
+def _max_mt(da):
+    """ Returns moment tensor vector corresponding to maximum DataArray value
+    """
+    da = dataarray_idxmax(da)
+    lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
+    lune_vals = [da[key].values for key in lune_keys]
+    return to_mij(*lune_vals)
+
+
 def _min_vw(da):
-    """ Returns overall best v,w
+    """ Returns v,w coordinates corresponding to mininum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['v', 'w']
@@ -328,12 +338,36 @@ def _min_vw(da):
     return lune_vals
 
 def _max_vw(da):
-    """ Returns overall best v,w
+    """ Returns v,w coordinates corresponding to maximum DataArray value
     """
     da = dataarray_idxmax(da)
     lune_keys = ['v', 'w']
     lune_vals = [da[key].values for key in lune_keys]
     return lune_vals
+
+
+def _vw_product(*arrays, best_vw='max'):
+
+    # evaluates product of arbitrarily many arrays
+    da = reduce((lambda x, y: x * y), arrays)
+
+    # previous attributes no longer apply
+    da = da.assign_attrs({
+        'best_mt': None,
+        'best_vw': None,
+        'lune_array': None,
+        'marginal_max': None,
+        'marginal_vw': None,
+        })
+
+    if best_vw=='min':
+        return da.assign_attrs({'best_vw': _min_vw(da)})
+
+    elif best_vw=='max':
+        return da.assign_attrs({'best_vw': _max_vw(da)})
+
+    else:
+        return da
 
 
 
