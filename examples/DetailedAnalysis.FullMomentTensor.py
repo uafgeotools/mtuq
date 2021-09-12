@@ -435,6 +435,11 @@ if __name__=='__main__':
         synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
         synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
 
+
+        # save misfit surfaces as netCDF files
+        results_bw.save(event_id+'FMT_misfit/bw.nc')
+        results_rayleigh.save(event_id+'FMT_misfit/rayleigh.nc')
+        results_love.save(event_id+'FMT_misfit/love.nc')
         results_sum.save(event_id+'FMT_misfit/sum.nc')
 
 
