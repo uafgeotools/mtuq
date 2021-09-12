@@ -939,16 +939,16 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             (results_love, sigma_love**2))
 
         # maximum likelihood vw surface
-        likelihoods_vw = product_vw(
-            calculate_likelihoods(results_bw, sigma_bw**2),
-            calculate_likelihoods(results_rayleigh, sigma_rayleigh**2),
-            calculate_likelihoods(results_love, sigma_love**2))
+        likelihoods_vw = _product_vw(
+            _likelihoods_vw_regular(results_bw, sigma_bw**2),
+            _likelihoods_vw_regular(results_rayleigh, sigma_rayleigh**2),
+            _likelihoods_vw_regular(results_love, sigma_love**2))
 
         # marginal likelihood vw surface
-        marginals_vw = product_vw(
-            calculate_marginals(results_bw, sigma_bw**2),
-            calculate_marginals(results_rayleigh, sigma_rayleigh**2),
-            calculate_marginals(results_love, sigma_love**2))
+        marginals_vw = _product_vw(
+            _marginals_vw_regular(results_bw, sigma_bw**2),
+            _marginals_vw_regular(results_rayleigh, sigma_rayleigh**2),
+            _marginals_vw_regular(results_love, sigma_love**2))
 
         #
         # Generate figures and save results
@@ -1536,9 +1536,9 @@ if __name__=='__main__':
             (
             'plot_misfit_lune,\\\n'+
             '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
-            '    calculate_likelihoods, calculate_marginals,\\\n'+
             '    plot_time_shifts, plot_amplitude_ratios,\\\n'+
-            '    _plot_lune, _plot_vw, product_vw, likelihood_analysis'
+            '    _likelihoods_vw_regular, _marginals_vw_regular,\\\n'+
+            '    _plot_lune, _plot_vw, _product_vw, likelihood_analysis'
             ),
             'from mtuq.misfit import Misfit',
             'from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data'

@@ -15,10 +15,10 @@ from mtuq.util import warn
 from mtuq.util.math import lune_det, to_gamma, to_delta
 
 from mtuq.graphics.uq.vw import\
-    calculate_misfit, calculate_misfit_unstruct,\
-    calculate_likelihoods, calculate_likelihoods_unstruct,\
-    calculate_marginals, calculate_marginals_unstruct,\
-    calculate_magnitudes
+    _misfit_vw_regular, _misfit_vw_random,\
+    _likelihoods_vw_regular, _likelihoods_vw_random,\
+    _marginals_vw_regular, _marginals_vw_random,\
+    _magnitudes_vw_regular
 
 
 def plot_misfit_lune(filename, ds, **kwargs):
@@ -47,10 +47,10 @@ def plot_misfit_lune(filename, ds, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        misfit = calculate_misfit(ds)
+        misfit = _misfit_vw_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        misfit = calculate_misfit_unstruct(ds)        
+        misfit = _misfit_vw_random(ds)        
 
     _plot_lune(filename, misfit, **kwargs)
 
@@ -84,10 +84,10 @@ def plot_likelihood_lune(filename, ds, var, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        likelihoods = calculate_likelihoods(ds, var)
+        likelihoods = _likelihoods_vw_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        likelihoods = calculate_likelihoods_unstruct(ds, var)
+        likelihoods = _likelihoods_vw_random(ds, var)
 
     _plot_lune(filename, likelihoods, **kwargs)
 
@@ -121,10 +121,10 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        marginals = calculate_marginals(ds, var)
+        marginals = _marginals_vw_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        marginals = calculate_marginals_unstruct(ds, var)
+        marginals = _marginals_vw_random(ds, var)
 
     _plot_lune(filename, marginals, **kwargs)
 
@@ -157,7 +157,7 @@ def plot_mt_tradeoffs(filename, ds, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        marginals = calculate_magnitudes(ds)
+        marginals = _magnitudes_vw_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
         raise NotImplementedError

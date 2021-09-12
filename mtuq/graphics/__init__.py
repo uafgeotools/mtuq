@@ -15,8 +15,8 @@ from mtuq.graphics.uq.double_couple import\
 
 from mtuq.graphics.uq.vw import\
     plot_misfit_vw, plot_likelihood_vw, plot_marginal_vw, \
-    calculate_misfit, calculate_likelihoods, calculate_marginals, \
-    _plot_vw, product_vw, likelihood_analysis
+    _misfit_vw_regular, _likelihoods_vw_regular, _marginals_vw_regular, \
+    _plot_vw, _product_vw
 
 from mtuq.graphics.uq.force import\
     plot_misfit_force, plot_likelihood_force, plot_marginal_force,\
@@ -30,6 +30,9 @@ from mtuq.graphics.uq.origin_xy import\
 
 from mtuq.graphics.waveforms import\
     plot_waveforms1, plot_waveforms2, plot_data_greens1, plot_data_greens2
+
+from mtuq.graphics.uq import\
+    likelihood_analysis
 
 
 # use Helvetica if available

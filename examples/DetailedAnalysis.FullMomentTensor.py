@@ -7,9 +7,9 @@ from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune,\
     plot_likelihood_lune, plot_marginal_vw,\
-    calculate_likelihoods, calculate_marginals,\
     plot_time_shifts, plot_amplitude_ratios,\
-    _plot_lune, _plot_vw, product_vw, likelihood_analysis
+    _likelihoods_vw_regular, _marginals_vw_regular,\
+    _plot_lune, _plot_vw, _product_vw, likelihood_analysis
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data
@@ -266,16 +266,16 @@ if __name__=='__main__':
             (results_love, sigma_love**2))
 
         # maximum likelihood vw surface
-        likelihoods_vw = product_vw(
-            calculate_likelihoods(results_bw, sigma_bw**2),
-            calculate_likelihoods(results_rayleigh, sigma_rayleigh**2),
-            calculate_likelihoods(results_love, sigma_love**2))
+        likelihoods_vw = _product_vw(
+            _likelihoods_vw_regular(results_bw, sigma_bw**2),
+            _likelihoods_vw_regular(results_rayleigh, sigma_rayleigh**2),
+            _likelihoods_vw_regular(results_love, sigma_love**2))
 
         # marginal likelihood vw surface
-        marginals_vw = product_vw(
-            calculate_marginals(results_bw, sigma_bw**2),
-            calculate_marginals(results_rayleigh, sigma_rayleigh**2),
-            calculate_marginals(results_love, sigma_love**2))
+        marginals_vw = _product_vw(
+            _marginals_vw_regular(results_bw, sigma_bw**2),
+            _marginals_vw_regular(results_rayleigh, sigma_rayleigh**2),
+            _marginals_vw_regular(results_love, sigma_love**2))
 
         #
         # Generate figures and save results

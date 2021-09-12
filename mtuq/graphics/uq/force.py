@@ -41,10 +41,10 @@ def plot_misfit_force(filename, ds, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        misfit = calculate_misfit(ds)
+        misfit = _misfit_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        misfit = calculate_misfit_unstruct(ds)
+        misfit = _misfit_random(ds)
 
     _plot_force(filename, misfit, **kwargs)
 
@@ -81,10 +81,10 @@ def plot_likelihood_force(filename, ds, var, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        likelihoods = calculate_likelihoods(ds, var)
+        likelihoods = _likelihoods_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        likelihoods = calculate_likelihoods_unstruct(ds, var)
+        likelihoods = _likelihoods_random(ds, var)
 
     _plot_force(filename, likelihoods, **kwargs)
 
@@ -119,10 +119,10 @@ def plot_marginal_force(filename, ds, var, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        marginals = calculate_marginals(ds, var)
+        marginals = _marginals_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        marginals = calculate_marginals_unstruct(ds, var)
+        marginals = _marginals_random(ds, var)
 
     _plot_force(filename, marginals, **kwargs)
 
@@ -155,7 +155,7 @@ def plot_force_tradeoffs(filename, ds, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        marginals = calculate_magnitudes(ds)
+        marginals = _magnitudes_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
         raise NotImplementedError
@@ -206,7 +206,7 @@ def _plot_force(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
 # for extracting misfit or likelihood from regularly-spaced grids
 #
 
-def calculate_misfit(da):
+def _misfit_regular(da):
     """ For each force orientation, extracts minimum misfit
     """
     misfit = da.min(dim=('origin_idx', 'F0'))
@@ -216,7 +216,7 @@ def calculate_misfit(da):
         })
 
 
-def calculate_likelihoods(da, var):
+def _likelihoods_regular(da, var):
     """ For each force orientation, calculates maximum likelihood value
     """
     likelihoods = da.copy()
@@ -231,7 +231,7 @@ def calculate_likelihoods(da, var):
         })
 
 
-def calculate_marginals(da, var):
+def _marginals_regular(da, var):
     """ For each force orientation, calculates marginal likelihood value
     """
 
@@ -247,7 +247,7 @@ def calculate_marginals(da, var):
         })
 
 
-def calculate_magnitudes(da):
+def _magnitudes_regular(da):
     """ For each source type, calculates magnitude of best-fitting moment tensor
     """
     phi = da.coords['phi']
@@ -299,7 +299,7 @@ def _max_force(da):
 # for extracting misfit or likelihood from irregularly-spaced grids
 #
 
-def calculate_misfit_unstruct(df, **kwargs):
+def _misfit_random(df, **kwargs):
     df = df.copy()
     df = df.reset_index()
     da = _bin(df, lambda df: df.min(), **kwargs)
@@ -309,7 +309,7 @@ def calculate_misfit_unstruct(df, **kwargs):
         })
 
 
-def calculate_likelihoods_unstruct(df, var, **kwargs):
+def _likelihoods_random(df, var, **kwargs):
     df = df.copy()
     df = np.exp(-df/(2.*var))
     df = df.reset_index()
@@ -322,7 +322,7 @@ def calculate_likelihoods_unstruct(df, var, **kwargs):
         })
 
 
-def calculate_marginals_unstruct(df, var, **kwargs):
+def _marginals_random(df, var, **kwargs):
     df = df.copy()
     df = np.exp(-df/(2.*var))
     df = df.reset_index()
