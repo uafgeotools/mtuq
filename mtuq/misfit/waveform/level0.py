@@ -1,7 +1,7 @@
 """
-Data misfit module (non-optimized pure Python version)
+Waveform misfit module (non-optimized pure Python version)
 
-See ``mtuq/misfit/__init__.py`` for more information
+See ``mtuq/misfit/waveform/__init__.py`` for more information
 """
 
 import numpy as np
@@ -14,9 +14,9 @@ from mtuq.util.signal import get_components
 def misfit(data, greens, sources, norm, time_shift_groups,
     time_shift_min, time_shift_max, msg_handle, set_attributes=False):
     """
-    Data misfit function (non-optimized pure Python version)
+    Waveform misfit function (non-optimized pure Python version)
 
-    See ``mtuq/misfit/__init__.py`` for more information
+    See ``mtuq/misfit/waveform/__init__.py`` for more information
     """
     values = np.zeros((len(sources), 1))
 

@@ -1,16 +1,16 @@
 """
-Data misfit module (fast Python/C version)
+Waveform misfit module (fast Python/C version)
 
-See ``mtuq/misfit/__init__.py`` for more information
+See ``mtuq/misfit/waveform/__init__.py`` for more information
 """
 
 import numpy as np
 import time
 from copy import deepcopy
-from mtuq.misfit.level1 import correlate
+from mtuq.misfit.waveform.level1 import correlate
 from mtuq.util.math import to_mij, to_rtp
 from mtuq.util.signal import get_components, get_time_sampling
-from mtuq.misfit import c_ext_L2
+from mtuq.misfit.waveform import c_ext_L2
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
@@ -18,7 +18,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     """
     Data misfit function (fast Python/C version)
 
-    See ``mtuq/misfit/__init__.py`` for more information
+    See ``mtuq/misfit/waveform/__init__.py`` for more information
     """
     #
     # collect metadata
