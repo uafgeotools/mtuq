@@ -58,7 +58,7 @@ def plot_beachball(filename, mt):
         beachball_obspy(filename, mt)
 
 
-def beachball_gmt(filename, mt):
+def beachball_gmt(filename, mt, stations=None):
     """ Plots focal mechanism using GMT
     """
     # check file extension
@@ -74,6 +74,11 @@ def beachball_gmt(filename, mt):
         'lat lon depth   mrr   mtt   mff   mrt    mrf    mtf',
         ('0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0' % tuple(mt.as_vector())),
         'END']), shell=True)
+
+    if stations:
+        raise NotImplementedError
+        #subprocess.call( insert gmt command here , shell=True )
+
 
     # create PNG image
     subprocess.call('gmt psconvert %s -A -Tg' % (filename+'.ps'),
