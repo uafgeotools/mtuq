@@ -947,8 +947,13 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
 
         # fix marker location
         from mtuq.graphics.uq.vw import _max_vw
+
         likelihoods = likelihoods.assign_attrs({
             'best_vw': _max_vw(likelihoods),
+            })
+
+        marginals = marginals.assign_attrs({
+            'best_vw': _max_vw(marginals),
             })
 
 
@@ -1039,6 +1044,27 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             title='All data categories')
 
         print()
+
+
+        print('Plotting marginal likelihood surfaces...\\n')
+
+        os.makedirs(event_id+'FMT_marginal', exist_ok=True)
+
+        plot_marginal_vw(event_id+'FMT_marginal/bw.png',
+            results_bw, var=sigma_bw**2,
+            title='Body waves')
+
+        plot_marginal_vw(event_id+'FMT_marginal/rayleigh.png',
+            results_rayleigh, var=sigma_rayleigh**2,
+            title='Rayleigh waves')
+
+        plot_marginal_vw(event_id+'FMT_marginal/love.png',
+            results_love, var=sigma_love**2,
+            title='Love waves')
+
+        #_plot_vw(event_id+'FMT_marginal/all.png',
+        #    marginals, colormap='hot_r',
+        #    title='All data categories')
 
 
         print('Plotting time shift geographic variation...\\n')
