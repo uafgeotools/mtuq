@@ -32,8 +32,9 @@ if __name__=='__main__':
     #
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
-    # - misfit surfaces
-    # - geographic variation of time shifts and amplitude ratios
+    # - data misfit surfaces
+    # - geographic variation of time shifts between data and synthetics
+    # - geographic variation of amplitude ratios between data and synthetics
     #
     #
     # USAGE
@@ -288,6 +289,7 @@ if __name__=='__main__':
         # Generate figures and save results
         #
 
+        # only generate components present in the data
         components_bw = data_bw.get_components()
         components_sw = data_sw.get_components()
 
@@ -297,6 +299,7 @@ if __name__=='__main__':
 
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
+
 
         # time shifts and other attributes corresponding to minimum misfit
         list_bw = misfit_bw.collect_attributes(
