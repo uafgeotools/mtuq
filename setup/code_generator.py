@@ -924,39 +924,27 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             misfit_love.time_shift_min, misfit_love.time_shift_max)
 
 
-        print('  Body wave variance estimate:      %.3e' %
+        print('  Body wave variance:  %.3e' %
             sigma_bw**2)
-        print('  Rayleigh wave variance estimate:  %.3e' %
+        print('  Rayleigh variance:   %.3e' %
             sigma_rayleigh**2)
-        print('  Love wave variance estimate:      %.3e' %
+        print('  Love variance:       %.3e' %
             sigma_love**2)
 
-        print()
+        print('\\n')
 
 
         # maximum likelihood surface
-        likelihoods =\\
-            calculate_likelihoods(results_bw, sigma_bw**2)*\\
-            calculate_likelihoods(results_rayleigh, sigma_rayleigh**2)*\\
-            calculate_likelihoods(results_love, sigma_love**2)
+        likelihoods = _vw_product(
+            calculate_likelihoods(results_bw, sigma_bw**2),
+            calculate_likelihoods(results_rayleigh, sigma_rayleigh**2),
+            calculate_likelihoods(results_love, sigma_love**2))
 
         # marginal likelihood surface
-        marginals =\\
-            calculate_marginals(results_bw, sigma_bw**2)*\\
-            calculate_marginals(results_rayleigh, sigma_rayleigh**2)*\\
-            calculate_marginals(results_love, sigma_love**2)
-
-        # fix marker location
-        from mtuq.graphics.uq.vw import _max_vw
-
-        likelihoods = likelihoods.assign_attrs({
-            'best_vw': _max_vw(likelihoods),
-            })
-
-        marginals = marginals.assign_attrs({
-            'best_vw': _max_vw(marginals),
-            })
-
+        marginals = _vw_product(
+            calculate_marginals(results_bw, sigma_bw**2),
+            calculate_marginals(results_rayleigh, sigma_rayleigh**2),
+            calculate_marginals(results_love, sigma_love**2))
 
         #
         # Generate figures and save results
@@ -1542,7 +1530,7 @@ if __name__=='__main__':
             '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
             '    calculate_likelihoods, calculate_marginals,\\\n'+
             '    plot_time_shifts, plot_amplitude_ratios,\\\n'+
-            '    _plot_lune, _plot_vw'
+            '    _plot_lune, _plot_vw, _vw_product'
             ),
             'from mtuq.misfit import Misfit',
             'from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data'
