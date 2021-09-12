@@ -362,6 +362,27 @@ class GreensTensorList(list):
         return self.__class__(processed)
 
 
+    #def parralell_map(self, function, *sequences):
+    #    """ Parallelized version of `map`
+
+    #    Maps a function to each `GreensTensor` in the list. If one or more 
+    #    optional sequences are given, the function is called with an argument 
+    #    list consisting of the corresponding item of each sequence, similar
+    #    to the Python built-in ``map``.
+
+    #    Parallelized using mpi4py
+
+    #    .. warning ::
+
+    #        Although ``map`` returns a new `GreensTensorList`, contents of the
+    #        original `GreensTensorList` may still be overwritten, depending on
+    #        the function. To preserve the original, consider making a 
+    #        `copy` first.
+
+    #    """
+    #    raise NotImplementedError
+
+
     def convolve(self, wavelet):
         """ Convolves time series with given wavelet
 
@@ -414,7 +435,7 @@ class GreensTensorList(list):
 
 
     def sort_by_function(self, function, reverse=False):
-        """ Sorts in-place using the python built-in "sort"
+        """ Sorts in-place using the python built-in `sort`
         """
         self.sort(key=function, reverse=reverse)
 
@@ -433,7 +454,9 @@ class GreensTensorList(list):
 
 
     def write(self, filename):
-        with open(filename, "wb") as file:
+       """ Writes a Python pickle of current `GreensTensorList`
+       """
+       with open(filename, "wb") as file:
            pickle.dump(self, file)
 
 

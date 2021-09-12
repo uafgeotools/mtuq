@@ -12,7 +12,10 @@ autogen
    mtuq.Origin
    mtuq.Station
    mtuq.graphics.plot_beachball
-   mtuq.graphics.plot_data_synthetics
+   mtuq.graphics.plot_data_greens1
+   mtuq.graphics.plot_data_greens2
+   mtuq.graphics.plot_waveforms1
+   mtuq.graphics.plot_waveforms2
    mtuq.graphics.plot_likelihood_lune
    mtuq.graphics.plot_marginal_lune
    mtuq.graphics.plot_misfit_lune
@@ -47,7 +50,7 @@ autogen
    mtuq.io.clients.FK_SAC.Client
    mtuq.io.clients.syngine.Client
    mtuq.io.readers.SAC.read
-   mtuq.misfit.level0
-   mtuq.misfit.level1
-   mtuq.misfit.level2
+   mtuq.misfit.waveform.level0
+   mtuq.misfit.waveform.level1
+   mtuq.misfit.waveform.level2
    

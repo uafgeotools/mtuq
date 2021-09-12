@@ -7,10 +7,12 @@ from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune,\
     plot_likelihood_lune, plot_marginal_vw,\
-    plot_time_shifts, plot_amplitude_ratios
+    calculate_likelihoods, calculate_marginals,\
+    plot_time_shifts, plot_amplitude_ratios,\
+    _plot_lune, _plot_vw
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
-from mtuq.misfit import Misfit
+from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
@@ -19,17 +21,31 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over all moment tensor parameters except
-    # magnitude and peforms detailed analysis of
+    # Peforms detailed analysis involving
     #
-    # - body wave, Rayleigh wave and Love wave data variance
+    # - grid search over all moment tensor parameters except magnitude
+    # - separate body wave, Rayleigh wave and Love wave data categories
+    # - data variance estimation and likelihood analysis
+    #
+    #
+    # Generates figures of
+    #
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
+    # - misfit surfaces
     # - geographic variation of time shifts and amplitude ratios
+    #
     #
     # USAGE
     #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
     #   
+    #
+    # For simpler examples, see SerialGridSearch.DoubleCouple.py and
+    # GridSearch.FullMomentTensor.py
+    #
+    # For ideas on applying this type of analysis to entire sets of events,
+    # see github.com/rmodrak/mtbench
+    #
 
 
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
@@ -206,31 +222,71 @@ if __name__=='__main__':
     results_love = grid_search(
         data_sw, greens_sw, misfit_love, origin, grid)
 
-
-    #
-    # Data variance estimation and likelihood analysis
-    #
-
     if comm.rank==0:
 
-        # TODO - replace dummy values
-        dummy_bw = 1.e-10
-        dummy_rayleigh = 1.e-10
-        dummy_love = 1.e-10
+        results_sum = results_bw + results_rayleigh + results_love
 
-        results = results_bw + results_rayleigh + results_love
+        #
+        # Data variance estimation and likelihood analysis
+        #
 
-    #
-    # Generate figures and save results
-    #
-
-    if comm.rank==0:
-
-        # source corresponding to minimum misfit
-        idx = results.idxmin('source')
+        # use minimum misfit as initial guess for maximum likelihood
+        idx = results_sum.idxmin('source')
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
+
+
+        sigma_bw = estimate_sigma(data_bw, greens_bw,
+            best_source, misfit_bw.norm, ['Z', 'R'],
+            misfit_bw.time_shift_min, misfit_bw.time_shift_max)
+
+        sigma_rayleigh = estimate_sigma(data_sw, greens_sw,
+            best_source, misfit_rayleigh.norm, ['Z', 'R'],
+            misfit_rayleigh.time_shift_min, misfit_rayleigh.time_shift_max)
+
+        sigma_love = estimate_sigma(data_sw, greens_sw,
+            best_source, misfit_love.norm, ['T'],
+            misfit_love.time_shift_min, misfit_love.time_shift_max)
+
+
+        print('  Body wave variance estimate:      %.3e' %
+            sigma_bw**2)
+        print('  Rayleigh wave variance estimate:  %.3e' %
+            sigma_rayleigh**2)
+        print('  Love wave variance estimate:      %.3e' %
+            sigma_love**2)
+
+        print()
+
+
+        # maximum likelihood surface
+        likelihoods =\
+            calculate_likelihoods(results_bw, sigma_bw**2)*\
+            calculate_likelihoods(results_rayleigh, sigma_rayleigh**2)*\
+            calculate_likelihoods(results_love, sigma_love**2)
+
+        # marginal likelihood surface
+        marginals =\
+            calculate_marginals(results_bw, sigma_bw**2)*\
+            calculate_marginals(results_rayleigh, sigma_rayleigh**2)*\
+            calculate_marginals(results_love, sigma_love**2)
+
+        # fix marker location
+        from mtuq.graphics.uq.vw import _max_vw
+
+        likelihoods = likelihoods.assign_attrs({
+            'best_vw': _max_vw(likelihoods),
+            })
+
+        marginals = marginals.assign_attrs({
+            'best_vw': _max_vw(marginals),
+            })
+
+
+        #
+        # Generate figures and save results
+        #
 
         components_bw = data_bw.get_components()
         components_sw = data_sw.get_components()
@@ -298,16 +354,44 @@ if __name__=='__main__':
 
         os.makedirs(event_id+'FMT_likelihood', exist_ok=True)
 
-        plot_likelihood_lune(event_id+'FMT_likelihood/bw.png', results_bw,
-            var=dummy_bw, title='Body wave likelihood\n(sigma = %.3e)' % dummy_bw)
+        plot_likelihood_lune(event_id+'FMT_likelihood/bw.png',
+            results_bw, var=sigma_bw**2, 
+            title='Body waves')
 
-        plot_likelihood_lune(event_id+'FMT_likelihood/rayleigh.png', results_rayleigh,
-            var=dummy_rayleigh, title='Rayleigh wave likelihood\n(sigma = %.3e)' % dummy_rayleigh)
+        plot_likelihood_lune(event_id+'FMT_likelihood/rayleigh.png',
+            results_rayleigh, var=sigma_rayleigh**2, 
+            title='Rayleigh waves')
 
-        plot_likelihood_lune(event_id+'FMT_likelihood/love.png', results_love,
-            var=dummy_love, title='Love wave likelihood\n(sigma = %.3e)' % dummy_love)
+        plot_likelihood_lune(event_id+'FMT_likelihood/love.png',
+            results_love, var=sigma_love**2, 
+            title='Love waves')
+
+        _plot_lune(event_id+'FMT_likelihood/all.png',
+            likelihoods, colormap='hot_r',
+            title='All data categories')
 
         print()
+
+
+        print('Plotting marginal likelihood surfaces...\n')
+
+        os.makedirs(event_id+'FMT_marginal', exist_ok=True)
+
+        plot_marginal_vw(event_id+'FMT_marginal/bw.png',
+            results_bw, var=sigma_bw**2,
+            title='Body waves')
+
+        plot_marginal_vw(event_id+'FMT_marginal/rayleigh.png',
+            results_rayleigh, var=sigma_rayleigh**2,
+            title='Rayleigh waves')
+
+        plot_marginal_vw(event_id+'FMT_marginal/love.png',
+            results_love, var=sigma_love**2,
+            title='Love waves')
+
+        #_plot_vw(event_id+'FMT_marginal/all.png',
+        #    marginals, colormap='hot_r',
+        #    title='All data categories')
 
 
         print('Plotting time shift geographic variation...\n')
@@ -331,27 +415,32 @@ if __name__=='__main__':
         print('\nSaving results...\n')
 
         # save best-fitting source
-        save_json(event_id+'DC_mt.json', mt_dict)
-        save_json(event_id+'DC_lune.json', lune_dict)
+        save_json(event_id+'FMT_mt.json', mt_dict)
+        save_json(event_id+'FMT_lune.json', lune_dict)
 
 
         # save time shifts and other attributes
-        os.makedirs(event_id+'DC_attrs', exist_ok=True)
+        os.makedirs(event_id+'FMT_attrs', exist_ok=True)
 
-        save_json(event_id+'DC_attrs/bw.json', dict_bw)
-        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+        save_json(event_id+'FMT_attrs/bw.json', dict_bw)
+        save_json(event_id+'FMT_attrs/sw.json', dict_sw)
 
 
         # save processed waveforms as binary files
-        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+        os.makedirs(event_id+'FMT_waveforms', exist_ok=True)
 
-        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
-        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+        data_bw.write(event_id+'FMT_waveforms/dat_bw.p')
+        data_sw.write(event_id+'FMT_waveforms/dat_sw.p')
 
-        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
-        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+        synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
 
-        results.save(event_id+'DC_misfit.nc')
+
+        # save misfit surfaces as netCDF files
+        results_bw.save(event_id+'FMT_misfit/bw.nc')
+        results_rayleigh.save(event_id+'FMT_misfit/rayleigh.nc')
+        results_love.save(event_id+'FMT_misfit/love.nc')
+        results_sum.save(event_id+'FMT_misfit/sum.nc')
 
 
         print('\nFinished\n')

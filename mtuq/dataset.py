@@ -268,6 +268,8 @@ class Dataset(list):
 
 
     def write(self, filename):
+        """ Writes a Python pickle of current dataset
+        """
         with open(filename, "wb") as file:
            pickle.dump(self, file)
 
