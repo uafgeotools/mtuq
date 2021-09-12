@@ -7,7 +7,9 @@ from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune,\
     plot_likelihood_lune, plot_marginal_vw,\
-    plot_time_shifts, plot_amplitude_ratios
+    calculate_likelihoods, calculate_marginals,\
+    plot_time_shifts, plot_amplitude_ratios,\
+    _plot_lune, _plot_vw
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data
@@ -258,6 +260,25 @@ if __name__=='__main__':
         print()
 
 
+        # maximum likelihood surface
+        likelihoods =\
+            calculate_likelihoods(results_bw, sigma_bw**2)*\
+            calculate_likelihoods(results_rayleigh, sigma_rayleigh**2)*\
+            calculate_likelihoods(results_love, sigma_love**2)
+
+        # marginal likelihood surface
+        marginals =\
+            calculate_marginals(results_bw, sigma_bw**2)*\
+            calculate_marginals(results_rayleigh, sigma_rayleigh**2)*\
+            calculate_marginals(results_love, sigma_love**2)
+
+        # fix marker location
+        from mtuq.graphics.uq.vw import _max_vw
+        likelihoods = likelihoods.assign_attrs({
+            'best_vw': _max_vw(likelihoods),
+            })
+
+
         #
         # Generate figures and save results
         #
@@ -330,15 +351,19 @@ if __name__=='__main__':
 
         plot_likelihood_lune(event_id+'FMT_likelihood/bw.png',
             results_bw, var=sigma_bw**2, 
-            title='Body wave likelihood')
+            title='Body waves')
 
         plot_likelihood_lune(event_id+'FMT_likelihood/rayleigh.png',
             results_rayleigh, var=sigma_rayleigh**2, 
-            title='Rayleigh wave likelihood')
+            title='Rayleigh waves')
 
         plot_likelihood_lune(event_id+'FMT_likelihood/love.png',
             results_love, var=sigma_love**2, 
-            title='Love wave likelihood')
+            title='Love waves')
+
+        _plot_lune(event_id+'FMT_likelihood/all.png',
+            likelihoods, colormap='hot_r',
+            title='All data categories')
 
         print()
 

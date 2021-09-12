@@ -14,7 +14,9 @@ from mtuq.graphics.uq.double_couple import\
     plot_misfit_dc, plot_likelihood_dc, plot_marginal_dc
 
 from mtuq.graphics.uq.vw import\
-    plot_misfit_vw, plot_likelihood_vw, plot_marginal_vw
+    plot_misfit_vw, plot_likelihood_vw, plot_marginal_vw, \
+    calculate_misfit, calculate_likelihoods, calculate_marginals, \
+    _plot_vw
 
 from mtuq.graphics.uq.force import\
     plot_misfit_force, plot_likelihood_force, plot_marginal_force,\
