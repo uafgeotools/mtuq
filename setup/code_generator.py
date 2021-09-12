@@ -1048,9 +1048,9 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             results_love, var=sigma_love**2,
             title='Love waves')
 
-        #_plot_vw(event_id+'FMT_marginal/all.png',
-        #    marginals, colormap='hot_r',
-        #    title='All data categories')
+        _plot_vw(event_id+'FMT_marginal/all.png',
+            marginals, colormap='hot_r',
+            title='All data categories')
 
 
         print('Plotting time shift geographic variation...\\n')

@@ -45,7 +45,6 @@ def plot_misfit_vw(filename, ds, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'viridis',
-        'marker_type': 1,
         })
 
     _check(ds)
@@ -80,7 +79,6 @@ def plot_likelihood_vw(filename, ds, var, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'hot_r',
-        'marker_type': 2,
         })
 
     _check(ds)
@@ -116,7 +114,6 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'hot_r',
-        'marker_type': 2,
         })
 
     _check(ds)
@@ -136,11 +133,7 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 # matplotlib backend
 #
 
-def _plot_vw(filename, da,
-    colormap='viridis', colorbar_type=1, marker_type=1, title=''):
-
-    if marker_type not in [0,1,2]:
-        raise ValueError
+def _plot_vw(filename, da, colormap='viridis', show_best=True, title=''):
 
     v = da.coords['v']
     w = da.coords['w']
@@ -169,7 +162,7 @@ def _plot_vw(filename, da,
     if exists(_local_path(colormap)):
        cmap = read_cpt(_local_path(colormap))
 
-    if colorbar_type:
+    if True:
         cbar = pyplot.colorbar(
             orientation='horizontal',
             pad=0.,
@@ -181,20 +174,21 @@ def _plot_vw(filename, da,
         fontdict = {'fontsize': 16}
         pyplot.title(title, fontdict=fontdict)
 
-    if marker_type > 0:
-        if marker_type==1:
-            idx = np.unravel_index(da.values.argmin(), da.values.shape)
-            coords = v[idx[0]], w[idx[1]]
-        elif marker_type==2:
-            idx = np.unravel_index(da.values.argmax(), da.values.shape)
-            coords = v[idx[0]], w[idx[1]]
 
-        pyplot.scatter(*coords, s=333,
-            marker='o',
-            facecolors='none',
-            edgecolors=[0,1,0],
-            linewidths=1.75,
-            )
+    if show_best:
+        if 'best_vw' in da.attrs:
+            coords = da.attrs['best_vw']
+
+            pyplot.scatter(*coords, s=333,
+                marker='o',
+                facecolors='none',
+                edgecolors=[0,1,0],
+                linewidths=1.75,
+                )
+
+        else:
+            warn("Best-fitting vw not given")
+
 
     pyplot.savefig(filename)
     pyplot.close()
