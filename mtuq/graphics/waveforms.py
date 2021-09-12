@@ -121,7 +121,7 @@ def plot_waveforms2(filename,
         trace_labels=True):
 
     """ Creates data/synthetics comparison figure with 5 columns 
-   (P-wave Z, P-wave R, Raleigh Z, Rayleigh R, Love T)
+   (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
     """
     # how many stations have at least one trace?
     nstations = _count([data_bw, data_sw])
@@ -278,7 +278,7 @@ def plot_data_greens2(filename,
         **kwargs):
 
     """ Creates data/synthetics comparison figure with 5 columns 
-    (P wave Z, P wave R, Raleigh Z, Rayleigh R, Love T)
+   (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
 
     Different input arguments, same result as plot_waveforms2
     """

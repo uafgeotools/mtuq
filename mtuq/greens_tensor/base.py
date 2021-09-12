@@ -414,7 +414,7 @@ class GreensTensorList(list):
 
 
     def sort_by_function(self, function, reverse=False):
-        """ Sorts in-place using the python built-in "sort"
+        """ Sorts in-place using the python built-in `sort`
         """
         self.sort(key=function, reverse=reverse)
 
@@ -433,7 +433,9 @@ class GreensTensorList(list):
 
 
     def write(self, filename):
-        with open(filename, "wb") as file:
+       """ Writes a Python pickle of current `GreensTensorList`
+       """
+       with open(filename, "wb") as file:
            pickle.dump(self, file)
 
 

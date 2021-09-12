@@ -12,7 +12,10 @@ autogen
    mtuq.Origin
    mtuq.Station
    mtuq.graphics.plot_beachball
-   mtuq.graphics.plot_data_synthetics
+   mtuq.graphics.plot_data_greens1
+   mtuq.graphics.plot_data_greens2
+   mtuq.graphics.plot_waveforms1
+   mtuq.graphics.plot_waveforms2
    mtuq.graphics.plot_likelihood_lune
    mtuq.graphics.plot_marginal_lune
    mtuq.graphics.plot_misfit_lune
