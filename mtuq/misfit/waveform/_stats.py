@@ -82,7 +82,7 @@ def estimate_sigma(data, greens, best_source, norm, components,
 
         for _k in indices:
 
-            # substract data from shifted synthetics
+            # subtract data from shifted synthetics
             r = s[_k].data[start:stop] - d[_k].data
 
             # sum the resulting residuals

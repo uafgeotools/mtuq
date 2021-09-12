@@ -32,8 +32,9 @@ if __name__=='__main__':
     #
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
-    # - misfit surfaces
-    # - geographic variation of time shifts and amplitude ratios
+    # - data misfit surfaces
+    # - geographic variation of time shifts between data and synthetics
+    # - geographic variation of amplitude ratios between data and synthetics
     #
     #
     # USAGE
@@ -961,6 +962,7 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         # Generate figures and save results
         #
 
+        # only generate components present in the data
         components_bw = data_bw.get_components()
         components_sw = data_sw.get_components()
 
@@ -970,6 +972,7 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
 
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
+
 
         # time shifts and other attributes corresponding to minimum misfit
         list_bw = misfit_bw.collect_attributes(
@@ -1138,6 +1141,8 @@ WrapUp_GridSearch="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+
+        # only generate components present in the data
         components_bw = data_bw.get_components()
         components_sw = data_sw.get_components()
 
@@ -1147,6 +1152,7 @@ WrapUp_GridSearch="""
 
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
+
 
         # time shifts and other attributes corresponding to minimum misfit
         list_bw = misfit_bw.collect_attributes(
@@ -1223,6 +1229,8 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+
+        # only generate components present in the data
         components_bw = data_bw.get_components()
         components_sw = data_sw.get_components()
 
@@ -1235,6 +1243,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
+
 
         # time shifts and other attributes corresponding to minimum misfit
         list_bw = misfit_bw.collect_attributes(
@@ -1304,6 +1313,8 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     lune_dict = grid.get_dict(idx)
     mt_dict = grid.get(idx).as_dict()
 
+
+    # only generate components present in the data
     components_bw = data_bw.get_components()
     components_sw = data_sw.get_components()
 
@@ -1313,6 +1324,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     synthetics_sw = greens_sw.get_synthetics(
         best_source, components_sw, mode='map')
+
 
     # time shifts and other attributes corresponding to minimum misfit
     list_bw = misfit_bw.collect_attributes(
