@@ -33,8 +33,8 @@ if __name__=='__main__':
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
     # - data misfit surfaces
-    # - geographic variation of time shifts between data and synthetics
-    # - geographic variation of amplitude ratios between data and synthetics
+    # - geographic variation of time shifts
+    # - geographic variation of amplitude ratios
     #
     #
     # USAGE
@@ -81,11 +81,6 @@ if __name__=='__main__':
         capuaf_file=path_weights,
         )
 
-
-    #
-    # For our objective function, we will use a sum of body and surface wave
-    # contributions
-    #
 
     #
     # For our objective function, we will use a sum of body and surface wave

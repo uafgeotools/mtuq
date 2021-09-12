@@ -33,8 +33,8 @@ if __name__=='__main__':
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
     # - data misfit surfaces
-    # - geographic variation of time shifts between data and synthetics
-    # - geographic variation of amplitude ratios between data and synthetics
+    # - geographic variation of time shifts
+    # - geographic variation of amplitude ratios
     #
     #
     # USAGE
@@ -474,11 +474,6 @@ OriginsDefinitions="""
 
 
 MisfitDefinitions_DetailedAnalysis="""
-    #
-    # For our objective function, we will use a sum of body and surface wave
-    # contributions
-    #
-
     misfit_bw = Misfit(
         norm='L2',
         time_shift_min=-2.,
