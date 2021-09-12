@@ -9,12 +9,11 @@ import numpy as np
 import pandas
 import xarray
 
-from functools import reduce
 from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.graphics._gmt import read_cpt
 from mtuq.graphics.uq._gmt import _nothing_to_plot
-from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath
+from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, product
 from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
     to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
 from os.path import exists
@@ -225,8 +224,7 @@ def calculate_likelihoods(da, var):
         'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
-        'likelihood_max': likelihoods.max(),
-        'likelihood_vw': dataarray_idxmax(likelihoods).values(),
+        'maximum_likelihood_estimate': dataarray_idxmax(likelihoods).values(),
         })
 
 
@@ -246,7 +244,6 @@ def calculate_marginals(da, var):
         'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
-        'marginal_max': marginals.max(),
         'marginal_vw': dataarray_idxmax(marginals).values(),
         })
 
@@ -340,17 +337,56 @@ def _max_vw(da):
     return lune_vals
 
 
-def _vw_product(*arrays, best_vw='max'):
+def likelihood_analysis(*args):
+    """ Multiplies to together contributions from different data categories to
+    likelihood function
+    """
+
+    arrays = [arg[0] for arg in args]
+    covs = [arg[1] for arg in args]
+
+    values = []
+    for _i, array in enumerate(arrays):
+        values += [np.exp(-array.values**2/covs[_i])]
+
+    dims = arrays[0].dims
+    coords = arrays[0].coords
+    values = product(*values)
+
+    likelihoods = MTUQDataArray(**{
+        'data': values,
+        'dims': dims,
+        'coords': coords,
+        })
+
+    marginals = likelihoods.sum(
+        dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+    marginals.values /= marginals.values.sum()
+    marginals /= vw_area
+
+    # extract maximum likelihood estimate
+    idxmax = dataarray_idxmax(likelihoods)
+    mle = {key: float(idxmax[key].values)
+        for key in dims}
+
+    # extract marginal vw estimate
+    idxmax = dataarray_idxmax(marginals)
+    marginal_vw = {key: float(idxmax[key].values)
+        for key in ('v', 'w')}
+
+    return likelihoods, mle, marginal_vw
+
+
+def product_vw(*arrays, best_vw='max'):
 
     # evaluates product of arbitrarily many arrays
-    da = reduce((lambda x, y: x * y), arrays)
+    da = product(*arrays)
 
-    # previous attributes no longer apply
+    # any previous attributes no longer apply
     da = da.assign_attrs({
         'best_mt': None,
         'best_vw': None,
         'lune_array': None,
-        'marginal_max': None,
         'marginal_vw': None,
         })
 
