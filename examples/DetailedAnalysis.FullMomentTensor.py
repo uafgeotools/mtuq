@@ -233,6 +233,8 @@ if __name__=='__main__':
         mt_dict = grid.get(idx).as_dict()
 
 
+        print('Data variance estimation...\n')
+
         sigma_bw = estimate_sigma(data_bw, greens_bw,
             best_source, misfit_bw.norm, ['Z', 'R'],
             misfit_bw.time_shift_min, misfit_bw.time_shift_max)
@@ -251,13 +253,11 @@ if __name__=='__main__':
             'sigma_love': sigma_love,
             }
 
-        print()
-
-        print('Body wave variance:  %.3e' %
+        print('  Body wave variance:  %.3e' %
             sigma_bw**2)
-        print('Rayleigh variance:   %.3e' %
+        print('  Rayleigh variance:   %.3e' %
             sigma_rayleigh**2)
-        print('Love variance:       %.3e' %
+        print('  Love variance:       %.3e' %
             sigma_love**2)
 
         print()
