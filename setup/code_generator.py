@@ -33,8 +33,8 @@ if __name__=='__main__':
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
     # - data misfit surfaces
-    # - geographic variation of time shifts between data and synthetics
-    # - geographic variation of amplitude ratios between data and synthetics
+    # - geographic variation of time shifts
+    # - geographic variation of amplitude ratios
     #
     #
     # USAGE
@@ -474,11 +474,6 @@ OriginsDefinitions="""
 
 
 MisfitDefinitions_DetailedAnalysis="""
-    #
-    # For our objective function, we will use a sum of body and surface wave
-    # contributions
-    #
-
     misfit_bw = Misfit(
         norm='L2',
         time_shift_min=-2.,
@@ -544,7 +539,7 @@ Grid_FullMomentTensor="""
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=15,
+        npts_per_axis=12,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -911,6 +906,8 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         mt_dict = grid.get(idx).as_dict()
 
 
+        print('Data variance estimation...\\n')
+
         sigma_bw = estimate_sigma(data_bw, greens_bw,
             best_source, misfit_bw.norm, ['Z', 'R'],
             misfit_bw.time_shift_min, misfit_bw.time_shift_max)
@@ -923,40 +920,66 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             best_source, misfit_love.norm, ['T'],
             misfit_love.time_shift_min, misfit_love.time_shift_max)
 
+        stats = {
+            'sigma_bw': sigma_bw,
+            'sigma_rayleigh': sigma_rayleigh,
+            'sigma_love': sigma_love,
+            }
 
-        print('  Body wave variance estimate:      %.3e' %
+        print('  Body wave variance:  %.3e' %
             sigma_bw**2)
-        print('  Rayleigh wave variance estimate:  %.3e' %
+        print('  Rayleigh variance:   %.3e' %
             sigma_rayleigh**2)
-        print('  Love wave variance estimate:      %.3e' %
+        print('  Love variance:       %.3e' %
             sigma_love**2)
 
         print()
 
+        norm_bw = calculate_norm_data(data_bw, 
+            misfit_bw.norm, ['Z', 'R'])
+        norm_rayleigh = calculate_norm_data(data_sw, 
+            misfit_rayleigh.norm, ['Z', 'R'])
+        norm_love = calculate_norm_data(data_sw, 
+            misfit_love.norm, ['T'])
 
-        # maximum likelihood surface
-        likelihoods =\\
-            calculate_likelihoods(results_bw, sigma_bw**2)*\\
-            calculate_likelihoods(results_rayleigh, sigma_rayleigh**2)*\\
-            calculate_likelihoods(results_love, sigma_love**2)
+        norms = {
+            misfit_bw.norm+'_bw': norm_bw,
+            misfit_rayleigh.norm+'_rayleigh': norm_rayleigh,
+            misfit_love.norm+'_love': norm_love,
+            }
 
-        # marginal likelihood surface
-        marginals =\\
-            calculate_marginals(results_bw, sigma_bw**2)*\\
-            calculate_marginals(results_rayleigh, sigma_rayleigh**2)*\\
-            calculate_marginals(results_love, sigma_love**2)
+        # variance reduction vw surfaces
 
-        # fix marker location
-        from mtuq.graphics.uq.vw import _max_vw
+        from mtuq.graphics.uq.vw import _variance_reduction_vw_regular
 
-        likelihoods = likelihoods.assign_attrs({
-            'best_vw': _max_vw(likelihoods),
-            })
+        variance_reduction_bw = _variance_reduction_vw_regular(
+            results_bw, norm_bw)
 
-        marginals = marginals.assign_attrs({
-            'best_vw': _max_vw(marginals),
-            })
+        variance_reduction_rayleigh = _variance_reduction_vw_regular(
+            results_rayleigh, norm_rayleigh)
 
+        variance_reduction_love = _variance_reduction_vw_regular(
+            results_love, norm_love)
+
+
+        print('Likelihood analysis...\\n')
+
+        likelihoods, mle, marginal_vw = likelihood_analysis(
+            (results_bw, sigma_bw**2),
+            (results_rayleigh, sigma_rayleigh**2),
+            (results_love, sigma_love**2))
+
+        # maximum likelihood vw surface
+        likelihoods_vw = _product_vw(
+            _likelihoods_vw_regular(results_bw, sigma_bw**2),
+            _likelihoods_vw_regular(results_rayleigh, sigma_rayleigh**2),
+            _likelihoods_vw_regular(results_love, sigma_love**2))
+
+        # marginal likelihood vw surface
+        marginals_vw = _product_vw(
+            _marginals_vw_regular(results_bw, sigma_bw**2),
+            _marginals_vw_regular(results_rayleigh, sigma_rayleigh**2),
+            _marginals_vw_regular(results_love, sigma_love**2))
 
         #
         # Generate figures and save results
@@ -1043,7 +1066,7 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             title='Love waves')
 
         _plot_lune(event_id+'FMT_likelihood/all.png',
-            likelihoods, colormap='hot_r',
+            likelihoods_vw, colormap='hot_r',
             title='All data categories')
 
         print()
@@ -1065,9 +1088,28 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             results_love, var=sigma_love**2,
             title='Love waves')
 
-        #_plot_vw(event_id+'FMT_marginal/all.png',
-        #    marginals, colormap='hot_r',
-        #    title='All data categories')
+        _plot_vw(event_id+'FMT_marginal/all.png',
+            marginals_vw, colormap='hot_r',
+            title='All data categories')
+
+
+        print('Plotting variance reduction surfaces...\\n')
+
+        os.makedirs(event_id+'FMT_variance_reduction', exist_ok=True)
+
+        _plot_lune(event_id+'FMT_variance_reduction/bw.png',
+            100.*variance_reduction_bw, colormap='viridis_r',
+            title='Body wave variance reduction (percent)')
+
+        _plot_lune(event_id+'FMT_variance_reduction/rayleigh.png',
+            100.*variance_reduction_rayleigh, colormap='viridis_r',
+            title='Rayleigh variance reduction (percent)')
+
+        _plot_lune(event_id+'FMT_variance_reduction/love.png',
+            100.*variance_reduction_love, colormap='viridis_r',
+            title='Love variance reduction (percent)')
+
+        print()
 
 
         print('Plotting time shift geographic variation...\\n')
@@ -1094,6 +1136,14 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         save_json(event_id+'FMT_mt.json', mt_dict)
         save_json(event_id+'FMT_lune.json', lune_dict)
 
+        os.makedirs(event_id+'FMT_stats', exist_ok=True)
+
+        save_json(event_id+'FMT_stats/marginal_vw.json', marginal_vw)
+        save_json(event_id+'FMT_stats/maximum_likelihood_estimate.json', mle)
+
+        save_json(event_id+'FMT_stats/data_variance.json', stats)
+        save_json(event_id+'FMT_stats/data_norm.json', norms)
+
 
         # save time shifts and other attributes
         os.makedirs(event_id+'FMT_attrs', exist_ok=True)
@@ -1116,7 +1166,6 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         results_bw.save(event_id+'FMT_misfit/bw.nc')
         results_rayleigh.save(event_id+'FMT_misfit/rayleigh.nc')
         results_love.save(event_id+'FMT_misfit/love.nc')
-        results_sum.save(event_id+'FMT_misfit/sum.nc')
 
 
         print('\\nFinished\\n')
@@ -1540,9 +1589,10 @@ if __name__=='__main__':
             (
             'plot_misfit_lune,\\\n'+
             '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
-            '    calculate_likelihoods, calculate_marginals,\\\n'+
             '    plot_time_shifts, plot_amplitude_ratios,\\\n'+
-            '    _plot_lune, _plot_vw'
+            '    _likelihoods_vw_regular, _marginals_vw_regular,\\\n'+
+            '    _plot_lune, _plot_vw, _product_vw, likelihood_analysis\n'+
+            'from mtuq.graphics.uq.vw import _variance_reduction_vw_regular'
             ),
             'from mtuq.misfit import Misfit',
             'from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data'

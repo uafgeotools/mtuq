@@ -106,8 +106,8 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
                         s_max = s[_k].data[start:stop].max()
                         d_max = d[_k].data.max()
-                        s[_k].attrs.amplitude_ratio = s_max/d_max
-                        s[_k].attrs.log_amplitude_ratio = np.log(s_max/d_max)
+                        s[_k].attrs.amplitude_ratio = d_max/s_max
+                        s[_k].attrs.log_amplitude_ratio = np.log(d_max/s_max)
 
                         s[_k].attrs.norm = norm
                         s[_k].attrs.time_shift_min = time_shift_min

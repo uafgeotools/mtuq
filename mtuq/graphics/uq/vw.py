@@ -13,7 +13,7 @@ from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.graphics._gmt import read_cpt
 from mtuq.graphics.uq._gmt import _nothing_to_plot
-from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath
+from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, product
 from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
     to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
 from os.path import exists
@@ -44,17 +44,16 @@ def plot_misfit_vw(filename, ds, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'viridis',
-        'marker_type': 1,
         })
 
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        misfit = calculate_misfit(ds)
+        misfit = _misfit_vw_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        misfit = calculate_misfit_unstruct(ds)
+        misfit = _misfit_vw_random(ds)
 
     _plot_vw(filename, misfit, **kwargs)
 
@@ -79,17 +78,16 @@ def plot_likelihood_vw(filename, ds, var, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'hot_r',
-        'marker_type': 2,
         })
 
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        likelihoods = calculate_likelihoods(ds, var)
+        likelihoods = _likelihoods_vw_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        likelihoods = calculate_likelihoods_unstruct(ds, var)
+        likelihoods = _likelihoods_vw_random(ds, var)
 
     _plot_vw(filename, likelihoods, **kwargs)
 
@@ -115,17 +113,16 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'hot_r',
-        'marker_type': 2,
         })
 
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        marginals = calculate_marginals(ds, var)
+        marginals = _marginals_vw_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        marginals = calculate_marginals_unstruct(ds, var)
+        marginals = _marginals_vw_random(ds, var)
 
     _plot_vw(filename, marginals, **kwargs)
 
@@ -135,11 +132,7 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 # matplotlib backend
 #
 
-def _plot_vw(filename, da,
-    colormap='viridis', colorbar_type=1, marker_type=1, title=''):
-
-    if marker_type not in [0,1,2]:
-        raise ValueError
+def _plot_vw(filename, da, colormap='viridis', show_best=True, title=''):
 
     v = da.coords['v']
     w = da.coords['w']
@@ -168,7 +161,7 @@ def _plot_vw(filename, da,
     if exists(_local_path(colormap)):
        cmap = read_cpt(_local_path(colormap))
 
-    if colorbar_type:
+    if True:
         cbar = pyplot.colorbar(
             orientation='horizontal',
             pad=0.,
@@ -180,20 +173,21 @@ def _plot_vw(filename, da,
         fontdict = {'fontsize': 16}
         pyplot.title(title, fontdict=fontdict)
 
-    if marker_type > 0:
-        if marker_type==1:
-            idx = np.unravel_index(da.values.argmin(), da.values.shape)
-            coords = v[idx[0]], w[idx[1]]
-        elif marker_type==2:
-            idx = np.unravel_index(da.values.argmax(), da.values.shape)
-            coords = v[idx[0]], w[idx[1]]
 
-        pyplot.scatter(*coords, s=333,
-            marker='o',
-            facecolors='none',
-            edgecolors=[0,1,0],
-            linewidths=1.75,
-            )
+    if show_best:
+        if 'best_vw' in da.attrs:
+            coords = da.attrs['best_vw']
+
+            pyplot.scatter(*coords, s=333,
+                marker='o',
+                facecolors='none',
+                edgecolors=[0,1,0],
+                linewidths=1.75,
+                )
+
+        else:
+            warn("Best-fitting vw not given")
+
 
     pyplot.savefig(filename)
     pyplot.close()
@@ -203,19 +197,19 @@ def _plot_vw(filename, da,
 # for extracting misfit or likelihood from regularly-spaced grids
 #
 
-def calculate_misfit(da):
+def _misfit_vw_regular(da):
     """ For each source type, extracts minimum misfit
     """
     misfit = da.min(dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
 
     return misfit.assign_attrs({
-        'best_mt': _best_mt(da),
+        'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
         })
 
 
-def calculate_likelihoods(da, var):
+def _likelihoods_vw_regular(da, var):
     """ For each source type, calculates maximum likelihood value
     """
     likelihoods = da.copy()
@@ -227,15 +221,14 @@ def calculate_likelihoods(da, var):
     likelihoods /= vw_area
 
     return likelihoods.assign_attrs({
-        'best_mt': _best_mt(da),
+        'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
-        'likelihood_max': likelihoods.max(),
-        'likelihood_vw': dataarray_idxmax(likelihoods).values(),
+        'maximum_likelihood_estimate': dataarray_idxmax(likelihoods).values(),
         })
 
 
-def calculate_marginals(da, var):
+def _marginals_vw_regular(da, var):
     """ For each source type, calculates marginal likelihood value
     """
 
@@ -248,15 +241,14 @@ def calculate_marginals(da, var):
     marginals /= vw_area
 
     return marginals.assign_attrs({
-        'best_mt': _best_mt(da),
+        'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
-        'marginal_max': marginals.max(),
         'marginal_vw': dataarray_idxmax(marginals).values(),
         })
 
 
-def calculate_magnitudes(da):
+def _magnitudes_vw_regular(da):
     """ For each source type, calculates magnitude of best-fitting moment tensor
     """
     v = da.coords['v']
@@ -281,7 +273,22 @@ def calculate_magnitudes(da):
         )
 
     return magnitudes.assign_attrs({
-        'best_mt': _best_mt(da),
+        'best_mt': _min_mt(da),
+        'best_vw': _min_vw(da),
+        'lune_array': _lune_array(da),
+        })
+
+
+def _variance_reduction_vw_regular(da, data_norm):
+    """ For each source type, extracts minimum misfit
+    """
+    variance_reduction = 1. - da.copy()/data_norm
+
+    variance_reduction = variance_reduction.max(
+        dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+
+    return variance_reduction.assign_attrs({
+        'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
         'lune_array': _lune_array(da),
         })
@@ -310,8 +317,8 @@ def _lune_array(da):
     return lune_array
 
 
-def _best_mt(da):
-    """ Returns overall best-fitting moment tensor
+def _min_mt(da):
+    """ Returns moment tensor vector corresponding to mininum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
@@ -319,8 +326,17 @@ def _best_mt(da):
     return to_mij(*lune_vals)
 
 
+def _max_mt(da):
+    """ Returns moment tensor vector corresponding to maximum DataArray value
+    """
+    da = dataarray_idxmax(da)
+    lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
+    lune_vals = [da[key].values for key in lune_keys]
+    return to_mij(*lune_vals)
+
+
 def _min_vw(da):
-    """ Returns overall best v,w
+    """ Returns v,w coordinates corresponding to mininum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['v', 'w']
@@ -328,7 +344,7 @@ def _min_vw(da):
     return lune_vals
 
 def _max_vw(da):
-    """ Returns overall best v,w
+    """ Returns v,w coordinates corresponding to maximum DataArray value
     """
     da = dataarray_idxmax(da)
     lune_keys = ['v', 'w']
@@ -336,49 +352,80 @@ def _max_vw(da):
     return lune_vals
 
 
+def _product_vw(*arrays, best_vw='max'):
+
+    # evaluates product of arbitrarily many arrays
+    da = product(*arrays)
+
+    # any previous attributes no longer apply
+    da = da.assign_attrs({
+        'best_mt': None,
+        'best_vw': None,
+        'lune_array': None,
+        'marginal_vw': None,
+        })
+
+    if best_vw=='min':
+        return da.assign_attrs({'best_vw': _min_vw(da)})
+
+    elif best_vw=='max':
+        return da.assign_attrs({'best_vw': _max_vw(da)})
+
+    else:
+        return da
+
+
 
 #
 # for extracting misfit or likelihood from irregularly-spaced grids
 #
 
-def calculate_misfit_unstruct(df, **kwargs):
+def _misfit_vw_random(df, **kwargs):
     df = df.copy()
     df = df.reset_index()
-    da = vw_bin_semiregular(df, lambda df: df.min(), **kwargs)
+    da = _bin_vw_semiregular(df, lambda df: df.min(), **kwargs)
 
     return da.assign_attrs({
         'best_vw':  _min_vw(da),
         })
 
 
-def calculate_likelihoods_unstruct(df, var, **kwargs):
+def _likelihoods_vw_random(df, var, **kwargs):
     df = df.copy()
     df = np.exp(-df/(2.*var))
     df = df.reset_index()
 
-    da = vw_bin_semiregular(df, lambda df: df.max(), **kwargs)
+    da = _bin_vw_semiregular(df, lambda df: df.max(), **kwargs)
     da.values /= da.values.sum()
     da.values /= vw_area
 
     return da.assign_attrs({
-        'likelihood_max': da.max(),
-        'likelihood_vw': _max_vw(da),
         'best_vw': _max_vw(da),
         })
 
 
-def calculate_marginals_unstruct(df, var, **kwargs):
+def _marginals_vw_random(df, var, **kwargs):
     df = df.copy()
     df = np.exp(-df/(2.*var))
     df = df.reset_index()
 
-    da = vw_bin_semiregular(df, lambda df: df.sum()/len(df))
+    da = _bin_vw_semiregular(df, lambda df: df.sum()/len(df))
     da.values /= da.values.sum()
     da.values /= vw_area
 
+    return da
+
+
+def _variance_reduction_vw_random(df, data_norm):
+    """ For each source type, extracts minimum misfit
+    """
+    df = df.copy()
+    df = 1 - df/data_norm
+    df = df.reset_index()
+    da = _bin_vw_semiregular(df, lambda df: df.max(), **kwargs)
+
     return da.assign_attrs({
-        'marginal_max': da.max(),
-        'marginal_vw': _max_vw(da),
+        'best_vw':  _max_vw(da),
         })
 
 
@@ -386,7 +433,7 @@ def calculate_marginals_unstruct(df, var, **kwargs):
 # bins irregularly-spaced moment tensors into v,w rectangles
 #
 
-def vw_bin_regular(df, handle, npts_v=20, npts_w=40):
+def _bin_vw_regular(df, handle, npts_v=20, npts_w=40):
     """ Bins irregularly-spaced moment tensors into square v,w cells
     """
     # define centers of cells
@@ -414,7 +461,7 @@ def vw_bin_regular(df, handle, npts_v=20, npts_w=40):
         )
 
 
-def vw_bin_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
+def _bin_vw_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
     """ Bins irregularly-spaced moment tensors into rectangular v,w cells
     """
     # at which points will we plot values?

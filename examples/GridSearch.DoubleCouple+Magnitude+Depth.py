@@ -219,6 +219,8 @@ if __name__=='__main__':
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+
+        # only generate components present in the data
         components_bw = data_bw.get_components()
         components_sw = data_sw.get_components()
 
@@ -231,6 +233,7 @@ if __name__=='__main__':
 
         synthetics_sw = greens_sw.get_synthetics(
             best_source, components_sw, mode='map')
+
 
         # time shifts and other attributes corresponding to minimum misfit
         list_bw = misfit_bw.collect_attributes(

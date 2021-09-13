@@ -1,4 +1,5 @@
 
+from functools import reduce
 from math import ceil, floor
 from os.path import abspath, join
 from retry import retry
@@ -56,6 +57,10 @@ def iterable(arg):
         return [arg]
     else:
         return arg
+
+
+def product(*arrays):
+    return reduce((lambda x, y: x * y), arrays)
 
 
 def remove_list(list1, list2):
