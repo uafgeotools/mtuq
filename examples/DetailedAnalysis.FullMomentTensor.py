@@ -245,6 +245,11 @@ if __name__=='__main__':
             best_source, misfit_love.norm, ['T'],
             misfit_love.time_shift_min, misfit_love.time_shift_max)
 
+        stats = {
+            'sigma_bw': sigma_bw,
+            'sigma_rayleigh': sigma_rayleigh,
+            'sigma_love': sigma_love,
+            }
 
         print()
 
@@ -256,6 +261,19 @@ if __name__=='__main__':
             sigma_love**2)
 
         print()
+
+        norm_bw = calculate_norm_data(data_bw, 
+            misfit_bw.norm, ['Z', 'R'])
+        norm_rayleigh = calculate_norm_data(data_sw, 
+            misfit_rayleigh.norm, ['Z', 'R'])
+        norm_love = calculate_norm_data(data_sw, 
+            misfit_love.norm, ['T'])
+
+        norms = {
+            misfit_bw.norm+'_bw': norm_bw,
+            misfit_rayleigh.norm+'_rayleigh': norm_rayleigh,
+            misfit_love.norm+'_love': norm_love,
+            }
 
 
         print('Likelihood analysis...\n')
@@ -416,7 +434,10 @@ if __name__=='__main__':
         os.makedirs(event_id+'FMT_stats', exist_ok=True)
 
         save_json(event_id+'FMT_stats/marginal_vw.json', marginal_vw)
-        save_json(event_id+'FMT_stats/mle.json', mle)
+        save_json(event_id+'FMT_stats/maximum_likelihood_estimate.json', mle)
+
+        save_json(event_id+'FMT_stats/data_variance.json', stats)
+        save_json(event_id+'FMT_stats/data_norms.json', norms)
 
 
         # save time shifts and other attributes
