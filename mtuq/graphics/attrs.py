@@ -30,6 +30,19 @@ def plot_amplitude_ratios(*args, **kwargs):
     _plot_attrs(*args, **kwargs)
 
 
+def plot_log_amplitude_ratios(*args, **kwargs):
+    """ Creates "spider plots" showing how ln(Aobs/Asyn) varies geographically
+
+    Within the specified directory, a separate PNG figure will be created for 
+    each given component. Any components not present in the data will be 
+    skipped.
+
+    """
+    kwargs.update({'attr_key': 'log_amplitude_ratio'})
+    _plot_attrs(*args, **kwargs)
+
+
+
 def _plot_attrs(dirname, attrs, stations, origin, source,
      attr_key='time_shift', components=['Z', 'R', 'T'], format='png', 
      backend='matplotlib'):
