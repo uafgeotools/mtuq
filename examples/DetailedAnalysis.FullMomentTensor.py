@@ -10,6 +10,7 @@ from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune,\
     plot_time_shifts, plot_amplitude_ratios,\
     _likelihoods_vw_regular, _marginals_vw_regular,\
     _plot_lune, _plot_vw, _product_vw, likelihood_analysis
+from mtuq.graphics.uq.vw import _variance_reduction_vw_regular
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data
@@ -275,6 +276,19 @@ if __name__=='__main__':
             misfit_love.norm+'_love': norm_love,
             }
 
+        # variance reduction vw surfaces
+
+        from mtuq.graphics.uq.vw import _variance_reduction_vw_regular
+
+        variance_reduction_bw = _variance_reduction_vw_regular(
+            results_bw, norm_bw)
+
+        variance_reduction_rayleigh = _variance_reduction_vw_regular(
+            results_rayleigh, norm_rayleigh)
+
+        variance_reduction_love = _variance_reduction_vw_regular(
+            results_love, norm_love)
+
 
         print('Likelihood analysis...\n')
 
@@ -407,6 +421,25 @@ if __name__=='__main__':
             title='All data categories')
 
 
+        print('Plotting variance reduction surfaces...\n')
+
+        os.makedirs(event_id+'FMT_variance_reduction', exist_ok=True)
+
+        _plot_lune(event_id+'FMT_variance_reduction/bw.png',
+            100.*variance_reduction_bw, colormap='viridis_r',
+            title='Body wave variance reduction (percent)')
+
+        _plot_lune(event_id+'FMT_variance_reduction/rayleigh.png',
+            100.*variance_reduction_rayleigh, colormap='viridis_r',
+            title='Rayleigh variance reduction (percent)')
+
+        _plot_lune(event_id+'FMT_variance_reduction/love.png',
+            100.*variance_reduction_love, colormap='viridis_r',
+            title='Love variance reduction (percent)')
+
+        print()
+
+
         print('Plotting time shift geographic variation...\n')
 
         plot_time_shifts(event_id+'FMT_time_shifts/bw',
@@ -437,7 +470,7 @@ if __name__=='__main__':
         save_json(event_id+'FMT_stats/maximum_likelihood_estimate.json', mle)
 
         save_json(event_id+'FMT_stats/data_variance.json', stats)
-        save_json(event_id+'FMT_stats/data_norms.json', norms)
+        save_json(event_id+'FMT_stats/data_norm.json', norms)
 
 
         # save time shifts and other attributes

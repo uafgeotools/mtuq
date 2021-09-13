@@ -279,6 +279,21 @@ def _magnitudes_vw_regular(da):
         })
 
 
+def _variance_reduction_vw_regular(da, data_norm):
+    """ For each source type, extracts minimum misfit
+    """
+    variance_reduction = 1. - da.copy()/data_norm
+
+    variance_reduction = variance_reduction.max(
+        dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
+
+    return variance_reduction.assign_attrs({
+        'best_mt': _min_mt(da),
+        'best_vw': _min_vw(da),
+        'lune_array': _lune_array(da),
+        })
+
+
 def _lune_array(da):
     """ For each source type, returns best-fitting moment tensor
     """
@@ -385,8 +400,6 @@ def _likelihoods_vw_random(df, var, **kwargs):
     da.values /= vw_area
 
     return da.assign_attrs({
-        'likelihood_max': da.max(),
-        'likelihood_vw': _max_vw(da),
         'best_vw': _max_vw(da),
         })
 
@@ -400,9 +413,19 @@ def _marginals_vw_random(df, var, **kwargs):
     da.values /= da.values.sum()
     da.values /= vw_area
 
+    return da
+
+
+def _variance_reduction_vw_random(df, data_norm):
+    """ For each source type, extracts minimum misfit
+    """
+    df = df.copy()
+    df = 1 - df/data_norm
+    df = df.reset_index()
+    da = _bin_vw_semiregular(df, lambda df: df.max(), **kwargs)
+
     return da.assign_attrs({
-        'marginal_max': da.max(),
-        'marginal_vw': _max_vw(da),
+        'best_vw':  _max_vw(da),
         })
 
 
