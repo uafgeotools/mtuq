@@ -35,7 +35,7 @@ def plot_misfit_lune(filename, ds, **kwargs):
 
     .. rubric :: Optional input arguments
 
-    For optional argument descpritions, 
+    For optional argument descriptions, 
     `see here <mtuq.graphics._plot_lune.html>`_
 
     """ 
@@ -73,7 +73,7 @@ def plot_likelihood_lune(filename, ds, var, **kwargs):
 
     .. rubric :: Optional input arguments
 
-    For optional argument descpritions, 
+    For optional argument descriptions, 
     `see here <mtuq.graphics._plot_lune.html>`_
     """
     _defaults(kwargs, {
@@ -110,7 +110,7 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
 
     .. rubric :: Optional input arguments
 
-    For optional argument descpritions, 
+    For optional argument descriptions, 
     `see here <mtuq.graphics._plot_lune.html>`_
     """
     _defaults(kwargs, {
@@ -146,7 +146,7 @@ def plot_mt_tradeoffs(filename, ds, **kwargs):
 
     .. rubric :: Optional input arguments
 
-    For optional argument descpritions, 
+    For optional argument descriptions, 
     `see here <mtuq.graphics._plot_lune.html>`_
     """
     _defaults(kwargs, {
