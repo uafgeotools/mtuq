@@ -71,7 +71,8 @@ def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
 
 
 def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
-    title='', colormap='viridis', flip_cpt=False, marker_coords=None, marker_type=0):
+    title='', colormap='viridis', flip_cpt=False, colorbar_type=1,
+    marker_coords=None, marker_type=0):
 
     print('  calling GMT script: %s' % basename(shell_script))
 
@@ -100,7 +101,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %s %f %f %d %e %s %d %s %d %s %s" %
+        subprocess.call("%s %s %s %s %s %f %f %d %e %s %d %d %s %d %s %s" %
            (shell_script,
             filename,
             filetype,
@@ -112,6 +113,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
             cpt_step,
             cpt_name,
             int(bool(flip_cpt)),
+            int(colorbar_type),
             marker_coords_file,
             int(marker_type),
             title,

@@ -10,7 +10,7 @@ source _gmt_functions
 
 
 # parse input arguments
-if [ $# -lt 14 ] ; then
+if [ $# -lt 15 ] ; then
     echo "plot_force: bad input arguments"
     exit -1
 fi
@@ -31,14 +31,14 @@ value_exp=$7
 cpt_step=$8
 cpt_name=$9
 flip_cpt=${10}
-colorbar_type=1
+colorbar_type=${11}
 colorbar_label=""
 
 # markers
-marker_coords=${11}
-marker_type=${12}
+marker_coords=${12}
+marker_type=${13}
 
-title="${13}"
+title="${14}"
 subtitle="${15}"
 
 proj_arg="-JH0/6i"

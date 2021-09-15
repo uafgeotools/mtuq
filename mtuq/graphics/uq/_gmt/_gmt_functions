@@ -237,7 +237,7 @@ function add_lune_labels_coords {
 }
 
 
-function add_title {
+function add_title_lune {
     ps=$1
     prog_arg=$2
     area_arg=$3
@@ -255,6 +255,31 @@ function add_title {
     elif [ -n "$title" ]; then
 
         echo "  0.0  90.0 ${title}" |\
+        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
+
+    fi
+
+}
+
+
+function add_title_vw {
+    ps=$1
+    prog_arg=$2
+    area_arg=$3
+    title="$4"
+    subtitle="$5"
+
+    if [ -n "$title" ] && [ -n "$subtitle" ]; then
+
+        echo "  0.0  1.178 ${title}" |\
+        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/25p >> $ps
+
+        echo "  0.0  1.178 ${subtitle}" |\
+        gmt pstext -F+f15p+jCT -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
+
+    elif [ -n "$title" ]; then
+
+        echo "  0.0  1.178 ${title}" |\
         gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
 
     fi

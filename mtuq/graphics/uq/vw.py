@@ -300,9 +300,7 @@ def _marginals_vw_regular(da, var):
     marginals /= vw_area
 
     return marginals.assign_attrs({
-        'best_mt': _min_mt(da),
-        'best_vw': _min_vw(da),
-        'lune_array': _lune_array(da),
+        'best_vw': _max_vw(marginals),
         'marginal_vw': dataarray_idxmax(marginals).values(),
         })
 
