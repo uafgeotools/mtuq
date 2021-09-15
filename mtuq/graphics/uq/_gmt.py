@@ -19,7 +19,6 @@ def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None,
 
     lon, lat =  _parse_coords(lon,lat)
 
-
     marker_coords = None
     supplemental_data = None
     if best_vw is not None:
@@ -31,6 +30,25 @@ def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None,
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
         filename, lon, lat, values, supplemental_data=supplemental_data,
         marker_coords=marker_coords, **kwargs)
+
+
+def gmt_plot_vw(filename, lon, lat, values, best_vw=None, lune_array=None,
+    **kwargs):
+
+    if _nothing_to_plot(values):
+        return
+
+    lon, lat =  _parse_coords(lon,lat)
+
+    marker_coords = None
+    supplemental_data = None
+    if lune_array is not None:
+        supplemental_data = _parse_lune_array(lune_array)
+
+
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_vw'),
+        filename, lon, lat, values, supplemental_data=supplemental_data,
+        marker_coords=best_vw, **kwargs)
 
 
 def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
