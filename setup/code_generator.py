@@ -948,20 +948,6 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             misfit_love.norm+'_love': norm_love,
             }
 
-        # variance reduction vw surfaces
-
-        from mtuq.graphics.uq.vw import _variance_reduction_vw_regular
-
-        variance_reduction_bw = _variance_reduction_vw_regular(
-            results_bw, norm_bw)
-
-        variance_reduction_rayleigh = _variance_reduction_vw_regular(
-            results_rayleigh, norm_rayleigh)
-
-        variance_reduction_love = _variance_reduction_vw_regular(
-            results_love, norm_love)
-
-
         print('Likelihood analysis...\\n')
 
         likelihoods, mle, marginal_vw = likelihood_analysis(
@@ -1099,16 +1085,16 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
 
         os.makedirs(event_id+'FMT_variance_reduction', exist_ok=True)
 
-        _plot_lune(event_id+'FMT_variance_reduction/bw.png',
-            100.*variance_reduction_bw, colormap='viridis_r',
+        plot_variance_reduction_lune(event_id+'FMT_variance_reduction/bw.png',
+            results_bw, norm_bw, colormap='viridis_r',
             title='Body wave variance reduction (percent)')
 
-        _plot_lune(event_id+'FMT_variance_reduction/rayleigh.png',
-            100.*variance_reduction_rayleigh, colormap='viridis_r',
+        plot_variance_reduction_lune(event_id+'FMT_variance_reduction/rayleigh.png',
+            results_rayleigh, norm_rayleigh, colormap='viridis_r',
             title='Rayleigh variance reduction (percent)')
 
-        _plot_lune(event_id+'FMT_variance_reduction/love.png',
-            100.*variance_reduction_love, colormap='viridis_r',
+        plot_variance_reduction_lune(event_id+'FMT_variance_reduction/love.png',
+            results_love, norm_love, colormap='viridis_r',
             title='Love variance reduction (percent)')
 
         print()
@@ -1123,6 +1109,19 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
 
         plot_magnitude_tradeoffs_lune(event_id+'FMT_tradeoffs/magnitude.png',
             results_sum, title='Magnitude tradeoffs')
+
+        print()
+
+
+        print('Plotting summary figures (work in progress)...\\n')
+
+        os.makedirs(event_id+'FMT_summary', exist_ok=True)
+
+        plot_summary1(event_id+'FMT_summary/1.png',
+            results_rayleigh, stations, origin, best_source)
+
+        plot_summary2(event_id+'FMT_summary/2.png',
+            results_rayleigh, sigma_rayleigh**2, stations, origin, best_source)
 
         print()
 
@@ -1604,10 +1603,11 @@ if __name__=='__main__':
             (
             'plot_misfit_lune,\\\n'+
             '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
+            '    plot_variance_reduction_lune, plot_magnitude_tradeoffs_lune,\\\n'+
             '    plot_time_shifts, plot_amplitude_ratios,\\\n'+
-            '    plot_magnitude_tradeoffs_lune,\\\n'+
+            '    plot_summary1, plot_summary2, likelihood_analysis,\\\n'+
             '    _likelihoods_vw_regular, _marginals_vw_regular,\\\n'+
-            '    _plot_lune, _plot_vw, _product_vw, likelihood_analysis\n'+
+            '    _plot_lune, _plot_vw, _product_vw\n'+
             'from mtuq.graphics.uq.vw import _variance_reduction_vw_regular'
             ),
             'from mtuq.misfit import Misfit',
