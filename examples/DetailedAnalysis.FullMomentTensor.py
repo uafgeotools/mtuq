@@ -8,6 +8,7 @@ from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune,\
     plot_likelihood_lune, plot_marginal_vw,\
     plot_time_shifts, plot_amplitude_ratios,\
+    plot_magnitude_tradeoffs_lune,\
     _likelihoods_vw_regular, _marginals_vw_regular,\
     _plot_lune, _plot_vw, _product_vw, likelihood_analysis
 from mtuq.graphics.uq.vw import _variance_reduction_vw_regular
@@ -124,7 +125,7 @@ if __name__=='__main__':
 
     grid = FullMomentTensorGridSemiregular(
         npts_per_axis=12,
-        magnitudes=[4.5])
+        magnitudes=[4.4, 4.5, 4.6])
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -420,6 +421,8 @@ if __name__=='__main__':
             marginals_vw, colormap='hot_r',
             title='All data categories')
 
+        print()
+
 
         print('Plotting variance reduction surfaces...\n')
 
@@ -436,6 +439,19 @@ if __name__=='__main__':
         _plot_lune(event_id+'FMT_variance_reduction/love.png',
             100.*variance_reduction_love, colormap='viridis_r',
             title='Love variance reduction (percent)')
+
+        print()
+
+
+        print('Plotting tradeoffs...\n')
+
+        os.makedirs(event_id+'FMT_tradeoffs', exist_ok=True)
+
+        plot_misfit_lune(event_id+'FMT_tradeoffs/orientation.png',
+            results_sum, show_tradeoffs=True, title='Orientation tradeoffs')
+
+        plot_magnitude_tradeoffs_lune(event_id+'FMT_tradeoffs/magnitude.png',
+            results_sum, title='Magnitude tradeoffs')
 
         print()
 

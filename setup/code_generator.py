@@ -1092,6 +1092,8 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             marginals_vw, colormap='hot_r',
             title='All data categories')
 
+        print()
+
 
         print('Plotting variance reduction surfaces...\\n')
 
@@ -1108,6 +1110,19 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         _plot_lune(event_id+'FMT_variance_reduction/love.png',
             100.*variance_reduction_love, colormap='viridis_r',
             title='Love variance reduction (percent)')
+
+        print()
+
+
+        print('Plotting tradeoffs...\\n')
+
+        os.makedirs(event_id+'FMT_tradeoffs', exist_ok=True)
+
+        plot_misfit_lune(event_id+'FMT_tradeoffs/orientation.png',
+            results_sum, show_tradeoffs=True, title='Orientation tradeoffs')
+
+        plot_magnitude_tradeoffs_lune(event_id+'FMT_tradeoffs/magnitude.png',
+            results_sum, title='Magnitude tradeoffs')
 
         print()
 
@@ -1590,6 +1605,7 @@ if __name__=='__main__':
             'plot_misfit_lune,\\\n'+
             '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
             '    plot_time_shifts, plot_amplitude_ratios,\\\n'+
+            '    plot_magnitude_tradeoffs_lune,\\\n'+
             '    _likelihoods_vw_regular, _marginals_vw_regular,\\\n'+
             '    _plot_lune, _plot_vw, _product_vw, likelihood_analysis\n'+
             'from mtuq.graphics.uq.vw import _variance_reduction_vw_regular'
@@ -1605,7 +1621,12 @@ if __name__=='__main__':
         file.write(MisfitDefinitions_DetailedAnalysis)
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
-        file.write(Grid_FullMomentTensor)
+        file.write(
+            replace(
+            Grid_FullMomentTensor,
+            'magnitudes=.*',
+            'magnitudes=[4.4, 4.5, 4.6])'
+            ))
         file.write(OriginComments)
         file.write(OriginDefinitions)
         file.write(
