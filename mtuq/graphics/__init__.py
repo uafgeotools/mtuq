@@ -6,17 +6,20 @@ from mtuq.graphics.attrs import\
 from mtuq.graphics.beachball import\
     plot_beachball, misfit_vs_depth
 
+from mtuq.graphics.summary import\
+    plot_summary1, plot_summary2
+
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune,\
-    plot_magnitude_tradeoffs_lune, _plot_lune
-
-from mtuq.graphics.uq.double_couple import\
-    plot_misfit_dc, plot_likelihood_dc, plot_marginal_dc
+    plot_variance_reduction_lune, plot_magnitude_tradeoffs_lune, _plot_lune
 
 from mtuq.graphics.uq.vw import\
     plot_misfit_vw, plot_likelihood_vw, plot_marginal_vw, \
     _misfit_vw_regular, _likelihoods_vw_regular, _marginals_vw_regular, \
     _plot_vw, _product_vw
+
+from mtuq.graphics.uq.double_couple import\
+    plot_misfit_dc, plot_likelihood_dc, plot_marginal_dc
 
 from mtuq.graphics.uq.force import\
     plot_misfit_force, plot_likelihood_force, plot_marginal_force,\

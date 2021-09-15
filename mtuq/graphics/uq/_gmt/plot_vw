@@ -55,7 +55,7 @@ gmt_settings
 
 
 # display background grid
-gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -K > $ps
+gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -Xc -Yr1.2 -K > $ps
 
 
 # generate color palette
@@ -95,13 +95,15 @@ fi
 if [ $colorbar_type -eq 2 ]; then
     # medium colorbar at bottom
     gmt gmtset FONT_ANNOT 18p
+    gmt gmtset FONT_LABEL 18p
     gmt psscale -C$tmp.cpt -D0.00/-0.40+w2.7/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 
 if [ $colorbar_type -eq 3 ]; then
     # large colorbar at bottom
-    gmt gmtset FONT_ANNOT 24p
+    gmt gmtset FONT_ANNOT 30p
+    gmt gmtset FONT_LABEL 30p
     gmt psscale -C$tmp.cpt -D0.00/-0.40+w2.7/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi

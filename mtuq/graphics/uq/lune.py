@@ -18,7 +18,7 @@ from mtuq.graphics.uq.vw import\
     _misfit_vw_regular, _misfit_vw_random,\
     _likelihoods_vw_regular, _likelihoods_vw_random,\
     _marginals_vw_regular, _marginals_vw_random,\
-    _magnitudes_vw_regular
+    _variance_reduction_vw_regular, _magnitudes_vw_regular
 
 
 def plot_misfit_lune(filename, ds, **kwargs):
@@ -127,6 +127,42 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
         marginals = _marginals_vw_random(ds, var)
 
     _plot_lune(filename, marginals, **kwargs)
+
+
+def plot_variance_reduction_lune(filename, ds, data_norm, **kwargs):
+    """ Plots misfit values on eigenvalue lune (requires GMT)
+
+    .. rubric :: Required input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``data_norm`` (`float`):
+    Norm of data
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_lune.html>`_
+
+    """
+    _defaults(kwargs, {
+        'colormap': 'viridis_r',
+        })
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        misfit = 100.*_variance_reduction_vw_regular(ds, data_norm)
+
+    elif issubclass(type(ds), DataFrame):
+        misfit = 100.*_variance_reduction_vw_random(ds, data_norm)
+
+    _plot_lune(filename, misfit, **kwargs)
 
 
 def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
