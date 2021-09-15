@@ -128,7 +128,7 @@ def plot_marginal_force(filename, ds, var, **kwargs):
 
 
 def plot_force_tradeoffs(filename, ds, **kwargs):
-    """ Plots magnitude of best-fitting force with respect to force orientation 
+    """ Plots magnitude versus force orientation tradeoffs
     (requires GMT)
 
     .. rubric :: Required input arguments

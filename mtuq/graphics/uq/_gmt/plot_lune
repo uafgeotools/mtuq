@@ -40,7 +40,7 @@ marker_coords=${11}
 marker_type=${12}
 
 title="${13}"
-subtitle="${15}"
+subtitle="${14}"
 
 proj_arg="-JH0/3.4i"
 area_arg="-R-30/30/-90/90"

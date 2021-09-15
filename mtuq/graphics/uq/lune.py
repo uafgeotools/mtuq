@@ -130,7 +130,7 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
 
 
 def plot_mt_tradeoffs(filename, ds, **kwargs):
-    """ Plots magnitudes of best-fitting moment tensors (requires GMT)
+    """ Plots magnitude versus source type tradeoffs (requires GMT)
 
     .. rubric :: Required input arguments
 
