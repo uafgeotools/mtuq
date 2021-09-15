@@ -13,7 +13,7 @@ from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 from mtuq.graphics import plot_misfit_lune, plot_likelihood_lune,\
-    plot_marginal_vw, plot_mt_tradeoffs
+    plot_marginal_vw, plot_magnitude_tradeoffs_lune
 from mtbench import calculate_sigma
 
 
@@ -162,7 +162,7 @@ if __name__=='__main__':
         plot_misfit_lune(event_id+'_mt_tradeoffs.png',
             results, show_tradeoffs=True, title='Orientation tradeoffs')
 
-        plot_mt_tradeoffs(event_id+'_Mw_tradeoffs.png',
+        plot_magnitude_tradeoffs_lune(event_id+'_Mw_tradeoffs.png',
             results, show_tradeoffs=False, title='Magnitude tradeoffs (Mw)')
 
 

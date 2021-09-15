@@ -105,8 +105,8 @@ To see how the magnitude of the best-fitting moment tensor varies with respect t
 
 .. code::
 
-    from mtuq.graphics import plot_mt_tradeoffs
-    plot_mt_tradeoffs(filename, ds)
+    from mtuq.graphics import plot_magnitude_tradeoffs_lune
+    plot_magnitude_tradeoffs_lune(filename, ds)
 
 .. image:: images/20090407201255351_Mw_tradeoffs.png
   :width: 100 

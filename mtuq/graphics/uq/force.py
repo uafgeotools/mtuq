@@ -127,7 +127,7 @@ def plot_marginal_force(filename, ds, var, **kwargs):
     _plot_force(filename, marginals, **kwargs)
 
 
-def plot_force_tradeoffs(filename, ds, **kwargs):
+def plot_magnitude_tradeoffs_force(filename, ds, **kwargs):
     """ Plots magnitude versus force orientation tradeoffs
     (requires GMT)
 

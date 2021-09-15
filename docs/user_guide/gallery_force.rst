@@ -71,8 +71,8 @@ To see how the magnitude of the best-fitting force varies with respect to orient
 
 .. code::
 
-    from mtuq.graphics import plot_force_tradeoffs
-    plot_force_tradeoffs(filename, ds)
+    from mtuq.graphics import plot_magnitude_tradeoffs_force
+    plot_magnitude_tradeoffs_force(filename, ds)
 
 .. image:: images/20090407201255351_force_tradeoffs.png
   :width: 200 

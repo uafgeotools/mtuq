@@ -129,7 +129,7 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
     _plot_lune(filename, marginals, **kwargs)
 
 
-def plot_mt_tradeoffs(filename, ds, **kwargs):
+def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
     """ Plots magnitude versus source type tradeoffs (requires GMT)
 
     .. rubric :: Required input arguments
