@@ -12,7 +12,7 @@ from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
-from mtuq.graphics import plot_misfit_force, plot_likelihood_force, plot_force_tradeoffs
+from mtuq.graphics import plot_misfit_force, plot_likelihood_force, plot_magnitude_tradeoffs_force
 from mtbench import calculate_sigma
 
 
@@ -158,7 +158,7 @@ if __name__=='__main__':
         plot_misfit_force(event_id+'_misfit_force.png', 
             results, title='L2 misfit')
 
-        plot_force_tradeoffs(event_id+'_force_tradeoffs.png',
+        plot_magnitude_tradeoffs_force(event_id+'_force_tradeoffs.png',
             results, title='Magnitude tradeoffs')
 
 

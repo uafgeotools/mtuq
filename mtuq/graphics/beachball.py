@@ -24,7 +24,7 @@ from mtuq.event import MomentTensor
 from mtuq.util import warn
 
 
-def plot_beachball(filename, mt):
+def plot_beachball(filename, mt, stations=None):
     """ Plots focal mechanism of given moment tensor as PNG image
 
     .. rubric :: Input arguments

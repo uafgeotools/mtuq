@@ -28,7 +28,7 @@ def plot_misfit_force(filename, ds, **kwargs):
 
     .. rubric :: Optional input arguments
 
-    For optional argument descpritions, 
+    For optional argument descriptions, 
     `see here <mtuq.graphics._plot_force.html>`_
 
 
@@ -67,7 +67,7 @@ def plot_likelihood_force(filename, ds, var, **kwargs):
 
     .. rubric :: Optional input arguments
 
-    For optional argument descpritions, 
+    For optional argument descriptions, 
     `see here <mtuq.graphics._plot_force.html>`_
 
 
@@ -107,7 +107,7 @@ def plot_marginal_force(filename, ds, var, **kwargs):
 
     .. rubric :: Optional input arguments
 
-    For optional argument descpritions, 
+    For optional argument descriptions, 
     `see here <mtuq.graphics._plot_force.html>`_
 
     """
@@ -127,8 +127,8 @@ def plot_marginal_force(filename, ds, var, **kwargs):
     _plot_force(filename, marginals, **kwargs)
 
 
-def plot_force_tradeoffs(filename, ds, **kwargs):
-    """ Plots magnitude of best-fitting force with respect to force orientation 
+def plot_magnitude_tradeoffs_force(filename, ds, **kwargs):
+    """ Plots magnitude versus force orientation tradeoffs
     (requires GMT)
 
     .. rubric :: Required input arguments
@@ -142,7 +142,7 @@ def plot_force_tradeoffs(filename, ds, **kwargs):
 
     .. rubric :: Optional input arguments
 
-    For optional argument descpritions, 
+    For optional argument descriptions, 
     `see here <mtuq.graphics._plot_force.html>`_
 
 

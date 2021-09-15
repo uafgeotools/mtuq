@@ -42,8 +42,8 @@ marker_type=${13}
 title="${14}"
 subtitle="${15}"
 
-proj_arg="-JH0/3.4i"
-area_arg="-R-30/30/-90/90"
+proj_arg="-Jx3.9/3.9i"
+area_arg="-R-0.35/0.35/-1.178/1.178"
 
 out=${filename}
 ps="${out}.ps"
@@ -74,11 +74,11 @@ fi
 
 
 # display reference arcs
-add_lune_arcs $ps $proj_arg $area_arg
+#add_vw_arcs $ps $proj_arg $area_arg
 
 
 # display title
-add_title_lune $ps $proj_arg $area_arg "$title" "$subtitle"
+add_title_vw $ps $proj_arg $area_arg "$title" "$subtitle"
 
 
 # display colorbar
@@ -88,46 +88,23 @@ if [ $colorbar_type -ne 0 ]; then
 fi
 
 if [ $colorbar_type -eq 1 ]; then
-    # small colorbar with long label at bottom
-    gmt psscale -C$tmp.cpt -D0.5/-0.4+w2.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
-
+    # small colorbar at bottom
+    gmt psscale -C$tmp.cpt -D0.00/-0.40+w2.7/0.2+h "$arg1" "$arg2" -O -K >> $ps
 fi
 
 if [ $colorbar_type -eq 2 ]; then
-    # medium colorbar with long label at bottom
+    # medium colorbar at bottom
     gmt gmtset FONT_ANNOT 18p
     gmt gmtset FONT_LABEL 18p
-    gmt psscale -C$tmp.cpt -D0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
+    gmt psscale -C$tmp.cpt -D0.00/-0.40+w2.7/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 
 if [ $colorbar_type -eq 3 ]; then
-    # large colorbar with long label at bottom
-    gmt gmtset FONT_ANNOT 32p
-    gmt gmtset FONT_LABEL 32p
-    gmt psscale -C$tmp.cpt -D0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
-
-fi
-
-if [ $colorbar_type -eq 4 ]; then
-    # small colorbar with short label at bottom
-    gmt psscale -C$tmp.cpt -D0.5/-0.4+w2.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
-
-fi
-
-if [ $colorbar_type -eq 5 ]; then
-    # medium colorbar with short label at bottom
-    gmt gmtset FONT_ANNOT 18p
-    gmt gmtset FONT_LABEL 18p
-    gmt psscale -C$tmp.cpt -D0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
-
-fi
-
-if [ $colorbar_type -eq 6 ]; then
-    # large colorbar with short label at bottom
+    # large colorbar at bottom
     gmt gmtset FONT_ANNOT 30p
     gmt gmtset FONT_LABEL 30p
-    gmt psscale -C$tmp.cpt -D0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
+    gmt psscale -C$tmp.cpt -D0.00/-0.40+w2.7/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 

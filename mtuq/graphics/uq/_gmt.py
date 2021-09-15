@@ -19,7 +19,6 @@ def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None,
 
     lon, lat =  _parse_coords(lon,lat)
 
-
     marker_coords = None
     supplemental_data = None
     if best_vw is not None:
@@ -31,6 +30,25 @@ def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None,
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_lune'),
         filename, lon, lat, values, supplemental_data=supplemental_data,
         marker_coords=marker_coords, **kwargs)
+
+
+def gmt_plot_vw(filename, lon, lat, values, best_vw=None, lune_array=None,
+    **kwargs):
+
+    if _nothing_to_plot(values):
+        return
+
+    lon, lat =  _parse_coords(lon,lat)
+
+    marker_coords = None
+    supplemental_data = None
+    if lune_array is not None:
+        supplemental_data = _parse_lune_array(lune_array)
+
+
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_vw'),
+        filename, lon, lat, values, supplemental_data=supplemental_data,
+        marker_coords=best_vw, **kwargs)
 
 
 def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
@@ -53,7 +71,8 @@ def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
 
 
 def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
-    title='', colormap='viridis', flip_cpt=False, marker_coords=None, marker_type=0):
+    title='', colormap='viridis', flip_cpt=False, colorbar_type=1,
+    marker_coords=None, marker_type=0):
 
     print('  calling GMT script: %s' % basename(shell_script))
 
@@ -82,7 +101,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %s %f %f %d %e %s %d %s %d %s %s" %
+        subprocess.call("%s %s %s %s %s %f %f %d %e %s %d %d %s %d %s %s" %
            (shell_script,
             filename,
             filetype,
@@ -94,6 +113,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
             cpt_step,
             cpt_name,
             int(bool(flip_cpt)),
+            int(colorbar_type),
             marker_coords_file,
             int(marker_type),
             title,
