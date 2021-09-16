@@ -250,11 +250,9 @@ if __name__=='__main__':
             best_source, misfit_love.norm, ['T'],
             misfit_love.time_shift_min, misfit_love.time_shift_max)
 
-        stats = {
-            'sigma_bw': sigma_bw,
-            'sigma_rayleigh': sigma_rayleigh,
-            'sigma_love': sigma_love,
-            }
+        stats = {'sigma_bw': sigma_bw,
+                 'sigma_rayleigh': sigma_rayleigh,
+                 'sigma_love': sigma_love}
 
         print('  Body wave variance:  %.3e' %
             sigma_bw**2)
@@ -272,11 +270,9 @@ if __name__=='__main__':
         norm_love = calculate_norm_data(data_sw, 
             misfit_love.norm, ['T'])
 
-        norms = {
-            misfit_bw.norm+'_bw': norm_bw,
-            misfit_rayleigh.norm+'_rayleigh': norm_rayleigh,
-            misfit_love.norm+'_love': norm_love,
-            }
+        norms = {misfit_bw.norm+'_bw': norm_bw,
+                 misfit_rayleigh.norm+'_rayleigh': norm_rayleigh,
+                 misfit_love.norm+'_love': norm_love}
 
         print('Likelihood analysis...\n')
 
@@ -354,13 +350,13 @@ if __name__=='__main__':
         os.makedirs(event_id+'FMT_misfit', exist_ok=True)
 
         plot_misfit_lune(event_id+'FMT_misfit/bw.png', results_bw,
-            title='Body wave misfit (%s)' % misfit_bw.norm)
+            title='Body waves')
 
-        plot_misfit_lune(event_id+'FMT_misfit/sw.png', results_rayleigh,
-            title='Rayleigh wave misfit (%s)' % misfit_rayleigh.norm)
+        plot_misfit_lune(event_id+'FMT_misfit/rayleigh.png', results_rayleigh,
+            title='Rayleigh waves')
 
         plot_misfit_lune(event_id+'FMT_misfit/love.png', results_love,
-            title='Love wave misfit (%s)' % misfit_love.norm)
+            title='Love waves')
 
         print()
 
@@ -416,13 +412,16 @@ if __name__=='__main__':
         os.makedirs(event_id+'FMT_variance_reduction', exist_ok=True)
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/bw.png',
-            results_bw, norm_bw, title='Body waves')
+            results_bw, norm_bw, title='Body waves',
+            colorbar_label='Variance reduction (percent)')
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/rayleigh.png',
-            results_rayleigh, norm_rayleigh, title='Rayleigh waves')
+            results_rayleigh, norm_rayleigh, title='Rayleigh waves',
+            colorbar_label='Variance reduction (percent)')
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/love.png',
-            results_love, norm_love, title='Love waves')
+            results_love, norm_love, title='Love waves', 
+            colorbar_label='Variance reduction (percent)')
 
         print()
 

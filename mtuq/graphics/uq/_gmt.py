@@ -205,7 +205,7 @@ def _parse_label(label):
     assert type(label) in string_types
 
     if len(label) > 0:
-        return label
+        return "'%s'" % label
     else:
         return "''"
 
