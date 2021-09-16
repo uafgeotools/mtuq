@@ -244,18 +244,21 @@ function add_title_lune {
     title="$4"
     subtitle="$5"
 
+    title_fontsize=25p
+    subtitle_fontsize=20p
+
     if [ -n "$title" ] && [ -n "$subtitle" ]; then
 
         echo "  0.0  90.0 ${title}" |\
-        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/25p >> $ps
+        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/${title_fontsize} >> $ps
 
         echo "  0.0  90.0 ${subtitle}" |\
-        gmt pstext -F+f15p+jCT -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
+        gmt pstext -F+f15p+jCT -N $proj_arg $area_arg -O -K -D0p/${subtitle_fontsize} >> $ps
 
     elif [ -n "$title" ]; then
 
         echo "  0.0  90.0 ${title}" |\
-        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/20p >> $ps
+        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/${title_fontsize} >> $ps
 
     fi
 
@@ -331,7 +334,8 @@ function get_colorbar_arg1 {
 }
 
 
-function get_colorbar_arg2 {
+
+function get_colorbar_exp {
     # constructs scaling factor 10^exp
 
     exp=$1

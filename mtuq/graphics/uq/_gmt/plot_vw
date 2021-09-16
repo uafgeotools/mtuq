@@ -12,7 +12,7 @@ source _gmt_functions
 
 
 # parse input arguments
-if [ $# -lt 15 ] ; then
+if [ $# -lt 16 ] ; then
     echo "plot_lune: bad input arguments"
     exit -1
 fi
@@ -33,14 +33,19 @@ cpt_step=$8
 cpt_name=$9
 flip_cpt=${10}
 colorbar_type=${11}
-colorbar_label=""
+colorbar_label="${12}"
 
 # markers
-marker_coords=${12}
-marker_type=${13}
+marker_coords=${13}
+marker_type=${14}
 
-title="${14}"
-subtitle="${15}"
+title="${15}"
+subtitle="${16}"
+
+title_size="25p"
+subtitle_size="20p"
+label_size="15p"
+
 
 proj_arg="-Jx3.9/3.9i"
 area_arg="-R-0.35/0.35/-1.178/1.178"
@@ -83,9 +88,18 @@ add_title_vw $ps $proj_arg $area_arg "$title" "$subtitle"
 
 # display colorbar
 if [ $colorbar_type -ne 0 ]; then
+
+    # controls label below horizontal colorbar
     arg1=$( get_colorbar_arg1 "$colorbar_label" )
-    arg2=$( get_colorbar_arg2 $value_exp )
+
+    # controls label to the right of horizontal colorbar
+    arg2=$( get_colorbar_exp $value_exp )
+
+    gmt gmtset FONT_ANNOT $label_size
+    gmt gmtset FONT_LABEL $label_size
+ 
 fi
+
 
 if [ $colorbar_type -eq 1 ]; then
     # small colorbar at bottom
@@ -94,16 +108,6 @@ fi
 
 if [ $colorbar_type -eq 2 ]; then
     # medium colorbar at bottom
-    gmt gmtset FONT_ANNOT 18p
-    gmt gmtset FONT_LABEL 18p
-    gmt psscale -C$tmp.cpt -Dx0.00/-0.40+w2.7/0.3+h "$arg1" "$arg2" -O -K >> $ps
-
-fi
-
-if [ $colorbar_type -eq 3 ]; then
-    # large colorbar at bottom
-    gmt gmtset FONT_ANNOT 30p
-    gmt gmtset FONT_LABEL 30p
     gmt psscale -C$tmp.cpt -Dx0.00/-0.40+w2.7/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
