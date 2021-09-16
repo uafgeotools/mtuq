@@ -280,7 +280,7 @@ if __name__=='__main__':
 
         print('Likelihood analysis...\n')
 
-        likelihoods, mle, marginal_vw = likelihood_analysis(
+        likelihoods, mle_lune, marginal_vw = likelihood_analysis(
             (results_bw, sigma_bw**2),
             (results_rayleigh, sigma_rayleigh**2),
             (results_love, sigma_love**2))
@@ -291,7 +291,7 @@ if __name__=='__main__':
             _likelihoods_vw_regular(results_rayleigh, sigma_rayleigh**2),
             _likelihoods_vw_regular(results_love, sigma_love**2))
 
-        # marginal likelihood vw surface
+        # TODO - marginalize over the joint likelihood distribution instead
         marginals_vw = _product_vw(
             _marginals_vw_regular(results_bw, sigma_bw**2),
             _marginals_vw_regular(results_rayleigh, sigma_rayleigh**2),
@@ -416,16 +416,13 @@ if __name__=='__main__':
         os.makedirs(event_id+'FMT_variance_reduction', exist_ok=True)
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/bw.png',
-            results_bw, norm_bw, colormap='viridis_r',
-            title='Body wave variance reduction (percent)')
+            results_bw, norm_bw, title='Body waves')
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/rayleigh.png',
-            results_rayleigh, norm_rayleigh, colormap='viridis_r',
-            title='Rayleigh variance reduction (percent)')
+            results_rayleigh, norm_rayleigh, title='Rayleigh waves')
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/love.png',
-            results_love, norm_love, colormap='viridis_r',
-            title='Love variance reduction (percent)')
+            results_love, norm_love, title='Love waves')
 
         print()
 
@@ -483,7 +480,7 @@ if __name__=='__main__':
         os.makedirs(event_id+'FMT_stats', exist_ok=True)
 
         save_json(event_id+'FMT_stats/marginal_vw.json', marginal_vw)
-        save_json(event_id+'FMT_stats/maximum_likelihood_estimate.json', mle)
+        save_json(event_id+'FMT_stats/MLE_lune.json', mle_lune)
 
         save_json(event_id+'FMT_stats/data_variance.json', stats)
         save_json(event_id+'FMT_stats/data_norm.json', norms)
