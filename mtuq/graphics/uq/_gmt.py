@@ -76,7 +76,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
 
     print('  calling GMT script: %s' % basename(shell_script))
 
-    filetype = _parse_filetype(filename)
+    filename, filetype = _parse_filetype(filename)
 
     values, minval, maxval, exp = _parse_values(values)
 
@@ -101,7 +101,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %s %f %f %d %e %s %d %d %s %d %s %s" %
+        subprocess.call("%s %s %s %s %s %f %f %d %s %s %d %d %s %d %s %s" %
            (shell_script,
             filename,
             filetype,
@@ -110,7 +110,8 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
             minval,
             maxval,
             exp,
-            cpt_step,
+            # workaround GMT scientific notation parsing
+            _float_to_str(cpt_step),
             cpt_name,
             int(bool(flip_cpt)),
             int(colorbar_type),
@@ -202,20 +203,20 @@ def _parse_filetype(filename):
     name, ext = parts[0], parts[1].lstrip('.')
 
     if ext.upper() in ['PS']:
-        return 'EPS'
+        return name, 'EPS'
 
     elif ext.upper() in ['JPG', 'JPEG']:
-        return 'JPEG'
+        return name, 'JPEG'
 
     elif ext.upper() in ['TIF', 'TIFF']:
-        return 'TIFF'
+        return name, 'TIFF'
 
     elif ext.upper() in gmt_formats:
-        return ext.upper()
+        return name, ext.upper()
 
     else:
         warn('Unrecognized extension: defaulting to PNG')
-        return 'PNG'
+        return name, 'PNG'
 
 
 def _parse_cpt(cpt_name):
@@ -279,6 +280,14 @@ def _parse_lune_array(lune_array):
 
 def _safename(filename):
     return filename.replace('/', '__')
+
+
+def _float_to_str(val):
+    # workaround GMT scientific notation parsing (problem with GMT >=6.1)
+    if str(val).endswith('e+00'):
+        return str(val).replace('e+00', '')
+    else:
+        return str(val).replace('e+', 'e')
 
 
 def _savetxt(filename, *args):

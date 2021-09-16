@@ -35,5 +35,5 @@ Finally, install GMT:
 
 .. code::
 
-    conda install gmt
+    conda install gmt=6.1
 

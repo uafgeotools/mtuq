@@ -88,46 +88,46 @@ if [ $colorbar_type -ne 0 ]; then
 fi
 
 if [ $colorbar_type -eq 1 ]; then
-    # small colorbar with long label at bottom
-    gmt psscale -C$tmp.cpt -D0.5/-0.4+w2.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
+    # small colorbar beneath figure long label
+    gmt psscale -C$tmp.cpt -Dx0.5/-0.4+w2.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 
 if [ $colorbar_type -eq 2 ]; then
-    # medium colorbar with long label at bottom
+    # medium colorbar beneath figure long label
     gmt gmtset FONT_ANNOT 18p
     gmt gmtset FONT_LABEL 18p
-    gmt psscale -C$tmp.cpt -D0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
+    gmt psscale -C$tmp.cpt -Dx0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 
 if [ $colorbar_type -eq 3 ]; then
-    # large colorbar with long label at bottom
+    # large colorbar beneath figure long label
     gmt gmtset FONT_ANNOT 32p
     gmt gmtset FONT_LABEL 32p
-    gmt psscale -C$tmp.cpt -D0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
+    gmt psscale -C$tmp.cpt -Dx0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 
 if [ $colorbar_type -eq 4 ]; then
-    # small colorbar with short label at bottom
-    gmt psscale -C$tmp.cpt -D0.5/-0.4+w2.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
+    # small colorbar beneath figure short label
+    gmt psscale -C$tmp.cpt -Dx0.5/-0.4+w2.4/0.2+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 
 if [ $colorbar_type -eq 5 ]; then
-    # medium colorbar with short label at bottom
+    # medium colorbar beneath figure short label
     gmt gmtset FONT_ANNOT 18p
     gmt gmtset FONT_LABEL 18p
-    gmt psscale -C$tmp.cpt -D0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
+    gmt psscale -C$tmp.cpt -Dx0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 
 if [ $colorbar_type -eq 6 ]; then
-    # large colorbar with short label at bottom
+    # large colorbar beneath figure short label
     gmt gmtset FONT_ANNOT 30p
     gmt gmtset FONT_LABEL 30p
-    gmt psscale -C$tmp.cpt -D0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
+    gmt psscale -C$tmp.cpt -Dx0.5/-0.5+w2.4/0.3+h "$arg1" "$arg2" -O -K >> $ps
 
 fi
 
