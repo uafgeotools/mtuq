@@ -30,7 +30,7 @@ class Grid(object):
     .. code ::          
 
        lat = np.linspace(-90., 90., N)
-       lon = np.linspace(-180., 180., N)
+       lon = np.linspace(-180., 180., 2*N)
        grid = Grid(dims=('lat', 'lon'), coords=(lat, lon))
 
 
@@ -53,7 +53,7 @@ class Grid(object):
 
     ``get(i)`` returns the `i`-th grid point as a NumPy array.
 
-    If a ``callback`` function is given when creating a grid, then ``get`` 
+    If a ``callback`` function was given when creating the grid, then ``get`` 
     returns the result of applying the callback to the `i`-th grid point.  This
     behavior can be overridden by supplying a callback function as a keyword
     argument to ``get`` itself.  If ``callback`` is ``None``, then no function 

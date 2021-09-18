@@ -26,7 +26,7 @@ if __name__=='__main__':
     #
     # Peforms detailed analysis involving
     #
-    # - grid search over all moment tensor parameters except magnitude
+    # - grid search over all moment tensor parameters, including magnitude
     # - separate body wave, Rayleigh wave and Love wave data categories
     # - data variance estimation and likelihood analysis
     #
@@ -36,6 +36,7 @@ if __name__=='__main__':
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
     # - data misfit surfaces
+    # - so-called variance reduction surfaces, involving `1 - |rsd|/|dat|`
     # - geographic variation of time shifts
     # - geographic variation of amplitude ratios
     #
