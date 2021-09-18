@@ -25,6 +25,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     #
     for _j, d in enumerate(data):
         greens[_j]._set_components(get_components(d))
+
         helpers += [Helper(data[_j], greens[_j], norm, 
                            time_shift_min, time_shift_max)]
 
@@ -106,7 +107,6 @@ class Helper(object):
         misfit += self.d_d[index]
 
         # s^2 contribution
-        _  = np.dot(self.g_g[index, it, :, :], source)
         misfit += np.dot(np.dot(self.g_g[index, it, :, :], source), source)
 
         # -2sd contribution
