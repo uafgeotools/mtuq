@@ -1,6 +1,7 @@
 
 import numpy as np
 import warnings
+from mpi4py import MPI
 
 from copy import copy, deepcopy
 from mtuq.event import Origin
@@ -362,25 +363,58 @@ class GreensTensorList(list):
         return self.__class__(processed)
 
 
-    #def parralell_map(self, function, *sequences):
-    #    """ Parallelized version of `map`
+    def parralell_map(self, function, *sequences):
+        """ Parallelized version of `map`
 
-    #    Maps a function to each `GreensTensor` in the list. If one or more 
-    #    optional sequences are given, the function is called with an argument 
-    #    list consisting of the corresponding item of each sequence, similar
-    #    to the Python built-in ``map``.
+        Maps a function to each `GreensTensor` in the list. If one or more
+        optional sequences are given, the function is called with an argument
+        list consisting of the corresponding item of each sequence, similar
+        to the Python built-in ``map``.
 
-    #    Parallelized using mpi4py
+        Parallelized using mpi4py
 
-    #    .. warning ::
+        .. warning ::
 
-    #        Although ``map`` returns a new `GreensTensorList`, contents of the
-    #        original `GreensTensorList` may still be overwritten, depending on
-    #        the function. To preserve the original, consider making a 
-    #        `copy` first.
+           Although ``map`` returns a new `GreensTensorList`, contents of the
+           original `GreensTensorList` may still be overwritten, depending on
+           the function. To preserve the original, consider making a
+           `copy` first.
 
-    #    """
-    #    raise NotImplementedError
+        """
+        # Create a list of lists, where each sublist contains the indices of tensors that will be distributed to one process
+        num_tensors = len(self)
+        num_processes = MPI.COMM_WORLD.Get_size()
+
+        if (num_tensors < num_processes):
+            raise ValueError("Number of tensors must be greater or equal to number of processes")
+
+        # Distribute the indices over the available processes
+        tensor_indices = np.arange(num_tensors)
+        local_tensor_indices = np.array_split(tensor_indices, num_processes)[MPI.COMM_WORLD.Get_rank()]
+
+        # Create a list of lists, where each sublist contains the tensors that will be distributed to one process
+        local_tensors = []
+        for i in local_tensor_indices:
+            local_tensors.append(self[i])
+
+        # Apply function to each of the tensor lists, and gather them onto process 0 to return a new list
+        local_results = []
+        for _i, tensor in enumerate(local_tensors):
+            args = [sequence[_i] for sequence in sequences]
+
+            # Apply function to each of the tensor lists and gather the results onto process 0 to return a new list
+            local_results += [function(tensor, *args)]
+
+        # Gather the results onto process 0 to return a new list of lists
+        global_results = MPI.COMM_WORLD.gather(local_results, root=0)
+        if MPI.COMM_WORLD.Get_rank() == 0:
+            final_list = []
+            for list in global_results:
+                final_list += list
+
+        if (MPI.COMM_WORLD.Get_rank() == 0):
+            return self.__class__(final_list)
+
 
 
     def convolve(self, wavelet):
