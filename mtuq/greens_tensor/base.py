@@ -1,7 +1,6 @@
 
 import numpy as np
 import warnings
-from mpi4py import MPI
 
 from copy import copy, deepcopy
 from mtuq.event import Origin
@@ -363,7 +362,7 @@ class GreensTensorList(list):
         return self.__class__(processed)
 
 
-    def parralell_map(self, function, *sequences):
+    def parallel_map(self, function, *sequences):
         """ Parallelized version of `map`
 
         Maps a function to each `GreensTensor` in the list. If one or more
@@ -381,6 +380,7 @@ class GreensTensorList(list):
            `copy` first.
 
         """
+        from mpi4py import MPI
         # Create a list of lists, where each sublist contains the indices of tensors that will be distributed to one process
         num_tensors = len(self)
         num_processes = MPI.COMM_WORLD.Get_size()
