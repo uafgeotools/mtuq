@@ -309,3 +309,29 @@ def semiregular_grid(npts_v, npts_w, tightness=0.5):
     gamma = gamma1*(1.-tightness) + gamma2*tightness
 
     return to_v(gamma), to_w(delta)
+
+def radiation_coef(source, takeoff_angle, azimuth):
+    """ Computes P-wave radiation coefficient from source (vecor form), takeoff_angle and azimuth, directly in mtuq orientation conventions.
+
+    Based on Aki & Richards, Second edition (2009), eq. 4.88, p. 108
+    """
+
+    alpha = np.deg2rad(takeoff_angle)
+    az = np.deg2rad(azimuth)
+    dir = np.zeros(3)
+    sth = np.sin(alpha)
+    cth = np.cos(alpha)
+    sphi = np.sin(az)
+    cphi = np.cos(az)
+    dir[0]=sth*cphi
+    dir[1]=sth*sphi
+    dir[2]=cth
+
+    cth = source[0]*dir[2]*dir[2] + source[1]*dir[0]*dir[0] + source[2]*dir[1]*dir[1] + 2*(source[3]*dir[0]*dir[2] - source[4]*dir[1]*dir[2] - source[5]*dir[0]*dir[1])
+
+    if cth > 0:
+        cth = 1
+    elif cth < 0:
+        cth = -1
+    return cth
+
