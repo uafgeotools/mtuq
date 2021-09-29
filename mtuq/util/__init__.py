@@ -61,6 +61,13 @@ def iterable(arg):
         return arg
 
 
+def merge_dicts(*dicts):
+   merged = {}
+   for dict in dicts:
+      merged.update(dict)
+   return merged
+
+
 def product(*arrays):
     return reduce((lambda x, y: x * y), arrays)
 
@@ -261,7 +268,6 @@ class ProgressCallback(object):
             self.msg_count += 1
             self.next_iter = self.msg_count * self.msg_interval
         self.iter += 1
-
 
 
 def dataarray_idxmin(da):
