@@ -3,11 +3,11 @@ import numpy as np
 import obspy
 from obspy.core import UTCDateTime
 
-from mtuq.util import asarray
+from mtuq.util import AttribDict, asarray
 
 
 
-class Origin(obspy.core.AttribDict):
+class Origin(AttribDict):
     """ Origin metadata object
 
     Holds the following event information
@@ -56,12 +56,9 @@ class Origin(obspy.core.AttribDict):
 
 
     def as_dict(self):
-        return {
-            'time': self.time.isoformat(), 
-            'latitude': self.latitude,
-            'longitude': self.longitude,
-            'depth_in_m': self.depth_in_m,
-            }
+        """ Converts to dictionary
+        """
+        return self.__dict__
 
 
 class MomentTensor(object):

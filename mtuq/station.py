@@ -1,7 +1,8 @@
 
 import obspy
+
+from mtuq.util import AttribDict
 from obspy.core import UTCDateTime
-from obspy.core.util import AttribDict
 from obspy.geodetics import gps2dist_azimuth
 
 
@@ -107,6 +108,5 @@ class Station(AttribDict):
                 float(self.npts-1)*self.delta
         else:
             self.__dict__['endtime'] = self.starttime
-
 
 
