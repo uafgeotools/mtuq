@@ -10,7 +10,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath, save_json
+from mtuq.util import fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 

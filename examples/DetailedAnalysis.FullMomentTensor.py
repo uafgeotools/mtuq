@@ -17,7 +17,7 @@ from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath, save_json
+from mtuq.util import fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
@@ -36,7 +36,7 @@ if __name__=='__main__':
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
     # - data misfit surfaces
-    # - so-called variance reduction surfaces, involving `1 - |rsd|/|dat|`
+    # - "variance reduction" surfaces
     # - geographic variation of time shifts
     # - geographic variation of amplitude ratios
     #
@@ -146,7 +146,6 @@ if __name__=='__main__':
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
-        'id': '20090407201255351'
         })
 
 
@@ -236,6 +235,8 @@ if __name__=='__main__':
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
 
         print('Data variance estimation...\n')
 
@@ -275,6 +276,7 @@ if __name__=='__main__':
                  misfit_rayleigh.norm+'_rayleigh': norm_rayleigh,
                  misfit_love.norm+'_love': norm_love}
 
+
         print('Likelihood analysis...\n')
 
         likelihoods, mle_lune, marginal_vw = likelihood_analysis(
@@ -293,6 +295,7 @@ if __name__=='__main__':
             _marginals_vw_regular(results_bw, sigma_bw**2),
             _marginals_vw_regular(results_rayleigh, sigma_rayleigh**2),
             _marginals_vw_regular(results_love, sigma_love**2))
+
 
         #
         # Generate figures and save results
@@ -474,16 +477,24 @@ if __name__=='__main__':
         print('\nSaving results...\n')
 
         # save best-fitting source
-        save_json(event_id+'FMT_mt.json', mt_dict)
-        save_json(event_id+'FMT_lune.json', lune_dict)
+        os.makedirs(event_id+'FMT_solutions', exist_ok=True)
+
+        save_json(event_id+'FMT_solutions/marginal_likelihood.json', marginal_vw)
+        save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
+        save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
 
         os.makedirs(event_id+'FMT_stats', exist_ok=True)
 
-        save_json(event_id+'FMT_stats/marginal_vw.json', marginal_vw)
-        save_json(event_id+'FMT_stats/MLE_lune.json', mle_lune)
-
         save_json(event_id+'FMT_stats/data_variance.json', stats)
         save_json(event_id+'FMT_stats/data_norm.json', norms)
+
+
+        # save stations and origins
+        stations_dict = {station.id: station
+            for _i,station in enumerate(stations)}
+
+        save_json(event_id+'FMT_stations.json', stations_dict)
+        save_json(event_id+'FMT_origins.json', {0: origin})
 
 
         # save time shifts and other attributes

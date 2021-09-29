@@ -10,7 +10,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath, save_json
+from mtuq.util import fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
@@ -118,7 +118,6 @@ if __name__=='__main__':
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
-        'id': '20090407201255351'
         })
 
 
