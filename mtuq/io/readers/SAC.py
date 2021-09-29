@@ -132,11 +132,25 @@ def _get_origin(stream, event_id):
         })
 
 
-def _get_station(stream, origin):
+def _get_station(stream, origin, attach_sac_headers=True):
     """ Extracts station metadata from SAC headers
     """
-    station = Station(stream[0].meta)
-    sac_headers = station.sac
+    #
+    # extract metadata from ObsPy structures
+    #
+    meta = stream[0].meta.__dict__
+
+    sac_headers = meta.pop('sac')
+
+    # remove channel-specific attributes
+    for attr in ['channel', 'component']:
+        if attr in meta:
+            meta.pop(attr)
+
+    #
+    # populate station object
+    #
+    station = Station(meta)
 
     station.update({
         'id': '.'.join([
@@ -160,6 +174,9 @@ def _get_station(stream, origin):
             'station_depth_in_m': sac_headers.stdp})
     except:
         pass
+
+    if attach_sac_headers:
+        station.sac = sac_headers
 
     return station
 

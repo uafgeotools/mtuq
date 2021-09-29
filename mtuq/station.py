@@ -32,7 +32,6 @@ class Station(AttribDict):
         'network': '',
         'station': '',
         'location': '',
-        'channel': '',
         }
 
     readonly = []
