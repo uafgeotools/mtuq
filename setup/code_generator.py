@@ -11,7 +11,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath, save_json
+from mtuq.util import fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
@@ -23,7 +23,7 @@ if __name__=='__main__':
     #
     # Peforms detailed analysis involving
     #
-    # - grid search over all moment tensor parameters except magnitude
+    # - grid search over all moment tensor parameters, including magnitude
     # - separate body wave, Rayleigh wave and Love wave data categories
     # - data variance estimation and likelihood analysis
     #
@@ -33,6 +33,7 @@ if __name__=='__main__':
     # - maximum likelihood surfaces
     # - marginal likelihood surfaces
     # - data misfit surfaces
+    # - "variance reduction" surfaces
     # - geographic variation of time shifts
     # - geographic variation of amplitude ratios
     #
@@ -436,7 +437,6 @@ OriginDefinitions="""
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
-        'id': '20090407201255351'
         })
 
 """
@@ -456,7 +456,6 @@ OriginsDefinitions="""
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
-        'id': '20090407201255351'
         })
 
     depths = np.array(
@@ -905,6 +904,8 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
 
         print('Data variance estimation...\\n')
 
@@ -920,11 +921,9 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             best_source, misfit_love.norm, ['T'],
             misfit_love.time_shift_min, misfit_love.time_shift_max)
 
-        stats = {
-            'sigma_bw': sigma_bw,
-            'sigma_rayleigh': sigma_rayleigh,
-            'sigma_love': sigma_love,
-            }
+        stats = {'sigma_bw': sigma_bw,
+                 'sigma_rayleigh': sigma_rayleigh,
+                 'sigma_love': sigma_love}
 
         print('  Body wave variance:  %.3e' %
             sigma_bw**2)
@@ -942,15 +941,14 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         norm_love = calculate_norm_data(data_sw, 
             misfit_love.norm, ['T'])
 
-        norms = {
-            misfit_bw.norm+'_bw': norm_bw,
-            misfit_rayleigh.norm+'_rayleigh': norm_rayleigh,
-            misfit_love.norm+'_love': norm_love,
-            }
+        norms = {misfit_bw.norm+'_bw': norm_bw,
+                 misfit_rayleigh.norm+'_rayleigh': norm_rayleigh,
+                 misfit_love.norm+'_love': norm_love}
+
 
         print('Likelihood analysis...\\n')
 
-        likelihoods, mle, marginal_vw = likelihood_analysis(
+        likelihoods, mle_lune, marginal_vw = likelihood_analysis(
             (results_bw, sigma_bw**2),
             (results_rayleigh, sigma_rayleigh**2),
             (results_love, sigma_love**2))
@@ -961,11 +959,12 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
             _likelihoods_vw_regular(results_rayleigh, sigma_rayleigh**2),
             _likelihoods_vw_regular(results_love, sigma_love**2))
 
-        # marginal likelihood vw surface
+        # TODO - marginalize over the joint likelihood distribution instead
         marginals_vw = _product_vw(
             _marginals_vw_regular(results_bw, sigma_bw**2),
             _marginals_vw_regular(results_rayleigh, sigma_rayleigh**2),
             _marginals_vw_regular(results_love, sigma_love**2))
+
 
         #
         # Generate figures and save results
@@ -1024,13 +1023,13 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         os.makedirs(event_id+'FMT_misfit', exist_ok=True)
 
         plot_misfit_lune(event_id+'FMT_misfit/bw.png', results_bw,
-            title='Body wave misfit (%s)' % misfit_bw.norm)
+            title='Body waves')
 
-        plot_misfit_lune(event_id+'FMT_misfit/sw.png', results_rayleigh,
-            title='Rayleigh wave misfit (%s)' % misfit_rayleigh.norm)
+        plot_misfit_lune(event_id+'FMT_misfit/rayleigh.png', results_rayleigh,
+            title='Rayleigh waves')
 
         plot_misfit_lune(event_id+'FMT_misfit/love.png', results_love,
-            title='Love wave misfit (%s)' % misfit_love.norm)
+            title='Love waves')
 
         print()
 
@@ -1086,16 +1085,16 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         os.makedirs(event_id+'FMT_variance_reduction', exist_ok=True)
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/bw.png',
-            results_bw, norm_bw, colormap='viridis_r',
-            title='Body wave variance reduction (percent)')
+            results_bw, norm_bw, title='Body waves',
+            colorbar_label='Variance reduction (percent)')
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/rayleigh.png',
-            results_rayleigh, norm_rayleigh, colormap='viridis_r',
-            title='Rayleigh variance reduction (percent)')
+            results_rayleigh, norm_rayleigh, title='Rayleigh waves',
+            colorbar_label='Variance reduction (percent)')
 
         plot_variance_reduction_lune(event_id+'FMT_variance_reduction/love.png',
-            results_love, norm_love, colormap='viridis_r',
-            title='Love variance reduction (percent)')
+            results_love, norm_love, title='Love waves', 
+            colorbar_label='Variance reduction (percent)')
 
         print()
 
@@ -1147,16 +1146,24 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         print('\\nSaving results...\\n')
 
         # save best-fitting source
-        save_json(event_id+'FMT_mt.json', mt_dict)
-        save_json(event_id+'FMT_lune.json', lune_dict)
+        os.makedirs(event_id+'FMT_solutions', exist_ok=True)
+
+        save_json(event_id+'FMT_solutions/marginal_likelihood.json', marginal_vw)
+        save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
+        save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
 
         os.makedirs(event_id+'FMT_stats', exist_ok=True)
 
-        save_json(event_id+'FMT_stats/marginal_vw.json', marginal_vw)
-        save_json(event_id+'FMT_stats/maximum_likelihood_estimate.json', mle)
-
         save_json(event_id+'FMT_stats/data_variance.json', stats)
         save_json(event_id+'FMT_stats/data_norm.json', norms)
+
+
+        # save stations and origins
+        stations_dict = {station.id: station
+            for _i,station in enumerate(stations)}
+
+        save_json(event_id+'FMT_stations.json', stations_dict)
+        save_json(event_id+'FMT_origins.json', {0: origin})
 
 
         # save time shifts and other attributes
@@ -1204,6 +1211,8 @@ WrapUp_GridSearch="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
 
         # only generate components present in the data
         components_bw = data_bw.get_components()
@@ -1245,8 +1254,7 @@ WrapUp_GridSearch="""
         print('Saving results...\\n')
 
         # save best-fitting source
-        save_json(event_id+'DC_mt.json', mt_dict)
-        save_json(event_id+'DC_lune.json', lune_dict)
+        save_json(event_id+'DC_solution.json', merged_dict)
 
 
         # save time shifts and other attributes
@@ -1292,6 +1300,8 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, best_origin)
+
 
         # only generate components present in the data
         components_bw = data_bw.get_components()
@@ -1324,38 +1334,44 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Generating figures...\\n')
 
-        plot_data_greens2(event_id+'DC_waveforms.png',
+        plot_data_greens2(event_id+'DC+_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
-        plot_misfit_depth(event_id+'_misfit_depth.png',
+        plot_misfit_depth(event_id+'DC+_misfit_depth.png',
             results, origins, grid)
 
 
         print('Saving results...\\n')
 
         # save best-fitting source
-        save_json(event_id+'DC_mt.json', mt_dict)
-        save_json(event_id+'DC_lune.json', lune_dict)
+        save_json(event_id+'DC+_solution.json', merged_dict)
+
+
+        # save origins
+        origins_dict = {_i: origin 
+            for _i,origin in enumerate(origins)}
+
+        save_json(event_id+'DC+_origins.json', origins_dict)
 
 
         # save time shifts and other attributes
-        os.makedirs(event_id+'DC_attrs', exist_ok=True)
+        os.makedirs(event_id+'DC+_attrs', exist_ok=True)
 
-        save_json(event_id+'DC_attrs/bw.json', dict_bw)
-        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+        save_json(event_id+'DC+_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC+_attrs/sw.json', dict_sw)
 
 
         # save processed waveforms as binary files
-        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+        os.makedirs(event_id+'DC+_waveforms', exist_ok=True)
 
-        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
-        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+        data_bw.write(event_id+'DC+_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC+_waveforms/dat_sw.p')
 
-        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
-        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+        synthetics_bw.write(event_id+'DC+_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC+_waveforms/syn_sw.p')
 
-        results.save(event_id+'DC_misfit.nc')
+        results.save(event_id+'DC+_misfit.nc')
 
 
         print('\\nFinished\\n')
@@ -1375,6 +1391,8 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     best_source = grid.get(idx)
     lune_dict = grid.get_dict(idx)
     mt_dict = grid.get(idx).as_dict()
+
+    merged_dict = merge_dicts(lune_dict, mt_dict, origin)
 
 
     # only generate components present in the data
@@ -1417,8 +1435,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     print('Saving results...\\n')
 
     # save best-fitting source
-    save_json(event_id+'DC_mt.json', mt_dict)
-    save_json(event_id+'DC_lune.json', lune_dict)
+    save_json(event_id+'DC_solution.json', merged_dict)
 
 
     # save time shifts and other attributes

@@ -1,6 +1,8 @@
 
+from copy import deepcopy
 from functools import reduce
 from math import ceil, floor
+from obspy import UTCDateTime
 from os.path import abspath, join
 from retry import retry
 
@@ -57,6 +59,13 @@ def iterable(arg):
         return [arg]
     else:
         return arg
+
+
+def merge_dicts(*dicts):
+   merged = {}
+   for dict in dicts:
+      merged.update(dict)
+   return merged
 
 
 def product(*arrays):
@@ -117,6 +126,14 @@ def fullpath(*args):
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
+
+        from mtuq import Station
+        if isinstance(obj, Station):
+            # don't write out SAC metadata (too big)
+            if hasattr(obj, 'sac'):
+                obj = deepcopy(obj)
+                obj.pop('sac', None)
+
         if isinstance(obj, np.integer):
             return int(obj)
         if isinstance(obj, np.floating):
@@ -124,9 +141,13 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         if isinstance(obj, AttribDict):
-            return {key: obj[key] for key in obj}
+            return obj.__dict__
+        if issubclass(type(obj), AttribDict):
+            return obj.__dict__
+        if isinstance(obj, UTCDateTime):
+            return str(obj)
 
-        return super(Encoder, self).default(obj)
+        return super(JSONEncoder, self).default(obj)
 
 
 def save_json(filename, data):
@@ -247,7 +268,6 @@ class ProgressCallback(object):
             self.msg_count += 1
             self.next_iter = self.msg_count * self.msg_interval
         self.iter += 1
-
 
 
 def dataarray_idxmin(da):

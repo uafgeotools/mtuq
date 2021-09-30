@@ -8,6 +8,7 @@ from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180, to_delta, to_gamma, to_mij
 from os.path import basename, exists, splitext
+from six import string_types
 
 
 
@@ -71,8 +72,8 @@ def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
 
 
 def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
-    title='', colormap='viridis', flip_cpt=False, colorbar_type=1,
-    marker_coords=None, marker_type=0):
+    title='', colormap='viridis', flip_cpt=False, colorbar_type=1, 
+    colorbar_label='', marker_coords=None, marker_type=0):
 
     print('  calling GMT script: %s' % basename(shell_script))
 
@@ -84,6 +85,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
     cpt_step=(maxval-minval)/20.
 
     title, subtitle = _parse_title(title)
+    colorbar_label = _parse_label(colorbar_label)
 
 
     # write ASCII data
@@ -101,7 +103,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
 
     # call bash script
     if exists_gmt():
-        subprocess.call("%s %s %s %s %s %f %f %d %s %s %d %d %s %d %s %s" %
+        subprocess.call("%s %s %s %s %s %f %f %d %s %s %d %d %s %s %d %s %s" %
            (shell_script,
             filename,
             filetype,
@@ -115,6 +117,7 @@ def _call(shell_script, filename, lon, lat, values, supplemental_data=None,
             cpt_name,
             int(bool(flip_cpt)),
             int(colorbar_type),
+            colorbar_label,
             marker_coords_file,
             int(marker_type),
             title,
@@ -195,6 +198,17 @@ def _parse_title(title):
         subtitle = "''"
 
     return title, subtitle
+
+
+def _parse_label(label):
+
+    assert type(label) in string_types
+
+    if len(label) > 0:
+        return "'%s'" % label
+    else:
+        return "''"
+
 
 
 def _parse_filetype(filename):

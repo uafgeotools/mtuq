@@ -10,7 +10,7 @@ from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
-from mtuq.util import fullpath, save_json
+from mtuq.util import fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
@@ -118,7 +118,6 @@ if __name__=='__main__':
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
-        'id': '20090407201255351'
         })
 
 
@@ -202,6 +201,8 @@ if __name__=='__main__':
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
 
         # only generate components present in the data
         components_bw = data_bw.get_components()
@@ -243,8 +244,7 @@ if __name__=='__main__':
         print('Saving results...\n')
 
         # save best-fitting source
-        save_json(event_id+'DC_mt.json', mt_dict)
-        save_json(event_id+'DC_lune.json', lune_dict)
+        save_json(event_id+'DC_solution.json', merged_dict)
 
 
         # save time shifts and other attributes

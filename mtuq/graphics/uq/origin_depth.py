@@ -9,8 +9,7 @@ import subprocess
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning,\
-    _parse_filetype, _parse_title
+from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath, warn
 from mtuq.util.math import closed_interval, open_interval

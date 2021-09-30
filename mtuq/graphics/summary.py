@@ -5,6 +5,8 @@
 
 import numpy as np
 import os
+
+from glob import glob
 from matplotlib import pyplot
 from mtuq.graphics.beachball import plot_beachball
 from mtuq.graphics.uq.lune import plot_misfit_lune
@@ -44,7 +46,7 @@ def _create_summary1(filename, tmp1, tmp2, cleanup=False):
 
 
     if cleanup:
-        for filename in [tmp1, tmp2]:
+        for filename in glob('tmp*'):
             os.remove(filename)
 
 
@@ -89,7 +91,7 @@ def _create_summary2(filename, tmp1, tmp2, tmp3, cleanup=False):
 
 
     if cleanup:
-        for filename in [tmp1, tmp2, tmp3]:
+        for filename in glob('tmp*'):
             os.remove(filename)
 
 

@@ -153,7 +153,7 @@ def _plot_vw(filename, da, show_best=True, show_tradeoffs=False,
     (choose from GMT or MTUQ built-ins)
 
     ``show_best`` (`bool`):
-    Show where best-fitting moment tensor falls on lune
+    Show where best-fitting moment tensor falls on vw rectangle
 
     ``title`` (`str`)
     Optional figure title

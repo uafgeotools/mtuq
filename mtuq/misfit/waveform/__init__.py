@@ -72,8 +72,7 @@ class Misfit(object):
     .. rubric:: Optimization Levels
 
     Because misfit evaluation is our most computationally expensive task, we 
-    have implemented three different version (each with different tradeoffs 
-    between code complexity and performance):
+    have implemented three different versions: 
 
     - a readable pure Python version (``mtuq.misfit.level0``)
 

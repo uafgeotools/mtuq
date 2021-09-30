@@ -1,0 +1,39 @@
+# This workflow will install Python dependencies and run tests
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python application
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+         pip install numpy obspy
+         pip install -e .
+    - name: Basic checks
+      run: |
+         python tests/check_import.py
+         python tests/check_entry_points.py
+         bash tests/check_examples.bash
+    - name: Integration tests
+      run: |
+         bash data/examples/unpack.bash
+         bash data/tests/unpack.bash
+         python tests/benchmark_cap_vs_mtuq.py --no_figures
+         python tests/test_grid_search_mt.py --no_figures
+         python tests/test_grid_search_mt_depth.py --no_figures
+

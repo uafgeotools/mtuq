@@ -23,6 +23,7 @@ autogen
    mtuq.graphics.plot_likelihood_vw
    mtuq.graphics.plot_marginal_vw
    mtuq.graphics.plot_misfit_vw
+   mtuq.graphics._plot_vw
    mtuq.graphics.plot_likelihood_force
    mtuq.graphics.plot_marginal_force
    mtuq.graphics.plot_misfit_force
