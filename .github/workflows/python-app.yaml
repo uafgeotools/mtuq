@@ -38,5 +38,11 @@ jobs:
          python tests/check_import.py
          python tests/check_entry_points.py
          bash tests/check_examples.bash
+         # benchmark comparisons
+         bash data/examples/unpack.bash
+         bash data/tests/unpack.bash
+         python tests/benchmark_cap_vs_mtuq.py --no_figures
+         python tests/test_grid_search_mt.py --no_figures
+         python tests/test_grid_search_mt_depth.py --no_figures
 
 
