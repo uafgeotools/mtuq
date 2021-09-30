@@ -6,7 +6,7 @@ from mtuq.graphics.attrs import\
 from mtuq.graphics.beachball import\
     plot_beachball, misfit_vs_depth
 
-from mtuq.graphics.big_beachball import\
+from mtuq.graphics.beachball_pygmt import\
     beachball_pygmt, _pygmt_polar
 
 from mtuq.graphics.summary import\
