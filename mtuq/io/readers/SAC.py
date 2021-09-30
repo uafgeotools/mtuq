@@ -5,6 +5,7 @@ import numpy as np
 import obspy
 import warnings
 
+from copy import deepcopy
 from os.path import join
 from obspy.core import Stream
 from mtuq import Dataset, Origin, Station
@@ -138,7 +139,7 @@ def _get_station(stream, origin, attach_sac_headers=True):
     #
     # extract metadata from ObsPy structures
     #
-    meta = stream[0].meta.__dict__
+    meta = deepcopy(stream[0].meta.__dict__)
 
     sac_headers = meta.pop('sac')
 
