@@ -201,6 +201,8 @@ if __name__=='__main__':
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
 
         # only generate components present in the data
         components_bw = data_bw.get_components()
@@ -242,8 +244,7 @@ if __name__=='__main__':
         print('Saving results...\n')
 
         # save best-fitting source
-        save_json(event_id+'DC_mt.json', mt_dict)
-        save_json(event_id+'DC_lune.json', lune_dict)
+        save_json(event_id+'DC_solution.json', merged_dict)
 
 
         # save time shifts and other attributes

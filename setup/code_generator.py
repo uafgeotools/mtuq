@@ -456,7 +456,6 @@ OriginsDefinitions="""
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
-        'id': '20090407201255351'
         })
 
     depths = np.array(
@@ -1212,6 +1211,8 @@ WrapUp_GridSearch="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
 
         # only generate components present in the data
         components_bw = data_bw.get_components()
@@ -1253,8 +1254,7 @@ WrapUp_GridSearch="""
         print('Saving results...\\n')
 
         # save best-fitting source
-        save_json(event_id+'DC_mt.json', mt_dict)
-        save_json(event_id+'DC_lune.json', lune_dict)
+        save_json(event_id+'DC_solution.json', merged_dict)
 
 
         # save time shifts and other attributes
@@ -1300,6 +1300,8 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, best_origin)
+
 
         # only generate components present in the data
         components_bw = data_bw.get_components()
@@ -1332,38 +1334,44 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Generating figures...\\n')
 
-        plot_data_greens2(event_id+'DC_waveforms.png',
+        plot_data_greens2(event_id+'DC+_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
-        plot_misfit_depth(event_id+'_misfit_depth.png',
+        plot_misfit_depth(event_id+'DC+_misfit_depth.png',
             results, origins, grid)
 
 
         print('Saving results...\\n')
 
         # save best-fitting source
-        save_json(event_id+'DC_mt.json', mt_dict)
-        save_json(event_id+'DC_lune.json', lune_dict)
+        save_json(event_id+'DC+_solution.json', merged_dict)
+
+
+        # save origins
+        origins_dict = {_i: origin 
+            for _i,origin in enumerate(origins)}
+
+        save_json(event_id+'DC+_origins.json', origins_dict)
 
 
         # save time shifts and other attributes
-        os.makedirs(event_id+'DC_attrs', exist_ok=True)
+        os.makedirs(event_id+'DC+_attrs', exist_ok=True)
 
-        save_json(event_id+'DC_attrs/bw.json', dict_bw)
-        save_json(event_id+'DC_attrs/sw.json', dict_sw)
+        save_json(event_id+'DC+_attrs/bw.json', dict_bw)
+        save_json(event_id+'DC+_attrs/sw.json', dict_sw)
 
 
         # save processed waveforms as binary files
-        os.makedirs(event_id+'DC_waveforms', exist_ok=True)
+        os.makedirs(event_id+'DC+_waveforms', exist_ok=True)
 
-        data_bw.write(event_id+'DC_waveforms/dat_bw.p')
-        data_sw.write(event_id+'DC_waveforms/dat_sw.p')
+        data_bw.write(event_id+'DC+_waveforms/dat_bw.p')
+        data_sw.write(event_id+'DC+_waveforms/dat_sw.p')
 
-        synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
-        synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
+        synthetics_bw.write(event_id+'DC+_waveforms/syn_bw.p')
+        synthetics_sw.write(event_id+'DC+_waveforms/syn_sw.p')
 
-        results.save(event_id+'DC_misfit.nc')
+        results.save(event_id+'DC+_misfit.nc')
 
 
         print('\\nFinished\\n')
@@ -1383,6 +1391,8 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     best_source = grid.get(idx)
     lune_dict = grid.get_dict(idx)
     mt_dict = grid.get(idx).as_dict()
+
+    merged_dict = merge_dicts(lune_dict, mt_dict, origin)
 
 
     # only generate components present in the data
@@ -1425,8 +1435,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     print('Saving results...\\n')
 
     # save best-fitting source
-    save_json(event_id+'DC_mt.json', mt_dict)
-    save_json(event_id+'DC_lune.json', lune_dict)
+    save_json(event_id+'DC_solution.json', merged_dict)
 
 
     # save time shifts and other attributes
