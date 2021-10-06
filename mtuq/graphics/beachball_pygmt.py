@@ -45,8 +45,8 @@ def beachball_pygmt(filename, mt, data, plot_all=False):
 
     # Initialize the pygmt plot with the beachball plot
     fig = pygmt.Figure()
-    fig.meca(region=[-1.2, 1.2, -1.2, 1.2], projection='m0/0/5c', scale='3c',
-             convention="mt", G='grey50', spec=focal_mechanism, N=False)
+    fig.meca(region=[-1.2, 1.2, -1.2, 1.2], projection='m0/0/5c', scale='9.9c',
+             convention="mt", G='grey50', spec=focal_mechanism, N=False, M=True)
 
     # Create a list of traces containing only the picked stations
     picked_data = [sta[0] for sta in data if sta[0].stats.sac['user5'] != 0]
