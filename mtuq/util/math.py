@@ -310,28 +310,29 @@ def semiregular_grid(npts_v, npts_w, tightness=0.5):
 
     return to_v(gamma), to_w(delta)
 
-def radiation_coef(source, takeoff_angle, azimuth):
-    """ Computes P-wave radiation coefficient from source (vecor form), takeoff_angle and azimuth, directly in mtuq orientation conventions.
+def radiation_coef(source_array, takeoff_angle, azimuth):
+    """ Computes P-wave radiation coefficient from a collection of sources (2D np.array with source parameter vectors), and the associated takeoff_angle and azimuth for a given station. The radiation coefficient is computed in mtuq orientation conventions.
 
     Based on Aki & Richards, Second edition (2009), eq. 4.88, p. 108
     """
+    # Check if source_array is a 2D array, and make it 2D if not.
+    if len(source_array.shape) == 1:
+        source_array = np.array([source_array])
 
     alpha = np.deg2rad(takeoff_angle)
     az = np.deg2rad(azimuth)
-    dir = np.zeros(3)
+    dir = np.zeros((len(source_array),3))
     sth = np.sin(alpha)
     cth = np.cos(alpha)
     sphi = np.sin(az)
     cphi = np.cos(az)
-    dir[0]=sth*cphi
-    dir[1]=sth*sphi
-    dir[2]=cth
+    dir[:,0]=sth*cphi
+    dir[:,1]=sth*sphi
+    dir[:,2]=cth
 
-    cth = source[0]*dir[2]*dir[2] + source[1]*dir[0]*dir[0] + source[2]*dir[1]*dir[1] + 2*(source[3]*dir[0]*dir[2] - source[4]*dir[1]*dir[2] - source[5]*dir[0]*dir[1])
+    cth = source_array[:,0]*dir[:,2]*dir[:,2] + source_array[:,1]*dir[:,0]*dir[:,0] + source_array[:,2]*dir[:,1]*dir[:,1] + 2*(source_array[:,3]*dir[:,0]*dir[:,2] - source_array[:,4]*dir[:,1]*dir[:,2] - source_array[:,5]*dir[:,0]*dir[:,1])
 
-    if cth > 0:
-        cth = 1
-    elif cth < 0:
-        cth = -1
+    cth[cth>0] = 1
+    cth[cth<0] = -1
     return cth
 
