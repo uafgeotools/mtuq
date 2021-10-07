@@ -66,4 +66,4 @@ class PolarityMisfit(object):
         values = np.sum(np.abs(predicted_polarity.T*np.abs(observed_polarities)-observed_polarities), axis=1)
 
         # returns a NSOURCESx1 np array
-        return np.array([values])
+        return np.array([values]).T
