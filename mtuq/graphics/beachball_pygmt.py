@@ -16,7 +16,7 @@ from mtuq.util import warn
 from mtuq.util.math import radiation_coef
 
 
-def beachball_pygmt(filename, mt, data, plot_all=False):
+def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
     """ Moment tensor plot with stations polarities, implemented in PyGMT.
 
     .. rubric :: Input arguments
@@ -149,7 +149,7 @@ def beachball_pygmt(filename, mt, data, plot_all=False):
     _pygmt_polar(down_unmatched_data, symbol='i0.40c', ext_fill='red')
     # If `plot_all` is True, will plot the unpicked stations as black crosses over the beachball plot
     if not plot_all is False:
-        _pygmt_polar(unpicked_data, symbol='x0.40', comp_outline='black', ext_outline='black')
+        _pygmt_polar(unpicked_data, symbol='x0.40c', comp_outline='black', ext_outline='black')
 
     # fig.show(dpi=300, method="external")
-    fig.savefig(filename, show=True)
+    fig.savefig(filename, show=display_plot)
