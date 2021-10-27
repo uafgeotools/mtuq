@@ -244,7 +244,8 @@ def plot_data_greens1(filename,
     synthetics = greens.select(origin).get_synthetics(
         source, components, mode='map', inplace=True)
 
-    total_misfit = misfit(data, greens, source, set_attributes=True)
+    total_misfit = misfit(data, greens.select(origin), source, 
+        set_attributes=True)
 
     # prepare figure header
     if 'header' in kwargs:
@@ -294,9 +295,11 @@ def plot_data_greens2(filename,
     synthetics_sw = greens_sw.select(origin).get_synthetics(
         source, components_sw, mode='map', inplace=True)
 
-    total_misfit_bw = misfit_bw(data_bw, greens_bw, source, set_attributes=True)
-    total_misfit_sw = misfit_sw(data_sw, greens_sw, source, set_attributes=True)
+    total_misfit_bw = misfit_bw(data_bw, greens_bw.select(origin), source, 
+        set_attributes=True)
 
+    total_misfit_sw = misfit_sw(data_sw, greens_sw.select(origin), source, 
+        set_attributes=True)
 
     # prepare figure header
     if 'header' in kwargs:
