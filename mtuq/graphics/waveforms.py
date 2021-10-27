@@ -85,7 +85,7 @@ def plot_waveforms1(filename,
 
         for dat in stream_dat:
             component = dat.stats.channel[-1].upper()
-            weight = getattr(dat.attrs, 'weight', 1.)
+            weight = _getattr(dat, 'weight', 1.)
 
             if not weight:
                 continue
@@ -175,7 +175,7 @@ def plot_waveforms2(filename,
 
         for dat in stream_dat:
             component = dat.stats.channel[-1].upper()
-            weight = getattr(dat.attrs, 'weight', 1.)
+            weight = _getattr(dat, 'weight', 1.)
 
             if not weight:
                 continue
@@ -200,7 +200,7 @@ def plot_waveforms2(filename,
 
         for dat in stream_dat:
             component = dat.stats.channel[-1].upper()
-            weight = getattr(dat.attrs, 'weight', 1.)
+            weight = _getattr(dat, 'weight', 1.)
 
             if not weight:
                 continue
@@ -439,8 +439,8 @@ def _plot(axis, dat, syn, label=None):
     """
     t1,t2,nt,dt = _time_stats(dat)
 
-    start = getattr(syn.attrs, 'start', 0)
-    stop = getattr(syn.attrs, 'stop', len(syn.data))
+    start = _getattr(syn, 'start', 0)
+    stop = _getattr(syn, 'stop', len(syn.data))
 
     t = np.linspace(0,t2-t1,nt,dt)
     d = dat.data
@@ -539,8 +539,8 @@ def _add_trace_labels(axis, dat, syn, total_misfit=1.):
 
     # display cross-correlation time shift
     time_shift = 0.
-    time_shift += getattr(syn.attrs, 'time_shift', np.nan)
-    time_shift += getattr(dat.attrs, 'static_time_shift', 0)
+    time_shift += _getattr(syn, 'time_shift', np.nan)
+    time_shift += _getattr(dat, 'static_time_shift', 0)
     axis.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=11)
 
     # display maximum cross-correlation coefficient
@@ -555,7 +555,7 @@ def _add_trace_labels(axis, dat, syn, total_misfit=1.):
         axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=11)
 
     # display percent of total misfit
-    misfit = getattr(syn.attrs, 'misfit', np.nan)
+    misfit = _getattr(syn, 'misfit', np.nan)
     misfit /= total_misfit
     if misfit >= 0.1:
         axis.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=11)
@@ -593,6 +593,15 @@ def _isempty(dataset):
         return True
     else:
         return bool(_count([dataset])==0)
+
+
+def _getattr(trace, name, *args):
+    if len(args)==1:
+        return getattr(trace.attrs, name, args[0])
+    elif len(args)==0:
+        return getattr(trace.attrs, name)
+    else:
+        raise TypeError("Wrong number of arguments")
 
 
 def _max(dat, syn):
