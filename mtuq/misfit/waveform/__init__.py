@@ -150,16 +150,23 @@ class Misfit(object):
         set_attributes=False, optimization_level=2):
         """ Evaluates misfit on given data
         """
-        # Normally misfit is evaluated over a grid of sources; `iterable`
+        # normally misfit is evaluated over a grid of sources; `iterable`
         # makes things work if just a single source is given
         sources = iterable(sources)
 
-        # Checks that dataset is nonempty
+        # checks that dataset is nonempty
         if isempty(data):
             warn("Empty data set. No misfit evaluations will be carried out")
             return np.zeros((len(sources), 1))
 
-        # Checks that optional Green's function padding is consistent with time 
+        # checks that the container legnths are consistent
+        if len(data) != len(greens):
+            raise Exception("Inconsistent container lengths\n\n  "+
+                "len(data): %d\n  len(greens): %d\n" %
+                (len(data), len(greens)))
+ 
+
+        # checks that optional Green's function padding is consistent with time 
         # shift bounds
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
@@ -183,25 +190,25 @@ class Misfit(object):
     def collect_attributes(self, data, greens, source):
         """ Collects time shifts and other attributes assigned to traces
         """
-        # Checks that dataset is nonempty
+        # checks that dataset is nonempty
         if isempty(data):
             warn("Empty data set. No attributes will be returned")
             return []
 
-        # Checks that optional Green's function padding is consistent with time 
+        # checks that optional Green's function padding is consistent with time 
         # shift bounds
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
         synthetics = greens.get_synthetics(
             source, components=data.get_components(), mode='map', inplace=True)
 
-        # Attaches attributes to synthetics
+        # attaches attributes to synthetics
         _ = level0.misfit(
             data, greens, iterable(source), self.norm, self.time_shift_groups,
             self.time_shift_min, self.time_shift_max, msg_handle=Null(),
             set_attributes=True)
 
-        # Collects attributes
+        # collects attributes
         attrs = []
         for stream in synthetics:
             attrs += [{}]
