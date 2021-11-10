@@ -33,7 +33,7 @@ class Client(ClientBase):
 
     .. code::
 
-        from mtuq.io.clients.SPECFEM3D_SAC import Client
+        from mtuq.io.clients.SPECFEM3D_SGT import Client
         db = Client(path_or_url)
 
     Then the database client can be used to generate GreensTensors:
