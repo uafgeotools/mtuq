@@ -130,7 +130,7 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
 
 
 def plot_variance_reduction_lune(filename, ds, data_norm, **kwargs):
-    """ Plots misfit values on eigenvalue lune (requires GMT)
+    """ Plots variance reduction values on eigenvalue lune (requires GMT)
 
     .. rubric :: Required input arguments
 

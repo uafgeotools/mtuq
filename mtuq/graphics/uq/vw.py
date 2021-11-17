@@ -337,7 +337,7 @@ def _magnitudes_vw_regular(da):
 
 
 def _variance_reduction_vw_regular(da, data_norm):
-    """ For each source type, extracts minimum misfit
+    """ For each source type, extracts maximum variance reduction
     """
     variance_reduction = 1. - da.copy()/data_norm
 
