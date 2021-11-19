@@ -1,5 +1,6 @@
 
 import numpy as np
+from obspy.geodetics import gps2dist_azimuth
 from scipy.signal import fftconvolve
 
 
@@ -321,7 +322,7 @@ def radiation_coef(mt_array, takeoff_angle, azimuth):
 # structured grids
 #
 
-def lat_lon_grid(center_lat=None,center_lon=None,
+def lat_lon_tuples(center_lat=None,center_lon=None,
     spacing_in_m=None, npts_per_edge=None, perturb_in_deg=0.1):
     """ Geographic grid
     """
@@ -330,22 +331,34 @@ def lat_lon_grid(center_lat=None,center_lon=None,
     perturb_in_m, _, _ = gps2dist_azimuth(
         center_lat,  center_lon, center_lat + perturb_in_deg, center_lon)
 
-    spacing_lat = spacing_in_m * (pertub_in_deg/pertub_in_m)
+    spacing_lat = spacing_in_m * (perturb_in_deg/perturb_in_m)
 
 
     # calculate spacing in degrees longitude
     perturb_in_m, _, _ = gps2dist_azimuth(
         center_lat,  center_lon, center_lat, center_lon + perturb_in_deg)
 
-    spacing_lat = spacing_in_m * (pertub_in_deg/pertub_in_m)
+    spacing_lon = spacing_in_m * (perturb_in_deg/perturb_in_m)
 
+    edge_length_lat = spacing_lat*(npts_per_edge-1)
+    edge_length_lon = spacing_lon*(npts_per_edge-1)
+
+
+    # construct regularly-spaced grid
     lat_vec = np.linspace(
-        center_lat-spacing_lat, center_lat+spacing_lat, npts_per_edge)
+        center_lat-edge_length_lat/2., center_lat+edge_length_lat/2., npts_per_edge)
 
     lon_vec = np.linspace(
-        center_lon-spacing_lon, center_lon+spacing_lon, npts_per_edge)
+        center_lon-edge_length_lon/2., center_lon+edge_length_lon/2., npts_per_edge)
 
-    return np.meshgrid(lat_vec, lon_vec).flatten()
+    lat, lon = np.meshgrid(lat_vec, lon_vec)
+
+    # return tuples
+    lat = lat.flatten()
+    lon = lon.flatten()
+
+    return zip(lat, lon)
+
 
 
 def semiregular_grid(npts_v, npts_w, tightness=0.5):

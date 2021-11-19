@@ -480,7 +480,9 @@ if __name__=='__main__':
         save_json(event_id+'FMT_solutions/marginal_likelihood.json', marginal_vw)
         save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+
         save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
 
 

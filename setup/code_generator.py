@@ -1149,7 +1149,9 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         save_json(event_id+'FMT_solutions/marginal_likelihood.json', marginal_vw)
         save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+
         save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
 
 
@@ -1226,14 +1228,15 @@ WrapUp_GridSearch="""
 
         print('Saving results...\\n')
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
 
 
         # save best-fitting source
         save_json(event_id+'DC_solution.json', merged_dict)
 
 
-        # save misfit
+        # save misfit surface
         results.save(event_id+'DC_misfit.nc')
 
 
@@ -1275,7 +1278,9 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Saving results...\\n')
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, best_origin)
+        merged_dict = merge_dicts(lune_dict, mt_dict, best_origin,
+            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+
 
         # save best-fitting source
         save_json(event_id+'DC+_solution.json', merged_dict)
@@ -1288,7 +1293,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         save_json(event_id+'DC+_origins.json', origins_dict)
 
 
-        # save misfit values
+        # save misfit surface
         results.save(event_id+'DC+_misfit.nc')
 
 
@@ -1325,13 +1330,14 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
-    merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+    merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+        {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
 
 
     # save best-fitting source
     save_json(event_id+'DC_solution.json', merged_dict)
 
-    # save misfit
+    # save misfit surface
     results.save(event_id+'DC_misfit.nc')
 
 

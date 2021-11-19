@@ -189,13 +189,14 @@ if __name__=='__main__':
 
     print('Saving results...\n')
 
-    merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+    merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+        {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
 
 
     # save best-fitting source
     save_json(event_id+'DC_solution.json', merged_dict)
 
-    # save misfit
+    # save misfit surface
     results.save(event_id+'DC_misfit.nc')
 
 
