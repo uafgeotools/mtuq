@@ -285,31 +285,6 @@ def to_Mw(rho):
     return ((np.log10(rho/np.sqrt(2))-9.1)/1.5)
 
 
-def semiregular_grid(npts_v, npts_w, tightness=0.5):
-    """ Semiregular moment tensor grid
-
-    For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
-    For tightness~1, grid will be regular in Tape2015 parameters v, w.
-    For intermediate values, the grid will be "semiregular" in the sense of
-    a linear interpolation between the above cases.
-    """
-    assert 0. <= tightness < 1.,\
-        Exception("Allowable range: 0. <= tightness < 1.")
-
-    v1 = open_interval(-1./3., 1./3., npts_v)
-    w1 = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
-
-    gamma1 = to_gamma(v1)
-    delta1 = to_delta(w1)
-
-    gamma2 = np.linspace(-29.5, 29.5, npts_v)
-    delta2 = np.linspace(-87.5, 87.5, npts_w)
-
-    delta = delta1*(1.-tightness) + delta2*tightness
-    gamma = gamma1*(1.-tightness) + gamma2*tightness
-
-    return to_v(gamma), to_w(delta)
-
 def radiation_coef(source_array, takeoff_angle, azimuth):
     """ Computes P-wave radiation coefficient from a collection of sources (2D np.array with source parameter vectors), and the associated takeoff_angle and azimuth for a given station. The radiation coefficient is computed in mtuq orientation conventions.
 
@@ -335,4 +310,63 @@ def radiation_coef(source_array, takeoff_angle, azimuth):
     cth[cth>0] = 1
     cth[cth<0] = -1
     return cth
+
+
+
+#
+# structured grids
+#
+
+def lat_lon_grid(center_lat=None,center_lon=None,
+    spacing_in_m=None, npts_per_edge=None, perturb_in_deg=0.1):
+    """ Geographic grid
+    """
+
+    # calculate spacing in degrees latitude
+    perturb_in_m, _, _ = gps2dist_azimuth(
+        center_lat,  center_lon, center_lat + perturb_in_deg, center_lon)
+
+    spacing_lat = spacing_in_m * (pertub_in_deg/pertub_in_m)
+
+
+    # calculate spacing in degrees longitude
+    perturb_in_m, _, _ = gps2dist_azimuth(
+        center_lat,  center_lon, center_lat, center_lon + perturb_in_deg)
+
+    spacing_lat = spacing_in_m * (pertub_in_deg/pertub_in_m)
+
+    lat_vec = np.linspace(
+        center_lat-spacing_lat, center_lat+spacing_lat, npts_per_edge)
+
+    lon_vec = np.linspace(
+        center_lon-spacing_lon, center_lon+spacing_lon, npts_per_edge)
+
+    return np.meshgrid(lat_vec, lon_vec).flatten()
+
+
+def semiregular_grid(npts_v, npts_w, tightness=0.5):
+    """ Semiregular moment tensor grid
+
+    For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
+    For tightness~1, grid will be regular in Tape2015 parameters v, w.
+    For intermediate values, the grid will be "semiregular" in the sense of
+    a linear interpolation between the above cases.
+    """
+    assert 0. <= tightness < 1.,\
+        Exception("Allowable range: 0. <= tightness < 1.")
+
+    v1 = open_interval(-1./3., 1./3., npts_v)
+    w1 = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
+
+    gamma1 = to_gamma(v1)
+    delta1 = to_delta(w1)
+
+    gamma2 = np.linspace(-29.5, 29.5, npts_v)
+    delta2 = np.linspace(-87.5, 87.5, npts_w)
+
+    delta = delta1*(1.-tightness) + delta2*tightness
+    gamma = gamma1*(1.-tightness) + gamma2*tightness
+
+    return to_v(gamma), to_w(delta)
+
 
