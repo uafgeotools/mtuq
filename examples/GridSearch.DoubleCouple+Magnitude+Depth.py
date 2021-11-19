@@ -214,26 +214,12 @@ if __name__=='__main__':
 
         # source corresponding to minimum misfit
         idx = results.idxmin('source')
+
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
         merged_dict = merge_dicts(lune_dict, mt_dict, best_origin)
-
-
-        # only generate components present in the data
-        components_bw = data_bw.get_components()
-        components_sw = data_sw.get_components()
-
-        greens_bw = greens_bw.select(best_origin)
-        greens_sw = greens_sw.select(best_origin)
-
-        # synthetics corresponding to minimum misfit
-        synthetics_bw = greens_bw.get_synthetics(
-            best_source, components_bw, mode='map')
-
-        synthetics_sw = greens_sw.get_synthetics(
-            best_source, components_sw, mode='map')
 
 
         # time shifts and other attributes corresponding to minimum misfit
@@ -280,15 +266,7 @@ if __name__=='__main__':
         save_json(event_id+'DC+_attrs/sw.json', dict_sw)
 
 
-        # save processed waveforms as binary files
-        os.makedirs(event_id+'DC+_waveforms', exist_ok=True)
-
-        data_bw.write(event_id+'DC+_waveforms/dat_bw.p')
-        data_sw.write(event_id+'DC+_waveforms/dat_sw.p')
-
-        synthetics_bw.write(event_id+'DC+_waveforms/syn_bw.p')
-        synthetics_sw.write(event_id+'DC+_waveforms/syn_sw.p')
-
+        # save misfit values
         results.save(event_id+'DC+_misfit.nc')
 
 
