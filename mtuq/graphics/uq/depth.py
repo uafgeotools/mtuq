@@ -193,6 +193,27 @@ def _plot_depth(filename, origins, da, title='',
     xlabel='auto', ylabel='', show_magnitudes=True, show_tradeoffs=True,
     fontsize=16., backend=_backend):
 
+    """ Plots depth versus user-supplied DataArray values (requires GMT)
+
+    .. rubric :: Keyword arguments
+
+    ``show_magnitudes`` (`bool`):
+    Write magnitude annotation for each plotted value
+
+    ``show_tradeoffs`` (`bool`):
+    Show how focal mechanism trades off with depth
+
+    ``xlabel`` (`str`):
+    Optional x-axis label
+
+    ``ylabel`` (`str`):
+    Optional y-axis label
+
+    ``title`` (`str`)
+    Optional figure title
+
+    """
+
     npts = len(origins)
 
     depths = np.empty(npts)

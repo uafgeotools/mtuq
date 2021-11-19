@@ -28,11 +28,11 @@ from mtuq.graphics.uq.force import\
     plot_misfit_force, plot_likelihood_force, plot_marginal_force,\
     plot_magnitude_tradeoffs_force, _plot_force
 
-from mtuq.graphics.uq.origin_depth import\
+from mtuq.graphics.uq.depth import\
     plot_misfit_depth, plot_likelihood_depth, plot_marginal_depth
 
-from mtuq.graphics.uq.origin_xy import\
-    plot_misfit_xy, plot_mt_xy
+from mtuq.graphics.uq.hypocenter import\
+    plot_misfit_latlon
 
 from mtuq.graphics.waveforms import\
     plot_waveforms1, plot_waveforms2, plot_data_greens1, plot_data_greens2
