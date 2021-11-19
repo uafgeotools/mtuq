@@ -162,9 +162,6 @@ if __name__=='__main__':
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
 
 
-    #
-    # Generate figures and save results
-    #
 
     results = results_bw + results_sw
 
@@ -176,14 +173,23 @@ if __name__=='__main__':
     mt_dict = grid.get(idx).as_dict()
 
 
+    #
+    # Generate figures and save results
+    #
+
     print('Generating figures...\n')
 
+    # plot observed and synthetic waveforms
     plot_data_greens2(event_id+'DC_waveforms.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
+
+    # plot focal mechanism
     plot_beachball(event_id+'DC_beachball.png', best_source)
 
+
+    # plot misfit surface
     plot_misfit_dc(event_id+'DC_misfit.png', results)
 
 
@@ -195,6 +201,7 @@ if __name__=='__main__':
 
     # save best-fitting source
     save_json(event_id+'DC_solution.json', merged_dict)
+
 
     # save misfit surface
     results.save(event_id+'DC_misfit.nc')
