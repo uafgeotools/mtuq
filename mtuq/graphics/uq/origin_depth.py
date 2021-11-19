@@ -16,9 +16,8 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 
-def plot_misfit_depth(filename, ds, origins, sources, title=''):
+def plot_misfit_depth(filename, ds, origins, title='', **kwargs):
     """ Plots misfit versus depth
-
 
     .. rubric :: Input arguments
 
@@ -28,31 +27,26 @@ def plot_misfit_depth(filename, ds, origins, sources, title=''):
     ``ds`` (`DataArray` or `DataFrame`):
     data structure containing moment tensors and corresponding misfit values
 
-    ``title`` (`str`):
-    Optional figure title
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-    depths = _get_depths(origins)
-
     _check(ds)
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        values, indices = _min_dataarray(ds)
-        best_sources = _get_sources(sources, indices)
+        da = _misfit_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        values, indices = _min_dataframe(ds)
-        best_sources = _get_sources(sources, indices)
+        da = _misfit_random(ds)
 
-    _plot_depth(filename, depths, values, indices,
-        title, xlabel='auto', ylabel='Misfit')
+    _plot_depth(filename, origins, da, title, **kwargs)
 
 
 
 def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
-    """ Plots marginal likelihood versus depth
-
+    """ Plots maximum likelihood versus depth
 
     .. rubric :: Input arguments
 
@@ -95,7 +89,7 @@ def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
 
 
 def plot_marginal_depth(filename, ds, origins, sources, sigma=None, title=''):
-    """ Plots marginal likelihoods on `v-w` rectangle
+    """ Plots marginal likelihoods versus depth
 
 
     .. rubric :: Input arguments
@@ -150,76 +144,41 @@ def _check(ds):
         raise TypeError("Unexpected grid format")
 
 
-def _get_depths(origins):
-    depths = []
-    for origin in origins:
-        depths += [float(origin.depth_in_m)]
-    return np.array(depths)
+def _misfit_regular(da):
+    dims = ('rho', 'v', 'w', 'kappa', 'sigma', 'h')
+    return da[da.argmin(dims)]
 
 
-def _get_sources(sources, indices):
-    return [sources.get(index) for index in indices]
+def _likelihoods_regular(da, var):
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
 
-
-def _min_dataarray(ds):
-    values, indices = [], []
-    for _i in range(ds.shape[-1]):
-        sliced = ds[:,:,:,:,:,:,_i]
-        values += [sliced.min()]
-        indices += [int(sliced.argmin())]
-    return np.array(values), indices
-
-
-def _max_dataarray(ds):
-    values, indices = [], []
-    for _i in range(ds.shape[-1]):
-        sliced = ds[:,:,:,:,:,:,_i]
-        values += [sliced.max()]
-        indices += [int(sliced.argmax())]
-    return np.array(values), indices
-
-
-def _sum_dataarray(ds):
-    raise NotImplementedError
-
-def _min_dataframe(ds):
-    raise NotImplementedError
-
-def _max_dataframe(ds):
-    raise NotImplementedError
-
-def _sum_dataframe(ds):
-    raise NotImplementedError
+    dims = ('rho', 'v', 'w', 'kappa', 'sigma', 'h')
+    idx = likelihoods.argmax(dims)
+    return likelihoods[idx]
 
 
 #
 # pyplot wrappers
 #
 
-def _plot_depth(filename, depths, values, best_sources, title='',
-    xlabel='auto', ylabel='', show_magnitudes=False, show_beachballs=False,
-    fontsize=16., normalize=False):
-
-    if xlabel=='auto' and ((depths.max()-depths.min()) < 10000.):
-       xlabel = 'Depth (m)'
-
-    if xlabel=='auto' and ((depths.max()-depths.min()) >= 10000.):
-       depths /= 1000.
-       xlabel = 'Depth (km)'
-
-    if normalize:
-        values /= values.max()
+def _backend(filename,
+        depths,
+        values,
+        magnitudes=None,
+        mt_array=None,
+        title=None,
+        xlabel=None,
+        ylabel=None,
+        fontsize=16.):
 
     figsize = (6., 6.)
     pyplot.figure(figsize=figsize)
-
     pyplot.plot(depths, values, 'k-')
 
-    if show_magnitudes:
-        raise NotImplementedError
-
-    if show_beachballs:
-        raise NotImplementedError
+    if title:
+        pyplot.title(title, fontsize=fontsize)
 
     if xlabel:
          pyplot.xlabel(xlabel, fontsize=fontsize)
@@ -227,9 +186,51 @@ def _plot_depth(filename, depths, values, best_sources, title='',
     if ylabel:
          pyplot.ylabel(ylabel, fontsize=fontsize)
 
-    if title:
-        pyplot.title(title, fontsize=fontsize)
-
     pyplot.savefig(filename)
+
+
+def _plot_depth(filename, origins, da, title='',
+    xlabel='auto', ylabel='', show_magnitudes=True, show_tradeoffs=True,
+    fontsize=16., backend=_backend):
+
+    npts = len(origins)
+
+    depths = np.empty(npts)
+    values = np.empty(npts)
+    for _i, origin in enumerate(origins):
+        depths[_i] = origin.depth_in_m
+        values[_i] = da.values[_i]
+
+    magnitudes = None
+    if show_magnitudes:
+        magnitudes = np.empty(npts)
+        for _i in range(npts):
+            magnitudes[_i] = da[_i].coords['rho']
+
+    mt_array = None
+    if show_tradeoffs:
+        mt_array = np.empty((npts, 6))
+        for _i in range(npts):
+            mt_array[_i, 0] = da[_i].coords['rho']
+            mt_array[_i, 1] = da[_i].coords['v']
+            mt_array[_i, 2] = da[_i].coords['w']
+            mt_array[_i, 3] = da[_i].coords['kappa']
+            mt_array[_i, 4] = da[_i].coords['sigma']
+            mt_array[_i, 5] = da[_i].coords['h']
+
+    if xlabel=='auto' and (depths.max() < 10000.):
+       xlabel = 'Depth (m)'
+    elif xlabel=='auto' and (depths.max() >= 10000.):
+       depths /= 1000.
+       xlabel = 'Depth (km)'
+
+    backend(filename,
+        depths,
+        values,
+        magnitudes=magnitudes,
+        mt_array=mt_array,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        fontsize=fontsize)
 
 
