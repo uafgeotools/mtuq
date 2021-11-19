@@ -285,18 +285,18 @@ def to_Mw(rho):
     return ((np.log10(rho/np.sqrt(2))-9.1)/1.5)
 
 
-def radiation_coef(source_array, takeoff_angle, azimuth):
+def radiation_coef(mt_array, takeoff_angle, azimuth):
     """ Computes P-wave radiation coefficient from a collection of sources (2D np.array with source parameter vectors), and the associated takeoff_angle and azimuth for a given station. The radiation coefficient is computed in mtuq orientation conventions.
 
     Based on Aki & Richards, Second edition (2009), eq. 4.88, p. 108
     """
-    # Check if source_array is a 2D array, and make it 2D if not.
-    if len(source_array.shape) == 1:
-        source_array = np.array([source_array])
+    # Check if mt_array is a 2D array, and make it 2D if not.
+    if len(mt_array.shape) == 1:
+        mt_array = np.array([mt_array])
 
     alpha = np.deg2rad(takeoff_angle)
     az = np.deg2rad(azimuth)
-    dir = np.zeros((len(source_array),3))
+    dir = np.zeros((len(mt_array),3))
     sth = np.sin(alpha)
     cth = np.cos(alpha)
     sphi = np.sin(az)
@@ -305,12 +305,16 @@ def radiation_coef(source_array, takeoff_angle, azimuth):
     dir[:,1]=sth*sphi
     dir[:,2]=cth
 
-    cth = source_array[:,0]*dir[:,2]*dir[:,2] + source_array[:,1]*dir[:,0]*dir[:,0] + source_array[:,2]*dir[:,1]*dir[:,1] + 2*(source_array[:,3]*dir[:,0]*dir[:,2] - source_array[:,4]*dir[:,1]*dir[:,2] - source_array[:,5]*dir[:,0]*dir[:,1])
+    cth = mt_array[:,0]*dir[:,2]*dir[:,2] +\
+          mt_array[:,1]*dir[:,0]*dir[:,0] +\
+          mt_array[:,2]*dir[:,1]*dir[:,1] +\
+       2*(mt_array[:,3]*dir[:,0]*dir[:,2] -\
+          mt_array[:,4]*dir[:,1]*dir[:,2] -\
+          mt_array[:,5]*dir[:,0]*dir[:,1])
 
     cth[cth>0] = 1
     cth[cth<0] = -1
     return cth
-
 
 
 #
