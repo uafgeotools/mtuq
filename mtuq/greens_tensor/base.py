@@ -82,7 +82,9 @@ class GreensTensor(Stream):
           would remove it
 
         """
-        if components==getattr(self, 'components', None):
+        if hasattr(self, 'components') and\
+           self.components==components:
+            # components already set
             return
 
         if components is None:

@@ -356,15 +356,12 @@ def _initialize(nrows=None, ncolumns=None, column_width_ratios=None,
 
     _hide_axes(axes)
 
-    if not header:
-        return fig, axes
-
-    else:
+    if header:
         header.write(
             header_height, width,
             margin_left, margin_top)
 
-        return fig, axes
+    return fig, axes
 
 
 def _plot_ZRT(axes, ic, dat, syn, component, 
