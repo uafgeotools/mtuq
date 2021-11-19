@@ -904,8 +904,6 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
-
 
         print('Data variance estimation...\\n')
 
@@ -1150,7 +1148,10 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
 
         save_json(event_id+'FMT_solutions/marginal_likelihood.json', marginal_vw)
         save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
+
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
         save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
+
 
         os.makedirs(event_id+'FMT_stats', exist_ok=True)
 
@@ -1212,23 +1213,6 @@ WrapUp_GridSearch="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
-
-
-        # time shifts and other attributes corresponding to minimum misfit
-        list_bw = misfit_bw.collect_attributes(
-            data_bw, greens_bw, best_source)
-
-        list_sw = misfit_sw.collect_attributes(
-            data_sw, greens_sw, best_source)
-
-        dict_bw = {station.id: list_bw[_i] 
-            for _i,station in enumerate(stations)}
-
-        dict_sw = {station.id: list_sw[_i] 
-            for _i,station in enumerate(stations)}
-
-
         print('Generating figures...\\n')
 
         plot_data_greens2(event_id+'DC_waveforms.png',
@@ -1242,16 +1226,14 @@ WrapUp_GridSearch="""
 
         print('Saving results...\\n')
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
+
         # save best-fitting source
         save_json(event_id+'DC_solution.json', merged_dict)
 
 
-        # save time shifts and other attributes
-        os.makedirs(event_id+'DC_attrs', exist_ok=True)
-
-        save_json(event_id+'DC_attrs/bw.json', dict_bw)
-        save_json(event_id+'DC_attrs/sw.json', dict_sw)
-
+        # save misfit
         results.save(event_id+'DC_misfit.nc')
 
 
@@ -1280,22 +1262,6 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, best_origin)
-
-
-        # time shifts and other attributes corresponding to minimum misfit
-        list_bw = misfit_bw.collect_attributes(
-            data_bw, greens_bw, best_source)
-
-        list_sw = misfit_sw.collect_attributes(
-            data_sw, greens_sw, best_source)
-
-        dict_bw = {station.id: list_bw[_i] 
-            for _i,station in enumerate(stations)}
-
-        dict_sw = {station.id: list_sw[_i] 
-            for _i,station in enumerate(stations)}
-
 
         print('Generating figures...\\n')
 
@@ -1309,6 +1275,8 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Saving results...\\n')
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, best_origin)
+
         # save best-fitting source
         save_json(event_id+'DC+_solution.json', merged_dict)
 
@@ -1318,13 +1286,6 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
             for _i,origin in enumerate(origins)}
 
         save_json(event_id+'DC+_origins.json', origins_dict)
-
-
-        # save time shifts and other attributes
-        os.makedirs(event_id+'DC+_attrs', exist_ok=True)
-
-        save_json(event_id+'DC+_attrs/bw.json', dict_bw)
-        save_json(event_id+'DC+_attrs/sw.json', dict_sw)
 
 
         # save misfit values
@@ -1350,22 +1311,6 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     lune_dict = grid.get_dict(idx)
     mt_dict = grid.get(idx).as_dict()
 
-    merged_dict = merge_dicts(lune_dict, mt_dict, origin)
-
-
-    # time shifts and other attributes corresponding to minimum misfit
-    list_bw = misfit_bw.collect_attributes(
-        data_bw, greens_bw, best_source)
-
-    list_sw = misfit_sw.collect_attributes(
-        data_sw, greens_sw, best_source)
-
-    dict_bw = {station.id: list_bw[_i] 
-        for _i,station in enumerate(stations)}
-
-    dict_sw = {station.id: list_sw[_i] 
-        for _i,station in enumerate(stations)}
-
 
     print('Generating figures...\\n')
 
@@ -1380,17 +1325,13 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
+    merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
+
     # save best-fitting source
     save_json(event_id+'DC_solution.json', merged_dict)
 
-
-    # save time shifts and other attributes
-    os.makedirs(event_id+'DC_attrs', exist_ok=True)
-
-    save_json(event_id+'DC_attrs/bw.json', dict_bw)
-    save_json(event_id+'DC_attrs/sw.json', dict_sw)
-
-
+    # save misfit
     results.save(event_id+'DC_misfit.nc')
 
 

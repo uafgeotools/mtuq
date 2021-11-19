@@ -202,23 +202,6 @@ if __name__=='__main__':
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
-
-
-        # time shifts and other attributes corresponding to minimum misfit
-        list_bw = misfit_bw.collect_attributes(
-            data_bw, greens_bw, best_source)
-
-        list_sw = misfit_sw.collect_attributes(
-            data_sw, greens_sw, best_source)
-
-        dict_bw = {station.id: list_bw[_i] 
-            for _i,station in enumerate(stations)}
-
-        dict_sw = {station.id: list_sw[_i] 
-            for _i,station in enumerate(stations)}
-
-
         print('Generating figures...\n')
 
         plot_data_greens2(event_id+'DC_waveforms.png',
@@ -232,16 +215,14 @@ if __name__=='__main__':
 
         print('Saving results...\n')
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
+
+
         # save best-fitting source
         save_json(event_id+'DC_solution.json', merged_dict)
 
 
-        # save time shifts and other attributes
-        os.makedirs(event_id+'DC_attrs', exist_ok=True)
-
-        save_json(event_id+'DC_attrs/bw.json', dict_bw)
-        save_json(event_id+'DC_attrs/sw.json', dict_sw)
-
+        # save misfit
         results.save(event_id+'DC_misfit.nc')
 
 

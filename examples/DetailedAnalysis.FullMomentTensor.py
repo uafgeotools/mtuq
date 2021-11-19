@@ -235,8 +235,6 @@ if __name__=='__main__':
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
-
 
         print('Data variance estimation...\n')
 
@@ -481,7 +479,10 @@ if __name__=='__main__':
 
         save_json(event_id+'FMT_solutions/marginal_likelihood.json', marginal_vw)
         save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
+
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
         save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
+
 
         os.makedirs(event_id+'FMT_stats', exist_ok=True)
 
