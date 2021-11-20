@@ -1,0 +1,132 @@
+#!/bin/bash -e
+
+
+# USAGE
+#   plot_mt_xy out filetype mt_file mw_file xmin xmax ymin ymax xlabel ylabel [title] [subtitle]
+#
+
+
+# add mtuq/graphics/_gmt to the path
+export PATH=${PATH:+${PATH}:}$(dirname ${BASH_SOURCE[0]})
+source _gmt_functions
+
+
+# parse input arguments
+if [ $# -lt 16 ] ; then
+    echo "plot_lune: bad input arguments"
+    exit -1
+fi
+
+# output file
+filename=$1
+filetype=$2
+
+# ASCII input files
+ascii_data=$3
+supplemental_data=$4
+
+# colorbar
+value_min=$5
+value_max=$6
+value_exp=$7
+cpt_step=$8
+cpt_name=$9
+flip_cpt=${10}
+colorbar_type=${11}
+colorbar_label=${12}
+
+# markers
+marker_coords=${13}
+marker_type=${14}
+
+# labels
+title="${15}"
+subtitle="${16}"
+
+title_size="25p"
+subtitle_size="20p"
+label_size="15p"
+
+out=${filename}
+ps="${out}.ps"
+tmp=tmp_${out//\//__}
+
+
+# parse axis limits
+
+xmin=$(cat $ascii_data | awk 'NR==1{min = $1 + 0; next} {if ($1 < min) min = $1;} END {print min}')
+xmax=$(cat $ascii_data | awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}')
+ymin=$(cat $ascii_data | awk 'NR==1{min = $2 + 0; next} {if ($2 < min) min = $2;} END {print min}')
+ymax=$(cat $ascii_data | awk 'NR==1{max = $2 + 0; next} {if ($2 > max) max = $2;} END {print max}')
+
+xmin=$(printf "%f" ${xmin})
+xmax=$(printf "%f" ${xmax})
+ymin=$(printf "%f" ${ymin})
+ymax=$(printf "%f" ${ymax})
+
+xlen=$(echo ${xmax} - ${xmin} | bc -l)
+ylen=$(echo ${ymax} - ${ymin} | bc -l)
+
+x1=$(echo ${xmin} - 0.1*${xlen} | bc -l)
+x2=$(echo ${xmax} + 0.1*${xlen} | bc -l)
+y1=$(echo ${ymin} - 0.1*${ylen} | bc -l)
+y2=$(echo ${ymax} + 0.1*${ylen} | bc -l)
+
+dx=$(echo ${xlen}/4. | bc -l)
+dy=$(echo ${ylen}/4. | bc -l)
+
+proj_arg="-JX5"
+area_arg="-R${x1}/${x2}/${y1}/${y2}"
+
+
+# parse axis labels
+
+xlabel=""
+ylabel=""
+
+xlabel_arg=""
+if [[ ! -z "$xlabel" ]]; then
+  xlabel_arg="+l${xlabel}"
+fi
+
+ylabel_arg=""
+if [[ ! -z "$ylabel" ]]; then
+  ylabel_arg="+l${ylabel}"
+fi
+
+
+# apply default settings
+gmt_settings
+
+
+# display background grid
+gmt psbasemap $proj_arg $area_arg -Bxa${dx}"${xlabel_arg}" -Bya${dy}"${ylabel_arg}" -K > $ps
+
+
+# generate color palette
+cpt_args=$( get_cpt_args $cpt_name $flip_cpt )
+range_arg="-T${value_min}/${value_max}/${cpt_step}"
+gmt makecpt $cpt_args -D $range_arg > $tmp.cpt
+
+# plot misfit values
+gmt pscontour $ascii_data $proj_arg $area_arg -C$tmp.cpt -I -N -A- -O -K >> $ps
+
+
+# plot beachballs
+#gmt psmeca $mt_file $proj_arg $area_arg -Sm0.2 -Ggrey50 -O -K >> $ps
+
+
+# display title
+#add_title $ps $proj_arg $area_arg "$title" "$subtitle"
+
+
+custom_psclose $ps
+custom_psconvert $ps $out $filetype
+
+
+#echo "  finished writing: $out"
+
+
+rm tmp*$out*
+rm $ps
+

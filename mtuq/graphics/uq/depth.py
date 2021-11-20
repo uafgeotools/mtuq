@@ -16,7 +16,7 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 
-def plot_misfit_depth(filename, ds, origins, title='', **kwargs):
+def plot_misfit_depth(filename, ds, origins, **kwargs):
     """ Plots misfit versus depth
 
     .. rubric :: Input arguments
@@ -41,7 +41,7 @@ def plot_misfit_depth(filename, ds, origins, title='', **kwargs):
     elif issubclass(type(ds), DataFrame):
         da = _misfit_random(ds)
 
-    _plot_depth(filename, origins, da, title, **kwargs)
+    _plot_depth(filename, da, origins, title, **kwargs)
 
 
 
@@ -189,7 +189,7 @@ def _backend(filename,
     pyplot.savefig(filename)
 
 
-def _plot_depth(filename, origins, da, title='',
+def _plot_depth(filename, da, origins, title='',
     xlabel='auto', ylabel='', show_magnitudes=True, show_tradeoffs=True,
     fontsize=16., backend=_backend):
 

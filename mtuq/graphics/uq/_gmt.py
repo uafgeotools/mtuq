@@ -49,8 +49,21 @@ def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
     data =  _parse_data(lon, lat, values)
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'), 
-        filename, lon, lat, values, supplemental_data=None,
+       filename, lon, lat, values, supplemental_data=None,
        marker_coords=_parse_force(best_force), **kwargs)
+
+
+def gmt_plot_latlon(filename, lon, lat, values, best_latlon=None, lune_array=None,
+    **kwargs):
+
+    if _nothing_to_plot(values):
+        return
+
+    data = np.column_stack((lon, lat, values))
+
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_latlon'),
+        filename, data, supplemental_data=_parse_lune_array(lune_array),
+        marker_coords=best_latlon, **kwargs)
 
 
 def _call(shell_script, filename, data, supplemental_data=None,
