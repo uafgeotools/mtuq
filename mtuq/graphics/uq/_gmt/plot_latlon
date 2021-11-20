@@ -112,7 +112,7 @@ dy=$(printf "%.3f" $dy)
 gmt_settings
 
 
-# display background grid
+# specify basemap
 gmt psbasemap $proj_arg $area_arg -BneSW -Bxa${dx}"${xlabel_arg}" -Bya${dy}"${ylabel_arg}" -Xc -Yr4. -K > $ps
 
 

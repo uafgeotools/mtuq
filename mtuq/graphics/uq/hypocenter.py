@@ -25,9 +25,17 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``origins`` (`list` of `Origin` objects)
+    Origin objects corresponding to different hypocenters
+
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_depth.html>`_
 
     """
+
     _check(ds)
     ds = ds.copy()
 

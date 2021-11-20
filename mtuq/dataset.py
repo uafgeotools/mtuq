@@ -95,7 +95,7 @@ class Dataset(list):
 
         else:
             raise ValueError(
-                "SELECTOR must be a Station, Origin or list")
+                "`selector` must be a `Station`, `Origin` or list thereof")
 
         return self.__class__(
             id=self.id, streams=filter(selected, self))

@@ -105,7 +105,7 @@ gmt_settings
 
 
 
-# display basemap
+# specify basemap
 
 proj_arg="-JX4i"
 area_arg="-R${x1}/${x2}/${y1}/${y2}"

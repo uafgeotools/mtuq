@@ -60,7 +60,7 @@ tmp=tmp_${out//\//__}
 gmt_settings
 
 
-# display background grid
+# specify basemap
 gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -Xc -Yr1.2 -K > $ps
 
 
@@ -73,7 +73,7 @@ gmt makecpt $cpt_args -D $range_arg > $tmp.cpt
 gmt pscontour $ascii_data $proj_arg $area_arg -C$tmp.cpt -I -N -A- -O -K >> $ps
 
 
-# plot focal mechanisms tradeoffs
+# plot focal mechanism tradeoffs
 if [ -f $supplemental_data ]; then
     gmt psmeca $supplemental_data -N -Sm0.2 $proj_arg $area_arg -Z$cpt_name -O -K >> $ps
 fi
