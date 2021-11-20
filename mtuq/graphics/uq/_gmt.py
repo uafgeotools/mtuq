@@ -86,7 +86,7 @@ def _call(shell_script, filename, data, supplemental_data=None,
     colorbar_label = _parse_label(colorbar_label)
 
     # parse colorbar limits
-    minval, maxval, exp = _parse_cpt_limits(data[:,-1])
+    minval, maxval, exp = _parse_limits(data[:,-1])
     cpt_step=(maxval-minval)/20.
 
     # write values to be plotted as ASCII table
@@ -132,9 +132,62 @@ def _call(shell_script, filename, data, supplemental_data=None,
 
 
 
-def gmt_plot_depth():
-    raise NotImplementedError
+def gmt_plot_depth(filename,
+        depths,
+        values,
+        magnitudes=None,
+        lune_array=None,
+        title='',
+        xlabel='',
+        ylabel='',
+        fontsize=16.):
 
+    # parse filenames
+    filename, filetype = _parse_filetype(filename)
+
+    ascii_file_1 = _safename('tmp_'+filename+'_ascii1.txt')
+    ascii_file_2 = _safename('tmp_'+filename+'_ascii2.txt')
+    ascii_file_3 = _safename('tmp_'+filename+'_ascii3.txt')
+
+
+    # parase title and labels
+    title, subtitle = _parse_title(title)
+
+    xlabel = "'%s'" % xlabel
+    ylabel = "'%s'" % ylabel
+
+
+    data = np.column_stack((depths, values))
+    minval, maxval, exp = _parse_limits(data[:,-1])
+
+    # write values to be plotted as ASCII table
+    _savetxt(ascii_file_1, data)
+
+    if lune_array is not None:
+        supplemental_data=_parse_lune_array2(data[:,0], data[:,1], lune_array)
+        _savetxt(ascii_file_2, supplemental_data)
+
+    # call bash script
+    if exists_gmt():
+        subprocess.call("%s %s %s %s %s %s %f %f %d %s %s %s %s" %
+           (fullpath('mtuq/graphics/uq/_gmt/plot_depth'),
+            filename,
+            filetype,
+            ascii_file_1,
+            ascii_file_2,
+            ascii_file_3,
+            minval,
+            maxval,
+            exp,
+            title,
+            subtitle,
+            xlabel,
+            ylabel,
+            ),
+            shell=True)
+    else:
+        gmt_not_found_warning(
+            values_ascii)
 
 
 #
@@ -200,7 +253,6 @@ def _parse_label(label):
         return "''"
 
 
-
 def _parse_filetype(filename):
 
     parts = splitext(filename)
@@ -232,7 +284,7 @@ def _parse_cpt_name(cpt_name):
        return cpt_name
 
 
-def _parse_cpt_limits(values):
+def _parse_limits(values):
 
     masked = np.ma.array(values, mask=np.isnan(values))
 
@@ -244,9 +296,9 @@ def _parse_cpt_limits(values):
         return minval, maxval, 0
 
     else:
-        masked /= 10**exp
         minval /= 10**exp
         maxval /= 10**exp
+        masked /= 10**exp
         return minval, maxval, exp
 
 

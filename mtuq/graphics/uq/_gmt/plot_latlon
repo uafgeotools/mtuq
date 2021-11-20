@@ -65,12 +65,14 @@ ymin=$(printf "%f" ${ymin})
 ymax=$(printf "%f" ${ymax})
 
 xlen=$(echo ${xmax} - ${xmin} | bc -l)
-ylen=$(echo ${ymax} - ${ymin} | bc -l)
-
 x1=$(echo ${xmin} - 0.1*${xlen} | bc -l)
 x2=$(echo ${xmax} + 0.1*${xlen} | bc -l)
+xc=$(echo "($xmin + $xmax)/2." | bc -l)
+
+ylen=$(echo ${ymax} - ${ymin} | bc -l)
 y1=$(echo ${ymin} - 0.1*${ylen} | bc -l)
 y2=$(echo ${ymax} + 0.1*${ylen} | bc -l)
+yc=$(echo "($ymin + $ymax)/2." | bc -l)
 
 dx=$(echo ${xlen}/2. | bc -l)
 dy=$(echo ${ylen}/2. | bc -l)
@@ -93,6 +95,12 @@ ylabel_arg=""
 if [[ ! -z "$ylabel" ]]; then
   ylabel_arg="+l${ylabel}"
 fi
+
+
+# markers and annotations
+
+radius=0.4
+
 
 
 # adjust tick label precision
@@ -129,7 +137,7 @@ gmt grdview $tmp.nc $proj_arg $area_arg -C$tmp.cpt -Qs -I -O -K >> $ps
 
 # plot focal mechanisms tradeoffs
 if [ -f $supplemental_data ]; then
-    gmt psmeca $supplemental_data -N -Sm0.4 $proj_arg $area_arg -Z$cpt_name -O -K >> $ps
+    gmt psmeca $supplemental_data -N -Sm$radius $proj_arg $area_arg -Z$cpt_name -O -K >> $ps
 fi
 
 
@@ -151,13 +159,8 @@ fi
 
 
 
-# adjust title placement
-x0=$(echo "($xmin + $xmax)/2." | bc -l)
-y0=$ymax
-
-
 # display title
-add_title_latlon $ps $proj_arg $area_arg $x0 $y0 "$title" "$subtitle"
+add_title $ps $proj_arg $area_arg $xc $y0 "$title" "$subtitle"
 
 
 custom_psclose $ps

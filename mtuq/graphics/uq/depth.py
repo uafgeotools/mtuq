@@ -9,7 +9,7 @@ import subprocess
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics.uq._gmt import exists_gmt, gmt_not_found_warning
+from mtuq.graphics.uq._gmt import gmt_plot_depth
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath, warn
 from mtuq.util.math import closed_interval, open_interval
@@ -25,13 +25,21 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``origins`` (`list` of `Origin` objects)
+    Origin objects corresponding to different depths
 
 
     For optional argument descriptions, 
     `see here <mtuq.graphics._plot_depth.html>`_
 
     """
+    _defaults(kwargs, {
+        'ylabel': 'Misfit',
+        })
+
+
     _check(ds)
     ds = ds.copy()
 
@@ -41,12 +49,12 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
     elif issubclass(type(ds), DataFrame):
         da = _misfit_random(ds)
 
-    _plot_depth(filename, da, origins, title, **kwargs)
+    _plot_depth(filename, da, origins, **kwargs)
 
 
 
-def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
-    """ Plots maximum likelihood versus depth
+def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
+    """ Plots maximum likelihoods versus depth
 
     .. rubric :: Input arguments
 
@@ -54,95 +62,48 @@ def plot_likelihood_depth(filename, ds, origins, sources, sigma=None, title=''):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
+    Data structure containing moment tensors and corresponding misfit values
 
-    ``title`` (`str`):
-    Optional figure title
+    ``origins`` (`list` of `Origin` objects)
+    Origin objects corresponding to different depths
+
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-    assert sigma is not None
 
-    depths = _get_depths(origins)
-
-    _check(ds)
-    ds = ds.copy()
-
-    if issubclass(type(ds), DataArray):
-        ds.values = np.exp(-ds.values/(2.*sigma**2))
-        ds.values /= ds.values.sum()
-
-        values, indices = _min_dataarray(ds)
-        best_sources = _get_sources(sources, indices)
-
-    elif issubclass(type(ds), DataFrame):
-        ds = np.exp(-ds/(2.*sigma**2))
-        ds /= ds.sum()
-
-        values, indices = _min_dataframe(ds)
-        best_sources = _get_sources(sources, indices)
-
-    values /= values.sum()
-
-    _plot_depth(filename, depths, values, indices, 
-        title=title, xlabel='auto', ylabel='Likelihood')
+    raise NotImplementedError
 
 
 
-def plot_marginal_depth(filename, ds, origins, sources, sigma=None, title=''):
+def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     """ Plots marginal likelihoods versus depth
 
-
     .. rubric :: Input arguments
 
     ``filename`` (`str`):
     Name of output image file
 
     ``ds`` (`DataArray` or `DataFrame`):
-    data structure containing moment tensors and corresponding misfit values
+    Data structure containing moment tensors and corresponding misfit values
 
-    ``title`` (`str`):
-    Optional figure title
+    ``origins`` (`list` of `Origin` objects)
+    Origin objects corresponding to different depths
+
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-    assert sigma is not None
 
-    depths = _get_depths(origins)
-
-    _check(ds)
-    ds = ds.copy()
-
-    if issubclass(type(ds), DataArray):
-        ds = np.exp(-ds/(2.*sigma**2))
-        ds /= ds.sum()
-
-        values, indices = _max_dataarray(ds)
-        best_sources = _get_sources(sources, indices)
-
-    elif issubclass(type(ds), DataFrame):
-        raise NotImplementedError
-        ds = np.exp(-ds/(2.*sigma**2))
-        ds /= ds.sum()
-
-        values, indices = _min_dataframe(ds)
-        best_sources = _get_sources(sources, indices)
-
-    values /= values.sum()
-
-    _plot_depth(filename, depths, values, indices, 
-        title=title, xlabel='auto', ylabel='Likelihood')
+    raise NotImplementedError
 
 
 
 #
-# utility functions
+# for extracting values from regularly-spaced grids
 #
-
-def _check(ds):
-    """ Checks data structures
-    """
-    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
-        raise TypeError("Unexpected grid format")
-
 
 def _misfit_regular(da):
     dims = ('rho', 'v', 'w', 'kappa', 'sigma', 'h')
@@ -160,14 +121,14 @@ def _likelihoods_regular(da, var):
 
 
 #
-# pyplot wrappers
+# wrappers
 #
 
 def _backend(filename,
         depths,
         values,
         magnitudes=None,
-        mt_array=None,
+        lune_array=None,
         title=None,
         xlabel=None,
         ylabel=None,
@@ -191,7 +152,7 @@ def _backend(filename,
 
 def _plot_depth(filename, da, origins, title='',
     xlabel='auto', ylabel='', show_magnitudes=True, show_tradeoffs=True,
-    fontsize=16., backend=_backend):
+    backend=gmt_plot_depth):
 
     """ Plots depth versus user-supplied DataArray values (requires GMT)
 
@@ -228,16 +189,16 @@ def _plot_depth(filename, da, origins, title='',
         for _i in range(npts):
             magnitudes[_i] = da[_i].coords['rho']
 
-    mt_array = None
+    lune_array = None
     if show_tradeoffs:
-        mt_array = np.empty((npts, 6))
+        lune_array = np.empty((npts, 6))
         for _i in range(npts):
-            mt_array[_i, 0] = da[_i].coords['rho']
-            mt_array[_i, 1] = da[_i].coords['v']
-            mt_array[_i, 2] = da[_i].coords['w']
-            mt_array[_i, 3] = da[_i].coords['kappa']
-            mt_array[_i, 4] = da[_i].coords['sigma']
-            mt_array[_i, 5] = da[_i].coords['h']
+            lune_array[_i, 0] = da[_i].coords['rho']
+            lune_array[_i, 1] = da[_i].coords['v']
+            lune_array[_i, 2] = da[_i].coords['w']
+            lune_array[_i, 3] = da[_i].coords['kappa']
+            lune_array[_i, 4] = da[_i].coords['sigma']
+            lune_array[_i, 5] = da[_i].coords['h']
 
     if xlabel=='auto' and (depths.max() < 10000.):
        xlabel = 'Depth (m)'
@@ -249,9 +210,26 @@ def _plot_depth(filename, da, origins, title='',
         depths,
         values,
         magnitudes=magnitudes,
-        mt_array=mt_array,
+        lune_array=lune_array,
         xlabel=xlabel,
         ylabel=ylabel,
-        fontsize=fontsize)
+        title=title,
+        )
+
+
+#
+# utility functions
+#
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
+
+def _defaults(kwargs, defaults):
+    for key in defaults:
+        if key not in kwargs:
+           kwargs[key] = defaults[key]
 
 

@@ -290,7 +290,7 @@ function add_title_vw {
 }
 
 
-function add_title_latlon {
+function add_title {
     ps=$1
     prog_arg=$2
     area_arg=$3
