@@ -538,8 +538,8 @@ Grid_FullMomentTensor="""
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=12,
-        magnitudes=[4.5])
+        npts_per_axis=10,
+        magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -554,7 +554,7 @@ Grid_TestDoubleCoupleMagnitudeDepth="""
 
     grid = DoubleCoupleGridRegular(
         npts_per_axis=5,
-        magnitudes=[4.4, 4.5, 4.6])
+        magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -1277,13 +1277,13 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
         print('Generating figures...\\n')
 
         # plot observed and synthetic waveforms
-        plot_data_greens2(event_id+'DC+_waveforms.png',
+        plot_data_greens2(event_id+'DC+Z_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
 
         # plot misfit versus depth
-        plot_misfit_depth(event_id+'DC+_misfit_depth.png', results, origins)
+        plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins)
 
 
         print('Saving results...\\n')
@@ -1293,18 +1293,18 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 
         # save best-fitting source
-        save_json(event_id+'DC+_solution.json', merged_dict)
+        save_json(event_id+'DC+Z_solution.json', merged_dict)
 
 
         # save origins
         origins_dict = {_i: origin 
             for _i,origin in enumerate(origins)}
 
-        save_json(event_id+'DC+_origins.json', origins_dict)
+        save_json(event_id+'DC+Z_origins.json', origins_dict)
 
 
         # save misfit surface
-        results.save(event_id+'DC+_misfit.nc')
+        results.save(event_id+'DC+Z_misfit.nc')
 
 
         print('\\nFinished\\n')
@@ -1539,12 +1539,7 @@ if __name__=='__main__':
         file.write(MisfitDefinitions_DetailedAnalysis)
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
-        file.write(
-            replace(
-            Grid_FullMomentTensor,
-            'magnitudes=.*',
-            'magnitudes=[4.4, 4.5, 4.6])'
-            ))
+        file.write(Grid_FullMomentTensor)
         file.write(OriginComments)
         file.write(OriginDefinitions)
         file.write(

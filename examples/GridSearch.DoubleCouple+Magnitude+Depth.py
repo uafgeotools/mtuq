@@ -224,13 +224,13 @@ if __name__=='__main__':
         print('Generating figures...\n')
 
         # plot observed and synthetic waveforms
-        plot_data_greens2(event_id+'DC+_waveforms.png',
+        plot_data_greens2(event_id+'DC+Z_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
 
         # plot misfit versus depth
-        plot_misfit_depth(event_id+'DC+_misfit_depth.png', results, origins)
+        plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins)
 
 
         print('Saving results...\n')
@@ -240,18 +240,18 @@ if __name__=='__main__':
 
 
         # save best-fitting source
-        save_json(event_id+'DC+_solution.json', merged_dict)
+        save_json(event_id+'DC+Z_solution.json', merged_dict)
 
 
         # save origins
         origins_dict = {_i: origin 
             for _i,origin in enumerate(origins)}
 
-        save_json(event_id+'DC+_origins.json', origins_dict)
+        save_json(event_id+'DC+Z_origins.json', origins_dict)
 
 
         # save misfit surface
-        results.save(event_id+'DC+_misfit.nc')
+        results.save(event_id+'DC+Z_misfit.nc')
 
 
         print('\nFinished\n')
