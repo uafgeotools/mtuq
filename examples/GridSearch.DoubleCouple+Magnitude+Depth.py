@@ -212,7 +212,6 @@ if __name__=='__main__':
         # array index corresponding to minimum misfit
         idx = results.idxmin('source')
 
-        # source parameters corresponding to minimum misfit
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
@@ -231,8 +230,7 @@ if __name__=='__main__':
 
 
         # plot misfit versus depth
-        plot_misfit_depth(event_id+'DC+_misfit_depth.png',
-            results, origins, grid)
+        plot_misfit_depth(event_id+'DC+_misfit_depth.png', results, origins)
 
 
         print('Saving results...\n')

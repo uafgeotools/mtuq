@@ -188,7 +188,6 @@ if __name__=='__main__':
         # array index corresponding to minimum misfit
         idx = results.idxmin('source')
 
-        # source parameters corresponding to minimum misfit
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()

@@ -165,7 +165,7 @@ if __name__=='__main__':
 
     results = results_bw + results_sw
 
-    # source corresponding to minimum misfit
+    # array index corresponding to minimum misfit
     idx = results.idxmin('source')
 
     best_source = grid.get(idx)
