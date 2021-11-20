@@ -45,13 +45,11 @@ subtitle="${16}"
 
 title_size="25p"
 subtitle_size="20p"
-label_size="15p"
+label_size="12p"
 
 out=${filename}
 ps="${out}.ps"
 tmp=tmp_${out//\//__}
-
-echo "made it" $title
 
 
 # parse axis limits
@@ -77,7 +75,7 @@ y2=$(echo ${ymax} + 0.1*${ylen} | bc -l)
 dx=$(echo ${xlen}/2. | bc -l)
 dy=$(echo ${ylen}/2. | bc -l)
 
-proj_arg="-JX4"
+proj_arg="-JX4i"
 area_arg="-R${x1}/${x2}/${y1}/${y2}"
 
 
@@ -107,7 +105,7 @@ gmt_settings
 
 
 # display background grid
-gmt psbasemap $proj_arg $area_arg -BneSW -Bxa${dx}"${xlabel_arg}" -Bya${dy}"${ylabel_arg}" -K > $ps
+gmt psbasemap $proj_arg $area_arg -BneSW -Bxa${dx}"${xlabel_arg}" -Bya${dy}"${ylabel_arg}" -Xc -Yr4. -K > $ps
 
 
 # generate color palette
@@ -133,6 +131,24 @@ gmt grdview $tmp.nc $proj_arg $area_arg -C$tmp.cpt -Qs -I -O -K >> $ps
 if [ -f $supplemental_data ]; then
     gmt psmeca $supplemental_data -N -Sm0.4 $proj_arg $area_arg -Z$cpt_name -O -K >> $ps
 fi
+
+
+# display colorbar
+if [ $colorbar_type -ne 0 ]; then
+
+    # controls label below horizontal colorbar
+    arg1=$( get_colorbar_arg1 "$colorbar_label" )
+
+    # controls label to the right of horizontal colorbar
+    arg2=$( get_colorbar_exp $value_exp )
+
+    gmt gmtset FONT_ANNOT $label_size
+    gmt gmtset FONT_LABEL $label_size
+
+    gmt psscale -C$tmp.cpt -Dx0./-0.9+w4/0.3+h "$arg1" "$arg2" -O -K >> $ps
+
+fi
+
 
 
 # adjust title placement
