@@ -9,7 +9,7 @@ Acquiring and quality control checking seismic data can be one of the most chall
 Data acquisition clients
 ------------------------
 
-`ObsPy FDSN clients <https://docs.obspy.org/packages/obspy.clients.fdsn.html>`_ provide a way of programmatically downloading waveforms from `IRIS <https://www.iris.edu>`_. `PySEP <https://github.com/uafgeotools/pysep>`_ is a wrapper around an Obspy FDSN client and our preferred data acquisition tool.  
+`ObsPy FDSN clients <https://docs.obspy.org/packages/obspy.clients.fdsn.html>`_ provide a way of programmatically downloading waveforms from `IRIS <https://www.iris.edu>`_. `PySEP <https://github.com/uafgeotools/pysep>`_ is a wrapper around an ObsPy FDSN client and our preferred data acquisition tool.  
 
 Besides downloading waveforms through ObsPy calls, PySEP performs data processing and quality control, ensuring that the data processing and time discretization requirements below are satisfied.  
 
@@ -34,5 +34,5 @@ It is expected that the following data processing steps have been carried out pr
 Other file formats
 ------------------
 
-Besides SAC, many other file formats could be supported in principle.  To make adding such spport easier, `mtuq.read` follows the manner in which `obspy.read` works, by accepting a `format` keyword arguments that corresponds to a module in `mtuq.io.readers`.
+Besides SAC, many other file formats could be supported in principle.  To make adding such support easier, `mtuq.read` follows the manner in which `obspy.read` works, by accepting a `format` keyword arguments that corresponds to a module in `mtuq.io.readers`.
 
