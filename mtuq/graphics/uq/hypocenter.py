@@ -27,9 +27,6 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
     ``ds`` (`DataArray` or `DataFrame`):
     data structure containing moment tensors and corresponding misfit values
 
-    ``title`` (`str`):
-    Optional figure title
-
     """
     _check(ds)
     ds = ds.copy()
@@ -40,7 +37,7 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
     elif issubclass(type(ds), DataFrame):
         raise NotImplementedError
 
-    _plot_latlon(filename, da, origins)
+    _plot_latlon(filename, da, origins, **kwargs)
 
 
 #
@@ -58,8 +55,8 @@ def _check(ds):
 # wrappers
 #
 
-def _plot_latlon(filename, da, origins, title='',
-    show_best=False, show_tradeoffs=False, **kwargs):
+def _plot_latlon(filename, da, origins,
+    show_best=False, show_tradeoffs=True, **kwargs):
 
     npts = len(origins)
 

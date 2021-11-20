@@ -62,7 +62,7 @@ def gmt_plot_latlon(filename, lon, lat, values, best_latlon=None, lune_array=Non
     data = np.column_stack((lon, lat, values))
 
     _call(fullpath('mtuq/graphics/uq/_gmt/plot_latlon'),
-        filename, data, supplemental_data=_parse_lune_array(lune_array),
+        filename, data, supplemental_data=_parse_lune_array2(lon, lat, lune_array),
         marker_coords=best_latlon, **kwargs)
 
 
@@ -308,6 +308,38 @@ def _parse_lune_array(lune_array):
     return gmt_array
 
 
+def _parse_lune_array2(lon, lat, lune_array):
+    if lune_array is None:
+        return None
+
+    # Convert from an (N x 6) table of lune parameters to the (N x 12) table
+    # expected by psmeca
+    N = lune_array.shape[0]
+    gmt_array = np.empty((N, 12))
+
+    for _i in range(N):
+        rho,v,w,kappa,sigma,h = lune_array[_i,:]
+
+        # adding a random negative perturbation to the dip, to avoid GMT plotting bug
+        perturb = np.random.uniform(0.2,0.4)
+        if sigma > (-90.0 + 0.4):
+            sigma -= perturb
+
+        mt = to_mij(rho, v, w, kappa, sigma, h)
+        exponent = np.max([int('{:.2e}'.format(mt[i]).split('e+')[1]) for i in range(len(mt))])
+        scaled_mt = mt/10**(exponent)
+        dummy_value = 0.
+
+        gmt_array[_i, 0] = lon[_i]
+        gmt_array[_i, 1] = lat[_i]
+        gmt_array[_i, 2] = dummy_value
+        gmt_array[_i, 3:9] = scaled_mt
+        gmt_array[_i, 9] = exponent+7
+        gmt_array[_i, 10:] = 0
+
+    return gmt_array
+
+
 def _safename(filename):
     # used for writing temporary files only
     return filename.replace('/', '__')
@@ -323,6 +355,6 @@ def _float_to_str(val):
 
 def _savetxt(filename, *args):
     # FIXME: can GMT accept virtual files?
-    np.savetxt(filename, np.column_stack(args), fmt='%.3e')
+    np.savetxt(filename, np.column_stack(args), fmt='%.6e')
 
 

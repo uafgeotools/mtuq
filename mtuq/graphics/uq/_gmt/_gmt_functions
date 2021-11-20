@@ -290,6 +290,33 @@ function add_title_vw {
 }
 
 
+function add_title_latlon {
+    ps=$1
+    prog_arg=$2
+    area_arg=$3
+    x0=$4
+    y0=$5
+    title="$6"
+    subtitle="$7"
+
+    if [ -n "$title" ] && [ -n "$subtitle" ]; then
+
+        echo "  $x0 $y0 ${title}" |\
+        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/35p >> $ps
+
+        echo "  $x0 $y0 ${subtitle}" |\
+        gmt pstext -F+f15p+jCT -N $proj_arg $area_arg -O -K -D0p/25p >> $ps
+
+    elif [ -n "$title" ]; then
+
+        echo "  $x0 $y0 ${title}" |\
+        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/30p >> $ps
+
+    fi
+
+}
+
+
 function get_image_format_arg {
     case $1 in
        BMP) echo -Tb;;

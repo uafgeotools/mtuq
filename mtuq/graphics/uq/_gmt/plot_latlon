@@ -51,6 +51,8 @@ out=${filename}
 ps="${out}.ps"
 tmp=tmp_${out//\//__}
 
+echo "made it" $title
+
 
 # parse axis limits
 
@@ -72,10 +74,10 @@ x2=$(echo ${xmax} + 0.1*${xlen} | bc -l)
 y1=$(echo ${ymin} - 0.1*${ylen} | bc -l)
 y2=$(echo ${ymax} + 0.1*${ylen} | bc -l)
 
-dx=$(echo ${xlen}/4. | bc -l)
-dy=$(echo ${ylen}/4. | bc -l)
+dx=$(echo ${xlen}/2. | bc -l)
+dy=$(echo ${ylen}/2. | bc -l)
 
-proj_arg="-JX5"
+proj_arg="-JX4"
 area_arg="-R${x1}/${x2}/${y1}/${y2}"
 
 
@@ -95,12 +97,17 @@ if [[ ! -z "$ylabel" ]]; then
 fi
 
 
+# adjust tick label precision
+dx=$(printf "%.3f" $dx)
+dy=$(printf "%.3f" $dy)
+
+
 # apply default settings
 gmt_settings
 
 
 # display background grid
-gmt psbasemap $proj_arg $area_arg -Bxa${dx}"${xlabel_arg}" -Bya${dy}"${ylabel_arg}" -K > $ps
+gmt psbasemap $proj_arg $area_arg -BneSW -Bxa${dx}"${xlabel_arg}" -Bya${dy}"${ylabel_arg}" -K > $ps
 
 
 # generate color palette
@@ -108,16 +115,33 @@ cpt_args=$( get_cpt_args $cpt_name $flip_cpt )
 range_arg="-T${value_min}/${value_max}/${cpt_step}"
 gmt makecpt $cpt_args -D $range_arg > $tmp.cpt
 
-# plot misfit values
-gmt pscontour $ascii_data $proj_arg $area_arg -C$tmp.cpt -I -N -A- -O -K >> $ps
+
+# adjust interpolation
+dx=$(echo ${xlen}/8. | bc -l)
+dy=$(echo ${ylen}/8. | bc -l)
 
 
-# plot beachballs
-#gmt psmeca $mt_file $proj_arg $area_arg -Sm0.2 -Ggrey50 -O -K >> $ps
+# plot misfit values with extrapolation
+gmt surface $ascii_data $area_arg -I$dx/$dy -G$tmp.nc
+gmt grdview $tmp.nc $proj_arg $area_arg -C$tmp.cpt -Qs -I -O -K >> $ps
+
+# plot misfit values without extrapolation
+#gmt pscontour $ascii_data $proj_arg $area_arg -C$tmp.cpt -I -N -A- -O -K >> $ps
+
+
+# plot focal mechanisms tradeoffs
+if [ -f $supplemental_data ]; then
+    gmt psmeca $supplemental_data -N -Sm0.4 $proj_arg $area_arg -Z$cpt_name -O -K >> $ps
+fi
+
+
+# adjust title placement
+x0=$(echo "($xmin + $xmax)/2." | bc -l)
+y0=$ymax
 
 
 # display title
-#add_title $ps $proj_arg $area_arg "$title" "$subtitle"
+add_title_latlon $ps $proj_arg $area_arg $x0 $y0 "$title" "$subtitle"
 
 
 custom_psclose $ps
@@ -125,7 +149,6 @@ custom_psconvert $ps $out $filetype
 
 
 #echo "  finished writing: $out"
-
 
 rm tmp*$out*
 rm $ps
