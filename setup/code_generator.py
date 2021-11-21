@@ -42,8 +42,8 @@ if __name__=='__main__':
     #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
     #   
     #
-    # For simpler examples, see SerialGridSearch.DoubleCouple.py and
-    # GridSearch.FullMomentTensor.py
+    # This is the most complicated example. For simpler ones, see
+    # SerialGridSearch.DoubleCouple.py or GridSearch.FullMomentTensor.py
     #
     # For ideas on applying this type of analysis to entire sets of events,
     # see github.com/rmodrak/mtbench
@@ -75,8 +75,23 @@ if __name__=='__main__':
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
     #
-    # This is the most complicated example. For a much simpler one, see
-    # SerialGridSearch.DoubleCouple.py
+    # This is one of the more complicated examples. For simpler ones, see
+    # SerialGridSearch.DoubleCouple.py or GridSearch.FullMomentTensor.py
+    #   
+
+"""
+
+
+Docstring_GridSearch_DoubleCoupleMagnitudeHypocenter="""
+if __name__=='__main__':
+    #
+    # Carries out grid search over source orientation, magnitude, and depth
+    #   
+    # USAGE
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Hypocenter.py
+    #
+    # This is one of the more complicated examples. For simpler ones, see
+    # SerialGridSearch.DoubleCouple.py or GridSearch.FullMomentTensor.py
     #   
 
 """
@@ -444,13 +459,13 @@ OriginDefinitions="""
 
 OriginsComments="""
     #
-    # We will search over a range of depths about the catalog origin
+    # We will search over a range of locations about the catalog origin
     #
 
 """
 
 
-OriginsDefinitions="""
+Origins_Depth="""
     catalog_origin = Origin({
         'time': '2009-04-07T20:12:55.000000Z',
         'latitude': 61.454200744628906,
@@ -470,6 +485,36 @@ OriginsDefinitions="""
 
 
 """
+
+
+
+Origins_Hypocenter="""
+    catalog_origin = Origin({
+        'time': '2009-04-07T20:12:55.000000Z',
+        'latitude': 61.454200744628906,
+        'longitude': -149.7427978515625,
+        'depth_in_m': 33033.599853515625,
+        })
+
+    from mtuq.util.math import lat_lon_tuples
+    tuples = lat_lon_tuples(
+        center_lat=catalog_origin.latitude,
+        center_lon=catalog_origin.longitude,
+        spacing_in_m=1000.,
+        npts_per_edge=4,
+        )
+
+    origins = []
+    for lat, lon in tuples:
+        origins += [catalog_origin.copy()]
+        setattr(origins[-1], 'latitude', lat)
+        setattr(origins[-1], 'longitude', lon)
+
+        # use best depth from DC+Depth search
+        setattr(origins[-1], 'depth_in_m', 45000.)
+        
+"""
+
 
 
 MisfitDefinitions_DetailedAnalysis="""
@@ -512,7 +557,27 @@ Grid_DoubleCouple="""
 """
 
 
-Grid_DoubleCoupleMagnitudeDepth="""
+Grid_DoubleCoupleMagnitude="""
+    #
+    # Next, we specify the moment tensor grid and source-time function
+    #
+
+    magnitudes = np.array(
+         # moment magnitude (Mw)
+        [4.3, 4.4, 4.5,     
+         4.6, 4.7, 4.8]) 
+
+    grid = DoubleCoupleGridRegular(
+        npts_per_axis=30,
+        magnitudes=magnitudes)
+
+    wavelet = Trapezoid(
+        magnitude=4.5)
+
+"""
+
+
+Grid_DoubleCoupleMagnitude="""
     #
     # Next, we specify the moment tensor grid and source-time function
     #
@@ -1599,8 +1664,8 @@ if __name__=='__main__':
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
         file.write(OriginsComments)
-        file.write(OriginsDefinitions)
-        file.write(Grid_DoubleCoupleMagnitudeDepth)
+        file.write(Origins_Depth)
+        file.write(Grid_DoubleCoupleMagnitude)
         file.write(
             replace(
             Main_GridSearch,
@@ -1608,6 +1673,42 @@ if __name__=='__main__':
             'origins',
             ))
         file.write(WrapUp_GridSearch_DoubleCoupleMagnitudeDepth)
+
+
+    with open('examples/GridSearch.DoubleCouple+Magnitude+Hypocenter.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
+        file.write(
+            replace(
+            Imports,
+            'plot_beachball',
+            'plot_misfit_latlon',
+            ))
+        file.write(Docstring_GridSearch_DoubleCoupleMagnitudeHypocenter)
+        file.write(PathsComments)
+        file.write(Paths_Syngine)
+        file.write(DataProcessingComments)
+        file.write(DataProcessingDefinitions)
+        file.write(MisfitComments)
+        file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(OriginsComments)
+        file.write(Origins_Hypocenter)
+        file.write(Grid_DoubleCoupleMagnitude)
+        file.write(
+            replace(
+            Main_GridSearch,
+            'origin',
+            'origins',
+            ))
+        file.write(
+            replace(
+            WrapUp_GridSearch_DoubleCoupleMagnitudeDepth,
+            'DC\+Z',
+            'DC+XY',
+            'misfit_depth',
+            'misfit_latlon',
+            ))
 
 
     with open('examples/GridSearch.FullMomentTensor.py', 'w') as file:

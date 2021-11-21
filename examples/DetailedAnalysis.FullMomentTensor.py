@@ -45,8 +45,8 @@ if __name__=='__main__':
     #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
     #   
     #
-    # For simpler examples, see SerialGridSearch.DoubleCouple.py and
-    # GridSearch.FullMomentTensor.py
+    # This is the most complicated example. For simpler ones, see
+    # SerialGridSearch.DoubleCouple.py or GridSearch.FullMomentTensor.py
     #
     # For ideas on applying this type of analysis to entire sets of events,
     # see github.com/rmodrak/mtbench
