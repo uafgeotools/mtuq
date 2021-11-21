@@ -127,7 +127,7 @@ if __name__=='__main__':
          4.6, 4.7, 4.8]) 
 
     grid = DoubleCoupleGridRegular(
-        npts_per_axis=30,
+        npts_per_axis=25,
         magnitudes=magnitudes)
 
     wavelet = Trapezoid(
@@ -230,7 +230,12 @@ if __name__=='__main__':
 
 
         # plot misfit versus depth
-        plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins)
+        plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins,
+            title=event_id)
+
+
+        plot_misfit_depth(event_id+'DC+Z_misfit_depth_tradeoffs.png', results, origins,
+            show_tradeoffs=True, title=event_id)
 
 
         print('Saving results...\n')

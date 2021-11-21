@@ -64,7 +64,7 @@ def _check(ds):
 #
 
 def _plot_latlon(filename, da, origins,
-    show_best=False, show_tradeoffs=True, **kwargs):
+    show_best=False, show_tradeoffs=False, **kwargs):
 
     npts = len(origins)
 

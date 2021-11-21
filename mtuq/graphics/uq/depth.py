@@ -151,7 +151,7 @@ def _backend(filename,
 
 
 def _plot_depth(filename, da, origins, title='',
-    xlabel='auto', ylabel='', show_magnitudes=True, show_tradeoffs=True,
+    xlabel='auto', ylabel='', show_magnitudes=False, show_tradeoffs=False,
     backend=gmt_plot_depth):
 
     """ Plots depth versus user-supplied DataArray values (requires GMT)

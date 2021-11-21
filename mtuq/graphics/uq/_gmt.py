@@ -70,10 +70,10 @@ def _call(shell_script, filename, data, supplemental_data=None,
     title='', colormap='viridis', flip_cpt=False, colorbar_type=1, 
     colorbar_label='', marker_coords=None, marker_type=0):
 
-   #
-   # Common wrapper for all GMT plotting functions involving 2D surfaces
-   # (lune, vw, force, and hypocenter surfaces)
-   #
+    #
+    # Common wrapper for all GMT plotting functions involving 2D surfaces
+    # (lune, vw, force, and hypocenter surfaces)
+    #
 
     print('  calling GMT script: %s' % basename(shell_script))
 

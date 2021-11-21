@@ -100,8 +100,7 @@ if __name__=='__main__':
 Docstring_GridSearch_FullMomentTensor="""
 if __name__=='__main__':
     #
-    # Carries out grid search over all moment tensor parameters except
-    # magnitude 
+    # Carries out grid search over all moment tensor parameters
     #
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
@@ -568,7 +567,7 @@ Grid_DoubleCoupleMagnitude="""
          4.6, 4.7, 4.8]) 
 
     grid = DoubleCoupleGridRegular(
-        npts_per_axis=30,
+        npts_per_axis=25,
         magnitudes=magnitudes)
 
     wavelet = Trapezoid(
@@ -588,7 +587,7 @@ Grid_DoubleCoupleMagnitude="""
          4.6, 4.7, 4.8]) 
 
     grid = DoubleCoupleGridRegular(
-        npts_per_axis=30,
+        npts_per_axis=25,
         magnitudes=magnitudes)
 
     wavelet = Trapezoid(
@@ -1348,7 +1347,12 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 
         # plot misfit versus depth
-        plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins)
+        plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins,
+            title=event_id)
+
+
+        plot_misfit_depth(event_id+'DC+Z_misfit_depth_tradeoffs.png', results, origins,
+            show_tradeoffs=True, title=event_id)
 
 
         print('Saving results...\\n')
@@ -1708,6 +1712,8 @@ if __name__=='__main__':
             'DC+XY',
             'misfit_depth',
             'misfit_latlon',
+            "title=event_id",
+            "title=event_id, colorbar_label='L2 misfit'",
             ))
 
 
