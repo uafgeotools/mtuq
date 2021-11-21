@@ -17,7 +17,7 @@ from mtuq.util.math import closed_interval, open_interval
 
 
 def plot_misfit_latlon(filename, ds, origins, **kwargs):
-    """ Plots misfit versus hypocenter position
+    """ Plots misfit versus hypocenter location
 
     .. rubric :: Input arguments
 
@@ -30,6 +30,8 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
     ``origins`` (`list` of `Origin` objects)
     Origin objects corresponding to different hypocenters
 
+
+    .. rubric :: Optional input arguments
 
     For optional argument descriptions, 
     `see here <mtuq.graphics._plot_depth.html>`_
@@ -48,15 +50,75 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
     _plot_latlon(filename, da, origins, **kwargs)
 
 
-#
-# utility functions
-#
+def plot_likelihood_latlon(filename, ds, origins, **kwargs):
+    """ Plots likelihood versus hypocenter location
 
-def _check(ds):
-    """ Checks data structures
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``origins`` (`list` of `Origin` objects)
+    Origin objects corresponding to different hypocenters
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_depth.html>`_
+
     """
-    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
-        raise TypeError("Unexpected grid format")
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        da = _likelihood_regular(ds)
+
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
+
+    _plot_latlon(filename, da, origins, **kwargs)
+
+
+
+def plot_marginal_latlon(filename, ds, origins, **kwargs):
+    """ Plots likelihood versus hypocenter location
+
+    .. rubric :: Input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``origins`` (`list` of `Origin` objects)
+    Origin objects corresponding to different hypocenters
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_depth.html>`_
+
+    """
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        raise NotImplementedError
+
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
+
+    _plot_latlon(filename, da, origins, **kwargs)
+
+
 
 
 #
@@ -65,6 +127,24 @@ def _check(ds):
 
 def _plot_latlon(filename, da, origins,
     show_best=False, show_tradeoffs=False, **kwargs):
+
+    """ Plots user-supplied DataArray values versus hypocenter (requires GMT)
+
+    .. rubric :: Keyword arguments
+
+    ``show_tradeoffs`` (`bool`):
+    Show how focal mechanism trades off with depth
+
+    ``xlabel`` (`str`):
+    Optional x-axis label
+
+    ``ylabel`` (`str`):
+    Optional y-axis label
+
+    ``title`` (`str`)
+    Optional figure title
+
+    """
 
     npts = len(origins)
 
@@ -115,4 +195,15 @@ def _get_labeltype(x,y,labeltype):
        ylabel = 'N-S offset (m)'
 
     return xlabel,ylabel
+
+
+#
+# utility functions
+#
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
 

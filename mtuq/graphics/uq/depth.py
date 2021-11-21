@@ -12,7 +12,7 @@ from xarray import DataArray
 from mtuq.graphics.uq._gmt import gmt_plot_depth
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath, warn
-from mtuq.util.math import closed_interval, open_interval
+from mtuq.util.math import to_Mw
 
 
 
@@ -30,6 +30,8 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
     ``origins`` (`list` of `Origin` objects)
     Origin objects corresponding to different depths
 
+
+    .. rubric :: Optional input arguments
 
     For optional argument descriptions, 
     `see here <mtuq.graphics._plot_depth.html>`_
@@ -68,12 +70,26 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
     Origin objects corresponding to different depths
 
 
+    .. rubric :: Optional input arguments
+
     For optional argument descriptions, 
     `see here <mtuq.graphics._plot_depth.html>`_
 
     """
+    _defaults(kwargs, {
+        'ylabel': 'Likelihood',
+        })
 
-    raise NotImplementedError
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        da = _likelihoods_regular(ds)
+
+    elif issubclass(type(ds), DataFrame):
+        da = _likelihoods_random(ds)
+
+    _plot_depth(filename, da, origins, **kwargs)
 
 
 
@@ -91,6 +107,8 @@ def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     ``origins`` (`list` of `Origin` objects)
     Origin objects corresponding to different depths
 
+
+    .. rubric :: Optional input arguments
 
     For optional argument descriptions, 
     `see here <mtuq.graphics._plot_depth.html>`_
@@ -154,7 +172,7 @@ def _plot_depth(filename, da, origins, title='',
     xlabel='auto', ylabel='', show_magnitudes=False, show_tradeoffs=False,
     backend=gmt_plot_depth):
 
-    """ Plots depth versus user-supplied DataArray values (requires GMT)
+    """ Plots user-supplied DataArray values depth (requires GMT)
 
     .. rubric :: Keyword arguments
 
@@ -187,7 +205,7 @@ def _plot_depth(filename, da, origins, title='',
     if show_magnitudes:
         magnitudes = np.empty(npts)
         for _i in range(npts):
-            magnitudes[_i] = da[_i].coords['rho']
+            magnitudes[_i] = to_MW(da[_i].coords['rho'])
 
     lune_array = None
     if show_tradeoffs:

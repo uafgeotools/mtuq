@@ -74,3 +74,14 @@ To see how orientation trade offs with hypocenter, we can add the following keyw
 .. image:: images/20090407201255351_misfit_latlon_tradeoffs.png
   :width: 200 
 
+
+
+Source code
+"""""""""""
+
+The above figures can be reproduced by running `GridSearch.DoubleCouple+Magnitude+Depth.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple+Magnitude+Depth.py>`_ and `GridSearch.DoubleCouple+Magnitude+Hypocenter.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple+Magnitude+Hypocenter.py>`_. 
+
+.. note::
+
+   1D Green's functions are used for the hypocenter grid search example. 3D Green's functions would provide more meaningful results, but are too large for remote hosting.
+
