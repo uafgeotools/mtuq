@@ -12,7 +12,7 @@ from six import string_types
 
 
 
-def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None, 
+def _plot_lune_gmt(filename, lon, lat, values, best_vw=None, lune_array=None, 
     **kwargs):
 
     if _nothing_to_plot(values):
@@ -25,7 +25,7 @@ def gmt_plot_lune(filename, lon, lat, values, best_vw=None, lune_array=None,
         marker_coords=_parse_vw(best_vw), **kwargs)
 
 
-def gmt_plot_vw(filename, lon, lat, values, best_vw=None, lune_array=None,
+def _plot_vw_gmt(filename, lon, lat, values, best_vw=None, lune_array=None,
     **kwargs):
 
     if _nothing_to_plot(values):
@@ -38,7 +38,7 @@ def gmt_plot_vw(filename, lon, lat, values, best_vw=None, lune_array=None,
         marker_coords=best_vw, **kwargs)
 
 
-def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
+def _plot_force_gmt(filename, phi, h, values, best_force=None, **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -53,7 +53,7 @@ def gmt_plot_force(filename, phi, h, values, best_force=None, **kwargs):
        marker_coords=_parse_force(best_force), **kwargs)
 
 
-def gmt_plot_latlon(filename, lon, lat, values, best_latlon=None, lune_array=None,
+def _plot_latlon_gmt(filename, lon, lat, values, best_latlon=None, lune_array=None,
     **kwargs):
 
     if _nothing_to_plot(values):
@@ -132,7 +132,7 @@ def _call(shell_script, filename, data, supplemental_data=None,
 
 
 
-def gmt_plot_depth(filename,
+def _plot_depth_gmt(filename,
         depths,
         values,
         magnitudes=None,

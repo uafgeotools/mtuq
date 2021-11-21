@@ -10,7 +10,7 @@ import xarray
 
 from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
-from mtuq.graphics.uq._gmt import gmt_plot_lune
+from mtuq.graphics.uq._gmt import _plot_lune_gmt
 from mtuq.util import warn
 from mtuq.util.math import lune_det, to_gamma, to_delta
 
@@ -205,7 +205,9 @@ def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
 # backend
 #
 
-def _plot_lune(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
+def _plot_lune(filename, da, show_best=True, show_tradeoffs=False,
+    backend=_plot_lune_gmt, **kwargs):
+
     """ Plots DataArray values on the eigenvalue lune (requires GMT)
 
     .. rubric :: Keyword arguments
@@ -244,7 +246,7 @@ def _plot_lune(filename, da, show_best=True, show_tradeoffs=False, **kwargs):
             warn("Focal mechanism tradeoffs not given")
 
 
-    gmt_plot_lune(filename, 
+    backend(filename, 
         to_gamma(da.coords['v']), 
         to_delta(da.coords['w']),
         da.values.transpose(), 

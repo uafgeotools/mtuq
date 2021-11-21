@@ -9,7 +9,7 @@ import subprocess
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics.uq._gmt import gmt_plot_depth
+from mtuq.graphics.uq._gmt import _plot_depth_gmt
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath, warn
 from mtuq.util.math import to_Mw
@@ -118,31 +118,11 @@ def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     raise NotImplementedError
 
 
-
 #
-# for extracting values from regularly-spaced grids
-#
-
-def _misfit_regular(da):
-    dims = ('rho', 'v', 'w', 'kappa', 'sigma', 'h')
-    return da[da.argmin(dims)]
-
-
-def _likelihoods_regular(da, var):
-    likelihoods = da.copy()
-    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
-    likelihoods.values /= likelihoods.values.sum()
-
-    dims = ('rho', 'v', 'w', 'kappa', 'sigma', 'h')
-    idx = likelihoods.argmax(dims)
-    return likelihoods[idx]
-
-
-#
-# wrappers
+# backends
 #
 
-def _backend(filename,
+def _plot_depth_matplotlib(filename,
         depths,
         values,
         magnitudes=None,
@@ -170,7 +150,7 @@ def _backend(filename,
 
 def _plot_depth(filename, da, origins, title='',
     xlabel='auto', ylabel='', show_magnitudes=False, show_tradeoffs=False,
-    backend=gmt_plot_depth):
+    backend=_plot_depth_gmt):
 
     """ Plots user-supplied DataArray values depth (requires GMT)
 
@@ -233,6 +213,25 @@ def _plot_depth(filename, da, origins, title='',
         ylabel=ylabel,
         title=title,
         )
+
+
+#
+# for extracting values from regularly-spaced grids
+#
+
+def _misfit_regular(da):
+    dims = ('rho', 'v', 'w', 'kappa', 'sigma', 'h')
+    return da[da.argmin(dims)]
+
+
+def _likelihoods_regular(da, var):
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
+
+    dims = ('rho', 'v', 'w', 'kappa', 'sigma', 'h')
+    idx = likelihoods.argmax(dims)
+    return likelihoods[idx]
 
 
 #

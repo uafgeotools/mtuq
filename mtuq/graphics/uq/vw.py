@@ -12,7 +12,7 @@ import xarray
 from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.graphics._gmt import read_cpt
-from mtuq.graphics.uq._gmt import _nothing_to_plot, gmt_plot_vw
+from mtuq.graphics.uq._gmt import _nothing_to_plot, _plot_vw_gmt
 from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, product
 from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
     to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
@@ -138,69 +138,8 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 
 
 #
-# backend
+# backends
 #
-
-def _plot_vw(filename, da, show_best=True, show_tradeoffs=False, 
-    backend='gmt', **kwargs):
-
-    """ Plots DataArray values on vw rectangle
-
-    .. rubric :: Keyword arguments
-
-    ``colormap`` (`str`)
-    Color palette used for plotting values 
-    (choose from GMT or MTUQ built-ins)
-
-    ``show_best`` (`bool`):
-    Show where best-fitting moment tensor falls on vw rectangle
-
-    ``title`` (`str`)
-    Optional figure title
-
-    ``backend`` (`str`)
-    `gmt` or `matplotlib`
-
-    """
-
-    best_vw = None
-    lune_array = None
-
-    if show_best:
-        if 'best_vw' in da.attrs:
-            best_vw = da.attrs['best_vw']
-        else:
-            warn("Best-fitting moment tensor not given")
-
-    if show_tradeoffs:
-        if 'lune_array' in da.attrs:
-            lune_array = da.attrs['lune_array']
-        else:
-            warn("Focal mechanism tradeoffs not given")
-
-
-    if backend.lower()=='matplotlib':
-        _backend = _plot_vw_matplotlib
-
-        values = da.values
-
-    elif backend.lower()=='gmt':
-        _backend = gmt_plot_vw
-
-        values = da.values.transpose()
-
-    else:
-        raise ValueError
-
-
-    _backend(filename,
-        da.coords['v'],
-        da.coords['w'],
-        values,
-        best_vw=best_vw,
-        lune_array=lune_array,
-        **kwargs)
-
 
 def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, colormap='viridis', title=''):
 
@@ -214,7 +153,7 @@ def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, c
     corners_w = _centers_to_edges(w)
 
     # `values` gets mapped to pixel colors
-    pyplot.pcolor(corners_v, corners_w, values.transpose(), cmap=colormap)
+    pyplot.pcolor(corners_v, corners_w, values, cmap=colormap)
 
     # v and w have the following bounds
     # (see https://doi.org/10.1093/gji/ggv262)
@@ -250,6 +189,52 @@ def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, c
 
     pyplot.savefig(filename)
     pyplot.close()
+
+
+def _plot_vw(filename, da, show_best=True, show_tradeoffs=False, 
+    backend=_plot_vw_gmt, **kwargs):
+
+    """ Plots DataArray values on vw rectangle
+
+    .. rubric :: Keyword arguments
+
+    ``colormap`` (`str`)
+    Color palette used for plotting values 
+    (choose from GMT or MTUQ built-ins)
+
+    ``show_best`` (`bool`):
+    Show where best-fitting moment tensor falls on vw rectangle
+
+    ``title`` (`str`)
+    Optional figure title
+
+    ``backend`` (`str`)
+    `gmt` or `matplotlib`
+
+    """
+
+    best_vw = None
+    lune_array = None
+
+    if show_best:
+        if 'best_vw' in da.attrs:
+            best_vw = da.attrs['best_vw']
+        else:
+            warn("Best-fitting moment tensor not given")
+
+    if show_tradeoffs:
+        if 'lune_array' in da.attrs:
+            lune_array = da.attrs['lune_array']
+        else:
+            warn("Focal mechanism tradeoffs not given")
+
+    backend(filename,
+        da.coords['v'],
+        da.coords['w'],
+        da.values.transpose(),
+        best_vw=best_vw,
+        lune_array=lune_array,
+        **kwargs)
 
 
 #
@@ -582,7 +567,6 @@ def _centers_to_edges(v):
     v[-1] = v[-2] + dv
 
     return v
-
 
 
 #

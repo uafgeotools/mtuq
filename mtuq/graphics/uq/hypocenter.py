@@ -9,7 +9,7 @@ import subprocess
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics.uq._gmt import gmt_plot_latlon
+from mtuq.graphics.uq._gmt import _plot_latlon_gmt
 from mtuq.graphics.uq.depth import _misfit_regular, _likelihoods_regular
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import fullpath, warn
@@ -125,8 +125,8 @@ def plot_marginal_latlon(filename, ds, origins, **kwargs):
 # wrappers
 #
 
-def _plot_latlon(filename, da, origins,
-    show_best=False, show_tradeoffs=False, **kwargs):
+def _plot_latlon(filename, da, origins,show_best=False, show_tradeoffs=False,
+    backend=_plot_latlon_gmt, **kwargs):
 
     """ Plots user-supplied DataArray values versus hypocenter (requires GMT)
 
@@ -173,7 +173,7 @@ def _plot_latlon(filename, da, origins,
             lune_array[_i, 5] = da[_i].coords['h']
 
 
-    gmt_plot_latlon(filename,
+    backend(filename,
         lon, lat, values,
         best_latlon=best_latlon,
         lune_array=lune_array,
