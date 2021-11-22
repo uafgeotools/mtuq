@@ -155,6 +155,11 @@ class MomentTensor(object):
         return 2./3.*(np.log10(self.moment()) - 9.1)
 
 
+    #def to_lune(self):
+    #    raise NotImplementedError
+
+
+
 class Force(object):
     """ Force source
 
@@ -212,9 +217,6 @@ class Force(object):
         return _change_convention_force(
            self._array, 'USE', convention.upper())
 
-
-    def to_lune(self):
-        raise NotImplementedError
 
 
 class CompositeSource(object):
