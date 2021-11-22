@@ -40,7 +40,7 @@ ylabel="${12}"
 
 title_size="25p"
 subtitle_size="20p"
-label_size="12p"
+label_size="16p"
 
 out=${filename}
 ps="${out}.ps"
@@ -118,6 +118,11 @@ gmt_settings
 proj_arg="-JX4i"
 area_arg="-R${x1}/${x2}/${y1}/${y2}"
 
+if [[ ! -z "$xlabel_arg" ]] || [[ ! -z "$ylabel_arg" ]]; then
+    gmt gmtset FONT_ANNOT $label_size
+    gmt gmtset FONT_LABEL $label_size
+fi
+
 gmt psbasemap $proj_arg $area_arg -BneSW -Bxaf"${xlabel_arg}" -Byaf"${ylabel_arg}" -Xc -Yr4. -K > $ps
 
 
@@ -143,7 +148,7 @@ fi
 
 
 # display title
-add_title $ps $proj_arg $area_arg $xc $y2 "$title" "$subtitle"
+add_title $ps $proj_arg $area_arg $xc $y2 "$title" "$subtitle" $title_size $subtitle_size
 
 
 custom_psclose $ps

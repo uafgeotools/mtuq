@@ -243,6 +243,8 @@ function add_title_lune {
     area_arg=$3
     title="$4"
     subtitle="$5"
+    title_size=$6
+    subtitle_size=$7
 
     title_fontsize=25p
     subtitle_fontsize=20p
@@ -302,15 +304,15 @@ function add_title {
     if [ -n "$title" ] && [ -n "$subtitle" ]; then
 
         echo "  $x0 $y0 ${title}" |\
-        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/35p >> $ps
+        gmt pstext -F+f${title_size}+jCB -N $proj_arg $area_arg -O -K -D0p/35p >> $ps
 
         echo "  $x0 $y0 ${subtitle}" |\
-        gmt pstext -F+f15p+jCT -N $proj_arg $area_arg -O -K -D0p/25p >> $ps
+        gmt pstext -F+f${subtitle_size}+jCT -N $proj_arg $area_arg -O -K -D0p/25p >> $ps
 
     elif [ -n "$title" ]; then
 
         echo "  $x0 $y0 ${title}" |\
-        gmt pstext -F+f20p+jCB -N $proj_arg $area_arg -O -K -D0p/30p >> $ps
+        gmt pstext -F+f${title_size}+jCB -N $proj_arg $area_arg -O -K -D0p/30p >> $ps
 
     fi
 

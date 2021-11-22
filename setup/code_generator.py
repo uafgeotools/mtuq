@@ -1344,7 +1344,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 
         plot_misfit_depth(event_id+'DC+Z_misfit_depth_tradeoffs.png', results, origins,
-            show_tradeoffs=True, title=event_id)
+            show_tradeoffs=True, show_magnitudes=True, title=event_id)
 
 
         print('Saving results...\\n')
@@ -1718,6 +1718,8 @@ if __name__=='__main__':
             'misfit_latlon',
             "title=event_id",
             "title=event_id, colorbar_label='L2 misfit'",
+            'show_magnitudes=True, ',
+            '',
             ))
 
 

@@ -235,7 +235,7 @@ if __name__=='__main__':
 
 
         plot_misfit_depth(event_id+'DC+Z_misfit_depth_tradeoffs.png', results, origins,
-            show_tradeoffs=True, title=event_id)
+            show_tradeoffs=True, show_magnitudes=True, title=event_id)
 
 
         print('Saving results...\n')

@@ -160,7 +160,7 @@ fi
 
 
 # display title
-add_title $ps $proj_arg $area_arg $xc $y2 "$title" "$subtitle"
+add_title $ps $proj_arg $area_arg $xc $y2 "$title" "$subtitle" $title_size $subtitle_size
 
 
 custom_psclose $ps
