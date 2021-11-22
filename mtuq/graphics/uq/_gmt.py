@@ -164,8 +164,12 @@ def _plot_depth_gmt(filename,
     _savetxt(ascii_file_1, data)
 
     if lune_array is not None:
-        supplemental_data=_parse_lune_array2(data[:,0], data[:,1], lune_array)
-        _savetxt(ascii_file_2, supplemental_data)
+        data2 = _parse_lune_array2(data[:,0], data[:,1], lune_array)
+        _savetxt(ascii_file_2, data2)
+
+    if magnitudes is not None:
+        data3 = np.column_stack((data[:,0], data[:,1], magnitudes))
+        _savetxt(ascii_file_3, data3, fmt='%e %e %.2f')
 
     # call bash script
     if exists_gmt():
@@ -405,8 +409,8 @@ def _float_to_str(val):
         return str(val).replace('e+', 'e')
 
 
-def _savetxt(filename, *args):
+def _savetxt(filename, *args, fmt='%.6e'):
     # FIXME: can GMT accept virtual files?
-    np.savetxt(filename, np.column_stack(args), fmt='%.6e')
+    np.savetxt(filename, np.column_stack(args), fmt=fmt)
 
 

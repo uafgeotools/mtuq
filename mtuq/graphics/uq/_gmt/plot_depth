@@ -86,15 +86,23 @@ fi
 if [ $npts -lt 5 ]; then
    diameter=0.4
    radius=0.2
+   offset="15p"
+
 elif [ $npts -lt 10 ]; then
    diameter=0.3
    radius=0.15
+   offset="12p"
+
 elif [ $npts -lt 20 ]; then
    diameter=0.2
    radius=0.1
+   offset="8p"
+
 else
    diameter=0.15
    radius=0.075
+   offset="6p"
+
 fi
 
 tinyval=0.000001
@@ -127,6 +135,11 @@ if [ $yexp -ne 0 ]; then
     echo "$xmin $ymax \226\ 10@+${yexp}@+" | gmt pstext -N $proj_arg $area_arg -O -K -D-50p/35p >> $ps
 fi
 
+
+## optional magnitude annotations
+if [ -f "$Mw_data" ]; then
+    gmt pstext $Mw_data -F+f10p+jCB -N $proj_arg $area_arg -D0p/$offset -O -K >> $ps
+fi
 
 
 # display title

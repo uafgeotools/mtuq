@@ -185,7 +185,7 @@ def _plot_depth(filename, da, origins, title='',
     if show_magnitudes:
         magnitudes = np.empty(npts)
         for _i in range(npts):
-            magnitudes[_i] = to_MW(da[_i].coords['rho'])
+            magnitudes[_i] = to_Mw(da[_i].coords['rho'])
 
     lune_array = None
     if show_tradeoffs:
