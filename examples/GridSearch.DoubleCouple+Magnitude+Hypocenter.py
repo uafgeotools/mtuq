@@ -5,7 +5,7 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens2, plot_misfit_depth, plot_misfit_dc
+from mtuq.graphics import plot_data_greens2, plot_misfit_latlon, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -17,14 +17,27 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over source orientation, magnitude, and depth
+    # Carries out grid search over source orientation, magnitude, and hypocenter 
     #   
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
+    #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Hypocenter.py
     #
-    # For simpler examples, see SerialGridSearch.DoubleCouple.py or
-    # GridSearch.FullMomentTensor.py
-    #   
+
+    #
+    # 1D Green's functions will be downloaded from a remote server, which can 
+    # take a very long time. Any subsequent runs will generally be much faster.
+    # A local Green's function database can be even faster still (see online 
+    # documentation for more information).
+    #
+    # More meaningful results could be obtained using 3D Green's functions and
+    # a phase misfit function, but 3D databases are too large for remote 
+    # hosting. 
+    #
+    # If you are just trying things out for the first time, consider running 
+    # one of the other examples instead.  Beacause they require fewer Green's
+    # functions, all the other examples have faster and more consistent 
+    # runtimes.
+    #
 
 
     #
@@ -105,17 +118,23 @@ if __name__=='__main__':
         'depth_in_m': 33033.599853515625,
         })
 
-    depths = np.array(
-         # depth in meters
-        [25000., 30000., 35000., 40000.,                    
-         45000., 50000., 55000., 60000.])
+    from mtuq.util.math import lat_lon_tuples
+    tuples = lat_lon_tuples(
+        center_lat=catalog_origin.latitude,
+        center_lon=catalog_origin.longitude,
+        spacing_in_m=1000.,
+        npts_per_edge=4,
+        )
 
     origins = []
-    for depth in depths:
+    for lat, lon in tuples:
         origins += [catalog_origin.copy()]
-        setattr(origins[-1], 'depth_in_m', depth)
+        setattr(origins[-1], 'latitude', lat)
+        setattr(origins[-1], 'longitude', lon)
 
-
+        # use best depth from DC+Depth search
+        setattr(origins[-1], 'depth_in_m', 45000.)
+        
 
     #
     # Next, we specify the moment tensor grid and source-time function
@@ -159,7 +178,7 @@ if __name__=='__main__':
         data_sw = data.map(process_sw)
 
 
-        print('Reading Greens functions...\n')
+        print('Reading Greens functions...\n\n  Downloads can take a few seconds ... OR AS LONG AS A FEW HOURS!\n')
         greens = download_greens_tensors(stations, origins, model)
 
         print('Processing Greens functions...\n')
@@ -224,18 +243,18 @@ if __name__=='__main__':
         print('Generating figures...\n')
 
         # plot observed and synthetic waveforms
-        plot_data_greens2(event_id+'DC+Z_waveforms.png',
+        plot_data_greens2(event_id+'DC+XY_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
 
         # plot misfit versus depth
-        plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins,
-            title=event_id)
+        plot_misfit_latlon(event_id+'DC+XY_misfit_latlon.png', results, origins,
+            title=event_id, colorbar_label='L2 misfit')
 
 
-        plot_misfit_depth(event_id+'DC+Z_misfit_depth_tradeoffs.png', results, origins,
-            show_tradeoffs=True, show_magnitudes=True, title=event_id)
+        plot_misfit_latlon(event_id+'DC+XY_misfit_latlon_tradeoffs.png', results, origins,
+            show_tradeoffs=True, title=event_id, colorbar_label='L2 misfit')
 
 
         print('Saving results...\n')
@@ -245,18 +264,18 @@ if __name__=='__main__':
 
 
         # save best-fitting source
-        save_json(event_id+'DC+Z_solution.json', merged_dict)
+        save_json(event_id+'DC+XY_solution.json', merged_dict)
 
 
         # save origins
         origins_dict = {_i: origin 
             for _i,origin in enumerate(origins)}
 
-        save_json(event_id+'DC+Z_origins.json', origins_dict)
+        save_json(event_id+'DC+XY_origins.json', origins_dict)
 
 
         # save misfit surface
-        results.save(event_id+'DC+Z_misfit.nc')
+        results.save(event_id+'DC+XY_misfit.nc')
 
 
         print('\nFinished\n')

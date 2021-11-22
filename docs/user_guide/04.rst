@@ -5,7 +5,7 @@ Data processing
 
 Filtering, windowing and other signal processing operations are essential for meaningful comparisons between data synthetics.  
 
-To make data processing easier, `mtuq.ProcessData` is an attempt at a one-size-fits-all data processing class.  While the approach below based on `mtuq.ProcessData` is very general,  users are neverthelsss free to apply their own custom data processing functions instead, with the only condition being that the `requirements <https://uafgeotools.github.io/mtuq/user_guide/04.html#requirements-for-processed-data>`_ below end up being satisfied.
+To make data processing easier, `mtuq.ProcessData` is an attempt at a one-size-fits-all data processing class.  While the approach below based on `mtuq.ProcessData` is very general,  users are nevertheless free to apply their own custom data processing functions instead, with the only condition being that the `requirements <https://uafgeotools.github.io/mtuq/user_guide/04.html#requirements-for-processed-data>`_ below end up being satisfied.
 
 
 
@@ -57,7 +57,7 @@ For computational efficiency and software engineering reasons, processed traces 
 1. all traces must have the same sampling rate and number of samples
 2. all traces common to the same station must have the same startime and endtime
 
-These conditions help MTUQ achieve faster memory access patterns, more efficent misfit evaluation, and more easily maintainable code.  An easy way to ensure that they are satisfied is to simply use `mtuq.ProcessData` for data processing.
+These conditions help MTUQ achieve faster memory access patterns, more efficient misfit evaluation, and more easily maintainable code.  An easy way to ensure that they are satisfied is to simply use `mtuq.ProcessData` for data processing.
 
-Of course, to make meaningful comparisons betweeen data and synthetics, processed data must also pass basic quality control checks.  For example, data must contain actual body wave or surface arrivals from the given event.  MTUQ's `waveform plotting <https://uafgeotools.github.io/mtuq/library/index.html#data-visualization>`_ functions can sometimes be helpful for these types of checks.
+Of course, to make meaningful comparisons between data and synthetics, processed data must also pass basic quality control checks.  For example, data must contain actual body wave or surface arrivals from the given event.  MTUQ's `waveform plotting <https://uafgeotools.github.io/mtuq/library/index.html#data-visualization>`_ functions can sometimes be helpful for these types of checks.
 

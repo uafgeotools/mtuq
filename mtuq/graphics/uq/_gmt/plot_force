@@ -58,7 +58,7 @@ tmp=tmp_${out//\//__}
 gmt_settings
 
 
-# display background grid
+# specify basemap
 gmt psbasemap $proj_arg $area_arg -Bf10g10/f10g10 -K > $ps
 
 

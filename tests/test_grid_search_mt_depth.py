@@ -87,7 +87,7 @@ if __name__=='__main__':
 
     grid = DoubleCoupleGridRegular(
         npts_per_axis=5,
-        magnitudes=[4.4, 4.5, 4.6])
+        magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
         magnitude=4.5)
