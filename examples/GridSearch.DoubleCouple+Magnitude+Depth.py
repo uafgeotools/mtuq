@@ -22,8 +22,8 @@ if __name__=='__main__':
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
     #
-    # This is one of the more complicated examples. For simpler ones, see
-    # SerialGridSearch.DoubleCouple.py or GridSearch.FullMomentTensor.py
+    # For simpler examples, see SerialGridSearch.DoubleCouple.py or
+    # GridSearch.FullMomentTensor.py
     #   
 
 
@@ -127,7 +127,7 @@ if __name__=='__main__':
          4.6, 4.7, 4.8]) 
 
     grid = DoubleCoupleGridRegular(
-        npts_per_axis=25,
+        npts_per_axis=20,
         magnitudes=magnitudes)
 
     wavelet = Trapezoid(

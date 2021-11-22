@@ -136,7 +136,7 @@ class Client(ClientBase):
 
 
 
-def download_greens_tensors(stations=[], origins=[], model='', **kwargs):
+def download_greens_tensors(stations=[], origins=[], model='', verbose=False, **kwargs):
     """ Downloads Green's tensors from syngine
 
     Downloads Green's functions for all combinations of stations and origins
@@ -161,7 +161,7 @@ def download_greens_tensors(stations=[], origins=[], model='', **kwargs):
 
     """
     client = Client(model=model, **kwargs)
-    return client.get_greens_tensors(stations, origins)
+    return client.get_greens_tensors(stations, origins, verbose=verbose)
 
 
 

@@ -17,14 +17,27 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over source orientation, magnitude, and depth
+    # Carries out grid search over source orientation, magnitude, and hypocenter 
     #   
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Hypocenter.py
     #
-    # This is one of the more complicated examples. For simpler ones, see
-    # SerialGridSearch.DoubleCouple.py or GridSearch.FullMomentTensor.py
-    #   
+
+    #
+    # 1D Green's functions will be downloaded from a remote server, which can 
+    # take a very long time. Any subsequent runs will generally be much faster.
+    # A local Green's function database can be even faster still (see online 
+    # documentation for more information).
+    #
+    # More meaningful results could be obtained using 3D Green's functions and
+    # a phase misfit function, but 3D databases are too large for remote 
+    # hosting. 
+    #
+    # If you are just trying things out for the first time, consider running 
+    # one of the other examples instead.  Beacause they require fewer Green's
+    # functions, all the other examples have faster and more consistent 
+    # runtimes.
+    #
 
 
     #
@@ -133,7 +146,7 @@ if __name__=='__main__':
          4.6, 4.7, 4.8]) 
 
     grid = DoubleCoupleGridRegular(
-        npts_per_axis=25,
+        npts_per_axis=20,
         magnitudes=magnitudes)
 
     wavelet = Trapezoid(
@@ -165,7 +178,7 @@ if __name__=='__main__':
         data_sw = data.map(process_sw)
 
 
-        print('Reading Greens functions...\n')
+        print('Reading Greens functions...\n\n  Downloads can take a few seconds ... OR AS LONG AS A FEW HOURS!\n')
         greens = download_greens_tensors(stations, origins, model)
 
         print('Processing Greens functions...\n')

@@ -126,7 +126,7 @@ if __name__=='__main__':
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=10,
+        npts_per_axis=12,
         magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
