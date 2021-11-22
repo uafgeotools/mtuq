@@ -13,4 +13,5 @@ The output of `mtuq.grid_search` in each of these cases is a data structure that
 
    gallery_mt
    gallery_force
+   gallery_origin
 

@@ -17,8 +17,7 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over all moment tensor parameters except
-    # magnitude 
+    # Carries out grid search over all moment tensor parameters
     #
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
@@ -91,8 +90,8 @@ if __name__=='__main__':
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=12,
-        magnitudes=[4.5])
+        npts_per_axis=10,
+        magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -180,82 +179,50 @@ if __name__=='__main__':
         data_sw, greens_sw, misfit_sw, origin, grid)
 
 
-    #
-    # Generate figures and save results
-    #
 
     if comm.rank==0:
 
         results = results_bw + results_sw
 
-        # source corresponding to minimum misfit
+        # array index corresponding to minimum misfit
         idx = results.idxmin('source')
+
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
 
-
-        # only generate components present in the data
-        components_bw = data_bw.get_components()
-        components_sw = data_sw.get_components()
-
-        # synthetics corresponding to minimum misfit
-        synthetics_bw = greens_bw.get_synthetics(
-            best_source, components_bw, mode='map')
-
-        synthetics_sw = greens_sw.get_synthetics(
-            best_source, components_sw, mode='map')
-
-
-        # time shifts and other attributes corresponding to minimum misfit
-        list_bw = misfit_bw.collect_attributes(
-            data_bw, greens_bw, best_source)
-
-        list_sw = misfit_sw.collect_attributes(
-            data_sw, greens_sw, best_source)
-
-        dict_bw = {station.id: list_bw[_i] 
-            for _i,station in enumerate(stations)}
-
-        dict_sw = {station.id: list_sw[_i] 
-            for _i,station in enumerate(stations)}
-
+        #
+        # Generate figures and save results
+        #
 
         print('Generating figures...\n')
 
+        # plot observed and synthetic waveforms
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
+
+        # plot focal mechanism
         plot_beachball(event_id+'FMT_beachball.png', best_source)
 
+
+        # plot misfit surface
         plot_misfit_lune(event_id+'FMT_misfit.png', results)
 
 
         print('Saving results...\n')
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+
+
         # save best-fitting source
         save_json(event_id+'FMT_solution.json', merged_dict)
 
 
-        # save time shifts and other attributes
-        os.makedirs(event_id+'FMT_attrs', exist_ok=True)
-
-        save_json(event_id+'FMT_attrs/bw.json', dict_bw)
-        save_json(event_id+'FMT_attrs/sw.json', dict_sw)
-
-
-        # save processed waveforms as binary files
-        os.makedirs(event_id+'FMT_waveforms', exist_ok=True)
-
-        data_bw.write(event_id+'FMT_waveforms/dat_bw.p')
-        data_sw.write(event_id+'FMT_waveforms/dat_sw.p')
-
-        synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
-        synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
-
+        # save misfit surface
         results.save(event_id+'FMT_misfit.nc')
 
 

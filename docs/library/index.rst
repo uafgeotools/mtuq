@@ -34,8 +34,8 @@ Data processing and inversion
 `mtuq.ProcessData <generated/mtuq.ProcessData.html>`_                                                          Data processing function constructor
 `mtuq.Misfit <generated/mtuq.Misfit.html>`_                                                                    Misfit function constructor
 `mtuq.grid_search <generated/mtuq.grid_search.grid_search.html>`_                                              Evaluates misfit over grids
-`mtuq.MTUQDataArray <generated/mtuq.grid_search.MTUQDataArray.html>`_                                          Data structure for storing misfit values on regularly-spaced grids
-`mtuq.MTUQDataFrame <generated/mtuq.grid_search.MTUQDataFrame.html>`_                                          Data structure for storing misfit values on irregularly-spaced grids
+`mtuq.MTUQDataArray <generated/mtuq.grid_search.MTUQDataArray.html>`_                                          Data structure for storing misfit on regularly-spaced grids
+`mtuq.MTUQDataFrame <generated/mtuq.grid_search.MTUQDataFrame.html>`_                                          Data structure for storing misfit on irregularly-spaced grids
 ============================================================================================================  ============================================================================================================
 
 
@@ -59,23 +59,34 @@ Data visualization
 `mtuq.graphics.plot_waveforms2 <generated/mtuq.graphics.plot_waveforms2.html>`_                                Plots body and surface waves
 `mtuq.graphics.plot_data_greens1 <generated/mtuq.graphics.plot_data_greens1.html>`_                            Very similar to `plot_waveforms1`
 `mtuq.graphics.plot_data_greens2 <generated/mtuq.graphics.plot_data_greens2.html>`_                            Very similar to `plot_waveforms2`
-`mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots focal mechansim (requires GMT)
+`mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots focal mechansim
 ============================================================================================================  ============================================================================================================
 
 
-Uncertainty visualization
--------------------------
+Moment tensor and force visualization
+-------------------------------------
 
 ============================================================================================================  ============================================================================================================
-`mtuq.graphics.plot_likelihood_lune <generated/mtuq.graphics.plot_likelihood_lune.html>`_                      Plots maximum likelihoods on lune (requires GMT)
-`mtuq.graphics.plot_marginal_lune <generated/mtuq.graphics.plot_marginal_lune.html>`_                          Plots marginal likelihoods on lune (requires GMT)
-`mtuq.graphics.plot_misfit_lune <generated/mtuq.graphics.plot_misfit_lune.html>`_                              Plots misfit on lune (requires GMT)
+`mtuq.graphics.plot_likelihood_lune <generated/mtuq.graphics.plot_likelihood_lune.html>`_                      Plots maximum likelihoods on lune
+`mtuq.graphics.plot_marginal_lune <generated/mtuq.graphics.plot_marginal_lune.html>`_                          Plots marginal likelihoods on lune
+`mtuq.graphics.plot_misfit_lune <generated/mtuq.graphics.plot_misfit_lune.html>`_                              Plots misfit on lune
 `mtuq.graphics.plot_likelihood_vw <generated/mtuq.graphics.plot_likelihood_vw.html>`_                          Plots maximum likelihoods on `v-w` rectangle
 `mtuq.graphics.plot_marginal_vw <generated/mtuq.graphics.plot_marginal_vw.html>`_                              Plots marginal likelihoods on `v-w` rectangle
 `mtuq.graphics.plot_misfit_vw <generated/mtuq.graphics.plot_misfit_vw.html>`_                                  Plots misfit on `v-w` rectangle
-`mtuq.graphics.plot_likelihood_force <generated/mtuq.graphics.plot_likelihood_force.html>`_                    Plots maximum likelihoods w.r.t force orientation (requires GMT)
-`mtuq.graphics.plot_marginal_force <generated/mtuq.graphics.plot_marginal_force.html>`_                        Plots marginal likelihoods w.r.t. force orientation (requires GMT)
-`mtuq.graphics.plot_misfit_force <generated/mtuq.graphics.plot_misfit_force.html>`_                            Plots misfit w.r.t force orientation (requires GMT)
+`mtuq.graphics.plot_likelihood_force <generated/mtuq.graphics.plot_likelihood_force.html>`_                    Plots maximum likelihoods w.r.t force orientation
+`mtuq.graphics.plot_marginal_force <generated/mtuq.graphics.plot_marginal_force.html>`_                        Plots marginal likelihoods w.r.t. force orientation
+`mtuq.graphics.plot_misfit_force <generated/mtuq.graphics.plot_misfit_force.html>`_                            Plots misfit w.r.t force orientation
+============================================================================================================  ============================================================================================================
+
+
+Depth and hypocenter visualization
+----------------------------------
+
+============================================================================================================  ============================================================================================================
+`mtuq.graphics.plot_likelihood_depth <generated/mtuq.graphics.plot_likelihood_depth.html>`_                    Plots maximum likelihoods versus depth
+`mtuq.graphics.plot_misfit_depth <generated/mtuq.graphics.plot_misfit_depth.html>`_                            Plots misfit versus depth
+`mtuq.graphics.plot_likelihood_latlon <generated/mtuq.graphics.plot_likelihood_latlon.html>`_                  Plots maximum likelihoods versus hypocenter
+`mtuq.graphics.plot_misfit_laton <generated/mtuq.graphics.plot_misfit_latlon.html>`_                           Plots misfit versus hypocenter
 ============================================================================================================  ============================================================================================================
 
 

@@ -1,0 +1,162 @@
+#!/bin/bash -e
+
+
+#
+# PLOT_DEPTH
+#    plots misfit versus depth values from ASCII file
+#
+
+
+# add mtuq/graphics/_gmt to the path
+export PATH=${PATH:+${PATH}:}$(dirname ${BASH_SOURCE[0]})
+source _gmt_functions
+
+
+# parse input arguments
+if [ $# -ne 12 ] ; then
+    echo "plot_depth: bad input arguments"
+    exit -1
+fi
+
+# output file
+filename=$1
+filetype=$2
+
+# ASCII input files
+ascii_data=$3
+mt_data=$4
+Mw_data=$5
+
+ymin=$6
+ymax=$7
+yexp=$8
+
+# labels
+title="$9"
+subtitle="${10}"
+
+xlabel="${11}"
+ylabel="${12}"
+
+title_size="25p"
+subtitle_size="20p"
+label_size="16p"
+
+out=${filename}
+ps="${out}.ps"
+tmp=tmp_${out//\//__}
+
+
+
+# parse axis limits
+
+npts=$(wc -l $ascii_data | awk '{print $1}')
+
+xmin=$(cat $ascii_data | awk 'NR==1{min = $1 + 0; next} {if ($1 < min) min = $1;} END {print min}')
+xmax=$(cat $ascii_data | awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}')
+xmin=$(printf "%f" ${xmin})
+xmax=$(printf "%f" ${xmax})
+
+xlen=$(echo ${xmax} - ${xmin} | bc -l)
+x1=$(echo ${xmin} - 0.1*${xlen} | bc -l)
+x2=$(echo ${xmax} + 0.1*${xlen} | bc -l)
+xc=$(echo "($xmin + $xmax)/2." | bc -l)
+
+ylen=$(echo ${ymax} - ${ymin} | bc -l)
+y1=$(echo ${ymin} - 0.1*${ylen} | bc -l)
+y2=$(echo ${ymax} + 0.1*${ylen} | bc -l)
+yc=$(echo "($ymin + $ymax)/2." | bc -l)
+
+
+# parse axis labels
+
+xlabel_arg=""
+if [[ ! -z "$xlabel" ]]; then
+  xlabel_arg="+l${xlabel}"
+fi
+
+ylabel_arg=""
+if [[ ! -z "$ylabel" ]]; then
+  ylabel_arg="+l${ylabel}"
+fi
+
+
+# marker and annotation settings
+
+if [ $npts -lt 5 ]; then
+   diameter=0.4
+   radius=0.2
+   offset="15p"
+
+elif [ $npts -lt 10 ]; then
+   diameter=0.3
+   radius=0.15
+   offset="12p"
+
+elif [ $npts -lt 20 ]; then
+   diameter=0.2
+   radius=0.1
+   offset="8p"
+
+else
+   diameter=0.15
+   radius=0.075
+   offset="6p"
+
+fi
+
+tinyval=0.000001
+
+
+# apply default settings
+gmt_settings
+
+
+
+# specify basemap
+
+proj_arg="-JX4i"
+area_arg="-R${x1}/${x2}/${y1}/${y2}"
+
+if [[ ! -z "$xlabel_arg" ]] || [[ ! -z "$ylabel_arg" ]]; then
+    gmt gmtset FONT_ANNOT $label_size
+    gmt gmtset FONT_LABEL $label_size
+fi
+
+gmt psbasemap $proj_arg $area_arg -BneSW -Bxaf"${xlabel_arg}" -Byaf"${ylabel_arg}" -Xc -Yr4. -K > $ps
+
+
+
+## plot misfit versus depth
+if [ -f "$mt_data" ]; then
+    gmt psmeca $mt_data -N -Sm$diameter $proj_arg $area_arg -G0/0/0 -V -O -K >> $ps
+
+    gmt psxy $ascii_data -Sd$tinyval $proj_arg $area_arg -O -K >> $ps
+else
+    gmt psxy $ascii_data -Sd$radius $proj_arg $area_arg -G0/0/0 -O -K >> $ps
+fi
+
+if [ $yexp -ne 0 ]; then
+    echo "$xmin $ymax \226\ 10@+${yexp}@+" | gmt pstext -N $proj_arg $area_arg -O -K -D-50p/35p >> $ps
+fi
+
+
+## optional magnitude annotations
+if [ -f "$Mw_data" ]; then
+    gmt pstext $Mw_data -F+f10p+jCB -N $proj_arg $area_arg -D0p/$offset -O -K >> $ps
+fi
+
+
+# display title
+add_title $ps $proj_arg $area_arg $xc $y2 "$title" "$subtitle" $title_size $subtitle_size
+
+
+custom_psclose $ps
+custom_psconvert $ps $out $filetype
+
+
+#echo "  finished writing: $out"
+
+rm tmp*$out*
+rm $ps
+

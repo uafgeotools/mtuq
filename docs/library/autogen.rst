@@ -28,6 +28,14 @@ autogen
    mtuq.graphics.plot_marginal_force
    mtuq.graphics.plot_misfit_force
    mtuq.graphics._plot_force
+   mtuq.graphics.plot_likelihood_depth
+   mtuq.graphics.plot_marginal_depth
+   mtuq.graphics.plot_misfit_depth
+   mtuq.graphics._plot_depth
+   mtuq.graphics.plot_likelihood_latlon
+   mtuq.graphics.plot_marginal_latlon
+   mtuq.graphics.plot_misfit_latlon
+   mtuq.graphics._plot_latlon
    mtuq.grid.DoubleCoupleGridRandom
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom
