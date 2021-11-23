@@ -4,7 +4,7 @@ import shutil
 import subprocess
 
 from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
-    gmt_formats
+    gmt_formats, _parse_filetype
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180, to_delta, to_gamma, to_mij
 from os.path import basename, exists, splitext
@@ -255,28 +255,6 @@ def _parse_label(label):
         return "'%s'" % label
     else:
         return "''"
-
-
-def _parse_filetype(filename):
-
-    parts = splitext(filename)
-    name, ext = parts[0], parts[1].lstrip('.')
-
-    if ext.upper() in ['PS']:
-        return name, 'EPS'
-
-    elif ext.upper() in ['JPG', 'JPEG']:
-        return name, 'JPEG'
-
-    elif ext.upper() in ['TIF', 'TIFF']:
-        return name, 'TIFF'
-
-    elif ext.upper() in gmt_formats:
-        return name, ext.upper()
-
-    else:
-        warn('Unrecognized extension: defaulting to PNG')
-        return name, 'PNG'
 
 
 def _parse_cpt_name(cpt_name):

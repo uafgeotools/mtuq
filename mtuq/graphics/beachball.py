@@ -19,6 +19,7 @@ import numpy as np
 import subprocess
 
 from mtuq.event import MomentTensor
+from mtuq.graphics._gmt import _parse_filetype, _get_format_arg
 from mtuq.util import warn
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 from obspy.geodetics import kilometers2degrees as _to_deg
@@ -38,13 +39,6 @@ def plot_beachball(filename, mt, **kwargs):
     Moment tensor object
 
 
-    .. note::
-
-        Ignores any given file extension: always generates a PNG file.
-
-        (TODO: support all GMT image formats.)
-
-
     """
     from mtuq.graphics._gmt import gmt_major_version
 
@@ -53,13 +47,16 @@ def plot_beachball(filename, mt, **kwargs):
 
     try:
         assert gmt_major_version() >= 6
-        _plot_beachball_gmt(filename, mt)
+        backend = _plot_beachball_gmt
 
     except:
-        _plot_beachball_obspy(filename, mt)
+        backend = _plot_beachball_obspy
+
+    backend(filename, mt, **kwargs)
 
 
-def _plot_beachball_obspy(filename, mt):
+
+def _plot_beachball_obspy(filename, mt, **kwargs):
     """ Plots focal mechanism using ObsPy
     """
     warn("""
@@ -78,23 +75,18 @@ def _plot_beachball_obspy(filename, mt):
 
 
 
-def plot_beachball(filename, mt, origin=None, stations=None, polarities=None,
-    model='ak135', write_station_labels=False, fill_color=None):
+def _plot_beachball_gmt(filename, mt, origin=None, stations=None, polarities=None,
+    model='ak135', label_stations=False, fill_color=None):
 
 
-    # parse filename
-    if filename.endswith('.png'):
-        filename = filename[:-4]
-
-    if filename.endswith('.ps'):
-        filename = filename[:-3]
-
+    filename, filetype = _parse_filetype(filename)
+    format_arg = _get_format_arg(filetype)
 
     # parse optional arguments
-    if write_station_labels:
-        station_label_arg = '-T+jCB'
+    if label_stations:
+        label_arg = '-T+jCB'
     else:
-        station_label_arg = ''
+        label_arg = ''
 
     if fill_color:
         raise NotImplementedError
@@ -114,10 +106,10 @@ def plot_beachball(filename, mt, origin=None, stations=None, polarities=None,
             *mt.as_vector(),
 
             #pspolar args
-            'tmp.'+filename+'.pol', station_label_arg, filename+'.ps',
+            'tmp.'+filename+'.pol', label_arg, filename+'.ps',
 
             #psconvert args
-            filename+'.ps',
+            filename+'.ps', filename, format_arg,
 
             ), shell=True)
 
@@ -135,10 +127,10 @@ def plot_beachball(filename, mt, origin=None, stations=None, polarities=None,
             *mt.as_vector(),
 
             #pspolar args
-            'tmp.'+filename+'.sta', station_label_arg, filename+'.ps',
+            'tmp.'+filename+'.sta', label_arg, filename+'.ps',
 
             #psconvert args
-            filename+'.ps',
+            filename+'.ps', filename, format_arg,
 
             ), shell=True)
 
@@ -151,7 +143,7 @@ def plot_beachball(filename, mt, origin=None, stations=None, polarities=None,
             *mt.as_vector(),
 
             #psconvert args
-            filename+'.ps',
+            filename+'.ps', filename, format_arg,
 
             ), shell=True)
 
@@ -238,7 +230,7 @@ lat lon depth   mrr   mtt   mff   mrt    mrf    mtf
 0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0
 END\n
 gmt pspolar %s -R -J -D0/0 -F -M9.9c -N -Si0.4c %s -O >> %s
-gmt psconvert %s -A -Tg
+gmt psconvert %s -F%s -A %s
 '''
 
 
@@ -251,7 +243,7 @@ gmt psmeca -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -M -Sm9.9c -Ggrey50 -h1 -Xc -Yc << END 
 lat lon depth   mrr   mtt   mff   mrt    mrf    mtf
 0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0
 END\n
-gmt psconvert %s -A -Tg
+gmt psconvert %s -F%s -A %s
 '''
 
 
