@@ -1,28 +1,14 @@
 
 import os.path
+import seisgen
 import obspy
 import numpy as np
 import pickle
 
-from obspy.core import Stream
-from obspy.geodetics.base import gps2dist_azimuth
 from mtuq.greens_tensor.SPECFEM3D import GreensTensor
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
 
-from mtuq.util_SPECFEM3D import SAMPLING_RATE, DT, SGT_DATABASE_folder, MODEL3D_folder, INFO_GRID_file
-from mtuq.util_SPECFEM3D.DSyn import DSyn, RTP_to_DENZ
-from mtuq.util_SPECFEM3D.DSGTMgr import DSGTMgr
-
-
-MT_ELEMENTS = [
-    'Mrr',
-    'Mtt',
-    'Mpp',
-    'Mrt',
-    'Mrp',
-    'Mtp'
-]
 
 class Client(ClientBase):
     """ SPECFEM3D Green's tensor client
@@ -59,12 +45,21 @@ class Client(ClientBase):
         self.include_mt = include_mt
         self.include_force = include_force
 
-        # database directory or path.
-        self.sgt_database_folder = SGT_DATABASE_folder
-        self.model3D_folder = MODEL3D_folder
-        self.info_grid_file = INFO_GRID_file
+        self.b_initial_db = False
+        self.b_new_origin = True
+        self.origin = 0
 
-        self.sgtMgr = DSGTMgr(self.sgt_database_folder, self.model3D_folder, self.info_grid_file)
+    def set_local_db(self, sgt_database_folder, model3D_folder, info_grid_file):
+        """ Set and utilize the local database. """
+        try:
+            self.sgtMgr = seisgen.DSGTMgr(sgt_database_folder, model3D_folder, info_grid_file)
+            self.b_initial_db = True
+        except:
+            raise Exception
+
+    def set_remote_db(self):
+        """ Set and utilize the remote database. """
+        raise NotImplementedError
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
@@ -120,16 +115,36 @@ class Client(ClientBase):
 
             if b_generate:
                 # Generate Green's function from SGT.
-                (distance, azimuth, back_azimuth) = gps2dist_azimuth(station.latitude, station.longitude,
-                                                                     origin.latitude, origin.longitude)
-                sgt = self.sgtMgr.get_sgt(station, origin)
-                stream = self.SGT2GF(sgt, back_azimuth)
-                stream.id = station.id
+                if not self.b_initial_db:
+                    raise Exception
+
+                if not self.b_new_origin:
+                    try:
+                        if origin.latitude != self.origin.latitude or origin.longitude != self.origin.longitude:
+                            self.b_new_origin = True
+                        else:
+                            try:
+                                if origin.depth_in_m != self.origin.depth_in_m:
+                                    self.b_new_origin = True
+                            except:
+                                if origin.elevation_in_m != self.origin.elevation_in_m:
+                                    self.b_new_origin = True
+                    except:
+                        self.b_new_origin = True
+
+                stream = self.sgtMgr.get_greens_function(station, origin, b_new_origin=self.b_new_origin)
+
+                if self.b_new_origin:
+                    self.origin = origin
+                    self.b_new_origin = False
+
                 try:
+                    # save the GF as pickle file for future use.
                     with open(GF_file_path, 'wb') as f:
                         pickle.dump(stream, f)
                 except:
                     print("! Unable to dump Green's function at {}.".format(GF_file_path))
+
 
         if self.include_force:
             raise NotImplementedError
@@ -163,26 +178,3 @@ class Client(ClientBase):
         return GreensTensor(traces=[trace for trace in stream],
             station=station, origin=origin, tags=tags,
             include_mt=self.include_mt, include_force=self.include_force)
-
-
-    def SGT2GF(self, sgt, ba):
-        '''Generate Green's Function (GF) from Strain Green's Tensor (SGT) database.'''
-
-        MTs_rtp = np.identity(6)
-        stream = Stream()
-
-        for i, mt_rtp in enumerate(MTs_rtp):
-            mt_enz = RTP_to_DENZ(mt_rtp)
-            # Synthetic waveform in ENZ
-            _st = DSyn(mt_enz, sgt, MT_ELEMENTS[i])
-            # Rotation (ENZ => RTZ)
-            _st.rotate(method='NE->RT', back_azimuth=ba)
-            for _tr in _st:
-                ch = _tr.stats.channel
-                _tr.stats.channel = '%s.%s' % (ch[-1], ch[:3])
-                _tr.stats._component = ch[-1]
-                _tr.stats.sampling_rate = SAMPLING_RATE
-                _tr.stats.delta = DT
-
-            stream += _st
-        return stream
