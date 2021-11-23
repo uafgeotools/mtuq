@@ -30,7 +30,7 @@ from six import string_types
 
 
 def plot_beachball(filename, mt, stations, origin, **kwargs):
-    """ Plots focal mechanism of given moment tensor as PNG image
+    """ Plots focal mechanism and station locations
 
     .. rubric :: Input arguments
 
@@ -40,6 +40,12 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
 
     ``mt`` (`mtuq.MomentTensor`):
     Moment tensor object
+
+    ``stations`` (`list` of `mtuq.Station` objects):
+    Station objects from which locations and takeoff angles are calculated
+
+    ``origin`` (`mtuq.Origin`):
+    Origin object
 
 
     """
@@ -59,7 +65,8 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
 
 
 
-def _plot_beachball_obspy(filename, mt, stations, origin, **kwargs):
+def _plot_beachball_obspy(filename, mt, stations, origin, polarities=None, 
+    fill_color='gray', **kwargs):
     """ Plots focal mechanism using ObsPy
     """
     warn("""
@@ -71,7 +78,7 @@ def _plot_beachball_obspy(filename, mt, stations, origin, **kwargs):
         """)
 
     obspy.imaging.beachball.beachball(
-        mt.as_vector(), size=200, linewidth=2, facecolor='gray')
+        mt.as_vector(), size=200, linewidth=2, facecolor=fill_color)
 
     pyplot.savefig(filename)
     pyplot.close()

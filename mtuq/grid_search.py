@@ -59,11 +59,7 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``timed`` (`bool`):
-    Display elapsed time at end?
-
-
-    ``verbose`` (`int`):
-    Display number of misfit evaluation and MPI proceses?
+    Displays elapsed time at end
 
 
     ``gather`` (`bool`):
