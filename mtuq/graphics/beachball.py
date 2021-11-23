@@ -75,7 +75,7 @@ def _plot_beachball_obspy(filename, mt, **kwargs):
 
 
 
-def _plot_beachball_gmt(filename, mt, origin=None, stations=None, polarities=None,
+def _plot_beachball_gmt(filename, mt, stations=None, origin=None, polarities=None,
     model='ak135', label_stations=False, fill_color=None):
 
 
@@ -90,7 +90,6 @@ def _plot_beachball_gmt(filename, mt, origin=None, stations=None, polarities=Non
 
     if fill_color:
         raise NotImplementedError
-
 
 
     if origin and stations and polarities:

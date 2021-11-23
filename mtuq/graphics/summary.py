@@ -16,12 +16,10 @@ from mtuq.graphics.uq.vw import plot_marginal_vw
 def plot_summary1(filename, misfit, stations, origin, mt):
 
     tmp1 = 'tmp_variance_reduction.png'
-
     plot_misfit_lune(tmp1, misfit, colorbar_type=3)
 
     tmp2 = 'tmp_beachball.png'
-
-    plot_beachball(tmp2, mt, None)
+    plot_beachball(tmp2, mt, stations=stations, origin=origin)
 
     _create_summary1(filename, tmp1, tmp2, cleanup=True)
 
@@ -59,11 +57,7 @@ def plot_summary2(filename, misfit, var, stations, origin, mt):
     plot_marginal_vw(tmp2, misfit, var, colorbar_type=3)
 
     tmp3 = 'tmp_beachball.png'
-
-    # stations is not yet implemented in plot_beachball
-    #plot_beachball('tmp_beachball.ps', mt, stations)
-
-    plot_beachball(tmp3, mt, None)
+    plot_beachball(tmp3, mt, stations=stations, origin=origin)
 
     _create_summary2(filename, tmp1, tmp2, tmp3, cleanup=True)
 

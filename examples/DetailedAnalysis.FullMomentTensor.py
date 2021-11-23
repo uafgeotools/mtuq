@@ -340,7 +340,8 @@ if __name__=='__main__':
 
         print('Plotting observed and synthetic waveforms...\n')
 
-        plot_beachball(event_id+'FMT_beachball.png', best_source)
+        plot_beachball(event_id+'FMT_beachball.png', 
+            best_source, stations, origin)
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
