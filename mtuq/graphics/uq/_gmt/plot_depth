@@ -129,7 +129,7 @@ gmt psbasemap $proj_arg $area_arg -BneSW -Bxaf"${xlabel_arg}" -Byaf"${ylabel_arg
 
 ## plot misfit versus depth
 if [ -f "$mt_data" ]; then
-    gmt psmeca $mt_data -N -Sm$diameter $proj_arg $area_arg -G0/0/0 -V -O -K >> $ps
+    gmt psmeca $mt_data -N -Sm$diameter $proj_arg $area_arg -G0/0/0 -O -K >> $ps
 
     gmt psxy $ascii_data -Sd$tinyval $proj_arg $area_arg -O -K >> $ps
 else

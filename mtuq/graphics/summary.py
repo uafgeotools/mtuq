@@ -19,7 +19,7 @@ def plot_summary1(filename, misfit, stations, origin, mt):
     plot_misfit_lune(tmp1, misfit, colorbar_type=3)
 
     tmp2 = 'tmp_beachball.png'
-    plot_beachball(tmp2, mt, stations=stations, origin=origin)
+    plot_beachball(tmp2, mt, stations, origin)
 
     _create_summary1(filename, tmp1, tmp2, cleanup=True)
 
@@ -57,7 +57,7 @@ def plot_summary2(filename, misfit, var, stations, origin, mt):
     plot_marginal_vw(tmp2, misfit, var, colorbar_type=3)
 
     tmp3 = 'tmp_beachball.png'
-    plot_beachball(tmp3, mt, stations=stations, origin=origin)
+    plot_beachball(tmp3, mt, stations, origin)
 
     _create_summary2(filename, tmp1, tmp2, tmp3, cleanup=True)
 

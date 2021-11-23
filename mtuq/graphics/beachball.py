@@ -18,15 +18,18 @@ import matplotlib.pyplot as pyplot
 import numpy as np
 import subprocess
 
+from matplotlib import colors
 from mtuq.event import MomentTensor
 from mtuq.graphics._gmt import _parse_filetype, _get_format_arg
-from mtuq.util import warn
+from mtuq.util import asarray, warn
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 from obspy.geodetics import kilometers2degrees as _to_deg
 from obspy.taup import TauPyModel
+from six import string_types
 
 
-def plot_beachball(filename, mt, **kwargs):
+
+def plot_beachball(filename, mt, stations, origin, **kwargs):
     """ Plots focal mechanism of given moment tensor as PNG image
 
     .. rubric :: Input arguments
@@ -52,11 +55,11 @@ def plot_beachball(filename, mt, **kwargs):
     except:
         backend = _plot_beachball_obspy
 
-    backend(filename, mt, **kwargs)
+    backend(filename, mt, stations, origin, **kwargs)
 
 
 
-def _plot_beachball_obspy(filename, mt, **kwargs):
+def _plot_beachball_obspy(filename, mt, stations, origin, **kwargs):
     """ Plots focal mechanism using ObsPy
     """
     warn("""
@@ -68,15 +71,15 @@ def _plot_beachball_obspy(filename, mt, **kwargs):
         """)
 
     obspy.imaging.beachball.beachball(
-        mt.as_vector(), size=200, linewidth=2, facecolor=gray)
+        mt.as_vector(), size=200, linewidth=2, facecolor='gray')
 
     pyplot.savefig(filename)
     pyplot.close()
 
 
 
-def _plot_beachball_gmt(filename, mt, stations=None, origin=None, polarities=None,
-    model='ak135', label_stations=False, fill_color=None):
+def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
+    model='ak135', label_stations=False, fill_color='gray'):
 
 
     filename, filetype = _parse_filetype(filename)
@@ -89,17 +92,20 @@ def _plot_beachball_gmt(filename, mt, stations=None, origin=None, polarities=Non
         label_arg = ''
 
     if fill_color:
-        raise NotImplementedError
+        rgb = 255*asarray(colors.to_rgba(fill_color)[:3])
 
 
     if origin and stations and polarities:
+        #
+        # plots beachball, station locations, and polarity fits
+        #
 
         _write_polarities('tmp.'+filename+'.pol',
             stations, origin, polarities, model)
 
         subprocess.call(script1 % (
             #psmeca args
-            filename+'.ps',
+            *rgb, filename+'.ps',
 
             #psmeca table
             *mt.as_vector(),
@@ -114,13 +120,16 @@ def _plot_beachball_gmt(filename, mt, stations=None, origin=None, polarities=Non
 
 
     elif origin and stations:
+        #
+        # plots beachball and station locations
+        #
 
         _write_stations('tmp.'+filename+'.sta',
             stations, origin, model)
 
         subprocess.call(script2 % (
             #psmeca args
-            filename+'.ps',
+            *rgb, filename+'.ps',
 
             #psmeca table
             *mt.as_vector(),
@@ -134,9 +143,13 @@ def _plot_beachball_gmt(filename, mt, stations=None, origin=None, polarities=Non
             ), shell=True)
 
     else:
+        #
+        # plots beachball only
+        #
+
         subprocess.call(script3 % (
             #psmeca args
-            filename+'.ps',
+            *rgb, filename+'.ps',
 
             #psmeca table
             *mt.as_vector(),
@@ -205,26 +218,22 @@ def _write_polarities(filename, stations, origin, polarities):
     raise NotImplementedError
 
 
-gray = [0.667, 0.667, 0.667]
-
-
 
 #
 # GMT SCRIPTS
 #
 
-# SCRIPT1 - plots beachball, station locations, and polarity fits
-
+# plots beachball, station locations, and polarity fits
 # TODO - not implemented yet
 
 
 
-# SCRIPT2 - plots beachball and station locations
+# plots beachball and station locations
 
 script2=\
 '''#!/bin/bash -e
 
-gmt psmeca -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -M -Sm9.9c -Ggrey50 -h1 -Xc -Yc -K << END > %s
+gmt psmeca -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -M -Sm9.9c -G%d/%d/%d -h1 -Xc -Yc -K << END > %s
 lat lon depth   mrr   mtt   mff   mrt    mrf    mtf
 0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0
 END\n
@@ -233,12 +242,12 @@ gmt psconvert %s -F%s -A %s
 '''
 
 
-# SCRIPT3 - plots beachball only
+# plots beachball only
 
 script3=\
 '''#!/bin/bash -e
 
-gmt psmeca -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -M -Sm9.9c -Ggrey50 -h1 -Xc -Yc << END > %s
+gmt psmeca -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -M -Sm9.9c -G%d/%d/%d -h1 -Xc -Yc << END > %s
 lat lon depth   mrr   mtt   mff   mrt    mrf    mtf
 0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0
 END\n
