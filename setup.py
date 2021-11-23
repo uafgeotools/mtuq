@@ -90,7 +90,7 @@ setup(
         "numpy", "scipy", "obspy",
         "pandas", "xarray", 
         "retry", 
-        "flake8>=3.0", "pytest", "nose",
+        "flake8>=3.0", "pytest", "nose", "seisgen",
     ],
     ext_modules = [
         Extension(
