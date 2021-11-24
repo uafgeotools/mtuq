@@ -32,8 +32,7 @@ from six import string_types
 def plot_beachball(filename, mt, stations, origin, **kwargs):
     """ Plots focal mechanism and station locations
 
-    .. rubric :: Input arguments
-
+    .. rubric :: Required arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -41,11 +40,30 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
     ``mt`` (`mtuq.MomentTensor`):
     Moment tensor object
 
-    ``stations`` (`list` of `mtuq.Station` objects):
-    Station objects from which locations and takeoff angles are calculated
+    ``stations`` (`list` of `Station` objects):
+    Stations from which azimuths and takeoff angles are calculated
 
-    ``origin`` (`mtuq.Origin`):
-    Origin object
+    ``origin`` (`Origin` object):
+    Origin used to define center
+
+
+    .. rubric :: Optional keyword arguments
+
+    ``polarities`` (`list`)
+    Observed polarities corresponding to given stations
+    (not yet implemented)
+
+    ``add_crosshair`` (`bool`)
+    Marks hypocenter with crosshair
+
+    ``add_station_labels`` (`bool`)
+    Displays stations names
+
+    ``fill_color`` (`str`)
+    Used for plotting focal mechanism
+
+    ``marker_color`` (`str`)
+    Used for station markers
 
 
     """
@@ -66,7 +84,7 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
 
 
 def _plot_beachball_obspy(filename, mt, stations, origin, polarities=None, 
-    fill_color='gray', **kwargs):
+    fill_color='gray', marker_color='black', **kwargs):
     """ Plots focal mechanism using ObsPy
     """
     warn("""
@@ -86,20 +104,24 @@ def _plot_beachball_obspy(filename, mt, stations, origin, polarities=None,
 
 
 def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
-    model='ak135', label_stations=False, fill_color='gray'):
+    taup_model='ak135', add_station_labels=True, 
+    fill_color='gray', marker_color='black'):
 
 
     filename, filetype = _parse_filetype(filename)
     format_arg = _get_format_arg(filetype)
 
     # parse optional arguments
-    if label_stations:
+    if add_station_labels:
         label_arg = '-T+jCB'
     else:
         label_arg = ''
 
     if fill_color:
         rgb = 255*asarray(colors.to_rgba(fill_color)[:3])
+
+    if marker_color:
+        marker_rgb = 255*asarray(colors.to_rgba(marker_color)[:3])
 
 
     if origin and stations and polarities:
@@ -108,7 +130,7 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
         #
 
         _write_polarities('tmp.'+filename+'.pol',
-            stations, origin, polarities, model)
+            stations, origin, polarities, taup_model)
 
         subprocess.call(script1 % (
             #psmeca args
@@ -118,7 +140,7 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
             *mt.as_vector(),
 
             #pspolar args
-            'tmp.'+filename+'.pol', label_arg, filename+'.ps',
+            'tmp.'+filename+'.sta', *marker_rgb, *marker_rgb, label_arg, filename+'.ps',
 
             #psconvert args
             filename+'.ps', filename, format_arg,
@@ -132,7 +154,7 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
         #
 
         _write_stations('tmp.'+filename+'.sta',
-            stations, origin, model)
+            stations, origin, taup_model)
 
         subprocess.call(script2 % (
             #psmeca args
@@ -142,7 +164,7 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
             *mt.as_vector(),
 
             #pspolar args
-            'tmp.'+filename+'.sta', label_arg, filename+'.ps',
+            'tmp.'+filename+'.sta', *marker_rgb, *marker_rgb, label_arg, filename+'.ps',
 
             #psconvert args
             filename+'.ps', filename, format_arg,
@@ -171,9 +193,9 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
 # utility functions
 #
 
-def get_takeoff_angle(taup_model, source_depth_in_km, **kwargs):
+def get_takeoff_angle(taup, source_depth_in_km, **kwargs):
     try:
-        arrivals = taup_model.get_travel_times(source_depth_in_km, **kwargs)
+        arrivals = taup.get_travel_times(source_depth_in_km, **kwargs)
 
         phases = []
         for arrival in arrivals:
@@ -192,12 +214,12 @@ def get_takeoff_angle(taup_model, source_depth_in_km, **kwargs):
         return None
 
 
-def _write_stations(filename, stations, origin, model):
+def _write_stations(filename, stations, origin, taup_model):
 
     try:
-        taup_model = TauPyModel(model=model)
+        taup = TauPyModel(model=taup_model)
     except:
-        taup_model = None
+        taup = None
 
     with open(filename, 'w') as file:
         for station in stations:
@@ -211,7 +233,7 @@ def _write_stations(filename, stations, origin, model):
                 station.longitude)
 
             takeoff_angle = get_takeoff_angle(
-                taup_model, 
+                taup, 
                 origin.depth_in_m/1000.,
                 distance_in_degree=_to_deg(distance_in_m/1000.),
                 phase_list=['p', 'P'])
@@ -244,7 +266,11 @@ gmt psmeca -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -M -Sm9.9c -G%d/%d/%d -h1 -Xc -Yc -K <<
 lat lon depth   mrr   mtt   mff   mrt    mrf    mtf
 0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0
 END\n
-gmt pspolar %s -R -J -D0/0 -F -M9.9c -N -Si0.4c %s -O >> %s
+
+# there appears to be bug? -- pspolar does not act on flags -E -G, 
+# which control marker fill color
+
+gmt pspolar %s -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -D0/0 -E%d/%d/%d -G%d/%d/%d -F -Qe -M9.9c -N -Si0.6c %s -O >> %s
 gmt psconvert %s -F%s -A %s
 '''
 

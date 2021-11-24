@@ -30,25 +30,10 @@ class WeightParser(object):
     def __init__(self, path):
         self._path = path
 
-    def parse_codes(self):
-        codes = []
-
-        with open(self._path) as file:
-            reader = csv.reader(
-                filter(lambda row: row[0]!='#', file),
-                delimiter=' ',
-                skipinitialspace=True)
-
-            for row in reader:
-                codes += [self._parse_code(row[0])]
-
-        return codes
-
-
     def _parse_code(self, string):
         return '.'.join(string.split('.')[1:4])
 
-    def parse_weights(self):
+    def parse_weights(self, remove_unused=True):
         weights = defaultdict(AttribDict)
           
         with open(self._path) as file:
@@ -65,6 +50,17 @@ class WeightParser(object):
                 weights[_code]['surface_wave_Z'] = float(row[4])
                 weights[_code]['surface_wave_R'] = float(row[5])
                 weights[_code]['surface_wave_T'] = float(row[6])
+
+        if remove_unused:
+            unused = []
+            for _code, _weight in weights.items():
+                if _weight['body_wave_Z']==_weight['body_wave_R']==\
+                   _weight['surface_wave_Z']==_weight['surface_wave_R']==\
+                   _weight['surface_wave_T']==0.:
+                    unused += [_code]
+
+            for _code in unused:
+                weights.pop(_code)
 
         return weights
 
@@ -114,7 +110,7 @@ class WeightParser(object):
 def parse_station_codes(filename):
     """ Parses CAPUAF-style weight file
     """
-    return WeightParser(filename).parse_codes()
+    return WeightParser(filename).parse_weights().keys()
 
 
 
