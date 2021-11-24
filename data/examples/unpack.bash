@@ -9,7 +9,7 @@ cd $(dirname ${BASH_SOURCE[0]})
 wd=$PWD
 
 for filename in \
-    20090407201255351.tgz;
+    20090407201255351.tgz SPECFEM3D_SGT.tgz;
 do
     cd $wd
     cd $(dirname $filename)
