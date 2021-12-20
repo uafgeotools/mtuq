@@ -214,7 +214,7 @@ class MomentTensorHeader(Base):
         px += 0.00
         py -= 0.30
 
-        line = u'model: %s   solver: %s   misfit (%s): %.1e' % \
+        line = u'model: %s   solver: %s   misfit (%s): %.3e' % \
                 (self.model, self.solver, self.norm, self.best_misfit)
         _write_text(line, px, py, ax, fontsize=14)
 
@@ -335,7 +335,7 @@ class ForceHeader(Base):
         px += 0.00
         py -= 0.30
 
-        line = u'model: %s   solver: %s   misfit (%s): %.1e' % \
+        line = u'model: %s   solver: %s   misfit (%s): %.3e' % \
                 (self.model, self.solver, self.norm, self.best_misfit)
         _write_text(line, px, py, ax, fontsize=14)
 
