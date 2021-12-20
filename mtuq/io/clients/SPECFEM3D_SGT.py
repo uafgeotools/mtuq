@@ -29,8 +29,6 @@ class Client(ClientBase):
         greens_tensors = db.get_greens_tensors(stations, origin)
 
 
-    .. note::
-
     """
 
     def __init__(self, path_or_url=None, model=None,
