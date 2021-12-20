@@ -371,6 +371,16 @@ Paths_FK="""
 
 """
 
+Paths_SPECFEM3D_SGT="""
+    path_greens = fullpath('data/examples/SPECFEM3D_SGT/greens/socal3D')
+    path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
+    path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
+    event_id    = 'evt11056825'
+    model       = 'socal3D'
+    taup_model  = 'ak135'
+
+"""
+
 
 
 DataProcessingComments="""
@@ -464,6 +474,18 @@ OriginDefinitions="""
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
+        })
+
+"""
+
+
+OriginDefinitions_SPECFEM3D_SGT="""
+    origin = Origin({
+        'time': '2019-07-04T18:39:44.0000Z',
+        'latitude': 35.601333,
+        'longitude': -117.597,
+        'depth_in_m': 2810.0,
+        'id': 'evt11056825'
         })
 
 """
@@ -1701,7 +1723,7 @@ if __name__=='__main__':
             'Reading Greens functions...\\\\n',
             (
             'Reading Greens functions...\\\\n\\\\n'+
-            '  Downloads can take a few seconds ... OR AS LONG AS A FEW HOURS!\\\\n'
+            '  Downloads can sometimes take as long as a few hours!\\\\n'
             ),
             'download_greens_tensors\(stations, origin, model\)',
             'download_greens_tensors(stations, origin, model, verbose=True)',
@@ -1770,6 +1792,49 @@ if __name__=='__main__':
         file.write(Main1_SerialGridSearch_DoubleCouple)
         file.write(Main2_SerialGridSearch_DoubleCouple)
         file.write(WrapUp_SerialGridSearch_DoubleCouple)
+
+
+    with open('examples/test_SPECFEM3D_SGT.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
+        file.write(
+            replace(
+            Imports,
+            'DoubleCoupleGridRegular',
+            'FullMomentTensorGridSemiregular',
+            'plot_misfit_dc',
+            'plot_misfit_lune',
+            ))
+        file.write(Docstring_GridSearch_FullMomentTensor)
+        file.write(Paths_SPECFEM3D_SGT)
+        file.write(DataProcessingComments)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'taup_model=model',
+            'taup_model=taup_model',
+            ))
+        file.write(MisfitComments)
+        file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(Grid_FullMomentTensor)
+        file.write(OriginComments)
+        file.write(OriginDefinitions_SPECFEM3D_SGT)
+        file.write(
+            replace(
+            Main_GridSearch,
+            'greens = download_greens_tensors\(stations, origin, model\)',
+            'db = open_db(path_greens, format=\'SPECFEM3D_SGT\', model=model)\n        '
+           +'greens = db.get_greens_tensors(stations, origin)',
+           ))
+        file.write(
+            replace(
+            WrapUp_GridSearch,
+            'DC',
+            'FMT',
+            'plot_misfit_dc',
+            'plot_misfit_lune',
+            ))
 
 
     with open('tests/test_grid_search_mt.py', 'w') as file:

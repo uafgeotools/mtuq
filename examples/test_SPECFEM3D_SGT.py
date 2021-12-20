@@ -17,28 +17,31 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over all moment tensor parameters except
-    # magnitude
+    # Carries out grid search over all moment tensor parameters
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.SPECFEM3D_SGT.py
-    #
+    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
+    #   
+
 
     path_greens = fullpath('data/examples/SPECFEM3D_SGT/greens/socal3D')
     path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
     path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
     event_id    = 'evt11056825'
-    model       = 'ak135'
+    model       = 'socal3D'
+    taup_model  = 'ak135'
+
 
     #
     # Body and surface wave measurements will be made separately
     #
+
     process_bw = ProcessData(
         filter_type='Bandpass',
-        freq_min= 0.05,
-        freq_max= 0.5,
+        freq_min= 0.1,
+        freq_max= 0.333,
         pick_type='taup',
-        taup_model=model,
+        taup_model=taup_model,
         window_type='body_wave',
         window_length=15.,
         capuaf_file=path_weights,
@@ -46,12 +49,12 @@ if __name__=='__main__':
 
     process_sw = ProcessData(
         filter_type='Bandpass',
-        freq_min=0.05,
-        freq_max=0.2,
+        freq_min=0.025,
+        freq_max=0.0625,
         pick_type='taup',
-        taup_model=model,
+        taup_model=taup_model,
         window_type='surface_wave',
-        window_length=100.,
+        window_length=150.,
         capuaf_file=path_weights,
         )
 
@@ -90,14 +93,14 @@ if __name__=='__main__':
 
     grid = FullMomentTensorGridSemiregular(
         npts_per_axis=10,
-        magnitudes=[4.6])
+        magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
-        magnitude=4.6)
+        magnitude=4.5)
 
 
     #
-    # Origin time and location will be fixed. For an example in which they
+    # Origin time and location will be fixed. For an example in which they 
     # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
     #
     # See also Dataset.get_origins(), which attempts to create Origin objects
@@ -123,10 +126,10 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print('Reading data...\n')
-        data = read(path_data, format='sac',
+        data = read(path_data, format='sac', 
             event_id=event_id,
             station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity'])
+            tags=['units:cm', 'type:velocity']) 
 
 
         data.sort_by_distance()
@@ -180,82 +183,48 @@ if __name__=='__main__':
         data_sw, greens_sw, misfit_sw, origin, grid)
 
 
-    #
-    # Generate figures and save results
-    #
 
     if comm.rank==0:
 
         results = results_bw + results_sw
 
-        # source corresponding to minimum misfit
+        # array index corresponding to minimum misfit
         idx = results.idxmin('source')
+
         best_source = grid.get(idx)
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
 
-
-        # only generate components present in the data
-        components_bw = data_bw.get_components()
-        components_sw = data_sw.get_components()
-
-        # synthetics corresponding to minimum misfit
-        synthetics_bw = greens_bw.get_synthetics(
-            best_source, components_bw, mode='map')
-
-        synthetics_sw = greens_sw.get_synthetics(
-            best_source, components_sw, mode='map')
-
-
-        # time shifts and other attributes corresponding to minimum misfit
-        list_bw = misfit_bw.collect_attributes(
-            data_bw, greens_bw, best_source)
-
-        list_sw = misfit_sw.collect_attributes(
-            data_sw, greens_sw, best_source)
-
-        dict_bw = {station.id: list_bw[_i]
-            for _i,station in enumerate(stations)}
-
-        dict_sw = {station.id: list_sw[_i]
-            for _i,station in enumerate(stations)}
-
+        #
+        # Generate figures and save results
+        #
 
         print('Generating figures...\n')
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
-        plot_beachball(event_id+'FMT_beachball.png', best_source)
+
+        plot_beachball(event_id+'FMT_beachball.png',
+            best_source, stations, origin)
+
 
         plot_misfit_lune(event_id+'FMT_misfit.png', results)
 
 
         print('Saving results...\n')
 
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+
+
         # save best-fitting source
         save_json(event_id+'FMT_solution.json', merged_dict)
 
 
-        # save time shifts and other attributes
-        os.makedirs(event_id+'FMT_attrs', exist_ok=True)
-
-        save_json(event_id+'FMT_attrs/bw.json', dict_bw)
-        save_json(event_id+'FMT_attrs/sw.json', dict_sw)
-
-
-        # save processed waveforms as binary files
-        os.makedirs(event_id+'FMT_waveforms', exist_ok=True)
-
-        data_bw.write(event_id+'FMT_waveforms/dat_bw.p')
-        data_sw.write(event_id+'FMT_waveforms/dat_sw.p')
-
-        synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
-        synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
-
+        # save misfit surface
         results.save(event_id+'FMT_misfit.nc')
 
 

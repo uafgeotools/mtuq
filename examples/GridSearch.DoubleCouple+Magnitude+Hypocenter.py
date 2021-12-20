@@ -178,7 +178,7 @@ if __name__=='__main__':
         data_sw = data.map(process_sw)
 
 
-        print('Reading Greens functions...\n\n  Downloads can take a few seconds ... OR AS LONG AS A FEW HOURS!\n')
+        print('Reading Greens functions...\n\n  Downloads can sometimes take as long as a few hours!\n')
         greens = download_greens_tensors(stations, origins, model)
 
         print('Processing Greens functions...\n')

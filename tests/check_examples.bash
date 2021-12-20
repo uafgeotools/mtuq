@@ -11,6 +11,7 @@ FILENAMES="\
     ../examples/GridSearch.DoubleCouple+Magnitude+Depth.py\
     ../examples/GridSearch.FullMomentTensor.py\
     ../examples/SerialGridSearch.DoubleCouple.py\
+    ../examples/test_SPECFEM3D_SGT.py\
     ../tests/benchmark_cap_vs_mtuq.py\
     ../tests/test_graphics.py\
     ../tests/test_grid_search_mt.py\
