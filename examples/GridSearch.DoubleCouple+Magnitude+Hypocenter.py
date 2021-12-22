@@ -178,7 +178,7 @@ if __name__=='__main__':
         data_sw = data.map(process_sw)
 
 
-        print('Reading Greens functions...\n\n  Downloads can take a few seconds ... OR AS LONG AS A FEW HOURS!\n')
+        print('Reading Greens functions...\n\n  Downloads can sometimes take as long as a few hours!\n')
         greens = download_greens_tensors(stations, origins, model)
 
         print('Processing Greens functions...\n')
@@ -242,13 +242,11 @@ if __name__=='__main__':
 
         print('Generating figures...\n')
 
-        # plot observed and synthetic waveforms
         plot_data_greens2(event_id+'DC+XY_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
 
-        # plot misfit versus depth
         plot_misfit_latlon(event_id+'DC+XY_misfit_latlon.png', results, origins,
             title=event_id, colorbar_label='L2 misfit')
 

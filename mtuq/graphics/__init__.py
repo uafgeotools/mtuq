@@ -4,7 +4,7 @@ from mtuq.graphics.attrs import\
     plot_time_shifts, plot_amplitude_ratios
 
 from mtuq.graphics.beachball import\
-    plot_beachball, misfit_vs_depth
+    plot_beachball
 
 from mtuq.graphics.beachball_pygmt import\
     beachball_pygmt

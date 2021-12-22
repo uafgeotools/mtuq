@@ -48,6 +48,14 @@ To display tradeoffs with depth, we can add the following keyword arguments:
 Plotting misfit versus hypocenter
 """""""""""""""""""""""""""""""""
 
+.. warning::
+
+   1D Green's functions are used for the hypocenter grid search example. 
+
+   (3D Green's functions would provide more meaningful results, but are too large for remote hosting.)
+
+
+
 If `origins` represents different hypocenters, we can plot the results as follows:
 
 .. code::
@@ -63,6 +71,14 @@ If `origins` represents different hypocenters, we can plot the results as follow
 
 Tradeoffs with hypocenter
 """""""""""""""""""""""""
+
+.. warning::
+
+   1D Green's functions are used for the hypocenter grid search example. 
+
+   (3D Green's functions would provide more meaningful results, but are too large for remote hosting.)
+
+
 
 To see how orientation trade offs with hypocenter, we can add the following keyword argument:
 
@@ -80,8 +96,4 @@ Source code
 """""""""""
 
 The above figures can be reproduced by running `GridSearch.DoubleCouple+Magnitude+Depth.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple+Magnitude+Depth.py>`_ and `GridSearch.DoubleCouple+Magnitude+Hypocenter.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple+Magnitude+Hypocenter.py>`_. 
-
-.. note::
-
-   1D Green's functions are used for the hypocenter grid search example. 3D Green's functions would provide more meaningful results, but are too large for remote hosting.
 

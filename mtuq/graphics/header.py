@@ -9,7 +9,7 @@ import os
 from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
-from mtuq.graphics.beachball import gray, plot_beachball
+from mtuq.graphics.beachball import plot_beachball
 from mtuq.util.math import to_delta_gamma
 
 
@@ -165,7 +165,7 @@ class MomentTensorHeader(Base):
         #yp = 0.45*height
         #ax.add_collection(
         #    beach(self.mt, xy=(xp, yp), width=diameter,
-        #    linewidth=0.5, facecolor=gray))
+        #    linewidth=0.5, facecolor='gray'))
 
 
         #
@@ -179,7 +179,7 @@ class MomentTensorHeader(Base):
         xp = offset
         yp = 0.075*height
 
-        plot_beachball('tmp.png', self.mt)
+        plot_beachball('tmp.png', self.mt, None, None)
         img = pyplot.imread('tmp.png')
 
         try:
@@ -214,7 +214,7 @@ class MomentTensorHeader(Base):
         px += 0.00
         py -= 0.30
 
-        line = u'model: %s   solver: %s   misfit (%s): %.1e' % \
+        line = u'model: %s   solver: %s   misfit (%s): %.3e' % \
                 (self.model, self.solver, self.norm, self.best_misfit)
         _write_text(line, px, py, ax, fontsize=14)
 
@@ -335,7 +335,7 @@ class ForceHeader(Base):
         px += 0.00
         py -= 0.30
 
-        line = u'model: %s   solver: %s   misfit (%s): %.1e' % \
+        line = u'model: %s   solver: %s   misfit (%s): %.3e' % \
                 (self.model, self.solver, self.norm, self.best_misfit)
         _write_text(line, px, py, ax, fontsize=14)
 

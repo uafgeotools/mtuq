@@ -55,7 +55,7 @@ if __name__=='__main__':
 Docstring_GridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
-    # Carries out grid search over 64,000 double-couple moment tensors
+    # Carries out grid search over 64,000 double couple moment tensors
     #
     # USAGE
     #   mpirun -n <NPROC> python GridSearch.DoubleCouple.py
@@ -125,7 +125,7 @@ if __name__=='__main__':
 Docstring_SerialGridSearch_DoubleCouple="""
 if __name__=='__main__':
     #
-    # Carries out grid search over 64,000 double-couple moment tensors
+    # Carries out grid search over 64,000 double couple moment tensors
     #
     # USAGE
     #   python SerialGridSearch.DoubleCouple.py
@@ -371,6 +371,16 @@ Paths_FK="""
 
 """
 
+Paths_SPECFEM3D_SGT="""
+    path_greens = fullpath('data/examples/SPECFEM3D_SGT/greens/socal3D')
+    path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
+    path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
+    event_id    = 'evt11056825'
+    model       = 'socal3D'
+    taup_model  = 'ak135'
+
+"""
+
 
 
 DataProcessingComments="""
@@ -464,6 +474,18 @@ OriginDefinitions="""
         'latitude': 61.454200744628906,
         'longitude': -149.7427978515625,
         'depth_in_m': 33033.599853515625,
+        })
+
+"""
+
+
+OriginDefinitions_SPECFEM3D_SGT="""
+    origin = Origin({
+        'time': '2019-07-04T18:39:44.0000Z',
+        'latitude': 35.601333,
+        'longitude': -117.597,
+        'depth_in_m': 2810.0,
+        'id': 'evt11056825'
         })
 
 """
@@ -876,7 +898,8 @@ Main_TestGraphics="""
 
     print('Figure 3 of 3\\n')
 
-    plot_beachball('graphics_test_3.png', mt)
+    plot_beachball('graphics_test_3.png', 
+        mt, None, None)
 
     print('\\nFinished\\n')
 """
@@ -1065,7 +1088,8 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
 
         print('Plotting observed and synthetic waveforms...\\n')
 
-        plot_beachball(event_id+'FMT_beachball.png', best_source)
+        plot_beachball(event_id+'FMT_beachball.png', 
+            best_source, stations, origin)
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
@@ -1275,17 +1299,15 @@ WrapUp_GridSearch="""
 
         print('Generating figures...\\n')
 
-        # plot observed and synthetic waveforms
         plot_data_greens2(event_id+'DC_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
 
-        # plot focal mechanism
-        plot_beachball(event_id+'DC_beachball.png', best_source)
+        plot_beachball(event_id+'DC_beachball.png',
+            best_source, stations, origin)
 
 
-        # plot misfit surface
         plot_misfit_dc(event_id+'DC_misfit.png', results)
 
 
@@ -1332,13 +1354,11 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Generating figures...\\n')
 
-        # plot observed and synthetic waveforms
         plot_data_greens2(event_id+'DC+Z_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
 
-        # plot misfit versus depth
         plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins,
             title=event_id)
 
@@ -1391,17 +1411,15 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Generating figures...\\n')
 
-    # plot observed and synthetic waveforms
     plot_data_greens2(event_id+'DC_waveforms.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
 
-    # plot focal mechanism
-    plot_beachball(event_id+'DC_beachball.png', best_source)
+    plot_beachball(event_id+'DC_beachball.png',
+        best_source, stations, origin)
 
 
-    # plot misfit surface
     plot_misfit_dc(event_id+'DC_misfit.png', results)
 
 
@@ -1441,7 +1459,8 @@ WrapUp_TestGridSearch_DoubleCouple="""
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
-        plot_beachball(event_id+'DC_beachball.png', best_source)
+        plot_beachball(event_id+'DC_beachball.png',
+            best_source, None, None)
 
 
     if run_checks:
@@ -1704,7 +1723,7 @@ if __name__=='__main__':
             'Reading Greens functions...\\\\n',
             (
             'Reading Greens functions...\\\\n\\\\n'+
-            '  Downloads can take a few seconds ... OR AS LONG AS A FEW HOURS!\\\\n'
+            '  Downloads can sometimes take as long as a few hours!\\\\n'
             ),
             'download_greens_tensors\(stations, origin, model\)',
             'download_greens_tensors(stations, origin, model, verbose=True)',
@@ -1773,6 +1792,49 @@ if __name__=='__main__':
         file.write(Main1_SerialGridSearch_DoubleCouple)
         file.write(Main2_SerialGridSearch_DoubleCouple)
         file.write(WrapUp_SerialGridSearch_DoubleCouple)
+
+
+    with open('examples/test_SPECFEM3D_SGT.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
+        file.write(
+            replace(
+            Imports,
+            'DoubleCoupleGridRegular',
+            'FullMomentTensorGridSemiregular',
+            'plot_misfit_dc',
+            'plot_misfit_lune',
+            ))
+        file.write(Docstring_GridSearch_FullMomentTensor)
+        file.write(Paths_SPECFEM3D_SGT)
+        file.write(DataProcessingComments)
+        file.write(
+            replace(
+            DataProcessingDefinitions,
+            'taup_model=model',
+            'taup_model=taup_model',
+            ))
+        file.write(MisfitComments)
+        file.write(MisfitDefinitions)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(Grid_FullMomentTensor)
+        file.write(OriginComments)
+        file.write(OriginDefinitions_SPECFEM3D_SGT)
+        file.write(
+            replace(
+            Main_GridSearch,
+            'greens = download_greens_tensors\(stations, origin, model\)',
+            'db = open_db(path_greens, format=\'SPECFEM3D_SGT\', model=model)\n        '
+           +'greens = db.get_greens_tensors(stations, origin)',
+           ))
+        file.write(
+            replace(
+            WrapUp_GridSearch,
+            'DC',
+            'FMT',
+            'plot_misfit_dc',
+            'plot_misfit_lune',
+            ))
 
 
     with open('tests/test_grid_search_mt.py', 'w') as file:

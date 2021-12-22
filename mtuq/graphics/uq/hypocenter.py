@@ -34,7 +34,7 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
     .. rubric :: Optional input arguments
 
     For optional argument descriptions, 
-    `see here <mtuq.graphics._plot_depth.html>`_
+    `see here <mtuq.graphics._plot_latlon.html>`_
 
     """
 
@@ -68,7 +68,7 @@ def plot_likelihood_latlon(filename, ds, origins, **kwargs):
     .. rubric :: Optional input arguments
 
     For optional argument descriptions, 
-    `see here <mtuq.graphics._plot_depth.html>`_
+    `see here <mtuq.graphics._plot_latlon.html>`_
 
     """
 

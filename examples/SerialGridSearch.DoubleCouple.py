@@ -17,7 +17,7 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over 64,000 double-couple moment tensors
+    # Carries out grid search over 64,000 double couple moment tensors
     #
     # USAGE
     #   python SerialGridSearch.DoubleCouple.py
@@ -179,17 +179,15 @@ if __name__=='__main__':
 
     print('Generating figures...\n')
 
-    # plot observed and synthetic waveforms
     plot_data_greens2(event_id+'DC_waveforms.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
 
-    # plot focal mechanism
-    plot_beachball(event_id+'DC_beachball.png', best_source)
+    plot_beachball(event_id+'DC_beachball.png',
+        best_source, stations, origin)
 
 
-    # plot misfit surface
     plot_misfit_dc(event_id+'DC_misfit.png', results)
 
 

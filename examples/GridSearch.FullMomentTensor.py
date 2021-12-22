@@ -198,17 +198,15 @@ if __name__=='__main__':
 
         print('Generating figures...\n')
 
-        # plot observed and synthetic waveforms
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
 
-        # plot focal mechanism
-        plot_beachball(event_id+'FMT_beachball.png', best_source)
+        plot_beachball(event_id+'FMT_beachball.png',
+            best_source, stations, origin)
 
 
-        # plot misfit surface
         plot_misfit_lune(event_id+'FMT_misfit.png', results)
 
 
