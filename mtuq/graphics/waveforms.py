@@ -591,7 +591,10 @@ def _isempty(dataset):
 
 def _getattr(trace, name, *args):
     if len(args)==1:
-        return getattr(trace.attrs, name, args[0])
+        if not hasattr(trace, 'attrs'):
+            return args[0]
+        else:
+            return getattr(trace.attrs, name, args[0])
     elif len(args)==0:
         return getattr(trace.attrs, name)
     else:

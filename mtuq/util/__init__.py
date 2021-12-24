@@ -278,9 +278,9 @@ def dataarray_idxmin(da):
     da = da.where(da==da.min(), drop=True).squeeze()
     if da.size > 1:
         warn("No unique global minimum\n")
-        return da[0].coords
-    else:
-        return da.coords
+        while da.size > 1:
+            da = da[0]
+    return da.coords
 
 
 def dataarray_idxmax(da):
@@ -291,7 +291,7 @@ def dataarray_idxmax(da):
     da = da.where(da==da.max(), drop=True).squeeze()
     if da.size > 1:
         warn("No unique global maximum\n")
-        return da[0].coords
-    else:
-        return da.coords
+        while da.size > 1:
+            da = da[0]
+    return da.coords
 
