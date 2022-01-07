@@ -16,7 +16,7 @@ xarray.set_options(keep_attrs=True)
 
 
 def grid_search(data, greens, misfit, origins, sources, 
-    msg_interval=25, timed=True, gather=True):
+    msg_interval=25, timed=True, verbose=1, gather=True):
 
     """ Evaluates misfit over grids
 
@@ -59,7 +59,7 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     ``timed`` (`bool`):
-    Display elapsed time at end?
+    Displays elapsed time at end
 
 
     ``gather`` (`bool`):
@@ -100,6 +100,20 @@ def grid_search(data, greens, misfit, origins, sources,
         if iproc != 0:
             timed = False
             msg_interval = 0
+
+
+    # print number of grid points
+    if verbose>0 and _is_mpi_env() and iproc==0:
+
+        print('  Number of grid points: %.3e' %\
+            (len(origins)*len(sources)))
+
+        print('  Number of MPI processes: %d\n' % nproc)
+
+    elif verbose>0 and not _is_mpi_env():
+
+        print('  Number of misfit evaluations: %.3e\n' %\
+            (len(origins)*len(sources)))
 
 
     # evaluate misfit over origins and sources

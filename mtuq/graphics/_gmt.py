@@ -161,3 +161,53 @@ def _parse_cpt(cpt, name, color_model='RGB', N=256):
     return cmap
 
 
+def _parse_filetype(filename):
+
+    parts = splitext(filename)
+    name, ext = parts[0], parts[1].lstrip('.')
+
+    if ext.upper() in ['PS']:
+        return name, 'EPS'
+
+    elif ext.upper() in ['JPG', 'JPEG']:
+        return name, 'JPEG'
+
+    elif ext.upper() in ['TIF', 'TIFF']:
+        return name, 'TIFF'
+
+    elif ext.upper() in gmt_formats:
+        return name, ext.upper()
+
+    else:
+        warn('Unrecognized extension: defaulting to PNG')
+        return name, 'PNG'
+
+
+def _get_format_arg(fmt):
+
+    assert fmt in gmt_formats
+
+    if fmt=='BMT':
+        return '-Tb'
+
+    elif fmt=='EPS':
+        return '-Te'
+
+    elif fmt=='PDF':
+        return '-Tf'
+
+    elif fmt=='JPEG':
+        return '-Tj'
+
+    elif fmt=='PNG':
+        return '-Tg'
+
+    elif fmt=='PPM':
+        return '-Tm'
+
+    elif fmt=='SVG':
+        return '-Ts'
+
+    elif fmt=='TIFF':
+        return '-Tt'
+

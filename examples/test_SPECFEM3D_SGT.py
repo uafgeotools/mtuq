@@ -5,8 +5,8 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens2, plot_misfit_depth, plot_misfit_dc
-from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune
+from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
@@ -17,25 +17,19 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over source orientation, magnitude, and depth
-    #   
+    # Carries out grid search over all moment tensor parameters
+    #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple+Magnitude+Depth.py
-    #
-    # For simpler examples, see SerialGridSearch.DoubleCouple.py or
-    # GridSearch.FullMomentTensor.py
+    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
     #   
 
 
-    #
-    # We will investigate the source process of an Mw~4 earthquake using data
-    # from a regional seismic array
-    #
-
-    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
-    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
-    event_id=     '20090407201255351'
-    model=        'ak135'
+    path_greens = fullpath('data/examples/SPECFEM3D_SGT/greens/socal3D')
+    path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
+    path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
+    event_id    = 'evt11056825'
+    model       = 'socal3D'
+    taup_model  = 'ak135'
 
 
     #
@@ -47,7 +41,7 @@ if __name__=='__main__':
         freq_min= 0.1,
         freq_max= 0.333,
         pick_type='taup',
-        taup_model=model,
+        taup_model=taup_model,
         window_type='body_wave',
         window_length=15.,
         capuaf_file=path_weights,
@@ -58,7 +52,7 @@ if __name__=='__main__':
         freq_min=0.025,
         freq_max=0.0625,
         pick_type='taup',
-        taup_model=model,
+        taup_model=taup_model,
         window_type='surface_wave',
         window_length=150.,
         capuaf_file=path_weights,
@@ -94,44 +88,32 @@ if __name__=='__main__':
 
 
     #
-    # We will search over a range of locations about the catalog origin
-    #
-
-
-    catalog_origin = Origin({
-        'time': '2009-04-07T20:12:55.000000Z',
-        'latitude': 61.454200744628906,
-        'longitude': -149.7427978515625,
-        'depth_in_m': 33033.599853515625,
-        })
-
-    depths = np.array(
-         # depth in meters
-        [25000., 30000., 35000., 40000.,                    
-         45000., 50000., 55000., 60000.])
-
-    origins = []
-    for depth in depths:
-        origins += [catalog_origin.copy()]
-        setattr(origins[-1], 'depth_in_m', depth)
-
-
-
-    #
     # Next, we specify the moment tensor grid and source-time function
     #
 
-    magnitudes = np.array(
-         # moment magnitude (Mw)
-        [4.3, 4.4, 4.5,     
-         4.6, 4.7, 4.8]) 
-
-    grid = DoubleCoupleGridRegular(
-        npts_per_axis=20,
-        magnitudes=magnitudes)
+    grid = FullMomentTensorGridSemiregular(
+        npts_per_axis=10,
+        magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
         magnitude=4.5)
+
+
+    #
+    # Origin time and location will be fixed. For an example in which they 
+    # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
+    #
+    # See also Dataset.get_origins(), which attempts to create Origin objects
+    # from waveform metadata
+    #
+
+    origin = Origin({
+        'time': '2019-07-04T18:39:44.0000Z',
+        'latitude': 35.601333,
+        'longitude': -117.597,
+        'depth_in_m': 2810.0,
+        'id': 'evt11056825'
+        })
 
 
     from mpi4py import MPI
@@ -160,7 +142,8 @@ if __name__=='__main__':
 
 
         print('Reading Greens functions...\n')
-        greens = download_greens_tensors(stations, origins, model)
+        db = open_db(path_greens, format='SPECFEM3D_SGT', model=model)
+        greens = db.get_greens_tensors(stations, origin)
 
         print('Processing Greens functions...\n')
         greens.convolve(wavelet)
@@ -191,23 +174,19 @@ if __name__=='__main__':
         print('Evaluating body wave misfit...\n')
 
     results_bw = grid_search(
-        data_bw, greens_bw, misfit_bw, origins, grid)
+        data_bw, greens_bw, misfit_bw, origin, grid)
 
     if comm.rank==0:
         print('Evaluating surface wave misfit...\n')
 
     results_sw = grid_search(
-        data_sw, greens_sw, misfit_sw, origins, grid)
+        data_sw, greens_sw, misfit_sw, origin, grid)
 
 
 
     if comm.rank==0:
 
         results = results_bw + results_sw
-
-        # origin corresponding to minimum misfit
-        best_origin = origins[results.idxmin('origin')]
-        origin_dict = best_origin.as_dict()
 
         # array index corresponding to minimum misfit
         idx = results.idxmin('source')
@@ -223,38 +202,30 @@ if __name__=='__main__':
 
         print('Generating figures...\n')
 
-        plot_data_greens2(event_id+'DC+Z_waveforms.png',
+        plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
+            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
 
-        plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins,
-            title=event_id)
+        plot_beachball(event_id+'FMT_beachball.png',
+            best_source, stations, origin)
 
 
-        plot_misfit_depth(event_id+'DC+Z_misfit_depth_tradeoffs.png', results, origins,
-            show_tradeoffs=True, show_magnitudes=True, title=event_id)
+        plot_misfit_lune(event_id+'FMT_misfit.png', results)
 
 
         print('Saving results...\n')
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, best_origin,
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
             {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
 
 
         # save best-fitting source
-        save_json(event_id+'DC+Z_solution.json', merged_dict)
-
-
-        # save origins
-        origins_dict = {_i: origin 
-            for _i,origin in enumerate(origins)}
-
-        save_json(event_id+'DC+Z_origins.json', origins_dict)
+        save_json(event_id+'FMT_solution.json', merged_dict)
 
 
         # save misfit surface
-        results.save(event_id+'DC+Z_misfit.nc')
+        results.save(event_id+'FMT_misfit.nc')
 
 
         print('\nFinished\n')

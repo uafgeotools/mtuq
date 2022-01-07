@@ -28,6 +28,14 @@ autogen
    mtuq.graphics.plot_marginal_force
    mtuq.graphics.plot_misfit_force
    mtuq.graphics._plot_force
+   mtuq.graphics.plot_likelihood_depth
+   mtuq.graphics.plot_marginal_depth
+   mtuq.graphics.plot_misfit_depth
+   mtuq.graphics._plot_depth
+   mtuq.graphics.plot_likelihood_latlon
+   mtuq.graphics.plot_marginal_latlon
+   mtuq.graphics.plot_misfit_latlon
+   mtuq.graphics._plot_latlon
    mtuq.grid.DoubleCoupleGridRandom
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom
@@ -49,6 +57,7 @@ autogen
    mtuq.read
    mtuq.io.clients.AxiSEM_NetCDF.Client
    mtuq.io.clients.FK_SAC.Client
+   mtuq.io.clients.SPECFEM3D_SGT.Client
    mtuq.io.clients.syngine.Client
    mtuq.io.readers.SAC.read
    mtuq.misfit.waveform.level0

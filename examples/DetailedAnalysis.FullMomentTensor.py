@@ -45,8 +45,8 @@ if __name__=='__main__':
     #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
     #   
     #
-    # For simpler examples, see SerialGridSearch.DoubleCouple.py and
-    # GridSearch.FullMomentTensor.py
+    # This is the most complicated example. For simpler ones, see
+    # SerialGridSearch.DoubleCouple.py or GridSearch.FullMomentTensor.py
     #
     # For ideas on applying this type of analysis to entire sets of events,
     # see github.com/rmodrak/mtbench
@@ -127,7 +127,7 @@ if __name__=='__main__':
 
     grid = FullMomentTensorGridSemiregular(
         npts_per_axis=12,
-        magnitudes=[4.4, 4.5, 4.6])
+        magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -235,8 +235,6 @@ if __name__=='__main__':
         lune_dict = grid.get_dict(idx)
         mt_dict = grid.get(idx).as_dict()
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin)
-
 
         print('Data variance estimation...\n')
 
@@ -342,7 +340,8 @@ if __name__=='__main__':
 
         print('Plotting observed and synthetic waveforms...\n')
 
-        plot_beachball(event_id+'FMT_beachball.png', best_source)
+        plot_beachball(event_id+'FMT_beachball.png', 
+            best_source, stations, origin)
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
@@ -481,7 +480,12 @@ if __name__=='__main__':
 
         save_json(event_id+'FMT_solutions/marginal_likelihood.json', marginal_vw)
         save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
+
+        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+
         save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
+
 
         os.makedirs(event_id+'FMT_stats', exist_ok=True)
 

@@ -17,7 +17,7 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over 64,000 double-couple moment tensors
+    # Carries out grid search over 64,000 double couple moment tensors
     #
     # USAGE
     #   python SerialGridSearch.DoubleCouple.py
@@ -162,46 +162,20 @@ if __name__=='__main__':
     results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
 
 
-    #
-    # Generate figures and save results
-    #
 
     results = results_bw + results_sw
 
-    # source corresponding to minimum misfit
+    # array index corresponding to minimum misfit
     idx = results.idxmin('source')
+
     best_source = grid.get(idx)
     lune_dict = grid.get_dict(idx)
     mt_dict = grid.get(idx).as_dict()
 
-    merged_dict = merge_dicts(lune_dict, mt_dict, origin)
 
-
-    # only generate components present in the data
-    components_bw = data_bw.get_components()
-    components_sw = data_sw.get_components()
-
-    # synthetics corresponding to minimum misfit
-    synthetics_bw = greens_bw.get_synthetics(
-        best_source, components_bw, mode='map')
-
-    synthetics_sw = greens_sw.get_synthetics(
-        best_source, components_sw, mode='map')
-
-
-    # time shifts and other attributes corresponding to minimum misfit
-    list_bw = misfit_bw.collect_attributes(
-        data_bw, greens_bw, best_source)
-
-    list_sw = misfit_sw.collect_attributes(
-        data_sw, greens_sw, best_source)
-
-    dict_bw = {station.id: list_bw[_i] 
-        for _i,station in enumerate(stations)}
-
-    dict_sw = {station.id: list_sw[_i] 
-        for _i,station in enumerate(stations)}
-
+    #
+    # Generate figures and save results
+    #
 
     print('Generating figures...\n')
 
@@ -209,33 +183,25 @@ if __name__=='__main__':
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
         misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
 
-    plot_beachball(event_id+'DC_beachball.png', best_source)
+
+    plot_beachball(event_id+'DC_beachball.png',
+        best_source, stations, origin)
+
 
     plot_misfit_dc(event_id+'DC_misfit.png', results)
 
 
     print('Saving results...\n')
 
+    merged_dict = merge_dicts(lune_dict, mt_dict, origin,
+        {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+
+
     # save best-fitting source
     save_json(event_id+'DC_solution.json', merged_dict)
 
 
-    # save time shifts and other attributes
-    os.makedirs(event_id+'DC_attrs', exist_ok=True)
-
-    save_json(event_id+'DC_attrs/bw.json', dict_bw)
-    save_json(event_id+'DC_attrs/sw.json', dict_sw)
-
-
-    # save processed waveforms as binary files
-    os.makedirs(event_id+'DC_waveforms', exist_ok=True)
-
-    data_bw.write(event_id+'DC_waveforms/dat_bw.p')
-    data_sw.write(event_id+'DC_waveforms/dat_sw.p')
-
-    synthetics_bw.write(event_id+'DC_waveforms/syn_bw.p')
-    synthetics_sw.write(event_id+'DC_waveforms/syn_sw.p')
-
+    # save misfit surface
     results.save(event_id+'DC_misfit.nc')
 
 

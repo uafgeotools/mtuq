@@ -82,7 +82,9 @@ class GreensTensor(Stream):
           would remove it
 
         """
-        if components==getattr(self, 'components', None):
+        if hasattr(self, 'components') and\
+           self.components==components:
+            # components already set
             return
 
         if components is None:
@@ -109,7 +111,7 @@ class GreensTensor(Stream):
         """
         nc, nr, nt = self._get_shape()
 
-        # allocate NuPy array to hold Green's function time series
+        # allocate NumPy array to hold Green's function time series
         self._array = np.zeros((nc, nr, nt))
 
         # allocate ObsPy structures to hold synthetics

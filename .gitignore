@@ -21,3 +21,4 @@ docs/_build
 docs/library/generated
 scripts/
 
+.git/

@@ -536,16 +536,14 @@ class ProcessData(object):
             # part 4b: apply statics
             # 
 
-            # STATIC CONVETION:  A positive static time shift means synthetics
+            # STATIC CONVENTION:  A positive static time shift means synthetics
             # are arriving too early and need to be shifted in the positive 
             # direction to match the observed data. 
 
             if self.apply_statics:
                 try:
-                    # _components is a custom metadata attribute added by
-                    # mtuq.io.clients. this workaround is needed because of
-                    # certain channel/component conventions are not 
-                    # supported by ObsPy
+                    # _component is a custom metadata attribute added by
+                    # mtuq.io.clients
 
                     # Even though obspy.read doesn't return a stats.component
                     # attribute, it appears "component" is still reserved by

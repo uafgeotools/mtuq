@@ -41,8 +41,6 @@ class Dataset(list):
     def append(self, stream):
         """ Appends stream to Dataset
         """
-        _warnings = getattr(self, '_warnings', False)
-
         assert issubclass(type(stream), Stream),\
             ValueError("Only Streams can be appended to a Dataset")
 
@@ -62,6 +60,9 @@ class Dataset(list):
 
         if not hasattr(stream, 'tags'):
             stream.tags = list()
+
+        # optional origin and station metadata warnings
+        _warnings = getattr(self, '_warnings', False)
 
         if not hasattr(stream, 'station') and _warnings:
             warn("Stream lacks station metadata")
@@ -94,7 +95,7 @@ class Dataset(list):
 
         else:
             raise ValueError(
-                "SELECTOR must be a Station, Origin or list")
+                "`selector` must be a `Station`, `Origin` or list thereof")
 
         return self.__class__(
             id=self.id, streams=filter(selected, self))

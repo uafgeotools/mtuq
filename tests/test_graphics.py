@@ -124,6 +124,7 @@ if __name__=='__main__':
 
     print('Figure 3 of 3\n')
 
-    plot_beachball('graphics_test_3.png', mt)
+    plot_beachball('graphics_test_3.png', 
+        mt, None, None)
 
     print('\nFinished\n')

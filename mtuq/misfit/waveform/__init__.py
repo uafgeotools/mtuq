@@ -188,7 +188,8 @@ class Misfit(object):
 
 
     def collect_attributes(self, data, greens, source):
-        """ Collects time shifts and other attributes assigned to traces
+        """ Collects misfit, time shifts and other attributes corresponding to 
+        each trace
         """
         # checks that dataset is nonempty
         if isempty(data):
@@ -220,4 +221,29 @@ class Misfit(object):
                     attrs[-1][component] = trace.attrs
 
         return deepcopy(attrs)
+
+
+    def collect_synthetics(self, data, greens, source):
+        """ Collects synthetics with misfit, time shifts and other attributes attached
+        """
+        # checks that dataset is nonempty
+        if isempty(data):
+            warn("Empty data set. No attributes will be returned")
+            return []
+
+        # checks that optional Green's function padding is consistent with time 
+        # shift bounds
+        check_padding(greens, self.time_shift_min, self.time_shift_max)
+
+        synthetics = greens.get_synthetics(
+            source, components=data.get_components(), mode='map', inplace=True)
+
+        # attaches attributes to synthetics
+        _ = level0.misfit(
+            data, greens, iterable(source), self.norm, self.time_shift_groups,
+            self.time_shift_min, self.time_shift_max, msg_handle=Null(),
+            set_attributes=True)
+
+        return deepcopy(synthetics)
+
 
