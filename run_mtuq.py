@@ -6,7 +6,7 @@ import numpy as np
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens2, plot_misfit_depth, plot_misfit_dc, plot_variance_reduction_lune
-from mtuq.graphics.uq.origin_depth import _get_depths, _get_sources, _min_dataarray
+#from mtuq.graphics.uq.hypocenter import _get_depths, _get_sources, _min_dataarray
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
@@ -20,6 +20,24 @@ from mpi4py import MPI
 # Tester script just trying to get the information I need
 # Event is the July 2021 event that capuaf has been run for
 
+# Utility functions from previous version of mtuq
+def _get_depths(origins):
+    depths = []
+    for origin in origins:
+        depths += [float(origin.depth_in_m)]
+    return np.array(depths)
+
+def _get_sources(sources, indices):
+    return [sources.get(index) for index in indices]
+
+def _min_dataarray(ds):
+    values, indices = [], []
+    for _i in range(ds.shape[-1]):
+        sliced = ds[:,:,:,:,:,:,_i]
+        values += [sliced.values.min()]
+        indices += [int(sliced.values.argmin())]
+    return np.array(values), indices
+
 if len(sys.argv) != 2:
     raise Exception('proper useage: python run_mtuq.py eid')
 else:
@@ -32,17 +50,18 @@ path_data = fullpath('%s/*.[zrt]' % eid)
 path_weights = fullpath('%s/weight.dat' % eid)
 #model = 'ak135'
 
-db = open_db('/store/wf/FK_synthetics/tactmod',format='FK')
-model='tactmod'
+#CHANGE THIS APPROPRIATELY
+db = open_db('/store/wf/FK_synthetics/scak',format='FK')
+model='scak'
 
 # Process the body and surface waves separately
 
 process_bw = ProcessData(
     filter_type='Bandpass',
-    freq_min= 0.25,
+    freq_min= 0.20,
     freq_max= 0.6667,
     pick_type='FK_metadata',
-    FK_database='/store/wf/FK_synthetics/tactmod',
+    FK_database='/store/wf/FK_synthetics/scak',
     window_type='body_wave',
     window_length=15.,
     capuaf_file=path_weights,
@@ -53,7 +72,7 @@ process_sw = ProcessData(
     freq_min=0.0333,
     freq_max=0.0625,
     pick_type='FK_metadata',
-    FK_database='/store/wf/FK_synthetics/tactmod',
+    FK_database='/store/wf/FK_synthetics/scak',
     window_type='surface_wave',
     window_length=120.,
     capuaf_file=path_weights,
@@ -94,15 +113,17 @@ station_id_list = parse_station_codes(path_weights)
 
 # Begin setup for depth search
 catalog_origin = Origin({
-    'time': '2021-07-23T04:20:20.018000Z',
-    'latitude': 64.461,
-    'longitude': -146.850,
-    'depth_in_m': 11700.000,
+    'time': '2020-04-17T00:22:45.356000Z',
+    'latitude': 55.9717,
+    'longitude': -153.3077,
+    'depth_in_m': 7340.7,
     'id': str(eid)
 })
 
 # Depths (in meters) to search over
-depths = np.array([1000., 2000., 4000., 5000., 6000., 7000., 8000., 9000., 10000., 12000., 13000., 14000.]) #tactmod has boundary at 3,11km
+depths = np.array([1000., 2000., 3000., 5000., 6000., 7000., 8000., 10000., 11000., 12000., 13000., 15000., 16000., 17000., 18000., 20000.]) 
+#tactmod has boundary at 3,11,24,31,76km
+#scak has bounday at 4,9,14,19,24,33,49,66km
 
 origins = []
 for depth in depths:
@@ -110,7 +131,7 @@ for depth in depths:
     setattr(origins[-1], 'depth_in_m', depth)
 
 # Magnitudes to search over
-magnitudes = np.array([4.40, 4.45, 4.50, 4.55])
+magnitudes = np.array([4.9, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9])
 
 grid = DoubleCoupleGridRegular(
     npts_per_axis=30,
@@ -282,7 +303,7 @@ if comm.rank == 0:
         misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
 
     plot_misfit_depth(eid+'DC+_misfit_depth.png',
-        results, origins, grid)
+                      results, origins, title=eid)
 
     plot_variance_reduction_lune(eid+'DC_vr_bw.png',
         results_bw, norm_bw, title='Body waves',
