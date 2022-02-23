@@ -117,16 +117,34 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     # evaluate misfit over origins and sources
-    values = _grid_search_serial(
-        data, greens, misfit, origins, _subset or sources, timed=timed, 
+    local_values = _grid_search_serial(
+        data, greens, misfit, origins, _subset or sources, timed=timed,
         msg_interval=msg_interval)
 
+    # get number of columns to correctly reshape the gathered array
+    n_col = np.shape(local_values)[-1]
+
+    if not isinstance(local_values, np.ndarray):
+        local_values = np.array(local_values, dtype="float64")
+
     if _is_mpi_env() and gather:
-        values = comm.gather(values, root=0)
+        # collect local array sizes using the low-level mpi4py Gatherv
+        # start by defining the memory block sizes and create receiving buffer
+        sendcounts = np.array(comm.gather(np.size(local_values), root=0))
         if iproc == 0:
-            values = np.concatenate(values, axis=0)
+            recvbuf = np.empty(sum(sendcounts), dtype=local_values.dtype)
+
+        else:
+            recvbuf = None
+
+    if _is_mpi_env() and gather:
+        comm.Gatherv(sendbuf=(local_values, MPI.DOUBLE), recvbuf=(recvbuf, sendcounts, None, MPI.DOUBLE), root=0)
+        if iproc == 0:
+            values = recvbuf.reshape(int(len(recvbuf)/n_col),n_col)
         else:
             return
+    else:
+        values = local_values
 
     # convert from NumPy array to DataArray or DataFrame
     if issubclass(type(sources), Grid):
