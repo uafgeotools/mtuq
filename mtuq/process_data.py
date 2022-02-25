@@ -271,9 +271,6 @@ class ProcessData(object):
 
         elif self.pick_type == 'taup':
             assert self.taup_model is not None
-            tmp = taup.TauPyModel(self.taup_model)
-
-            print(type(tmp))
             self._taup = taup.TauPyModel(self.taup_model)
 
 
