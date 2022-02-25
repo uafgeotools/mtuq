@@ -34,6 +34,51 @@ def asarray(x):
     return np.array(x, dtype=np.float64, ndmin=1, copy=False)
 
 
+def gather2(comm, array):
+    """ Gathers 2D NumPy arrays and combines along first dimension
+
+    For large NumPy arrays, provides improved performance over mpi4py gather
+    by using lower-level Gatherv
+    """
+    from mpi4py import MPI
+
+    if not isinstance(array, np.ndarray):
+        raise NotImplementedError
+
+    if array.dtype!="float32":
+        mpi_type = MPI.SINGLE
+
+    elif array.dtype!="float64":
+        mpi_type = MPI.DOUBLE
+
+    else:
+        raise NotImplementedError
+
+    if array.ndim!=2:
+        raise NotImplementedError
+
+    # TODO - how to enforce same ncol for all processes?
+    nrow, ncol = array.shape
+
+
+    # start by defining the memory block sizes and create receiving buffer
+    sendcounts = np.array(comm.gather(array.size, root=0))
+    if comm.rank == 0:
+        recvbuf = np.empty(sum(sendcounts), dtype=array.dtype)
+    else:
+        recvbuf = None
+
+    comm.Gatherv(
+        sendbuf=(local_values, mpi_type),
+        recvbuf=(recvbuf, sendcounts, None, mpi_type),
+        root=0)
+
+    if comm.rank == 0:
+        return recvbuf.reshape(int(len(recvbuf)/ncol),ncol)
+    else:
+        return
+
+
 def is_mpi_env():
     try:
         import mpi4py
