@@ -42,13 +42,14 @@ def gather2(comm, array):
     """
     from mpi4py import MPI
 
+
     if not isinstance(array, np.ndarray):
         raise NotImplementedError
 
-    if array.dtype!="float32":
-        mpi_type = MPI.SINGLE
+    if array.dtype=="float32":
+        mpi_type = MPI.FLOAT
 
-    elif array.dtype!="float64":
+    elif array.dtype=="float64":
         mpi_type = MPI.DOUBLE
 
     else:
@@ -62,14 +63,15 @@ def gather2(comm, array):
 
 
     # start by defining the memory block sizes and create receiving buffer
-    sendcounts = np.array(comm.gather(array.size, root=0))
+    sendcounts = np.array(comm.gather(np.size(array), root=0))
+
     if comm.rank == 0:
         recvbuf = np.empty(sum(sendcounts), dtype=array.dtype)
     else:
         recvbuf = None
 
     comm.Gatherv(
-        sendbuf=(local_values, mpi_type),
+        sendbuf=(array, mpi_type),
         recvbuf=(recvbuf, sendcounts, None, mpi_type),
         root=0)
 

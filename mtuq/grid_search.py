@@ -123,9 +123,8 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     if _is_mpi_env() and gather:
-        if iproc==0:
-            values = gather2(comm, array)
-        else:
+        values = gather2(comm, values)
+        if iproc!=0:
             return
 
     # convert from NumPy array to DataArray or DataFrame
