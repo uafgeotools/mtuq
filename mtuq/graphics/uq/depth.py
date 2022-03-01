@@ -84,10 +84,10 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        da = _likelihoods_regular(ds)
+        da = _likelihoods_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        da = _likelihoods_random(ds)
+        da = _likelihoods_random(ds, var)
 
     _plot_depth(filename, da, origins, **kwargs)
 

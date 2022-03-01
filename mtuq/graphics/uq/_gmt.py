@@ -364,7 +364,11 @@ def _parse_lune_array2(lon, lat, lune_array):
             sigma -= perturb
 
         mt = to_mij(rho, v, w, kappa, sigma, h)
-        exponent = np.max([int('{:.2e}'.format(mt[i]).split('e+')[1]) for i in range(len(mt))])
+
+        list_str =  [('%.e2' % mt[i]) for i in range(len(mt))]
+        list_int = [int(string.split('e'[1])) for string in list_str]
+
+        exponent = np.max(list_int)
         scaled_mt = mt/10**(exponent)
         dummy_value = 0.
 
