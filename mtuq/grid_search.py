@@ -6,8 +6,8 @@ import xarray
 from collections.abc import Iterable
 from mtuq.event import Origin
 from mtuq.grid import DataFrame, DataArray, Grid, UnstructuredGrid
-from mtuq.util import iterable, timer, remove_list, warn, ProgressCallback,\
-    dataarray_idxmin, dataarray_idxmax
+from mtuq.util import gather2, iterable, timer, remove_list, warn,\
+    ProgressCallback, dataarray_idxmin, dataarray_idxmax
 from os.path import splitext
 from xarray.core.formatting import unindexed_dims_repr
 
@@ -76,6 +76,8 @@ def grid_search(data, greens, misfit, origins, sources,
       reduces to ``_grid_search_serial``.
 
     """
+
+    # check input arguments
     origins = iterable(origins)
     for origin in origins:
         assert type(origin) is Origin
@@ -83,7 +85,6 @@ def grid_search(data, greens, misfit, origins, sources,
     if type(sources) not in (Grid, UnstructuredGrid):
         raise TypeError
 
-    _subset = None
     if _is_mpi_env():
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
@@ -92,17 +93,8 @@ def grid_search(data, greens, misfit, origins, sources,
         if nproc > sources.size:
             raise Exception('Number of CPU cores exceeds size of grid')
 
-        # partition grid and scatter across processes
-        _subsets = None
-        if iproc == 0:
-            _subsets = sources.partition(nproc)
-        _subset = comm.scatter(_subsets, root=0)
-        if iproc != 0:
-            timed = False
-            msg_interval = 0
 
-
-    # print number of grid points
+    # print debugging information
     if verbose>0 and _is_mpi_env() and iproc==0:
 
         print('  Number of grid points: %.3e' %\
@@ -116,35 +108,39 @@ def grid_search(data, greens, misfit, origins, sources,
             (len(origins)*len(sources)))
 
 
-    # evaluate misfit over origins and sources
-    local_values = _grid_search_serial(
-        data, greens, misfit, origins, _subset or sources, timed=timed,
+    if _is_mpi_env():
+        #
+        # divide up the grid search over MPI processes
+        #
+        _all = sources
+        _subsets = None
+        if iproc == 0:
+            _subsets = sources.partition(nproc)
+        sources = comm.scatter(_subsets, root=0)
+
+        if iproc != 0:
+            timed = False
+            msg_interval = 0
+
+
+    #
+    # evaluate misfit over grids
+    #
+    values = _grid_search_serial(
+        data, greens, misfit, origins, sources, timed=timed,
         msg_interval=msg_interval)
 
-    # get number of columns to correctly reshape the gathered array
-    n_col = np.shape(local_values)[-1]
 
-    if not isinstance(local_values, np.ndarray):
-        local_values = np.array(local_values, dtype="float64")
-
+    #
+    # collect results
+    #
     if _is_mpi_env() and gather:
-        # collect local array sizes using the low-level mpi4py Gatherv
-        # start by defining the memory block sizes and create receiving buffer
-        sendcounts = np.array(comm.gather(np.size(local_values), root=0))
-        if iproc == 0:
-            recvbuf = np.empty(sum(sendcounts), dtype=local_values.dtype)
+        # gather results from MPI processes
+        values = gather2(comm, values)
+        sources = _all
 
-        else:
-            recvbuf = None
-
-    if _is_mpi_env() and gather:
-        comm.Gatherv(sendbuf=(local_values, MPI.DOUBLE), recvbuf=(recvbuf, sendcounts, None, MPI.DOUBLE), root=0)
-        if iproc == 0:
-            values = recvbuf.reshape(int(len(recvbuf)/n_col),n_col)
-        else:
+        if iproc!=0:
             return
-    else:
-        values = local_values
 
     # convert from NumPy array to DataArray or DataFrame
     if issubclass(type(sources), Grid):

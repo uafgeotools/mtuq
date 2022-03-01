@@ -64,7 +64,7 @@ class ProcessData(object):
 
     - ``'taup'``
       calculates P, S arrival times from Tau-P model 
-      (uses `obspy.taup.TaupModel.get_arrival_times`)
+      (uses `obspy.taup.TauPyModel.get_arrival_times`)
 
     - ``'FK_metadata'``
       reads P, S arrival times from FK metadata
@@ -119,7 +119,8 @@ class ProcessData(object):
     amount by which Green's functions will be padded relative to data
 
     ``taup_model`` (`str`)
-    Name of ObsPy TauP model, required for `pick_type=taup`
+    Name of built-in ObsPy TauP model or path to custom ObsPy Taup model,
+    required for `pick_type=taup`
 
     ``FK_database`` (`str`)
     Path to FK database, required for `pick_type=FK_metadata`
@@ -271,6 +272,7 @@ class ProcessData(object):
         elif self.pick_type == 'taup':
             assert self.taup_model is not None
             self._taup = taup.TauPyModel(self.taup_model)
+
 
         elif self.pick_type == 'FK_metadata':
             assert self.FK_database is not None

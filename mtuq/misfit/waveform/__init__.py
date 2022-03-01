@@ -62,6 +62,9 @@ class Misfit(object):
 
     ``time_shift_max`` (`float`): maximum allowable time shift (s)
 
+    ``optimization_level`` (int): optimization level 
+    (see further details below)
+
 
     .. note:: 
 
@@ -101,7 +104,7 @@ class Misfit(object):
 
     .. note:: 
 
-      During installation, C extension modules are aumotically compiled by
+      During installation, C extension modules are automatically compiled by
       `build_ext.sh` using compiler flags given in `setup.py`.  For performance
       tuning or compiler troubleshooting, users may wish to modify the
       `get_compier_args` function in `setup.py`.
@@ -113,6 +116,7 @@ class Misfit(object):
         time_shift_groups=['ZRT'],
         time_shift_min=0.,
         time_shift_max=0.,
+        optimization_level=2,
         ):
         """ Function handle constructor
         """
@@ -140,16 +144,24 @@ class Misfit(object):
                 assert component in ['Z','R','T'],\
                     ValueError("Bad input argument")
 
+        assert optimization_level in [0,1,2]
+
         self.norm = norm
         self.time_shift_min = time_shift_min
         self.time_shift_max = time_shift_max
         self.time_shift_groups = time_shift_groups
+        self.optimization_level = optimization_level
 
 
     def __call__(self, data, greens, sources, progress_handle=Null(), 
-        set_attributes=False, optimization_level=2):
+        set_attributes=False, optimization_level=None):
         """ Evaluates misfit on given data
         """
+        if optimization_level is None:
+            optimization_level = self.optimization_level
+
+        assert optimization_level in [0,1,2]
+
         # normally misfit is evaluated over a grid of sources; `iterable`
         # makes things work if just a single source is given
         sources = iterable(sources)
@@ -170,6 +182,7 @@ class Misfit(object):
         # shift bounds
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
+ 
         if optimization_level==0 or set_attributes:
             return level0.misfit(
                 data, greens, sources, self.norm, self.time_shift_groups, 
