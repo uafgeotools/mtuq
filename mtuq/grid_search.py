@@ -76,6 +76,8 @@ def grid_search(data, greens, misfit, origins, sources,
       reduces to ``_grid_search_serial``.
 
     """
+
+    # check input arguments
     origins = iterable(origins)
     for origin in origins:
         assert type(origin) is Origin
@@ -83,7 +85,6 @@ def grid_search(data, greens, misfit, origins, sources,
     if type(sources) not in (Grid, UnstructuredGrid):
         raise TypeError
 
-    _subset = None
     if _is_mpi_env():
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
@@ -92,17 +93,8 @@ def grid_search(data, greens, misfit, origins, sources,
         if nproc > sources.size:
             raise Exception('Number of CPU cores exceeds size of grid')
 
-        # partition grid and scatter across processes
-        _subsets = None
-        if iproc == 0:
-            _subsets = sources.partition(nproc)
-        _subset = comm.scatter(_subsets, root=0)
-        if iproc != 0:
-            timed = False
-            msg_interval = 0
 
-
-    # print number of grid points
+    # print debugging information
     if verbose>0 and _is_mpi_env() and iproc==0:
 
         print('  Number of grid points: %.3e' %\
@@ -116,14 +108,37 @@ def grid_search(data, greens, misfit, origins, sources,
             (len(origins)*len(sources)))
 
 
-    # evaluate misfit over origins and sources
+    if _is_mpi_env():
+        #
+        # divide up the grid search over MPI processes
+        #
+        _all = sources
+        _subsets = None
+        if iproc == 0:
+            _subsets = sources.partition(nproc)
+        sources = comm.scatter(_subsets, root=0)
+
+        if iproc != 0:
+            timed = False
+            msg_interval = 0
+
+
+    #
+    # evaluate misfit over grids
+    #
     values = _grid_search_serial(
-        data, greens, misfit, origins, _subset or sources, timed=timed,
+        data, greens, misfit, origins, sources, timed=timed,
         msg_interval=msg_interval)
 
 
+    #
+    # collect results
+    #
     if _is_mpi_env() and gather:
+        # gather results from MPI processes
         values = gather2(comm, values)
+        sources = _all
+
         if iproc!=0:
             return
 
