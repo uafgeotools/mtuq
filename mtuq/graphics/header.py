@@ -405,7 +405,7 @@ def _delta_gamma(lune_dict):
     except:
         delta, gamma = lune_dict['delta'], lune_dict['gamma']
 
-    return 'lune coords %s  %s:  %d  %d' % (u'\u03B3', u'\u03B4', delta, gamma)
+    return 'lune coords %s  %s:  %d  %d' % (u'\u03B3', u'\u03B4', gamma, delta)
 
 
 
