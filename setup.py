@@ -87,11 +87,9 @@ setup(
     entry_points=ENTRY_POINTS,
     python_requires='>=3.7.0',
     install_requires=[
-        "numpy==1.21",  # workaround for ObsPy regression
-        "scipy", "obspy",
-        "pandas", "xarray", 
-        "retry", 
-        "flake8>=3.0", "pytest", "nose", "seisgen",
+        "numpy", "scipy", "obspy",
+        "pandas", "xarray", "seisgen"
+        "retry", "flake8>=3.0", "pytest", "nose",
     ],
     ext_modules = [
         Extension(
