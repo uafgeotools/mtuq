@@ -17,7 +17,7 @@ Install MTUQ:
 .. code::
 
    conda activate mtuq
-   conda install numpy obspy instaseis
+   conda install numpy scipy obspy instaseis pandas xarray mpi4py
    git clone https://github.com/uafgeotools/mtuq.git
    cd mtuq
    pip install -e .
@@ -35,5 +35,5 @@ Finally, install GMT:
 
 .. code::
 
-    conda install gmt=6.1
+    conda install gmt=6.3.0
 
