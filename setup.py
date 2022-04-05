@@ -76,7 +76,7 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Physics",
@@ -86,10 +86,14 @@ setup(
     ],
     entry_points=ENTRY_POINTS,
     python_requires='>=3.7.0',
+    # NOTE
+    # instaseis Fortran extension modules sometimes fail to compile via pip
+    # (consider using a conda based installation instead)
     install_requires=[
         "numpy", "scipy", "obspy",
-        "pandas", "xarray", "seisgen"
+        "pandas", "xarray", "seisgen",
         "retry", "flake8>=3.0", "pytest", "nose",
+        # "instaseis"
     ],
     ext_modules = [
         Extension(
