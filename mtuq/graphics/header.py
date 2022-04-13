@@ -394,7 +394,7 @@ def _focal_mechanism(lune_dict):
 
     slip = lune_dict['sigma']
 
-    return ("strike  dip  slip:  %f  %f  %f" %
+    return ("strike  dip  slip:  %.f  %.f  %.f" %
         (strike, dip, slip))
 
 
@@ -405,7 +405,7 @@ def _delta_gamma(lune_dict):
     except:
         delta, gamma = lune_dict['delta'], lune_dict['gamma']
 
-    return 'lune coords %s  %s:  %f  %f' % (u'\u03B3', u'\u03B4', gamma, delta)
+    return 'lune coords %s  %s:  %.f  %.f' % (u'\u03B3', u'\u03B4', gamma, delta)
 
 
 
@@ -416,7 +416,7 @@ def _phi_theta(force_dict):
         phi, h = force_dict['phi'], force_dict['h']
         theta = np.degrees(np.arccos(h))
 
-    return '%s  %s:  %f  %f' % (u'\u03C6', u'\u03B8', phi, theta)
+    return '%s  %s:  %.f  %.f' % (u'\u03C6', u'\u03B8', phi, theta)
 
 
 def _write_text(text, x, y, ax, fontsize=12, **kwargs):
