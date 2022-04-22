@@ -17,7 +17,7 @@ Install MTUQ:
 .. code::
 
    conda activate mtuq
-   conda install numpy scipy obspy instaseis pandas xarray mpi4py
+   conda install numpy obspy instaseis
    git clone https://github.com/uafgeotools/mtuq.git
    cd mtuq
    pip install -e .
@@ -31,9 +31,9 @@ Unpack seismic waveforms used by examples:
     bash ./data/tests/unpack.bash
 
 
-Finally, install GMT:
+Finally, install PyGMT:
 
 .. code::
 
-    conda install gmt=6.3.0
+    conda install pygmt
 
