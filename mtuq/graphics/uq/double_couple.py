@@ -50,10 +50,10 @@ def plot_marginal_dc():
 
 def _squeeze(da):
     if 'origin_idx' in da.dims:
-        da = da.max(dim='origin_idx')
+        da = da.min(dim='origin_idx')
 
     if 'rho' in da.dims:
-        da = da.max(dim='rho')
+        da = da.min(dim='rho')
 
     if 'v' in da.dims:
         assert len(da.coords['v'])==1
