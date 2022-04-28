@@ -6,10 +6,9 @@ from obspy.core import Stream
 from mtuq.greens_tensor.syngine import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
-from mtuq.util.syngine import download_greens_tensor, download_force_response,\
+from mtuq.util.syngine import download_unzip_mt, download_forces,\
      resolve_model,\
      GREENS_TENSOR_FILENAMES, SYNTHETICS_FILENAMES
-from mtuq.util import unzip
 
 
 
@@ -81,14 +80,13 @@ class Client(ClientBase):
         stream = Stream()
 
         if self.include_mt:
-            dirname = unzip(
-                download_greens_tensor(self.url, self.model, station, origin))
+            dirname = download_unzip_mt(self.url, self.model, station, origin)
 
             for filename in GREENS_TENSOR_FILENAMES:
                 stream += obspy.read(dirname+'/'+filename, format='sac')
 
         if self.include_force:
-            filenames = download_force_response(
+            filenames = download_forces(
                 self.url, self.model, station, origin)
 
             dirnames = []
