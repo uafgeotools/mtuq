@@ -59,7 +59,7 @@ def resolve_model(name):
         raise ValueError('Bad model')
 
 
-def download_unzip_mt(url, model, station, origin, verbose=True):
+def download_unzip_mt_response(url, model, station, origin, verbose=True):
     """ Downloads Green's functions through syngine URL interface
     """
     url = (url+'/'+'query'
@@ -72,7 +72,7 @@ def download_unzip_mt(url, model, station, origin, verbose=True):
          +'&starttime='+str(origin.time)[:-1])
 
     try:
-       dirname = os.environs['SYNGINE_DOWNLOADS']
+       dirname = os.environs['SYNGINE_CACHE']
     except:
        dirname = 'data/greens_tensor/syngine/cache/'
 
@@ -144,7 +144,7 @@ def download_synthetics(url, model, station, origin, source):
         return filename+'.zip'
 
 
-def download_forces(url, model, station, origin):
+def download_force_response(url, model, station, origin):
     # syngine uses up-south-east convention for forces
     # https://github.com/krischer/instaseis/pull/74
     forces = []
