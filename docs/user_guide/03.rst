@@ -27,9 +27,9 @@ Methods built into the `GreensTensor` class allow data processing and synthetics
 Downloading precomputed Green's functions
 -----------------------------------------
 
-An easy way to acquire Green's functions is to download them from `syngine <http://ds.iris.edu/ds/products/syngine/>`_, a webservice that hosts Green's functions from the following 1D Earth models: PREM, AK135, and iasp91.
+An easy way to acquire Green's functions is to download them from `syngine <http://ds.iris.edu/ds/products/syngine/>`_, a webservice that hosts Green's functions from the following 1D Earth models: `PREM`, `AK135`, and `iasp91`.
 
-To download AK135 Green's functions and generate MTUQ `GreenTensor` objects:
+To download AK135 Green's functions and generate MTUQ `GreensTensor` objects:
 
 .. code ::
 
