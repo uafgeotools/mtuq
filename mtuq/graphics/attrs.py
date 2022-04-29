@@ -43,31 +43,6 @@ def plot_log_amplitude_ratios(*args, **kwargs):
 
 
 
-def _plot_attrs(dirname, attrs, stations, origin, source,
-     attr_key='time_shift', components=['Z', 'R', 'T'], format='png', 
-     _backend=_plot_matplotlib):
-
-    if backend.lower()=='gmt':
-        raise NotImplementedError
-
-    os.makedirs(dirname, exist_ok=True)
-
-    for component in components:
-        attr_list = []
-        station_list = []
-
-        for _i, station in enumerate(stations):
-            if component not in attrs[_i]:
-                continue
-
-            attr_list += [attrs[_i][component][attr_key]]
-            station_list += [stations[_i]]
-
-        if len(attr_list) > 0:
-            filename = join(dirname, component+'.'+format)
-            _backend(filename, attr_list, station_list, origin, source)
-
-
 def _plot_matplotlib(filename, time_shifts, stations, origin, source, 
     cmap='seismic', station_marker_size=80, source_marker_size=15):
 
@@ -117,4 +92,28 @@ def _plot_matplotlib(filename, time_shifts, stations, origin, source,
 def _plot_pygmt(filename, time_shifts, stations, origin, source):
     raise NotImplementedError
 
+
+def _plot_attrs(dirname, attrs, stations, origin, source,
+     attr_key='time_shift', components=['Z', 'R', 'T'], format='png',
+     _backend=_plot_matplotlib):
+
+    if backend.lower()=='gmt':
+        raise NotImplementedError
+
+    os.makedirs(dirname, exist_ok=True)
+
+    for component in components:
+        attr_list = []
+        station_list = []
+
+        for _i, station in enumerate(stations):
+            if component not in attrs[_i]:
+                continue
+
+            attr_list += [attrs[_i][component][attr_key]]
+            station_list += [stations[_i]]
+
+        if len(attr_list) > 0:
+            filename = join(dirname, component+'.'+format)
+            _backend(filename, attr_list, station_list, origin, source)
 
