@@ -13,7 +13,7 @@ MTUQ_PATH=$(dirname ${BASH_SOURCE[0]})/..
 
 #
 # check that the following versions and dependencies match 
-# mtuq/docs/install/env_conda.sh
+# mtuq/docs/install/env_conda.rst
 #
 PYTHON_VERSION=3
 DEPENDENCIES="numpy scipy obspy instaseis pandas xarray mpi4py"
