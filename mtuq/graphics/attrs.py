@@ -45,7 +45,7 @@ def plot_log_amplitude_ratios(*args, **kwargs):
 
 def _plot_attrs(dirname, attrs, stations, origin, source,
      attr_key='time_shift', components=['Z', 'R', 'T'], format='png', 
-     backend='matplotlib'):
+     _backend=_plot_matplotlib):
 
     if backend.lower()=='gmt':
         raise NotImplementedError
@@ -65,10 +65,10 @@ def _plot_attrs(dirname, attrs, stations, origin, source,
 
         if len(attr_list) > 0:
             filename = join(dirname, component+'.'+format)
-            _save_figure(filename, attr_list, station_list, origin, source)
+            _backend(filename, attr_list, station_list, origin, source)
 
 
-def _save_figure(filename, time_shifts, stations, origin, source, 
+def _plot_matplotlib(filename, time_shifts, stations, origin, source, 
     cmap='seismic', station_marker_size=80, source_marker_size=15):
 
     """ Creates the actual "spider plot"
@@ -114,7 +114,7 @@ def _save_figure(filename, time_shifts, stations, origin, source,
     pyplot.close()
 
 
-def _save_figure_pygmt(filename, time_shifts, stations, origin, source):
+def _plot_pygmt(filename, time_shifts, stations, origin, source):
     raise NotImplementedError
 
 
