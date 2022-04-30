@@ -2,9 +2,26 @@
 
 MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data.  
 
-Use cases include full moment tensor analysis, constrained moment tensor analysis, and many other possibilities involving moment tensor, force, hypocenter, depth, and wavelet parameters.
 
-To provide these capabilities, MTUQ draws on ObsPy, instaseis, and pandas data structures.
+## Getting started
+
+[Installation](https://uafgeotools.github.io/mtuq/install/index.html)
+
+[Quick start](https://uafgeotools.github.io/mtuq/quick_start.html)
+
+
+
+## Documentation
+
+[Acquiring seismic data](https://uafgeotools.github.io/mtuq/user_guide/02.html)
+
+[Acquiring Green's functions](https://uafgeotools.github.io/mtuq/user_guide/03.html)
+
+[Data processing](https://uafgeotools.github.io/mtuq/user_guide/04.html)
+
+[Visualization galleries](https://uafgeotools.github.io/mtuq/user_guide/05.html)
+
+[Library reference](https://uafgeotools.github.io/mtuq/library/index.html)
 
 
 ## Misfit evaluation
