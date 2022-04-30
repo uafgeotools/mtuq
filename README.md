@@ -26,7 +26,10 @@ MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification fro
 
 ## Highlights
 
-Use cases include full moment tensor, constrained moment tensor, depth and hypocenter estimation and uncertainty analysis.  Force inversions and source-time function estimation are also possible.
+Use cases include [double couple moment tensor](https://github.com/uafgeotools/mtuq/blob/master/examples/SeralGridSearch.DoubleCouple.py), [full moment tensor](https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.FullMomentTensor.py), [depth](https://github.com/rmodrak/mtuq/blob/master/examples/GridSearch.DoubleCouple%2BMagnitude%2BDepth.py) and [hypocenter](https://github.com/rmodrak/mtuq/blob/master/examples/GridSearch.DoubleCouple%2BMagnitude%2BHypocenter.py) uncertainty analysis.  
+
+Force inversions and source-time function estimation are also possible.
+
 
 ### Misfit evaluation
 
