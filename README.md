@@ -26,19 +26,7 @@ MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification fro
 
 ## Highlights
 
-Use cases include [double couple moment tensor](https://github.com/uafgeotools/mtuq/blob/master/examples/SeralGridSearch.DoubleCouple.py), [full moment tensor](https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.FullMomentTensor.py), [depth](https://github.com/rmodrak/mtuq/blob/master/examples/GridSearch.DoubleCouple%2BMagnitude%2BDepth.py) and [hypocenter](https://github.com/rmodrak/mtuq/blob/master/examples/GridSearch.DoubleCouple%2BMagnitude%2BHypocenter.py) uncertainty analysis.  
-
-Force inversions and source-time function estimation are also possible.
-
-
-### Misfit evaluation
-
-Waveform difference and cross-correlation time-shift [misfit evaluation](https://uafgeotools.github.io/mtuq/library/index.html#data-processing-and-inversion) 
-on body-wave and surface-wave windows is implemented in C-accelerated Python.
-
-These misfit functions can be used with [mtuq.grid_search](https://uafgeotools.github.io/mtuq/library/generated/mtuq.grid_search.grid_search.html), which automatically partitions the grid over multiple MPI processes if invoked from an MPI environment.  For efficient and unbiased uncertainty quantification, [uniform grids](https://uafgeotools.github.io/mtuq/library/index.html#moment-tensor-and-force-grids) can be used for the grid search, drawing from [Tape2015](https://academic.oup.com/gji/article/202/3/2074/613765).
-
-Alternatively, MTUQ misfit functions can be used as a starting point for Bayesian uncertainty quantification using pymc or other MCMC libraries.
+Common use cases include [double couple moment tensor](https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py), [full moment tensor](https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.FullMomentTensor.py), [depth](https://github.com/rmodrak/mtuq/blob/master/examples/GridSearch.DoubleCouple%2BMagnitude%2BDepth.py) and [hypocenter](https://github.com/rmodrak/mtuq/blob/master/examples/GridSearch.DoubleCouple%2BMagnitude%2BHypocenter.py) uncertainty analysis.  Applications involving composite sources, force sources, constrained moment tensor sources, source-time functions, and other source parameters are also possible.
 
 
 ### Solver interfaces
@@ -46,6 +34,17 @@ Alternatively, MTUQ misfit functions can be used as a starting point for Bayesia
 [I/O functions](https://uafgeotools.github.io/mtuq/library/index.html#data-i-o)
 are included for reading AxiSEM, SPECFEM3D, and FK Green's functions as well as
 downloading Green's functions from remote [syngine](http://ds.iris.edu/ds/products/syngine/) databases.
+
+
+
+### Misfit evaluation
+
+Waveform difference and cross-correlation time-shift [misfit evaluation](https://uafgeotools.github.io/mtuq/library/index.html#data-processing-and-inversion)
+on body-wave and surface-wave windows is implemented in C-accelerated Python.
+
+These misfit functions can be used with [mtuq.grid_search](https://uafgeotools.github.io/mtuq/library/generated/mtuq.grid_search.grid_search.html), which automatically partitions the grid over multiple MPI processes if invoked from an MPI environment.  For efficient and unbiased uncertainty quantification, [uniform grids](https://uafgeotools.github.io/mtuq/library/index.html#moment-tensor-and-force-grids) can be used for the grid search, drawing from [Tape2015](https://academic.oup.com/gji/article/202/3/2074/613765).
+
+Alternatively, MTUQ misfit functions can be used as a starting point for Bayesian uncertainty quantification using pymc or other MCMC libraries.
 
 
 ### Visualization
