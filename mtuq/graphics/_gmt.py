@@ -211,3 +211,8 @@ def _get_format_arg(fmt):
     elif fmt=='TIFF':
         return '-Tt'
 
+
+def _safename(filename):
+    # used for writing temporary files only
+    return filename.replace('/', '__')
+

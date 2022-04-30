@@ -40,7 +40,7 @@ class Client(ClientBase):
 
         For instructions on creating AxiSEM NetCDF databases, see
         `AxiSEM user manual - Output wavefields in netcdf format needed for Instaseis
-        <https://geodynamics.org/cig/software/axisem/axisem-manual.pdf>`_
+        <https://raw.githubusercontent.com/geodynamics/axisem/master/MANUAL/manual_axisem1.3.pdf>`_
 
     """
 

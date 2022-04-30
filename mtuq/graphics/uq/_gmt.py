@@ -4,7 +4,7 @@ import shutil
 import subprocess
 
 from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
-    gmt_formats, _parse_filetype
+    gmt_formats, _parse_filetype, _safename
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180, to_delta, to_gamma, to_mij
 from os.path import basename, exists, splitext
@@ -401,11 +401,6 @@ def _parse_lune_array2(lon, lat, lune_array):
         gmt_array[_i, 10:] = 0
 
     return gmt_array
-
-
-def _safename(filename):
-    # used for writing temporary files only
-    return filename.replace('/', '__')
 
 
 def _float_to_str(val):

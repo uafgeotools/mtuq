@@ -6,7 +6,7 @@
 #
 
 URLS="\
-    https://geodynamics.org/cig/software/axisem/axisem-manual.pdf\
+    https://raw.githubusercontent.com/geodynamics/axisem/master/MANUAL/manual_axisem1.3.pdf\
     https://github.com/Liang-Ding/seisgen\
     https://instaseis.net\
     "

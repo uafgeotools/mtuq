@@ -18,9 +18,10 @@ import matplotlib.pyplot as pyplot
 import numpy as np
 import subprocess
 
+from glob import glob
 from matplotlib import colors
 from mtuq.event import MomentTensor
-from mtuq.graphics._gmt import _parse_filetype, _get_format_arg
+from mtuq.graphics._gmt import _parse_filetype, _get_format_arg, _safename
 from mtuq.util import asarray, warn
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 from obspy.geodetics import kilometers2degrees as _to_deg
@@ -129,7 +130,7 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
         # plots beachball, station locations, and polarity fits
         #
 
-        _write_polarities('tmp.'+filename+'.pol',
+        _write_polarities(_safename('tmp.'+filename+'.pol'),
             stations, origin, polarities, taup_model)
 
         subprocess.call(script1 % (
@@ -140,7 +141,7 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
             *mt.as_vector(),
 
             #pspolar args
-            'tmp.'+filename+'.sta', *marker_rgb, *marker_rgb, label_arg, filename+'.ps',
+            _safename('tmp.'+filename+'.sta'), *marker_rgb, *marker_rgb, label_arg, filename+'.ps',
 
             #psconvert args
             filename+'.ps', filename, format_arg,
@@ -153,7 +154,7 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
         # plots beachball and station locations
         #
 
-        _write_stations('tmp.'+filename+'.sta',
+        _write_stations(_safename('tmp.'+filename+'.sta'),
             stations, origin, taup_model)
 
         subprocess.call(script2 % (
@@ -164,7 +165,7 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
             *mt.as_vector(),
 
             #pspolar args
-            'tmp.'+filename+'.sta', *marker_rgb, *marker_rgb, label_arg, filename+'.ps',
+            _safename('tmp.'+filename+'.sta'), *marker_rgb, *marker_rgb, label_arg, filename+'.ps',
 
             #psconvert args
             filename+'.ps', filename, format_arg,
@@ -187,6 +188,11 @@ def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
             filename+'.ps', filename, format_arg,
 
             ), shell=True)
+
+
+    # remove temporary files
+    for filename in glob(_safename('tmp.'+filename+'*')):
+        os.remove(filename)
 
 
 #
