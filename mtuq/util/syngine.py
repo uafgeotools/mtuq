@@ -8,6 +8,7 @@ from obspy.core import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
 from mtuq.util import fullpath, unzip, url2uuid, urlopen_with_retry
 from mtuq.util.signal import get_distance_in_m, get_distance_in_deg
+from zipfile import BadZipFile
 
 
 GREENS_TENSOR_FILENAMES = [
@@ -58,33 +59,49 @@ def resolve_model(name):
         raise ValueError('Bad model')
 
 
-def download_greens_tensor(url, model, station, origin):
+def download_unzip_mt_response(url, model, station, origin, verbose=True):
     """ Downloads Green's functions through syngine URL interface
     """
-    distance_in_deg = get_distance_in_deg(station, origin)
-
     url = (url+'/'+'query'
          +'?model='+model
          +'&dt='+str(station.delta)
          +'&greensfunction=1'
-         +'&sourcedistanceindegrees='+str(distance_in_deg)
+         +'&sourcedistanceindegrees='+str(get_distance_in_deg(station, origin))
          +'&sourcedepthinmeters='+str(int(round(origin.depth_in_m)))
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
 
     try:
-       dirname = os.environs['SYNGINE_DOWNLOADS']
+       dirname = os.environs['SYNGINE_CACHE']
     except:
        dirname = 'data/greens_tensor/syngine/cache/'
-    filename = fullpath(dirname, str(url2uuid(url)))
-    if exists(filename):
-        return filename
-    elif exists(filename+'.zip'):
-        return filename
-    else:
-        print(' Downloading Green''s functions for station %s' % station.station)
-        urlopen_with_retry(url, filename+'.zip')
-        return filename
+
+    fullname = fullpath(dirname, str(url2uuid(url)))
+
+    if exists(fullname):
+        # if unzipped directory already exists, return its absolute path
+        return fullname
+
+    elif exists(fullname+'.zip'):
+        try:
+            # if zip file already exists, try unzipping it
+            unzip(fullname+'.zip')
+            return fullname
+        except BadZipFile:
+            # if zip file is corrupt, remove it
+            os.remove(fullname+'.zip')
+
+    if verbose:
+        print(' Downloading Green''s functions for station %s' 
+              % station.station)
+
+    # download zip file
+    urlopen_with_retry(url, fullname+'.zip')
+
+    # unzip
+    unzip(fullname+'.zip')
+
+    return fullname
 
 
 def download_synthetics(url, model, station, origin, source):

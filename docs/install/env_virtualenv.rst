@@ -24,7 +24,7 @@ Install MTUQ:
    source mtuq_env/bin/activate
    cd mtuq_src
    pip install numpy
-   pip install obspy instaseis
+   pip install scipy obspy instaseis pandas xarray mpi4py
    pip install -e .
 
 

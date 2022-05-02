@@ -19,6 +19,7 @@ from mtuq.graphics.uq.vw import\
     _likelihoods_vw_regular, _likelihoods_vw_random,\
     _marginals_vw_regular, _marginals_vw_random,\
     _variance_reduction_vw_regular, _magnitudes_vw_regular
+from mtuq.graphics.uq._gmt import _parse_best_lune
 
 
 def plot_misfit_lune(filename, ds, **kwargs):
@@ -205,15 +206,15 @@ def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
 # backend
 #
 
-def _plot_lune(filename, da, show_best=True, show_tradeoffs=False,
-    backend=_plot_lune_gmt, **kwargs):
+def _plot_lune(filename, da, show_best=True, show_mt=False,
+    show_tradeoffs=False, backend=_plot_lune_gmt, **kwargs):
 
     """ Plots DataArray values on the eigenvalue lune (requires GMT)
 
     .. rubric :: Keyword arguments
 
     ``colormap`` (`str`)
-    Color palette used for plotting values 
+    Color palette used for plotting values
     (choose from GMT or MTUQ built-ins)
 
     ``show_best`` (`bool`):
@@ -229,27 +230,31 @@ def _plot_lune(filename, da, show_best=True, show_tradeoffs=False,
     if not issubclass(type(da), DataArray):
         raise Exception()
 
-
     best_vw = None
     lune_array = None
 
-    if show_best:
+    if show_best or show_mt:
         if 'best_vw' in da.attrs:
             best_vw = da.attrs['best_vw']
         else:
             warn("Best-fitting moment tensor not given")
 
-    if show_tradeoffs:
+
+    if show_tradeoffs or show_mt:
         if 'lune_array' in da.attrs:
             lune_array = da.attrs['lune_array']
         else:
             warn("Focal mechanism tradeoffs not given")
 
+    if show_mt:
+        lune_array = _parse_best_lune(best_vw, lune_array)
+        best_vw = None
 
-    backend(filename, 
-        to_gamma(da.coords['v']), 
+
+    backend(filename,
+        to_gamma(da.coords['v']),
         to_delta(da.coords['w']),
-        da.values.transpose(), 
+        da.values.transpose(),
         best_vw=best_vw,
         lune_array=lune_array,
         **kwargs)
@@ -270,5 +275,3 @@ def _defaults(kwargs, defaults):
     for key in defaults:
         if key not in kwargs:
            kwargs[key] = defaults[key]
-
-

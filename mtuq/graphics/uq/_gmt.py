@@ -4,7 +4,7 @@ import shutil
 import subprocess
 
 from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
-    gmt_formats, _parse_filetype
+    gmt_formats, _parse_filetype, _safename
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180, to_delta, to_gamma, to_mij
 from os.path import basename, exists, splitext
@@ -343,7 +343,27 @@ def _parse_lune_array(lune_array):
         gmt_array[_i, 9] = exponent+7
         gmt_array[_i, 10:] = 0
 
+        if N == 1:
+            gmt_array[_i, 9] = exponent+20
+
     return gmt_array
+
+
+def _parse_best_lune(best_vw, lune_array):
+    if best_vw is None:
+        return None
+    if lune_array is None:
+        return None
+
+    # Scan to find the corresponding cell in lune_array for the coordinates in best_vw.
+    best_vw_array = np.ones_like(lune_array[:,1:3]) * best_vw
+    idx = np.where((best_vw_array == lune_array[:,1:3]).all(axis=1))
+
+    # If idx is longer than 1, there is a problem...
+    if np.shape(idx)[1] != 1:
+        raise ValueError('There are more than one matching values!')
+    # return the lune_array row corresponding to the best_vw coordinates only.
+    return(lune_array[idx])
 
 
 def _parse_lune_array2(lon, lat, lune_array):
@@ -381,11 +401,6 @@ def _parse_lune_array2(lon, lat, lune_array):
         gmt_array[_i, 10:] = 0
 
     return gmt_array
-
-
-def _safename(filename):
-    # used for writing temporary files only
-    return filename.replace('/', '__')
 
 
 def _float_to_str(val):

@@ -27,9 +27,9 @@ Methods built into the `GreensTensor` class allow data processing and synthetics
 Downloading precomputed Green's functions
 -----------------------------------------
 
-An easy way to acquire Green's functions is to download them from `syngine <http://ds.iris.edu/ds/products/syngine/>`_, a webservice that hosts Green's functions from the following 1D Earth models: PREM, AK135, and iasp91.
+An easy way to acquire Green's functions is to download them from `syngine <http://ds.iris.edu/ds/products/syngine/>`_, a webservice that hosts Green's functions from the following 1D Earth models: `PREM`, `AK135`, and `iasp91`.
 
-To download AK135 Green's functions and generate MTUQ `GreenTensor` objects:
+To download AK135 Green's functions and generate MTUQ `GreensTensor` objects:
 
 .. code ::
 
@@ -46,7 +46,7 @@ Computing Green's functions from 1D Earth models
 
 MTUQ supports the following 1D Green's functions formats: AxiSEM (preferred) and FK.
 
-`AxiSEM <https://github.com/geodynamics/axisem>`_ performs spectral element wave simulations in radially-symmetric Earth models.  To generate synthetics in a format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://geodynamics.org/cig/software/axisem/axisem-manual.pdf>`_  under "Output wavefields in NetCDF formated needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
+`AxiSEM <https://github.com/geodynamics/axisem>`_ performs spectral element wave simulations in radially-symmetric Earth models.  To generate synthetics in a format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://raw.githubusercontent.com/geodynamics/axisem/master/MANUAL/manual_axisem1.3.pdf>`_  under "Output wavefields in NetCDF formated needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
 
 To open an AxiSEM database client in MTUQ:
 
