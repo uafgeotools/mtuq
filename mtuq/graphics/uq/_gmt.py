@@ -12,7 +12,7 @@ from six import string_types
 
 
 
-def _plot_lune_gmt(filename, lon, lat, values, best_vw=None, lune_array=None, 
+def _plot_lune_gmt(filename, lon, lat, values, best_vw=None, lune_array=None,
     **kwargs):
 
     if _nothing_to_plot(values):
@@ -48,8 +48,8 @@ def _plot_force_gmt(filename, phi, h, values, best_force=None, **kwargs):
 
     data =  _parse_data(lon, lat, values)
 
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'), 
-       filename, lon, lat, values, supplemental_data=None,
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
+       filename, data, supplemental_data=None,
        marker_coords=_parse_force(best_force), **kwargs)
 
 
@@ -67,7 +67,7 @@ def _plot_latlon_gmt(filename, lon, lat, values, best_latlon=None, lune_array=No
 
 
 def _call(shell_script, filename, data, supplemental_data=None,
-    title='', colormap='viridis', flip_cpt=False, colorbar_type=1, 
+    title='', colormap='viridis', flip_cpt=False, colorbar_type=1,
     colorbar_label='', marker_coords=None, marker_type=0):
 
     #
@@ -414,5 +414,3 @@ def _float_to_str(val):
 def _savetxt(filename, *args, fmt='%.6e'):
     # TODO - can GMT accept virtual files?
     np.savetxt(filename, np.column_stack(args), fmt=fmt)
-
-

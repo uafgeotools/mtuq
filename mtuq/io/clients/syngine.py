@@ -3,9 +3,10 @@ import obspy
 import numpy as np
 
 from obspy.core import Stream
-from mtuq.greens_tensor.syngine import GreensTensor 
+from mtuq.greens_tensor.syngine import GreensTensor
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
+from mtuq.util import unzip
 from mtuq.util.syngine import download_unzip_mt_response, download_force_response,\
      resolve_model,\
      GREENS_TENSOR_FILENAMES, SYNTHETICS_FILENAMES
@@ -14,13 +15,13 @@ from mtuq.util.syngine import download_unzip_mt_response, download_force_respons
 
 class Client(ClientBase):
     """ Syngine web service client
-        
+
     .. rubric:: Usage
 
     To instantiate a syngine client, supply the name of an Earth model from one
-    one of the available Earth models listed at 
+    one of the available Earth models listed at
     http://ds.iris.edu/ds/products/syngine/#models
-        
+
     .. code::
 
         from mtuq.io.clients.syngine import Client
@@ -29,18 +30,18 @@ class Client(ClientBase):
     Then the client can be used to download GreensTensors:
 
     .. code::
-        
+
         greens_tensors = db.get_greens_tensors(stations, origin)
-            
+
 
     .. note::
 
         Syngine is an webservice that provides Green's functions and synthetic
-        seismograms for download as compressed SAC files. 
+        seismograms for download as compressed SAC files.
 
     """
 
-    def __init__(self, path_or_url=None, model=None, 
+    def __init__(self, path_or_url=None, model=None,
                  include_mt=True, include_force=False):
 
         if not path_or_url:
@@ -129,7 +130,7 @@ class Client(ClientBase):
             'solver:%s' % 'syngine',
              ]
 
-        return GreensTensor(traces=[trace for trace in stream], 
+        return GreensTensor(traces=[trace for trace in stream],
             station=station, origin=origin, tags=tags,
             include_mt=self.include_mt, include_force=self.include_force)
 
@@ -148,7 +149,7 @@ def download_greens_tensors(stations=[], origins=[], model='', verbose=False, **
 
     ``stations`` (list of `mtuq.Station` objects):
     Stations for which Green's functions will be downloaded
-    
+
 
     ``origins`` (list of `mtuq.Origin` objects):
     Origins for which Green's functions will be downloaded
@@ -161,6 +162,3 @@ def download_greens_tensors(stations=[], origins=[], model='', verbose=False, **
     """
     client = Client(model=model, **kwargs)
     return client.get_greens_tensors(stations, origins, verbose=verbose)
-
-
-
