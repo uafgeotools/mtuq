@@ -120,7 +120,7 @@ def FullMomentTensorPlottingGrid(magnitudes=[1.], npts_per_axis=11, tightness=0.
         coords=(rho, v, w, kappa, sigma, h),
         callback=to_mt)
 
-def DeviatoricGridSemiregular(magnitudes=[1.], npts_per_axis=20, tightness=0.0):
+def DeviatoricGridSemiregular(magnitudes=[1.], npts_per_axis=20, tightness=0.8):
     """ Deviatoric grid. See FullMomentTensorGridSemiregular for details.
 
     """
