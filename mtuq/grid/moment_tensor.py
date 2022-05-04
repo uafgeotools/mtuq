@@ -120,6 +120,23 @@ def FullMomentTensorPlottingGrid(magnitudes=[1.], npts_per_axis=11, tightness=0.
         coords=(rho, v, w, kappa, sigma, h),
         callback=to_mt)
 
+def DeviatoricGridSemiregular(magnitudes=[1.], npts_per_axis=20, tightness=0.8):
+    """ Deviatoric grid. See FullMomentTensorGridSemiregular for details
+
+    """
+    v, w = semiregular_grid(npts_per_axis, 2*npts_per_axis, tightness)
+    w = 0
+
+    kappa = regular(0., 360, npts_per_axis)
+    sigma = regular(-90., 90., npts_per_axis)
+    h = regular(0., 1., npts_per_axis)
+    rho = list(map(to_rho, asarray(magnitudes)))
+
+    return Grid(
+        dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+        coords=(rho, v, w, kappa, sigma, h),
+        callback=to_mt)
+
 
 def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
     """ Double-couple moment tensor grid with randomly-spaced values
@@ -156,7 +173,7 @@ def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
         coords=(rho, v, w, kappa, sigma, h),
         callback=to_mt)
-
+    
 
 def DoubleCoupleGridRegular(magnitudes=[1.], npts_per_axis=40):
     """ Double-couple moment tensor grid with regularly-spaced values
