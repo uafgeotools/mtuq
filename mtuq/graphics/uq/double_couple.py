@@ -91,30 +91,14 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
     _plot_dc(filename, likelihoods, **kwargs)
 
 
+
 def plot_marginal_dc():
     raise NotImplementedError
 
 
 
-def _check(ds):
-    """ Checks data structures
-    """
-    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
-        raise TypeError("Unexpected grid format")
-
-
-def _defaults(kwargs, defaults):
-    for key in defaults:
-        if key not in kwargs:
-           kwargs[key] = defaults[key]
-
-
-#
-# matplotlib backend
-#
-
-def _plot_dc(filename, da, show_best=True, type_best='min', colormap='hot', 
-    backend=_plot_dc_matplotlib, **kwargs):
+def _plot_dc(filename, da, show_best=True, colormap='hot', 
+    backend=_plot_dc_matplotlib, type_best='min', **kwargs):
 
     """ Plots DataArray values on vw rectangle
 
@@ -172,7 +156,7 @@ def _plot_dc(filename, da, show_best=True, type_best='min', colormap='hot',
 #
 
 def _misfit_dc_regular(da):
-    """ For each double couple, extract minimum misfit
+    """ For each moment tensor orientation, extract minimum misfit
     """
     misfit = da.min(dim=('origin_idx', 'rho', 'v', 'w'))
 
@@ -183,7 +167,7 @@ def _misfit_dc_regular(da):
 
 
 def _likelihoods_dc_regular(da, var):
-    """ For each double couple, calculate maximum likelihood
+    """ For each moment tensor orientation, calculate maximum likelihood
     """
     likelihoods = da.copy()
     likelihoods.values = np.exp(-likelihoods.values/(2.*var))
@@ -201,7 +185,7 @@ def _likelihoods_dc_regular(da, var):
 
 
 def _marginals_dc_regular(da, var):
-    """ For each double couple, calculate marginal likelihood
+    """ For each moment tensor orientation, calculate marginal likelihood
     """
     likelihoods = da.copy()
     likelihoods.values = np.exp(-likelihoods.values/(2.*var))
@@ -216,6 +200,9 @@ def _marginals_dc_regular(da, var):
         'maximum_likelihood_estimate': dataarray_idxmax(likelihoods).values(),
         })
 
+#
+# utility functions
+#
 
 def _min_mt(da):
     """ Returns moment tensor vector corresponding to mininum DataArray value
@@ -236,7 +223,7 @@ def _max_mt(da):
 
 
 def _min_dc(da):
-    """ Returns v,w coordinates corresponding to mininum DataArray value
+    """ Returns orientation angles corresponding to mininum DataArray value
     """
     da = dataarray_idxmin(da)
     dc_keys = ['kappa', 'sigma', 'h']
@@ -244,7 +231,7 @@ def _min_dc(da):
     return dc_vals
 
 def _max_dc(da):
-    """ Returns v,w coordinates corresponding to maximum DataArray value
+    """ Returns orientation angles corresponding to maximum DataArray value
     """
     da = dataarray_idxmax(da)
     dc_keys = ['kappa', 'sigma', 'h']
@@ -252,4 +239,16 @@ def _max_dc(da):
     return dc_vals
 
 
+
+def _check(ds):
+    """ Checks data structures
+    """
+    if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
+        raise TypeError("Unexpected grid format")
+
+
+def _defaults(kwargs, defaults):
+    for key in defaults:
+        if key not in kwargs:
+           kwargs[key] = defaults[key]
 
