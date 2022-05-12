@@ -158,10 +158,10 @@ def plot_variance_reduction_lune(filename, ds, data_norm, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        misfit = 100.*_variance_reduction_vw_regular(ds, data_norm)
+        variance_reduction = _variance_reduction_vw_regular(ds, data_norm)
 
     elif issubclass(type(ds), DataFrame):
-        misfit = 100.*_variance_reduction_vw_random(ds, data_norm)
+        variance_reduction = _variance_reduction_vw_random(ds, data_norm)
 
     _plot_lune(filename, misfit, **kwargs)
 

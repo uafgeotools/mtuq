@@ -98,7 +98,7 @@ def plot_marginal_dc():
 
 
 def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
-    """ Plots maximum likelihood values over strike, dip, slip
+    """ Plots variance reduction values over strike, dip, slip
 
     .. rubric :: Required input arguments
 
@@ -237,6 +237,9 @@ def _variance_reduction_dc_regular(da, data_norm):
 
     variance_reduction = variance_reduction.max(
         dim=('origin_idx', 'rho', 'v', 'w'))
+
+    # in geophysics, variance reduction is usually given as a percentage
+    variance_reduction.values *= 100.
 
     return variance_reduction.assign_attrs({
         'best_mt': _min_mt(da),
