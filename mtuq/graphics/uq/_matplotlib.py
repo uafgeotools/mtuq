@@ -9,9 +9,73 @@ from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
 
 
-#
-# vw rectangle
-#
+def _plot_dc_matplotlib(filename, coords, values_h_kappa, values_sigma_kappa, values_sigma_h,
+    best_dc=None, colormap='viridis', figsize=(8., 8.), axis_label_fontsize=14):
+
+    # prepare axes
+    fig, axes = pyplot.subplots(2, 2,
+        figsize=figsize,
+        )
+
+    pyplot.subplots_adjust(
+        wspace=0.4,
+        hspace=0.4,
+        )
+
+    # parse colormap
+    if exists(_cpt_path(colormap)):
+       colormap = read_cpt(_cpt_path(colormap))
+
+    _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa, colormap)
+
+    _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa, colormap)
+
+    _pcolor(axes[1][1], coords['sigma'], coords['h'], values_sigma_h, colormap)
+
+    # optional markers
+    if best_dc:
+        _kappa, _sigma, _h = best_dc
+        _add_marker(axes[0][0], (_h, _kappa))
+        _add_marker(axes[0][1], (_sigma, _kappa))
+        _add_marker(axes[1][1], (_sigma, _h))
+
+    _set_dc_labels(axes, fontsize=axis_label_fontsize)
+
+    pyplot.savefig(filename)
+
+
+def _set_dc_labels(axes, **kwargs):
+    # upper left panel
+    axis = axes[0][0]
+    axis.set_xlabel('Dip', **kwargs)
+    axis.set_xticks(theta_ticks)
+    axis.set_xticklabels(theta_ticklabels)
+    axis.set_ylabel('Strike', **kwargs)
+    axis.set_yticks(kappa_ticks)
+    axis.set_yticklabels(kappa_ticklabels)
+
+    # upper right panel
+    axis = axes[0][1]
+    axis.set_xlabel('Slip', **kwargs)
+    axis.set_xticks(sigma_ticks)
+    axis.set_xticklabels(sigma_ticklabels)
+    axis.set_ylabel('Strike', **kwargs)
+    axis.set_yticks(kappa_ticks)
+    axis.set_yticklabels(kappa_ticklabels)
+
+    # lower right panel
+    axis = axes[1][1]
+    axis.set_xlabel('Slip', **kwargs)
+    axis.set_xticks(sigma_ticks)
+    axis.set_xticklabels(sigma_ticklabels)
+    axis.set_ylabel('Dip', **kwargs)
+    axis.set_yticks(theta_ticks)
+    axis.set_yticklabels(theta_ticklabels)
+
+    # lower left panel
+    axes[1][0].axis('off')
+
+
 
 def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, 
     colormap='viridis', title=''):
@@ -77,4 +141,33 @@ def _centers_to_edges(v):
     v[-1] = v[-2] + dv
 
     return v
+
+
+def _add_marker(axis, coords):
+    axis.scatter(*coords, s=250,
+        marker='o',
+        facecolors='none',
+        edgecolors=[0,1,0],
+        linewidths=1.75,
+        clip_on=False,
+        zorder=100,
+        )
+
+
+def _pcolor(axis, x, y, values, colormap, **kwargs):
+    # workaround matplotlib compatibility issue
+    try:
+        axis.pcolor(x, y, values, cmap=colormap, shading='auto', **kwargs)
+    except:
+        axis.pcolor(x, y, values, cmap=colormap, **kwargs)
+
+
+kappa_ticks = [0, 45, 90, 135, 180, 225, 270, 315, 360]
+kappa_ticklabels = ['0', '', '90', '', '180', '', '270', '', '360']
+
+sigma_ticks = [-90, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90]
+sigma_ticklabels = ['-90', '', '-45', '', '0', '', '45', '', '90']
+
+theta_ticks = [np.cos(np.radians(tick)) for tick in [0, 15, 30, 45, 60, 75, 90]]
+theta_ticklabels = ['0', '', '30', '', '60', '', '90']
 

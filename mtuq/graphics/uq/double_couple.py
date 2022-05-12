@@ -8,6 +8,7 @@ from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics._gmt import read_cpt, _cpt_path
+from mtuq.graphics.uq._matplotlib import _plot_dc_matplotlib
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, warn
 from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma, to_mij
@@ -34,6 +35,7 @@ def plot_misfit_dc(filename, ds, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'viridis',
+        'type_best': 'min',
         })
 
     _check(ds)
@@ -73,6 +75,7 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'hot_r',
+        'type_best': 'max',
         })
 
     _check(ds)
@@ -110,7 +113,8 @@ def _defaults(kwargs, defaults):
 # matplotlib backend
 #
 
-def _plot_dc(filename, da, show_best=True, colormap='hot', **kwargs):
+def _plot_dc(filename, da, show_best=True, type_best='min', colormap='hot', 
+    backend=_plot_dc_matplotlib, **kwargs):
 
     """ Plots DataArray values on vw rectangle
 
@@ -139,117 +143,27 @@ def _plot_dc(filename, da, show_best=True, colormap='hot', **kwargs):
             best_dc = da.attrs['best_dc']
         else:
             warn("Best-fitting orientation not given")
+            best_dc = None
 
+    # collect values
+    if type_best=='min':
+        values_h_kappa = da.min(dim=('sigma')).values
+        values_sigma_kappa = da.min(dim=('h')).values
+        values_sigma_h= da.min(dim=('kappa')).values.T
+    elif type_best=='max':
+        values_h_kappa = da.max(dim=('sigma')).values
+        values_sigma_kappa = da.max(dim=('h')).values
+        values_sigma_h= da.max(dim=('kappa')).values.T
+    else:
+        raise ValueError
 
-    # FIXME: do labels correspond to the correct axes ?!
-
-    # prepare axes
-    fig, axes = pyplot.subplots(2, 2, 
-        figsize=(8., 8.),
-        )
-
-    pyplot.subplots_adjust(
-        wspace=0.4,
-        hspace=0.4,
-        )
-
-    if exists(_cpt_path(colormap)):
-       colormap = read_cpt(_cpt_path(colormap))
-
-    # upper left panel
-    marginal = da.min(dim=('sigma'))
-    x = marginal.coords['h']
-    y = marginal.coords['kappa']
-
-    axis = axes[0][0]
-    _pcolor(axis, x, y, marginal.values, colormap)
-
-    axis.set_xlabel('Dip', **axis_label_kwargs)
-    axis.set_xticks(theta_ticks)
-    axis.set_xticklabels(theta_ticklabels)
-
-    axis.set_ylabel('Strike', **axis_label_kwargs)
-    axis.set_yticks(kappa_ticks)
-    axis.set_yticklabels(kappa_ticklabels)
-
-    # upper right panel
-    marginal = da.min(dim=('h'))
-    x = marginal.coords['sigma']
-    y = marginal.coords['kappa']
-
-    axis = axes[0][1]
-    _pcolor(axis, x, y, marginal.values, colormap)
-
-    axis.set_xlabel('Slip', **axis_label_kwargs)
-    axis.set_xticks(sigma_ticks)
-    axis.set_xticklabels(sigma_ticklabels)
-
-    axis.set_ylabel('Strike', **axis_label_kwargs)
-    axis.set_yticks(kappa_ticks)
-    axis.set_yticklabels(kappa_ticklabels)
-
-    # lower right panel
-    marginal = da.min(dim=('kappa'))
-    y = marginal.coords['h']
-    x = marginal.coords['sigma']
-
-    axis = axes[1][1]
-    _pcolor(axis, x, y, marginal.values.T, colormap)
-
-    axis.set_xlabel('Slip', **axis_label_kwargs)
-    axis.set_xticks(sigma_ticks)
-    axis.set_xticklabels(sigma_ticklabels)
-
-    axis.set_ylabel('Dip', **axis_label_kwargs)
-    axis.set_yticks(theta_ticks)
-    axis.set_yticklabels(theta_ticklabels)
-
-    # lower left panel
-    axes[1][0].axis('off')
-
-    # optional markers
-    if show_best:
-        _kappa, _sigma, _h = best_dc
-        _add_marker(axes[0][0], (_h, _kappa))
-        _add_marker(axes[0][1], (_sigma, _kappa))
-        _add_marker(axes[1][1], (_sigma, _h))
-
-    pyplot.savefig(filename)
-
-
-def _add_marker(axis, coords):
-    axis.scatter(*coords, s=250,
-        marker='o',
-        facecolors='none',
-        edgecolors=[0,1,0],
-        linewidths=1.75,
-        clip_on=False,
-        zorder=100,
-        )
-
-
-axis_label_kwargs = {
-    'fontsize': 14
-    }
-
-
-def _pcolor(axis, x, y, values, colormap, **kwargs):
-    # workaround matplotlib compatibility issue
-    try:
-        axis.pcolor(x, y, values, cmap=colormap, shading='auto',  **kwargs)
-    except:
-        axis.pcolor(x, y, values, cmap=colormap, **kwargs)
-
-
-kappa_ticks = [0, 45, 90, 135, 180, 225, 270, 315, 360]
-kappa_ticklabels = ['0', '', '90', '', '180', '', '270', '', '360']
-
-sigma_ticks = [-90, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90]
-sigma_ticklabels = ['-90', '', '-45', '', '0', '', '45', '', '90']
-
-theta_ticks = [np.cos(np.radians(tick)) for tick in [0, 15, 30, 45, 60, 75, 90]]
-theta_ticklabels = ['0', '', '30', '', '60', '', '90']
-
+    backend(filename,
+        da.coords,
+        values_h_kappa,
+        values_sigma_kappa,
+        values_sigma_h,
+        best_dc=best_dc,
+        **kwargs)
 
 
 #
