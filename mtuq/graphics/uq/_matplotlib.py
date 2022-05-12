@@ -1,13 +1,20 @@
 
+import numpy as np
+
 from matplotlib import pyplot
+from os.path import exists
+from xarray import DataArray
+
 from mtuq.graphics.uq import _nothing_to_plot
+from mtuq.graphics._gmt import read_cpt, _cpt_path
 
 
 #
 # vw rectangle
 #
 
-def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, colormap='viridis', title=''):
+def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, 
+    colormap='viridis', title=''):
 
     if _nothing_to_plot(values):
         return
@@ -29,8 +36,8 @@ def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, c
     pyplot.xticks([], [])
     pyplot.yticks([], [])
 
-    if exists(_local_path(colormap)):
-       cmap = read_cpt(_local_path(colormap))
+    if exists(_cpt_path(colormap)):
+       cmap = read_cpt(_cpt_path(colormap))
 
     if True:
         cbar = pyplot.colorbar(

@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
-from mtuq.graphics._gmt import read_cpt
+from mtuq.graphics._gmt import read_cpt, _cpt_path
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
 from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, warn
 from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma, to_mij
@@ -126,10 +126,13 @@ def _plot_dc(filename, da, show_best=True, colormap='hot', **kwargs):
     ``title`` (`str`)
     Optional figure title
 
-    ``backend`` (`str`)
-    `gmt` or `matplotlib`
+    ``backend`` (`function`)
+    Choose from `_plot_dc_matplotlib` (default) or user-supplied function
 
     """
+
+    if not issubclass(type(da), DataArray):
+        raise Exception()
 
     if show_best:
         if 'best_dc' in da.attrs:
@@ -150,8 +153,8 @@ def _plot_dc(filename, da, show_best=True, colormap='hot', **kwargs):
         hspace=0.4,
         )
 
-    if exists(_local_path(colormap)):
-       colormap = read_cpt(_local_path(colormap))
+    if exists(_cpt_path(colormap)):
+       colormap = read_cpt(_cpt_path(colormap))
 
     # upper left panel
     marginal = da.min(dim=('sigma'))
@@ -246,11 +249,6 @@ sigma_ticklabels = ['-90', '', '-45', '', '0', '', '45', '', '90']
 
 theta_ticks = [np.cos(np.radians(tick)) for tick in [0, 15, 30, 45, 60, 75, 90]]
 theta_ticklabels = ['0', '', '30', '', '60', '', '90']
-
-
-def _local_path(name):
-    return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
-
 
 
 

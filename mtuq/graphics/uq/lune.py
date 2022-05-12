@@ -202,10 +202,6 @@ def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
     _plot_lune(filename, marginals, **kwargs)
 
 
-#
-# backend
-#
-
 def _plot_lune(filename, da, show_best=True, show_mt=False,
     show_tradeoffs=False, backend=_plot_lune_gmt, **kwargs):
 

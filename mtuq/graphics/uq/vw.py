@@ -10,12 +10,11 @@ import pandas
 import xarray
 
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
-from mtuq.graphics._gmt import read_cpt
-from mtuq.graphics.uq._gmt import _nothing_to_plot, _plot_vw_gmt
+from mtuq.graphics.uq._gmt import _plot_vw_gmt
+from mtuq.graphics.uq._matplotlib import _plot_vw_matplotlib
 from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, product
 from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
     to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
-from os.path import exists
 
 
 v_min = -1./3.
@@ -136,12 +135,8 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 
 
 
-#
-# backends
-#
-
 def _plot_vw(filename, da, show_best=True, show_tradeoffs=False, 
-    backend=_plot_vw_gmt, **kwargs):
+    backend=_plot_vw_matplotlib, **kwargs):
 
     """ Plots DataArray values on vw rectangle
 
@@ -157,8 +152,9 @@ def _plot_vw(filename, da, show_best=True, show_tradeoffs=False,
     ``title`` (`str`)
     Optional figure title
 
-    ``backend`` (`str`)
-    `gmt` or `matplotlib`
+    ``backend`` (`function`)
+    Choose from `_plot_vw_gmt` (default), `plot_vw_matplotlib`, 
+    or user-supplied function
 
     """
 
@@ -522,7 +518,5 @@ def _defaults(kwargs, defaults):
         if key not in kwargs:
            kwargs[key] = defaults[key]
 
-def _local_path(name):
-    return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
 
 
