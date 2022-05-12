@@ -197,7 +197,7 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
 
     elif squeeze=='slice_max':
         argmax = da.argmax(('kappa','sigma','h'))
-        values_h_kappa = da.isel(sigma=argmax['sigma'], drop=True)).values
+        values_h_kappa = da.isel(sigma=argmax['sigma'], drop=True).values
         values_sigma_kappa = da.isel(h=argmax['h'], drop=True).values
         values_sigma_h = da.isel(kappa=argmax['kappa'], drop=True).values.T
 
