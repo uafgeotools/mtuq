@@ -190,14 +190,16 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
         values_sigma_h = da.max(dim=('kappa')).values.T
 
     elif squeeze=='slice_min':
-        values_h_kappa = da.isel(sigma=da.argmin('sigma'), drop=True).values
-        values_sigma_kappa = da.isel(h=da.argmin('h'), drop=True).values
-        values_sigma_h = da.isel(kappa=da.argmin('kappa'), drop=True).values.T
+        argmin = da.argmin(('kappa','sigma','h'))
+        values_h_kappa = da.isel(sigma=argmin['sigma'], drop=True).values
+        values_sigma_kappa = da.isel(h=argmin['h'], drop=True).values
+        values_sigma_h = da.isel(kappa=argmin['kappa'], drop=True).values.T
 
     elif squeeze=='slice_max':
-        values_h_kappa = da.isel(sigma=da.argmax('sigma', drop=True)).values
-        values_sigma_kappa = da.isel(h=da.argmax('h'), drop=True).values
-        values_sigma_h = da.isel(kappa=da.argmax('kappa'), drop=True).values.T
+        argmax = da.argmax(('kappa','sigma','h'))
+        values_h_kappa = da.isel(sigma=argmax['sigma'], drop=True)).values
+        values_sigma_kappa = da.isel(h=argmax['h'], drop=True).values
+        values_sigma_h = da.isel(kappa=argmax['kappa'], drop=True).values.T
 
     else:
         raise ValueError
