@@ -49,7 +49,10 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
         da = _misfit_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        da = _misfit_random(ds)
+        warn('plot_misfit_depth() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
+        return
+
 
     _plot_depth(filename, da, origins, **kwargs)
 
@@ -87,7 +90,9 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
         da = _likelihoods_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        da = _likelihoods_random(ds, var)
+        warn('plot_likelihood_depth() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
+        return
 
     _plot_depth(filename, da, origins, **kwargs)
 

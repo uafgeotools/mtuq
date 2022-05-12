@@ -45,7 +45,9 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
         da = _misfit_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        raise NotImplementedError
+        warn('plot_misfit_latlon() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
+        return
 
     _plot_latlon(filename, da, origins, **kwargs)
 
@@ -79,7 +81,8 @@ def plot_likelihood_latlon(filename, ds, origins, **kwargs):
         da = _likelihood_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        raise NotImplementedError
+        warn('plot_likelihood_latlon() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
 
     _plot_latlon(filename, da, origins, **kwargs)
 
@@ -106,17 +109,7 @@ def plot_marginal_latlon(filename, ds, origins, **kwargs):
     `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-
-    _check(ds)
-    ds = ds.copy()
-
-    if issubclass(type(ds), DataArray):
-        raise NotImplementedError
-
-    elif issubclass(type(ds), DataFrame):
-        raise NotImplementedError
-
-    _plot_latlon(filename, da, origins, **kwargs)
+    raise NotImplementedError
 
 
 

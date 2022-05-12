@@ -44,7 +44,7 @@ def plot_misfit_dc(filename, ds, **kwargs):
         misfit = _misfit_dc_regular(ds)
         
     elif issubclass(type(ds), DataFrame):
-        warn('plot_misfit_dc not implemented for irregularly-spaced grids.\n'
+        warn('plot_misfit_dc() not implemented for irregularly-spaced grids.\n'
              'No figure will be generated.')
         return
 
@@ -84,7 +84,7 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
         likelihoods = _likelihoods_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_misfit_dc not implemented for irregularly-spaced grids. '
+        warn('plot_likelihood_dc() not implemented for irregularly-spaced grids.\n'
              'No figure will be generated.')
         return
 
