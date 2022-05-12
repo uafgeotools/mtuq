@@ -153,7 +153,7 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
 
     ``squeeze`` (`str`)
     By default, 2-D surfaces are obtained by minimizing or maximizing.
-    For slices instead, use `slice_min` or slice_max`.
+    For slices instead, use `slice_min` or `slice_max`.
 
     ``backend`` (`function`)
     Choose from `_plot_dc_matplotlib` (default) or user-supplied function
@@ -182,18 +182,22 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
     if squeeze=='min':
         values_h_kappa = da.min(dim=('sigma')).values
         values_sigma_kappa = da.min(dim=('h')).values
-        values_sigma_h= da.min(dim=('kappa')).values.T
+        values_sigma_h = da.min(dim=('kappa')).values.T
 
     elif squeeze=='max':
         values_h_kappa = da.max(dim=('sigma')).values
         values_sigma_kappa = da.max(dim=('h')).values
-        values_sigma_h= da.max(dim=('kappa')).values.T
+        values_sigma_h = da.max(dim=('kappa')).values.T
 
     elif squeeze=='slice_min':
-        raise NotImplementedError
+        values_h_kappa = da.isel(sigma=da.argmin('sigma'), drop=True).values
+        values_sigma_kappa = da.isel(h=da.argmin('h'), drop=True).values
+        values_sigma_h = da.isel(kappa=da.argmin('kappa'), drop=True).values.T
 
     elif squeeze=='slice_max':
-        raise NotImplementedError
+        values_h_kappa = da.isel(sigma=da.argmax('sigma', drop=True)).values
+        values_sigma_kappa = da.isel(h=da.argmax('h'), drop=True).values
+        values_sigma_h = da.isel(kappa=da.argmax('kappa'), drop=True).values.T
 
     else:
         raise ValueError
