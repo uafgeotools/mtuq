@@ -275,7 +275,7 @@ def _variance_reduction_vw_regular(da, data_norm):
     variance_reduction = variance_reduction.max(
         dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
 
-    # in geophysics, variance reduction is usually given as a percentage
+    # widely-used convention - variance reducation as a percentage
     variance_reduction.values *= 100.
 
     return variance_reduction.assign_attrs({

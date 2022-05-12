@@ -35,7 +35,7 @@ def plot_misfit_dc(filename, ds, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'viridis',
-        'type_best': 'min',
+        'squeeze': 'min',
         })
 
     _check(ds)
@@ -75,7 +75,7 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'hot_r',
-        'type_best': 'max',
+        'squeeze': 'max',
         })
 
     _check(ds)
@@ -120,7 +120,7 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
     """
     _defaults(kwargs, {
         'colormap': 'viridis',
-        'type_best': 'max',
+        'squeeze': 'max',
         })
 
     _check(ds)
@@ -129,16 +129,15 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
         variance_reduction = _variance_reduction_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_misfit_dc not implemented for irregularly-spaced grids. '
+        warn('plot_variance_reduction_dc() not implemented for irregularly-spaced grids.\n'
              'No figure will be generated.')
         return
 
     _plot_dc(filename, variance_reduction, **kwargs)
 
 
-
 def _plot_dc(filename, da, show_best=True, colormap='hot', 
-    backend=_plot_dc_matplotlib, type_best='min', **kwargs):
+    backend=_plot_dc_matplotlib, squeeze='min', **kwargs):
 
     """ Plots DataArray values over strike, dip, slip
 
@@ -149,15 +148,23 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
     (choose from GMT or MTUQ built-ins)
 
     ``show_best`` (`bool`):
-    Show where best-fitting orientation falls on strike, dip, slip plots
+    Show where best-fitting moment tensor falls in terms of strike, dip, slip
 
-    ``title`` (`str`)
+    ``squeeze`` (`str`)
     Optional figure title
 
     ``backend`` (`function`)
     Choose from `_plot_dc_matplotlib` (default) or user-supplied function
 
     """
+
+    #
+    # note the following parameterization details
+    #
+    #     kappa = strike
+    #     sigma = slip
+    #     h = cos(dip)
+    #
 
     if not issubclass(type(da), DataArray):
         raise Exception()
@@ -169,15 +176,23 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
             warn("Best-fitting orientation not given")
             best_dc = None
 
-    # collect values
-    if type_best=='min':
+    # squeeze full 3-D array into 2-D arrays
+    if squeeze=='min':
         values_h_kappa = da.min(dim=('sigma')).values
         values_sigma_kappa = da.min(dim=('h')).values
         values_sigma_h= da.min(dim=('kappa')).values.T
-    elif type_best=='max':
+
+    elif squeeze=='max':
         values_h_kappa = da.max(dim=('sigma')).values
         values_sigma_kappa = da.max(dim=('h')).values
         values_sigma_h= da.max(dim=('kappa')).values.T
+
+    elif squeeze=='slice_min':
+        raise NotImplementedError
+
+    elif squeeze=='slice_max':
+        raise NotImplementedError
+
     else:
         raise ValueError
 
@@ -231,14 +246,14 @@ def _marginals_dc_regular(da, var):
 
 
 def _variance_reduction_dc_regular(da, data_norm):
-    """ For each source type, extracts maximum variance reduction
+    """ For each moment tensor orientation, extracts maximum variance reduction
     """
     variance_reduction = 1. - da.copy()/data_norm
 
     variance_reduction = variance_reduction.max(
         dim=('origin_idx', 'rho', 'v', 'w'))
 
-    # in geophysics, variance reduction is usually given as a percentage
+    # widely-used convention - variance reducation as a percentage
     variance_reduction.values *= 100.
 
     return variance_reduction.assign_attrs({

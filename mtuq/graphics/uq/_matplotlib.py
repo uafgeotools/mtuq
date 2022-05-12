@@ -26,6 +26,14 @@ def _plot_dc_matplotlib(filename, coords, values_h_kappa, values_sigma_kappa, va
     if exists(_cpt_path(colormap)):
        colormap = read_cpt(_cpt_path(colormap))
 
+    #
+    # note the following parameterization details
+    #
+    #     kappa - strike
+    #     sigma - slip
+    #     h - cos(dip)
+    #
+
     _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa, colormap)
 
     _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa, colormap)
