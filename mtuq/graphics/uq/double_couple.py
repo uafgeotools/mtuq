@@ -9,61 +9,88 @@ from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics._gmt import read_cpt
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util import fullpath, warn
-from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma
+from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, warn
+from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma, to_mij
 from os.path import exists
 
 
-def plot_misfit_dc(filename, ds, title='',
-    colorbar_type=1, marker_type=1):
-    """ Plots misfit over strike, dip, and slip
-    (matplotlib implementation)
+def plot_misfit_dc(filename, ds, **kwargs):
+    """ Plots misfit values over strike, dip, slip
+
+    .. rubric :: Required input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_dc.html>`_
+
     """
+    _defaults(kwargs, {
+        'colormap': 'viridis',
+        })
+
     _check(ds)
-    ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        _plot_dc(filename, _squeeze(ds), cmap='viridis')
+        misfit = _misfit_dc_regular(ds)
         
     elif issubclass(type(ds), DataFrame):
-        warn('plot_misfit_dc not implemented for irregularly-spaced grids')
+        warn('plot_misfit_dc not implemented yet for irregularly-spaced grids.\n'
+             'No figure will be generated.')
+        return
+
+    _plot_dc(filename, misfit, **kwargs)
 
 
-def plot_likelihood_dc(filename, ds, sigma=None, title=''):
-    assert sigma is not None
+
+def plot_likelihood_dc(filename, ds, var, **kwargs):
+    """ Plots maximum likelihood values over strike, dip, slip
+
+    .. rubric :: Required input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+   ``var`` (`float` or `array`):
+    Data variance
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_dc.html>`_
+
+    """
+    _defaults(kwargs, {
+        'colormap': 'hot_r',
+        })
 
     _check(ds)
-    ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        ds.values = np.exp(-ds.values/(2.*sigma**2))
-        _plot_dc(filename, _squeeze(ds), cmap='hot',
-                 colorbar_type=colorbar_type, marker_type=marker_type)
+        likelihoods = _likelihoods_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_likelihood_dc not implemented for irregularly-spaced grids')
+        warn('plot_misfit_dc not implemented for irregularly-spaced grids. '
+             'No figure will be generated.')
+        return
+
+    _plot_dc(filename, likelihoods, **kwargs)
 
 
 def plot_marginal_dc():
     raise NotImplementedError
 
-
-def _squeeze(da):
-    if 'origin_idx' in da.dims:
-        da = da.min(dim='origin_idx')
-
-    if 'rho' in da.dims:
-        da = da.min(dim='rho')
-
-    if 'v' in da.dims:
-        assert len(da.coords['v'])==1
-        da = da.squeeze(dim='v')
-
-    if 'w' in da.dims:
-        assert len(da.coords['w'])==1
-        da = da.squeeze(dim='w')
-
-    return da
 
 
 def _check(ds):
@@ -73,11 +100,44 @@ def _check(ds):
         raise TypeError("Unexpected grid format")
 
 
+def _defaults(kwargs, defaults):
+    for key in defaults:
+        if key not in kwargs:
+           kwargs[key] = defaults[key]
+
+
 #
 # matplotlib backend
 #
 
-def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs):
+def _plot_dc(filename, da, show_best=True, colormap='hot', **kwargs):
+
+    """ Plots DataArray values on vw rectangle
+
+    .. rubric :: Keyword arguments
+
+    ``colormap`` (`str`)
+    Color palette used for plotting values 
+    (choose from GMT or MTUQ built-ins)
+
+    ``show_best`` (`bool`):
+    Show where best-fitting orientation falls on strike, dip, slip plots
+
+    ``title`` (`str`)
+    Optional figure title
+
+    ``backend`` (`str`)
+    `gmt` or `matplotlib`
+
+    """
+
+    if show_best:
+        if 'best_dc' in da.attrs:
+            best_dc = da.attrs['best_dc']
+        else:
+            warn("Best-fitting orientation not given")
+
+
     # FIXME: do labels correspond to the correct axes ?!
 
     # prepare axes
@@ -90,19 +150,16 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
         hspace=0.4,
         )
 
-    if exists(_local_path(cmap)):
-       cmap = read_cpt(_local_path(cmap))
+    if exists(_local_path(colormap)):
+       colormap = read_cpt(_local_path(colormap))
 
     # upper left panel
     marginal = da.min(dim=('sigma'))
     x = marginal.coords['h']
     y = marginal.coords['kappa']
 
-    minmax1 = _minmax(x, y, marginal)
-
     axis = axes[0][0]
-
-    _pcolor(axis, x, y, marginal.values, cmap, **kwargs)
+    _pcolor(axis, x, y, marginal.values, colormap)
 
     axis.set_xlabel('Dip', **axis_label_kwargs)
     axis.set_xticks(theta_ticks)
@@ -117,11 +174,8 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     x = marginal.coords['sigma']
     y = marginal.coords['kappa']
 
-    minmax2 = _minmax(x, y, marginal)
-
     axis = axes[0][1]
-
-    _pcolor(axis, x, y, marginal.values, cmap, **kwargs)
+    _pcolor(axis, x, y, marginal.values, colormap)
 
     axis.set_xlabel('Slip', **axis_label_kwargs)
     axis.set_xticks(sigma_ticks)
@@ -136,11 +190,8 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     y = marginal.coords['h']
     x = marginal.coords['sigma']
 
-    minmax3 = _minmax(x, y, marginal.T)
-
     axis = axes[1][1]
-
-    _pcolor(axis, x, y, marginal.values.T, cmap, **kwargs)
+    _pcolor(axis, x, y, marginal.values.T, colormap)
 
     axis.set_xlabel('Slip', **axis_label_kwargs)
     axis.set_xticks(sigma_ticks)
@@ -154,10 +205,11 @@ def _plot_dc(filename, da, colorbar_type=1, marker_type=1, cmap='hot', **kwargs)
     axes[1][0].axis('off')
 
     # optional markers
-    if marker_type > 0:
-        _add_marker(axes[0][0], minmax1[marker_type-1])
-        _add_marker(axes[0][1], minmax2[marker_type-1])
-        _add_marker(axes[1][1], minmax3[marker_type-1])
+    if show_best:
+        _kappa, _sigma, _h = best_dc
+        _add_marker(axes[0][0], (_h, _kappa))
+        _add_marker(axes[0][1], (_sigma, _kappa))
+        _add_marker(axes[1][1], (_sigma, _h))
 
     pyplot.savefig(filename)
 
@@ -173,27 +225,17 @@ def _add_marker(axis, coords):
         )
 
 
-def _minmax(x, y, values):
-    x = x.values
-    y = y.values
-    iymin, ixmin = np.unravel_index(values.argmin(), values.shape)
-    iymax, ixmax = np.unravel_index(values.argmax(), values.shape)
-    xmin, ymin = x[ixmin], y[iymin]
-    xmax, ymax = x[ixmax], y[iymax]
-    return (xmin, ymin), (xmax, ymax)
-
-
 axis_label_kwargs = {
     'fontsize': 14
     }
 
 
-def _pcolor(axis, x, y, values, cmap, **kwargs):
+def _pcolor(axis, x, y, values, colormap, **kwargs):
     # workaround matplotlib compatibility issue
     try:
-        axis.pcolor(x, y, values, cmap=cmap, shading='auto',  **kwargs)
+        axis.pcolor(x, y, values, cmap=colormap, shading='auto',  **kwargs)
     except:
-        axis.pcolor(x, y, values, cmap=cmap, **kwargs)
+        axis.pcolor(x, y, values, cmap=colormap, **kwargs)
 
 
 kappa_ticks = [0, 45, 90, 135, 180, 225, 270, 315, 360]
@@ -208,5 +250,94 @@ theta_ticklabels = ['0', '', '30', '', '60', '', '90']
 
 def _local_path(name):
     return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
+
+
+
+
+#
+# for extracting misfit, variance reduction and likelihood from
+# regularly-spaced grids
+#
+
+def _misfit_dc_regular(da):
+    """ For each double couple, extract minimum misfit
+    """
+    misfit = da.min(dim=('origin_idx', 'rho', 'v', 'w'))
+
+    return misfit.assign_attrs({
+        'best_mt': _min_mt(da),
+        'best_dc': _min_dc(da),
+        })
+
+
+def _likelihoods_dc_regular(da, var):
+    """ For each double couple, calculate maximum likelihood
+    """
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
+
+    likelihoods = likelihoods.max(dim=('origin_idx', 'rho', 'v', 'w'))
+    likelihoods.values /= likelihoods.values.sum()
+    #likelihoods /= dc_area
+
+    return likelihoods.assign_attrs({
+        'best_mt': _min_mt(da),
+        'best_dc': _min_dc(da),
+        'maximum_likelihood_estimate': dataarray_idxmax(likelihoods).values(),
+        })
+
+
+def _marginals_dc_regular(da, var):
+    """ For each double couple, calculate marginal likelihood
+    """
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
+
+    likelihoods = likelihoods.max(dim=('origin_idx', 'rho', 'v', 'w'))
+    likelihoods.values /= likelihoods.values.sum()
+    likelihoods /= vw_area
+
+    return likelihoods.assign_attrs({
+        'best_mt': _min_mt(da),
+        'maximum_likelihood_estimate': dataarray_idxmax(likelihoods).values(),
+        })
+
+
+def _min_mt(da):
+    """ Returns moment tensor vector corresponding to mininum DataArray value
+    """
+    da = dataarray_idxmin(da)
+    lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
+    lune_vals = [da[key].values for key in lune_keys]
+    return to_mij(*lune_vals)
+
+
+def _max_mt(da):
+    """ Returns moment tensor vector corresponding to maximum DataArray value
+    """
+    da = dataarray_idxmax(da)
+    lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
+    lune_vals = [da[key].values for key in lune_keys]
+    return to_mij(*lune_vals)
+
+
+def _min_dc(da):
+    """ Returns v,w coordinates corresponding to mininum DataArray value
+    """
+    da = dataarray_idxmin(da)
+    dc_keys = ['kappa', 'sigma', 'h']
+    dc_vals = [da[key].values for key in dc_keys]
+    return dc_vals
+
+def _max_dc(da):
+    """ Returns v,w coordinates corresponding to maximum DataArray value
+    """
+    da = dataarray_idxmax(da)
+    dc_keys = ['kappa', 'sigma', 'h']
+    dc_vals = [da[key].values for key in dc_keys]
+    return dc_vals
+
 
 
