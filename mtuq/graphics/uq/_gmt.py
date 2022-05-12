@@ -5,6 +5,7 @@ import subprocess
 
 from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
     gmt_formats, _parse_filetype, _safename
+from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180, to_delta, to_gamma, to_mij
 from os.path import basename, exists, splitext
@@ -197,25 +198,6 @@ def _plot_depth_gmt(filename,
 #
 # utility functions
 #
-
-def _nothing_to_plot(values):
-    mask = np.isnan(values)
-    if np.all(mask):
-        warn(
-            "Nothing to plot: all values are NaN",
-            Warning)
-        return True
-
-    masked = np.ma.array(values, mask=mask)
-    minval = masked.min()
-    maxval = masked.max()
-
-    if minval==maxval:
-        warn(
-            "Nothing to plot: all values are identical",
-            Warning)
-        return True
-
 
 def _parse_data(lon, lat, values):
 

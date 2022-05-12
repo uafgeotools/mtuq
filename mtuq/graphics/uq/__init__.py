@@ -1,15 +1,38 @@
 
 import numpy as np
 
-from mtuq.graphics.uq.vw import vw_area
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.util import dataarray_idxmin, dataarray_idxmax, product
+
+
+def _nothing_to_plot(values):
+    """ Sanity check - are all values identical in 2-D array?
+    """
+    mask = np.isnan(values)
+    if np.all(mask):
+        warn(
+            "Nothing to plot: all values are NaN",
+            Warning)
+        return True
+
+    masked = np.ma.array(values, mask=mask)
+    minval = masked.min()
+    maxval = masked.max()
+
+    if minval==maxval:
+        warn(
+            "Nothing to plot: all values are identical",
+            Warning)
+        return True
+
 
 
 def likelihood_analysis(*args):
     """ Converts misfit to likelihood and multiplies together contributions 
     from different data categories 
     """
+    from mtuq.graphics.uq.vw import vw_area
+
 
     arrays = [arg[0] for arg in args]
     covs = [arg[1] for arg in args]
@@ -44,4 +67,6 @@ def likelihood_analysis(*args):
         for key in ('v', 'w')}
 
     return likelihoods, mle, marginal_vw
+
+
 
