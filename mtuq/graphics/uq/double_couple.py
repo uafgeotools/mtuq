@@ -136,6 +136,7 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
     _plot_dc(filename, variance_reduction, **kwargs)
 
 
+
 def _plot_dc(filename, da, show_best=True, colormap='hot', 
     backend=_plot_dc_matplotlib, squeeze='min', **kwargs):
 
@@ -151,7 +152,8 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
     Show where best-fitting moment tensor falls in terms of strike, dip, slip
 
     ``squeeze`` (`str`)
-    Optional figure title
+    By default, 2-D surfaces are obtained by minimizing or maximizing.
+    For slices instead, use `slice_min` or slice_max`.
 
     ``backend`` (`function`)
     Choose from `_plot_dc_matplotlib` (default) or user-supplied function
