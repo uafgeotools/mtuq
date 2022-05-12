@@ -97,10 +97,50 @@ def plot_marginal_dc():
 
 
 
+def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
+    """ Plots maximum likelihood values over strike, dip, slip
+
+    .. rubric :: Required input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+   ``data_norm`` (`float`):
+    Data norm
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_dc.html>`_
+
+    """
+    _defaults(kwargs, {
+        'colormap': 'viridis',
+        'type_best': 'max',
+        })
+
+    _check(ds)
+
+    if issubclass(type(ds), DataArray):
+        variance_reduction = _variance_reduction_dc_regular(ds, var)
+
+    elif issubclass(type(ds), DataFrame):
+        warn('plot_misfit_dc not implemented for irregularly-spaced grids. '
+             'No figure will be generated.')
+        return
+
+    _plot_dc(filename, variance_reduction, **kwargs)
+
+
+
 def _plot_dc(filename, da, show_best=True, colormap='hot', 
     backend=_plot_dc_matplotlib, type_best='min', **kwargs):
 
-    """ Plots DataArray values on vw rectangle
+    """ Plots DataArray values over strike, dip, slip
 
     .. rubric :: Keyword arguments
 
@@ -187,18 +227,23 @@ def _likelihoods_dc_regular(da, var):
 def _marginals_dc_regular(da, var):
     """ For each moment tensor orientation, calculate marginal likelihood
     """
-    likelihoods = da.copy()
-    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
-    likelihoods.values /= likelihoods.values.sum()
+    raise NotImplementedError
 
-    likelihoods = likelihoods.max(dim=('origin_idx', 'rho', 'v', 'w'))
-    likelihoods.values /= likelihoods.values.sum()
-    likelihoods /= vw_area
 
-    return likelihoods.assign_attrs({
+def _variance_reduction_dc_regular(da, data_norm):
+    """ For each source type, extracts maximum variance reduction
+    """
+    variance_reduction = 1. - da.copy()/data_norm
+
+    variance_reduction = variance_reduction.max(
+        dim=('origin_idx', 'rho', 'v', 'w'))
+
+    return variance_reduction.assign_attrs({
         'best_mt': _min_mt(da),
-        'maximum_likelihood_estimate': dataarray_idxmax(likelihoods).values(),
+        'best_dc': _min_dc(da),
+        'lune_array': _lune_array(da),
         })
+
 
 #
 # utility functions
