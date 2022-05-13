@@ -39,4 +39,4 @@ html_show_sphinx = False
 html_show_copyright = False
 
 def setup(app):
-    app.add_stylesheet('style.css')  # remove line numbers
+    app.add_css_file('style.css')  # remove line numbers
