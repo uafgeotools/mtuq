@@ -1,4 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash
+
+# github workflows apparanetly ignores bash arguments in the shebang line
+set -e
 
 
 #

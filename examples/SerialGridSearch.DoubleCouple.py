@@ -188,7 +188,7 @@ if __name__=='__main__':
         best_source, stations, origin)
 
 
-    plot_misfit_dc(event_id+'DC_misfit_slice.png', results, squeeze='slice_min')
+    plot_misfit_dc(event_id+'DC_misfit.png', results)
 
 
     print('Saving results...\n')
