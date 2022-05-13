@@ -48,6 +48,7 @@ autogen
    mtuq.grid.ForceGridRegular
    mtuq.grid.Grid
    mtuq.grid.UnstructuredGrid
+   mtuq.grid.moment_tensor.semiregular_grid
    mtuq.grid_search.grid_search
    mtuq.grid_search.MTUQDataArray
    mtuq.grid_search.MTUQDataFrame

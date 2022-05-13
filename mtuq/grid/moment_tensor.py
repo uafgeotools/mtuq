@@ -12,6 +12,17 @@ from mtuq.util.math import open_interval as regular
 from mtuq.util.math import to_mij, to_rho, semiregular_grid, to_v, to_w
 
 
+# Usage
+#
+#    Use ``get(i)`` to return the `i`-th moment tensor as a `MomentTensor` object
+#
+#    Use ``get(i).as_vector()`` to return the `i`-th moment tensor as a vector
+#    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
+#
+#    Use ``get_dict(i)`` to return the `i`-th moment tensor as dictionary
+#    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
+
+
 
 def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
     """ Full moment tensor grid with randomly-drawn points
@@ -20,18 +31,8 @@ def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
 
     Moment tensors are drawn from the uniform distribution defined by
-    `Tape2015` (https://doi.org/10.1093/gji/ggv262)
+    `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`-
 
-
-    .. rubric :: Usage
-
-    Use ``get(i)`` to return the `i`-th moment tensor as a `MomentTensor` object
-
-    Use ``get(i).as_vector()`` to return the `i`-th moment tensor as a vector
-    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
-
-    Use ``get_dict(i)`` to return the `i`-th moment tensor as dictionary
-    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
 
     v = random(-1./3., 1./3., npts)
@@ -62,18 +63,8 @@ def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20,
     returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
 
     The grid is `semiregular` in the sense of an interpolation between
-    `Tape2012` and `Tape2015` parameters.  See here for details.
-
-
-    .. rubric :: Usage
-
-    Use ``get(i)`` to return the `i`-th moment tensor as a `MomentTensor` object
-
-    Use ``get(i).as_vector()`` to return the `i`-th moment tensor as a vector
-    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
-
-    Use ``get_dict(i)`` to return the `i`-th moment tensor as dictionary
-    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
+    `Tape2012` and `Tape2015` parameters.  `See here
+    <mtuq.grid.moment_tensor.semiregular_grid.html>`_ for details.
 
     """
     v, w = semiregular_grid(npts_per_axis, 2*npts_per_axis, tightness, uniformity)
@@ -96,7 +87,7 @@ def DeviatoricGridRandom(magnitudes=[1.], npts=100000):
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
 
     Moment tensors are drawn from the uniform distribution defined by
-    `Tape2015` (https://doi.org/10.1093/gji/ggv262)
+    `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`-
 
     """
 
@@ -129,7 +120,8 @@ def DeviatoricGridSemiregular(magnitudes=[1.], npts_per_axis=20,
     returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^4`.
 
     The grid is `semiregular` in the sense of an interpolation between
-    `Tape2012` and `Tape2015` parameters.  See here for details.
+    `Tape2012` and `Tape2015` parameters.  `See here
+    <mtuq.grid.moment_tensor.semiregular_grid.html>`_ for details.
 
     """
 
@@ -152,17 +144,6 @@ def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
-
-
-    .. rubric :: Usage
-
-    Use ``get(i)`` to return the `i`-th moment tensor as a `MomentTensor` object
-
-    Use ``get(i).as_vector()`` to return the `i`-th moment tensor as a vector
-    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
-
-    Use ``get_dict(i)`` to return the `i`-th moment tensor as dictionary
-    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
 
     """
     v = np.zeros(npts)
@@ -191,16 +172,6 @@ def DoubleCoupleGridRegular(magnitudes=[1.], npts_per_axis=40):
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^3`.
 
-
-    .. rubric :: Usage
-
-    Use ``get(i)`` to return the `i`-th moment tensor as a `MomentTensor` object
-
-    Use ``get(i).as_vector()`` to return the `i`-th moment tensor as a vector
-    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
-
-    Use ``get_dict(i)`` to return the `i`-th moment tensor as dictionary
-    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
     """
     v = 0.
     w = 0.
