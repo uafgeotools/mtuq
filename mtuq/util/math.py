@@ -361,28 +361,51 @@ def lat_lon_tuples(center_lat=None,center_lon=None,
 
 
 
-def semiregular_grid(npts_v, npts_w, tightness=0.5):
+def semiregular_grid(npts_v, npts_w, tightness=0.8, uniformity=0.8):
     """ Semiregular moment tensor grid
 
-    For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
-    For tightness~1, grid will be regular in Tape2015 parameters v, w.
+    .. rubric :: Tightness 
+
+    `tightness` controls how close the extremal points lie to the boundary of 
+    the eigenvalue lune and v,w rectangle
+
+
+    .. rubric :: Uniformity
+
+    `uniformity` controls the spacing between grid points.
+
+    For `uniformity=0`, the grid will be regular in Tape2012 parameters 
+    `delta`, `gamma`, which is  good for avoiding distortion in eigenvalue lune
+    figures.
+
+    For `uniformity=1`, the grid will be regular in v,w parameters, which means that
+    points are uniformly-spaced in terms of moment tensor Frobenius norms.
+
     For intermediate values, the grid will be "semiregular" in the sense of
     a linear interpolation between the above cases.
+
     """
     assert 0. <= tightness < 1.,\
-        Exception("Allowable range: 0. <= tightness < 1.")
+        Exception("Allowable range: 0. < tightness < 1.")
 
-    v1 = open_interval(-1./3., 1./3., npts_v)
-    w1 = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
+    assert 0. <= uniformity <= 1.,\
+        Exception("Allowable range: 0. <= uniformity <= 1.")
 
-    gamma1 = to_gamma(v1)
-    delta1 = to_delta(w1)
 
-    gamma2 = np.linspace(-29.5, 29.5, npts_v)
-    delta2 = np.linspace(-87.5, 87.5, npts_w)
+    v1 = (tightness * closed_interval(-1./3., 1./3., npts_v) +
+          (1.-tightness) * open_interval(-1./3., 1./3., npts_v))
 
-    delta = delta1*(1.-tightness) + delta2*tightness
-    gamma = gamma1*(1.-tightness) + gamma2*tightness
+    w1 = (tightness * closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w) +
+          (1.-tightness) * open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w))
+
+    gamma2 = (tightness * closed_interval(-30., 30., npts_v) +
+              (1.-tightness) * open_interval(-30, 30., npts_v))
+
+    delta2 = (tightness * closed_interval(-90., 90., npts_w) +
+              (1.-tightness) * open_interval(-90, 90., npts_w))
+
+    delta = to_delta(w1)*(1.-uniformity) + delta2*uniformity
+    gamma = to_gamma(v1)*(1.-uniformity) + gamma2*uniformity
 
     return to_v(gamma), to_w(delta)
 
