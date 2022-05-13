@@ -216,3 +216,8 @@ def _safename(filename):
     # used for writing temporary files only
     return filename.replace('/', '__')
 
+
+
+def _cpt_path(name):
+    return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
+

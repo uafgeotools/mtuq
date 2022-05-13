@@ -1,12 +1,11 @@
 
 #
-# graphics/uq/hypocenter.py
+# graphics/uq/hypocenter.py - uncertainty quantification of hypocenter location
 #
 
 import numpy as np
 import subprocess
 
-from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics.uq._gmt import _plot_latlon_gmt
@@ -45,7 +44,9 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
         da = _misfit_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        raise NotImplementedError
+        warn('plot_misfit_latlon() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
+        return
 
     _plot_latlon(filename, da, origins, **kwargs)
 
@@ -79,7 +80,8 @@ def plot_likelihood_latlon(filename, ds, origins, **kwargs):
         da = _likelihood_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        raise NotImplementedError
+        warn('plot_likelihood_latlon() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
 
     _plot_latlon(filename, da, origins, **kwargs)
 
@@ -106,24 +108,9 @@ def plot_marginal_latlon(filename, ds, origins, **kwargs):
     `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-
-    _check(ds)
-    ds = ds.copy()
-
-    if issubclass(type(ds), DataArray):
-        raise NotImplementedError
-
-    elif issubclass(type(ds), DataFrame):
-        raise NotImplementedError
-
-    _plot_latlon(filename, da, origins, **kwargs)
+    raise NotImplementedError
 
 
-
-
-#
-# wrappers
-#
 
 def _plot_latlon(filename, da, origins,show_best=False, show_tradeoffs=False,
     backend=_plot_latlon_gmt, **kwargs):
@@ -143,6 +130,9 @@ def _plot_latlon(filename, da, origins,show_best=False, show_tradeoffs=False,
 
     ``title`` (`str`)
     Optional figure title
+
+    ``backend`` (`function`)
+    Choose from `_plot_latlon_gmt` (default) or user-supplied function
 
     """
 
@@ -180,6 +170,10 @@ def _plot_latlon(filename, da, origins,show_best=False, show_tradeoffs=False,
         **kwargs)
 
 
+#
+# utility functions
+#
+
 def _get_labeltype(x,y,labeltype):
     if labeltype=='latlon':
        xlabel = None
@@ -196,10 +190,6 @@ def _get_labeltype(x,y,labeltype):
 
     return xlabel,ylabel
 
-
-#
-# utility functions
-#
 
 def _check(ds):
     """ Checks data structures

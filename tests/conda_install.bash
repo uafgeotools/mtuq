@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash
+
 
 #
 # TESTS MTUQ INSTALLATION UNDER CONDA
@@ -70,6 +71,9 @@ echo $URL
 #
 # installation tests begin now
 #
+
+# if any test fails, stop immediately
+set -e
 
 echo
 echo "See mtuq/tests/ for installation logs"

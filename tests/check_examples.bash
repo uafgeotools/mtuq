@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 
 #
@@ -22,6 +22,10 @@ FILENAMES="\
 
 # navigate to mtuq/tests
 cd $(dirname ${BASH_SOURCE[0]})
+
+
+# if any comparison fails, stop immediately
+set -e
 
 for filename in $FILENAMES
 do

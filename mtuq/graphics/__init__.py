@@ -22,7 +22,7 @@ from mtuq.graphics.uq.vw import\
     _plot_vw, _product_vw
 
 from mtuq.graphics.uq.double_couple import\
-    plot_misfit_dc, plot_likelihood_dc, plot_marginal_dc
+    plot_misfit_dc, plot_likelihood_dc, plot_marginal_dc, _plot_dc
 
 from mtuq.graphics.uq.force import\
     plot_misfit_force, plot_likelihood_force, plot_marginal_force,\

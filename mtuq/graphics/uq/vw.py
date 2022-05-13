@@ -1,23 +1,25 @@
 
-#
-# For details about the v,w rectangle see 
-# Tape2015 - A uniform parameterization of moment tensors
-# (https://doi.org/10.1093/gji/ggv262)
+# 
+# graphics/uq/vw.py - uncertainty quantification on the v,w rectangle
 #
 
 import numpy as np
 import pandas
 import xarray
 
-from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
-from mtuq.graphics._gmt import read_cpt
-from mtuq.graphics.uq._gmt import _nothing_to_plot, _plot_vw_gmt
+from mtuq.graphics.uq._gmt import _plot_vw_gmt
+from mtuq.graphics.uq._matplotlib import _plot_vw_matplotlib
 from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, product
 from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
     to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
-from os.path import exists
 
+
+#
+# For details about the v,w rectangle see 
+# Tape2015 - A uniform parameterization of moment tensors
+# (https://doi.org/10.1093/gji/ggv262)
+#
 
 v_min = -1./3.
 v_max = +1./3.
@@ -137,62 +139,47 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 
 
 
-#
-# backends
-#
+def plot_variance_reduction_vw(filename, ds, data_norm, **kwargs):
+    """ Plots variance reduction on v,w rectangle
 
-def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, colormap='viridis', title=''):
+    .. rubric :: Required input arguments
 
-    if _nothing_to_plot(values):
-        return
+    ``filename`` (`str`):
+    Name of output image file
 
-    fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
 
-    # pcolor requires corners of pixels
-    corners_v = _centers_to_edges(v)
-    corners_w = _centers_to_edges(w)
-
-    # `values` gets mapped to pixel colors
-    pyplot.pcolor(corners_v, corners_w, values, cmap=colormap)
-
-    # v and w have the following bounds
-    # (see https://doi.org/10.1093/gji/ggv262)
-    pyplot.xlim([-1./3., 1./3.])
-    pyplot.ylim([-3./8.*np.pi, 3./8.*np.pi])
-
-    pyplot.xticks([], [])
-    pyplot.yticks([], [])
-
-    if exists(_local_path(colormap)):
-       cmap = read_cpt(_local_path(colormap))
-
-    if True:
-        cbar = pyplot.colorbar(
-            orientation='horizontal',
-            pad=0.,
-            )
-
-        cbar.formatter.set_powerlimits((-2, 2))
-
-    if title:
-        fontdict = {'fontsize': 16}
-        pyplot.title(title, fontdict=fontdict)
+    ``var`` (`float` or `array`):
+    Data variance
 
 
-    if best_vw:
-        pyplot.scatter(*best_vw, s=333,
-            marker='o',
-            facecolors='none',
-            edgecolors=[0,1,0],
-            linewidths=1.75,
-            )
+    .. rubric :: Optional input arguments
 
-    pyplot.savefig(filename)
-    pyplot.close()
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_vw.html>`_
+
+    """
+    _defaults(kwargs, {
+        'colormap': 'viridis_r',
+        })
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        variance_reduction = _variance_reduction_vw_regular(ds, data_norm)
+
+    elif issubclass(type(ds), DataFrame):
+        variance_reduction = _variance_reduction_vw_random(ds, data_norm)
+
+    _plot_vw(filename, variance_reduction, **kwargs)
+
+
 
 
 def _plot_vw(filename, da, show_best=True, show_tradeoffs=False, 
-    backend=_plot_vw_gmt, **kwargs):
+    backend=_plot_vw_matplotlib, **kwargs):
 
     """ Plots DataArray values on vw rectangle
 
@@ -208,8 +195,9 @@ def _plot_vw(filename, da, show_best=True, show_tradeoffs=False,
     ``title`` (`str`)
     Optional figure title
 
-    ``backend`` (`str`)
-    `gmt` or `matplotlib`
+    ``backend`` (`function`)
+    Choose from `_plot_vw_gmt` (default), `plot_vw_matplotlib`, 
+    or user-supplied function
 
     """
 
@@ -238,7 +226,8 @@ def _plot_vw(filename, da, show_best=True, show_tradeoffs=False,
 
 
 #
-# for extracting misfit or likelihood from regularly-spaced grids
+# for extracting misfit, variance reduction, or likelihood from
+# regularly-spaced grids
 #
 
 def _misfit_vw_regular(da):
@@ -329,6 +318,9 @@ def _variance_reduction_vw_regular(da, data_norm):
     variance_reduction = variance_reduction.max(
         dim=('origin_idx', 'rho', 'kappa', 'sigma', 'h'))
 
+    # widely-used convention - variance reducation as a percentage
+    variance_reduction.values *= 100.
+
     return variance_reduction.assign_attrs({
         'best_mt': _min_mt(da),
         'best_vw': _min_vw(da),
@@ -337,7 +329,7 @@ def _variance_reduction_vw_regular(da, data_norm):
 
 
 def _lune_array(da):
-    """ For each source type, returns best-fitting moment tensor
+    """ For each source type, keeps track of best-fitting moment tensor
     """
     nv = len(da.coords['v'])
     nw = len(da.coords['w'])
@@ -419,7 +411,8 @@ def _product_vw(*arrays, best_vw='max'):
 
 
 #
-# for extracting misfit or likelihood from irregularly-spaced grids
+# for extracting misfit, variance reduction, or likelihood from
+# irregularly-spaced grids
 #
 
 def _misfit_vw_random(df, **kwargs):
@@ -555,20 +548,6 @@ def _bin_vw_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normali
         )
 
 
-def _centers_to_edges(v):
-    if issubclass(type(v), DataArray):
-        v = v.values.copy()
-    else:
-        v = v.copy()
-
-    dv = (v[1]-v[0])
-    v -= dv/2
-    v = np.pad(v, (0, 1))
-    v[-1] = v[-2] + dv
-
-    return v
-
-
 #
 # utility functions
 #
@@ -585,7 +564,5 @@ def _defaults(kwargs, defaults):
         if key not in kwargs:
            kwargs[key] = defaults[key]
 
-def _local_path(name):
-    return fullpath('mtuq/graphics/_gmt/cpt', name+'.cpt')
 
 
