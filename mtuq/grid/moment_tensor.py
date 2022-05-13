@@ -31,7 +31,7 @@ def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
 
     Moment tensors are drawn from the uniform distribution defined by
-    `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`-
+    `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`_
 
     """
 
@@ -64,7 +64,7 @@ def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20,
     returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
 
     The grid is `semiregular` in the sense of an interpolation between
-    `Tape2012` and `Tape2015` parameters.  `See here
+    two parameterizations.  `See here
     <mtuq.grid.moment_tensor.semiregular_grid.html>`_ for details.
 
     """
@@ -88,7 +88,7 @@ def DeviatoricGridRandom(magnitudes=[1.], npts=100000):
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
 
     Moment tensors are drawn from the uniform distribution defined by
-    `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`-
+    `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`_
 
     """
 
@@ -121,7 +121,7 @@ def DeviatoricGridSemiregular(magnitudes=[1.], npts_per_axis=20,
     returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^4`.
 
     The grid is `semiregular` in the sense of an interpolation between
-    `Tape2012` and `Tape2015` parameters.  `See here
+    two parameterizations.  `See here
     <mtuq.grid.moment_tensor.semiregular_grid.html>`_ for details.
 
     """
