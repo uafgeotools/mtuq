@@ -352,7 +352,7 @@ def _lune_array(da):
 
 
 def _min_mt(da):
-    """ Returns moment tensor vector corresponding to mininum DataArray value
+    """ Returns moment tensor vector corresponding to minimum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
@@ -370,7 +370,7 @@ def _max_mt(da):
 
 
 def _min_vw(da):
-    """ Returns v,w coordinates corresponding to mininum DataArray value
+    """ Returns v,w coordinates corresponding to minimum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['v', 'w']

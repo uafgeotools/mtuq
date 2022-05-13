@@ -273,7 +273,7 @@ def _variance_reduction_dc_regular(da, data_norm):
 #
 
 def _min_mt(da):
-    """ Returns moment tensor vector corresponding to mininum DataArray value
+    """ Returns moment tensor vector corresponding to minimum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
@@ -291,7 +291,7 @@ def _max_mt(da):
 
 
 def _min_dc(da):
-    """ Returns orientation angles corresponding to mininum DataArray value
+    """ Returns orientation angles corresponding to minimum DataArray value
     """
     da = dataarray_idxmin(da)
     dc_keys = ['kappa', 'sigma', 'h']
