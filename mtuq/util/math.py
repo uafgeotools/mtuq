@@ -362,26 +362,28 @@ def lat_lon_tuples(center_lat=None,center_lon=None,
 
 
 def semiregular_grid(npts_v, npts_w, tightness=0.8, uniformity=0.8):
-    """ Semiregular moment tensor grid
-
+    """ 
     .. rubric :: Tightness 
 
     `tightness` controls how close the extremal points lie to the boundary of 
-    the eigenvalue lune and v,w rectangle
+    the eigenvalue lune and `v, w` rectangle
 
 
     .. rubric :: Uniformity
 
     `uniformity` controls the spacing between grid points.
 
-    For `uniformity=0`, the grid will be regular in Tape2012 parameters 
+    For `uniformity=0`, the grid will be regular in `Tape2012 
+    <https://uafgeotools.github.io/mtuq/references.html>`_ parameters 
     `delta`, `gamma`, which is  good for avoiding distortion in eigenvalue lune
     figures.
 
-    For `uniformity=1`, the grid will be regular in v,w parameters, which means that
-    points are uniformly-spaced in terms of moment tensor Frobenius norms.
+    For `uniformity=1`, the grid will be regular in `Tape2015
+    <https://uafgeotools.github.io/mtuq/references.html>`_ parameters `v, w`, 
+    which means that points are uniformly-spaced in terms of moment tensor 
+    Frobenius norms.
 
-    For intermediate values, the grid will be "semiregular" in the sense of
+    For intermediate values, the grid will be `semiregular` in the sense of
     a linear interpolation between the above cases.
 
     """
