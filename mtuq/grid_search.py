@@ -261,8 +261,8 @@ class MTUQDataFrame(pandas.DataFrame):
     .. note::
 
         Besides the methods below, `MTUQDataFrame` includes many useful methods
-        inherited from ``pandas.DataFrame``. See 
-        `pandas documentation <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html>`_
+        inherited from ``pandas.DataFrame``. See `pandas documentation 
+        <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html>`_
         for more information.
 
     """
