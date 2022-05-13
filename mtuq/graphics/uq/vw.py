@@ -135,6 +135,11 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 
 
 
+def plot_variance_reduction_vw():
+    raise NotImplementedError
+
+
+
 def _plot_vw(filename, da, show_best=True, show_tradeoffs=False, 
     backend=_plot_vw_matplotlib, **kwargs):
 
@@ -368,7 +373,7 @@ def _product_vw(*arrays, best_vw='max'):
 
 
 #
-# for extracting misfit, variance reduction, or  likelihood from
+# for extracting misfit, variance reduction, or likelihood from
 # irregularly-spaced grids
 #
 

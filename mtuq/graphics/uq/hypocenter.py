@@ -1,6 +1,6 @@
 
 #
-# graphics/uq/hypocenter.py
+# graphics/uq/hypocenter.py - uncertainty quantification of hypocenter location
 #
 
 import numpy as np
@@ -113,11 +113,6 @@ def plot_marginal_latlon(filename, ds, origins, **kwargs):
 
 
 
-
-#
-# wrappers
-#
-
 def _plot_latlon(filename, da, origins,show_best=False, show_tradeoffs=False,
     backend=_plot_latlon_gmt, **kwargs):
 
@@ -173,6 +168,10 @@ def _plot_latlon(filename, da, origins,show_best=False, show_tradeoffs=False,
         **kwargs)
 
 
+#
+# utility functions
+#
+
 def _get_labeltype(x,y,labeltype):
     if labeltype=='latlon':
        xlabel = None
@@ -189,10 +188,6 @@ def _get_labeltype(x,y,labeltype):
 
     return xlabel,ylabel
 
-
-#
-# utility functions
-#
 
 def _check(ds):
     """ Checks data structures

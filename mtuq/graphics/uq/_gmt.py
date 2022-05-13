@@ -133,15 +133,9 @@ def _call(shell_script, filename, data, supplemental_data=None,
 
 
 
-def _plot_depth_gmt(filename,
-        depths,
-        values,
-        magnitudes=None,
-        lune_array=None,
-        title='',
-        xlabel='',
-        ylabel='',
-        fontsize=16.):
+def _plot_depth_gmt(filename, depths, values,
+        magnitudes=None, lune_array=None,
+        title='', xlabel='', ylabel='', fontsize=16.):
 
     # parse filenames
     filename, filetype = _parse_filetype(filename)

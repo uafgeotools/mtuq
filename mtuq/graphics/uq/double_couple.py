@@ -160,14 +160,6 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
 
     """
 
-    #
-    # note the following parameterization details
-    #
-    #     kappa = strike
-    #     sigma = slip
-    #     h = cos(dip)
-    #
-
     if not issubclass(type(da), DataArray):
         raise Exception()
 
@@ -177,6 +169,11 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
         else:
             warn("Best-fitting orientation not given")
             best_dc = None
+
+    # note the following parameterization details
+    #     kappa = strike
+    #     sigma = slip
+    #     h = cos(dip)
 
     # squeeze full 3-D array into 2-D arrays
     if squeeze=='min':

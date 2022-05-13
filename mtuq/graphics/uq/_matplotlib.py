@@ -9,8 +9,9 @@ from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
 
 
-def _plot_dc_matplotlib(filename, coords, values_h_kappa, values_sigma_kappa, values_sigma_h,
-    best_dc=None, colormap='viridis', figsize=(8., 8.), axis_label_fontsize=14):
+def _plot_dc_matplotlib(filename, coords, 
+    values_h_kappa, values_sigma_kappa, values_sigma_h,
+    best_dc=None, colormap='viridis',  figsize=(8., 8.), fontsize=14):
 
     # prepare axes
     fig, axes = pyplot.subplots(2, 2,
@@ -26,14 +27,12 @@ def _plot_dc_matplotlib(filename, coords, values_h_kappa, values_sigma_kappa, va
     if exists(_cpt_path(colormap)):
        colormap = read_cpt(_cpt_path(colormap))
 
-    #
     # note the following parameterization details
-    #
-    #     kappa - strike
-    #     sigma - slip
-    #     h - cos(dip)
-    #
+    #     kappa = strike
+    #     sigma = slip
+    #     h = cos(dip)
 
+    # plot surfaces
     _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa, colormap)
 
     _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa, colormap)
@@ -47,51 +46,19 @@ def _plot_dc_matplotlib(filename, coords, values_h_kappa, values_sigma_kappa, va
         _add_marker(axes[0][1], (_sigma, _kappa))
         _add_marker(axes[1][1], (_sigma, _h))
 
-    _set_dc_labels(axes, fontsize=axis_label_fontsize)
+    _set_dc_labels(axes, fontsize=fontsize)
 
     pyplot.savefig(filename)
 
 
-def _set_dc_labels(axes, **kwargs):
-    # upper left panel
-    axis = axes[0][0]
-    axis.set_xlabel('Dip', **kwargs)
-    axis.set_xticks(theta_ticks)
-    axis.set_xticklabels(theta_ticklabels)
-    axis.set_ylabel('Strike', **kwargs)
-    axis.set_yticks(kappa_ticks)
-    axis.set_yticklabels(kappa_ticklabels)
-
-    # upper right panel
-    axis = axes[0][1]
-    axis.set_xlabel('Slip', **kwargs)
-    axis.set_xticks(sigma_ticks)
-    axis.set_xticklabels(sigma_ticklabels)
-    axis.set_ylabel('Strike', **kwargs)
-    axis.set_yticks(kappa_ticks)
-    axis.set_yticklabels(kappa_ticklabels)
-
-    # lower right panel
-    axis = axes[1][1]
-    axis.set_xlabel('Slip', **kwargs)
-    axis.set_xticks(sigma_ticks)
-    axis.set_xticklabels(sigma_ticklabels)
-    axis.set_ylabel('Dip', **kwargs)
-    axis.set_yticks(theta_ticks)
-    axis.set_yticklabels(theta_ticklabels)
-
-    # lower left panel
-    axes[1][0].axis('off')
-
-
 
 def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None, 
-    colormap='viridis', title=''):
+    colormap='viridis', title='', figsize=(3., 8.)):
 
     if _nothing_to_plot(values):
         return
 
-    fig, ax = pyplot.subplots(figsize=(3., 8.), constrained_layout=True)
+    fig, ax = pyplot.subplots(figsize=figsize, constrained_layout=True)
 
     # pcolor requires corners of pixels
     corners_v = _centers_to_edges(v)
@@ -137,6 +104,30 @@ def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None,
 
 
 
+def _plot_depth_matplotlib(filename, depths, values,
+        magnitudes=None, lune_array=None,
+        title=None, xlabel=None, ylabel=None, figsize=(6., 6.), fontsize=16.):
+
+    pyplot.figure(figsize=figsize)
+    pyplot.plot(depths, values, 'k-')
+
+    if title:
+        pyplot.title(title, fontsize=fontsize)
+
+    if xlabel:
+         pyplot.xlabel(xlabel, fontsize=fontsize)
+
+    if ylabel:
+         pyplot.ylabel(ylabel, fontsize=fontsize)
+
+    pyplot.savefig(filename)
+
+
+
+#
+# utility functions
+#
+
 def _centers_to_edges(v):
     if issubclass(type(v), DataArray):
         v = v.values.copy()
@@ -170,12 +161,49 @@ def _pcolor(axis, x, y, values, colormap, **kwargs):
         axis.pcolor(x, y, values, cmap=colormap, **kwargs)
 
 
-kappa_ticks = [0, 45, 90, 135, 180, 225, 270, 315, 360]
-kappa_ticklabels = ['0', '', '90', '', '180', '', '270', '', '360']
+def _set_dc_labels(axes, **kwargs):
 
-sigma_ticks = [-90, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90]
-sigma_ticklabels = ['-90', '', '-45', '', '0', '', '45', '', '90']
+    # note the following parameterization details
+    #     kappa = strike
+    #     sigma = slip
+    #     h = cos(dip)
 
-theta_ticks = [np.cos(np.radians(tick)) for tick in [0, 15, 30, 45, 60, 75, 90]]
-theta_ticklabels = ['0', '', '30', '', '60', '', '90']
+    kappa_ticks = [0, 45, 90, 135, 180, 225, 270, 315, 360]
+    kappa_ticklabels = ['0', '', '90', '', '180', '', '270', '', '360']
+
+    sigma_ticks = [-90, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90]
+    sigma_ticklabels = ['-90', '', '-45', '', '0', '', '45', '', '90']
+
+    h_ticks = [np.cos(np.radians(tick)) for tick in [0, 15, 30, 45, 60, 75, 90]]
+    h_ticklabels = ['0', '', '30', '', '60', '', '90']
+
+    # upper left panel
+    axis = axes[0][0]
+    axis.set_xlabel('Dip', **kwargs)
+    axis.set_xticks(h_ticks)
+    axis.set_xticklabels(h_ticklabels)
+    axis.set_ylabel('Strike', **kwargs)
+    axis.set_yticks(kappa_ticks)
+    axis.set_yticklabels(kappa_ticklabels)
+
+    # upper right panel
+    axis = axes[0][1]
+    axis.set_xlabel('Slip', **kwargs)
+    axis.set_xticks(sigma_ticks)
+    axis.set_xticklabels(sigma_ticklabels)
+    axis.set_ylabel('Strike', **kwargs)
+    axis.set_yticks(kappa_ticks)
+    axis.set_yticklabels(kappa_ticklabels)
+
+    # lower right panel
+    axis = axes[1][1]
+    axis.set_xlabel('Slip', **kwargs)
+    axis.set_xticks(sigma_ticks)
+    axis.set_xticklabels(sigma_ticklabels)
+    axis.set_ylabel('Dip', **kwargs)
+    axis.set_yticks(h_ticks)
+    axis.set_yticklabels(h_ticklabels)
+
+    # lower left panel
+    axes[1][0].axis('off')
 

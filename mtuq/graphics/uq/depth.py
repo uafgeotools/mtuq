@@ -1,6 +1,6 @@
 
 #
-# graphics/uq/origin.py - uncertainty quantification of source origin
+# graphics/uq/origin.py - uncertainty quantification of source depth
 #
 
 import numpy as np
@@ -121,36 +121,6 @@ def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     """
 
     raise NotImplementedError
-
-
-#
-# backends
-#
-
-def _plot_depth_matplotlib(filename,
-        depths,
-        values,
-        magnitudes=None,
-        lune_array=None,
-        title=None,
-        xlabel=None,
-        ylabel=None,
-        fontsize=16.):
-
-    figsize = (6., 6.)
-    pyplot.figure(figsize=figsize)
-    pyplot.plot(depths, values, 'k-')
-
-    if title:
-        pyplot.title(title, fontsize=fontsize)
-
-    if xlabel:
-         pyplot.xlabel(xlabel, fontsize=fontsize)
-
-    if ylabel:
-         pyplot.ylabel(ylabel, fontsize=fontsize)
-
-    pyplot.savefig(filename)
 
 
 def _plot_depth(filename, da, origins, title='',
