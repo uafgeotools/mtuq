@@ -12,7 +12,7 @@ from mtuq.util.math import open_interval as regular
 from mtuq.util.math import to_mij, to_rho, semiregular_grid, to_v, to_w
 
 
-# How to use grids
+# How to use moment tensor grids
 #
 #    Use ``get(i)`` to return the `i`-th moment tensor as a `MomentTensor` object
 #
@@ -106,7 +106,7 @@ def DeviatoricGridRandom(magnitudes=[1.], npts=100000):
     h = np.tile(h, len(magnitudes))
     rho = np.repeat(rho, npts)
 
-    return Grid(
+    return UnstructuredGrid(
         dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
         coords=(rho, v, w, kappa, sigma, h),
         callback=to_mt)

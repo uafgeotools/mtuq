@@ -10,7 +10,7 @@ from mtuq.util.math import open_interval as regular
 from mtuq.util.math import to_rtp
 
 
-# How to use grids
+# How to use force grids
 #
 #   Use ``get(i)`` to return the `i`-th force as a `Force` object
 #
