@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# github workflows apparanetly ignores bash arguments in the shebang line
-set -e
-
 
 #
 # Checks whether existing files match code generater output
@@ -25,6 +22,10 @@ FILENAMES="\
 
 # navigate to mtuq/tests
 cd $(dirname ${BASH_SOURCE[0]})
+
+
+# if any comparison fails, stop immediately
+set -e
 
 for filename in $FILENAMES
 do
