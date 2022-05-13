@@ -40,6 +40,8 @@ autogen
    mtuq.graphics.plot_marginal_latlon
    mtuq.graphics.plot_misfit_latlon
    mtuq.graphics._plot_latlon
+   mtuq.grid.DeviatoricGridRandom
+   mtuq.grid.DeviatoricGridSemiregular
    mtuq.grid.DoubleCoupleGridRandom
    mtuq.grid.DoubleCoupleGridRegular
    mtuq.grid.FullMomentTensorGridRandom
