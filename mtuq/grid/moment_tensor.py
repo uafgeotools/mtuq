@@ -12,7 +12,7 @@ from mtuq.util.math import open_interval as regular
 from mtuq.util.math import to_mij, to_rho, semiregular_grid, to_v, to_w
 
 
-# Usage
+# How to use grids
 #
 #    Use ``get(i)`` to return the `i`-th moment tensor as a `MomentTensor` object
 #
@@ -25,7 +25,7 @@ from mtuq.util.math import to_mij, to_rho, semiregular_grid, to_v, to_w
 
 
 def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
-    """ Full moment tensor grid with randomly-drawn points
+    """ Grid with randomly-drawn full moment tensors
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
@@ -57,7 +57,8 @@ def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
 
 def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20, 
     tightness=0.8, uniformity=0.8):
-    """ Full moment tensor grid with semiregularly-spaced points
+    """ Grid with regularly-spaced full moment tensors
+
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
@@ -81,7 +82,7 @@ def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20,
 
 
 def DeviatoricGridRandom(magnitudes=[1.], npts=100000):
-    """ Grid of randomly-drawn deviatoric moment tensors
+    """ Grid with randomly-drawn deviatoric moment tensors
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
@@ -114,7 +115,7 @@ def DeviatoricGridRandom(magnitudes=[1.], npts=100000):
 
 def DeviatoricGridSemiregular(magnitudes=[1.], npts_per_axis=20,
     tightness=0.8, uniformity=0.8):
-    """ Grid of deviatoric moment tensors with semiregular spacing
+    """ Grid with reguarly-spaced deviatoric moment tensors
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^4`.
@@ -140,7 +141,7 @@ def DeviatoricGridSemiregular(magnitudes=[1.], npts_per_axis=20,
 
 
 def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
-    """ Double-couple moment tensor grid with randomly-drawn points
+    """ Grid with randomly-drawn double couple moment tensors
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
@@ -167,7 +168,7 @@ def DoubleCoupleGridRandom(magnitudes=[1.], npts=50000):
     
 
 def DoubleCoupleGridRegular(magnitudes=[1.], npts_per_axis=40):
-    """ Double-couple moment tensor grid with regularly-spaced points
+    """ Grid with reguarly-spaced double couple moment tensors
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns a ``Grid`` of size `len(magnitudes)*npts_per_axis^3`.
