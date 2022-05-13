@@ -119,7 +119,7 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
 
     """
     _defaults(kwargs, {
-        'colormap': 'viridis',
+        'colormap': 'viridis_r',
         'squeeze': 'max',
         })
 

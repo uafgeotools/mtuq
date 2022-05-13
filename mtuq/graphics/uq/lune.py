@@ -1,3 +1,8 @@
+
+# 
+# graphics/uq/lune.py - uncertainty quantification on the eigenvalue lune
+#
+
 #
 # For details about the eigenvalue lune, see
 # Tape2012 - A geometric setting for moment tensors

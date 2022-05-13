@@ -1,8 +1,6 @@
 
-#
-# For details about the v,w rectangle see 
-# Tape2015 - A uniform parameterization of moment tensors
-# (https://doi.org/10.1093/gji/ggv262)
+# 
+# graphics/uq/vw.py - uncertainty quantification on the v,w rectangle
 #
 
 import numpy as np
@@ -16,6 +14,12 @@ from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, product
 from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
     to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
 
+
+#
+# For details about the v,w rectangle see 
+# Tape2015 - A uniform parameterization of moment tensors
+# (https://doi.org/10.1093/gji/ggv262)
+#
 
 v_min = -1./3.
 v_max = +1./3.
@@ -135,8 +139,42 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 
 
 
-def plot_variance_reduction_vw():
-    raise NotImplementedError
+def plot_variance_reduction_vw(filename, ds, data_norm, **kwargs):
+   """ Plots variance reduction on v,w rectangle
+
+    .. rubric :: Required input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``var`` (`float` or `array`):
+    Data variance
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_vw.html>`_
+
+    """
+    _defaults(kwargs, {
+        'colormap': 'viridis_r',
+        })
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        variance_reduction = _variance_reduction_vw_regular(ds, data_norm)
+
+    elif issubclass(type(ds), DataFrame):
+        variance_reduction = _variance_reduction_vw_random(ds, data_norm)
+
+    _plot_vw(filename, variance_reduction, **kwargs)
+
 
 
 
