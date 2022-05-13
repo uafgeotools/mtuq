@@ -140,7 +140,7 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
 
 
 def plot_variance_reduction_vw(filename, ds, data_norm, **kwargs):
-   """ Plots variance reduction on v,w rectangle
+    """ Plots variance reduction on v,w rectangle
 
     .. rubric :: Required input arguments
 

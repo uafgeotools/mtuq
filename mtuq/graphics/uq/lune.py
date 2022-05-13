@@ -227,6 +227,9 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
     ``title`` (`str`)
     Optional figure title
 
+    ``backend`` (`function`)
+    Choose from `_plot_lune_gmt` (default) or user-supplied function
+
     """
     if not issubclass(type(da), DataArray):
         raise Exception()
