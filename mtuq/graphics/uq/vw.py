@@ -7,11 +7,12 @@ import numpy as np
 import pandas
 import xarray
 
+from mtuq.grid.moment_tensor import _semiregular
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.graphics.uq._gmt import _plot_vw_gmt
 from mtuq.graphics.uq._matplotlib import _plot_vw_matplotlib
 from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, product
-from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
+from mtuq.util.math import closed_interval, open_interval,\
     to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
 
 
@@ -500,7 +501,7 @@ def _bin_vw_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normali
     """ Bins irregularly-spaced moment tensors into rectangular v,w cells
     """
     # at which points will we plot values?
-    centers_v, centers_w = semiregular_grid(
+    centers_v, centers_w = _semiregular(
         npts_v, npts_w, tightness=tightness)
 
     # what cell edges correspond to the above centers?

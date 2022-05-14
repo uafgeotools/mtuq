@@ -9,7 +9,8 @@ from mtuq.event import Force, MomentTensor
 from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.util import asarray
 from mtuq.util.math import open_interval as regular
-from mtuq.util.math import to_mij, to_rho, semiregular_grid, to_v, to_w
+from mtuq.util.math import open_interval, closed_interval,\
+   to_delta, to_gamma, to_mij, to_rho, to_v, to_w
 
 
 # How to use moment tensor grids
@@ -65,10 +66,10 @@ def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20,
 
     The grid is `semiregular` in the sense of an interpolation between
     two parameterizations.  `See here
-    <mtuq.grid.moment_tensor.semiregular_grid.html>`_ for details.
+    <mtuq.grid.moment_tensor._semiregular.html>`_ for details.
 
     """
-    v, w = semiregular_grid(npts_per_axis, 2*npts_per_axis, tightness, uniformity)
+    v, w = _semiregular(npts_per_axis, 2*npts_per_axis, tightness, uniformity)
 
     kappa = regular(0., 360, npts_per_axis)
     sigma = regular(-90., 90., npts_per_axis)
@@ -122,11 +123,11 @@ def DeviatoricGridSemiregular(magnitudes=[1.], npts_per_axis=20,
 
     The grid is `semiregular` in the sense of an interpolation between
     two parameterizations.  `See here
-    <mtuq.grid.moment_tensor.semiregular_grid.html>`_ for details.
+    <mtuq.grid.moment_tensor._semiregular.html>`_ for details.
 
     """
 
-    v, _ = semiregular_grid(npts_per_axis, 1, tightness, uniformity)
+    v, _ = _semiregular(npts_per_axis, 1, tightness, uniformity)
     w = 0
 
     kappa = regular(0., 360, npts_per_axis)
@@ -199,6 +200,56 @@ def to_mt(rho, v, w, kappa, sigma, h):
     return MomentTensor(mt, convention='USE')
 
 
+def _semiregular(npts_v, npts_w, tightness=0.8, uniformity=0.8):
+    """ Returns coordinate vectors along the `v, w` axes
+ 
+    .. rubric :: Tightness 
+
+    `tightness` controls how close the extremal points lie to the boundary of 
+    `v, w` rectangle
+
+
+    .. rubric :: Uniformity
+
+    `uniformity` controls the spacing between points.
+
+    For `uniformity=0`, the spacing will be regular in `Tape2012 
+    <https://uafgeotools.github.io/mtuq/references.html>`_ parameters 
+    `delta`, `gamma`, which is  good for avoiding distortion near the upper
+    and lower edges.
+
+    For `uniformity=1`, the spacing will be regular in `Tape2015
+    <https://uafgeotools.github.io/mtuq/references.html>`_ parameters `v, w`, 
+    which means that points are uniformly-spaced in terms of moment tensor 
+    Frobenius norms.
+
+    For intermediate values, the spacing will be `semiregular` in the sense of
+    a linear interpolation between the above cases.
+
+    """
+    assert 0. <= tightness < 1.,\
+        Exception("Allowable range: 0. < tightness < 1.")
+
+    assert 0. <= uniformity <= 1.,\
+        Exception("Allowable range: 0. <= uniformity <= 1.")
+
+
+    v1 = (tightness * closed_interval(-1./3., 1./3., npts_v) +
+          (1.-tightness) * open_interval(-1./3., 1./3., npts_v))
+
+    w1 = (tightness * closed_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w) +
+          (1.-tightness) * open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w))
+
+    gamma2 = (tightness * closed_interval(-30., 30., npts_v) +
+              (1.-tightness) * open_interval(-30, 30., npts_v))
+
+    delta2 = (tightness * closed_interval(-90., 90., npts_w) +
+              (1.-tightness) * open_interval(-90, 90., npts_w))
+
+    delta = to_delta(w1)*(1.-uniformity) + delta2*uniformity
+    gamma = to_gamma(v1)*(1.-uniformity) + gamma2*uniformity
+
+    return to_v(gamma), to_w(delta)
 
 
 #

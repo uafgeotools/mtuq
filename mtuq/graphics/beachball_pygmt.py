@@ -12,8 +12,8 @@ import matplotlib.pyplot as pyplot
 import numpy as np
 
 from mtuq.event import MomentTensor
+from mtuq.misfit.polarity import radiation_coef
 from mtuq.util import warn
-from mtuq.util.math import radiation_coef
 
 
 def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
@@ -153,3 +153,4 @@ def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
 
     # fig.show(dpi=300, method="external")
     fig.savefig(filename, show=display_plot)
+
