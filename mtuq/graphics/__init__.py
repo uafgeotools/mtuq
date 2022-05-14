@@ -9,9 +9,6 @@ from mtuq.graphics.beachball import\
 from mtuq.graphics.beachball_pygmt import\
     beachball_pygmt
 
-from mtuq.graphics.summary import\
-    plot_summary1, plot_summary2
-
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune,\
     plot_variance_reduction_lune, plot_magnitude_tradeoffs_lune, _plot_lune

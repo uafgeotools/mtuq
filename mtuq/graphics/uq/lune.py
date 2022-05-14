@@ -168,7 +168,7 @@ def plot_variance_reduction_lune(filename, ds, data_norm, **kwargs):
     elif issubclass(type(ds), DataFrame):
         variance_reduction = _variance_reduction_vw_random(ds, data_norm)
 
-    _plot_lune(filename, misfit, **kwargs)
+    _plot_lune(filename, variance_reduction, **kwargs)
 
 
 def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):

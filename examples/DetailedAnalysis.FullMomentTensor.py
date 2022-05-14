@@ -9,8 +9,7 @@ from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune,\
     plot_likelihood_lune, plot_marginal_vw,\
     plot_variance_reduction_lune, plot_magnitude_tradeoffs_lune,\
     plot_time_shifts, plot_amplitude_ratios,\
-    plot_summary1, plot_summary2, likelihood_analysis,\
-    _likelihoods_vw_regular, _marginals_vw_regular,\
+    likelihood_analysis, _likelihoods_vw_regular, _marginals_vw_regular,\
     _plot_lune, _plot_vw, _product_vw
 from mtuq.graphics.uq.vw import _variance_reduction_vw_regular
 from mtuq.grid import FullMomentTensorGridSemiregular
@@ -438,19 +437,6 @@ if __name__=='__main__':
 
         plot_magnitude_tradeoffs_lune(event_id+'FMT_tradeoffs/magnitude.png',
             results_sum, title='Magnitude tradeoffs')
-
-        print()
-
-
-        print('Plotting summary figures (work in progress)...\n')
-
-        os.makedirs(event_id+'FMT_summary', exist_ok=True)
-
-        plot_summary1(event_id+'FMT_summary/1.png',
-            results_rayleigh, stations, origin, best_source)
-
-        plot_summary2(event_id+'FMT_summary/2.png',
-            results_rayleigh, sigma_rayleigh**2, stations, origin, best_source)
 
         print()
 

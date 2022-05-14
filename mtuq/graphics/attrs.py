@@ -95,10 +95,7 @@ def _plot_pygmt(filename, time_shifts, stations, origin, source):
 
 def _plot_attrs(dirname, attrs, stations, origin, source,
      attr_key='time_shift', components=['Z', 'R', 'T'], format='png',
-     _backend=_plot_matplotlib):
-
-    if backend.lower()=='gmt':
-        raise NotImplementedError
+     backend=_plot_matplotlib):
 
     os.makedirs(dirname, exist_ok=True)
 
@@ -115,5 +112,5 @@ def _plot_attrs(dirname, attrs, stations, origin, source,
 
         if len(attr_list) > 0:
             filename = join(dirname, component+'.'+format)
-            _backend(filename, attr_list, station_list, origin, source)
+            backend(filename, attr_list, station_list, origin, source)
 

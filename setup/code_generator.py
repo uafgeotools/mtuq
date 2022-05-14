@@ -1190,19 +1190,6 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         print()
 
 
-        print('Plotting summary figures (work in progress)...\\n')
-
-        os.makedirs(event_id+'FMT_summary', exist_ok=True)
-
-        plot_summary1(event_id+'FMT_summary/1.png',
-            results_rayleigh, stations, origin, best_source)
-
-        plot_summary2(event_id+'FMT_summary/2.png',
-            results_rayleigh, sigma_rayleigh**2, stations, origin, best_source)
-
-        print()
-
-
         print('Plotting time shift geographic variation...\\n')
 
         plot_time_shifts(event_id+'FMT_time_shifts/bw',
@@ -1603,8 +1590,7 @@ if __name__=='__main__':
             '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
             '    plot_variance_reduction_lune, plot_magnitude_tradeoffs_lune,\\\n'+
             '    plot_time_shifts, plot_amplitude_ratios,\\\n'+
-            '    plot_summary1, plot_summary2, likelihood_analysis,\\\n'+
-            '    _likelihoods_vw_regular, _marginals_vw_regular,\\\n'+
+            '    likelihood_analysis, _likelihoods_vw_regular, _marginals_vw_regular,\\\n'+
             '    _plot_lune, _plot_vw, _product_vw\n'+
             'from mtuq.graphics.uq.vw import _variance_reduction_vw_regular'
             ),
