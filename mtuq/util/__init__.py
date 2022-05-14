@@ -2,6 +2,7 @@
 from copy import deepcopy
 from functools import reduce
 from math import ceil, floor
+from matplotlib import colors
 from obspy import UTCDateTime
 from os.path import abspath, join
 from retry import retry
@@ -219,6 +220,10 @@ def timer(func):
             return func(*args, **kwargs)
 
     return timed_func
+
+
+def to_rgb(color):
+    return 255*asarray(colors.to_rgba(color)[:3])
 
 
 def unzip(filename):
