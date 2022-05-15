@@ -21,6 +21,7 @@ Visualization
    :maxdepth: 1
 
    06/plotting_time_shifts
+   06/customizing_figures
 
    
 

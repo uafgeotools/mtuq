@@ -2,7 +2,9 @@
 Plotting time shifts and amplitude ratios
 =========================================
 
-Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, many moment tensor inversion studies use time shifts to mitigate velocity model inaccuracy. It has become common to plot how these time shifts vary with geographic location.
+Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, many moment tensor inversions use time shifts to mitigate velocity model inaccuracy. 
+
+It is common to plot how these time shifts vary with geographic location.
 
 
 Keeping track of trace attributes
@@ -47,20 +49,20 @@ As a result, one image like the following will be created for each component
   :width: 400 
 
 
-Plotting custom trace attributes
---------------------------------
+Plotting custom attributes
+--------------------------
 
-It is possible to add `custom trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html#custom-trace-attributes>`_ to the `attrs` data structure returned by `collect_attributes`. 
+It is possible to `add custom trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html#custom-trace-attributes>`_ to the data structure returned by `collect_attributes`. 
 
-To plot how a user-specified attribute, say, `custom_attr`, varies by location and component, we can use the private function `_plot_attr`:
+To plot how a custom attribute (say, `custom_attr`) varies, we can use the private function `_plot_attrs`:
 
 .. code::
 
-    from mtuq.graphics import _plot_attr
+    from mtuq.graphics import _plot_attrs
     _plot_attrs(dirname, stations, origins, attrs, 'custom_attr', components=['Z','R','T'])
 
 
-As it turns out, `_plot_attr` is also what the public functions `plot_time_shifts`, `plot_amplitude_ratios`, `plot_log_amplitude_ratios` use under the hood.
+It turns out that `_plot_attr` is also what `plot_time_shifts`, `plot_amplitude_ratios`, `plot_log_amplitude_ratios` use under the hood to create figures.
 
 
 Source code
