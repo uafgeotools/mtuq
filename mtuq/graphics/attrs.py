@@ -1,116 +1,166 @@
+
+import matplotlib
 import os
+import numpy as np
 
 from matplotlib import pyplot
 from os.path import join
 
-from mtuq.util import warn
+from mtuq.util import defaults, warn
 
 
-def plot_time_shifts(*args, **kwargs):
-    """ Creates "spider plots" showing how time shifts vary geographically
+def plot_time_shifts(dirname, attrs, stations, origin, **kwargs):
+    """ Plots how time shifts vary geographically
 
-    Within the specified directory, a separate PNG figure will be created for 
-    each given component. Any components not present in the data will be 
-    skipped.
+    .. rubric :: Required input arguments
 
-    """
-    kwargs.update({'attr_key': 'time_shift'})
-    _plot_attrs(*args, **kwargs)
+    ``direname`` (`str`):
+    Directory in which figures will be written
+
+    ``attrs`` (`list` of `AttribDict`):
+    List returned by misfit function's `collect_attributes` method
 
 
-def plot_amplitude_ratios(*args, **kwargs):
-    """ Creates "spider plots" showing how amplitude ratios vary geographically
+    .. rubric :: Optional input arguments
 
-    Within the specified directory, a separate PNG figure will be created for 
-    each given component. Any components not present in the data will be 
-    skipped.
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_attrs.html>`_
 
     """
-    kwargs.update({'attr_key': 'amplitude_ratio'})
-    _plot_attrs(*args, **kwargs)
+    defaults(kwargs, {
+        'label': 'Time shift (s)',
+        })
+
+    _plot_attrs(dirname, stations, origin, attrs, 'time_shift', **kwargs)
 
 
-def plot_log_amplitude_ratios(*args, **kwargs):
-    """ Creates "spider plots" showing how ln(Aobs/Asyn) varies geographically
-
-    Within the specified directory, a separate PNG figure will be created for 
-    each given component. Any components not present in the data will be 
-    skipped.
+def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
+    """ Plots how amplitude ratios vary geographically
 
     """
-    kwargs.update({'attr_key': 'log_amplitude_ratio'})
-    _plot_attrs(*args, **kwargs)
+    defaults(kwargs, {
+        'label': '$A_{obs}/A_{syn}$',
+        'colormap': 'Reds',
+        'centered': False,
+        })
+
+    _plot_attrs(dirname, stations, origin, attrs, 'amplitude_ratio', **kwargs)
 
 
+def plot_log_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
+    """ Plots how ln(Aobs/Asyn) varies geographically
 
-def _plot_matplotlib(filename, time_shifts, stations, origin, source, 
-    cmap='seismic', station_marker_size=80, source_marker_size=15):
-
-    """ Creates the actual "spider plot"
     """
-    #
-    # TODO 
-    #   - replace generic source marker with beachball
-    #   - implement alternative GMT version
-    #
+    defaults(kwargs, {
+        'label': 'ln($A_{obs}/A_{syn}$)',
+        })
 
-    pyplot.figure()
-
-    # plot "spider lines"
-    for station in stations:
-        pyplot.plot(
-            [origin.longitude, station.longitude],
-            [origin.latitude, station.latitude],
-            marker=None,
-            color='black',
-            linestyle='-',
-            linewidth=0.5,
-            )
-
-    # plot stations
-    pyplot.scatter(
-        [station.longitude for station in stations],
-        [station.latitude for station in stations], 
-        s=station_marker_size,
-        c=time_shifts, 
-        cmap=cmap, 
-        marker='^',
-        )
-
-    # plot origin
-    pyplot.plot(
-        origin.longitude, 
-        origin.latitude,
-        marker='o', 
-        markersize=source_marker_size,
-        )
-
-    pyplot.savefig(filename)
-    pyplot.close()
+    _plot_attrs(dirname, stations, origin, attrs, 'log_amplitude_ratio', **kwargs)
 
 
-def _plot_pygmt(filename, time_shifts, stations, origin, source):
-    raise NotImplementedError
+def _plot_attrs(dirname, stations, origin, attrs, key,
+     components=['Z', 'R', 'T'], format='png', backend='matplotlib',
+     **kwargs):
+
+    """ Reads the attribute given by `key` from the `attrs` data structure, and
+    plots how this attribute varies geographically
+
+    Within the specified directory, a separate figure will be created for each
+    component, e.g. `Z.png`, `R.png`, `T.png`.
 
 
-def _plot_attrs(dirname, attrs, stations, origin, source,
-     attr_key='time_shift', components=['Z', 'R', 'T'], format='png',
-     backend=_plot_matplotlib):
+    .. rubric :: Optional input arguments
+
+
+    """
+
+    if backend=='matplotlib':
+        backend = _matplotlib
 
     os.makedirs(dirname, exist_ok=True)
 
     for component in components:
-        attr_list = []
+        values = []
         station_list = []
 
         for _i, station in enumerate(stations):
             if component not in attrs[_i]:
                 continue
 
-            attr_list += [attrs[_i][component][attr_key]]
+            values += [attrs[_i][component][key]]
             station_list += [stations[_i]]
 
-        if len(attr_list) > 0:
+        if len(values) > 0:
             filename = join(dirname, component+'.'+format)
-            backend(filename, attr_list, station_list, origin, source)
+            backend(filename, values, station_list, origin, **kwargs)
+
+
+#
+# low-level function for plotting trace attributes
+#
+
+def _matplotlib(filename, values, stations, origin,
+    add_station_labels=True, colormap='coolwarm', centered=True, label='',
+    figsize=(5., 6.)):
+
+    fig = pyplot.figure(figsize=figsize)
+
+
+    # generate colormap
+    cmap = matplotlib.cm.get_cmap(colormap)
+    if centered:
+        min_val = -np.max(np.abs(values))
+        max_val = +np.max(np.abs(values))
+    else:
+        min_val = np.min(values)
+        max_val = np.max(values)
+ 
+    # plot stations
+    im = pyplot.scatter(
+        [station.longitude for station in stations],
+        [station.latitude for station in stations], 
+        s=80.,
+        c=values, 
+        cmap=cmap, 
+        vmin=min_val,
+        vmax=max_val,
+        marker='^',
+        )
+
+    # plot line segments
+    for _i, station in enumerate(stations):
+
+        scaled = (values[_i]-min_val)/(max_val-min_val)
+        rgb = cmap(scaled)
+
+        pyplot.plot(
+            [origin.longitude, station.longitude],
+            [origin.latitude, station.latitude],
+            marker=None,
+            color=rgb,
+            linestyle='-',
+            linewidth=0.5,
+            )
+
+    # plot origin
+    pyplot.plot(
+        origin.longitude,
+        origin.latitude,
+        marker='*',
+        markersize=15.,
+        color='black',
+        )
+
+    # adjust ticks
+    pyplot.gca().tick_params(top=True, right=True,
+        labeltop=True, labelright=True)
+
+    pyplot.locator_params(nbins=3)
+
+    # add colorbar
+    fig.colorbar(im, orientation="horizontal", pad=0.2,
+        label=label)
+
+    pyplot.savefig(filename)
+    pyplot.close()
 
