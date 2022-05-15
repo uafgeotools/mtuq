@@ -1,9 +1,26 @@
 
 
-Advanced graphics
-=================
+Advanced topics
+===============
 
-Plotting saved results from disk
 
-Customizing figure appearance
+Data structures
+---------------
+
+.. toctree::
+   :maxdepth: 1
+
+   06/trace_attributes
+
+
+
+Visualization
+-------------
+
+.. toctree::
+   :maxdepth: 1
+
+   06/plotting_time_shifts
+
+   
 
