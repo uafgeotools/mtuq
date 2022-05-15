@@ -1,7 +1,8 @@
 
 
 from mtuq.graphics.attrs import\
-    plot_time_shifts, plot_amplitude_ratios
+    plot_time_shifts, plot_amplitude_ratios, plot_log_amplitude_ratios,\
+    _plot_attrs
 
 from mtuq.graphics.beachball import\
     plot_beachball

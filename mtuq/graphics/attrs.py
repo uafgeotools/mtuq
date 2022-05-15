@@ -14,11 +14,17 @@ def plot_time_shifts(dirname, attrs, stations, origin, **kwargs):
 
     .. rubric :: Required input arguments
 
-    ``direname`` (`str`):
+    ``dirname`` (`str`):
     Directory in which figures will be written
 
     ``attrs`` (`list` of `AttribDict`):
     List returned by misfit function's `collect_attributes` method
+
+    ``stations`` (`list` of `mtuq.Station` objects)
+    Used to extract station locations
+
+    ``origin`` (`mtuq.Origin` object)
+    Used to extract origin location
 
 
     .. rubric :: Optional input arguments
@@ -35,7 +41,28 @@ def plot_time_shifts(dirname, attrs, stations, origin, **kwargs):
 
 
 def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
-    """ Plots how amplitude ratios vary geographically
+    """ Plots how Aobs/Asyn varies geographically
+
+    .. rubric :: Required input arguments
+
+    ``dirname`` (`str`):
+    Directory in which figures will be written
+
+    ``attrs`` (`list` of `AttribDict`):
+    List returned by misfit function's `collect_attributes` method
+
+    ``stations`` (`list` of `mtuq.Station` objects)
+    Used to extract station locations
+
+    ``origin`` (`mtuq.Origin` object)
+    Used to extract origin location
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_attrs.html>`_
+
 
     """
     defaults(kwargs, {
@@ -49,6 +76,26 @@ def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
 
 def plot_log_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
     """ Plots how ln(Aobs/Asyn) varies geographically
+
+    .. rubric :: Required input arguments
+
+    ``dirname`` (`str`):
+    Directory in which figures will be written
+
+    ``attrs`` (`list` of `AttribDict`):
+    List returned by misfit function's `collect_attributes` method
+
+    ``stations`` (`list` of `mtuq.Station` objects)
+    Used to extract station locations
+
+    ``origin`` (`mtuq.Origin` object)
+    Used to extract origin location
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_attrs.html>`_
 
     """
     defaults(kwargs, {
@@ -76,6 +123,10 @@ def _plot_attrs(dirname, stations, origin, attrs, key,
 
     if backend=='matplotlib':
         backend = _matplotlib
+
+    if not callable(backend):
+        raise TypeError
+
 
     os.makedirs(dirname, exist_ok=True)
 
