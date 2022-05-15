@@ -444,19 +444,19 @@ if __name__=='__main__':
         print('Plotting time shift geographic variation...\n')
 
         plot_time_shifts(event_id+'FMT_time_shifts/bw',
-            list_bw, stations, origin, best_source)
+            list_bw, stations, origin)
 
         plot_time_shifts(event_id+'FMT_time_shifts/sw',
-            list_sw, stations, origin, best_source)
+            list_sw, stations, origin)
 
 
         print('Plotting amplitude ratio geographic variation...\n')
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/bw',
-            list_bw, stations, origin, best_source)
+            list_bw, stations, origin)
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/sw',
-            list_sw, stations, origin, best_source)
+            list_sw, stations, origin)
 
 
         print('\nSaving results...\n')
