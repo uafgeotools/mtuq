@@ -11,7 +11,7 @@ from xarray import DataArray
 from mtuq.graphics.uq._gmt import _plot_latlon_gmt
 from mtuq.graphics.uq.depth import _misfit_regular, _likelihoods_regular
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util import fullpath, warn
+from mtuq.util import defaults, warn
 from mtuq.util.math import closed_interval, open_interval
 
 

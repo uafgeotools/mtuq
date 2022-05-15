@@ -10,7 +10,7 @@ from xarray import DataArray
 from mtuq.graphics._gmt import read_cpt, _cpt_path
 from mtuq.graphics.uq._matplotlib import _plot_dc_matplotlib
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, warn
+from mtuq.util import dataarray_idxmin, dataarray_idxmax, defaults, warn
 from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma, to_mij
 from os.path import exists
 
@@ -33,7 +33,7 @@ def plot_misfit_dc(filename, ds, **kwargs):
     `see here <mtuq.graphics._plot_dc.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'viridis',
         'squeeze': 'min',
         })
@@ -73,7 +73,7 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
     `see here <mtuq.graphics._plot_dc.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'hot_r',
         'squeeze': 'max',
         })
@@ -118,7 +118,7 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
     `see here <mtuq.graphics._plot_dc.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'viridis_r',
         'squeeze': 'max',
         })
@@ -314,9 +314,4 @@ def _check(ds):
     if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
 
-
-def _defaults(kwargs, defaults):
-    for key in defaults:
-        if key not in kwargs:
-           kwargs[key] = defaults[key]
 
