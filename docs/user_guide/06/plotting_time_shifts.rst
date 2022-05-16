@@ -2,15 +2,15 @@
 Plotting time shifts and amplitude ratios
 =========================================
 
-Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, many moment tensor inversions use time shifts to mitigate velocity model inaccuracy. 
+Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, moment tensor inversions commonly use time shifts to mitigate velocity model inaccuracy. 
 
 To understand model inaccuracy effects, it can be helpful to plot how these time shifts vary geographically.
 
 
-Keeping track of trace attributes
----------------------------------
+Calculating trace attributes
+----------------------------
 
-To keep track of time shifts and other trace attributes, MTUQ uses `an approach <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_, in which the `collect_attributes` method returns a data structure containing time shifts and other information:
+To calculate time shifts, amplitude ratios and other `trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_, MTUQ provides the `collect_attributes` method, which can be invoked using the same arguments as an ordinary misfit function evaluation:
 
 .. code::
 
@@ -20,14 +20,14 @@ To keep track of time shifts and other trace attributes, MTUQ uses `an approach 
 Plotting time shifts
 --------------------
 
-To plot time shifts, the `attrs` data structure returned above can simply be passed to a plotting function:
+To plot time shifts, the `attrs` data structure returned above can be passed directly to a plotting function:
 
 .. code::
 
     from mtuq.graphics import plot_time_shifts
     plot_time_shifts(dirname, attrs, stations, origins, components=['Z','R','T'])
 
-As a result, one image like the following will be created for each component.
+As a result, one image like the following will be created for each component:
 
 .. image:: images/20090407201255351_attrs_time_shifts_bw_Z.png
   :width: 400 
@@ -43,7 +43,7 @@ Similarly, the `attrs` data structure can be used to plot amplitude ratios:
     from mtuq.graphics import plot_amplitude_ratios
     plot_amplitude_ratios(dirname, attrs, stations, origins, components=['Z','R','T'])
 
-As a result, one image like the following will be created for each component
+As a result, one image like the following will be created for each component:
 
 .. image:: images/20090407201255351_attrs_amplitude_ratios_bw_Z.png
   :width: 400 

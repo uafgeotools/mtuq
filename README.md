@@ -49,7 +49,7 @@ Alternatively, MTUQ misfit functions can be used as a starting point for Bayesia
 
 ### Visualization
 
-[Visualization utilities](https://uafgeotools.github.io/mtuq/user_guide/gallery_mt.html) are included for both the [eigenvalue lune](https://onlinelibrary.wiley.com/doi/10.1111/j.1365-246X.2012.05491.x) and [v-w rectangle](https://academic.oup.com/gji/article/202/3/2074/613765), with matplotlib and Generic Mapping Tools graphics backends.
+[Visualization utilities](https://uafgeotools.github.io/mtuq/user_guide/05/gallery_mt.html) are included for both the [eigenvalue lune](https://onlinelibrary.wiley.com/doi/10.1111/j.1365-246X.2012.05491.x) and [v,w rectangle](https://academic.oup.com/gji/article/202/3/2074/613765), with matplotlib and Generic Mapping Tools graphics backends.
 
 
 ### Testing

@@ -2,9 +2,9 @@
 Trace attributes
 ================
 
-In a seismic inversion, waveform differences, phase shifts, amplitude ratios, and other quantities are calculated from observed and synthetic seismic traces. 
+Throughout a seismic inversion, waveform differences, phase shifts, amplitude ratios, and other quantities are calculated from observed and synthetic seismic traces. 
 
-Such quantities provide important information about how data fit evolves and varies according to location and component. 
+Such `trace attribute` quantities provide important information about how data fit evolves during the inversion and varies with respect to geographic location and seismic component. 
 
 
 Collecting trace attributes
@@ -32,7 +32,7 @@ The `attrs` data structure above consists of a list of `AttribDict <https://docs
 Attaching trace attributes to `Datasets`
 ----------------------------------------
 
-We can also attach traces attributes to the observed data directly by invoking the misfit function as follows:
+We can also attach trace attributes to the observed data directly by invoking the misfit function as follows:
 
 .. code::
 
@@ -49,6 +49,6 @@ During misfit evaluation, a `AttribDict` will be attached to each `Trace` object
 Custom trace attributes
 -----------------------
 
-Users can add additional trace attributes by modifying `mtuq/misfit/waveform/level0.py`. Any changes made here carry over to both the `collect_attributes` and `set_attributes` methods above.
+Users can add additional trace attributes by modifying `mtuq/misfit/waveform/level0.py <https://github.com/uafgeotools/mtuq/blob/master/mtuq/misfit/waveform/level0.py>`_. Any changes made here carry over to both the `collect_attributes` and `set_attributes` methods above.
 
 
