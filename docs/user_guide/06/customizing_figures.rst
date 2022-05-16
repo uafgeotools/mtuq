@@ -10,22 +10,22 @@ Fortunately, figure appearance is highly customizable, as illustrated below.
 Time shift and amplitude ratio figures
 ---------------------------------------
 
-To plot how time shifts, amplitude ratios, or other `trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_ vary geographically, we can pass the output of `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ to a plotting function, as in the following example:
+To plot how time shifts, amplitude ratios, or other `trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_ vary geographically, we can pass the output of `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ to a plotting function, as in the following:
 
 .. code::
 
     plot_time_shifts(dirname, attrs, stations, origins)
 
 
-Because we haven't specified a map projection or other details, it's no surprise that the resulting figure is quite generic:
+Because we haven't specified a map projection or other details, it's no surprise that the resulting figures are quite generic:
 
 .. image:: images/20090407201255351_attrs_time_shifts_bw_Z.png
   :width: 400 
 
 
-To some extent, the above figure can be customized through optional arguments, which get passed to the backend function `_plot_attrs` (see `documentation <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_).
+To some extent, the above figure can be customized through input arguments (`see descriptions <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_), some of which get passed to the backend function `_plot_attrs <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics._plot_attrs.html>`_.
 
-A much more powerful approach, though, is to overload the backend entirely:
+A much more powerful approach, though, is to overload the backend function completely:
 
 .. code::
 
@@ -36,4 +36,5 @@ To illustrate, we have implemented a `custom backend <https://uafgeotools.github
 
 .. image:: images/20090407201255351_attrs_time_shifts_bw_Z_pygmt.png
   :width: 400 
+
 

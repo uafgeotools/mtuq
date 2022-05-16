@@ -4,13 +4,13 @@ Plotting time shifts and amplitude ratios
 
 Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, many moment tensor inversions use time shifts to mitigate velocity model inaccuracy. 
 
-It is common to plot how these time shifts vary with geographic location.
+To understand model inaccuracy effects, it can be helpful to plot how these time shifts vary geographically.
 
 
 Keeping track of trace attributes
 ---------------------------------
 
-To keep track of time shifts and other trace attributes, MTUQ uses `this approach <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_, in which the `collect_attributes` method returns a data structure containing time shifts and other information:
+To keep track of time shifts and other trace attributes, MTUQ uses `an approach <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_, in which the `collect_attributes` method returns a data structure containing time shifts and other information:
 
 .. code::
 
@@ -54,7 +54,7 @@ Plotting custom attributes
 
 It is possible to `add custom trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html#custom-trace-attributes>`_ to the data structure returned by `collect_attributes`. 
 
-To plot how a custom attribute (say, `custom_attr`) varies, we can use the private function `_plot_attrs`:
+To plot how a custom attribute varies, we can use the private function `_plot_attrs`:
 
 .. code::
 
@@ -62,7 +62,7 @@ To plot how a custom attribute (say, `custom_attr`) varies, we can use the priva
     _plot_attrs(dirname, stations, origins, attrs, 'custom_attr', components=['Z','R','T'])
 
 
-It turns out that `_plot_attr` is also what `plot_time_shifts`, `plot_amplitude_ratios`, `plot_log_amplitude_ratios` use under the hood to create figures.
+(In fact, `_plot_attr` is used under the hood by `plot_time_shifts`, `plot_amplitude_ratios`, `plot_log_amplitude_ratios` in exactly the same manner.)
 
 
 Source code

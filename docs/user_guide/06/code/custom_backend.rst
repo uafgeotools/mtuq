@@ -1,4 +1,20 @@
 
+Custom backends
+===============
+
+Custom backend can be used to modify the appearance of many MTUQ plotting functions.
+
+First, check that the function has a `backend` keyword argument.  If so, then feel free to pass a custom backend function via the backend keyword argument.
+
+
+Example
+-------
+
+The backend function below can be passed to `plot_time_shifts <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_, `plot_amplitude_ratios <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_amplitude_ratios.html>`_, `plot_log_amplitude_ratios <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_log_amplitude_ratios.html>`_, and `_plot_attrs <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics._plot_attrs.html>`_. 
+
+Note that the backend function contains hardcoded map limits and projection settings, which improve the appearance `Silwal2016 <https://uafgeotools.github.io/mtuq/references.html>`_ figures, but lack generality for default MTUQ plotting.
+
+
 .. code::
 
   def custom_backend(filename, values, stations, origin,
