@@ -23,15 +23,15 @@ Because we haven't specified a map projection or other details, it's no surprise
   :width: 400 
 
 
-To some extent, the above figure can be customized through optional arguments, which get passed to a backend function `_plot_attrs` (see `documentation <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_).
+To some extent, the above figure can be customized through optional arguments, which get passed to the backend function `_plot_attrs` (see `documentation <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_).
 
 A much more powerful approach, though, is to overload the backend entirely:
 
 .. code::
 
-    plot_time_shifts(dirname, attrs, stations, origins, backend=user_supplied_function)
+    plot_time_shifts(dirname, attrs, stations, origins, backend=custom_backend)
 
-To illustrate, we have implemented a `custom backend <>`_ for the `Silwal2016` study area. The result of calling `plot_time_shifts` with this new backend is shown below:
+To illustrate, we have implemented a `custom backend <https://uafgeotools.github.io/mtuq/user_guide/06/code/custom_backend.html>`_ for the `Silwal2016` study area. The result of calling `plot_time_shifts` with this new backend is shown below:
 
 
 .. image:: images/20090407201255351_attrs_time_shifts_bw_Z_pygmt.png

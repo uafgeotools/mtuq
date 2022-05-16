@@ -10,7 +10,7 @@ Such quantities provide important information about how data fit evolves and var
 Collecting trace attributes
 ---------------------------
 
-Through the misfit function's `collect_attributes` method, MTUQ provides a way to collect time shift, amplitude ratio and other trace attributes.
+Through the misfit function's `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ method, MTUQ provides a way to collect time shift, amplitude ratio and other trace attributes.
 
 Suppose we have defined a misfit function as follows:
 
@@ -19,14 +19,14 @@ Suppose we have defined a misfit function as follows:
     misfit = Misfit(norm='L2')
 
 
-To get a data structure containing trace attributes, we can invoke `collect_attributes()` using the same input arguments as we would for an ordinary misfit function evaluation:
+To get a data structure containing trace attributes, we can invoke `collect_attributes` using the same input arguments as we would for an ordinary misfit function evaluation:
 
 .. code::
 
     attrs =  misfit.collect_attributes(data, greens, source)
 
 
-The `attrs` data structure in the above consists of a list of `AttribDict` objects organized by station and component.
+The `attrs` data structure above consists of a list of `AttribDict <https://docs.obspy.org/packages/autogen/obspy.core.util.attribdict.AttribDict.html>`_ objects organized by station and component.
 
 
 Attaching trace attributes to `Datasets`
