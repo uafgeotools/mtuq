@@ -30,7 +30,7 @@ To read the NetCDF file back from disk:
     da = open_dataarray('output.nc')
 
 
-Before or after writing to disk, `da` can be passed to visualization utilities or manipulated using xarray methods.
+Before or after writing to disk, `da` can be passed to visualization utilities or manipulated using `xarray methods <https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html>`_.
 
 
 
@@ -62,6 +62,6 @@ To read the HDF5 file back from disk:
     df = read_hdf('output.hf5')
 
 
-Before or after writing to disk, `df` can be passed to visualization utilities or manipulated using pandas methods.
+Before or after writing to disk, `df` can be passed to visualization utilities or manipulated using `pandas methods <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 
 

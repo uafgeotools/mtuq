@@ -2,13 +2,17 @@
 
 
 #
-# Checks whether URLs still exist
+# Checks whether web pages still exist
 #
 
 URLS="\
     https://raw.githubusercontent.com/geodynamics/axisem/master/MANUAL/manual_axisem1.3.pdf\
     https://github.com/Liang-Ding/seisgen\
     https://instaseis.net\
+    https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html
+    https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
+    https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html
+    https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems
     "
 
 
