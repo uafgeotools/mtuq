@@ -7,7 +7,7 @@ Suppose we are running a grid search over both `origins` and moment tensor `sour
 
 .. code::
 
-    ds = grid_search(data, greens, stations, origins, sources)
+    ds = grid_search(data, greens, misfit, stations, origins, sources)
 
 
 After the above command finishes, the data structure `ds` will contain all the moment tensors and corresponding misfit values.

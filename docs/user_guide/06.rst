@@ -11,6 +11,8 @@ Data structures
    :maxdepth: 1
 
    06/trace_attributes
+   06/regularly_spaced_grids
+   06/randomly_drawn_grids
 
 
 
