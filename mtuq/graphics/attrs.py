@@ -66,8 +66,8 @@ def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
 
     """
     defaults(kwargs, {
-        'label': '$A_{obs}/A_{syn}$',
         'colormap': 'Reds',
+        'label': '$A_{obs}/A_{syn}$',
         'zero_centered': False,
         })
 
@@ -170,7 +170,7 @@ def _plot_attrs(dirname, stations, origin, attrs, key,
 
 def _default_backend(filename, values, stations, origin,
     colormap='coolwarm', zero_centered=True, colorbar=True,
-    colorbar_label='', width=5., height=5.):
+    label='', width=5., height=5.):
 
     """ Default backend for all other `mtuq.graphics.attrs` functions
 
@@ -191,7 +191,7 @@ def _default_backend(filename, values, stations, origin,
     ``colorbar`` (`bool`):
     Whether or not to display a colorbar
 
-    ``colorbar_label`` (`str`):
+    ``label`` (`str`):
     Optional colorbar label
 
 
