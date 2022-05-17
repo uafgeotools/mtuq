@@ -31,7 +31,7 @@ In comparison, a much more powerful approach is to overload the backend function
 
     plot_time_shifts(dirname, attrs, stations, origins, backend=custom_backend)
 
-To illustrate, we have implemented a `custom backend <https://uafgeotools.github.io/mtuq/user_guide/06/code/custom_backend.html>`_ relevant to `Silwal2016 <https://uafgeotools.github.io/mtuq/references.html>`_. The result of calling `plot_time_shifts` with this new backend is shown below:
+To illustrate, we have implemented a `custom backend <https://uafgeotools.github.io/mtuq/user_guide/06/code/custom_backend.html#example>`_ relevant to `Silwal2016 <https://uafgeotools.github.io/mtuq/references.html>`_. The result of calling `plot_time_shifts` with this new backend is:
 
 
 .. image:: images/20090407201255351_attrs_time_shifts_bw_Z_pygmt.png
@@ -40,16 +40,16 @@ To illustrate, we have implemented a `custom backend <https://uafgeotools.github
 
 .. note::
 
-    Note that the frontend functions perform only data manipulation. All graphics library calls occur in the backends. As a result, users can interchange graphics libraries such as matplotlib, GMT, or PyGMT. 
+    Note that frontend functions perform only data manipulation. All graphics library calls occur in the backends. As a result, users can interchange graphics libraries such as matplotlib, GMT, or PyGMT. 
 
 
 .. warning::
 
-    The default figure above was generated using `matplotlib`, while `PyGMT` was used to generate the custom figure.  PyGMT requires additional installation steps, beyond `pip install -e mtuq/`.
+    The default figure above was generated using matplotlib, while PyGMT was used to generate the custom figure.  PyGMT requires additional installation steps, beyond `pip install -e mtuq/`.
 
 
 Misfit and likelihood figures
-------------------------------
+-----------------------------
 
 `Misfit and likelihood figures <https://uafgeotools.github.io/mtuq/library/index.html#moment-tensor-and-force-visualization>`_ for force, moment tensor, depth and hypocenter can also be customized by user-supplied backends.
 

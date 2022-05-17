@@ -71,13 +71,6 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
     if type(mt)!=MomentTensor:
         raise TypeError
 
-    #try:
-    #    assert exists_pygmt()
-    #    _plot_beachball_pygmt(filename, mt, stations, origin, **kwargs)
-    #    return
-    #except:
-    #    pass
-
     try:
         assert exists_gmt()
         assert gmt_major_version() >= 6

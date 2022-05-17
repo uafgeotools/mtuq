@@ -241,7 +241,7 @@ class MomentTensorHeader(Base):
         py -= 0.30
 
         line = _focal_mechanism(self.lune_dict)
-        line +=  ',   '+_delta_gamma(self.lune_dict)
+        line +=  ',   '+_gamma_delta(self.lune_dict)
         _write_text(line, px, py, ax, fontsize=14)
 
 
@@ -398,7 +398,7 @@ def _focal_mechanism(lune_dict):
         (strike, dip, slip))
 
 
-def _delta_gamma(lune_dict):
+def _gamma_delta(lune_dict):
     try:
         v, w = lune_dict['v'], lune_dict['w']
         delta, gamma = to_delta_gamma(v, w)

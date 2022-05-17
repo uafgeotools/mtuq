@@ -1,9 +1,4 @@
 
-#
-# graphics/big_beachball.py - first motion "beachball" plots with piercing point polarities
-#
-
-
 import os
 import matplotlib.pyplot as pyplot
 import numpy as np
