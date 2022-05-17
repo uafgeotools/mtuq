@@ -4,7 +4,7 @@ Trace attributes
 
 During a seismic inversion waveform differences, phase shifts, amplitude ratios, and other quantities are calculated from observed and synthetic seismic traces. 
 
-Such `trace attribute` quantities provide important information about how data fit evolves over model model updates and varies with respect to geographic location and seismic component. 
+Such `trace attribute` quantities provide important information about how data fit evolves over model updates and varies with respect to geographic location and seismic component. 
 
 
 Collecting trace attributes

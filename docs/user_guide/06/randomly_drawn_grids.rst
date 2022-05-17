@@ -1,7 +1,7 @@
 
 
-Randomly-drawn grids
-====================
+Working with randomly-drawn grids
+=================================
 
 Randomly-drawn grids of moment tensors, forces, or other sources parameters can be defined using the `UnstructredGrid` class.
 
@@ -11,16 +11,16 @@ A grid search over a randomly-drawn grid of `sources`
 
     df = grid_search(data, greens, misfit, stations, origins, sources)
 
-returns a `pandas DataFrame` df, which contains misfit values associated with each grid point.
+returns a pandas DataFrame `df`, which contains misfit values associated with each grid point.
 
 To write the grid search output `df` to disk as an HDF5 file:
 
 .. code::
 
-    df.results('output.hf5')
+    df.save('output.hf5')
 
 
-To reading the HDF5 file back from disk:
+To read the HDF5 file back from disk:
 
 .. code::
 

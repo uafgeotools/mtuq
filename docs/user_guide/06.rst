@@ -1,29 +1,14 @@
 
 
-Advanced topics
-===============
+Miscellaneous
+=============
 
-
-Data structures
----------------
 
 .. toctree::
    :maxdepth: 1
 
-   06/trace_attributes
-   06/regularly_spaced_grids
-   06/randomly_drawn_grids
-
-
-
-Visualization
--------------
-
-.. toctree::
-   :maxdepth: 1
-
-   06/plotting_time_shifts
    06/customizing_figures
-
-   
+   06/plotting_time_shifts
+   06/writing_results
+   06/trace_attributes
 

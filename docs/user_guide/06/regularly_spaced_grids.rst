@@ -1,7 +1,7 @@
 
 
-Regularly-spaced grids
-======================
+Working with regularly-spaced grids
+===================================
 
 Regularly-spaced grids of moment tensors, forces, or other sources parameters can be defined using the `Grid` class.
 
@@ -11,16 +11,16 @@ A grid search over a reguarly-spaced grid of `sources`
 
     da = grid_search(data, greens, misfit, stations, origins, sources)
 
-returns a `xarray DataArray` da, which contains misfit values associated with each grid point.
+returns an xarray DataArray `da`, which contains misfit values associated with each grid point.
 
-To write the grid search output `da` to disk as an NetCDF file:
+To write the grid search output `da` to disk as a NetCDF file:
 
 .. code::
 
-    da.results('output.nc')
+    da.save('output.nc')
 
 
-To reading the NetCDF file back from disk:
+To read the NetCDF file back from disk:
 
 .. code::
 
