@@ -2,9 +2,9 @@
 Custom backends
 ===============
 
-Custom backend can be used to modify the appearance of many MTUQ plotting functions.
+Custom backends can be used to modify the appearance of many MTUQ plotting functions.
 
-First, check that the function has a `backend` keyword argument.  If so, then feel free to pass a custom backend function via the backend keyword argument.
+If a plotting function has a `backend` keyword argument, then feel free to pass it a custom backend function.
 
 
 Example
@@ -18,7 +18,7 @@ Note that the backend function contains hardcoded map limits and projection sett
 .. code::
 
   def custom_backend(filename, values, stations, origin,
-      add_station_labels=True, centered=True, label=''):
+      zero_centered=True, label='Time shift (s)'):
 
       import pygmt
 
@@ -43,7 +43,7 @@ Note that the backend function contains hardcoded map limits and projection sett
       # construct color palette
       cmap = "polar"
 
-      if centered:
+      if zero_centered:
           limits = (-np.max(np.abs(values)), +np.max(np.abs(values)))
       else:
           limits = (np.min(values), np.max(values))

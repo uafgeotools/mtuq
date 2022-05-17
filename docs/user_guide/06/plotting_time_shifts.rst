@@ -27,7 +27,7 @@ To plot time shifts, the `attrs` data structure returned above can be passed dir
     from mtuq.graphics import plot_time_shifts
     plot_time_shifts(dirname, attrs, stations, origins, components=['Z','R','T'])
 
-As a result, one image like the following will be created for each component:
+As a result, an image like the following will be created for each component:
 
 .. image:: images/20090407201255351_attrs_time_shifts_bw_Z.png
   :width: 400 
@@ -43,7 +43,7 @@ Similarly, the `attrs` data structure can be used to plot amplitude ratios:
     from mtuq.graphics import plot_amplitude_ratios
     plot_amplitude_ratios(dirname, attrs, stations, origins, components=['Z','R','T'])
 
-As a result, one image like the following will be created for each component:
+As a result, an image like the following will be created for each component:
 
 .. image:: images/20090407201255351_attrs_amplitude_ratios_bw_Z.png
   :width: 400 
@@ -52,7 +52,7 @@ As a result, one image like the following will be created for each component:
 Plotting custom attributes
 --------------------------
 
-It is possible to `add custom trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html#custom-trace-attributes>`_ to the data structure returned by `collect_attributes`. 
+It is possible to `add custom attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html#custom-trace-attributes>`_ to the data structure returned by `collect_attributes`. 
 
 To plot how a custom attribute varies, we can use the private function `_plot_attrs`:
 

@@ -44,6 +44,7 @@ autogen
    mtuq.graphics.plot_amplitude_ratios
    mtuq.graphics.plot_log_amplitude_ratios
    mtuq.graphics._plot_attrs
+   mtuq.graphics.attrs._default_backend
    mtuq.grid.DeviatoricGridRandom
    mtuq.grid.DeviatoricGridSemiregular
    mtuq.grid.DoubleCoupleGridRandom

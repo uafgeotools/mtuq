@@ -68,7 +68,7 @@ def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
     defaults(kwargs, {
         'label': '$A_{obs}/A_{syn}$',
         'colormap': 'Reds',
-        'zero_centered_colormap': False,
+        'zero_centered': False,
         })
 
     _plot_attrs(dirname, stations, origin, attrs, 'amplitude_ratio', **kwargs)
@@ -169,7 +169,7 @@ def _plot_attrs(dirname, stations, origin, attrs, key,
 #
 
 def _default_backend(filename, values, stations, origin,
-    colormap='coolwarm', zero_centered_colormap=True, colorbar=True,
+    colormap='coolwarm', zero_centered=True, colorbar=True,
     colorbar_label='', width=5., height=5.):
 
     """ Default backend for all other `mtuq.graphics.attrs` functions
@@ -185,7 +185,7 @@ def _default_backend(filename, values, stations, origin,
     ``colormap`` (`str`):
     Matplotlib color palette
 
-    ``zero_centered_colormap`` (`bool`):
+    ``zero_centered`` (`bool`):
     Whether or not the colormap is centered on zero
 
     ``colorbar`` (`bool`):
@@ -208,7 +208,7 @@ def _default_backend(filename, values, stations, origin,
     # generate colormap
     cmap = matplotlib.cm.get_cmap(colormap)
 
-    if zero_centered_colormap:
+    if zero_centered:
         min_val = -np.max(np.abs(values))
         max_val = +np.max(np.abs(values))
     else:
