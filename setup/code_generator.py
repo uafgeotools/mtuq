@@ -225,7 +225,7 @@ if True:
     # and functions listed in __all__
     #
     # Note that some I/O and data processing are involved in creating the
-    # example data, so importing this module may significantly longer than
+    # example data, so importing this module may take significantly longer than
     # other modules
     #
     

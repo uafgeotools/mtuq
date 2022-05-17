@@ -10,7 +10,7 @@ from mtuq.util import defaults, warn
 
 
 def plot_time_shifts(dirname, attrs, stations, origin, **kwargs):
-    """ Plots how time shifts vary geographically
+    """ Plots how time shifts vary by location and component
 
     .. rubric :: Required input arguments
 
@@ -41,7 +41,7 @@ def plot_time_shifts(dirname, attrs, stations, origin, **kwargs):
 
 
 def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
-    """ Plots how Aobs/Asyn varies geographically
+    """ Plots how Aobs/Asyn varies by location and component
 
     .. rubric :: Required input arguments
 
@@ -75,7 +75,7 @@ def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
 
 
 def plot_log_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
-    """ Plots how ln(Aobs/Asyn) varies geographically
+    """ Plots how ln(Aobs/Asyn) varies by location and component
 
     .. rubric :: Required input arguments
 
@@ -110,7 +110,7 @@ def _plot_attrs(dirname, stations, origin, attrs, key,
      **kwargs):
 
     """ Reads the attribute given by `key` from the `attrs` data structure, and
-    plots how this attribute varies geographically
+    plots how this attribute varies
 
     Within the specified directory, a separate figure will be created for each
     component, e.g. `Z.png`, `R.png`, `T.png`.
@@ -134,7 +134,7 @@ def _plot_attrs(dirname, stations, origin, attrs, key,
     See `online documentation 
     <https://uafgeotools.github.io/mtuq/user_guide/06/customizing_figures.html>`_
     for details. Otherwise, defaults to a generic matplotlib `backend
-    <mtuq.graphics._default_backend.html>`_.
+    <mtuq.graphics.attrs._default_backend.html>`_.
 
 
     """
@@ -195,10 +195,9 @@ def _default_backend(filename, values, stations, origin,
     Optional colorbar label
 
 
-    .. rubric:: Example
+    .. rubric:: Examples
 
-    `See here <https://uafgeotools.github.io/mtuq/user_guide/06/customizing_figures.html>`_
-    for an example figure
+    `See here <https://uafgeotools.github.io/mtuq/user_guide/06/plotting_time_shifts.html>`_
 
     """
 

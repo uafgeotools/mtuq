@@ -5,7 +5,7 @@ Reading and writing grid search results
 Regularly-spaced grids
 ----------------------
 
-Regularly-spaced grids of moment tensors, forces, or other sources parameters can be defined using the `Grid` class.
+Regularly-spaced grids of moment tensors, forces, or other source parameters can be defined using the `Grid` class.
 
 A grid search over a reguarly-spaced grid of `sources`
 
@@ -37,7 +37,7 @@ Before or after writing to disk, `da` can be passed to visualization utilities o
 Randomly-drawn grids
 --------------------
 
-Randomly-drawn grids of moment tensors, forces, or other sources parameters can be defined using the `UnstructredGrid` class.
+Randomly-drawn grids of moment tensors, forces, or other source parameters can be defined using the `UnstructredGrid` class.
 
 A grid search over a randomly-drawn grid of `sources`
 

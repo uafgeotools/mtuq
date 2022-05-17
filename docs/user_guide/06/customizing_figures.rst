@@ -10,7 +10,7 @@ Fortunately, figure appearance is highly customizable, as illustrated below.
 Time shift and amplitude ratio figures
 ---------------------------------------
 
-To plot how time shifts, amplitude ratios, or other `trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_ vary geographically, we can pass the output of `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ to a plotting function as follows:
+To plot how time shifts, amplitude ratios, or other `trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_ vary geographically, we can pass the output of the misfit function's `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ method to a plotting function as follows:
 
 .. code::
 
@@ -23,9 +23,9 @@ Because we haven't specified a map projection or other details, it's no surprise
   :width: 400 
 
 
-To some extent, the above figure can be customized through optional input arguments to the default backend function. For argument descriptions, follow the links in the `plot_time_shifts <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_ documentation, or see the `default backend <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.attrs._default_backend.html>`_ documentation directly.
+To some extent, the above figure can be customized through optional input arguments to the default backend function. For argument descriptions, follow the links in the `plot_time_shifts <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_ documentation, or see the `default backend <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.attrs._default_backend.html>`_ documentation page directly.
 
-In comparison, a much more powerful approach is to overload the backend function completely:
+In comparison, a more powerful approach is to overload the backend function completely:
 
 .. code::
 
@@ -40,7 +40,7 @@ To illustrate, we have implemented a `custom backend <https://uafgeotools.github
 
 .. note::
 
-    Note that frontend functions perform only data manipulation. All calls to graphics libraries (matplotlib, GMT, PyGMT and so on) occur in the backends. As a result, figures are customizable to extent that users are free to use any graphics library.
+    Note that frontend functions perform only data manipulation. All calls to graphics libraries (matplotlib, GMT, PyGMT and so on) occur in the backends. As a result, figures are customizable to extent that it is possible to use any graphics library.
 
 
 .. warning::
