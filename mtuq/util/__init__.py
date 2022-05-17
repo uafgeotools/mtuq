@@ -19,6 +19,7 @@ import warnings
 import zipfile
 
 
+# Python2/3 compatibility
 try:
     from urllib import URLopener
 except ImportError:
@@ -26,20 +27,22 @@ except ImportError:
 
 
 class AttribDict(obspy.core.util.attribdict.AttribDict):
+    """ For storing trace attributes (see `mtuq.graphics.attrs`)
+    """
     pass
 
 
 def asarray(x):
-    """ Numpy array typecast
+    """ NumPy array typecast
     """
     return np.array(x, dtype=np.float64, ndmin=1, copy=False)
 
 
 def gather2(comm, array):
-    """ Gathers 2D NumPy arrays and combines along first dimension
+    """ Gathers 2-D NumPy arrays and combines along first dimension
 
-    For large NumPy arrays, provides improved performance over mpi4py gather
-    by using lower-level Gatherv
+    For very large numbers of elements, provides improved performance over 
+    `gather` by using the lower-level function `Gatherv`
     """
     from mpi4py import MPI
 
@@ -223,6 +226,8 @@ def timer(func):
 
 
 def to_rgb(color):
+    """ Converts matplotlib color to red-green-blue tuple
+    """
     return 255*asarray(colors.to_rgba(color)[:3])
 
 

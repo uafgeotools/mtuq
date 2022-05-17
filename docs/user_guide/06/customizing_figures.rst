@@ -40,7 +40,7 @@ To illustrate, we have implemented a `custom backend <https://uafgeotools.github
 
 .. note::
 
-    Note that frontend functions perform only data manipulation. All calls to graphics libraries (matplotlib, GMT, PyGMT and so on) occur in the backends. As a result, figures are customizable to extent that it is possible to use any graphics library.
+    Note that frontend functions perform only data manipulation. All calls to graphics libraries (matplotlib, GMT, PyGMT and so on) occur in the backends, making figures customizable to the extent of being able to use any graphics library.
 
 
 .. warning::

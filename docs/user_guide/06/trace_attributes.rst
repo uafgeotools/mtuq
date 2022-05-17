@@ -43,7 +43,7 @@ We can also attach trace attributes to the observed data directly by invoking th
     misfit(data, greens, source, set_attributes=True)
 
 
-During misfit evaluation, a `AttribDict` will be attached to each `Trace` object in the `Dataset`.
+During evaluation of the above, a `AttribDict` will be attached to each `Trace` object in the `Dataset`.
 
 .. note::
 
