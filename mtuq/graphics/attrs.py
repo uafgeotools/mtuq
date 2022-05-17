@@ -68,7 +68,7 @@ def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
     defaults(kwargs, {
         'label': '$A_{obs}/A_{syn}$',
         'colormap': 'Reds',
-        'centered': False,
+        'zero_centered_colormap': False,
         })
 
     _plot_attrs(dirname, stations, origin, attrs, 'amplitude_ratio', **kwargs)
@@ -106,7 +106,7 @@ def plot_log_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
 
 
 def _plot_attrs(dirname, stations, origin, attrs, key,
-     components=['Z', 'R', 'T'], format='png', backend='matplotlib',
+     components=['Z', 'R', 'T'], format='png', backend=None,
      **kwargs):
 
     """ Reads the attribute given by `key` from the `attrs` data structure, and
@@ -116,13 +116,31 @@ def _plot_attrs(dirname, stations, origin, attrs, key,
     component, e.g. `Z.png`, `R.png`, `T.png`.
 
 
-    .. rubric :: Optional input arguments
+    .. rubric ::  Keyword arguments
+
+    ``components`` (`list`):
+    Generate figures for the given components
+
+    ``format`` (`str`):
+    Image file format (defaults to `png`)
+
+    ``backend`` (`function`):
+    Backend function
+
+
+    .. rubric :: Backend function
+
+    To customize figure appearance, users can pass their own backend function.
+    See `online documentation 
+    <https://uafgeotools.github.io/mtuq/user_guide/06/customizing_figures.html>`_
+    for details. Otherwise, defaults to a generic matplotlib `backend
+    <mtuq.graphics._default_backend.html>`_.
 
 
     """
 
-    if backend=='matplotlib':
-        backend = _matplotlib
+    if backend is None:
+        backend = _default_backend
 
     if not callable(backend):
         raise TypeError
@@ -150,16 +168,47 @@ def _plot_attrs(dirname, stations, origin, attrs, key,
 # low-level function for plotting trace attributes
 #
 
-def _matplotlib(filename, values, stations, origin,
-    colormap='coolwarm', centered=True, label=None,
-    figsize=(5., 6.)):
+def _default_backend(filename, values, stations, origin,
+    colormap='coolwarm', zero_centered_colormap=True, colorbar=True,
+    colorbar_label='', width=5., height=5.):
 
-    fig = pyplot.figure(figsize=figsize)
+    """ Default backend for all other `mtuq.graphics.attrs` functions
+
+    The frontend functions perform only data manipulation. All graphics library
+    calls occur in the backend
+
+    By isolating the graphics function calls in this way, users can completely
+    interchange graphics libraries (matplotlib, GMT, PyGMT, and so on)
+
+    .. rubric::  Keyword arguments
+
+    ``colormap`` (`str`):
+    Matplotlib color palette
+
+    ``zero_centered_colormap`` (`bool`):
+    Whether or not the colormap is centered on zero
+
+    ``colorbar`` (`bool`):
+    Whether or not to display a colorbar
+
+    ``colorbar_label`` (`str`):
+    Optional colorbar label
+
+
+    .. rubric:: Example
+
+    `See here <https://uafgeotools.github.io/mtuq/user_guide/06/customizing_figures.html>`_
+    for an example figure
+
+    """
+
+    fig = pyplot.figure(figsize=(width, height))
 
 
     # generate colormap
     cmap = matplotlib.cm.get_cmap(colormap)
-    if centered:
+
+    if zero_centered_colormap:
         min_val = -np.max(np.abs(values))
         max_val = +np.max(np.abs(values))
     else:
