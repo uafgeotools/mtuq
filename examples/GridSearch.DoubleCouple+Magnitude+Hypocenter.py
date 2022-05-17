@@ -224,10 +224,10 @@ if __name__=='__main__':
 
         results = results_bw + results_sw
 
-        origin_idx = results.idxmin('origin_idx')
+        origin_idx = results.origin_idxmin()
         best_origin = origins[origin_idx]
 
-        source_idx = results.idxmin('source_idx')
+        source_idx = results.source_idxmin()
         best_mt = grid.get(source_idx)
 
         lune_dict = grid.get_dict(source_idx)

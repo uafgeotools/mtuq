@@ -978,7 +978,7 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         #
 
         # use minimum misfit as initial guess for maximum likelihood
-        idx = results_sum.idxmin('source')
+        idx = results_sum.source_idxmin()
         best_mt = grid.get(idx)
         lune_dict = grid.get_dict(idx)
         mt_dict = best_mt.as_dict()
@@ -1273,7 +1273,7 @@ WrapUp_GridSearch="""
         results = results_bw + results_sw
 
         # `grid` index corresponding to minimum misfit
-        idx = results.idxmin('source_idx')
+        idx = results.source_idxmin()
 
         best_mt = grid.get(idx)
         lune_dict = grid.get_dict(idx)
@@ -1336,10 +1336,10 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         results = results_bw + results_sw
 
-        origin_idx = results.idxmin('origin_idx')
+        origin_idx = results.origin_idxmin()
         best_origin = origins[origin_idx]
 
-        source_idx = results.idxmin('source_idx')
+        source_idx = results.source_idxmin()
         best_mt = grid.get(source_idx)
 
         lune_dict = grid.get_dict(source_idx)
@@ -1409,7 +1409,7 @@ WrapUp_SerialGridSearch_DoubleCouple="""
     results = results_bw + results_sw
 
     # `grid` index corresponding to minimum misfit
-    idx = results.idxmin('source_idx')
+    idx = results.source_idxmin()
 
     best_mt = grid.get(idx)
     lune_dict = grid.get_dict(idx)
@@ -1471,7 +1471,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
     results = results_bw + results_sw
 
     # source corresponding to minimum misfit
-    idx = results.idxmin('source_idx')
+    idx = results.source_idxmin()
     best_mt = grid.get(idx)
     lune_dict = grid.get_dict(idx)
 
@@ -1520,7 +1520,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     results = results_bw + results_sw
 
-    idx = results.idxmin('source_idx')
+    idx = results.source_idxmin()
     best_mt = grid.get(idx)
 
     if run_figures:

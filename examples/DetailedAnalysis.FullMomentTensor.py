@@ -229,7 +229,7 @@ if __name__=='__main__':
         #
 
         # use minimum misfit as initial guess for maximum likelihood
-        idx = results_sum.idxmin('source')
+        idx = results_sum.source_idxmin()
         best_mt = grid.get(idx)
         lune_dict = grid.get_dict(idx)
         mt_dict = best_mt.as_dict()

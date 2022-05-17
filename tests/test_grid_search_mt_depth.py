@@ -158,7 +158,7 @@ if __name__=='__main__':
 
     results = results_bw + results_sw
 
-    idx = results.idxmin('source_idx')
+    idx = results.source_idxmin()
     best_mt = grid.get(idx)
 
     if run_figures:
