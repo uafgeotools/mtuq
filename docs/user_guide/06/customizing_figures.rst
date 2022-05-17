@@ -40,12 +40,12 @@ To illustrate, we have implemented a `custom backend <https://uafgeotools.github
 
 .. note::
 
-    Note that frontend functions perform only data manipulation. All graphics library calls occur in the backends. As a result, users can interchange graphics libraries such as matplotlib, GMT, or PyGMT. 
+    Note that frontend functions perform only data manipulation. All calls to graphics libraries (matplotlib, GMT, PyGMT and so on) occur in the backends. As a result, figures are customizable to extent that users are free to use any graphics library.
 
 
 .. warning::
 
-    matplotlib was used to generated the default figure above, while PyGMT was used to generate the custom figure.  PyGMT requires additional installation steps, beyond `pip install -e mtuq/`.
+    matplotlib was used to create the default figure above, while PyGMT was used to generate the custom figure.  PyGMT requires `additional installation steps <https://uafgeotools.github.io/mtuq/install/index.html#graphics-dependencies>`_, beyond `pip install -e mtuq/`.
 
 
 Misfit and likelihood figures

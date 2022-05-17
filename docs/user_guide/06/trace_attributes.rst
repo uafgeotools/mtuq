@@ -12,18 +12,18 @@ Collecting trace attributes
 
 Through the misfit function's `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ method, MTUQ provides a way to collect time shift, amplitude ratio and other trace attributes.
 
-Suppose we have defined a misfit function as follows:
+Suppose we have the following misfit function:
 
 .. code::
 
-    misfit_sw = Misfit(
+    misfit = Misfit(
         norm='L2',
         time_shift_min=-10.,
         time_shift_max=+10.,
         )
 
 
-To get a data structure containing trace attributes, we can invoke `collect_attributes` using the same input arguments as we would for an ordinary misfit function evaluation:
+To get a data structure containing trace attributes, we can invoke the misfit function's `collect_attributes` method using the same input arguments as we would for an ordinary misfit function evaluation:
 
 .. code::
 

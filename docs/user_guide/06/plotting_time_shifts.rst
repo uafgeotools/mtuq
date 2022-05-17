@@ -20,7 +20,7 @@ To calculate time shifts, amplitude ratios and other `trace attributes <https://
 Plotting time shifts
 --------------------
 
-To plot time shifts, the `attrs` data structure returned above can be passed directly to a plotting function:
+To plot time shifts, the `attrs` data structure above can be passed directly to a plotting function:
 
 .. code::
 
