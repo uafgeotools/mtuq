@@ -16,7 +16,11 @@ Suppose we have defined a misfit function as follows:
 
 .. code::
 
-    misfit = Misfit(norm='L2')
+    misfit_sw = Misfit(
+        norm='L2',
+        time_shift_min=-10.,
+        time_shift_max=+10.,
+        )
 
 
 To get a data structure containing trace attributes, we can invoke `collect_attributes` using the same input arguments as we would for an ordinary misfit function evaluation:
