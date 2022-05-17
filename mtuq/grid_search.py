@@ -188,37 +188,16 @@ class MTUQDataArray(xarray.DataArray):
 
     """
 
-    def idxmin(self, idx_type=None):
-        """ Returns coordinates corresponding to minimum misfit
+    def origin_idxmin(self):
+        """ Returns `origins` index corresponding to minimum misfit
         """
-        if idx_type is None:
-            return dataarray_idxmin(self)
+        return int(dataarray_idxmin(self)['origin_idx'])
 
-        elif idx_type in ('origin', 'origin_idx'):
-            return int(dataarray_idxmin(self)['origin_idx'])
-
-        elif idx_type in ('source', 'source_idx'):
-            shape = self._get_shape()
-            return np.unravel_index(self.argmin(), shape)[0]
-
-        else:
-            raise TypeError
-
-    def idxmax(self, idx_type=None):
-        """ Returns coordinates corresponding to maximum misfit
+    def source_idxmin(self):
+        """ Returns `sources` index corresponding to minimum misfit
         """
-        if idx_type is None:
-            return dataarray_idxmax(self)
-
-        elif idx_type in ('origin', 'origin_idx'):
-            return int(dataarray_idxmax(self)['origin_idx'])
-
-        elif idx_type in ('source', 'source_idx'):
-            shape = self._get_shape()
-            return np.unravel_index(self.argmax(), shape)[0]
-
-        else:
-            raise TypeError
+        shape = self._get_shape()
+        return np.unravel_index(self.argmin(), shape)[0]
 
     def _get_shape(self):
         """ Private helper method
@@ -267,39 +246,17 @@ class MTUQDataFrame(pandas.DataFrame):
         for more information.
 
     """
-    def idxmin(self, idx_type=None):
+    def origin_idxmin(self):
         """ Returns coordinates corresponding to minimum misfit
         """
-        if idx_type is None:
-            return self[0].idxmin()
+        df = self.reset_index()
+        return df['origin_idx'][df[0].idxmin()]
 
-        elif idx_type in ('origin', 'origin_idx'):
-            df = self.reset_index()
-            return df['origin_idx'][df[0].idxmin()]
-
-        elif idx_type in ('source', 'source_idx'):
-            df = self.reset_index()
-            return df['source_idx'][df[0].idxmin()]
-
-        else:
-            raise TypeError
-
-    def idxmax(self, idx_type=None):
-        """ Returns coordinates corresponding to maximum misfit
+    def source_idxmin(self):
+        """ Returns coordinates corresponding to minimum misfit
         """
-        if idx_type is None:
-            return self[0].idxmax()
-
-        elif idx_type in ('origin', 'origin_idx'):
-            df = self.reset_index()
-            return df['origin_idx'][df[0].idxmax()]
-
-        elif idx_type in ('source', 'source_idx'):
-            df = self.reset_index()
-            return df['source_idx'][df[0].idxmax()]
-
-        else:
-            raise TypeError
+        df = self.reset_index()
+        return df['source_idx'][df[0].idxmin()]
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file
