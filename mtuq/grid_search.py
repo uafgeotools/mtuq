@@ -1,4 +1,6 @@
 
+import h5py
+import netCDF4
 import numpy as np
 import pandas
 import xarray
@@ -31,7 +33,6 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     .. rubric :: Input arguments
-
 
     ``data`` (`mtuq.Dataset`):
     The observed data to be compared with synthetic data
@@ -382,5 +383,34 @@ def _to_dataframe(origins, sources, values, index_type=2):
     df = MTUQDataFrame(data=data)
     df = df.set_index(list(dims))
     return df
+
+
+def read_array(filename, format=None):
+    """ Reads grid search results from disk
+
+    In other words, reads an MTUQDataArray from a NetCDF file, or reads an
+    MTUQDataFrame from an HDF5 file
+    """
+
+    if not format:
+        # try to determine file format, if not given
+        if h5py.is_hdf5(filename):
+            format = 'HDF'
+        else:
+            try:
+                netCDF.Dataset(filename, "r")
+                format = 'NETCDF4'
+            except:
+                raise Exception('File format not recognized: %s' % filename)
+
+    if format.upper() in ['H5', 'HDF','HDF5']:
+        raise NotImplementedError
+
+    elif format.upper() in ['NC', 'NC4', 'NETCDF', 'NETCDF4']:
+        da = pandas.read_hdf(filename)
+        return MTUQDataArray(data=da.values, coords=da.coords, dims=da.dims)
+
+    else:
+        raise Exception('File format not supported: %s' % filename)
 
 
