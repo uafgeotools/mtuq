@@ -31,6 +31,9 @@ echo
 echo "Checking URLs"
 echo
 
+# for broken link, stop immediately
+set -e
+
 for url in $URLS
 do
     echo $url
@@ -42,5 +45,6 @@ do
     check_url $url
 done
 echo
-
+echo SUCCESS
+echo
 
