@@ -12,7 +12,7 @@ Example
 
 The backend function below can be passed to `plot_time_shifts <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_, `plot_amplitude_ratios <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_amplitude_ratios.html>`_, `plot_log_amplitude_ratios <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_log_amplitude_ratios.html>`_, and `_plot_attrs <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics._plot_attrs.html>`_. 
 
-Note that the backend function contains hardcoded map limits and projection settings, which improve the appearance `Silwal2016 <https://uafgeotools.github.io/mtuq/references.html>`_ figures, but lack generality for default MTUQ plotting.
+Note that the backend function contains hardcoded that improve the appearance `Silwal2016 <https://uafgeotools.github.io/mtuq/references.html>`_ figures, but lack generality for default MTUQ plotting.
 
 
 .. code::

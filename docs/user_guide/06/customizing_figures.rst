@@ -31,7 +31,7 @@ In comparison, a much more powerful approach is to overload the backend function
 
     plot_time_shifts(dirname, attrs, stations, origins, backend=custom_backend)
 
-To illustrate, we have implemented a `custom backend <https://uafgeotools.github.io/mtuq/user_guide/06/code/custom_backend.html#example>`_ relevant to `Silwal2016 <https://uafgeotools.github.io/mtuq/references.html>`_. The result of calling `plot_time_shifts` with this new backend is:
+To illustrate, we have implemented a `custom backend <https://uafgeotools.github.io/mtuq/user_guide/06/custom_backends.html#example>`_ relevant to `Silwal2016 <https://uafgeotools.github.io/mtuq/references.html>`_. The result of calling `plot_time_shifts` with this new backend is:
 
 
 .. image:: images/20090407201255351_attrs_time_shifts_bw_Z_pygmt.png
@@ -45,7 +45,7 @@ To illustrate, we have implemented a `custom backend <https://uafgeotools.github
 
 .. warning::
 
-    The default figure above was generated using matplotlib, while PyGMT was used to generate the custom figure.  PyGMT requires additional installation steps, beyond `pip install -e mtuq/`.
+    matplotlib was used to generated the default figure above, while PyGMT was used to generate the custom figure.  PyGMT requires additional installation steps, beyond `pip install -e mtuq/`.
 
 
 Misfit and likelihood figures
