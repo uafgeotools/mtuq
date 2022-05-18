@@ -389,6 +389,6 @@ def _open_da(filename):
 def _open_df(filename):
     """ Reads MTUQDataFrame from HDF5 file
     """
-    def = pandas.read_hdf(filename)
+    df = pandas.read_hdf(filename)
     return MTUQDataFrame(df.values, index=df.index)
 

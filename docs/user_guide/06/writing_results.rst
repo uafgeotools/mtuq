@@ -71,7 +71,7 @@ Before or after writing to disk, `da` can be passed to visualization utilities o
 Irregularly-spaced grids
 """"""""""""""""""""""""
 
-A grid search over a irregularly-spaced grid of `sources`
+A grid search over an irregularly-spaced grid of `sources`
 
 .. code::
 
