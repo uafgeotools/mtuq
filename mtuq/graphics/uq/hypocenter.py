@@ -18,7 +18,7 @@ from mtuq.util.math import closed_interval, open_interval
 def plot_misfit_latlon(filename, ds, origins, **kwargs):
     """ Plots misfit versus hypocenter location
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -54,7 +54,7 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
 def plot_likelihood_latlon(filename, ds, origins, **kwargs):
     """ Plots likelihood versus hypocenter location
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -90,7 +90,7 @@ def plot_likelihood_latlon(filename, ds, origins, **kwargs):
 def plot_marginal_latlon(filename, ds, origins, **kwargs):
     """ Plots likelihood versus hypocenter location
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file

@@ -25,7 +25,7 @@ To plot time shifts, the `attrs` data structure above can be passed directly to 
 .. code::
 
     from mtuq.graphics import plot_time_shifts
-    plot_time_shifts(dirname, attrs, stations, origins, components=['Z','R','T'])
+    plot_time_shifts(dirname, attrs, stations, origin, components=['Z','R','T'])
 
 As a result, an image like the following will be created for each component:
 
@@ -41,7 +41,7 @@ Similarly, the `attrs` data structure can be used to plot amplitude ratios:
 .. code::
 
     from mtuq.graphics import plot_amplitude_ratios
-    plot_amplitude_ratios(dirname, attrs, stations, origins, components=['Z','R','T'])
+    plot_amplitude_ratios(dirname, attrs, stations, origin, components=['Z','R','T'])
 
 As a result, an image like the following will be created for each component:
 
@@ -59,10 +59,10 @@ To plot how a custom attribute varies, we can use the private function `_plot_at
 .. code::
 
     from mtuq.graphics import _plot_attrs
-    _plot_attrs(dirname, stations, origins, attrs, 'custom_attr', components=['Z','R','T'])
+    _plot_attrs(dirname, stations, origin, attrs, 'custom_attr', components=['Z','R','T'])
 
 
-(In fact, `_plot_attr` is used under the hood by `plot_time_shifts`, `plot_amplitude_ratios`, `plot_log_amplitude_ratios` in exactly the same manner.)
+(In fact, `_plot_attr` is used under the hood by `plot_time_shifts`, `plot_amplitude_ratios`, `plot_log_amplitude_ratios` in a similar manner.)
 
 
 Source code

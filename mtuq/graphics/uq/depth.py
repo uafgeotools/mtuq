@@ -19,7 +19,7 @@ from mtuq.util.math import to_Mw
 def plot_misfit_depth(filename, ds, origins, **kwargs):
     """ Plots misfit versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -61,7 +61,7 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
 def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
     """ Plots maximum likelihoods versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -101,7 +101,7 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
 def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     """ Plots marginal likelihoods versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file

@@ -23,7 +23,7 @@ Because we haven't specified a map projection or other details, it's no surprise
   :width: 400 
 
 
-To some extent, the above figure can be customized through optional input arguments to the default backend function. For argument descriptions, follow the links in the `plot_time_shifts <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_ documentation, or see the `default backend <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.attrs._default_backend.html>`_ documentation page directly.
+To some extent, the above figure can be customized through optional input arguments to the default backend function. For argument descriptions, follow the links in the `plot_time_shifts <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.plot_time_shifts.html>`_ documentation, or see the `default backend <https://uafgeotools.github.io/mtuq/library/generated/mtuq.graphics.attrs._default_backend.html>`_ page directly.
 
 In comparison, a more powerful approach is to overload the backend function completely:
 

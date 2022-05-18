@@ -16,11 +16,7 @@ Suppose we have the following misfit function:
 
 .. code::
 
-    misfit = Misfit(
-        norm='L2',
-        time_shift_min=-10.,
-        time_shift_max=+10.,
-        )
+    misfit = Misfit(norm='L2', time_shift_min=-10.,time_shift_max=+10.)
 
 
 To get a data structure containing trace attributes, we can invoke the misfit function's `collect_attributes` method using the same input arguments as we would for an ordinary misfit function evaluation:
@@ -43,7 +39,7 @@ We can also attach trace attributes to the observed data directly by invoking th
     misfit(data, greens, source, set_attributes=True)
 
 
-During evaluation of the above, a `AttribDict` will be attached to each `Trace` object in the `Dataset`.
+During misfit evaluation, an `AttribDict` will be attached to each trace in `data`.
 
 .. note::
 

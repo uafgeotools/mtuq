@@ -257,7 +257,7 @@ def _semiregular(npts_v, npts_w, tightness=0.8, uniformity=0.8):
 #
 
 def FullMomentTensorPlottingGrid(magnitudes=[1.], npts_per_axis=11):
-    # depracated because separate tightness and uniformity options have been
+    # depracated now that separate tightness and uniformity options have been
     # added to FullMomentTensorGridSemiregular
 
     v1, v2, nv = -30, 30, 13

@@ -18,20 +18,12 @@ To write this data structure to disk:
 
 Depending on whether the grid points are regularly- or irregularly-spaced, the result will be either a NetCDF or HDF5 file.
 
-The results can be read back in using the I/O function `open_ds`, which attempts to automatically determine the file type:
+The file can be read back in using the I/O function `open_ds`, which automatically determines the file type:
 
 .. code::
 
     from mtuq import open_ds
     ds = open_ds(filename)
-
-If for some reason file format determination fails, users can pass a keyword argument `format`, as in the following example:
-
-.. code::
-
-    from mtuq import open_ds
-    ds = open_ds('output.nc', 'format='NetCDF')
-
 
 
 
@@ -41,7 +33,7 @@ More details
 Regularly-spaced grids
 """"""""""""""""""""""
 
-A grid search over a reguarly-spaced grid of `sources`
+A search over a reguarly-spaced grid of `sources`
 
 .. code::
 
@@ -71,7 +63,7 @@ Before or after writing to disk, `da` can be passed to visualization utilities o
 Irregularly-spaced grids
 """"""""""""""""""""""""
 
-A grid search over an irregularly-spaced grid of `sources`
+A search over an irregularly-spaced grid of `sources`
 
 .. code::
 
