@@ -342,13 +342,13 @@ def _to_dataframe(origins, sources, values, index_type=2):
     return df
 
 
-def read_array(filename, format=None):
+#
+# I/O functions
+#
+
+def open(filename, format=None):
     """ Reads grid search results from disk
-
-    In other words, reads an MTUQDataArray from a NetCDF file, or reads an
-    MTUQDataFrame from an HDF5 file
     """
-
     if not format:
         # try to determine file format, if not given
         if h5py.is_hdf5(filename):
@@ -361,13 +361,25 @@ def read_array(filename, format=None):
                 raise Exception('File format not recognized: %s' % filename)
 
     if format.upper() in ['H5', 'HDF','HDF5']:
-        raise NotImplementedError
+        return _open_df(filename)
 
     elif format.upper() in ['NC', 'NC4', 'NETCDF', 'NETCDF4']:
-        da = pandas.read_hdf(filename)
-        return MTUQDataArray(data=da.values, coords=da.coords, dims=da.dims)
+        return _open_da(filename)
 
     else:
         raise Exception('File format not supported: %s' % filename)
+
+
+def _open_da(filename):
+    """ Reads MTUQDataArray from NetCDF file
+    """
+    da = xarray.open_dataarray(filename)
+    return MTUQDataArray(data=da.values, coords=da.coords, dims=da.dims)
+
+
+def _open_df(filename):
+    """ Reads MTUQDataFrame from HDF5 file
+    """
+    raise NotImplementedError
 
 
