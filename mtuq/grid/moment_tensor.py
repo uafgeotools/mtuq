@@ -1,5 +1,4 @@
 
-
 import numpy as np
 
 from numpy import pi
@@ -13,26 +12,16 @@ from mtuq.util.math import open_interval, closed_interval,\
    to_delta, to_gamma, to_mij, to_rho, to_v, to_w
 
 
-# How to use moment tensor grids
 #
-#    Use ``get(i)`` to return the `i`-th moment tensor as a `MomentTensor` object
+# see here for usage and other practical information
+# https://uafgeotools.github.io/mtuq/user_guide/06/moment_tensor_and_force_grids.html
 #
-#    Use ``get(i).as_vector()`` to return the `i`-th moment tensor as a vector
-#    `Mrr, Mtt, Mpp, Mrp, Mrt, Mtp`
-#
-#    Use ``get_dict(i)`` to return the `i`-th moment tensor as dictionary
-#    of Tape2015 parameters `rho, v, w, kappa, sigma, h`
-
-
 
 def FullMomentTensorGridRandom(magnitudes=[1.], npts=1000000):
     """ Grid with randomly-drawn full moment tensors
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
-
-    Moment tensors are drawn from the uniform distribution defined by
-    `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`_
 
     """
 
@@ -87,9 +76,6 @@ def DeviatoricGridRandom(magnitudes=[1.], npts=100000):
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
     returns an ``UnstructuredGrid`` of size `npts*len(magnitudes)`.
-
-    Moment tensors are drawn from the uniform distribution defined by
-    `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`_
 
     """
 

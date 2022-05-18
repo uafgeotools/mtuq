@@ -10,15 +10,10 @@ from mtuq.util.math import open_interval as regular
 from mtuq.util.math import to_rtp
 
 
-# How to use force grids
 #
-#   Use ``get(i)`` to return the `i`-th force as a `Force` object
+# see here for usage and other practical information
+# https://uafgeotools.github.io/mtuq/user_guide/06/moment_tensor_and_force_grids.html
 #
-#   Use ``get(i).as_vector()`` to return the `i`-th force as a NumPy array
-#   `Fr, Ft, Fp`
-#
-#   Use ``get_dict(i)`` to return the `i`-th force as dictionary
-#   of parameters `F0, phi, h`
 
 
 def ForceGridRegular(magnitudes_in_N=1., npts_per_axis=80):

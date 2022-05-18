@@ -60,6 +60,7 @@ autogen
    mtuq.grid_search.open_ds
    mtuq.grid_search.MTUQDataArray
    mtuq.grid_search.MTUQDataFrame
+   mtuq.util.math.to_rtp
    mtuq.Force
    mtuq.MomentTensor
    mtuq.Wavelet

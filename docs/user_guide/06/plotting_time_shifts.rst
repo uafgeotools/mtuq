@@ -2,9 +2,7 @@
 Plotting time shifts and amplitude ratios
 =========================================
 
-Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, moment tensor inversions commonly use time shifts to mitigate velocity model inaccuracy. 
-
-To understand model inaccuracy effects, it can be helpful to plot how these time shifts vary geographically.
+Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, moment tensor inversions commonly use time shifts to mitigate velocity model inaccuracy.  To understand such effects, it can be helpful to plot how these time shifts vary geographically and by component.
 
 
 Calculating trace attributes
