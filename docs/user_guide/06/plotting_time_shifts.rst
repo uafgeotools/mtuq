@@ -10,7 +10,7 @@ To understand model inaccuracy effects, it can be helpful to plot how these time
 Calculating trace attributes
 ----------------------------
 
-To calculate time shifts, amplitude ratios and other `trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_, the misfit functions's `collect_attributes` can be invoked using the same arguments as an ordinary misfit function evaluation:
+To calculate time shifts, amplitude ratios and other `trace attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html>`_, the misfit functions's `collect_attributes` method can be invoked using the same arguments as an ordinary misfit function evaluation:
 
 .. code::
 

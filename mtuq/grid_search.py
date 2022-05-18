@@ -348,6 +348,15 @@ def _to_dataframe(origins, sources, values, index_type=2):
 
 def open_ds(filename, format=None):
     """ Reads grid search results from disk
+
+    .. rubric :: Parameters
+
+    ``filename`` (`str`):
+    File containing grid search results
+
+    ``format`` (`str`):
+    File format (`NetCDF` or `HDF5`)
+
     """
     if not format:
         # try to determine file format, if not given
