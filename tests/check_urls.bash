@@ -10,6 +10,8 @@ URLS="\
     https://www.eas.slu.edu/People/LZhu/home.html\
     https://github.com/geodynamics/axisem\
     https://github.com/Liang-Ding/seisgen\
+    http://ds.iris.edu/ds/products/syngine\
+    http://ds.iris.edu/ds/products/syngine/#models\
     https://instaseis.net\
     https://docs.obspy.org/tutorial/index.html\
     https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html\
