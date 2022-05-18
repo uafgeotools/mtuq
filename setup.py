@@ -91,7 +91,7 @@ setup(
     # (consider using a conda based installation instead)
     install_requires=[
         "numpy", "scipy",
-        "pandas", "xarray", "netCDF4", "h5py", "pytables",
+        "pandas", "xarray", "netCDF4", "h5py", "tables",
         "obspy", "seisgen",
         "retry", "flake8>=3.0", "pytest", "nose",
         # "instaseis"
