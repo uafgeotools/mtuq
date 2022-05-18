@@ -52,7 +52,7 @@ As a result, an image like the following will be created for each component:
 Plotting custom attributes
 --------------------------
 
-It is possible to `add custom attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html#custom-trace-attributes>`_ to the data structure returned by `collect_attributes`. 
+It is possible to add `custom attributes <https://uafgeotools.github.io/mtuq/user_guide/06/trace_attributes.html#custom-trace-attributes>`_ to the data structure returned by `collect_attributes`. 
 
 To plot how a custom attribute varies, we can use the private function `_plot_attrs`:
 

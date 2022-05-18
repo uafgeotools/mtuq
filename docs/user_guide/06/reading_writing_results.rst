@@ -16,14 +16,14 @@ To write this data structure to disk:
 
     ds.save(filename)
 
-Depending on whether the grid points are regularly- or irregularly-spaced, the result will be either a NetCDF or HDF5 file.
-
-The file can be read back in using the I/O function `open_ds`, which automatically determines the file type:
+Depending on whether the grid points are regularly- or irregularly-spaced, a NetCDF or HDF5 file will be written. Subsequently, this file can be read back in using `open_ds`, which tries to automatically determine file format:
 
 .. code::
 
     from mtuq import open_ds
     ds = open_ds(filename)
+
+Alternatively, users can specify file type through the `format` keyword argument, as in the examples below.
 
 
 

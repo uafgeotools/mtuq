@@ -10,7 +10,7 @@ Such `trace attribute` quantities provide important information about how data m
 Collecting trace attributes
 ---------------------------
 
-Through the misfit function's `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ method, MTUQ provides a way to collect time shift, amplitude ratio and other trace attributes.
+The misfit function's `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ method provides a way to collect time shift, amplitude ratio and other trace attributes.
 
 Suppose we have the following misfit function:
 
