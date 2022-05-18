@@ -40,8 +40,6 @@ If MPI is present, run the parallel examples as follows:
 Note that the examples will still work if invoked without `mpirun`, but running times will be longer.
 
 
-
-
 References
 ----------
 

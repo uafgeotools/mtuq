@@ -10,13 +10,13 @@ A grid search
 
 returns a data structure `ds` that contains both misfit values and grid points.
 
-To write these results to disk:
+To write this data structure to disk:
 
 .. code::
 
     ds.save(filename)
 
-Depending on whether the grid points are regularly- or irregularly spaced, the result will be either a NetCDF or HDF5 file.
+Depending on whether the grid points are regularly- or irregularly-spaced, the result will be either a NetCDF or HDF5 file.
 
 The results can be read back in using the I/O function `open_ds`, which attempts to automatically determine the file type:
 
@@ -27,11 +27,10 @@ The results can be read back in using the I/O function `open_ds`, which attempts
 
 If for some reason file format determination fails, users can pass a keyword argument `format`, as in the following example:
 
-
 .. code::
 
     from mtuq import open_ds
-    ds = open_ds('output.nc', 'format='NetCDF'')
+    ds = open_ds('output.nc', 'format='NetCDF')
 
 
 
