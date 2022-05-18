@@ -45,7 +45,7 @@ To illustrate, we have implemented a `custom backend <https://uafgeotools.github
 
 .. warning::
 
-    matplotlib was used to create the default figure above, while PyGMT was used to generate the custom figure.  PyGMT requires `additional installation steps <https://uafgeotools.github.io/mtuq/install/index.html#graphics-dependencies>`_, beyond `pip install -e mtuq/`.
+    The custom backend used to create the figure above is based on PyGMT, which requires `additional installation steps <https://uafgeotools.github.io/mtuq/install/index.html#graphics-dependencies>`_, beyond `pip install -e mtuq/`.
 
 
 Misfit and likelihood figures

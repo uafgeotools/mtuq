@@ -132,9 +132,9 @@ Database and web service clients
     These classes provide low-level database and web service access.  Normally it is easier to use high-level functions ``mtuq.download_greens_tensors`` or ``mtuq.open_db`` instead.
 
 ============================================================================================================  ============================================================================================================ 
-`mtuq.io.clients.AxiSEM_NetCDF.Client <generated/mtuq.io.clients.AxiSEM_NetCDF.Client.html>`_                  AxiSEM NetCDF database client (based on `instaseis <https://instaseis.net>`_)
+`mtuq.io.clients.AxiSEM_NetCDF.Client <generated/mtuq.io.clients.AxiSEM_NetCDF.Client.html>`_                  AxiSEM NetCDF database client based on instaseis
 `mtuq.io.clients.FK_SAC.Client <generated/mtuq.io.clients.FK_SAC.Client.html>`_                                FK database client
-`mtuq.io.clients.SPECFEM3D_SGT.Client <generated/mtuq.io.clients.SPECFEM3D_SGT.Client.html>`_                  SPECFEM3D/3D_GLOBE SGT database client
+`mtuq.io.clients.SPECFEM3D_SGT.Client <generated/mtuq.io.clients.SPECFEM3D_SGT.Client.html>`_                  SPECFEM3D/3D_GLOBE SGT database client based on seisgen
 `mtuq.io.clients.syngine.Client <generated/mtuq.io.clients.syngine.Client.html>`_                              Syngine web service client
 ============================================================================================================  ============================================================================================================ 
 
