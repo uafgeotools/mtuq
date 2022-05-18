@@ -22,7 +22,7 @@ from mtuq.station import Station
 from mtuq.wavelet import Wavelet
 
 from mtuq.grid import Grid, UnstructuredGrid
-from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
+from mtuq.grid_search import MTUQDataArray, MTUQDataFrame, open_ds
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 

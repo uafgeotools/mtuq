@@ -346,7 +346,7 @@ def _to_dataframe(origins, sources, values, index_type=2):
 # I/O functions
 #
 
-def open(filename, format=None):
+def open_ds(filename, format=None):
     """ Reads grid search results from disk
     """
     if not format:
