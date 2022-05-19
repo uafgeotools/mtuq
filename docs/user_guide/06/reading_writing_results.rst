@@ -33,7 +33,7 @@ More details
 Regularly-spaced grids
 """"""""""""""""""""""
 
-A search over a reguarly-spaced grid of `sources`
+A search over reguarly-spaced `sources`
 
 .. code::
 
@@ -63,7 +63,7 @@ Before or after writing to disk, `da` can be passed to visualization utilities o
 Irregularly-spaced grids
 """"""""""""""""""""""""
 
-A search over an irregularly-spaced grid of `sources`
+A search over irregularly-spaced `sources`
 
 .. code::
 

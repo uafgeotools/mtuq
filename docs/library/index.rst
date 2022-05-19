@@ -22,7 +22,7 @@ Data I/O
 ============================================================================================================  ============================================================================================================
 `mtuq.download_greens_tensors <generated/mtuq.download_greens_tensors.html>`_                                  Downloads Green's tensors from syngine
 `mtuq.open_db <generated/mtuq.open_db.html>`_                                                                  Opens Green's tensor database from disk
-`mtuq.open_ds <generated/mtuq.grid_search.open_ds.html>`_                                                      Reads grid search results from disk
+`mtuq.open_ds <generated/mtuq.grid_search.open_ds.html>`_                                                      Opens grid search results from disk
 `mtuq.read <generated/mtuq.io.readers.SAC.read.html>`_                                                         Reads seismic data from disk
 ============================================================================================================  ============================================================================================================
 

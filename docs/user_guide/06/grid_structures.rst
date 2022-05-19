@@ -35,6 +35,6 @@ If `sources` is regularly spaced, the output `ds` will be a type of `xarray Data
 
 If `sources` is irregularly spaced, the output `ds` will be a type of `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 
-See also `reading or writing grid search results <https://uafgeotools.github.io/mtuq/user_guide/06/reading_writing_results.html>`_.
+See also `reading and writing grid search results <https://uafgeotools.github.io/mtuq/user_guide/06/reading_writing_results.html>`_.
 
 

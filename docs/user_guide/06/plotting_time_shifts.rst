@@ -2,7 +2,7 @@
 Plotting time shifts and amplitude ratios
 =========================================
 
-Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, moment tensor inversions commonly use time shifts to mitigate velocity model inaccuracy.  To understand such effects, it can be helpful to plot how these time shifts vary geographically and by component.
+Following `Zhao1994 <https://uafgeotools.github.io/mtuq/references.html>`_, moment tensor inversions commonly use time shifts to mitigate velocity model inaccuracy.  To understand such effects, it can be helpful to plot how time shifts vary geographically and by component.
 
 
 Calculating trace attributes
@@ -60,7 +60,7 @@ To plot how a custom attribute varies, we can use the private function `_plot_at
     _plot_attrs(dirname, stations, origin, attrs, 'custom_attr', components=['Z','R','T'])
 
 
-(In fact, `_plot_attr` is used under the hood by `plot_time_shifts`, `plot_amplitude_ratios`, `plot_log_amplitude_ratios` in a similar manner.)
+(In fact, `_plot_attr` is used under the hood in a similar way by `plot_time_shifts`, `plot_amplitude_ratios`, `plot_log_amplitude_ratios`.)
 
 
 Source code
