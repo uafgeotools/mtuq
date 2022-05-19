@@ -7,11 +7,12 @@ import numpy as np
 import pandas
 import xarray
 
+from mtuq.grid.moment_tensor import _semiregular
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.graphics.uq._gmt import _plot_vw_gmt
 from mtuq.graphics.uq._matplotlib import _plot_vw_matplotlib
-from mtuq.util import dataarray_idxmin, dataarray_idxmax, fullpath, product
-from mtuq.util.math import closed_interval, open_interval, semiregular_grid,\
+from mtuq.util import dataarray_idxmin, dataarray_idxmax, defaults, product
+from mtuq.util.math import closed_interval, open_interval,\
     to_v, to_w, to_gamma, to_delta, to_mij, to_Mw
 
 
@@ -47,7 +48,7 @@ def plot_misfit_vw(filename, ds, **kwargs):
     `see here <mtuq.graphics._plot_vw.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'viridis',
         })
 
@@ -84,7 +85,7 @@ def plot_likelihood_vw(filename, ds, var, **kwargs):
     `see here <mtuq.graphics._plot_vw.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'hot_r',
         })
 
@@ -122,7 +123,7 @@ def plot_marginal_vw(filename, ds, var, **kwargs):
     `see here <mtuq.graphics._plot_vw.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'hot_r',
         })
 
@@ -160,7 +161,7 @@ def plot_variance_reduction_vw(filename, ds, data_norm, **kwargs):
     `see here <mtuq.graphics._plot_vw.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'viridis_r',
         })
 
@@ -352,7 +353,7 @@ def _lune_array(da):
 
 
 def _min_mt(da):
-    """ Returns moment tensor vector corresponding to mininum DataArray value
+    """ Returns moment tensor vector corresponding to minimum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
@@ -370,7 +371,7 @@ def _max_mt(da):
 
 
 def _min_vw(da):
-    """ Returns v,w coordinates corresponding to mininum DataArray value
+    """ Returns v,w coordinates corresponding to minimum DataArray value
     """
     da = dataarray_idxmin(da)
     lune_keys = ['v', 'w']
@@ -500,7 +501,7 @@ def _bin_vw_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normali
     """ Bins irregularly-spaced moment tensors into rectangular v,w cells
     """
     # at which points will we plot values?
-    centers_v, centers_w = semiregular_grid(
+    centers_v, centers_w = _semiregular(
         npts_v, npts_w, tightness=tightness)
 
     # what cell edges correspond to the above centers?
@@ -558,11 +559,6 @@ def _check(ds):
     if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
 
-
-def _defaults(kwargs, defaults):
-    for key in defaults:
-        if key not in kwargs:
-           kwargs[key] = defaults[key]
 
 
 

@@ -59,5 +59,9 @@ For computational efficiency and software engineering reasons, processed traces 
 
 These conditions help MTUQ achieve faster memory access patterns, more efficient misfit evaluation, and more easily maintainable code.  An easy way to ensure that they are satisfied is to simply use `mtuq.ProcessData` for data processing.
 
-Of course, to make meaningful comparisons between data and synthetics, processed data must also pass basic quality control checks.  For example, data must contain actual body wave or surface arrivals from the given event.  MTUQ's `waveform plotting <https://uafgeotools.github.io/mtuq/library/index.html#data-visualization>`_ functions can sometimes be helpful for these types of checks.
+
+Plotting waveforms
+------------------
+
+Of course, to make meaningful comparisons between data and synthetics, processed data must pass basic quality control checks.  For example, windowed data must contain actual body wave or surface arrivals from the given event.  MTUQ's `waveform plotting <https://uafgeotools.github.io/mtuq/library/index.html#data-visualization>`_ functions can sometimes be helpful for these types of checks.
 

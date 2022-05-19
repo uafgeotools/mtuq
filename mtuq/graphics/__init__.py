@@ -1,16 +1,14 @@
 
 
 from mtuq.graphics.attrs import\
-    plot_time_shifts, plot_amplitude_ratios
+    plot_time_shifts, plot_amplitude_ratios, plot_log_amplitude_ratios,\
+    _plot_attrs
 
 from mtuq.graphics.beachball import\
     plot_beachball
 
 from mtuq.graphics.beachball_pygmt import\
     beachball_pygmt
-
-from mtuq.graphics.summary import\
-    plot_summary1, plot_summary2
 
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune,\

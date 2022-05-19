@@ -286,38 +286,6 @@ def to_Mw(rho):
     return ((np.log10(rho/np.sqrt(2))-9.1)/1.5)
 
 
-def radiation_coef(mt_array, takeoff_angle, azimuth):
-    """ Computes P-wave radiation coefficient from a collection of sources (2D np.array with source parameter vectors), and the associated takeoff_angle and azimuth for a given station. The radiation coefficient is computed in mtuq orientation conventions.
-
-    Based on Aki & Richards, Second edition (2009), eq. 4.88, p. 108
-    """
-    # Check if mt_array is a 2D array, and make it 2D if not.
-    if len(mt_array.shape) == 1:
-        mt_array = np.array([mt_array])
-
-    alpha = np.deg2rad(takeoff_angle)
-    az = np.deg2rad(azimuth)
-    dir = np.zeros((len(mt_array),3))
-    sth = np.sin(alpha)
-    cth = np.cos(alpha)
-    sphi = np.sin(az)
-    cphi = np.cos(az)
-    dir[:,0]=sth*cphi
-    dir[:,1]=sth*sphi
-    dir[:,2]=cth
-
-    cth = mt_array[:,0]*dir[:,2]*dir[:,2] +\
-          mt_array[:,1]*dir[:,0]*dir[:,0] +\
-          mt_array[:,2]*dir[:,1]*dir[:,1] +\
-       2*(mt_array[:,3]*dir[:,0]*dir[:,2] -\
-          mt_array[:,4]*dir[:,1]*dir[:,2] -\
-          mt_array[:,5]*dir[:,0]*dir[:,1])
-
-    cth[cth>0] = 1
-    cth[cth<0] = -1
-    return cth
-
-
 #
 # structured grids
 #
@@ -358,32 +326,5 @@ def lat_lon_tuples(center_lat=None,center_lon=None,
     lon = lon.flatten()
 
     return zip(lat, lon)
-
-
-
-def semiregular_grid(npts_v, npts_w, tightness=0.5):
-    """ Semiregular moment tensor grid
-
-    For tightness~0, grid will be regular in Tape2012 parameters delta, gamma.
-    For tightness~1, grid will be regular in Tape2015 parameters v, w.
-    For intermediate values, the grid will be "semiregular" in the sense of
-    a linear interpolation between the above cases.
-    """
-    assert 0. <= tightness < 1.,\
-        Exception("Allowable range: 0. <= tightness < 1.")
-
-    v1 = open_interval(-1./3., 1./3., npts_v)
-    w1 = open_interval(-3./8.*np.pi, 3./8.*np.pi, npts_w)
-
-    gamma1 = to_gamma(v1)
-    delta1 = to_delta(w1)
-
-    gamma2 = np.linspace(-29.5, 29.5, npts_v)
-    delta2 = np.linspace(-87.5, 87.5, npts_w)
-
-    delta = delta1*(1.-tightness) + delta2*tightness
-    gamma = gamma1*(1.-tightness) + gamma2*tightness
-
-    return to_v(gamma), to_w(delta)
 
 

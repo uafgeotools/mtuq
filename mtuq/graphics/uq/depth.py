@@ -11,7 +11,7 @@ from xarray import DataArray
 from mtuq.graphics.uq._gmt import _plot_depth_gmt
 from mtuq.graphics.uq._matplotlib import _plot_depth_matplotlib
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util import fullpath, warn
+from mtuq.util import defaults, warn
 from mtuq.util.math import to_Mw
 
 
@@ -19,7 +19,7 @@ from mtuq.util.math import to_Mw
 def plot_misfit_depth(filename, ds, origins, **kwargs):
     """ Plots misfit versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -37,7 +37,7 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
     `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'ylabel': 'Misfit',
         })
 
@@ -61,7 +61,7 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
 def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
     """ Plots maximum likelihoods versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -79,7 +79,7 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
     `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'ylabel': 'Likelihood',
         })
 
@@ -101,7 +101,7 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
 def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     """ Plots marginal likelihoods versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -222,10 +222,4 @@ def _check(ds):
     """
     if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
-
-def _defaults(kwargs, defaults):
-    for key in defaults:
-        if key not in kwargs:
-           kwargs[key] = defaults[key]
-
 

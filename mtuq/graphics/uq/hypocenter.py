@@ -11,14 +11,14 @@ from xarray import DataArray
 from mtuq.graphics.uq._gmt import _plot_latlon_gmt
 from mtuq.graphics.uq.depth import _misfit_regular, _likelihoods_regular
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util import fullpath, warn
+from mtuq.util import defaults, warn
 from mtuq.util.math import closed_interval, open_interval
 
 
 def plot_misfit_latlon(filename, ds, origins, **kwargs):
     """ Plots misfit versus hypocenter location
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -54,7 +54,7 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
 def plot_likelihood_latlon(filename, ds, origins, **kwargs):
     """ Plots likelihood versus hypocenter location
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -90,7 +90,7 @@ def plot_likelihood_latlon(filename, ds, origins, **kwargs):
 def plot_marginal_latlon(filename, ds, origins, **kwargs):
     """ Plots likelihood versus hypocenter location
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file

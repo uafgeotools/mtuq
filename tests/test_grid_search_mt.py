@@ -155,20 +155,18 @@ if __name__=='__main__':
     results = results_bw + results_sw
 
     # source corresponding to minimum misfit
-    idx = results.idxmin('source')
-    best_source = grid.get(idx)
-
+    idx = results.source_idxmin()
+    best_mt = grid.get(idx)
     lune_dict = grid.get_dict(idx)
-    mt_dict = grid.get(idx).as_dict()
 
     if run_figures:
 
         plot_data_greens2(event_id+'DC_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png',
-            best_source, None, None)
+            best_mt, None, None)
 
 
     if run_checks:
@@ -186,7 +184,7 @@ if __name__=='__main__':
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
-        if not isclose(best_source.as_vector(),
+        if not isclose(best_mt.as_vector(),
             np.array([
                  -6.731618e+15,
                   8.398708e+14,
