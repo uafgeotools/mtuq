@@ -19,6 +19,6 @@ Visualization
 .. toctree::
    :maxdepth: 1
 
+   06/plotting_trace_attributes
    06/customizing_figures
-   06/plotting_time_shifts
 

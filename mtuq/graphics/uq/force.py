@@ -170,17 +170,17 @@ def _plot_force(filename, da, show_best=True, show_tradeoffs=False,
 
     .. rubric :: Keyword arguments
 
-    ``colormap`` (`str`)
+    ``colormap`` (`str`):
     Color palette used for plotting values 
     (choose from GMT or MTUQ built-ins)
 
     ``show_best`` (`bool`):
     Show orientation of best-fitting force
 
-    ``title`` (`str`)
+    ``title`` (`str`):
     Optional figure title
 
-    ``backend`` (`function`)
+    ``backend`` (`function`):
     Choose from `_plot_force_gmt` (default) or user-supplied function
 
     """

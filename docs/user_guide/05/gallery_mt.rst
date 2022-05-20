@@ -117,7 +117,7 @@ To see how the magnitude of the best-fitting moment tensor varies with respect t
 Source code
 """""""""""
 
-[`script to reproduce above figures <https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/code/gallery_mt.py>`_]
+[`script to reproduce above figures <https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/05/code/gallery_mt.py>`_]
 
 Users can run the script immediately after `installing MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_, without any additional setup.
 

@@ -14,7 +14,7 @@ To plot how time shifts, amplitude ratios, or other `trace attributes <https://u
 
 .. code::
 
-    plot_time_shifts(dirname, attrs, stations, origins)
+    plot_time_shifts(dirname, attrs, stations, origin)
 
 
 Because we haven't specified a map projection or other details, it's no surprise that the resulting figure is quite generic:
@@ -29,7 +29,7 @@ In comparison, a more powerful approach is to overload the backend function comp
 
 .. code::
 
-    plot_time_shifts(dirname, attrs, stations, origins, backend=custom_backend)
+    plot_time_shifts(dirname, attrs, stations, origin, backend=custom_backend)
 
 To illustrate, we have implemented a `custom backend <https://uafgeotools.github.io/mtuq/user_guide/06/custom_backends.html#example>`_ relevant to `Silwal2016 <https://uafgeotools.github.io/mtuq/references.html>`_. The result of calling `plot_time_shifts` with this new backend is:
 

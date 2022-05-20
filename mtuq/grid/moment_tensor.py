@@ -190,28 +190,26 @@ def to_mt(rho, v, w, kappa, sigma, h):
 def _semiregular(npts_v, npts_w, tightness=0.8, uniformity=0.8):
     """ Returns coordinate vectors along the `v, w` axes
  
-    .. rubric :: Tightness 
+    .. rubric :: Keyword arguments
 
-    `tightness` controls how close the extremal points lie to the boundary of 
-    `v, w` rectangle
+    ``tightness`` (`float`):
+    Value in range `[0,1)` that controls how close the extremal points lie to the 
+    boundary of the `v, w` rectangle
 
 
-    .. rubric :: Uniformity
+    ``uniformity`` (`float`):
+    Value in range `[0,1]` that controls the spacing between points
 
-    `uniformity` controls the spacing between points.
-
-    For `uniformity=0`, the spacing will be regular in `Tape2012 
-    <https://uafgeotools.github.io/mtuq/references.html>`_ parameters 
-    `delta`, `gamma`, which is  good for avoiding distortion near the upper
-    and lower edges.
-
-    For `uniformity=1`, the spacing will be regular in `Tape2015
-    <https://uafgeotools.github.io/mtuq/references.html>`_ parameters `v, w`, 
-    which means that points are uniformly-spaced in terms of moment tensor 
-    Frobenius norms.
-
-    For intermediate values, the spacing will be `semiregular` in the sense of
-    a linear interpolation between the above cases.
+    - For `uniformity=0`, the spacing will be regular in `Tape2012 
+      <https://uafgeotools.github.io/mtuq/references.html>`_ parameters 
+      `delta`, `gamma`, which is  good for avoiding distortion near the upper
+      and lower edges.
+    - For `uniformity=1`, the spacing will be regular in `Tape2015
+      <https://uafgeotools.github.io/mtuq/references.html>`_ parameters `v, w`, 
+      which means that points are uniformly-spaced in terms of moment tensor 
+      Frobenius norms.
+    - For intermediate values, the spacing will be `semiregular` in the sense of
+      a linear interpolation between the above cases.
 
     """
     assert 0. <= tightness < 1.,\

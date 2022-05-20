@@ -186,17 +186,17 @@ def _plot_vw(filename, da, show_best=True, show_tradeoffs=False,
 
     .. rubric :: Keyword arguments
 
-    ``colormap`` (`str`)
+    ``colormap`` (`str`):
     Color palette used for plotting values 
     (choose from GMT or MTUQ built-ins)
 
     ``show_best`` (`bool`):
     Show where best-fitting moment tensor falls on vw rectangle
 
-    ``title`` (`str`)
+    ``title`` (`str`):
     Optional figure title
 
-    ``backend`` (`function`)
+    ``backend`` (`function`):
     Choose from `_plot_vw_gmt` (default), `plot_vw_matplotlib`, 
     or user-supplied function
 

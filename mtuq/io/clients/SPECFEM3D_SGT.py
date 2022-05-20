@@ -11,7 +11,8 @@ from mtuq.util.signal import resample
 
 
 class Client(ClientBase):
-    """ SPECFEM3D strain Green's tensor database client
+    """ SPECFEM3D strain Green's tensor database client based on `seisgen
+    <https://github.com/Liang-Ding/seisgen>`_
 
     .. rubric:: Usage
 
@@ -32,7 +33,7 @@ class Client(ClientBase):
     .. note ::
 
         For instructions on creating SPECFEM3D/3D_GLOBE strain Green's tensor
-        databases, see `SEISGEN documentation 
+        databases, see `seisgen documentation 
         <https://github.com/Liang-Ding/seisgen>`_
 
 

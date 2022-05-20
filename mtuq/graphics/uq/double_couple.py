@@ -151,11 +151,11 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
     ``show_best`` (`bool`):
     Show where best-fitting moment tensor falls in terms of strike, dip, slip
 
-    ``squeeze`` (`str`)
+    ``squeeze`` (`str`):
     By default, 2-D surfaces are obtained by minimizing or maximizing.
     For slices instead, use `slice_min` or `slice_max`.
 
-    ``backend`` (`function`)
+    ``backend`` (`function`):
     Choose from `_plot_dc_matplotlib` (default) or user-supplied function
 
     """
