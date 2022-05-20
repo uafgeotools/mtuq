@@ -18,6 +18,8 @@ URLS="\
     https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems\
     https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html\
     https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html\
+    https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/05/code/gallery_mt.py
+    https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/05/code/gallery_force.py
     "
 
 
