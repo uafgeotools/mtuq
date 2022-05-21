@@ -69,7 +69,7 @@ def _plot_latlon_gmt(filename, lon, lat, values, best_latlon=None, lune_array=No
 
 def _call(shell_script, filename, data, supplemental_data=None,
     title='', colormap='viridis', flip_cpt=False, colorbar_type=1,
-    colorbar_label='', marker_coords=None, marker_type=0):
+    colorbar_label='', colorbar_limits=None, marker_coords=None, marker_type=0):
 
     #
     # Common wrapper for all GMT plotting functions involving 2D surfaces
@@ -87,7 +87,15 @@ def _call(shell_script, filename, data, supplemental_data=None,
     colorbar_label = _parse_label(colorbar_label)
 
     # parse colorbar limits
-    minval, maxval, exp = _parse_limits(data[:,-1])
+    try:
+        minval, maxval = colorbar_limits
+        exp = _exponent((minval, maxval))
+        minval /= 10.**exp
+        maxval /= 10.**exp
+    except:
+        minval, maxval, exp = _parse_limits(data[:,-1])
+
+    data[:,-1] /= 10.**exp
     cpt_step=(maxval-minval)/20.
 
     # write values to be plotted as ASCII table
@@ -248,7 +256,7 @@ def _parse_limits(values):
 
     minval = masked.min()
     maxval = masked.max()
-    exp = np.floor(np.log10(np.max(np.abs(masked))))
+    exp = _exponent(masked)
 
     if -1 <= exp <= 2:
         return minval, maxval, 0
@@ -256,7 +264,6 @@ def _parse_limits(values):
     else:
         minval /= 10**exp
         maxval /= 10**exp
-        masked /= 10**exp
         return minval, maxval, exp
 
 
@@ -390,3 +397,8 @@ def _float_to_str(val):
 def _savetxt(filename, *args, fmt='%.6e'):
     # TODO - can GMT accept virtual files?
     np.savetxt(filename, np.column_stack(args), fmt=fmt)
+
+
+def _exponent(values):
+    return np.floor(np.log10(np.max(np.abs(values))))
+
