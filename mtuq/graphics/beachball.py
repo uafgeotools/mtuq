@@ -51,20 +51,21 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
 
     .. rubric :: Optional arguments
 
-    ``crosshair`` (`bool`)
-    Marks hypocenter with crosshair
-
-    ``add_station_labels`` (`bool`)
+    ``add_station_labels`` (`bool`):
     Displays station names
 
-    ``add_station_markers`` (`bool`)
+    ``add_station_markers`` (`bool`):
     Displays station markers
 
-    ``fill_color`` (`str`)
-    Used for plotting beachball
+    ``fill_color`` (`str`):
+    Color used for beachball
 
-    ``marker_color`` (`str`)
-    Used for station markers
+    ``marker_color`` (`str`):
+    Color used for station markers
+
+    ``taup_model`` (`str`):
+    Name of built-in ObsPy TauP model or path to custom ObsPy TauP model,
+    used for takeoff angle calculations
 
 
     """
