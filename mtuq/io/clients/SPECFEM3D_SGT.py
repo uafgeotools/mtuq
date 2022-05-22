@@ -126,16 +126,9 @@ class Client(ClientBase):
 
                 if not self.b_new_origin:
                     try:
-                        if origin.latitude != self.origin.latitude or origin.longitude != self.origin.longitude:
-                            self.b_new_origin = True
-                        else:
-                            try:
-                                if origin.depth_in_m != self.origin.depth_in_m:
-                                    self.b_new_origin = True
-                            except:
-                                if origin.elevation_in_m != self.origin.elevation_in_m:
-                                    self.b_new_origin = True
-                    except:
+                        for key in ('latitude','longitude','depth_in_m','elevation_in_m'):
+                            assert origin[key] == self.origin[key]
+                    except AssertionError:
                         self.b_new_origin = True
 
                 stream = self.sgtMgr.get_greens_function(station, origin, b_new_origin=self.b_new_origin)
