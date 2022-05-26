@@ -18,7 +18,7 @@ from mtuq.wavelet import EarthquakeTrapezoid
 
 #
 # the following functions allow reading in and performing other operations with
-# CAP-style weight files. Such files can be used to control the weight on  
+# CAP-style weight files. Such files can be used to control the weight on
 # individual stations and components in a moment tensor inversion
 #
 
@@ -33,9 +33,16 @@ class WeightParser(object):
     def _parse_code(self, string):
         return '.'.join(string.split('.')[1:4])
 
+    def _parse_polarity(self, string):
+        if '/' in string:
+            polarity = string.split('/')[-1]
+        else:
+            polarity = 0
+        return polarity
+
     def parse_weights(self, remove_unused=True):
         weights = defaultdict(AttribDict)
-          
+
         with open(self._path) as file:
             reader = csv.reader(
                 filter(lambda row: row[0]!='#', file),
@@ -76,12 +83,24 @@ class WeightParser(object):
 
             for row in reader:
                 _code = self._parse_code(row[0])
+                _polarity = int(self._parse_polarity(row[0]))
+                print(_code, _polarity)
 
                 picks[_code]['P'] = float(row[7])
                 picks[_code]['S'] = float(row[9])
 
         return picks
 
+    def parse_polarity(self):
+
+        with open(self._path) as file:
+            reader = csv.reader(
+                filter(lambda row: row[0]!='#', file),
+                delimiter=' ',
+                skipinitialspace=True)
+
+            polarities = [int(self._parse_polarity(row[0])) for row in reader]
+        return polarities
 
 
     def parse_statics(self):
@@ -202,7 +221,7 @@ def taper(array, taper_fraction=0.3, inplace=True):
 
 
 #
-# the following functions are used in benchmark comparisons between CAP and 
+# the following functions are used in benchmark comparisons between CAP and
 # MTUQ synthetics. See tests/benchmark_cap_mtuq.py
 #
 
@@ -233,7 +252,7 @@ def get_synthetics_cap(dummy_bw, dummy_sw, path, event_name):
 
             else:
                 stream.remove(trace)
-            
+
     for stream in synthetics_sw:
         for trace in stream:
             trace.weight = 1.
@@ -309,7 +328,7 @@ def get_data_cap(dummy_bw, dummy_sw, path, event_name):
 
 
 
-def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt, 
+def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt,
                         apply_shifts=True):
 
     synthetics_bw = deepcopy(dummy_bw)
@@ -335,7 +354,7 @@ def get_synthetics_mtuq(dummy_bw, dummy_sw, greens_bw, greens_sw, mt,
 
 
 def apply_magnitude_dependent_shift(trace, Mw):
-    """ This type of time-shift arises from the idiosyncratic way CAP 
+    """ This type of time-shift arises from the idiosyncratic way CAP
       implements source-time function convolution. CAP's "conv" function
       results in systematic magnitude-dependent shifts between origin times
       and arrival times. This is arguably a bug. We include this function
@@ -354,10 +373,10 @@ def apply_magnitude_dependent_shift(trace, Mw):
     trace.data[:nt] = 0.
 
 
-def compare_cap_mtuq(cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_, 
+def compare_cap_mtuq(cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_,
                      bw_tol=np.inf, sw_tol=1.e-2, norm=2):
     """ Checks whether CAP and MTUQ synthetics agree within the specified
-      tolerances 
+      tolerances
 
       Even with the magnitude-dependent time-shift correction described above,
       CAP and MTUQ synthetics will not match perfectly because the correction
@@ -401,7 +420,7 @@ def compare_cap_mtuq(cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_,
             for sw1, sw2 in zip(cap_sw, mtuq_sw):
                 dt = sw1.stats.delta
                 e = np.linalg.norm((sw1.data-sw2.data)*dt, norm)
-                e *= dt/maxval 
+                e *= dt/maxval
                 if e > sw_tol:
                     print(((
                         "Discrepancy between CAP and MTUQ synthetics\n"+
@@ -416,6 +435,3 @@ def compare_cap_mtuq(cap_bw_, cap_sw_, mtuq_bw_, mtuq_sw_,
     if count > 0:
         raise Exception(
             "Discrepancy between CAP and MTUQ synthetics")
-
-
-
