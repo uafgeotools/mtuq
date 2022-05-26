@@ -125,10 +125,10 @@ def calculate_takeoff_angle(taup, source_depth_in_km, **kwargs):
             phases += [arrival.phase.name]
 
         if 'p' in phases:
-            return arrivals[phases.index('p')].incident_angle
+            return arrivals[phases.index('p')].takeoff_angle
 
         elif 'P' in phases:
-            return arrivals[phases.index('P')].incident_angle
+            return arrivals[phases.index('P')].takeoff_angle
         else:
             raise Excpetion
 
