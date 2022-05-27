@@ -49,7 +49,7 @@ class PolarityMisfit(object):
         values = np.zeros((len(sources), 1))
 
         # Extracting measured polarities,  as a numpy array
-        observed_polarities = extract_polarity(polarity_input)
+        observed_polarities = extract_polarity(polarity_input, self.polarity_keyword)
 
         takeoff_angles = extract_takeoff_angle(greens, taup_model=self.taup_model)
 

@@ -5,7 +5,7 @@ from obspy.taup import TauPyModel
 from obspy.geodetics import kilometers2degrees as _to_deg
 from mtuq.util.cap import WeightParser
 
-def extract_polarity(polarity_in):
+def extract_polarity(polarity_in, polarity_keyword=None):
     """
     Extract first motion polarity from polarity_in input.
     The function automatically detects the type of input to return an array of len(data) [-1, 0 , +1] integer values used in polarity mismatch misfit.
@@ -18,11 +18,11 @@ def extract_polarity(polarity_in):
 
     """
     if isinstance(polarity_in, (mtuq.dataset.Dataset)) and polarity_keyword is not None:
-        observed_polarities = np.asarray([sta[0].stats.sac[polarity_keyword] for sta in data])
+        observed_polarities = np.asarray([sta[0].stats.sac[polarity_keyword] for sta in polarity_in])
 
     elif isinstance(polarity_in, (mtuq.greens_tensor.base.GreensTensorList)) and polarity_keyword is not None:
         print('detected as GreensTensorList')
-        observed_polarities = np.asarray([sta[0].stats.sac[polarity_keyword] for sta in data])
+        observed_polarities = np.asarray([sta[0].stats.sac[polarity_keyword] for sta in polarity_in])
 
     elif type(polarity_in) == list or type(polarity_in) == np.ndarray:
         print('detected as list or numpy array')
