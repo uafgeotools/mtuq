@@ -5,8 +5,8 @@
 
 # To correctly plot focal mechanims, MTUQ uses Generic Mapping Tools (GMT).
 
-# If GMT >=6.0.0 executables are not found on the system path, MTUQ falls 
-# back to ObsPy. As described in the following GitHub issue, ObsPy 
+# If GMT >=6.0.0 executables are not found on the system path, MTUQ falls
+# back to ObsPy. As described in the following GitHub issue, ObsPy
 # focal mechanism plots suffer from  plotting artifacts:
 
 # https://github.com/obspy/obspy/issues/2388
@@ -24,6 +24,7 @@ from mtuq.graphics._gmt import _parse_filetype, _get_format_arg, _safename,\
     exists_gmt, gmt_major_version
 from mtuq.graphics._pygmt import exists_pygmt
 from mtuq.util import asarray, to_rgb, warn
+from mtuq.util.polarity import calculate_takeoff_angle
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 from obspy.geodetics import kilometers2degrees as _to_deg
 from obspy.taup import TauPyModel
@@ -115,28 +116,6 @@ def plot_polarities(filename, polarities, mt, stations, origin, **kwargs):
     raise NotImplementedError
 
 
-
-def calculate_takeoff_angle(taup, source_depth_in_km, **kwargs):
-    try:
-        arrivals = taup.get_travel_times(source_depth_in_km, **kwargs)
-
-        phases = []
-        for arrival in arrivals:
-            phases += [arrival.phase.name]
-
-        if 'p' in phases:
-            return arrivals[phases.index('p')].takeoff_angle
-
-        elif 'P' in phases:
-            return arrivals[phases.index('P')].takeoff_angle
-        else:
-            raise Excpetion
-
-    except:
-        # if taup fails, use dummy takeoff angle
-        return None
-
-
 #
 # GMT implementation
 #
@@ -146,7 +125,7 @@ GMT_PROJECTION = '-Jm0/0/5c'
 
 
 def _plot_beachball_gmt(filename, mt, stations, origin,
-    taup_model='ak135', add_station_markers=True, add_station_labels=True, 
+    taup_model='ak135', add_station_markers=True, add_station_labels=True,
     fill_color='gray', marker_color='black'):
 
 
@@ -250,7 +229,7 @@ def _write_stations(filename, stations, origin, taup_model):
                 station.longitude)
 
             takeoff_angle = calculate_takeoff_angle(
-                taup, 
+                taup,
                 origin.depth_in_m/1000.,
                 distance_in_degree=_to_deg(distance_in_m/1000.),
                 phase_list=['p', 'P'])
@@ -352,5 +331,3 @@ def _plot_polarities_pygmt():
 
     # case 4 - observed negative, synthetic positive
     _pygmt_polar()
-
-
