@@ -83,23 +83,27 @@ class WeightParser(object):
 
             for row in reader:
                 _code = self._parse_code(row[0])
-                _polarity = int(self._parse_polarity(row[0]))
-                print(_code, _polarity)
-
                 picks[_code]['P'] = float(row[7])
                 picks[_code]['S'] = float(row[9])
 
         return picks
 
-    def parse_polarity(self):
-
+    def parse_polarity(self, remove_unused=True):
+        polarities = []
         with open(self._path) as file:
             reader = csv.reader(
                 filter(lambda row: row[0]!='#', file),
                 delimiter=' ',
                 skipinitialspace=True)
 
-            polarities = [int(self._parse_polarity(row[0])) for row in reader]
+            for row in reader:
+                if not float(row[2]) ==\
+                float(row[3]) ==\
+                float(row[4]) ==\
+                float(row[5]) ==\
+                float(row[6]) == 0:
+                    polarities+=[int(self._parse_polarity(row[0]))]
+
         return polarities
 
 
