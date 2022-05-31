@@ -19,7 +19,7 @@ class PolarityMisfit(object):
 
     .. code::
 
-        function_handle = Misfit(**parameters)
+        function_handle = PolarityMisfit(**parameters)
         values = function_handle(polarity_input, greens, sources)
 
     In the first step, the user may supply optional parameters such as the sac
@@ -32,6 +32,17 @@ class PolarityMisfit(object):
     Theoretical first motion polarities are then generated and compared with observed first motions, and a NumPy array of misfit values is returned of
     the same length as `sources`.
 
+    When the polarity_input is a mtuq.Dataset or a mtuq.GreensTensorList, the
+    picked polarity info should be written in the header of the first trace
+    of the stream of each station. The "polarity_keyword" will then have to be defined to point toward the right key in the SAC header of each station's first trace.
+
+    .. example:
+
+    `pmisfit = PolarityMisfit(polarity_keyword='user3')`
+
+    will seek a +1, 0 or -1 value in
+    `Stream[0].stats.sac['user3']`
+    for each station stream in the mtuq.Dataset or mtuq.GreensTensorList
 
     .. rubric:: Parameters
 
@@ -46,6 +57,8 @@ class PolarityMisfit(object):
 
     *Convention* : Positive vertical motion should be encoded as +1 and negative vertical motion should be encoded as -1 and unpicked data as 0.
     (integer values [1, 0, -1])
+
+    *Using FK* : If the Green's function were generated using FK, the takeoff angle should already be pre-written in the SAC files. The takeoff angle will thus be read from the 'user1' SAC header field of the Green's function, instead of being computed on the fly using obspy.taup function. 
 
     """
 
