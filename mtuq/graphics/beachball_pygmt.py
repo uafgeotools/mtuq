@@ -25,17 +25,22 @@ def beachball_pygmt(filename, polarity_input, greens, mt, plot_all=False, displa
     ``filename`` (`str`):
     Name of output image file
 
-    ``data`` (`mtuq.DataSet`):
-    mtuq Dataset with valid sac header
+    ``polarity_input`` (`list`, `numpy.ndarray`, `mtuq.dataset.Dataset`,
+    `mtuq.greens_tensor.base.GreensTensorList, `str`):
+    See mtuq.misfit.polarity.PolarityMisfit() and
+    mtuq.util.polarity.extract_polarity() for a complete set of instructions. Polarity inputs should only contains [1, 0, -1] values.
+
+    ``greens`` (mtuq.GreensTensorList): green's function list required to compute takeoff angles.
 
     ``mt`` (`mtuq.MomentTensor`):
     Moment tensor object
 
-    Warning : Implemented and tested with PyGMT v0.3.1, which is still in early developpment. It is possible that the code might break some time in the future, as nerwer versions of the code are rolled-out.
+    Warning : Implemented and tested with PyGMT v0.3.1, which is still in early
+    developpment. It is possible that the code might break some time in the
+    future, as nerwer versions of the code are rolled-out.
 
-    This plotting function presuppose that the data is a valid mtuq.DataSet whith a sac header containing the station azimuth in the `az` key, the takeoff_angle in the key `user3` and the picked polarity in the key `user5`
-
-    TODO: This function will benefit from having a different way of handling polarity than with the sac header used as of right now. This will enable easier usage for user that won't be using pysep to fetch the data.
+    This plotting function presuppose that greens is a mtuq.GreensTensorList
+    whith a valid SAC header containing the station.azimuth key. The takeoff angles is computed on the fly using obspy.taup or by reading FK Green's tensor SAC files header ('user1' key).
     """
     import pygmt
     from pygmt.helpers import build_arg_string, use_alias
@@ -49,7 +54,7 @@ def beachball_pygmt(filename, polarity_input, greens, mt, plot_all=False, displa
              convention="mt", G='grey50', spec=focal_mechanism, N=False, M=True)
 
 
-    polarities = extract_polarity(polarity_input)
+    polarities = extract_polarity(polarity_input, polarity_keyword=polarity_keyword)
     takeoff_angles = extract_takeoff_angle(greens,taup_model=taup_model)
     azimuths = [sta.azimuth for sta in greens]
 
@@ -158,7 +163,7 @@ def beachball_pygmt(filename, polarity_input, greens, mt, plot_all=False, displa
     _pygmt_polar(down_unmatched_data, symbol='i0.40c', ext_fill='red')
     # If `plot_all` is True, will plot the unpicked stations as black crosses over the beachball plot
     if not plot_all is False:
-        _pygmt_polar(unpicked_data, symbol='x0.40c', comp_outline='black', ext_outline='black')
+        _pygmt_polar(unpicked_data, symbol='x0.40c', comp_outline='black')
 
     # fig.show(dpi=300, method="external")
     fig.savefig(filename, show=display_plot)
