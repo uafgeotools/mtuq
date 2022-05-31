@@ -52,7 +52,7 @@ if __name__=='__main__':
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=10,
+        npts_per_axis=15,
         magnitudes=[4.4])
 
 
@@ -120,6 +120,7 @@ if __name__=='__main__':
     if comm.rank==0:
         print('Evaluating polarity misfit...\n')
 
+
     # Using an array as input
     results = grid_search(
     polarity_input, greens, pmisfit, origin, grid)
@@ -170,6 +171,6 @@ if __name__=='__main__':
         random_index = random.randrange(len(min_indexes))
         random_value = min_indexes[random_index]
         # Then plot it
-        beachball_pygmt('polarity.pdf', path_weights, greens, grid.get(random_value))
+        beachball_pygmt('polarity.pdf', polarity_input, greens, grid.get(random_value))
 
         print('\nFinished\n')
