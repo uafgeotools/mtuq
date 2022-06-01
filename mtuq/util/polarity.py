@@ -86,8 +86,10 @@ def extract_takeoff_angle(greens, taup_model='ak135'):
     solver = _get_tag(greens[0].tags, 'solver')
     if solver == 'FK':
         mode = 'FK'
-    else:
+    elif solver == 'AxiSEM' or solver == 'syngine':
         mode = 'taup'
+    else:
+        raise NotImplementedError('Greens function currently supported include AxiSEM, syngine and FK.')
 
     # List takeoff_angle and azimuth out of the provided data
     if mode == 'FK':

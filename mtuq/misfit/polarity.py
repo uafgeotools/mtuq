@@ -91,6 +91,10 @@ class PolarityMisfit(object):
 
         """
 
+        # Check if the greens functions passed to polarity misfit are for Moment Tensor sources.
+        if not all(green.include_mt for green in greens):
+            raise NotImplementedError('Polarity misfit does not support Force sources at the moment.')
+
         # Preallocate list containing source vector for faster computation.
         source_vector_list = _to_array(sources)
         # Create the array to store polarity misfit values.
