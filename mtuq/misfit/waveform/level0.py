@@ -100,6 +100,10 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                         Ns = np.dot(s[_k].data,s[_k].data)**0.5
                         Nd = np.dot(d[_k].data,d[_k].data)**0.5
 
+                        #
+                        # keep track of trace attributes
+                        #
+
                         s[_k].attrs = AttribDict()
 
                         s[_k].attrs.misfit = value

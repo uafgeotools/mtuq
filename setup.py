@@ -90,8 +90,9 @@ setup(
     # instaseis Fortran extension modules sometimes fail to compile via pip
     # (consider using a conda based installation instead)
     install_requires=[
-        "numpy", "scipy", "obspy",
-        "pandas", "xarray", "seisgen",
+        "numpy", "scipy",
+        "pandas", "xarray", "netCDF4", "h5py", "tables",
+        "obspy", "seisgen",
         "retry", "flake8>=3.0", "pytest", "nose",
         # "instaseis"
     ],

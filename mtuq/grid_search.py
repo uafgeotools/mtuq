@@ -1,4 +1,6 @@
 
+import h5py
+import netCDF4
 import numpy as np
 import pandas
 import xarray
@@ -31,7 +33,6 @@ def grid_search(data, greens, misfit, origins, sources,
 
 
     .. rubric :: Input arguments
-
 
     ``data`` (`mtuq.Dataset`):
     The observed data to be compared with synthetic data
@@ -187,37 +188,16 @@ class MTUQDataArray(xarray.DataArray):
 
     """
 
-    def idxmin(self, idx_type=None):
-        """ Returns coordinates corresponding to minimum misfit
+    def origin_idxmin(self):
+        """ Returns `origins` index corresponding to minimum misfit
         """
-        if idx_type is None:
-            return dataarray_idxmin(self)
+        return int(dataarray_idxmin(self)['origin_idx'])
 
-        elif idx_type in ('origin', 'origin_idx'):
-            return int(dataarray_idxmin(self)['origin_idx'])
-
-        elif idx_type in ('source', 'source_idx'):
-            shape = self._get_shape()
-            return np.unravel_index(self.argmin(), shape)[0]
-
-        else:
-            raise TypeError
-
-    def idxmax(self, idx_type=None):
-        """ Returns coordinates corresponding to maximum misfit
+    def source_idxmin(self):
+        """ Returns `sources` index corresponding to minimum misfit
         """
-        if idx_type is None:
-            return dataarray_idxmax(self)
-
-        elif idx_type in ('origin', 'origin_idx'):
-            return int(dataarray_idxmax(self)['origin_idx'])
-
-        elif idx_type in ('source', 'source_idx'):
-            shape = self._get_shape()
-            return np.unravel_index(self.argmax(), shape)[0]
-
-        else:
-            raise TypeError
+        shape = self._get_shape()
+        return np.unravel_index(self.argmin(), shape)[0]
 
     def _get_shape(self):
         """ Private helper method
@@ -261,44 +241,22 @@ class MTUQDataFrame(pandas.DataFrame):
     .. note::
 
         Besides the methods below, `MTUQDataFrame` includes many useful methods
-        inherited from ``pandas.DataFrame``. See 
-        `pandas documentation <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html>`_
+        inherited from ``pandas.DataFrame``. See `pandas documentation 
+        <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html>`_
         for more information.
 
     """
-    def idxmin(self, idx_type=None):
+    def origin_idxmin(self):
         """ Returns coordinates corresponding to minimum misfit
         """
-        if idx_type is None:
-            return self[0].idxmin()
+        df = self.reset_index()
+        return df['origin_idx'][df[0].idxmin()]
 
-        elif idx_type in ('origin', 'origin_idx'):
-            df = self.reset_index()
-            return df['origin_idx'][df[0].idxmin()]
-
-        elif idx_type in ('source', 'source_idx'):
-            df = self.reset_index()
-            return df['source_idx'][df[0].idxmin()]
-
-        else:
-            raise TypeError
-
-    def idxmax(self, idx_type=None):
-        """ Returns coordinates corresponding to maximum misfit
+    def source_idxmin(self):
+        """ Returns coordinates corresponding to minimum misfit
         """
-        if idx_type is None:
-            return self[0].idxmax()
-
-        elif idx_type in ('origin', 'origin_idx'):
-            df = self.reset_index()
-            return df['origin_idx'][df[0].idxmax()]
-
-        elif idx_type in ('source', 'source_idx'):
-            df = self.reset_index()
-            return df['source_idx'][df[0].idxmax()]
-
-        else:
-            raise TypeError
+        df = self.reset_index()
+        return df['source_idx'][df[0].idxmin()]
 
     def save(self, filename, *args, **kwargs):
         """ Saves grid search results to HDF5 file
@@ -383,4 +341,54 @@ def _to_dataframe(origins, sources, values, index_type=2):
     df = df.set_index(list(dims))
     return df
 
+
+#
+# I/O functions
+#
+
+def open_ds(filename, format=None):
+    """ Reads grid search results from disk
+
+    .. rubric :: Parameters
+
+    ``filename`` (`str`):
+    File containing grid search results
+
+    ``format`` (`str`):
+    File format (`NetCDF` or `HDF5`)
+
+    """
+    if not format:
+        # try to determine file format, if not given
+        if h5py.is_hdf5(filename):
+            format = 'HDF'
+        else:
+            try:
+                netCDF.Dataset(filename, "r")
+                format = 'NETCDF4'
+            except:
+                raise Exception('File format not recognized: %s' % filename)
+
+    if format.upper() in ['H5', 'HDF','HDF5']:
+        return _open_df(filename)
+
+    elif format.upper() in ['NC', 'NC4', 'NETCDF', 'NETCDF4']:
+        return _open_da(filename)
+
+    else:
+        raise Exception('File format not supported: %s' % filename)
+
+
+def _open_da(filename):
+    """ Reads MTUQDataArray from NetCDF file
+    """
+    da = xarray.open_dataarray(filename)
+    return MTUQDataArray(data=da.values, coords=da.coords, dims=da.dims)
+
+
+def _open_df(filename):
+    """ Reads MTUQDataFrame from HDF5 file
+    """
+    df = pandas.read_hdf(filename)
+    return MTUQDataFrame(df.values, index=df.index)
 

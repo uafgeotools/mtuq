@@ -9,8 +9,7 @@ from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune,\
     plot_likelihood_lune, plot_marginal_vw,\
     plot_variance_reduction_lune, plot_magnitude_tradeoffs_lune,\
     plot_time_shifts, plot_amplitude_ratios,\
-    plot_summary1, plot_summary2, likelihood_analysis,\
-    _likelihoods_vw_regular, _marginals_vw_regular,\
+    likelihood_analysis, _likelihoods_vw_regular, _marginals_vw_regular,\
     _plot_lune, _plot_vw, _product_vw
 from mtuq.graphics.uq.vw import _variance_reduction_vw_regular
 from mtuq.grid import FullMomentTensorGridSemiregular
@@ -230,24 +229,24 @@ if __name__=='__main__':
         #
 
         # use minimum misfit as initial guess for maximum likelihood
-        idx = results_sum.idxmin('source')
-        best_source = grid.get(idx)
+        idx = results_sum.source_idxmin()
+        best_mt = grid.get(idx)
         lune_dict = grid.get_dict(idx)
-        mt_dict = grid.get(idx).as_dict()
+        mt_dict = best_mt.as_dict()
 
 
         print('Data variance estimation...\n')
 
         sigma_bw = estimate_sigma(data_bw, greens_bw,
-            best_source, misfit_bw.norm, ['Z', 'R'],
+            best_mt, misfit_bw.norm, ['Z', 'R'],
             misfit_bw.time_shift_min, misfit_bw.time_shift_max)
 
         sigma_rayleigh = estimate_sigma(data_sw, greens_sw,
-            best_source, misfit_rayleigh.norm, ['Z', 'R'],
+            best_mt, misfit_rayleigh.norm, ['Z', 'R'],
             misfit_rayleigh.time_shift_min, misfit_rayleigh.time_shift_max)
 
         sigma_love = estimate_sigma(data_sw, greens_sw,
-            best_source, misfit_love.norm, ['T'],
+            best_mt, misfit_love.norm, ['T'],
             misfit_love.time_shift_min, misfit_love.time_shift_max)
 
         stats = {'sigma_bw': sigma_bw,
@@ -305,21 +304,21 @@ if __name__=='__main__':
 
         # synthetics corresponding to minimum misfit
         synthetics_bw = greens_bw.get_synthetics(
-            best_source, components_bw, mode='map')
+            best_mt, components_bw, mode='map')
 
         synthetics_sw = greens_sw.get_synthetics(
-            best_source, components_sw, mode='map')
+            best_mt, components_sw, mode='map')
 
 
         # time shifts and other attributes corresponding to minimum misfit
         list_bw = misfit_bw.collect_attributes(
-            data_bw, greens_bw, best_source)
+            data_bw, greens_bw, best_mt)
 
         list_rayleigh = misfit_rayleigh.collect_attributes(
-            data_sw, greens_sw, best_source)
+            data_sw, greens_sw, best_mt)
 
         list_love = misfit_love.collect_attributes(
-            data_sw, greens_sw, best_source)
+            data_sw, greens_sw, best_mt)
 
         list_sw = [{**list_rayleigh[_i], **list_love[_i]}
             for _i in range(len(stations))]
@@ -341,11 +340,11 @@ if __name__=='__main__':
         print('Plotting observed and synthetic waveforms...\n')
 
         plot_beachball(event_id+'FMT_beachball.png', 
-            best_source, stations, origin)
+            best_mt, stations, origin)
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
-            misfit_bw, misfit_rayleigh, stations, origin, best_source, lune_dict)
+            misfit_bw, misfit_rayleigh, stations, origin, best_mt, lune_dict)
 
 
         print('Plotting misfit surfaces...\n')
@@ -442,35 +441,22 @@ if __name__=='__main__':
         print()
 
 
-        print('Plotting summary figures (work in progress)...\n')
-
-        os.makedirs(event_id+'FMT_summary', exist_ok=True)
-
-        plot_summary1(event_id+'FMT_summary/1.png',
-            results_rayleigh, stations, origin, best_source)
-
-        plot_summary2(event_id+'FMT_summary/2.png',
-            results_rayleigh, sigma_rayleigh**2, stations, origin, best_source)
-
-        print()
-
-
         print('Plotting time shift geographic variation...\n')
 
         plot_time_shifts(event_id+'FMT_time_shifts/bw',
-            list_bw, stations, origin, best_source)
+            list_bw, stations, origin)
 
         plot_time_shifts(event_id+'FMT_time_shifts/sw',
-            list_sw, stations, origin, best_source)
+            list_sw, stations, origin)
 
 
         print('Plotting amplitude ratio geographic variation...\n')
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/bw',
-            list_bw, stations, origin, best_source)
+            list_bw, stations, origin)
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/sw',
-            list_sw, stations, origin, best_source)
+            list_sw, stations, origin)
 
 
         print('\nSaving results...\n')
@@ -482,7 +468,7 @@ if __name__=='__main__':
         save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
 
         merged_dict = merge_dicts(lune_dict, mt_dict, origin,
-            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+            {'M0': best_mt.moment(), 'Mw': best_mt.magnitude()})
 
         save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
 

@@ -1,0 +1,24 @@
+
+
+Additional topics
+=================
+
+Data structures
+
+.. toctree::
+   :maxdepth: 1
+
+   06/grid_structures
+   06/moment_tensor_and_force_grids
+   06/reading_writing_results
+   06/trace_attributes
+
+
+Visualization
+
+.. toctree::
+   :maxdepth: 1
+
+   06/customizing_figures
+   06/plotting_time_shifts
+

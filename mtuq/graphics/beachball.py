@@ -19,15 +19,15 @@ import numpy as np
 import subprocess
 
 from glob import glob
-from matplotlib import colors
 from mtuq.event import MomentTensor
-from mtuq.graphics._gmt import _parse_filetype, _get_format_arg, _safename
-from mtuq.util import asarray, warn
+from mtuq.graphics._gmt import _parse_filetype, _get_format_arg, _safename,\
+    exists_gmt, gmt_major_version
+from mtuq.graphics._pygmt import exists_pygmt
+from mtuq.util import asarray, to_rgb, warn
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 from obspy.geodetics import kilometers2degrees as _to_deg
 from obspy.taup import TauPyModel
 from six import string_types
-
 
 
 def plot_beachball(filename, mt, stations, origin, **kwargs):
@@ -44,162 +44,79 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
     ``stations`` (`list` of `Station` objects):
     Stations from which azimuths and takeoff angles are calculated
 
-    ``origin`` (`Origin` object):
-    Origin used to define center
+    ``origin`` (`mtuq.Origin`):
+    Origin object
 
 
-    .. rubric :: Optional keyword arguments
+    .. rubric :: Optional arguments
 
-    ``polarities`` (`list`)
-    Observed polarities corresponding to given stations
-    (not yet implemented)
-
-    ``add_crosshair`` (`bool`)
+    ``crosshair`` (`bool`)
     Marks hypocenter with crosshair
 
     ``add_station_labels`` (`bool`)
-    Displays stations names
+    Displays station names
+
+    ``add_station_markers`` (`bool`)
+    Displays station markers
 
     ``fill_color`` (`str`)
-    Used for plotting focal mechanism
+    Used for plotting beachball
 
     ``marker_color`` (`str`)
     Used for station markers
 
 
     """
-    from mtuq.graphics._gmt import gmt_major_version
 
     if type(mt)!=MomentTensor:
-        mt = MomentTensor(mt)
+        raise TypeError
 
     try:
+        assert exists_gmt()
         assert gmt_major_version() >= 6
-        backend = _plot_beachball_gmt
-
+        _plot_beachball_gmt(filename, mt, stations, origin, **kwargs)
+        return
     except:
-        backend = _plot_beachball_obspy
+        pass
 
-    backend(filename, mt, stations, origin, **kwargs)
+    try:
+        warn("plot_beachball: Falling back to ObsPy.")
+        from matplotlib import pyplot
+        obspy.imaging.beachball.beachball(
+            mt.as_vector(), size=200, linewidth=2, facecolor=fill_color)
+        pyplot.savefig(filename)
+        pyplot.close()
+    except:
+        warn("plot_beachball failed. No figure generated.")
 
 
 
-def _plot_beachball_obspy(filename, mt, stations, origin, polarities=None, 
-    fill_color='gray', marker_color='black', **kwargs):
-    """ Plots focal mechanism using ObsPy
+def plot_polarities(filename, polarities, mt, stations, origin, **kwargs):
+    """ Plots first-motion polarities
+
+    .. rubric :: Required arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``stations`` (`list` of `Station` objects):
+    Stations from which azimuths and takeoff angles are calculated
+
+    ``origin`` (`mtuq.Origin`):
+    Origin object
+
+    ``polarities`` (`dict`)
+    Polarities dictionary
+
+    ``mt`` (`mtuq.MomentTensor`):
+    Moment tensor object
+
     """
-    warn("""
-        WARNING
-
-        Generic Mapping Tools (>=6.0.0) executables not found on system path.
-        Falling back to ObsPy.
-
-        """)
-
-    obspy.imaging.beachball.beachball(
-        mt.as_vector(), size=200, linewidth=2, facecolor=fill_color)
-
-    pyplot.savefig(filename)
-    pyplot.close()
+    raise NotImplementedError
 
 
 
-def _plot_beachball_gmt(filename, mt, stations, origin, polarities=None,
-    taup_model='ak135', add_station_labels=True, 
-    fill_color='gray', marker_color='black'):
-
-
-    filename, filetype = _parse_filetype(filename)
-    format_arg = _get_format_arg(filetype)
-
-    # parse optional arguments
-    if add_station_labels:
-        label_arg = '-T+jCB'
-    else:
-        label_arg = ''
-
-    if fill_color:
-        rgb = 255*asarray(colors.to_rgba(fill_color)[:3])
-
-    if marker_color:
-        marker_rgb = 255*asarray(colors.to_rgba(marker_color)[:3])
-
-
-    if origin and stations and polarities:
-        #
-        # plots beachball, station locations, and polarity fits
-        #
-
-        _write_polarities(_safename('tmp.'+filename+'.pol'),
-            stations, origin, polarities, taup_model)
-
-        subprocess.call(script1 % (
-            #psmeca args
-            *rgb, filename+'.ps',
-
-            #psmeca table
-            *mt.as_vector(),
-
-            #pspolar args
-            _safename('tmp.'+filename+'.sta'), *marker_rgb, *marker_rgb, label_arg, filename+'.ps',
-
-            #psconvert args
-            filename+'.ps', filename, format_arg,
-
-            ), shell=True)
-
-
-    elif origin and stations:
-        #
-        # plots beachball and station locations
-        #
-
-        _write_stations(_safename('tmp.'+filename+'.sta'),
-            stations, origin, taup_model)
-
-        subprocess.call(script2 % (
-            #psmeca args
-            *rgb, filename+'.ps',
-
-            #psmeca table
-            *mt.as_vector(),
-
-            #pspolar args
-            _safename('tmp.'+filename+'.sta'), *marker_rgb, *marker_rgb, label_arg, filename+'.ps',
-
-            #psconvert args
-            filename+'.ps', filename, format_arg,
-
-            ), shell=True)
-
-    else:
-        #
-        # plots beachball only
-        #
-
-        subprocess.call(script3 % (
-            #psmeca args
-            *rgb, filename+'.ps',
-
-            #psmeca table
-            *mt.as_vector(),
-
-            #psconvert args
-            filename+'.ps', filename, format_arg,
-
-            ), shell=True)
-
-
-    # remove temporary files
-    for filename in glob(_safename('tmp.'+filename+'*')):
-        os.remove(filename)
-
-
-#
-# utility functions
-#
-
-def get_takeoff_angle(taup, source_depth_in_km, **kwargs):
+def calculate_takeoff_angle(taup, source_depth_in_km, **kwargs):
     try:
         arrivals = taup.get_travel_times(source_depth_in_km, **kwargs)
 
@@ -220,6 +137,100 @@ def get_takeoff_angle(taup, source_depth_in_km, **kwargs):
         return None
 
 
+#
+# GMT implementation
+#
+
+GMT_REGION = '-R-1.2/1.2/-1.2/1.2'
+GMT_PROJECTION = '-Jm0/0/5c'
+
+
+def _plot_beachball_gmt(filename, mt, stations, origin,
+    taup_model='ak135', add_station_markers=True, add_station_labels=True, 
+    fill_color='gray', marker_color='black'):
+
+
+    filename, filetype = _parse_filetype(filename)
+    format_arg = _get_format_arg(filetype)
+
+    # parse optional arguments
+    label_arg = ''
+    if add_station_labels:
+        label_arg = '-T+jCB'
+
+    if fill_color:
+        rgb = to_rgb(fill_color)
+
+    if marker_color:
+        rgb2 = to_rgb(marker_color)
+
+
+    if stations and origin and (add_station_markers or add_station_labels):
+        #
+        # plots beachball and stations
+        #
+        ascii_table = _safename('tmp.'+filename+'.sta')
+        _write_stations(ascii_table, stations, origin, taup_model)
+
+        subprocess.call(
+            '#!/bin/bash -e\n'
+
+            'gmt psmeca %s %s -M -Sm9.9c -G%d/%d/%d -h1 -Xc -Yc -K << END > %s\n'
+            'lat lon depth   mrr   mtt   mpp   mrt    mrp    mtp\n'
+            '0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0\n'
+            'END\n\n'
+
+            'gmt pspolar %s %s %s -D0/0 -E%d/%d/%d -G%d/%d/%d -F -Qe -M9.9c -N -Si0.6c %s -O >> %s\n'
+
+            'gmt psconvert %s -F%s -A %s\n'
+             %
+        (
+            #psmeca args
+            GMT_REGION, GMT_PROJECTION, *rgb, filename+'.ps',
+
+            #psmeca table
+            *mt.as_vector(),
+
+            #pspolar args
+            GMT_REGION, GMT_PROJECTION, ascii_table, *rgb2, *rgb2, label_arg, filename+'.ps',
+
+            #psconvert args
+            filename+'.ps', filename, format_arg,
+
+        ), shell=True)
+
+    else:
+        #
+        # plots beachball only
+        #
+        subprocess.call(
+            '#!/bin/bash -e\n'
+
+            'gmt psmeca %s %s -M -Sm9.9c -G%d/%d/%d -h1 -Xc -Yc << END > %s\n'
+            'lat lon depth   mrr   mtt   mpp   mrt    mrp    mtp\n'
+            '0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0\n'
+            'END\n\n'
+
+            'gmt psconvert %s -F%s -A %s\n'
+            %
+        (
+            #psmeca args
+            GMT_REGION, GMT_PROJECTION, *rgb, filename+'.ps',
+
+            #psmeca table
+            *mt.as_vector(),
+
+            #psconvert args
+            filename+'.ps', filename, format_arg,
+
+        ), shell=True)
+
+
+    # remove temporary files
+    for filename in glob(_safename('tmp.'+filename+'*')):
+        os.remove(filename)
+
+
 def _write_stations(filename, stations, origin, taup_model):
 
     try:
@@ -238,7 +249,7 @@ def _write_stations(filename, stations, origin, taup_model):
                 station.latitude,
                 station.longitude)
 
-            takeoff_angle = get_takeoff_angle(
+            takeoff_angle = calculate_takeoff_angle(
                 taup, 
                 origin.depth_in_m/1000.,
                 distance_in_degree=_to_deg(distance_in_m/1000.),
@@ -247,50 +258,99 @@ def _write_stations(filename, stations, origin, taup_model):
             if takeoff_angle is not None:
                 file.write('%s  %f  %f\n' % (label, azimuth, takeoff_angle))
 
-
-def _write_polarities(filename, stations, origin, polarities):
-
-    raise NotImplementedError
-
-
-
 #
-# GMT SCRIPTS
+# PyGMT implementation (experimental)
 #
 
-# plots beachball, station locations, and polarity fits
-# TODO - not implemented yet
+def _plot_beachball_pygmt(filename, mt, stations, origin,
+    taup_model='ak135', add_station_labels=True, add_station_markers=True,
+    fill_color='gray', marker_color='black'):
+
+    import pygmt
+    from pygmt.helpers import build_arg_string, use_alias
+
+    gmt_region    = [-1.2, 1.2, -1.2, 1.2]
+    gmt_projection= 'm0/0/5c'
+    gmt_scale     = '9.9c'
+
+    fig = pygmt.Figure()
+
+    #
+    # plot the beachball itself
+    #
+    fig.meca(
+        # basemap arguments
+        region=gmt_region,
+        projection=gmt_projection,
+        scale=gmt_scale,
+
+        # lon, lat, depth, mrr, mtt, mpp, mrt, mrp, mtp, exp, lon2, lat2
+        spec=(0, 0, 10, *mt.as_vector(), 25, 0, 0),
+        convention="mt",
+
+        # face color
+        G='grey50',
+
+        N=False,
+        M=True,
+        )
+
+    #
+    # add station markers and labels
+    #
+    if stations and origin:
+        _write_stations(_safename('tmp.'+filename+'.sta'),
+            stations, origin, taup_model)
+
+        @use_alias(
+            D='offset',
+            J='projection',
+            M='scale',
+            S='symbol',
+            E='ext_fill',
+            G='comp_fill',
+            F='background',
+            Qe='ext_outline',
+            Qg='comp_outline',
+            Qf='mt_outline',
+            T='station_labels'
+        )
+        def _pygmt_polar(ascii_table, **kwargs):
+            arg_string = " ".join([ascii_table, build_arg_string(kwargs)])
+            with pygmt.clib.Session() as session:
+                session.call_module('polar',arg_string)
+
+        _pygmt_polar(
+            _safename('tmp.'+filename+'.sta'),
+
+            # basemap arguments
+            projection=gmt_projection,
+            scale=gmt_scale,
+
+            station_labels='+f0.18c',
+            offset='0/0',
+            symbol='t0.40c',
+            comp_fill='grey50',
+            )
 
 
-
-# plots beachball and station locations
-
-script2=\
-'''#!/bin/bash -e
-
-gmt psmeca -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -M -Sm9.9c -G%d/%d/%d -h1 -Xc -Yc -K << END > %s
-lat lon depth   mrr   mtt   mff   mrt    mrf    mtf
-0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0
-END\n
-
-# there appears to be bug? -- pspolar does not act on flags -E -G, 
-# which control marker fill color
-
-gmt pspolar %s -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -D0/0 -E%d/%d/%d -G%d/%d/%d -F -Qe -M9.9c -N -Si0.6c %s -O >> %s
-gmt psconvert %s -F%s -A %s
-'''
+        fig.savefig(filename)
 
 
-# plots beachball only
+def _plot_polarities_pygmt():
+    # calculate theoretical polarities
+    calculate_polarities()
 
-script3=\
-'''#!/bin/bash -e
+    # case 1 - observed and synthetic both positive
+    _pygmt_polar()
 
-gmt psmeca -R-1.2/1.2/-1.2/1.2 -Jm0/0/5c -M -Sm9.9c -G%d/%d/%d -h1 -Xc -Yc << END > %s
-lat lon depth   mrr   mtt   mff   mrt    mrf    mtf
-0.  0.  10.    %e     %e    %e    %e     %e     %e 25 0 0
-END\n
-gmt psconvert %s -F%s -A %s
-'''
+    # case 2 - observed and synthetic both negative
+    _pygmt_polar()
+
+    # case 3 - observed positive, synthetic negative
+    _pygmt_polar()
+
+    # case 4 - observed negative, synthetic positive
+    _pygmt_polar()
 
 

@@ -225,7 +225,7 @@ if True:
     # and functions listed in __all__
     #
     # Note that some I/O and data processing are involved in creating the
-    # example data, so importing this module may significantly longer than
+    # example data, so importing this module may take significantly longer than
     # other modules
     #
     
@@ -978,24 +978,24 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         #
 
         # use minimum misfit as initial guess for maximum likelihood
-        idx = results_sum.idxmin('source')
-        best_source = grid.get(idx)
+        idx = results_sum.source_idxmin()
+        best_mt = grid.get(idx)
         lune_dict = grid.get_dict(idx)
-        mt_dict = grid.get(idx).as_dict()
+        mt_dict = best_mt.as_dict()
 
 
         print('Data variance estimation...\\n')
 
         sigma_bw = estimate_sigma(data_bw, greens_bw,
-            best_source, misfit_bw.norm, ['Z', 'R'],
+            best_mt, misfit_bw.norm, ['Z', 'R'],
             misfit_bw.time_shift_min, misfit_bw.time_shift_max)
 
         sigma_rayleigh = estimate_sigma(data_sw, greens_sw,
-            best_source, misfit_rayleigh.norm, ['Z', 'R'],
+            best_mt, misfit_rayleigh.norm, ['Z', 'R'],
             misfit_rayleigh.time_shift_min, misfit_rayleigh.time_shift_max)
 
         sigma_love = estimate_sigma(data_sw, greens_sw,
-            best_source, misfit_love.norm, ['T'],
+            best_mt, misfit_love.norm, ['T'],
             misfit_love.time_shift_min, misfit_love.time_shift_max)
 
         stats = {'sigma_bw': sigma_bw,
@@ -1053,21 +1053,21 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
 
         # synthetics corresponding to minimum misfit
         synthetics_bw = greens_bw.get_synthetics(
-            best_source, components_bw, mode='map')
+            best_mt, components_bw, mode='map')
 
         synthetics_sw = greens_sw.get_synthetics(
-            best_source, components_sw, mode='map')
+            best_mt, components_sw, mode='map')
 
 
         # time shifts and other attributes corresponding to minimum misfit
         list_bw = misfit_bw.collect_attributes(
-            data_bw, greens_bw, best_source)
+            data_bw, greens_bw, best_mt)
 
         list_rayleigh = misfit_rayleigh.collect_attributes(
-            data_sw, greens_sw, best_source)
+            data_sw, greens_sw, best_mt)
 
         list_love = misfit_love.collect_attributes(
-            data_sw, greens_sw, best_source)
+            data_sw, greens_sw, best_mt)
 
         list_sw = [{**list_rayleigh[_i], **list_love[_i]}
             for _i in range(len(stations))]
@@ -1089,11 +1089,11 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         print('Plotting observed and synthetic waveforms...\\n')
 
         plot_beachball(event_id+'FMT_beachball.png', 
-            best_source, stations, origin)
+            best_mt, stations, origin)
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
-            misfit_bw, misfit_rayleigh, stations, origin, best_source, lune_dict)
+            misfit_bw, misfit_rayleigh, stations, origin, best_mt, lune_dict)
 
 
         print('Plotting misfit surfaces...\\n')
@@ -1190,35 +1190,22 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         print()
 
 
-        print('Plotting summary figures (work in progress)...\\n')
-
-        os.makedirs(event_id+'FMT_summary', exist_ok=True)
-
-        plot_summary1(event_id+'FMT_summary/1.png',
-            results_rayleigh, stations, origin, best_source)
-
-        plot_summary2(event_id+'FMT_summary/2.png',
-            results_rayleigh, sigma_rayleigh**2, stations, origin, best_source)
-
-        print()
-
-
         print('Plotting time shift geographic variation...\\n')
 
         plot_time_shifts(event_id+'FMT_time_shifts/bw',
-            list_bw, stations, origin, best_source)
+            list_bw, stations, origin)
 
         plot_time_shifts(event_id+'FMT_time_shifts/sw',
-            list_sw, stations, origin, best_source)
+            list_sw, stations, origin)
 
 
         print('Plotting amplitude ratio geographic variation...\\n')
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/bw',
-            list_bw, stations, origin, best_source)
+            list_bw, stations, origin)
 
         plot_amplitude_ratios(event_id+'FMT_amplitude_ratios/sw',
-            list_sw, stations, origin, best_source)
+            list_sw, stations, origin)
 
 
         print('\\nSaving results...\\n')
@@ -1230,7 +1217,7 @@ WrapUp_DetailedAnalysis_FullMomentTensor="""
         save_json(event_id+'FMT_solutions/maximum_likelihood.json', mle_lune)
 
         merged_dict = merge_dicts(lune_dict, mt_dict, origin,
-            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+            {'M0': best_mt.moment(), 'Mw': best_mt.magnitude()})
 
         save_json(event_id+'FMT_solutions/minimum_misfit.json', merged_dict)
 
@@ -1285,12 +1272,12 @@ WrapUp_GridSearch="""
 
         results = results_bw + results_sw
 
-        # array index corresponding to minimum misfit
-        idx = results.idxmin('source')
+        # `grid` index corresponding to minimum misfit
+        idx = results.source_idxmin()
 
-        best_source = grid.get(idx)
+        best_mt = grid.get(idx)
         lune_dict = grid.get_dict(idx)
-        mt_dict = grid.get(idx).as_dict()
+        mt_dict = best_mt.as_dict()
 
 
         #
@@ -1301,11 +1288,11 @@ WrapUp_GridSearch="""
 
         plot_data_greens2(event_id+'DC_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
 
 
         plot_beachball(event_id+'DC_beachball.png',
-            best_source, stations, origin)
+            best_mt, stations, origin)
 
 
         plot_misfit_dc(event_id+'DC_misfit.png', results)
@@ -1313,9 +1300,22 @@ WrapUp_GridSearch="""
 
         print('Saving results...\\n')
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
-            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+        # collect information about best-fitting source
+        merged_dict = merge_dicts(
 
+            # dictionary of Mij parameters
+            mt_dict,
+
+            # dictionary of Tape2015 parameters
+            lune_dict,
+
+            # magnitude information
+            {'M0': best_mt.moment()},
+            {'Mw': best_mt.magnitude()},
+
+            # origin information
+            origin,
+            )
 
         # save best-fitting source
         save_json(event_id+'DC_solution.json', merged_dict)
@@ -1336,16 +1336,14 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         results = results_bw + results_sw
 
-        # origin corresponding to minimum misfit
-        best_origin = origins[results.idxmin('origin')]
-        origin_dict = best_origin.as_dict()
+        origin_idx = results.origin_idxmin()
+        best_origin = origins[origin_idx]
 
-        # array index corresponding to minimum misfit
-        idx = results.idxmin('source')
+        source_idx = results.source_idxmin()
+        best_mt = grid.get(source_idx)
 
-        best_source = grid.get(idx)
-        lune_dict = grid.get_dict(idx)
-        mt_dict = grid.get(idx).as_dict()
+        lune_dict = grid.get_dict(source_idx)
+        mt_dict = best_mt.as_dict()
 
 
         #
@@ -1356,7 +1354,7 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         plot_data_greens2(event_id+'DC+Z_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, best_origin, best_source, lune_dict)
+            misfit_bw, misfit_sw, stations, best_origin, best_mt, lune_dict)
 
 
         plot_misfit_depth(event_id+'DC+Z_misfit_depth.png', results, origins,
@@ -1369,9 +1367,22 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         print('Saving results...\\n')
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, best_origin,
-            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+        # collect information about best-fitting source
+        merged_dict = merge_dicts(
 
+            # dictionary of Mij parameters
+            mt_dict,
+
+            # dictionary of Tape2015 parameters
+            lune_dict,
+
+            # magnitude information
+            {'M0': best_mt.moment()},
+            {'Mw': best_mt.magnitude()},
+
+            # origin information
+            best_origin,
+            )
 
         # save best-fitting source
         save_json(event_id+'DC+Z_solution.json', merged_dict)
@@ -1397,12 +1408,12 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     results = results_bw + results_sw
 
-    # array index corresponding to minimum misfit
-    idx = results.idxmin('source')
+    # `grid` index corresponding to minimum misfit
+    idx = results.source_idxmin()
 
-    best_source = grid.get(idx)
+    best_mt = grid.get(idx)
     lune_dict = grid.get_dict(idx)
-    mt_dict = grid.get(idx).as_dict()
+    mt_dict = best_mt.as_dict()
 
 
     #
@@ -1413,11 +1424,11 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     plot_data_greens2(event_id+'DC_waveforms.png',
         data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-        misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+        misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
 
 
     plot_beachball(event_id+'DC_beachball.png',
-        best_source, stations, origin)
+        best_mt, stations, origin)
 
 
     plot_misfit_dc(event_id+'DC_misfit.png', results)
@@ -1425,9 +1436,22 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     print('Saving results...\\n')
 
-    merged_dict = merge_dicts(lune_dict, mt_dict, origin,
-        {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+    # collect information about best-fitting source
+    merged_dict = merge_dicts(
 
+        # dictionary of Mij parameters
+        mt_dict,
+
+        # dictionary of Tape2015 parameters
+        lune_dict,
+
+        # magnitude information
+        {'M0': best_mt.moment()},
+        {'Mw': best_mt.magnitude()},
+
+        # origin information
+        origin,
+        )
 
     # save best-fitting source
     save_json(event_id+'DC_solution.json', merged_dict)
@@ -1447,20 +1471,18 @@ WrapUp_TestGridSearch_DoubleCouple="""
     results = results_bw + results_sw
 
     # source corresponding to minimum misfit
-    idx = results.idxmin('source')
-    best_source = grid.get(idx)
-
+    idx = results.source_idxmin()
+    best_mt = grid.get(idx)
     lune_dict = grid.get_dict(idx)
-    mt_dict = grid.get(idx).as_dict()
 
     if run_figures:
 
         plot_data_greens2(event_id+'DC_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
 
         plot_beachball(event_id+'DC_beachball.png',
-            best_source, None, None)
+            best_mt, None, None)
 
 
     if run_checks:
@@ -1478,7 +1500,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
             return np.all(
                 np.isclose(a, b, atol=atol, rtol=rtol))
 
-        if not isclose(best_source.as_vector(),
+        if not isclose(best_mt.as_vector(),
             np.array([
                  -6.731618e+15,
                   8.398708e+14,
@@ -1498,8 +1520,8 @@ WrapUp_TestGridSearch_DoubleCouple="""
 WrapUp_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     results = results_bw + results_sw
 
-    idx = results.idxmin('source')
-    best_source = grid.get(idx)
+    idx = results.source_idxmin()
+    best_mt = grid.get(idx)
 
     if run_figures:
         filename = event_id+'_misfit_vs_depth.png'
@@ -1603,8 +1625,7 @@ if __name__=='__main__':
             '    plot_likelihood_lune, plot_marginal_vw,\\\n'+
             '    plot_variance_reduction_lune, plot_magnitude_tradeoffs_lune,\\\n'+
             '    plot_time_shifts, plot_amplitude_ratios,\\\n'+
-            '    plot_summary1, plot_summary2, likelihood_analysis,\\\n'+
-            '    _likelihoods_vw_regular, _marginals_vw_regular,\\\n'+
+            '    likelihood_analysis, _likelihoods_vw_regular, _marginals_vw_regular,\\\n'+
             '    _plot_lune, _plot_vw, _product_vw\n'+
             'from mtuq.graphics.uq.vw import _variance_reduction_vw_regular'
             ),

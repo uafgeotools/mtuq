@@ -22,6 +22,7 @@ Data I/O
 ============================================================================================================  ============================================================================================================
 `mtuq.download_greens_tensors <generated/mtuq.download_greens_tensors.html>`_                                  Downloads Green's tensors from syngine
 `mtuq.open_db <generated/mtuq.open_db.html>`_                                                                  Opens Green's tensor database from disk
+`mtuq.open_ds <generated/mtuq.grid_search.open_ds.html>`_                                                      Opens grid search results from disk
 `mtuq.read <generated/mtuq.io.readers.SAC.read.html>`_                                                         Reads seismic data from disk
 ============================================================================================================  ============================================================================================================
 
@@ -70,9 +71,9 @@ Moment tensor and force visualization
 `mtuq.graphics.plot_likelihood_lune <generated/mtuq.graphics.plot_likelihood_lune.html>`_                      Plots maximum likelihoods on lune
 `mtuq.graphics.plot_marginal_lune <generated/mtuq.graphics.plot_marginal_lune.html>`_                          Plots marginal likelihoods on lune
 `mtuq.graphics.plot_misfit_lune <generated/mtuq.graphics.plot_misfit_lune.html>`_                              Plots misfit on lune
-`mtuq.graphics.plot_likelihood_vw <generated/mtuq.graphics.plot_likelihood_vw.html>`_                          Plots maximum likelihoods on `v-w` rectangle
-`mtuq.graphics.plot_marginal_vw <generated/mtuq.graphics.plot_marginal_vw.html>`_                              Plots marginal likelihoods on `v-w` rectangle
-`mtuq.graphics.plot_misfit_vw <generated/mtuq.graphics.plot_misfit_vw.html>`_                                  Plots misfit on `v-w` rectangle
+`mtuq.graphics.plot_likelihood_vw <generated/mtuq.graphics.plot_likelihood_vw.html>`_                          Plots maximum likelihoods on `v,w` rectangle
+`mtuq.graphics.plot_marginal_vw <generated/mtuq.graphics.plot_marginal_vw.html>`_                              Plots marginal likelihoods on `v,w` rectangle
+`mtuq.graphics.plot_misfit_vw <generated/mtuq.graphics.plot_misfit_vw.html>`_                                  Plots misfit on `v,w` rectangle
 `mtuq.graphics.plot_likelihood_force <generated/mtuq.graphics.plot_likelihood_force.html>`_                    Plots maximum likelihoods w.r.t force orientation
 `mtuq.graphics.plot_marginal_force <generated/mtuq.graphics.plot_marginal_force.html>`_                        Plots marginal likelihoods w.r.t. force orientation
 `mtuq.graphics.plot_misfit_force <generated/mtuq.graphics.plot_misfit_force.html>`_                            Plots misfit w.r.t force orientation
@@ -90,6 +91,14 @@ Depth and hypocenter visualization
 ============================================================================================================  ============================================================================================================
 
 
+Time shift and amplitude ratio visualization
+--------------------------------------------
+
+============================================================================================================  ============================================================================================================
+`mtuq.graphics.plot_time_shifts <generated/mtuq.graphics.plot_time_shifts.html>`_                              Plots time shifts by location and component
+`mtuq.graphics.plot_amplitude_ratios <generated/mtuq.graphics.plot_amplitude_ratios.html>`_                    Plots amplitude ratios by location and component
+============================================================================================================  ============================================================================================================
+
 
 Moment tensor and force grids
 -----------------------------
@@ -99,6 +108,8 @@ Moment tensor and force grids
 `mtuq.grid.FullMomentTensorGridSemiregular <generated/mtuq.grid.FullMomentTensorGridSemiregular.html>`_        Grid with semiregularly-spaced full moment tensors
 `mtuq.grid.DoubleCoupleGridRandom <generated/mtuq.grid.DoubleCoupleGridRandom.html>`_                          Grid with randomly-drawn double couples
 `mtuq.grid.DoubleCoupleGridRegular <generated/mtuq.grid.DoubleCoupleGridRegular.html>`_                        Grid with regularly-spaced double couples
+`mtuq.grid.DeviatoricGridRandom <generated/mtuq.grid.DeviatoricGridRandom.html>`_                              Grid with randomly-drawn deviatoric moment tensors 
+`mtuq.grid.DeviatoricGridSeimiregular <generated/mtuq.grid.DeviatoricGridSemiregular.html>`_                   Grid with semiregularly-spaced deviatoric moment tensors
 `mtuq.grid.ForceGridRandom <generated/mtuq.grid.ForceGridRandom.html>`_                                        Grid with randomly-drawn forces
 `mtuq.grid.ForceGridRegular <generated/mtuq.grid.ForceGridRegular.html>`_                                      Grid with regularly-spaced forces
 ============================================================================================================  ============================================================================================================
@@ -123,9 +134,9 @@ Database and web service clients
     These classes provide low-level database and web service access.  Normally it is easier to use high-level functions ``mtuq.download_greens_tensors`` or ``mtuq.open_db`` instead.
 
 ============================================================================================================  ============================================================================================================ 
-`mtuq.io.clients.AxiSEM_NetCDF.Client <generated/mtuq.io.clients.AxiSEM_NetCDF.Client.html>`_                  AxiSEM NetCDF database client (based on `instaseis <https://instaseis.net>`_)
+`mtuq.io.clients.AxiSEM_NetCDF.Client <generated/mtuq.io.clients.AxiSEM_NetCDF.Client.html>`_                  AxiSEM NetCDF database client based on instaseis
 `mtuq.io.clients.FK_SAC.Client <generated/mtuq.io.clients.FK_SAC.Client.html>`_                                FK database client
-`mtuq.io.clients.SPECFEM3D_SGT.Client <generated/mtuq.io.clients.SPECFEM3D_SGT.Client.html>`_                  SPECFEM3D/3D_GLOBE SGT database client
+`mtuq.io.clients.SPECFEM3D_SGT.Client <generated/mtuq.io.clients.SPECFEM3D_SGT.Client.html>`_                  SPECFEM3D/3D_GLOBE database client based on seisgen
 `mtuq.io.clients.syngine.Client <generated/mtuq.io.clients.syngine.Client.html>`_                              Syngine web service client
 ============================================================================================================  ============================================================================================================ 
 

@@ -7,7 +7,7 @@ Suppose we are running a force grid search:
 
 .. code::
 
-    ds = grid_search(data, greens, stations, origins, sources)
+    ds = grid_search(data, greens, misfit, stations, origins, sources)
 
 
 After the above command finishes, the data structure `ds` will contain all the forces and corresponding misfit values.

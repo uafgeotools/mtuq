@@ -1,17 +1,17 @@
 
 #
-# graphics/uq/origin.py - uncertainty quantification of source origin
+# graphics/uq/origin.py - uncertainty quantification of source depth
 #
 
 import numpy as np
 import subprocess
 
-from matplotlib import pyplot
 from pandas import DataFrame
 from xarray import DataArray
 from mtuq.graphics.uq._gmt import _plot_depth_gmt
+from mtuq.graphics.uq._matplotlib import _plot_depth_matplotlib
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame
-from mtuq.util import fullpath, warn
+from mtuq.util import defaults, warn
 from mtuq.util.math import to_Mw
 
 
@@ -19,7 +19,7 @@ from mtuq.util.math import to_Mw
 def plot_misfit_depth(filename, ds, origins, **kwargs):
     """ Plots misfit versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -37,7 +37,7 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
     `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'ylabel': 'Misfit',
         })
 
@@ -49,7 +49,10 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
         da = _misfit_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        da = _misfit_random(ds)
+        warn('plot_misfit_depth() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
+        return
+
 
     _plot_depth(filename, da, origins, **kwargs)
 
@@ -58,7 +61,7 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
 def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
     """ Plots maximum likelihoods versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -76,7 +79,7 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
     `see here <mtuq.graphics._plot_depth.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'ylabel': 'Likelihood',
         })
 
@@ -87,7 +90,9 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
         da = _likelihoods_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        da = _likelihoods_random(ds, var)
+        warn('plot_likelihood_depth() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
+        return
 
     _plot_depth(filename, da, origins, **kwargs)
 
@@ -96,7 +101,7 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
 def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     """ Plots marginal likelihoods versus depth
 
-    .. rubric :: Input arguments
+    .. rubric :: Required input arguments
 
     ``filename`` (`str`):
     Name of output image file
@@ -116,36 +121,6 @@ def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     """
 
     raise NotImplementedError
-
-
-#
-# backends
-#
-
-def _plot_depth_matplotlib(filename,
-        depths,
-        values,
-        magnitudes=None,
-        lune_array=None,
-        title=None,
-        xlabel=None,
-        ylabel=None,
-        fontsize=16.):
-
-    figsize = (6., 6.)
-    pyplot.figure(figsize=figsize)
-    pyplot.plot(depths, values, 'k-')
-
-    if title:
-        pyplot.title(title, fontsize=fontsize)
-
-    if xlabel:
-         pyplot.xlabel(xlabel, fontsize=fontsize)
-
-    if ylabel:
-         pyplot.ylabel(ylabel, fontsize=fontsize)
-
-    pyplot.savefig(filename)
 
 
 def _plot_depth(filename, da, origins, title='',
@@ -170,6 +145,10 @@ def _plot_depth(filename, da, origins, title='',
 
     ``title`` (`str`)
     Optional figure title
+
+   ``backend`` (`function`)
+    Choose from `_plot_lune_gmt` (default), `_plot_lune_matplotlib`,
+    or user-supplied function
 
     """
 
@@ -243,10 +222,4 @@ def _check(ds):
     """
     if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
-
-def _defaults(kwargs, defaults):
-    for key in defaults:
-        if key not in kwargs:
-           kwargs[key] = defaults[key]
-
 

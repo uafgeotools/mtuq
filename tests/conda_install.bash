@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash
+
 
 #
 # TESTS MTUQ INSTALLATION UNDER CONDA
@@ -16,7 +17,7 @@ MTUQ_PATH=$(dirname ${BASH_SOURCE[0]})/..
 # mtuq/docs/install/env_conda.rst
 #
 PYTHON_VERSION=3
-DEPENDENCIES="numpy scipy obspy instaseis pandas xarray mpi4py"
+DEPENDENCIES="scipy obspy instaseis pandas xarray netCDF4 h5py mpi4py"
 
 
 #
@@ -70,6 +71,9 @@ echo $URL
 #
 # installation tests begin now
 #
+
+# if any test fails, stop immediately
+set -e
 
 echo
 echo "See mtuq/tests/ for installation logs"

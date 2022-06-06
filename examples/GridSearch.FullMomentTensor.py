@@ -184,12 +184,12 @@ if __name__=='__main__':
 
         results = results_bw + results_sw
 
-        # array index corresponding to minimum misfit
-        idx = results.idxmin('source')
+        # `grid` index corresponding to minimum misfit
+        idx = results.source_idxmin()
 
-        best_source = grid.get(idx)
+        best_mt = grid.get(idx)
         lune_dict = grid.get_dict(idx)
-        mt_dict = grid.get(idx).as_dict()
+        mt_dict = best_mt.as_dict()
 
 
         #
@@ -200,11 +200,11 @@ if __name__=='__main__':
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
-            misfit_bw, misfit_sw, stations, origin, best_source, lune_dict)
+            misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
 
 
         plot_beachball(event_id+'FMT_beachball.png',
-            best_source, stations, origin)
+            best_mt, stations, origin)
 
 
         plot_misfit_lune(event_id+'FMT_misfit.png', results)
@@ -212,9 +212,22 @@ if __name__=='__main__':
 
         print('Saving results...\n')
 
-        merged_dict = merge_dicts(lune_dict, mt_dict, origin,
-            {'M0': best_source.moment(), 'Mw': best_source.magnitude()})
+        # collect information about best-fitting source
+        merged_dict = merge_dicts(
 
+            # dictionary of Mij parameters
+            mt_dict,
+
+            # dictionary of Tape2015 parameters
+            lune_dict,
+
+            # magnitude information
+            {'M0': best_mt.moment()},
+            {'Mw': best_mt.magnitude()},
+
+            # origin information
+            origin,
+            )
 
         # save best-fitting source
         save_json(event_id+'FMT_solution.json', merged_dict)

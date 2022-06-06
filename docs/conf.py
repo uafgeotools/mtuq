@@ -26,8 +26,7 @@ html_theme_options = {
     'source_link_position': 'none',
     'bootswatch_theme': '',
     'bootstrap_version': '3',
-
-}
+    }
 
 # extension options
 autosummary_generate = True
@@ -39,4 +38,4 @@ html_show_sphinx = False
 html_show_copyright = False
 
 def setup(app):
-    app.add_stylesheet('style.css')  # remove line numbers
+    app.add_css_file('style.css')  # remove line numbers

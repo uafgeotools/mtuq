@@ -9,7 +9,7 @@ from matplotlib import pyplot
 
 from mtuq.graphics.uq._gmt import _plot_force_gmt
 from mtuq.grid_search import DataFrame, DataArray, MTUQDataArray, MTUQDataFrame
-from mtuq.util import warn
+from mtuq.util import defaults, warn
 from mtuq.util import dataarray_idxmin, dataarray_idxmax
 from mtuq.util.math import closed_interval, open_interval
 
@@ -33,7 +33,7 @@ def plot_misfit_force(filename, ds, **kwargs):
 
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'viridis',
         })
 
@@ -73,7 +73,7 @@ def plot_likelihood_force(filename, ds, var, **kwargs):
 
     """
 
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'hot_r',
         })
 
@@ -111,7 +111,7 @@ def plot_marginal_force(filename, ds, var, **kwargs):
     `see here <mtuq.graphics._plot_force.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'hot_r',
         })
 
@@ -147,7 +147,7 @@ def plot_magnitude_tradeoffs_force(filename, ds, **kwargs):
 
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'gray',
         })
 
@@ -162,10 +162,6 @@ def plot_magnitude_tradeoffs_force(filename, ds, **kwargs):
 
     _plot_force(filename, marginals, **kwargs)
 
-
-#
-# backend
-#
 
 def _plot_force(filename, da, show_best=True, show_tradeoffs=False, 
     backend=_plot_force_gmt, **kwargs):
@@ -183,6 +179,9 @@ def _plot_force(filename, da, show_best=True, show_tradeoffs=False,
 
     ``title`` (`str`)
     Optional figure title
+
+    ``backend`` (`function`)
+    Choose from `_plot_force_gmt` (default) or user-supplied function
 
     """
     if not issubclass(type(da), DataArray):
@@ -387,7 +386,7 @@ def _check(ds):
         raise TypeError("Unexpected grid format")
 
 
-def _defaults(kwargs, defaults):
+def defaults(kwargs, defaults):
     for key in defaults:
         if key not in kwargs:
            kwargs[key] = defaults[key]

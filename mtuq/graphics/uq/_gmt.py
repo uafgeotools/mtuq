@@ -5,6 +5,7 @@ import subprocess
 
 from mtuq.graphics._gmt import exists_gmt, gmt_not_found_warning, gmt_version,\
     gmt_formats, _parse_filetype, _safename
+from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.util import fullpath, warn
 from mtuq.util.math import wrap_180, to_delta, to_gamma, to_mij
 from os.path import basename, exists, splitext
@@ -12,7 +13,7 @@ from six import string_types
 
 
 
-def _plot_lune_gmt(filename, lon, lat, values, best_vw=None, lune_array=None, 
+def _plot_lune_gmt(filename, lon, lat, values, best_vw=None, lune_array=None,
     **kwargs):
 
     if _nothing_to_plot(values):
@@ -48,8 +49,8 @@ def _plot_force_gmt(filename, phi, h, values, best_force=None, **kwargs):
 
     data =  _parse_data(lon, lat, values)
 
-    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'), 
-       filename, lon, lat, values, supplemental_data=None,
+    _call(fullpath('mtuq/graphics/uq/_gmt/plot_force'),
+       filename, data, supplemental_data=None,
        marker_coords=_parse_force(best_force), **kwargs)
 
 
@@ -67,7 +68,7 @@ def _plot_latlon_gmt(filename, lon, lat, values, best_latlon=None, lune_array=No
 
 
 def _call(shell_script, filename, data, supplemental_data=None,
-    title='', colormap='viridis', flip_cpt=False, colorbar_type=1, 
+    title='', colormap='viridis', flip_cpt=False, colorbar_type=1,
     colorbar_label='', marker_coords=None, marker_type=0):
 
     #
@@ -132,15 +133,9 @@ def _call(shell_script, filename, data, supplemental_data=None,
 
 
 
-def _plot_depth_gmt(filename,
-        depths,
-        values,
-        magnitudes=None,
-        lune_array=None,
-        title='',
-        xlabel='',
-        ylabel='',
-        fontsize=16.):
+def _plot_depth_gmt(filename, depths, values,
+        magnitudes=None, lune_array=None,
+        title='', xlabel='', ylabel='', fontsize=16.):
 
     # parse filenames
     filename, filetype = _parse_filetype(filename)
@@ -197,25 +192,6 @@ def _plot_depth_gmt(filename,
 #
 # utility functions
 #
-
-def _nothing_to_plot(values):
-    mask = np.isnan(values)
-    if np.all(mask):
-        warn(
-            "Nothing to plot: all values are NaN",
-            Warning)
-        return True
-
-    masked = np.ma.array(values, mask=mask)
-    minval = masked.min()
-    maxval = masked.max()
-
-    if minval==maxval:
-        warn(
-            "Nothing to plot: all values are identical",
-            Warning)
-        return True
-
 
 def _parse_data(lon, lat, values):
 
@@ -414,5 +390,3 @@ def _float_to_str(val):
 def _savetxt(filename, *args, fmt='%.6e'):
     # TODO - can GMT accept virtual files?
     np.savetxt(filename, np.column_stack(args), fmt=fmt)
-
-

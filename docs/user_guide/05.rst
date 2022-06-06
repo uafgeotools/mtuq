@@ -11,7 +11,8 @@ The output of `mtuq.grid_search` in each of these cases is a data structure that
 .. toctree::
    :maxdepth: 1
 
-   gallery_mt
-   gallery_force
-   gallery_origin
+   05/gallery_mt
+   05/gallery_force
+   05/gallery_origin
+
 

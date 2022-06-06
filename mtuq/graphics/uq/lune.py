@@ -1,3 +1,8 @@
+
+# 
+# graphics/uq/lune.py - uncertainty quantification on the eigenvalue lune
+#
+
 #
 # For details about the eigenvalue lune, see
 # Tape2012 - A geometric setting for moment tensors
@@ -11,7 +16,7 @@ import xarray
 from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.graphics.uq._gmt import _plot_lune_gmt
-from mtuq.util import warn
+from mtuq.util import defaults, warn
 from mtuq.util.math import lune_det, to_gamma, to_delta
 
 from mtuq.graphics.uq.vw import\
@@ -40,7 +45,7 @@ def plot_misfit_lune(filename, ds, **kwargs):
     `see here <mtuq.graphics._plot_lune.html>`_
 
     """ 
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'viridis',
         })
 
@@ -77,7 +82,7 @@ def plot_likelihood_lune(filename, ds, var, **kwargs):
     For optional argument descriptions, 
     `see here <mtuq.graphics._plot_lune.html>`_
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'hot_r',
         })
 
@@ -114,7 +119,7 @@ def plot_marginal_lune(filename, ds, var, **kwargs):
     For optional argument descriptions, 
     `see here <mtuq.graphics._plot_lune.html>`_
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'hot_r',
         })
 
@@ -150,7 +155,7 @@ def plot_variance_reduction_lune(filename, ds, data_norm, **kwargs):
     `see here <mtuq.graphics._plot_lune.html>`_
 
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'viridis_r',
         })
 
@@ -158,12 +163,12 @@ def plot_variance_reduction_lune(filename, ds, data_norm, **kwargs):
     ds = ds.copy()
 
     if issubclass(type(ds), DataArray):
-        misfit = 100.*_variance_reduction_vw_regular(ds, data_norm)
+        variance_reduction = _variance_reduction_vw_regular(ds, data_norm)
 
     elif issubclass(type(ds), DataFrame):
-        misfit = 100.*_variance_reduction_vw_random(ds, data_norm)
+        variance_reduction = _variance_reduction_vw_random(ds, data_norm)
 
-    _plot_lune(filename, misfit, **kwargs)
+    _plot_lune(filename, variance_reduction, **kwargs)
 
 
 def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
@@ -186,7 +191,7 @@ def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
     For optional argument descriptions, 
     `see here <mtuq.graphics._plot_lune.html>`_
     """
-    _defaults(kwargs, {
+    defaults(kwargs, {
         'colormap': 'gray',
         })
 
@@ -201,10 +206,6 @@ def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
 
     _plot_lune(filename, marginals, **kwargs)
 
-
-#
-# backend
-#
 
 def _plot_lune(filename, da, show_best=True, show_mt=False,
     show_tradeoffs=False, backend=_plot_lune_gmt, **kwargs):
@@ -225,6 +226,9 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
 
     ``title`` (`str`)
     Optional figure title
+
+    ``backend`` (`function`)
+    Choose from `_plot_lune_gmt` (default) or user-supplied function
 
     """
     if not issubclass(type(da), DataArray):
@@ -270,8 +274,3 @@ def _check(ds):
     if type(ds) not in (DataArray, DataFrame, MTUQDataArray, MTUQDataFrame):
         raise TypeError("Unexpected grid format")
 
-
-def _defaults(kwargs, defaults):
-    for key in defaults:
-        if key not in kwargs:
-           kwargs[key] = defaults[key]
