@@ -2,7 +2,7 @@
 import numpy as np
 
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
-from mtuq.util import dataarray_idxmin, dataarray_idxmax, product
+from mtuq.util import dataarray_idxmin, dataarray_idxmax, product, warn
 
 
 def _nothing_to_plot(values):
