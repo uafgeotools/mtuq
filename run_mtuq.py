@@ -113,15 +113,15 @@ station_id_list = parse_station_codes(path_weights)
 
 # Begin setup for depth search
 catalog_origin = Origin({
-    'time': '2020-04-17T00:22:45.356000Z',
-    'latitude': 55.9717,
-    'longitude': -153.3077,
-    'depth_in_m': 7340.7,
+    'time': '2017-11-27T22:18:30.467000Z',
+    'latitude': 60.5552,
+    'longitude': -147.4303,
+    'depth_in_m': 16624.7,
     'id': str(eid)
 })
 
 # Depths (in meters) to search over
-depths = np.array([1000., 2000., 3000., 5000., 6000., 7000., 8000., 10000., 11000., 12000., 13000., 15000., 16000., 17000., 18000., 20000.]) 
+depths = np.array([16624.7]) 
 #tactmod has boundary at 3,11,24,31,76km
 #scak has bounday at 4,9,14,19,24,33,49,66km
 
@@ -131,14 +131,14 @@ for depth in depths:
     setattr(origins[-1], 'depth_in_m', depth)
 
 # Magnitudes to search over
-magnitudes = np.array([4.9, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9])
+magnitudes = np.array([5.3])
 
 grid = DoubleCoupleGridRegular(
     npts_per_axis=30,
     magnitudes=magnitudes)
 
 # Define source-time function
-wavelet = Trapezoid(magnitude=4.7)
+wavelet = Trapezoid(magnitude=5.3)
 
 comm = MPI.COMM_WORLD
 
@@ -190,6 +190,7 @@ data_bw = comm.bcast(data_bw, root=0)
 data_sw = comm.bcast(data_sw, root=0)
 greens_bw = comm.bcast(greens_bw, root=0)
 greens_sw = comm.bcast(greens_sw, root=0)
+greens_all = comm.bcast(greens_all, root=0)
 
 # Main computational work
 if comm.rank==0:
@@ -218,7 +219,7 @@ if comm.rank == 0:
 
     
     # Source corresponding to minimum misfit
-    idx = results.idxmin('source')
+    idx = results.source_idxmin()
     best_source = grid.get(idx)
     lune_dict = grid.get_dict(idx)
     mt_dict = grid.get(idx).as_dict()
@@ -239,7 +240,7 @@ if comm.rank == 0:
     save_json(eid+'_data_norms.json',norms)
 
     # origin corresponding to minimum misfit
-    best_origin = origins[results.idxmin('origin')]
+    best_origin = origins[results.origin_idxmin()]
     origin_dict = best_origin.as_dict()
 
     # Best sources for each depth
