@@ -12,11 +12,11 @@ import matplotlib.pyplot as pyplot
 import numpy as np
 
 from mtuq.event import MomentTensor
-from mtuq.misfit.polarity import radiation_coef
+from mtuq.util.math import radiation_coef
 from mtuq.util import warn
+from mtuq.util.polarity import extract_polarity, extract_takeoff_angle
 
-
-def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
+def beachball_pygmt(filename, polarity_input, greens, mt, plot_all=False, display_plot=False, taup_model = 'ak135', polarity_keyword=None):
     """ Moment tensor plot with stations polarities, implemented in PyGMT.
 
     .. rubric :: Input arguments
@@ -25,17 +25,22 @@ def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
     ``filename`` (`str`):
     Name of output image file
 
-    ``data`` (`mtuq.DataSet`):
-    mtuq Dataset with valid sac header
+    ``polarity_input`` (`list`, `numpy.ndarray`, `mtuq.dataset.Dataset`,
+    `mtuq.greens_tensor.base.GreensTensorList, `str`):
+    See mtuq.misfit.polarity.PolarityMisfit() and
+    mtuq.util.polarity.extract_polarity() for a complete set of instructions. Polarity inputs should only contains [1, 0, -1] values.
+
+    ``greens`` (mtuq.GreensTensorList): green's function list required to compute takeoff angles.
 
     ``mt`` (`mtuq.MomentTensor`):
     Moment tensor object
 
-    Warning : Implemented and tested with PyGMT v0.3.1, which is still in early developpment. It is possible that the code might break some time in the future, as nerwer versions of the code are rolled-out.
+    Warning : Implemented and tested with PyGMT v0.3.1, which is still in early
+    developpment. It is possible that the code might break some time in the
+    future, as nerwer versions of the code are rolled-out.
 
-    This plotting function presuppose that the data is a valid mtuq.DataSet whith a sac header containing the station azimuth in the `az` key, the takeoff_angle in the key `user3` and the picked polarity in the key `user5`
-
-    TODO: This function will benefit from having a different way of handling polarity than with the sac header used as of right now. This will enable easier usage for user that won't be using pysep to fetch the data.
+    This plotting function presuppose that greens is a mtuq.GreensTensorList
+    whith a valid SAC header containing the station.azimuth key. The takeoff angles is computed on the fly using obspy.taup or by reading FK Green's tensor SAC files header ('user1' key).
     """
     import pygmt
     from pygmt.helpers import build_arg_string, use_alias
@@ -48,15 +53,24 @@ def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
     fig.meca(region=[-1.2, 1.2, -1.2, 1.2], projection='m0/0/5c', scale='9.9c',
              convention="mt", G='grey50', spec=focal_mechanism, N=False, M=True)
 
+
+    polarities = extract_polarity(polarity_input, polarity_keyword=polarity_keyword)
+    takeoff_angles = extract_takeoff_angle(greens,taup_model=taup_model)
+    azimuths = [sta.azimuth for sta in greens]
+
+    for _i, sta in enumerate(greens):
+        sta.station['takeoff_angle'] = takeoff_angles[_i]
+        sta.station['azimuth'] = azimuths[_i]
+        sta.station['polarity'] = polarities[_i]
+
     # Create a list of traces containing only the picked stations
-    picked_data = [sta[0] for sta in data if sta[0].stats.sac['user5'] != 0]
+    picked_data = [sta for i, sta in enumerate(greens) if polarities[i] != 0]
     # Create a list of traces containing the unpicked stations
-    unpicked_data = [sta[0] for sta in data if sta[0].stats.sac['user5'] == 0]
+    unpicked_data = [sta for i, sta in enumerate(greens) if polarities[i] == 0]
 
     # List the theoretical and picked radiation coefficients for comparison purposes
-    theoretical_rad_coef = np.asarray(
-        [radiation_coef(mt.as_vector(), sta.stats.sac['user3'], sta.stats.sac['az']) for sta in picked_data])
-    picked_rad_coef = np.asarray([sta.stats.sac['user5'] for sta in picked_data])
+    predicted_polarity = np.asarray(
+        [radiation_coef(mt.as_vector(), sta.station.takeoff_angle, sta.station.azimuth) for sta in picked_data])
 
     # Place the piercing in 4 list if they are:
     # - picked up motion matching theoretical polarity
@@ -65,13 +79,13 @@ def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
     # - picked down motion not matching theoretical polarity
 
     up_matching_data = [sta for i, sta in enumerate(
-        picked_data) if sta.stats.sac['user5'] == theoretical_rad_coef[i] and sta.stats.sac['user5'] == 1]
+        picked_data) if sta.station.polarity == predicted_polarity[i] and sta.station.polarity == 1]
     down_matching_data = [sta for i, sta in enumerate(
-        picked_data) if sta.stats.sac['user5'] == theoretical_rad_coef[i] and sta.stats.sac['user5'] == -1]
+        picked_data) if sta.station.polarity == predicted_polarity[i] and sta.station.polarity == -1]
     down_unmatched_data = [sta for i, sta in enumerate(
-        picked_data) if sta.stats.sac['user5'] != theoretical_rad_coef[i] and sta.stats.sac['user5'] == -1]
+        picked_data) if sta.station.polarity != predicted_polarity[i] and sta.station.polarity == -1]
     up_unmatched_data = [sta for i, sta in enumerate(
-            picked_data) if sta.stats.sac['user5'] != theoretical_rad_coef[i] and sta.stats.sac['user5'] == 1]
+            picked_data) if sta.station.polarity != predicted_polarity[i] and sta.station.polarity == 1]
 
     # Define aliases for the pygmt function. Please refer to GMT 6.2.0 `polar` function documentation for a complete overview of all the available options and option details.
     @use_alias(
@@ -119,21 +133,21 @@ def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
         tmp_filename='polar_temp.txt'
         with open(tmp_filename, 'w') as f:
             for sta in trace_list:
-                if sta.stats.sac['user5'] == 1:
+                if sta.station.polarity == 1:
                     pol = '+'
-                    f.write('{} {} {} {}'.format(sta.stats.network+'.'+sta.stats.station, sta.stats.sac['az'], sta.stats.sac['user3'], pol))
+                    f.write('{} {} {} {}'.format(sta.station.network+'.'+sta.station.station, sta.station.azimuth, sta.station.takeoff_angle, pol))
                     f.write('\n')
 
-                elif sta.stats.sac['user5'] == -1:
+                elif sta.station.polarity == -1:
                     pol = '-'
-                    f.write('{} {} {} {}'.format(sta.stats.network+'.'+sta.stats.station, sta.stats.sac['az'], sta.stats.sac['user3'], pol))
+                    f.write('{} {} {} {}'.format(sta.station.network+'.'+sta.station.station, sta.station.azimuth, sta.station.takeoff_angle, pol))
                     f.write('\n')
                 else:
                     pol = '0'
-                    f.write('{} {} {} {}'.format(sta.stats.network+'.'+sta.stats.station, sta.stats.sac['az'], sta.stats.sac['user3'], pol))
+                    f.write('{} {} {} {}'.format(sta.station.network+'.'+sta.station.station, sta.station.azimuth, sta.station.takeoff_angle, pol))
                     f.write('\n')
-                    print('Warning !: Station ', sta.stats.network+'.' +
-                          sta.stats.station, ' has no picked polarity')
+                    print('Warning !: Station ', sta.station.network+'.' +
+                          sta.station.station, ' has no picked polarity')
 
         arg_string = " ".join([tmp_filename, build_arg_string(kwargs)])
         with pygmt.clib.Session() as session:
@@ -149,8 +163,7 @@ def beachball_pygmt(filename, mt, data, plot_all=False, display_plot=False):
     _pygmt_polar(down_unmatched_data, symbol='i0.40c', ext_fill='red')
     # If `plot_all` is True, will plot the unpicked stations as black crosses over the beachball plot
     if not plot_all is False:
-        _pygmt_polar(unpicked_data, symbol='x0.40c', comp_outline='black', ext_outline='black')
+        _pygmt_polar(unpicked_data, symbol='x0.40c', comp_outline='black')
 
     # fig.show(dpi=300, method="external")
     fig.savefig(filename, show=display_plot)
-
