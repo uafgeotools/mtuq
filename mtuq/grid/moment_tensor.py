@@ -49,9 +49,8 @@ def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20,
     tightness=0.8, uniformity=0.8):
     """ Grid with regularly-spaced full moment tensors
 
-
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
-    returns a ``Grid`` of size `2.1*len(magnitudes)*npts_per_axis^5`.
+    returns a ``Grid`` of roughly size `2*len(magnitudes)*npts_per_axis^5`.
 
     The grid is set such that it ensures that deviatoric moment tensors are sampled (w = 0).
 
