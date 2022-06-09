@@ -51,14 +51,16 @@ def FullMomentTensorGridSemiregular(magnitudes=[1.], npts_per_axis=20,
 
 
     Given input parameters ``magnitudes`` (`list`) and ``npts`` (`int`),
-    returns a ``Grid`` of size `2*len(magnitudes)*npts_per_axis^5`.
+    returns a ``Grid`` of size `2.1*len(magnitudes)*npts_per_axis^5`.
+
+    The grid is set such that it ensures that deviatoric moment tensors are sampled (w = 0).
 
     The grid is `semiregular` in the sense of an interpolation between
     two parameterizations.  `See here
     <mtuq.grid.moment_tensor._semiregular.html>`_ for details.
 
     """
-    v, w = _semiregular(npts_per_axis, 2*npts_per_axis, tightness, uniformity)
+    v, w = _semiregular(npts_per_axis, 2*npts_per_axis + 1, tightness, uniformity)
 
     kappa = regular(0., 360, npts_per_axis)
     sigma = regular(-90., 90., npts_per_axis)
