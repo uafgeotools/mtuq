@@ -34,7 +34,7 @@ A search over reguarly-spaced `sources`
 
 .. code::
 
-    da = grid_search(data, greens, misfit, stations, origins, sources)
+    da = grid_search(data, greens, misfit, origins, sources)
 
 returns an xarray DataArray `da`.
 
@@ -64,7 +64,7 @@ A search over irregularly-spaced `sources`
 
 .. code::
 
-    df = grid_search(data, greens, misfit, stations, origins, sources)
+    df = grid_search(data, greens, misfit, origins, sources)
 
 returns a pandas DataFrame `df`.
 
