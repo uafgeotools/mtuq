@@ -6,7 +6,7 @@ During a grid search
 
 .. code::
 
-    ds = grid_search(data, greens, misfit, stations, origins, sources)
+    ds = grid_search(data, greens, misfit, origins, sources)
 
 
 the misfit function is evaluated over all `origins` and `sources`.

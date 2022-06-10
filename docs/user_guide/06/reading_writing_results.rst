@@ -6,7 +6,7 @@ A grid search
 
 .. code::
 
-    ds = grid_search(data, greens, misfit, stations, origins, sources)
+    ds = grid_search(data, greens, misfit, origins, sources)
 
 returns a data structure `ds` that contains both misfit values and grid points.
 
@@ -27,11 +27,8 @@ Alternatively, users can specify file type through the `format` keyword argument
 
 
 
-More details
-------------
-
-Regularly-spaced grids
-""""""""""""""""""""""
+Details on regularly-spaced grids
+---------------------------------
 
 A search over reguarly-spaced `sources`
 
@@ -60,8 +57,8 @@ Before or after writing to disk, `da` can be passed to visualization utilities o
 
 
 
-Irregularly-spaced grids
-""""""""""""""""""""""""
+Details on irregularly-spaced grids
+-----------------------------------
 
 A search over irregularly-spaced `sources`
 
