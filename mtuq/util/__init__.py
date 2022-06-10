@@ -25,6 +25,8 @@ try:
 except ImportError:
     from urllib.request import URLopener
 
+from six import string_types
+
 
 class AttribDict(obspy.core.util.attribdict.AttribDict):
     """ For storing trace attributes (see `mtuq.graphics.attrs`)
@@ -102,14 +104,21 @@ def is_mpi_env():
         return False
 
 
-def iterable(arg):
+def iterable(obj):
     """ Simple list typecast
     """
-    from mtuq.grid import Grid, UnstructuredGrid
-    if not isinstance(arg, (list, tuple, Grid, UnstructuredGrid)):
-        return [arg]
-    else:
-        return arg
+    if isinstance(obj, string_types):
+        return [obj]
+
+    if issubclass(type(obj), dict) or issubclass(type(obj), AttribDict):
+        return [obj]
+
+    try:
+        (item for item in obj)
+    except TypeError:
+        obj = [obj]
+    finally:
+        return obj
 
 
 def merge_dicts(*dicts):
