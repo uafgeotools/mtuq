@@ -1302,18 +1302,10 @@ WrapUp_GridSearch="""
 
         # collect information about best-fitting source
         merged_dict = merge_dicts(
-
-            # dictionary of Mij parameters
             mt_dict,
-
-            # dictionary of Tape2015 parameters
             lune_dict,
-
-            # magnitude information
             {'M0': best_mt.moment()},
             {'Mw': best_mt.magnitude()},
-
-            # origin information
             origin,
             )
 
@@ -1369,18 +1361,10 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         # collect information about best-fitting source
         merged_dict = merge_dicts(
-
-            # dictionary of Mij parameters
             mt_dict,
-
-            # dictionary of Tape2015 parameters
             lune_dict,
-
-            # magnitude information
             {'M0': best_mt.moment()},
             {'Mw': best_mt.magnitude()},
-
-            # origin information
             best_origin,
             )
 
@@ -1438,18 +1422,10 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     # collect information about best-fitting source
     merged_dict = merge_dicts(
-
-        # dictionary of Mij parameters
         mt_dict,
-
-        # dictionary of Tape2015 parameters
         lune_dict,
-
-        # magnitude information
         {'M0': best_mt.moment()},
         {'Mw': best_mt.magnitude()},
-
-        # origin information
         origin,
         )
 
