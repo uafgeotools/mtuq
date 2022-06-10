@@ -345,6 +345,9 @@ def _initialize(nrows=None, ncolumns=None, column_width_ratios=None,
         gridspec_kw=dict(width_ratios=[station_label_width]+column_width_ratios)
         )
 
+    if nrows==1:
+        axes = [axes]
+
     pyplot.subplots_adjust(
         left=margin_left/width,
         right=1.-margin_right/width,
