@@ -79,11 +79,11 @@ class PolarityMisfit(object):
         header to read polarity from, velocity model to compute takeoff angles).
 
         """
+        print('Still under development... API changes likely')
 
         self.polarity_keyword = polarity_keyword
         self.taup_model = taup_model
 
-        print('Setting up default parameters')
 
     def __call__(self, polarity_input, greens, sources, progress_handle=Null(),
                  set_attributes=False):
