@@ -119,7 +119,7 @@ class ProcessData(object):
     amount by which Green's functions will be padded relative to data
 
     ``taup_model`` (`str`)
-    Name of built-in ObsPy TauP model or path to custom ObsPy Taup model,
+    Name of built-in ObsPy TauP model or path to custom ObsPy TauP model,
     required for `pick_type=taup`
 
     ``FK_database`` (`str`)

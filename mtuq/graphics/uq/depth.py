@@ -27,7 +27,7 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
     ``ds`` (`DataArray` or `DataFrame`):
     Data structure containing moment tensors and corresponding misfit values
 
-    ``origins`` (`list` of `Origin` objects)
+    ``origins`` (`list` of `Origin` objects):
     Origin objects corresponding to different depths
 
 
@@ -69,7 +69,7 @@ def plot_likelihood_depth(filename, ds, origins, var=None, **kwargs):
     ``ds`` (`DataArray` or `DataFrame`):
     Data structure containing moment tensors and corresponding misfit values
 
-    ``origins`` (`list` of `Origin` objects)
+    ``origins`` (`list` of `Origin` objects):
     Origin objects corresponding to different depths
 
 
@@ -109,7 +109,7 @@ def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     ``ds`` (`DataArray` or `DataFrame`):
     Data structure containing moment tensors and corresponding misfit values
 
-    ``origins`` (`list` of `Origin` objects)
+    ``origins`` (`list` of `Origin` objects):
     Origin objects corresponding to different depths
 
 
@@ -127,7 +127,7 @@ def _plot_depth(filename, da, origins, title='',
     xlabel='auto', ylabel='', show_magnitudes=False, show_tradeoffs=False,
     backend=_plot_depth_gmt):
 
-    """ Plots user-supplied DataArray values depth (requires GMT)
+    """ Plots DataArray values versus depth (requires GMT)
 
     .. rubric :: Keyword arguments
 
@@ -143,10 +143,10 @@ def _plot_depth(filename, da, origins, title='',
     ``ylabel`` (`str`):
     Optional y-axis label
 
-    ``title`` (`str`)
+    ``title`` (`str`):
     Optional figure title
 
-   ``backend`` (`function`)
+    ``backend`` (`function`):
     Choose from `_plot_lune_gmt` (default), `_plot_lune_matplotlib`,
     or user-supplied function
 

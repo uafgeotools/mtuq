@@ -79,17 +79,18 @@ class PolarityMisfit(object):
         header to read polarity from, velocity model to compute takeoff angles).
 
         """
+        warn('Polarity misfit still under development... API changes likely')
 
         self.polarity_keyword = polarity_keyword
         self.taup_model = taup_model
 
-        print('Setting up default parameters')
 
     def __call__(self, polarity_input, greens, sources, progress_handle=Null(),
                  set_attributes=False):
         """ Evaluates polarity misfit on given data.
 
         """
+        warn('Polarity misfit still under development... API changes likely')
 
         # Check if the greens functions passed to polarity misfit are for Moment Tensor sources.
         if not all(green.include_mt for green in greens):

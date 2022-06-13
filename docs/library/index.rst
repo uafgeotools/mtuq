@@ -58,8 +58,8 @@ Data visualization
 ============================================================================================================  ============================================================================================================
 `mtuq.graphics.plot_waveforms1 <generated/mtuq.graphics.plot_waveforms1.html>`_                                Plots surface waves only
 `mtuq.graphics.plot_waveforms2 <generated/mtuq.graphics.plot_waveforms2.html>`_                                Plots body and surface waves
-`mtuq.graphics.plot_data_greens1 <generated/mtuq.graphics.plot_data_greens1.html>`_                            Very similar to `plot_waveforms1`
-`mtuq.graphics.plot_data_greens2 <generated/mtuq.graphics.plot_data_greens2.html>`_                            Very similar to `plot_waveforms2`
+`mtuq.graphics.plot_data_greens1 <generated/mtuq.graphics.plot_data_greens1.html>`_                            Variation on `plot_waveforms1`
+`mtuq.graphics.plot_data_greens2 <generated/mtuq.graphics.plot_data_greens2.html>`_                            Variation on `plot_waveforms2`
 `mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots focal mechansim
 ============================================================================================================  ============================================================================================================
 
@@ -109,7 +109,7 @@ Moment tensor and force grids
 `mtuq.grid.DoubleCoupleGridRandom <generated/mtuq.grid.DoubleCoupleGridRandom.html>`_                          Grid with randomly-drawn double couples
 `mtuq.grid.DoubleCoupleGridRegular <generated/mtuq.grid.DoubleCoupleGridRegular.html>`_                        Grid with regularly-spaced double couples
 `mtuq.grid.DeviatoricGridRandom <generated/mtuq.grid.DeviatoricGridRandom.html>`_                              Grid with randomly-drawn deviatoric moment tensors 
-`mtuq.grid.DeviatoricGridSeimiregular <generated/mtuq.grid.DeviatoricGridSemiregular.html>`_                   Grid with semiregularly-spaced deviatoric moment tensors
+`mtuq.grid.DeviatoricGridSemiregular <generated/mtuq.grid.DeviatoricGridSemiregular.html>`_                    Grid with semiregularly-spaced deviatoric moment tensors
 `mtuq.grid.ForceGridRandom <generated/mtuq.grid.ForceGridRandom.html>`_                                        Grid with randomly-drawn forces
 `mtuq.grid.ForceGridRegular <generated/mtuq.grid.ForceGridRegular.html>`_                                      Grid with regularly-spaced forces
 ============================================================================================================  ============================================================================================================

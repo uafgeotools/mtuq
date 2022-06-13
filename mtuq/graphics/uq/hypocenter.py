@@ -26,7 +26,7 @@ def plot_misfit_latlon(filename, ds, origins, **kwargs):
     ``ds`` (`DataArray` or `DataFrame`):
     Data structure containing moment tensors and corresponding misfit values
 
-    ``origins`` (`list` of `Origin` objects)
+    ``origins`` (`list` of `Origin` objects):
     Origin objects corresponding to different hypocenters
 
 
@@ -62,7 +62,7 @@ def plot_likelihood_latlon(filename, ds, origins, **kwargs):
     ``ds`` (`DataArray` or `DataFrame`):
     Data structure containing moment tensors and corresponding misfit values
 
-    ``origins`` (`list` of `Origin` objects)
+    ``origins`` (`list` of `Origin` objects):
     Origin objects corresponding to different hypocenters
 
 
@@ -98,7 +98,7 @@ def plot_marginal_latlon(filename, ds, origins, **kwargs):
     ``ds`` (`DataArray` or `DataFrame`):
     Data structure containing moment tensors and corresponding misfit values
 
-    ``origins`` (`list` of `Origin` objects)
+    ``origins`` (`list` of `Origin` objects):
     Origin objects corresponding to different hypocenters
 
 
@@ -128,10 +128,10 @@ def _plot_latlon(filename, da, origins,show_best=False, show_tradeoffs=False,
     ``ylabel`` (`str`):
     Optional y-axis label
 
-    ``title`` (`str`)
+    ``title`` (`str`):
     Optional figure title
 
-    ``backend`` (`function`)
+    ``backend`` (`function`):
     Choose from `_plot_latlon_gmt` (default) or user-supplied function
 
     """

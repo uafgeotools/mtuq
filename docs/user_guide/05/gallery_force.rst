@@ -7,7 +7,7 @@ Suppose we are running a force grid search:
 
 .. code::
 
-    ds = grid_search(data, greens, misfit, stations, origins, sources)
+    ds = grid_search(data, greens, misfit, origins, sources)
 
 
 After the above command finishes, the data structure `ds` will contain all the forces and corresponding misfit values.
@@ -83,7 +83,7 @@ To see how the magnitude of the best-fitting force varies with respect to orient
 Source code
 """""""""""
 
-[`script to reproduce above figures <https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/code/gallery_force.py>`_]
+[`script to reproduce above figures <https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/05/code/gallery_force.py>`_]
 
 Users can run the script immediately after `installing MTUQ <https://uafgeotools.github.io/mtuq/install/index.html>`_, without any additional setup.
 

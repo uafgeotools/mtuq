@@ -62,7 +62,7 @@ class Misfit(object):
 
     ``time_shift_max`` (`float`): maximum allowable time shift (s)
 
-    ``optimization_level`` (int): optimization level 
+    ``optimization_level`` (`int`): optimization level 
     (see further details below)
 
 
@@ -92,7 +92,7 @@ class Misfit(object):
 
     - ``level1`` is an optimized pure Python implementation which provides 
       significant computational savings for `len(sources)` > 100. This
-      version is the closest to `ZhuHelmberger1996`'s original C software.
+      version is the closest to `Zhu1996`'s original C software.
 
     - ``level2`` is an optimized Python/C implementation, in which a Python 
       wrapper is used to combine ObsPy traces into multidimensional arrays.
@@ -107,7 +107,7 @@ class Misfit(object):
       During installation, C extension modules are automatically compiled by
       `build_ext.sh` using compiler flags given in `setup.py`.  For performance
       tuning or compiler troubleshooting, users may wish to modify the
-      `get_compier_args` function in `setup.py`.
+      `get_compiler_args` function in `setup.py`.
 
     """
 

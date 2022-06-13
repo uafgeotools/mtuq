@@ -361,6 +361,10 @@ def _initialize(nrows=None, ncolumns=None, column_width_ratios=None,
             header_height, width,
             margin_left, margin_top)
 
+    # single station plotting workaround
+    if nrows==1:
+        axes = [axes]
+
     return fig, axes
 
 

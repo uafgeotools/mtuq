@@ -214,7 +214,7 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
 
     .. rubric :: Keyword arguments
 
-    ``colormap`` (`str`)
+    ``colormap`` (`str`):
     Color palette used for plotting values
     (choose from GMT or MTUQ built-ins)
 
@@ -224,10 +224,10 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
     ``show_tradeoffs`` (`bool`):
     Show how focal mechanism trades off with lune coordinates
 
-    ``title`` (`str`)
+    ``title`` (`str`):
     Optional figure title
 
-    ``backend`` (`function`)
+    ``backend`` (`function`):
     Choose from `_plot_lune_gmt` (default) or user-supplied function
 
     """
@@ -243,7 +243,6 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
         else:
             warn("Best-fitting moment tensor not given")
 
-
     if show_tradeoffs or show_mt:
         if 'lune_array' in da.attrs:
             lune_array = da.attrs['lune_array']
@@ -251,6 +250,8 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
             warn("Focal mechanism tradeoffs not given")
 
     if show_mt:
+        # display the beachball the best-fitting moment tensor
+        # (no other marker)
         lune_array = _parse_best_lune(best_vw, lune_array)
         best_vw = None
 

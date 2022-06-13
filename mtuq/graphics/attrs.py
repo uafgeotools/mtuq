@@ -20,10 +20,10 @@ def plot_time_shifts(dirname, attrs, stations, origin, **kwargs):
     ``attrs`` (`list` of `AttribDict`):
     List returned by misfit function's `collect_attributes` method
 
-    ``stations`` (`list` of `mtuq.Station` objects)
+    ``stations`` (`list` of `mtuq.Station` objects):
     Used to plot station locations
 
-    ``origin`` (`mtuq.Origin` object)
+    ``origin`` (`mtuq.Origin` object):
     Used to plot origin location
 
 
@@ -51,10 +51,10 @@ def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
     ``attrs`` (`list` of `AttribDict`):
     List returned by misfit function's `collect_attributes` method
 
-    ``stations`` (`list` of `mtuq.Station` objects)
+    ``stations`` (`list` of `mtuq.Station` objects):
     Used to plot station locations
 
-    ``origin`` (`mtuq.Origin` object)
+    ``origin`` (`mtuq.Origin` object):
     Used to plot origin location
 
 
@@ -85,10 +85,10 @@ def plot_log_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
     ``attrs`` (`list` of `AttribDict`):
     List returned by misfit function's `collect_attributes` method
 
-    ``stations`` (`list` of `mtuq.Station` objects)
+    ``stations`` (`list` of `mtuq.Station` objects):
     Used to plot station locations
 
-    ``origin`` (`mtuq.Origin` object)
+    ``origin`` (`mtuq.Origin` object):
     Used to plot origin location
 
 
@@ -194,10 +194,6 @@ def _default_backend(filename, values, stations, origin,
     ``label`` (`str`):
     Optional colorbar label
 
-
-    .. rubric:: Examples
-
-    `See here <https://uafgeotools.github.io/mtuq/user_guide/06/plotting_time_shifts.html>`_
 
     """
 

@@ -51,10 +51,10 @@ class Client(ClientBase):
 
     .. note::
 
-      GreensTensor are obtained by reading precomputed time series from an 
+      `GreensTensor`s are obtained by reading precomputed time series from an 
       FK directory tree.  Such trees contain SAC files organized by model, 
-      event depth, and event distance, as used by the `ZhuHelmberger1996`
-      software package.
+      event depth, and event distance, as used by the `Zhu1994`
+      software packages.
 
     """
     def __init__(self, path_or_url=None, model=None,

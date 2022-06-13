@@ -123,6 +123,25 @@ def _plot_depth_matplotlib(filename, depths, values,
     pyplot.savefig(filename)
 
 
+def _plot_omega_matplotlib(filename, omega, values,
+    title=None, xlabel='Angular distance', ylabel=None, figsize=(6., 6.), fontsize=16.):
+
+    pyplot.figure(figsize=figsize)
+    pyplot.plot(omega, values, 'k-')
+
+    pyplot.xlim([0., 180.])
+
+    if title:
+        pyplot.title(title, fontsize=fontsize)
+
+    if xlabel:
+         pyplot.xlabel(xlabel, fontsize=fontsize)
+
+    if ylabel:
+         pyplot.ylabel(ylabel, fontsize=fontsize)
+
+    pyplot.savefig(filename)
+
 
 #
 # utility functions
