@@ -72,7 +72,7 @@ def download_unzip_mt_response(url, model, station, origin, verbose=True):
          +'&starttime='+str(origin.time)[:-1])
 
     try:
-       dirname = os.environs['SYNGINE_CACHE']
+       dirname = os.environ['SYNGINE_CACHE']
     except:
        dirname = 'data/greens_tensor/syngine/cache/'
 
