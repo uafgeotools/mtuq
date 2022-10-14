@@ -43,11 +43,6 @@ To illustrate, we have implemented a `custom backend <https://uafgeotools.github
     Frontend functions perform only data manipulation. All calls to graphics libraries (matplotlib, GMT, PyGMT and so on) occur in the backends, making even the choice of graphics library customizable.
 
 
-.. warning::
-
-    The custom backend used to create the figure above is based on PyGMT, which requires `additional installation steps <https://uafgeotools.github.io/mtuq/install/index.html#graphics-dependencies>`_, beyond `pip install -e mtuq/`.
-
-
 Misfit and likelihood figures
 -----------------------------
 

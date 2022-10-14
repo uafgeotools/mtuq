@@ -1,7 +1,7 @@
 Installation
 ============
 
-We recommend installing MTUQ under Anaconda or Miniconda, which if not already present, can be installed following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+We recommend installing MTUQ under Anaconda or Miniconda, which can be obtained following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_, if not already present.
 
 
 To install MTUQ, first create a conda virtual environment:
@@ -12,12 +12,17 @@ To install MTUQ, first create a conda virtual environment:
    conda create -n mtuq python=3
 
 
-Install MTUQ:
+Download the MTUQ source code:
 
 .. code::
 
    git clone https://github.com/uafgeotools/mtuq.git
    cd mtuq
+
+
+Install in editable mode:
+
+.. code::
 
    conda activate mtuq
    conda env update --file env.yml
@@ -44,12 +49,8 @@ Finally, install PyGMT:
 
 
 
-Alternative method
-------------------
+**Alternative method**
 
-For installation under `virtualenv` instead, see these instructions:
+For installation under `virtualenv` instead, see `here <https://uafgeotools.github.io/mtuq/install/env_virtualenv.html>`_.
 
-.. toctree::
-
-   env_virtualenv
 
