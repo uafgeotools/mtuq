@@ -16,10 +16,11 @@ Install MTUQ:
 
 .. code::
 
-   conda activate mtuq
-   conda install numpy scipy obspy instaseis pandas xarray netCDF4 h5py mpi4py conda-build
    git clone https://github.com/uafgeotools/mtuq.git
    cd mtuq
+
+   conda activate mtuq
+   conda env update --file env.yml
    conda develop .
 
 
