@@ -17,7 +17,7 @@ MTUQ_PATH=$(dirname ${BASH_SOURCE[0]})/..
 # mtuq/docs/install/env_conda.rst
 #
 PYTHON_VERSION=3
-DEPENDENCIES="scipy obspy instaseis pandas xarray netCDF4 h5py mpi4py"
+DEPENDENCIES="numpy scipy obspy instaseis pandas xarray netCDF4 h5py mpi4py conda-build"
 
 
 #
@@ -93,7 +93,7 @@ echo "Testing mtuq installation without PyGMT"
 conda create -q -n env_step2 python=$PYTHON_VERSION > tests/log2
 conda activate env_step2
 conda install $DEPENDENCIES >> tests/log2
-pip install -e . >> tests/log2
+conda develop . >> tests/log2
 conda deactivate
 echo SUCCESS
 echo 
@@ -102,7 +102,7 @@ echo "Testing mtuq installation with PyGMT"
 conda create -q -n env_step3 python=$PYTHON_VERSION > tests/log3
 conda activate env_step3
 conda install ${DEPENDENCIES} >> tests/log3
-pip install -e . >> tests/log3
+conda develop . >> tests/log3
 conda install pygmt >> tests/log3
 conda deactivate
 echo SUCCESS

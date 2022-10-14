@@ -1,0 +1,5 @@
+To build docs:
+
+>> conda install sphinx sphinx_bootstrap_theme
+>> ./build.py
+

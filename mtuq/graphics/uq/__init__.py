@@ -35,11 +35,11 @@ def likelihood_analysis(*args):
 
 
     arrays = [arg[0] for arg in args]
-    covs = [arg[1] for arg in args]
+    vars = [arg[1] for arg in args]
 
     values = []
     for _i, array in enumerate(arrays):
-        values += [np.exp(-array.values**2/covs[_i])]
+        values += [np.exp(-0.5*array.values/vars[_i])]
 
     dims = arrays[0].dims
     coords = arrays[0].coords
