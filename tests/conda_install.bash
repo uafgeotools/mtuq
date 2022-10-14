@@ -90,7 +90,7 @@ echo SUCCESS
 echo
 
 echo "Testing mtuq installation without PyGMT"
-conda create -q --name env_step2 python=$PYTHON_VERSION --file env.yaml > tests/log2
+conda env create -q --name env_step2 python=$PYTHON_VERSION --file env.yaml > tests/log2
 conda activate env_step2
 conda develop . >> tests/log2
 conda deactivate
@@ -98,7 +98,7 @@ echo SUCCESS
 echo 
 
 echo "Testing mtuq installation with PyGMT"
-conda create -q --name env_step3 python=$PYTHON_VERSION --file env.yaml > tests/log3
+conda env create -q --name env_step3 python=$PYTHON_VERSION --file env.yaml > tests/log3
 conda activate env_step3
 conda develop . >> tests/log3
 conda install pygmt >> tests/log3
