@@ -17,7 +17,7 @@ MTUQ_PATH=$(dirname ${BASH_SOURCE[0]})/..
 # mtuq/docs/install/env_conda.rst
 #
 PYTHON_VERSION=3
-DEPENDENCIES="scipy obspy instaseis pandas xarray netCDF4 h5py mpi4py"
+DEPENDENCIES="numpy scipy obspy instaseis pandas xarray netCDF4 h5py mpi4py"
 
 
 #
