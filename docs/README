@@ -1,5 +1,35 @@
-To build docs:
+HOW TO UPDATE DOCS
 
->> conda install sphinx sphinx_bootstrap_theme
->> ./build.py
+
+1. Install sphinx
+
+    >> conda install sphinx=4 sphinx_bootstrap_theme
+
+    Note that we use an earlier version of sphinx because later versions seem to 
+    mess up the spacing of docs/library/index.html
+
+
+2. Create local build
+
+>> ./build.bash
+
+
+3. If build fails with "Encountered unknown tag 'do', then try the following:
+
+   Modify the sphinx autosummary source code by adding  'jinja2.ext.do' to the jinja
+   Environment() extensions list
+
+   See for example this line of the source code:
+   https://github.com/sphinx-doc/sphinx/blob/a6032e852a650c070aed66f0790e612905159f15/sphinx/ext/autosummary/generate.py#L111
+
+   See also:
+   https://stackoverflow.com/questions/39858191/do-statement-not-working-in-jinja
+
+
+4. Inspect the resulting HTML files in _build/html.
+
+
+5. If the local build is satisfactory, then push the changes to the remote:
+
+>> ./push.bash
 

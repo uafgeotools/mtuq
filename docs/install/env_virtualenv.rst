@@ -46,5 +46,5 @@ Unpack seismic waveforms used by examples:
 
 Finally, `install PyGMT manually <https://www.pygmt.org/latest/install.html#installing-pygmt>`_.  
 
-(For an automated PyGMT installation, consider `installing MTUQ under conda <https://uafgeotools.github.io/mtuq/install/env_conda.html>`_ instead.)
+(For an automated PyGMT installation, consider `installing MTUQ under conda <https://uafgeotools.github.io/mtuq/install/index.html>`_ instead.)
 

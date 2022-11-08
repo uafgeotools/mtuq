@@ -2,7 +2,7 @@
 Trace attributes
 ================
 
-During a seismic inversion waveform differences, phase shifts, amplitude ratios, and other quantities are calculated from observed and synthetic seismic traces. 
+Waveform differences, phase shifts, amplitude ratios, and other quantities are calculated from observed and synthetic seismic traces during a seismic inversion.
 
 Such `trace attribute` quantities provide important information about how data misfit varies by geographic location and seismic component or with repsect to particular inversion settings. 
 
@@ -10,7 +10,8 @@ Such `trace attribute` quantities provide important information about how data m
 Collecting trace attributes
 ---------------------------
 
-The misfit function's `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ method provides a way to collect time shift, amplitude ratio and other trace attributes.
+The misfit function's `collect_attributes <https://uafgeotools.github.io/mtuq/library/generated/mtuq.Misfit.collect_attributes.html#mtuq.Misfit.collect_attributes>`_ method provides a way to collect 
+trace attributes.
 
 Suppose we have the following misfit function:
 

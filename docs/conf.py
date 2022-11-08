@@ -29,7 +29,6 @@ html_theme_options = {
     }
 
 # extension options
-autodoc_mock_imports = ["mtuq"]
 autosummary_generate = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.

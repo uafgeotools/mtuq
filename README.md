@@ -1,6 +1,12 @@
 # mtuq
 
+![Build Status](https://github.com/uafgeotools/mtuq/actions/workflows/python-app.yaml/badge.svg)
+
+<!--
+Commenting out broken badge
 ![SCOPED](https://img.shields.io/endpoint?url=https://runkit.io/wangyinz/scoped/branches/master/MTUQ)
+-->
+
 
 MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data.  
 
@@ -59,8 +65,6 @@ Alternatively, MTUQ misfit functions can be used as a starting point for Bayesia
 The package has been tested against [legacy Perl/C codes](https://github.com/uafgeotools/mtuq/blob/master/tests/benchmark_cap_vs_mtuq.py) as well as [published studies](https://github.com/rmodrak/mtbench).
 
 
-
-[![Build Status](https://travis-ci.org/uafgeotools/mtuq.svg?branch=master)](https://travis-ci.org/uafgeotools/mtuq)
 
 [Instaseis]: http://instaseis.net/
 

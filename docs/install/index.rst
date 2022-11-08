@@ -1,30 +1,55 @@
 Installation
 ============
 
-If you're familiar with Python virtual environments, feel free to install MTUQ as follows within an environment of your choice::
+We recommend installing MTUQ under Anaconda or Miniconda, which can be obtained following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_, if not already present.
+
+
+To install MTUQ, first create a conda virtual environment:
+
+.. code::
+
+   conda config --prepend channels conda-forge
+   conda create -n mtuq python=3
+
+
+Download the MTUQ source code:
+
+.. code::
 
    git clone https://github.com/uafgeotools/mtuq.git
    cd mtuq
-   pip install -e .
 
 
-Otherwise, follow these instructions for installation under `conda` (preferred) or `virtualenv`:
+Install in editable mode:
 
-.. toctree::
+.. code::
 
-   env_conda
-   env_virtualenv
+   conda activate mtuq
+   conda env update --file env.yml
+
+
+Unpack seismic waveforms used by examples:
+
+.. code::
+
+    bash ./data/examples/unpack.bash
+    bash ./data/tests/unpack.bash
+
+
+Finally, install PyGMT:
+
+.. code::
+
+    conda install pygmt
+
+.. note::
+
+    PyGMT is only used for generating figures. If `conda install pygmt` fails, MTUQ will attempt to fall back to GMT or ObsPy.  We note that some versions of GMT and ObsPy do not plot full moment tensors `correctly <https://github.com/obspy/obspy/issues/2388>`_.
 
 
 
-Graphics dependencies
----------------------
+**Alternative method**
 
-.. warning::
+For installation under `virtualenv` instead, see `here <https://uafgeotools.github.io/mtuq/install/env_virtualenv.html>`_.
 
-   To avoid graphics problems, we recommend installing PyGMT.
-
-MTUQ uses `PyGMT <https://www.pygmt.org/latest/>`_ if present.  PyGMT is not installed by default, but requires an extra `conda install pygmt`.
-
-If PyGMT is not present, MTUQ may fall back to GMT or ObsPy.  We note that some versions of GMT and ObsPy do not plot full moment tensors correctly (`see here <https://github.com/obspy/obspy/issues/2388>`_).
 
