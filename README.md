@@ -1,10 +1,10 @@
 # mtuq
 
-[![Build Status](https://travis-ci.org/uafgeotools/mtuq.svg?branch=master)](https://travis-ci.org/uafgeotools/mtuq)
+![Build Status](https://github.com/uafgeotools/mtuq/actions/workflows/python-app.yaml/badge.svg)
 
 <!--
 Commenting out broken badge
-#![SCOPED](https://img.shields.io/endpoint?url=https://runkit.io/wangyinz/scoped/branches/master/MTUQ)
+![SCOPED](https://img.shields.io/endpoint?url=https://runkit.io/wangyinz/scoped/branches/master/MTUQ)
 -->
 
 
