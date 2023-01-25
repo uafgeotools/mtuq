@@ -208,8 +208,17 @@ def to_xyz(F0, phi, h):
 
 def to_rtp(F0, phi, h):
     """ Converts from spherical to Cartesian coordinates (up-south-east)
+
+    Parameters:
+    F0 (float or numpy array): The radial distance from the origin
+    phi (float or numpy array): The azimuthal angle in degrees - 0 to 360 range, where 0 is East. Anticlockwise positive.
+    h (float or numpy array): The cosine of the polar angle - -1 to 1 range, where 1 is Up
+    
+    Returns:
+    numpy array: The Cartesian coordinates in the up-south-east system
     """
     # spherical coordinates in "physics convention"
+    
     r = F0
     phi = np.radians(phi)
     theta = np.arccos(h)
