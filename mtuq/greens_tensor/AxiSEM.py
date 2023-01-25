@@ -19,7 +19,7 @@ class GreensTensor(GreensTensorBase):
       symmetric medium.  Time series represent vertical, radial, and transverse
       displacement in units of m*(N-m)^-1
 
-      For the vertical and raidal components, there are four associated time 
+      For the vertical and raidal components, there are four associated time
       series. For the tranverse component, there are two associated time
       series. Thus there are ten independent Green's tensor elements altogether,
       which is fewer than in the case of a general inhomogeneous medium
@@ -115,9 +115,11 @@ class GreensTensor(GreensTensorBase):
                 array[_i, _j+2, :] = Z2
 
             elif component=='R':
-                R0 = self.select(channel="R0")[0].data
-                R1 = self.select(channel="R1")[0].data
-                R2 = self.select(channel="R2")[0].data
+                # Manual fix of the Radial component polarity
+                # until Axisem/Syngine Force get fixed.
+                R0 = self.select(channel="R0")[0].data * -1
+                R1 = self.select(channel="R1")[0].data * -1
+                R2 = self.select(channel="R2")[0].data * -1
                 array[_i, _j+0, :] = R0
                 array[_i, _j+1, :] = R1
                 array[_i, _j+2, :] = R2
@@ -138,7 +140,7 @@ class GreensTensor(GreensTensorBase):
         # The mathematical formulas above are based on the North-East-Down
         # convention, but mtuq works in the Up-South-East convention.
         # We could get equivalent results by permuting the get_synthetics
-        # arguments every time it is called, but it is faster to permute the 
+        # arguments every time it is called, but it is faster to permute the
         # whole array once and for all
 
         array = self._array
@@ -150,4 +152,3 @@ class GreensTensor(GreensTensorBase):
         array[:, 3, :] =  array_copy[:, 4, :]
         array[:, 4, :] = -array_copy[:, 5, :]
         array[:, 5, :] = -array_copy[:, 3, :]
-
