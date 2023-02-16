@@ -22,9 +22,6 @@ class GreensTensor(GreensTensorBase):
     def __init__(self, *args, **kwargs):
         super(GreensTensor, self).__init__(*args, **kwargs)
 
-        import warnings
-        warnings.warn("SPECFEM3D modules have not yet been tested.")
-
         if 'type:greens' not in self.tags:
             self.tags += ['type:greens']
 
