@@ -57,7 +57,7 @@ class GreensTensor(GreensTensorBase):
         phi = np.deg2rad(self.azimuth)
         _j = 0
 
-        # the mathetical formulas here were obtained by reverse engineering
+        # the mathematical formulas here were obtained by reverse engineering
         # FK/CAP
         for _i, component in enumerate(self.components):
             if component=='Z':
