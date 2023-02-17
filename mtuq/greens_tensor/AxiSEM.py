@@ -43,7 +43,6 @@ class GreensTensor(GreensTensorBase):
         """
         if self.include_mt:
             self._precompute_mt()
-            self._permute()
 
         if self.include_force:
             self._precompute_force()
@@ -51,13 +50,13 @@ class GreensTensor(GreensTensorBase):
 
     def _precompute_mt(self):
         """ Recombines AxiSEM time series so they can be used in straightforward
-        liner combination with Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
+        linear combination with Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
         """
         array = self._array
         phi = np.deg2rad(self.azimuth)
         _j = 0
 
-        # these formulas are from Minson and Dregor 2008
+        # The formulas below are copied directly from Minson2008
 
         for _i, component in enumerate(self.components):
             if component=='Z':
@@ -94,7 +93,19 @@ class GreensTensor(GreensTensorBase):
                 array[_i, _j+4, :] = TDS * np.sin(phi)
                 array[_i, _j+5, :] = -TDS * np.cos(phi)
 
+        #
+        # Minson2008 uses a north-east-down basis convention, while mtuq uses an
+        # up-south-east basis convention, so a permuation is necessary
+        #
+        array_copy = array.copy()
+        array[:, 0, :] =  array_copy[:, 2, :]
+        array[:, 1, :] =  array_copy[:, 0, :]
+        array[:, 2, :] =  array_copy[:, 1, :]
+        array[:, 3, :] =  array_copy[:, 4, :]
+        array[:, 4, :] = -array_copy[:, 5, :]
+        array[:, 5, :] = -array_copy[:, 3, :]
 
+ 
     def _precompute_force(self):
         """ Computes NumPy arrays used in force linear combination
         """
@@ -120,7 +131,7 @@ class GreensTensor(GreensTensorBase):
                 R2 = self.select(channel="R2")[0].data
 
                 #
-                # A sign change is necessary to the radial component 
+                # A sign change is necessary for the radial component 
                 # returned by Instaseis/syngine:
                 #
 
@@ -129,15 +140,15 @@ class GreensTensor(GreensTensorBase):
                 R2 = -R2
 
                 #
-                # - For an explanation see:
+                # - For more information see:
                 #   https://github.com/krischer/instaseis/issues/77
                 #   https://github.com/krischer/instaseis/issues/82
                 #
-                # - It is important that the above fix creates a *copy* of the
-                #   numeric trace data (so that the fix remains correct even
-                #   if _precompute() is called multiple times)
+                # - It is important that a *copy* of the numeric trace data
+                #   is created (so that the fix remains correct even if
+                #   _precompute() is called multiple times)
                 #
-                # - See also test_syngine.py, which looks for changes in
+                # - See also test_syngine.py, which tests for changes to
                 #   Instaseis/syngine itself
                 #
 
@@ -155,21 +166,3 @@ class GreensTensor(GreensTensorBase):
 
 
 
-    def _permute(self):
-        """ Accounts for different basis conventions
-        """
-        # The mathematical formulas above are based on the North-East-Down
-        # convention, but mtuq works in the Up-South-East convention.
-        # We could get equivalent results by permuting the get_synthetics
-        # arguments every time it is called, but it is faster to permute the
-        # whole array once and for all
-
-        array = self._array
-        array_copy = self._array.copy()
-
-        array[:, 0, :] =  array_copy[:, 2, :]
-        array[:, 1, :] =  array_copy[:, 0, :]
-        array[:, 2, :] =  array_copy[:, 1, :]
-        array[:, 3, :] =  array_copy[:, 4, :]
-        array[:, 4, :] = -array_copy[:, 5, :]
-        array[:, 5, :] = -array_copy[:, 3, :]
