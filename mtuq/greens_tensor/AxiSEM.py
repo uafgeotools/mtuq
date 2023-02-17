@@ -115,11 +115,31 @@ class GreensTensor(GreensTensorBase):
                 array[_i, _j+2, :] = Z2
 
             elif component=='R':
-                # Manual fix of the Radial component polarity
-                # until Axisem/Syngine Force get fixed.
-                R0 = self.select(channel="R0")[0].data * -1
-                R1 = self.select(channel="R1")[0].data * -1
-                R2 = self.select(channel="R2")[0].data * -1
+                R0 = self.select(channel="R0")[0].data
+                R1 = self.select(channel="R1")[0].data
+                R2 = self.select(channel="R2")[0].data
+
+                #
+                # A sign change is necessary to the radial component 
+                # returned by Instaseis/syngine:
+
+                R0 = -R0
+                R1 = -R1
+                R2 = -R2
+
+                #
+                # - For an explanation see:
+                #   https://github.com/krischer/instaseis/issues/77
+                #   https://github.com/krischer/instaseis/issues/82
+                #
+                # - It is important that the above fix creates a *copy* of the
+                #   numeric trace data (so that the fix remains correct even
+                #   if _precompute() is called multiple times)
+                #
+                # - See also test_syngine.py, which looks for changes in
+                #   Instaseis/syngine itself
+                #
+
                 array[_i, _j+0, :] = R0
                 array[_i, _j+1, :] = R1
                 array[_i, _j+2, :] = R2
