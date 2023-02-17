@@ -366,10 +366,11 @@ class ProcessData(object):
             station.longitude)
 
         #
-        # TODO - remove SAC format dependence
+        # TODO - https://github.com/uafgeotools/mtuq/issues/199
         #
         if not 'az' in station.sac:
             print('adding azimuth in ', id)
+            station.sac['az'] = azimuth
 
 
         # collect time sampling information
