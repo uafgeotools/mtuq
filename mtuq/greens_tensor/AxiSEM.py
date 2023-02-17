@@ -122,6 +122,7 @@ class GreensTensor(GreensTensorBase):
                 #
                 # A sign change is necessary to the radial component 
                 # returned by Instaseis/syngine:
+                #
 
                 R0 = -R0
                 R1 = -R1

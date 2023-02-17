@@ -20,9 +20,8 @@ opener.retrieve(syngine_url, 'output.zip')
 
 
 #
-#  Checks if following issues have been fixed:
-#    https://github.com/krischer/instaseis/issues/77
-#    https://github.com/krischer/instaseis/issues/82
+# Checks if a sign change is still necessary to the radial component
+# returned by Instaseis/syngine from a Force source
 #
 
 url = "http://service.iris.washington.edu/irisws/syngine/1/query?model=ak135f_5s&format=saczip&components=ZRE&units=displacement&receiverlatitude=0&receiverlongitude=1&sourcelatitude=0&sourcelongitude=0&sourcedepthinmeters=0&sourceforce=1e12,0,0&nodata=404"
@@ -44,13 +43,12 @@ for tr in stream:
     if tr.stats.channel == 'MXR':
         R = tr.data
 
-if np.allclose(E, R):
-    print('Instaseis/syngine now returns the correct sign on the verical component.'
-          'The workaround currently implemented by MTUQ may need to be removed.')
-
 os.remove('data.zip')
 os.remove('Syngine.log')
-for trace in stream:
-    os.remove(trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel+'.sac')
+
+if np.allclose(E, R):
+    # Instaseis/syngine now returns the correct sign on the radial component
+    # The workaround implemented by MTUQ may need to be removed
+    raise Exception()
 
 

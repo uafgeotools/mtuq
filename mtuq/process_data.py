@@ -365,9 +365,12 @@ class ProcessData(object):
             station.latitude,
             station.longitude)
 
+        #
+        # TODO - remove SAC format dependence
+        #
         if not 'az' in station.sac:
             print('adding azimuth in ', id)
-            station.sac['az'] = azimuth
+
 
         # collect time sampling information
         nt, dt = traces[0].stats.npts, traces[0].stats.delta
@@ -543,8 +546,8 @@ class ProcessData(object):
             #
 
             # STATIC CONVENTION:  A positive static time shift means synthetics
-            # are arriving too early and need to be shifted in the positive
-            # direction to match the observed data.
+            # are arriving too early and need to be shifted forward in time 
+            # (positive shift) to match the observed data.
 
             if self.apply_statics:
                 try:
@@ -552,8 +555,8 @@ class ProcessData(object):
                     # mtuq.io.clients
 
                     # Even though obspy.read doesn't return a stats.component
-                    # attribute, it appears "component" is still reserved by
-                    # ObsPy in some manner, thus we use "_component" instead
+                    # attribute, "component" is still reserved by ObsPy,
+                    # thus we use "_component" instead
                     component = trace.stats._component
 
                 except:
