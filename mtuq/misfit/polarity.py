@@ -4,119 +4,223 @@ import numpy as np
 import mtuq
 from mtuq.util.math import radiation_coef
 from mtuq.util import Null, iterable, warn
-from mtuq.misfit.waveform.level2 import _to_array
+from mtuq.misfit.waveform.level2 import _to_array, _type
 from obspy.taup import TauPyModel
-from mtuq.util.polarity import extract_polarity, extract_takeoff_angle
+from mtuq.util.signal import m_to_deg
+
 
 class PolarityMisfit(object):
     """ Polarity misfit function
-
-    Evaluates first motion polarity by comparing observed and predicted first-motion polarities.
-
-    .. rubric:: Usage
-
-    Evaluating misfit is a two-step procedure:
-
-    .. code::
-
-        function_handle = PolarityMisfit(**parameters)
-        values = function_handle(polarity_input, greens, sources)
-
-    In the first step, the user may supply optional parameters such as the sac
-    header keyword that stores the polarity inputs or the velocity model used
-    to compute takeoff angles (see below for detailed argument descriptions).
-
-    In the second step, the user supplies the polarity inputs (list, numpy
-    array, mtuq Dataset or Green's function list, CAP weight files), Green's
-    functions, and sources grid. This function presuppose that greens is a
-    mtuq.GreensTensorList whith a valid SAC header containing the
-    station.azimuth key.
-    Theoretical first motion polarities are then generated and compared with
-    observed first motions, and a NumPy array of misfit values is returned of
-    the same length as `sources`.
-
-    When the polarity_input is a mtuq.Dataset or a mtuq.GreensTensorList, the
-    picked polarity info should be written in the header of the first trace
-    of the stream of each station. The "polarity_keyword" will then have to be
-    defined to point toward the right key in the SAC header of each station's
-    first trace.
-
-    .. example:
-
-    `pmisfit = PolarityMisfit(polarity_keyword='user3')`
-
-    will seek a +1, 0 or -1 value in
-    `Stream[0].stats.sac['user3']`
-    for each station stream in the mtuq.Dataset or mtuq.GreensTensorList
-
-    .. rubric:: Parameters
-
-    ``polarity_keyword`` (`str`): SAC header field where observed polarity is
-    stored. Used when the polarity input type is mtuq.Dataset or
-    mtuq.GreensTensorList (for ex: 'user3', would point to
-    trace.stats.sac['user3'] entry in the SAC header).
-
-    ``taup_model`` (`str`): Valid obspy taup model name, used to compute
-    takeoff angles. If not a default obspy.taup model, taup_model should be a
-    path pointing to a valid .npz velocity model file.
-
-    .. note::
-
-    *Convention* : Positive vertical motion should be encoded as +1 and
-    negative vertical motion should be encoded as -1 and unpicked data as 0.
-    (integer values [1, 0, -1])
-
-    *Using FK* : If the Green's function were generated using FK, the takeoff
-    angle should already be pre-written in the SAC files. The takeoff angle
-    will thus be read from the 'user1' SAC header field of the Green's
-    function, instead of being computed on the fly using obspy.taup function.
-
     """
 
-    def __init__(self, polarity_keyword=None, taup_model='ak135'):
-        """ Function handle constructor
-        Pre-set optional arguments for custom polarity misfit inputs (sac
-        header to read polarity from, velocity model to compute takeoff angles).
+    def __init__(self,
+        method='taup',
+        taup_model='ak135',
+        FK_database=None,
+        FK_model=None,
+        **parameters):
 
-        """
-        warn('Polarity misfit still under development... API changes likely')
+        if not method:
+            raise Exception('Undefined parameter: method')
 
-        self.polarity_keyword = polarity_keyword
+        self.method = method
         self.taup_model = taup_model
+        self.FK_database = FK_database
+        self.FK_model = FK_model
 
 
-    def __call__(self, polarity_input, greens, sources, progress_handle=Null(),
-                 set_attributes=False):
-        """ Evaluates polarity misfit on given data.
+        #
+        # check parameters
+        #
+        if self.method == 'taup':
+            assert self.taup_model is not None
+            self._taup = TauPyModel(self.taup_model)
 
-        """
-        warn('Polarity misfit still under development... API changes likely')
+        elif self.method == 'FK_metadata':
+            assert self.FK_database is not None
+            assert exists(self.FK_database)
+            if self.FK_model is None:
+                self.FK_model = basename(self.FK_database)
 
-        # Check if the greens functions passed to polarity misfit are for Moment Tensor sources.
-        if not all(green.include_mt for green in greens):
-            raise NotImplementedError('Polarity misfit does not support Force sources at the moment.')
+        else:
+            raise TypeError('Bad parameter: method')
 
-        # Preallocate list containing source vector for faster computation.
-        source_vector_list = _to_array(sources)
-        # Create the array to store polarity misfit values.
-        values = np.zeros((len(sources), 1))
 
-        # Extracting measured polarities,  as a numpy array
-        observed_polarities = extract_polarity(polarity_input, self.polarity_keyword)
+    def __call__(self, data, greens, sources, progress_handle=Null(),
+            set_attributes=False):
 
-        takeoff_angles = extract_takeoff_angle(greens, taup_model=self.taup_model)
+        #
+        # check input arguments
+        #
+        _check(greens, self.method)
 
-        azimuths = [sta.azimuth for sta in greens]
+        if _type(sources.dims) == 'MomentTensor':
+            sources = _to_array(sources)
+            calculate_polarities = _polarities_mt
 
-        # Compute a NSOURCESxNSTATIONS array for quick misfit evaluation.
-        predicted_polarity = np.asarray(
-            [radiation_coef(source_vector_list, takeoff_angles[i], azimuths[i]) for i in range(len(observed_polarities))])
+        elif _type(sources.dims) == 'Force':
+            raise NotImplementedError
+        else:
+            raise TypeError
 
-        # Misfit evaluation
-        # values = (|obs|*calc) - obs
-        # ((|obs|*calc) is used to filter out the un-picked station polarities)
-        values = np.sum(np.abs(predicted_polarity.T *
-                               np.abs(observed_polarities)-observed_polarities), axis=1)/2
+        #
+        # collect observed polarities
+        #
+        if isinstance(data, mtuq.Dataset):
+            observed = np.array([_get_polarity(stream) for stream in data])
 
-        # returns a NSOURCESx1 np array
-        return np.array([values]).T
+        elif isinstance(data, list):
+            observed = np.array(data)
+
+        elif isinstance(data, np.ndarray):
+            observed = data
+
+        else:
+            raise TypeError
+
+
+        #
+        # calculate predicted polarities
+        #
+        if self.method=='taup':
+            takeoff_angles = _takeoff_angles_taup(
+                self._taup, greens)
+
+            predicted = calculate_polarities(
+                sources, takeoff_angles, _collect_azimuths(greens))
+
+        elif self.method=='FK_metadata':
+            takeoff_angles = _takeoff_angles_FK(
+                self.FK_database, greens)
+
+            predicted = calculate_polarities(
+                sources, takeoff_angles, _collect_azimuths(greens))
+
+
+        #
+        # evaluate misfit
+        #
+        values = np.abs(predicted - observed)/2.
+
+        # mask unpicked
+        mask = (observed != 0).astype(int)
+        values = np.dot(values, mask)
+
+        # returns a NumPy array of shape (len(sources), 1)
+        return values.reshape(len(values), 1)
+
+
+def _takeoff_angles_taup(taup, greens):
+    """ Calculates takeoff angles from Tau-P model
+    """
+
+    takeoff_angles = np.zeros(len(greens))
+
+    for _i, greens_tensor in enumerate(greens):
+
+        depth_in_km = greens_tensor.origin.depth_in_m/1000.
+        distance_in_deg = m_to_deg(greens_tensor.distance_in_m)
+
+        arrivals = taup.get_travel_times(
+            depth_in_km, distance_in_deg, phase_list=['p', 'P'])
+
+        phases = []
+        for arrival in arrivals:
+            phases += [arrival.phase.name]
+
+        if 'p' in phases:
+            takeoff_angles[_i] = arrivals[phases.index('p')].takeoff_angle
+
+        elif 'P' in phases:
+            takeoff_angles[_i] = arrivals[phases.index('P')].takeoff_angle
+
+        else:
+            raise Exception
+
+    return takeoff_angles
+
+
+def _polarities_mt(mt_array, takeoff, azimuth):
+
+        n1,n2 = mt_array.shape
+        if n2!= 6:
+            raise Exception('Inconsistent dimensions')
+
+        n3,n4 = len(takeoff), len(azimuth)
+        if n3!=n4:
+            raise Exception('Inconsistent dimensions')
+
+        # prepare arrays
+        polarities = np.zeros((n1,n3))
+        drc = np.empty((n1, 3))
+        takeoff = np.deg2rad(takeoff)
+        azimuth = np.deg2rad(azimuth)
+
+        for _i, angles in enumerate(zip(takeoff, azimuth)):
+            sth = np.sin(angles[0])
+            cth = np.cos(angles[0])
+            sphi = np.sin(angles[1])
+            cphi = np.cos(angles[1])
+
+            drc[:, 0] = sth*cphi
+            drc[:, 1] = sth*sphi
+            drc[:, 2] = cth
+
+            # Aki & Richards 2ed, p. 108, eq. 4.88
+            cth = mt_array[:, 0]*drc[:, 2]*drc[:, 2] +\
+                  mt_array[:, 1]*drc[:, 0]*drc[:, 0] +\
+                  mt_array[:, 2]*drc[:, 1]*drc[:, 1] +\
+               2*(mt_array[:, 3]*drc[:, 0]*drc[:, 2] -
+                  mt_array[:, 4]*drc[:, 1]*drc[:, 2] -
+                  mt_array[:, 5]*drc[:, 0]*drc[:, 1])
+
+            polarities[cth > 0, _i] = +1
+            polarities[cth < 0, _i] = -1
+
+        return polarities
+
+
+def _polarities_force(force_array, takeoff_array, azimuth_array):
+    raise NotImplementedError
+
+
+def _collect_azimuths(greens):
+    return np.array([stream.azimuth for stream in greens])
+
+
+#
+# input argument checking
+#
+
+def _model_type(greens):
+    try:
+        solver = greens[0].attrs.solver
+    except:
+        solver = 'Unknown'
+
+    if solver in ('AxiSEM', 'FK', 'syngine'):
+        model_type = '1D model'
+
+    elif solver in ('SPECFEM3D', 'SPECFEM3D_GLOBE'):
+        model_type = '3D model'
+
+    else:
+        model_type = 'Unknown model'
+
+    return model_type
+
+
+def _check(greens, method):
+    return
+
+    #model = _model_type(greens)
+    #method = _method_type(method)
+
+    #if model != method:
+    #    print()
+    #    print('  Possible inconsistency?')
+    #    print('  Green''s functions are from: %s' % model)
+    #    print('  Polarities are from: %s' % method)
+    #    print()
+
+
