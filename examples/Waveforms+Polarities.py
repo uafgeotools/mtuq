@@ -5,7 +5,8 @@ import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_lune
+from mtuq.graphics import plot_data_greens2, plot_misfit_lune,\
+    plot_beachball, plot_polarities
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit, PolarityMisfit
@@ -229,6 +230,9 @@ if __name__=='__main__':
         plot_misfit_lune(event_id+'FMT_misfit_polarity.png', results_polarity,
             show_best=False, title='Polarity Misfit')
 
+        # not implemented yet
+        #plot_polarities(event_id+'FMT_misfit_polarity.png', polarities,
+        #    best_mt, stations, origin)
 
         print('\nFinished\n')
 
