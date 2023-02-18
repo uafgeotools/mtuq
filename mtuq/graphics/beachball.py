@@ -24,7 +24,7 @@ from mtuq.graphics._gmt import _parse_filetype, _get_format_arg, _safename,\
     exists_gmt, gmt_major_version
 from mtuq.graphics._pygmt import exists_pygmt
 from mtuq.util import asarray, to_rgb, warn
-from mtuq.util.polarity import calculate_takeoff_angle
+from mtuq.misfit.polarity import _takeoff_angle_taup
 from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
 from obspy.geodetics import kilometers2degrees as _to_deg
 from obspy.taup import TauPyModel
@@ -229,11 +229,10 @@ def _write_stations(filename, stations, origin, taup_model):
                 station.latitude,
                 station.longitude)
 
-            takeoff_angle = calculate_takeoff_angle(
+            takeoff_angle = _takeoff_angle_taup(
                 taup,
                 origin.depth_in_m/1000.,
-                distance_in_degree=_to_deg(distance_in_m/1000.),
-                phase_list=['p', 'P'])
+                _to_deg(distance_in_m/1000.))
 
             if takeoff_angle is not None:
                 file.write('%s  %f  %f\n' % (label, azimuth, takeoff_angle))
