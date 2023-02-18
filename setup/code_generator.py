@@ -18,7 +18,7 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 """
 
 
-Docstring_DetailedAnalysis_FullMomentTensor="""
+Docstring_DetailedAnalysis="""
 if __name__=='__main__':
     #
     # Peforms detailed analysis involving
@@ -39,7 +39,7 @@ if __name__=='__main__':
     #
     #
     # USAGE
-    #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
+    #   mpirun -n <NPROC> python Misfit_vs_Likelihood.py
     #   
     #
     # This is the most complicated example. For simpler ones, see
@@ -550,7 +550,7 @@ Origins_Hypocenter="""
 """
 
 
-MisfitDefinitions_DetailedAnalysis="""
+MisfitDefinitions_DetailedExample="""
     misfit_bw = Misfit(
         norm='L2',
         time_shift_min=-2.,
@@ -968,7 +968,7 @@ Main_TestMisfit="""
 """
 
 
-WrapUp_DetailedAnalysis_FullMomentTensor="""
+WrapUp_DetailedAnalysis="""
     if comm.rank==0:
 
         results_sum = results_bw + results_rayleigh + results_love
@@ -1588,7 +1588,7 @@ if __name__=='__main__':
     os.chdir(basepath())
 
 
-    with open('examples/DetailedAnalysis.FullMomentTensor.py', 'w') as file:
+    with open('examples/DetailedAnalysis.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
@@ -1608,12 +1608,12 @@ if __name__=='__main__':
             'from mtuq.misfit import Misfit',
             'from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data'
             ))
-        file.write(Docstring_DetailedAnalysis_FullMomentTensor)
+        file.write(Docstring_DetailedAnalysis)
         file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
-        file.write(MisfitDefinitions_DetailedAnalysis)
+        file.write(MisfitDefinitions_DetailedExample)
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
         file.write(
@@ -1641,7 +1641,7 @@ if __name__=='__main__':
     results_love = grid_search(
         data_sw, greens_sw, misfit_love, origin, grid)\n"""
         )
-        file.write(WrapUp_DetailedAnalysis_FullMomentTensor)
+        file.write(WrapUp_DetailedAnalysis)
 
 
     with open('examples/GridSearch.DoubleCouple.py', 'w') as file:
@@ -1791,7 +1791,7 @@ if __name__=='__main__':
         file.write(WrapUp_SerialGridSearch_DoubleCouple)
 
 
-    with open('examples/test_SPECFEM3D_SGT.py', 'w') as file:
+    with open('tests/test_SPECFEM3D_SGT.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
