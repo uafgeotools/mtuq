@@ -230,9 +230,9 @@ if __name__=='__main__':
         plot_misfit_lune(event_id+'FMT_misfit_polarity.png', results_polarity,
             show_best=False, title='Polarity Misfit')
 
-        # not implemented yet
-        #plot_polarities(event_id+'FMT_misfit_polarity.png', polarities,
-        #    best_mt, stations, origin)
+        #plot_polarities(event_id+'FMT_misfit_polarity.png',
+        #    polarities, polarity_misfit(polarities, greens, best_mit),
+        #    stations, origin, best_mt)
 
         print('\nFinished\n')
 

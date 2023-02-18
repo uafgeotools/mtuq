@@ -93,7 +93,7 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
 
 
 
-def plot_polarities(filename, polarities, mt, stations, origin, **kwargs):
+def plot_polarities(filename, polarities, misfit, stations, origin, mt, **kwargs):
     """ Plots first-motion polarities
 
     .. rubric :: Required arguments
@@ -101,20 +101,26 @@ def plot_polarities(filename, polarities, mt, stations, origin, **kwargs):
     ``filename`` (`str`):
     Name of output image file
 
+    ``polarities`` (`list` or `dict`)
+    Observed polarities for each station
+
+    ``misfit`` (`list` or `dict`)
+    Data fit for each station (+1 match, -1 mismatch, 0 unpicked) 
+
+    ``mt`` (`mtuq.MomentTensor`):
+    Moment tensor object
+
     ``stations`` (`list` of `Station` objects):
     Stations from which azimuths and takeoff angles are calculated
 
     ``origin`` (`mtuq.Origin`):
     Origin object
 
-    ``polarities`` (`dict`)
-    Polarities dictionary
-
     ``mt`` (`mtuq.MomentTensor`):
     Moment tensor object
 
     """
-    raise NotImplementedError
+    _plot_polarities_pygmt(filename, polarities, misfit, stations, origin, mt, **kwargs)
 
 
 #
@@ -316,9 +322,7 @@ def _plot_beachball_pygmt(filename, mt, stations, origin,
         fig.savefig(filename)
 
 
-def _plot_polarities_pygmt():
-    # calculate theoretical polarities
-    calculate_polarities()
+def _plot_polarities_pygmt(filename, polarities, misfit, stations, origin, mt, **kwargs):
 
     # case 1 - observed and synthetic both positive
     _pygmt_polar()
