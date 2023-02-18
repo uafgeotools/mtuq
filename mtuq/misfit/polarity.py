@@ -2,7 +2,6 @@
 import numpy as np
 
 import mtuq
-from mtuq.util.math import radiation_coef
 from mtuq.util import Null, iterable, warn
 from mtuq.misfit.waveform.level2 import _to_array, _type
 from obspy.taup import TauPyModel
@@ -96,7 +95,6 @@ class PolarityMisfit(object):
             predicted = calculate_polarities(
                 sources, takeoff_angles, _collect_azimuths(greens))
 
-
         #
         # evaluate misfit
         #
@@ -121,23 +119,30 @@ def _takeoff_angles_taup(taup, greens):
         depth_in_km = greens_tensor.origin.depth_in_m/1000.
         distance_in_deg = m_to_deg(greens_tensor.distance_in_m)
 
-        arrivals = taup.get_travel_times(
-            depth_in_km, distance_in_deg, phase_list=['p', 'P'])
-
-        phases = []
-        for arrival in arrivals:
-            phases += [arrival.phase.name]
-
-        if 'p' in phases:
-            takeoff_angles[_i] = arrivals[phases.index('p')].takeoff_angle
-
-        elif 'P' in phases:
-            takeoff_angles[_i] = arrivals[phases.index('P')].takeoff_angle
-
-        else:
-            raise Exception
+        takeoff_angles[_i] = _takeoff_angle_taup(
+            taup, depth_in_km, distance_in_deg)
 
     return takeoff_angles
+
+
+def _takeoff_angle_taup(taup, depth_in_km, distance_in_deg):
+
+    arrivals = taup.get_travel_times(
+        depth_in_km, distance_in_deg, phase_list=['p', 'P'])
+
+    phases = []
+    for arrival in arrivals:
+        phases += [arrival.phase.name]
+
+    if 'p' in phases:
+        return arrivals[phases.index('p')].takeoff_angle
+
+    elif 'P' in phases:
+        return arrivals[phases.index('P')].takeoff_angle
+
+    else:
+        raise Exception
+
 
 
 def _polarities_mt(mt_array, takeoff, azimuth):
