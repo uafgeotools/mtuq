@@ -6,17 +6,17 @@
 #
 
 FILENAMES="\
-    ../examples/DetailedAnalysis.FullMomentTensor.py\
+    ../examples/DetailedAnalysis.py\
     ../examples/GridSearch.DoubleCouple.py\
     ../examples/GridSearch.DoubleCouple+Magnitude+Depth.py\
     ../examples/GridSearch.FullMomentTensor.py\
     ../examples/SerialGridSearch.DoubleCouple.py\
-    ../examples/test_SPECFEM3D_SGT.py\
     ../tests/benchmark_cap_vs_mtuq.py\
     ../tests/test_graphics.py\
     ../tests/test_grid_search_mt.py\
     ../tests/test_grid_search_mt_depth.py\
     ../tests/test_misfit.py\
+    ../tests/test_SPECFEM3D_SGT.py\
     "
 
 
