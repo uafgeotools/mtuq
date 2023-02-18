@@ -10,6 +10,60 @@ from mtuq.util.signal import m_to_deg
 
 class PolarityMisfit(object):
     """ Polarity misfit function
+
+    .. rubric:: Usage
+
+    Evaluating misfit is a two-step procedure:
+
+    .. code::
+
+        function_handle = PolarityMisfit(**parameters)
+        values = function_handle(data, greens, sources)
+
+    In the first step, the user supplies parameters such as the method
+    used to calculate predicted polarities (see below for detailed parameter
+    descriptions).
+
+    In the second step
+
+    - observed polarities are collected from the `data` argument, which can be
+    either a list of integers or a `Dataset` with observed polarity values
+    attached (see convention below for more information)
+
+    - predicted polarities are calculated from the `greens` argument (see 
+    paramter descriptions below for more information)
+
+    - a NumPy array of length `len(sources)` is returned giving the
+    number of mismatches between observed and predicted
+
+    .. note:: 
+
+      *Convention* : Positive vertical first motions are encoded as +1 and
+      negative vertical first motions are encoded as -1. Unpicked or 
+      indeterminate first motions can be encoded as 0.
+ 
+
+    .. rubric:: Parameters
+
+    ``method`` (`str`)
+
+    - ``'taup'``
+      Calculate polarities using Taup-P
+
+    - ``'FK_metadata'``
+      Read polarities from FK database
+
+    - ``'waveform'``
+      Determine polarity from full-waveform synthetics (not implemented yet)
+
+
+    .. rubric:: Other input arguments that may be required, depending on the above
+
+    ``taup_model`` (`str`): Name of built-in ObsPy TauP model or path to custom
+    ObsPy TauP model, required for `type='taup'`
+
+    ``FK_database`` (`str`): Path to FK database, required for for `type='FK_metadata'`.
+
     """
 
     def __init__(self,
