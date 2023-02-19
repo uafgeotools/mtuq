@@ -1,15 +1,14 @@
-##!/usr/bin/env python
+#!/usr/bin/env python
 
 import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin
-from mtuq.graphics import plot_data_greens2, plot_misfit_lune,\
-    plot_beachball, plot_polarities
+from mtuq.graphics import plot_data_greens2, plot_beachball, plot_polarities, plot_misfit_lune
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
-from mtuq.misfit import Misfit, PolarityMisfit
+from mtuq.misfit import WaveformMisfit, PolarityMisfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
@@ -18,10 +17,10 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Joint waveform and polarity grid search (under construction)
+    # Joint waveform and polarity grid search over all moment tensor parameters
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
+    #   mpirun -n <NPROC> python Waveforms+Polarities.py
     #   
 
 
@@ -62,14 +61,14 @@ if __name__=='__main__':
     # We will jointly evaluate waveform differences and polarities
     #
 
-    misfit_bw = Misfit(
+    misfit_bw = WaveformMisfit(
         norm='L2',
         time_shift_min=-2.,
         time_shift_max=+2.,
         time_shift_groups=['ZR'],
         )
 
-    misfit_sw = Misfit(
+    misfit_sw = WaveformMisfit(
         norm='L2',
         time_shift_min=-10.,
         time_shift_max=+10.,
@@ -190,6 +189,7 @@ if __name__=='__main__':
     results_sw = grid_search(
         data_sw, greens_sw, misfit_sw, origin, grid)
 
+
     if comm.rank==0:
         print('Evaluating polarity misfit...\n')
 
@@ -216,7 +216,7 @@ if __name__=='__main__':
         print('Generating figures...\n')
 
         plot_data_greens2(event_id+'FMT_waveforms.png',
-            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
             misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
 
         plot_beachball(event_id+'FMT_beachball.png',
