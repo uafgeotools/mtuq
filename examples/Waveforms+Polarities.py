@@ -102,7 +102,7 @@ if __name__=='__main__':
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=10,
+        npts_per_axis=5,
         magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
@@ -231,7 +231,7 @@ if __name__=='__main__':
             show_best=False, title='Polarity Misfit')
 
         #plot_polarities(event_id+'FMT_misfit_polarity.png',
-        #    observed, polarity_misfit.calculate_predicted(greens, best_mt),
+        #    polarities, misfit_polarity.get_predicted(greens, best_mt),
         #    stations, origin, best_mt)
 
         print('\nFinished\n')

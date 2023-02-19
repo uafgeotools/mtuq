@@ -11,37 +11,36 @@ from mtuq.util.signal import m_to_deg
 class PolarityMisfit(object):
     """ Polarity misfit function
 
+    .. note:: 
+
+      *Convention* : Positive vertical first motions are encoded as +1 and
+      negative vertical first motions are encoded as -1. Unpicked or 
+      indeterminate first motions can be encoded as 0.
+
+
     .. rubric:: Usage
 
-    Evaluating misfit is a two-step procedure:
+    Evaluating polarity misfit is a two-step procedure:
 
     .. code::
 
         function_handle = PolarityMisfit(**parameters)
         values = function_handle(data, greens, sources)
 
-    In the first step, the user supplies parameters such as the method
-    used to calculate predicted polarities (see below for detailed parameter
-    descriptions).
+    First, the user supplies parameters such as the method used to calculate
+    predicted polarities (see below for detailed parameter descriptions).
 
-    In the second step
+    Second, the user invokes the misfit function, which
 
-    - observed polarities are collected from the `data` argument, which can be
-    either a list of integers or a `Dataset` with observed polarity values
-    attached (see convention below for more information)
+    - collects observed polarities from the `data` argument, which can be
+      either a list of integers or a `Dataset` with observed polarity values
+      attached (see convention below for more information)
 
-    - predicted polarities are calculated from the `greens` argument (see 
-    paramter descriptions below for more information)
+    - calculates predicted polarities from the `greens` argument (see parameter
+      descriptions below for more information)
 
-    - a NumPy array of length `len(sources)` is returned giving the
-    number of mismatches between observed and predicted
-
-    .. note:: 
-
-      *Convention* : Positive vertical first motions are encoded as +1 and
-      negative vertical first motions are encoded as -1. Unpicked or 
-      indeterminate first motions can be encoded as 0.
- 
+    - returns a NumPy array of length `len(sources)` giving the number of
+      mismatches between observed and predicted
 
     .. rubric:: Parameters
 
@@ -102,23 +101,28 @@ class PolarityMisfit(object):
     def __call__(self, data, greens, sources, progress_handle=Null(),
             set_attributes=False):
 
-        #
         # check input arguments
-        #
         _check(greens, self.method)
 
-        if _type(sources.dims) == 'MomentTensor':
-            sources = _to_array(sources)
-            self._calculate = _polarities_mt
-
-        elif _type(sources.dims) == 'Force':
-            raise NotImplementedError
-        else:
-            raise TypeError
-
+ 
         #
-        # collect observed polarities
+        # evaluate misfit
         #
+        observed = self.get_observed(data)
+        predicted = self.get_predicted(greens, sources)
+
+        values = np.abs(predicted - observed)/2.
+
+        # mask unpicked
+        mask = (observed != 0).astype(int)
+        values = np.dot(values, mask)
+
+        # returns a NumPy array of shape (len(sources), 1)
+        return values.reshape(len(values), 1)
+
+
+    def get_observed(self, data):
+
         if isinstance(data, mtuq.Dataset):
             observed = np.array([_get_polarity(stream) for stream in data])
 
@@ -131,40 +135,39 @@ class PolarityMisfit(object):
         else:
             raise TypeError
 
-
-        #
-        # calculate predicted polarities
-        #
-        predicted = self.calculate_predicted(greens, sources)
+        return observed
 
 
-        #
-        # evaluate misfit
-        #
-        values = np.abs(predicted - observed)/2.
+    def get_predicted(self, greens, sources):
 
-        # mask unpicked
-        mask = (observed != 0).astype(int)
-        values = np.dot(values, mask)
+        if type(sources) == mtuq.MomentTensor:
+            sources = sources.as_vector().reshape((1,6))
+            _calculate = _polarities_mt
 
-        # returns a NumPy array of shape (len(sources), 1)
-        return values.reshape(len(values), 1)
+        elif type(sources) == mtuq.Force:
+            raise NotImplementedError
 
+        elif _type(sources.dims) == 'MomentTensor':
+            sources = _to_array(sources)
+            _calculate = _polarities_mt
 
-    def calculate_predicted(self, greens, sources):
+        elif _type(sources.dims) == 'Force':
+            raise NotImplementedError
+        else:
+            raise TypeError
 
         if self.method=='taup':
             takeoff_angles = _takeoff_angles_taup(
                 self._taup, greens)
 
-            predicted = self._calculate(
+            predicted = _calculate(
                 sources, takeoff_angles, _collect_azimuths(greens))
 
         elif self.method=='FK_metadata':
             takeoff_angles = _takeoff_angles_FK(
                 self.FK_database, greens)
 
-            predicted = self._calculate_polarities(
+            predicted = _calculate(
                 sources, takeoff_angles, _collect_azimuths(greens))
 
         return predicted
