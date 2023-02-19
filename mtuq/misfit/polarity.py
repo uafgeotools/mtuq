@@ -194,6 +194,8 @@ class PolarityMisfit(object):
             takeoff_angles = _takeoff_angles_FK(
                 self.FK_database, greens)
 
+        observed = self.get_observed(data)
+
         attrs_list = []
         for _i, greens_tensor in enumerate(greens):
             attrs = AttribDict()
@@ -213,6 +215,10 @@ class PolarityMisfit(object):
                 pass
             try:
                 attrs.takeoff_angle = takeoff_angles[_i]
+            except:
+                pass
+            try:
+                attrs.polarity = observed[_i]
             except:
                 pass
 
