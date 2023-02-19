@@ -208,8 +208,8 @@ def _plot_beachball_gmt(filename, mt, stations, origin,
 
 
     # remove temporary files
-    for filename in glob(_safename('tmp.'+filename+'*')):
-        os.remove(filename)
+    for _filename in glob(_safename('tmp.'+filename+'*')):
+        os.remove(_filename)
 
 
 def _write_stations(filename, stations, origin, taup_model):
@@ -283,6 +283,10 @@ def _plot_beachball_pygmt(filename, mt, stations, origin,
             )
 
     fig.savefig(filename)
+
+    # remove temporary files
+    for _filename in glob(_safename('tmp.'+filename+'*')):
+        os.remove(_filename)
 
 
 def _plot_polarities_pygmt(filename, observed, predicted, 
