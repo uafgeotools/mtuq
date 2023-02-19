@@ -8,9 +8,7 @@ The response of a medium to an impulsive source is called a Green's function.  T
 Role of Green's functions
 -------------------------
 
-By combining Green's functions, it is possible to obtain synthetics from any moment tensor or force source.  Synthetics can then be compared with data to determine a best-fitting source.
-
-Generating synthetics through linear combinations of Green's functions is useful because it provides computational savings.  It is more cost effective to compute Green's functions (an up-front expense, independent of the number of sources) than it is to perform an on-the-fly wavefield simulation for each new source.
+By combining Green's functions, it is possible to obtain synthetics from any moment tensor or force source.  Generating synthetics in this way is useful because it provides cost savings compared with on-the-fly wavefield simulations. Synthetics can then be compared with data to determine a best-fitting source.
 
 
 
@@ -19,7 +17,7 @@ Generating synthetics through linear combinations of Green's functions is useful
 
 `GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to a set of Green's functions describing the medium response between a given station and origin.  
 
-Methods built into the `GreensTensor` class allow data processing and synthetics generation.  In particular, the `get_synthetics <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.get_synthetics.html#mtuq.GreensTensor.get_synthetics>`_ method accepts a `MomentTensor` or `Force` and returns traces representing the response at the given station.
+Methods built into the `GreensTensor` class allow data processing and synthetics generation.  In particular, the `get_synthetics <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.get_synthetics.html#mtuq.GreensTensor.get_synthetics>`_ method accepts a `MomentTensor` or `Force` and returns corresponding synthetics for the given station.
 
 
 
