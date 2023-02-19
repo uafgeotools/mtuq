@@ -90,7 +90,7 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
         warn("plot_beachball failed. No figure generated.")
 
 
-def plot_polarities(filename, polarities, misfit, stations, origin, mt, **kwargs):
+def plot_polarities(filename, observed, predicted, stations, origin, mt, **kwargs):
     """ Plots first-motion polarities
 
     .. rubric :: Required arguments
@@ -118,7 +118,7 @@ def plot_polarities(filename, polarities, misfit, stations, origin, mt, **kwargs
 
     """
     if exists_pygmt():
-        _plot_beachball_pygmt(filename, mt, stations, origin, **kwargs)
+        _plot_polarities_pygmt(filename, observed, predicted, stations, origin, mt, **kwargs)
 
     else:
         raise Exception('Requires PyGMT')
@@ -249,40 +249,22 @@ def _write_stations(filename, stations, origin, taup_model):
 # PyGMT implementation (experimental)
 #
 
+pygmt_region    = [-1.2, 1.2, -1.2, 1.2]
+pygmt_projection= 'm0/0/5c'
+pygmt_scale     = '9.9c'
+
+
 def _plot_beachball_pygmt(filename, mt, stations, origin,
     taup_model='ak135', add_station_labels=True, add_station_markers=True,
     fill_color='gray', marker_color='black'):
 
     import pygmt
-    from pygmt.helpers import build_arg_string, use_alias
-
-    print('made it here')
-
-    gmt_region    = [-1.2, 1.2, -1.2, 1.2]
-    gmt_projection= 'm0/0/5c'
-    gmt_scale     = '9.9c'
-
     fig = pygmt.Figure()
 
     #
     # plot the beachball itself
     #
-    fig.meca(
-        # basemap arguments
-        region=gmt_region,
-        projection=gmt_projection,
-        scale=gmt_scale,
-
-        # lon, lat, depth, mrr, mtt, mpp, mrt, mrp, mtp, exp, lon2, lat2
-        spec=(0, 0, 10, *mt.as_vector(), 25, 0, 0),
-        convention="mt",
-
-        # face color
-        G='grey50',
-
-        N=False,
-        M=True,
-        )
+    _meca_pygmt(fig, mt)
 
     #
     # add station markers and labels
@@ -291,7 +273,7 @@ def _plot_beachball_pygmt(filename, mt, stations, origin,
         _write_stations(_safename('tmp.'+filename+'.sta'),
             stations, origin, taup_model)
 
-        _polar_pygmt(
+        _polar1(
             _safename('tmp.'+filename+'.sta'),
 
             # basemap arguments
@@ -304,11 +286,13 @@ def _plot_beachball_pygmt(filename, mt, stations, origin,
             comp_fill='grey50',
             )
 
+    fig.savefig(filename)
 
-        fig.savefig(filename)
 
+def _plot_polarities_pygmt(filename, observed, predicted, 
+    stations, origin, mt, **kwargs):
 
-def _plot_polarities_pygmt(filename, observed, predicted, stations, origin, mt, **kwargs):
+    import pygmt
 
     if observed.size != predicted.size:
         raise Exception('Inconsistent dimensions')
@@ -332,20 +316,53 @@ def _plot_polarities_pygmt(filename, observed, predicted, stations, origin, mt, 
         if observed[_i] != predicted[_i] == 1]
 
 
-    # case 1 - observed and synthetic both positive
-    _polar_pygmt(up_matched)
+    fig = pygmt.Figure()
 
-    # case 2 - observed and synthetic both negative
-    _polar_pygmt(down_matched)
+    # the beachball itself
+    _meca_pygmt(fig, mt)
 
-    # case 3 - observed positive, synthetic negative
-    _polar_pygmt(up_unmatched)
+    # plot observed and synthetic both positive
+    _polar2(up_matched, symbol='t0.40c', comp_fill='green')
 
-    # case 4 - observed negative, synthetic positive
-    _polar_pygmt(down_unmatched)
+    # plot observed and synthetic both negative
+    _polar2(down_matched, symbol='i0.40c', ext_fill='blue')
+
+    # plot observed positive, synthetic negative
+    _polar2(up_unmatched, symbol='t0.40c', comp_fill='red')
+
+    # plot observed negative, synthetic positive
+    _polar2(down_unmatched, symbol='i0.40c', ext_fill='red')
+
+    fig.savefig(filename)
 
 
-def _polar_pygmt(stations, **kwargs):
+def _meca_pygmt(fig, mt):
+    fig.meca(
+        # lon, lat, depth, mrr, mtt, mpp, mrt, mrp, mtp, lon2, lat2
+        np.array([0, 0, 10, *mt.as_vector(), 0, 0]),
+
+        scale=pygmt_scale,
+
+        convention="mt",
+
+        # basemap arguments
+        region=pygmt_region,
+        projection=pygmt_projection,
+
+        # face color
+        G='grey50',
+
+        no_clip=False,
+        M=True,
+        )
+
+
+
+#
+# workaround until pygmt implements these functions itself
+#
+
+def _polar1(ascii_table, **kwargs):
     import pygmt
     from pygmt.helpers import build_arg_string, use_alias
 
@@ -362,8 +379,75 @@ def _polar_pygmt(stations, **kwargs):
         Qf='mt_outline',
         T='station_labels'
     )
-    def __polar_pygmt(ascii_table, **kwargs):
+    def __polar1(ascii_table, **kwargs):
         arg_string = " ".join([ascii_table, build_arg_string(kwargs)])
         with pygmt.clib.Session() as session:
             session.call_module('polar',arg_string)
+
+    __polar1(ascii_table, **kwargs)
+
+
+
+def _polar2(stations, **kwargs):
+    import pygmt
+    from pygmt.helpers import build_arg_string, use_alias
+
+    @use_alias(
+        D='offset',
+        J='projection',
+        M='size',
+        S='symbol',
+        E='ext_fill',
+        G='comp_fill',
+        F='background',
+        Qe='ext_outline',
+        Qg='comp_outline',
+        Qf='mt_outline',
+        T='station_labels'
+    )
+    def __polar2(stations, **kwargs):
+        # Color arguments must be in {red, green, blue, black, white} and the symbol in {a,c,d,h,i,p,s,t,x} (see GMT polar function for reference)
+
+        # apply defaults
+        kwargs = {
+            'D' : '0/0',
+            'J' : 'm0/0/5c',
+            'M' : '9.9c',
+            'T' : '+f0.18c',
+            'R': '-1.2/1.2/-1.2/1.2',
+            **_to_rgb(kwargs),
+            }
+
+        with open('_tmp_polar2', 'w') as f:
+            for station in stations:
+
+                label = station.network+'.'+station.station
+                symbol='+'
+
+                f.write("%s %s %s %s\n" % (
+                    label, station.azimuth, station.takeoff_angle, symbol))
+
+        arg_string = " ".join(['_tmp_polar2', build_arg_string(kwargs)])
+        with pygmt.clib.Session() as session:
+            session.call_module('polar',arg_string)
+        os.remove('_tmp_polar2')
+
+
+    __polar2(stations, **kwargs)
+
+
+def _to_rgb(d):
+        _codes = {
+            "red": "255/0/0",
+            "green": "0/255/0",
+            "blue": "0/0/255",
+            "white":"255, 255, 255",
+            "black": "0/0/0"
+            }
+        for key in d:
+            try:
+                d[key]= _codes[d[key]]
+            except:
+                pass
+        return d
 
