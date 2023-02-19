@@ -76,7 +76,7 @@ if __name__=='__main__':
         time_shift_groups=['ZR','T'],
         )
 
-    misfit_polarity = PolarityMisfit(
+    polarity_misfit = PolarityMisfit(
         taup_model=model)
 
 
@@ -102,7 +102,7 @@ if __name__=='__main__':
     #
 
     grid = FullMomentTensorGridSemiregular(
-        npts_per_axis=5,
+        npts_per_axis=10,
         magnitudes=[4.4, 4.5, 4.6, 4.7])
 
     wavelet = Trapezoid(
@@ -194,7 +194,7 @@ if __name__=='__main__':
         print('Evaluating polarity misfit...\n')
 
     results_polarity = grid_search(
-        polarities, greens_bw, misfit_polarity, origin, grid)
+        polarities, greens_bw, polarity_misfit, origin, grid)
 
 
     if comm.rank==0:
@@ -219,20 +219,25 @@ if __name__=='__main__':
             data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
             misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
 
-
         plot_beachball(event_id+'FMT_beachball.png',
             best_mt, stations, origin)
-
 
         plot_misfit_lune(event_id+'FMT_misfit.png', results,
             title='Waveform Misfit')
 
+        # generate polarity figures
+
         plot_misfit_lune(event_id+'FMT_misfit_polarity.png', results_polarity,
             show_best=False, title='Polarity Misfit')
 
-        #plot_polarities(event_id+'FMT_misfit_polarity.png',
-        #    polarities, misfit_polarity.get_predicted(greens, best_mt),
-        #    stations, origin, best_mt)
+        # predicted polarities
+        predicted = polarity_misfit.get_predicted(greens, best_mt)
+
+        # station attributes
+        attrs = polarity_misfit.collect_attributes(polarities, greens)
+
+        plot_polarities(event_id+'FMT_beachball_polarity.png',
+            polarities, predicted, attrs, origin, best_mt)
 
         print('\nFinished\n')
 
