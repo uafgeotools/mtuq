@@ -80,11 +80,13 @@ if __name__=='__main__':
 
 
     #
-    # Observed polarities can be attached to the data or
-    # passed through a user-supplied list as follows
+    # Observed polarities can be attached to the data or passed through a 
+    # user-supplied dictionary or list in which +1 corresopnds to positive 
+    # first motion, -1 to negative first moation, and 0 to indeterminate or
+    # unpicked
     #
 
-    polarities = np.array([-1, -1, -1, 1, 1, 0, 1, 1, -1, 1, 1, 1, 0 ,1, 1, 1, -1, 1, 1, 0])
+    polarities = np.array([-1, -1, -1, 1, 1, 0, 1, 1, -1, 1, 1, 1, 0, 1, 1, 1, -1, 1, 1, 0])
 
 
 
