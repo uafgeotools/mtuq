@@ -64,5 +64,5 @@ To plot how a custom attribute varies, we can use the private function `_plot_at
 Source code
 -----------
 
-The above figures can be reproduced by running `DetailedAnalysis.FullMomentTensor.py <https://github.com/uafgeotools/mtuq/blob/master/examples/DetailedAnalysis.FullMomentTensor.py>`_.
+The above figures can be reproduced by running `DetailedAnalysis.py <https://github.com/uafgeotools/mtuq/blob/master/examples/DetailedAnalysis.py>`_.
 
