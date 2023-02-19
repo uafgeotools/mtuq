@@ -109,7 +109,7 @@ class PolarityMisfit(object):
 
         if _type(sources.dims) == 'MomentTensor':
             sources = _to_array(sources)
-            calculate_polarities = _polarities_mt
+            self._calculate = _polarities_mt
 
         elif _type(sources.dims) == 'Force':
             raise NotImplementedError
@@ -135,19 +135,8 @@ class PolarityMisfit(object):
         #
         # calculate predicted polarities
         #
-        if self.method=='taup':
-            takeoff_angles = _takeoff_angles_taup(
-                self._taup, greens)
+        predicted = self.calculate_predicted(greens, sources)
 
-            predicted = calculate_polarities(
-                sources, takeoff_angles, _collect_azimuths(greens))
-
-        elif self.method=='FK_metadata':
-            takeoff_angles = _takeoff_angles_FK(
-                self.FK_database, greens)
-
-            predicted = calculate_polarities(
-                sources, takeoff_angles, _collect_azimuths(greens))
 
         #
         # evaluate misfit
@@ -160,6 +149,26 @@ class PolarityMisfit(object):
 
         # returns a NumPy array of shape (len(sources), 1)
         return values.reshape(len(values), 1)
+
+
+    def calculate_predicted(self, greens, sources):
+
+        if self.method=='taup':
+            takeoff_angles = _takeoff_angles_taup(
+                self._taup, greens)
+
+            predicted = self._calculate(
+                sources, takeoff_angles, _collect_azimuths(greens))
+
+        elif self.method=='FK_metadata':
+            takeoff_angles = _takeoff_angles_FK(
+                self.FK_database, greens)
+
+            predicted = self._calculate_polarities(
+                sources, takeoff_angles, _collect_azimuths(greens))
+
+        return predicted
+
 
 
 def _takeoff_angles_taup(taup, greens):
@@ -196,7 +205,6 @@ def _takeoff_angle_taup(taup, depth_in_km, distance_in_deg):
 
     else:
         raise Exception
-
 
 
 def _polarities_mt(mt_array, takeoff, azimuth):
