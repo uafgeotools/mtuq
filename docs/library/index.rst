@@ -60,7 +60,8 @@ Data visualization
 `mtuq.graphics.plot_waveforms2 <generated/mtuq.graphics.plot_waveforms2.html>`_                                Plots body and surface waves
 `mtuq.graphics.plot_data_greens1 <generated/mtuq.graphics.plot_data_greens1.html>`_                            Variation on `plot_waveforms1`
 `mtuq.graphics.plot_data_greens2 <generated/mtuq.graphics.plot_data_greens2.html>`_                            Variation on `plot_waveforms2`
-`mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots focal mechansim
+`mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots first-motion beachball
+`mtuq.graphics.plot_polarities <generated/mtuq.graphics.plot_polarities.html>`_                                Plots first-motion data fit
 ============================================================================================================  ============================================================================================================
 
 

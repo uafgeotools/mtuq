@@ -12,6 +12,7 @@ autogen
    mtuq.Origin
    mtuq.Station
    mtuq.graphics.plot_beachball
+   mtuq.graphics.plot_polarities
    mtuq.graphics.plot_data_greens1
    mtuq.graphics.plot_data_greens2
    mtuq.graphics.plot_waveforms1
