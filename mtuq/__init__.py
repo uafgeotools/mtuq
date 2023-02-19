@@ -23,10 +23,13 @@ from mtuq.wavelet import Wavelet
 
 from mtuq.grid import Grid, UnstructuredGrid
 from mtuq.grid_search import MTUQDataArray, MTUQDataFrame, open_ds
-from mtuq.misfit import Misfit
+from mtuq.misfit import PolarityMisfit, WaveformMisfit
 from mtuq.process_data import ProcessData
 
-# commented out because of name conflict
+# for backward compatibility
+Misfit = WaveformMisfit
+
+# commented out because of namespace conflict
 #from mtuq.grid_search import grid_search
 
 

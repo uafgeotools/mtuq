@@ -66,7 +66,8 @@ autogen
    mtuq.MomentTensor
    mtuq.Wavelet
    mtuq.ProcessData
-   mtuq.Misfit
+   mtuq.PolarityMisfit
+   mtuq.WaveformMisfit
    mtuq.download_greens_tensors
    mtuq.open_db
    mtuq.read
@@ -75,7 +76,6 @@ autogen
    mtuq.io.clients.SPECFEM3D_SGT.Client
    mtuq.io.clients.syngine.Client
    mtuq.io.readers.SAC.read
-   mtuq.misfit.polarity.PolarityMisfit
    mtuq.misfit.waveform.level0
    mtuq.misfit.waveform.level1
    mtuq.misfit.waveform.level2

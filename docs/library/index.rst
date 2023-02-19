@@ -33,7 +33,8 @@ Data processing and inversion
 
 ============================================================================================================  ============================================================================================================
 `mtuq.ProcessData <generated/mtuq.ProcessData.html>`_                                                          Data processing function constructor
-`mtuq.Misfit <generated/mtuq.Misfit.html>`_                                                                    Misfit function constructor
+`mtuq.PolarityMisfit <generated/mtuq.PolarityMisfit.html>`_                                                    Polarity misfit function constructor
+`mtuq.WaveformMisfit <generated/mtuq.WaveformMisfit.html>`_                                                    Waveform misfit function constructor
 `mtuq.grid_search <generated/mtuq.grid_search.grid_search.html>`_                                              Evaluates misfit over grids
 `mtuq.MTUQDataArray <generated/mtuq.grid_search.MTUQDataArray.html>`_                                          Data structure for storing misfit on regularly-spaced grids
 `mtuq.MTUQDataFrame <generated/mtuq.grid_search.MTUQDataFrame.html>`_                                          Data structure for storing misfit on irregularly-spaced grids

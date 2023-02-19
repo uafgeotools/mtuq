@@ -9,7 +9,7 @@ from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import check_padding, get_components, isempty
 
 
-class Misfit(object):
+class WaveformMisfit(object):
     """ Waveform misfit function
 
     Evaluates misfit between data and synthetics using time shifts followed by
