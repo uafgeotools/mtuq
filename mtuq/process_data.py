@@ -336,11 +336,8 @@ class ProcessData(object):
 
     def __call__(self, traces, station=None, origin=None, overwrite=False):
         '''
-        Carries out data processing operations on obspy streams
+        Carries out data processing operations on ObsPy traces or
         MTUQ GreensTensors
-
-        input traces: all availables traces for a given station
-        type traces: obspy Stream or MTUQ GreensTensor
         '''
         if station is None:
             station = getattr(traces, 'station', None)

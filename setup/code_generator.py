@@ -145,6 +145,8 @@ if __name__=='__main__':
     # USAGE
     #   mpirun -n <NPROC> python Waveforms+Polarities.py
     #   
+    # For a simpler example, see SerialGridSearch.DoubleCouple.py
+    #
 
 """
 

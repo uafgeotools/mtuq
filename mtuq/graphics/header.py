@@ -384,11 +384,11 @@ class ForceHeader(Base):
         plot_force('tmp.png', self.force_dict)
         img = pyplot.imread('tmp.png')
 
-        #try:
-        #    os.remove('tmp.png')
-        #    os.remove('tmp.ps')
-        #except:
-        #    pass
+        try:
+            os.remove('tmp.png')
+            os.remove('tmp.ps')
+        except:
+            pass
 
         ax.imshow(img, extent=(xp,xp+diameter,yp,yp+diameter))
 

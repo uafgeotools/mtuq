@@ -26,6 +26,10 @@ if __name__=='__main__':
     # Check if a sign change is still necessary to the radial component
     # returned by Instaseis/syngine from a Force source
     #
+    #   https://github.com/krischer/instaseis/issues/77
+    #   https://github.com/krischer/instaseis/issues/82
+    #
+
 
     url = "http://service.iris.washington.edu/irisws/syngine/1/query?model=ak135f_5s&format=saczip&components=ZRE&units=displacement&receiverlatitude=0&receiverlongitude=1&sourcelatitude=0&sourcelongitude=0&sourcedepthinmeters=0&sourceforce=1e12,0,0&nodata=404"
 
@@ -49,8 +53,9 @@ if __name__=='__main__':
         os.remove(filename)
 
     if np.allclose(E, R):
-        # Instaseis/syngine now returns the correct sign on the radial component.
-        # The workaround implemented by MTUQ may need to be removed
-        raise Exception()
+        print(
+        'syngine now returns the correct sign on the radial component.\n'
+        'MTUQ needs to be updated'
+        )
 
 

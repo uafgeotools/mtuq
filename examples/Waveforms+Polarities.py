@@ -22,6 +22,8 @@ if __name__=='__main__':
     # USAGE
     #   mpirun -n <NPROC> python Waveforms+Polarities.py
     #   
+    # For a simpler example, see SerialGridSearch.DoubleCouple.py
+    #
 
 
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')

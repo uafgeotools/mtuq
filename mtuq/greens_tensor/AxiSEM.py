@@ -144,12 +144,13 @@ class GreensTensor(GreensTensorBase):
                 #   https://github.com/krischer/instaseis/issues/77
                 #   https://github.com/krischer/instaseis/issues/82
                 #
-                # - It is important that a *copy* of the numeric trace data
+                # - It is important that a copy of the numeric trace data
                 #   is created (so that the fix remains correct even if
                 #   _precompute() is called multiple times)
                 #
                 # - See also test_syngine.py, which tests for changes to
-                #   Instaseis/syngine itself
+                #   Instaseis/syngine itself, which may obviate the above
+                #   workaround
                 #
 
                 array[_i, _j+0, :] = R0
