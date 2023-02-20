@@ -39,8 +39,7 @@ from mtuq.graphics.uq import\
 # use Helvetica if available
 for fontname in ['Helvetica', 'Arial']:
     try:
-        from matplotlib.font_manager import find_font
-        find_font(fontname, fallback_to_default=False)
+        import matplotlib
         matplotlib.rcParams['font.sans-serif'] = fontname
         matplotlib.rcParams['font.family'] = "sans-serif"
         break
