@@ -12,7 +12,7 @@ from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
 from mtuq.graphics.header import MomentTensorHeader, ForceHeader
 from mtuq.util import warn
-from mtuq.util.signal import get_components
+from mtuq.util.signal import get_components, m_to_deg
 from obspy import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
 
@@ -29,8 +29,10 @@ def plot_waveforms1(filename,
         header=None,
         total_misfit=1., 
         normalize='maximum_amplitude',
-        station_labels=True, 
-        trace_labels=True):
+        trace_labels=True,
+        station_labels=True,
+        station_label_units='km',
+        ):
 
     """ Creates data/synthetics comparison figure with 3 columns (Z, R, T)
     """
@@ -74,7 +76,8 @@ def plot_waveforms1(filename,
 
         # add station labels
         if station_labels:
-            _add_station_labels(axes[ir][0], stations[_i], origin)
+            _add_station_labels(axes[ir][0], stations[_i], origin,
+                units=station_label_units)
 
         #
         # plot traces
@@ -118,8 +121,11 @@ def plot_waveforms2(filename,
         total_misfit_bw=1., 
         total_misfit_sw=1., 
         normalize='maximum_amplitude',
-        station_labels=True, 
-        trace_labels=True):
+        trace_labels=True,
+        station_labels=True,
+        station_label_units='km',
+        ):
+
 
     """ Creates data/synthetics comparison figure with 5 columns 
    (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
@@ -163,8 +169,8 @@ def plot_waveforms2(filename,
 
         # add station labels
         if station_labels:
-            _add_station_labels(axes[ir][0], stations[_i], origin)
-
+            _add_station_labels(axes[ir][0], stations[_i], origin,
+                units=station_label_units)
 
         #
         # plot body wave traces
@@ -514,7 +520,7 @@ def _add_component_labels2(axes, body_wave_labels=True, surface_wave_labels=True
         transform=ax.transAxes)
 
 
-def _add_station_labels(ax, station, origin):
+def _add_station_labels(ax, station, origin, units='km'):
     """ Displays station id, distance, and azimuth to the left of current axes
     """
     distance_in_m, azimuth, _ = gps2dist_azimuth(
@@ -528,14 +534,16 @@ def _add_station_labels(ax, station, origin):
     pyplot.text(0.2,0.50, label, fontsize=11, transform=ax.transAxes)
 
     # display distance
-    if distance_in_m > 10000:
-        distance = '%d km' % round(distance_in_m/1000.)
-    elif distance_in_m > 1000:
-        distance = '%.1f km' % (distance_in_m/1000.)
-    else:
-        distance = '%.2f km' % (distance_in_m/1000.)
+    if units=='m':
+        label = '%d m' % round(distance_in_m)
 
-    pyplot.text(0.2,0.35, distance, fontsize=11, transform=ax.transAxes)
+    elif units=='km':
+        label = '%d km' % round(distance_in_m/1000.)
+
+    elif units=='deg':
+        label = '%d%s' % (round(m_to_deg(distance_in_m)), u'\N{DEGREE SIGN}')
+
+    pyplot.text(0.2,0.35, label, fontsize=11, transform=ax.transAxes)
 
     # display azimuth
     azimuth =  '%d%s' % (round(azimuth), u'\N{DEGREE SIGN}')

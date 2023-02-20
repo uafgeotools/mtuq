@@ -5,10 +5,7 @@ from mtuq.graphics.attrs import\
     _plot_attrs
 
 from mtuq.graphics.beachball import\
-    plot_beachball
-
-from mtuq.graphics.beachball_pygmt import\
-    beachball_pygmt
+    plot_beachball, plot_polarities
 
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune,\
@@ -42,8 +39,7 @@ from mtuq.graphics.uq import\
 # use Helvetica if available
 for fontname in ['Helvetica', 'Arial']:
     try:
-        from matplotlib.font_manager import find_font
-        find_font(fontname, fallback_to_default=False)
+        import matplotlib
         matplotlib.rcParams['font.sans-serif'] = fontname
         matplotlib.rcParams['font.family'] = "sans-serif"
         break

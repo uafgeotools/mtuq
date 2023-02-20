@@ -365,14 +365,12 @@ class GreensTensorList(list):
 
 
     def parallel_map(self, function, *sequences):
-        """ Parallelized version of `map`
+        """ Version of `map` parallelized using mpi4py
 
         Maps a function to each `GreensTensor` in the list. If one or more
         optional sequences are given, the function is called with an argument
         list consisting of the corresponding item of each sequence, similar
         to the Python built-in ``map``.
-
-        Parallelized using mpi4py
 
         .. warning ::
 

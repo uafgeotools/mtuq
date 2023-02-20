@@ -25,7 +25,7 @@ Install in editable mode:
 .. code::
 
    conda activate mtuq
-   conda env update --file env.yml
+   conda env update --file env.yaml
 
 
 Unpack seismic waveforms used by examples:

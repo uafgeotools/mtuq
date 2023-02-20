@@ -1,15 +1,10 @@
-
 #
 # graphics/beachball.py - first motion "beachball" plots
 #
 
-# To correctly plot focal mechanims, MTUQ uses Generic Mapping Tools (GMT).
-
-# If GMT >=6.0.0 executables are not found on the system path, MTUQ falls
-# back to ObsPy. As described in the following GitHub issue, ObsPy
-# focal mechanism plots suffer from  plotting artifacts:
-
-# https://github.com/obspy/obspy/issues/2388
+# - uses PyGMT if present to plot beachballs
+# - if PyGMT is not present, attempts to fall back to GMT >=6
+# - if GMT >=6 is not present, attempts to fall back to ObsPy
 
 
 import obspy.imaging.beachball
@@ -24,8 +19,8 @@ from mtuq.graphics._gmt import _parse_filetype, _get_format_arg, _safename,\
     exists_gmt, gmt_major_version
 from mtuq.graphics._pygmt import exists_pygmt
 from mtuq.util import asarray, to_rgb, warn
-from mtuq.util.polarity import calculate_takeoff_angle
-from obspy.geodetics import gps2dist_azimuth, kilometers2degrees
+from mtuq.misfit.polarity import _takeoff_angle_taup
+from obspy.geodetics import gps2dist_azimuth
 from obspy.geodetics import kilometers2degrees as _to_deg
 from obspy.taup import TauPyModel
 from six import string_types
@@ -67,33 +62,31 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
     Name of built-in ObsPy TauP model or path to custom ObsPy TauP model,
     used for takeoff angle calculations
 
-
     """
 
     if type(mt)!=MomentTensor:
         raise TypeError
 
-    try:
-        assert exists_gmt()
-        assert gmt_major_version() >= 6
+    if exists_pygmt():
+        _plot_beachball_pygmt(filename, mt, stations, origin, **kwargs)
+        return
+
+    if exists_gmt() and gmt_major_version() >= 6:
         _plot_beachball_gmt(filename, mt, stations, origin, **kwargs)
         return
-    except:
-        pass
 
     try:
-        warn("plot_beachball: Falling back to ObsPy.")
-        from matplotlib import pyplot
-        obspy.imaging.beachball.beachball(
-            mt.as_vector(), size=200, linewidth=2, facecolor=fill_color)
-        pyplot.savefig(filename)
-        pyplot.close()
+          warn("plot_beachball: Falling back to ObsPy")
+          from matplotlib import pyplot
+          obspy.imaging.beachball.beachball(
+              mt.as_vector(), size=200, linewidth=2, facecolor=fill_color)
+          pyplot.savefig(filename)
+          pyplot.close()
     except:
-        warn("plot_beachball failed. No figure generated.")
+        warn("plot_beachball: Plotting failed")
 
 
-
-def plot_polarities(filename, polarities, mt, stations, origin, **kwargs):
+def plot_polarities(filename, observed, predicted, stations, origin, mt, **kwargs):
     """ Plots first-motion polarities
 
     .. rubric :: Required arguments
@@ -101,20 +94,28 @@ def plot_polarities(filename, polarities, mt, stations, origin, **kwargs):
     ``filename`` (`str`):
     Name of output image file
 
-    ``stations`` (`list` of `Station` objects):
-    Stations from which azimuths and takeoff angles are calculated
+    ``observed`` (`list` or `dict`)
+    Observed polarities for all stations (+1 positive, -1 negative, 0 unpicked)
+
+    ``predicted`` (`list` or `dict`)
+    Predicted polarities for all stations (+1 positive, -1 negative)
+
+    ``stations`` (`list`):
+    List containting station names, azimuths and takeoff angles
 
     ``origin`` (`mtuq.Origin`):
     Origin object
-
-    ``polarities`` (`dict`)
-    Polarities dictionary
 
     ``mt`` (`mtuq.MomentTensor`):
     Moment tensor object
 
     """
-    raise NotImplementedError
+    if exists_pygmt():
+        _plot_polarities_pygmt(filename, observed, predicted,
+            stations, origin, mt, **kwargs)
+
+    else:
+        raise Exception('Requires PyGMT')
 
 
 #
@@ -207,8 +208,8 @@ def _plot_beachball_gmt(filename, mt, stations, origin,
 
 
     # remove temporary files
-    for filename in glob(_safename('tmp.'+filename+'*')):
-        os.remove(filename)
+    for _filename in glob(_safename('tmp.'+filename+'*')):
+        os.remove(_filename)
 
 
 def _write_stations(filename, stations, origin, taup_model):
@@ -229,51 +230,35 @@ def _write_stations(filename, stations, origin, taup_model):
                 station.latitude,
                 station.longitude)
 
-            takeoff_angle = calculate_takeoff_angle(
+            takeoff_angle = _takeoff_angle_taup(
                 taup,
                 origin.depth_in_m/1000.,
-                distance_in_degree=_to_deg(distance_in_m/1000.),
-                phase_list=['p', 'P'])
+                _to_deg(distance_in_m/1000.))
 
             if takeoff_angle is not None:
                 file.write('%s  %f  %f\n' % (label, azimuth, takeoff_angle))
 
+
 #
 # PyGMT implementation (experimental)
 #
+
+PYGMT_REGION    = [-1.2, 1.2, -1.2, 1.2]
+PYGMT_PROJECTION= 'm0/0/5c'
+PYGMT_SCALE     = '9.9c'
+
 
 def _plot_beachball_pygmt(filename, mt, stations, origin,
     taup_model='ak135', add_station_labels=True, add_station_markers=True,
     fill_color='gray', marker_color='black'):
 
     import pygmt
-    from pygmt.helpers import build_arg_string, use_alias
-
-    gmt_region    = [-1.2, 1.2, -1.2, 1.2]
-    gmt_projection= 'm0/0/5c'
-    gmt_scale     = '9.9c'
-
     fig = pygmt.Figure()
 
     #
     # plot the beachball itself
     #
-    fig.meca(
-        # basemap arguments
-        region=gmt_region,
-        projection=gmt_projection,
-        scale=gmt_scale,
-
-        # lon, lat, depth, mrr, mtt, mpp, mrt, mrp, mtp, exp, lon2, lat2
-        spec=(0, 0, 10, *mt.as_vector(), 25, 0, 0),
-        convention="mt",
-
-        # face color
-        G='grey50',
-
-        N=False,
-        M=True,
-        )
+    _meca_pygmt(fig, mt)
 
     #
     # add station markers and labels
@@ -282,53 +267,177 @@ def _plot_beachball_pygmt(filename, mt, stations, origin,
         _write_stations(_safename('tmp.'+filename+'.sta'),
             stations, origin, taup_model)
 
-        @use_alias(
-            D='offset',
-            J='projection',
-            M='scale',
-            S='symbol',
-            E='ext_fill',
-            G='comp_fill',
-            F='background',
-            Qe='ext_outline',
-            Qg='comp_outline',
-            Qf='mt_outline',
-            T='station_labels'
-        )
-        def _pygmt_polar(ascii_table, **kwargs):
-            arg_string = " ".join([ascii_table, build_arg_string(kwargs)])
-            with pygmt.clib.Session() as session:
-                session.call_module('polar',arg_string)
-
-        _pygmt_polar(
+        _polar1(
             _safename('tmp.'+filename+'.sta'),
 
             # basemap arguments
-            projection=gmt_projection,
-            scale=gmt_scale,
+            projection=PYGMT_PROJECTION,
+            scale=PYGMT_SCALE,
 
-            station_labels='+f0.18c',
+            station_labels='+jCB',
             offset='0/0',
-            symbol='t0.40c',
-            comp_fill='grey50',
+            symbol='i0.60c',
+            comp_fill='black',
+            ext_fill='black',
+            background=True,
             )
 
+    fig.savefig(filename)
 
-        fig.savefig(filename)
+    # remove temporary files
+    for _filename in glob(_safename('tmp.'+filename+'*')):
+        os.remove(_filename)
 
 
-def _plot_polarities_pygmt():
-    # calculate theoretical polarities
-    calculate_polarities()
+def _plot_polarities_pygmt(filename, observed, predicted, 
+    stations, origin, mt, **kwargs):
 
-    # case 1 - observed and synthetic both positive
-    _pygmt_polar()
+    import pygmt
 
-    # case 2 - observed and synthetic both negative
-    _pygmt_polar()
+    if observed.size != predicted.size:
+        raise Exception('Inconsistent dimensions')
 
-    # case 3 - observed positive, synthetic negative
-    _pygmt_polar()
+    if observed.size != len(stations):
+        raise Exception('Inconsistent dimensions')
 
-    # case 4 - observed negative, synthetic positive
-    _pygmt_polar()
+    observed = observed.flatten()
+    predicted = predicted.flatten()
+
+    up_matched = [station for _i, station in enumerate(stations)
+        if observed[_i] == predicted[_i] == 1]
+
+    down_matched = [station for _i, station in enumerate(stations)
+        if observed[_i] == predicted[_i] == -1]
+
+    up_unmatched = [station for _i, station in enumerate(stations)
+        if (observed[_i] == 1) and (predicted[_i] == -1)]
+
+    down_unmatched = [station for _i, station in enumerate(stations)
+        if (observed[_i] == -1) and (predicted[_i] == 1)]
+
+    unpicked = [station for _i, station in enumerate(stations)
+        if (observed[_i] != +1) and (observed[_i] != -1)]
+
+
+    fig = pygmt.Figure()
+
+    # the beachball itself
+    _meca_pygmt(fig, mt)
+
+    # observed and synthetic both positive
+    _polar2(up_matched, symbol='t0.40c', comp_fill='green')
+
+    # observed and synthetic both negative
+    _polar2(down_matched, symbol='i0.40c', ext_fill='green')
+
+    # observed positive, synthetic negative
+    _polar2(up_unmatched, symbol='t0.40c', comp_fill='red')
+
+    # observed negative, synthetic positive
+    _polar2(down_unmatched, symbol='i0.40c', ext_fill='red')
+
+    fig.savefig(filename)
+
+
+def _meca_pygmt(fig, mt):
+    fig.meca(
+        # lon, lat, depth, mrr, mtt, mpp, mrt, mrp, mtp, lon2, lat2
+        np.array([0, 0, 10, *mt.as_vector(), 0, 0]),
+
+        scale=PYGMT_SCALE,
+        convention="mt",
+
+        # basemap arguments
+        region=PYGMT_REGION,
+        projection=PYGMT_PROJECTION,
+
+        G='grey50',
+        no_clip=False,
+        M=True,
+        )
+
+
+# ugly workarounds like those below necessary until PyGMT itself implements 
+# GMT polar
+
+def _polar1(ascii_table, **kwargs):
+    import pygmt
+    from pygmt.helpers import build_arg_string, use_alias
+
+    @use_alias(
+        D='offset',
+        J='projection',
+        M='scale',
+        S='symbol',
+        E='ext_fill',
+        G='comp_fill',
+        F='background',
+        Qe='ext_outline',
+        Qg='comp_outline',
+        Qf='mt_outline',
+        T='station_labels'
+    )
+    def __polar1(ascii_table, **kwargs):
+
+        arg_string = " ".join([ascii_table, build_arg_string(kwargs)])
+        with pygmt.clib.Session() as session:
+            session.call_module('polar',arg_string)
+
+    __polar1(ascii_table, **kwargs)
+
+
+def _polar2(stations, **kwargs):
+    import pygmt
+    from pygmt.helpers import build_arg_string, use_alias
+
+    @use_alias(
+        D='offset',
+        J='projection',
+        M='size',
+        S='symbol',
+        E='ext_fill',
+        G='comp_fill',
+        F='background',
+        Qe='ext_outline',
+        Qg='comp_outline',
+        Qf='mt_outline',
+        T='station_labels'
+    )
+    def __polar2(stations, **kwargs):
+
+        # apply defaults
+        kwargs = {
+            'D' : '0/0',
+            'J' : 'm0/0/5c',
+            'M' : '9.9c',
+            'T' : '+f0.18c',
+            'R': '-1.2/1.2/-1.2/1.2',
+            **kwargs,
+            }
+
+        with open('_tmp_polar2', 'w') as f:
+            for station in stations:
+
+                label = station.network+'.'+station.station
+                try:
+                    if station.polarity > 0:
+                        polarity = '+'
+                    elif station.polarity < 0:
+                        polarity = '-'
+                    else:
+                        polarity = '0'
+                except:
+                    polarity = '0'
+
+                f.write("%s %s %s %s\n" % (
+                    label, station.azimuth, station.takeoff_angle, polarity))
+
+        arg_string = " ".join(['_tmp_polar2', build_arg_string(kwargs)])
+        with pygmt.clib.Session() as session:
+            session.call_module('polar',arg_string)
+        os.remove('_tmp_polar2')
+
+
+    __polar2(stations, **kwargs)
+
+

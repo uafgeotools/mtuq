@@ -41,7 +41,7 @@ if __name__=='__main__':
     #
     #
     # USAGE
-    #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
+    #   mpirun -n <NPROC> python Misfit_vs_Likelihood.py
     #   
     #
     # This is the most complicated example. For simpler ones, see

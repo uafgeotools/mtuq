@@ -27,7 +27,6 @@ class GreensTensor(GreensTensorBase):
         """
         if self.include_mt:
             self._precompute_mt()
-            self._permute()
 
         if self.include_force:
             self._precompute_force()
@@ -51,13 +50,13 @@ class GreensTensor(GreensTensorBase):
                 G2 = Grr
                 G4 = Grt
 
-                # derived by setting phi=0 in Minson & Dregor 2008 formulas
+                # derived by setting phi=0 in Minson2008 formulas
                 ZSS = G0 - G1
                 ZDS = G4
                 ZDD = 2.*G2 - G0 - G1
                 ZEP = G0 + G1 + G2
 
-                # Minson & Dregor 2008 formulas
+                # Minson2008 formulas
                 array[_i, _j+0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 array[_i, _j+1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
                 array[_i, _j+2, :] =  ZDD/3. + ZEP/3.
@@ -77,13 +76,13 @@ class GreensTensor(GreensTensorBase):
                 G2 = Grr
                 G4 = Grt
 
-                # derived by setting phi=0 in Minson & Dregor 2008 formulas
+                # derived by setting phi=0 in Minson2008 formulas
                 RSS = G0 - G1
                 RDS = G4
                 RDD = 2.*G2 - G0 - G1
                 REP = G0 + G1 + G2
 
-                # Minson & Dregor 2008 formulas
+                # Minson2008 formulas
                 array[_i, _j+0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 array[_i, _j+1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
                 array[_i, _j+2, :] =  RDD/3. + REP/3.
@@ -110,28 +109,22 @@ class GreensTensor(GreensTensorBase):
                 array[_i, _j+5, :] = -TDS * np.cos(phi)
 
 
-    def _precompute_force(self):
-        """ Computes NumPy arrays used in force linear combination
-        """
-        raise NotImplementedError
-
-
-    def _permute(self):
-        """ Accounts for different basis conventions
-        """
-        # The mathematical formulas above are based on the North-East-Down
-        # convention, but mtuq works in the Up-South-East convention.
-        # We could get equivalent results by permuting the get_synthetics
-        # arguments every time it is called, but it is faster to permute the 
-        # whole array once and for all
-
-        array = self._array
-        array_copy = self._array.copy()
-
+        #
+        # Minson2008 uses a north-east-down basis convention, while mtuq uses an
+        # up-south-east basis convention, so a permuation is necessary
+        #
+        array_copy = array.copy()
         array[:, 0, :] =  array_copy[:, 2, :]
         array[:, 1, :] =  array_copy[:, 0, :]
         array[:, 2, :] =  array_copy[:, 1, :]
         array[:, 3, :] =  array_copy[:, 4, :]
         array[:, 4, :] = -array_copy[:, 5, :]
         array[:, 5, :] = -array_copy[:, 3, :]
+
+
+
+    def _precompute_force(self):
+        """ Computes NumPy arrays used in force linear combination
+        """
+        raise NotImplementedError
 

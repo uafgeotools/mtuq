@@ -9,13 +9,13 @@ from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import check_padding, get_components, isempty
 
 
-class Misfit(object):
+class WaveformMisfit(object):
     """ Waveform misfit function
 
     Evaluates misfit between data and synthetics using time shifts followed by
-    waveform differences. This approach, due to `ZhaoHelmberger1994` and 
-    `ZhuHelmberger1996`, has become widely used in regional seismology.  See 
-    `docs/` and `docs/references` for more information.
+    waveform differences. This approach, due to `Zhao1994` and `Zhu1996`, has 
+    become widely used in regional seismology.  See `docs/references` for more
+    information.
 
     .. rubric:: Usage
 

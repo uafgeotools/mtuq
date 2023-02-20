@@ -336,27 +336,29 @@ class ProgressCallback(object):
         self.iter += 1
 
 
-def dataarray_idxmin(da):
+def dataarray_idxmin(da, warnings=True):
     """ idxmin helper function
     """
     # something similar to this has now been implemented in a beta version 
     # of xarray
     da = da.where(da==da.min(), drop=True).squeeze()
     if da.size > 1:
-        warn("No unique global minimum\n")
+        if warnings:
+            warn("No unique global minimum\n")
         while da.size > 1:
             da = da[0]
     return da.coords
 
 
-def dataarray_idxmax(da):
+def dataarray_idxmax(da, warnings=True):
     """ idxmax helper function
     """
     # something similar to this has now been implemented in a beta version 
     # of xarray
     da = da.where(da==da.max(), drop=True).squeeze()
     if da.size > 1:
-        warn("No unique global maximum\n")
+        if warnings:
+            warn("No unique global maximum\n")
         while da.size > 1:
             da = da[0]
     return da.coords

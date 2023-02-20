@@ -33,7 +33,8 @@ Data processing and inversion
 
 ============================================================================================================  ============================================================================================================
 `mtuq.ProcessData <generated/mtuq.ProcessData.html>`_                                                          Data processing function constructor
-`mtuq.Misfit <generated/mtuq.Misfit.html>`_                                                                    Misfit function constructor
+`mtuq.PolarityMisfit <generated/mtuq.PolarityMisfit.html>`_                                                    Polarity misfit function constructor
+`mtuq.WaveformMisfit <generated/mtuq.WaveformMisfit.html>`_                                                    Waveform misfit function constructor
 `mtuq.grid_search <generated/mtuq.grid_search.grid_search.html>`_                                              Evaluates misfit over grids
 `mtuq.MTUQDataArray <generated/mtuq.grid_search.MTUQDataArray.html>`_                                          Data structure for storing misfit on regularly-spaced grids
 `mtuq.MTUQDataFrame <generated/mtuq.grid_search.MTUQDataFrame.html>`_                                          Data structure for storing misfit on irregularly-spaced grids
@@ -60,7 +61,8 @@ Data visualization
 `mtuq.graphics.plot_waveforms2 <generated/mtuq.graphics.plot_waveforms2.html>`_                                Plots body and surface waves
 `mtuq.graphics.plot_data_greens1 <generated/mtuq.graphics.plot_data_greens1.html>`_                            Variation on `plot_waveforms1`
 `mtuq.graphics.plot_data_greens2 <generated/mtuq.graphics.plot_data_greens2.html>`_                            Variation on `plot_waveforms2`
-`mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots focal mechansim
+`mtuq.graphics.plot_beachball <generated/mtuq.graphics.plot_beachball.html>`_                                  Plots first-motion beachball
+`mtuq.graphics.plot_polarities <generated/mtuq.graphics.plot_polarities.html>`_                                Plots first-motion data fit
 ============================================================================================================  ============================================================================================================
 
 

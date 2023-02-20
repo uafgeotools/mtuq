@@ -34,5 +34,5 @@ It is expected that the following data processing steps have been carried out pr
 Other file formats
 ------------------
 
-Besides SAC, many other file formats could be supported in principle.  To make adding such support easier, `mtuq.read` follows the manner in which `obspy.read` works, by accepting a `format` keyword arguments that corresponds to a module in `mtuq.io.readers`.
+Besides SAC, many other file formats could be supported in principle.  To make adding such support easier, `mtuq.read` closely follows `obspy.read`, with each supported file format having its own keyword argument and an identially named module in `mtuq.io.readers`.
 

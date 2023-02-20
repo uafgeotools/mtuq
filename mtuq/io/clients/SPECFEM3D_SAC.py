@@ -1,4 +1,5 @@
 
+import glob
 import obspy
 import numpy as np
 
@@ -91,8 +92,18 @@ class Client(ClientBase):
         stream = Stream()
         stream.id = station.id
 
-        if self.include_mt:
+        # check if Green's functions exist for given station code
+        if _exists(self.path+'/'+station.id+'.*.sac'):
             prefix = station.id
+
+        else:
+            print('No Green\'s functions found for "%s"\n\n'
+                  'Trying other codes instead:'
+                  % station.id)
+
+            prefix = _try_wildcards(self.path, station)
+            
+        if self.include_mt:
             for suffix in SUFFIXES:
                 trace = obspy.read(
                     self.path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
@@ -113,6 +124,8 @@ class Client(ClientBase):
         t1_old = float(stream[0].stats.starttime)
         t2_old = float(stream[0].stats.endtime)
         dt_old = float(stream[0].stats.delta)
+        t1_old += float(origin.time)
+        t2_old += float(origin.time)
 
         for trace in stream:
             # resample Green's functions
@@ -132,4 +145,27 @@ class Client(ClientBase):
         return GreensTensor(traces=[trace for trace in stream], 
             station=station, origin=origin, tags=tags,
             include_mt=self.include_mt, include_force=self.include_force)
+
+
+
+def _exists(wildcard):
+    if len(glob.glob(wildcard)) > 0:
+        return True
+    else:
+        return False
+
+def _try_wildcards(path, station):
+
+    wildcards = [ 
+        station.network+'.'+station.station+'.*',
+        '*'            +'.'+station.station+'.*',
+        ] 
+
+    for wildcard in wildcards:
+        print('  "%s"' % wildcard)
+        if _exists(path+'/'+wildcard+'.*.sac'):
+            print()
+            return wildcard
+    else:
+        raise FileNotFoundError()
 

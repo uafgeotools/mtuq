@@ -28,8 +28,8 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     components = _get_components(data)
 
 
-    # which components are absent from the data (boolean array)?
-    mask = _get_mask(data, stations, components)
+    # collect user-supplied data weights
+    weights = _get_weights(data, stations, components)
 
     # which components will be used to determine time shifts (boolean array)?
     groups = _get_groups(time_shift_groups, components)
@@ -76,7 +76,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
     if norm in ['L2', 'hybrid']:
         results = c_ext_L2.misfit(
-           data_data, greens_data, greens_greens, sources, groups, mask,
+           data_data, greens_data, greens_greens, sources, groups, weights,
            hybrid_norm, dt, padding[0], padding[1], debug_level, *msg_args)
 
     elif norm in ['L1']:
@@ -179,7 +179,38 @@ def _get_components(data):
     return components_sorted
 
 
+def _get_weights(data, stations, components):
+    # user-supplied data weights
+
+    Ncomponents = len(components)
+    Nstations = len(stations)
+
+    weights = np.ones((
+        Nstations,
+        Ncomponents,
+        ))
+
+    for _i, station in enumerate(stations):
+        for _j, component in enumerate(components):
+
+            stream = data.select(station)[0]
+            stream = stream.select(component=component)
+
+            if len(stream) > 0:
+                try:
+                    weights[_i, _j] = stream[0].attrs.weight
+                except:
+                    print('Error reading user-suppled data weight')
+                    weights[_i, _j] = 1.
+            else:
+                weights[_i, _j] = 0.
+
+    return weights
+
+
 def _get_mask(data, stations, components):
+    # which components are absent from the data (boolean array)?
+
     Ncomponents = len(components)
     Nstations = len(stations)
 

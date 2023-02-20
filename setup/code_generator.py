@@ -18,7 +18,7 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 """
 
 
-Docstring_DetailedAnalysis_FullMomentTensor="""
+Docstring_DetailedAnalysis="""
 if __name__=='__main__':
     #
     # Peforms detailed analysis involving
@@ -39,7 +39,7 @@ if __name__=='__main__':
     #
     #
     # USAGE
-    #   mpirun -n <NPROC> python DetailedAnalysis.FullMomentTensor.py
+    #   mpirun -n <NPROC> python Misfit_vs_Likelihood.py
     #   
     #
     # This is the most complicated example. For simpler ones, see
@@ -132,6 +132,20 @@ if __name__=='__main__':
     #
     # A typical runtime is about 60 seconds. For faster results try 
     # GridSearch.DoubleCouple.py, which runs the same inversion in parallel
+    #
+
+"""
+
+
+Docstring_WaveformsPolarities="""
+if __name__=='__main__':
+    #
+    # Joint waveform and polarity grid search over all moment tensor parameters
+    #
+    # USAGE
+    #   mpirun -n <NPROC> python Waveforms+Polarities.py
+    #   
+    # For a simpler example, see SerialGridSearch.DoubleCouple.py
     #
 
 """
@@ -441,6 +455,40 @@ MisfitDefinitions="""
 
 """
 
+WaveformsPolaritiesMisfit="""
+    #
+    # We will jointly evaluate waveform differences and polarities
+    #
+
+    misfit_bw = WaveformMisfit(
+        norm='L2',
+        time_shift_min=-2.,
+        time_shift_max=+2.,
+        time_shift_groups=['ZR'],
+        )
+
+    misfit_sw = WaveformMisfit(
+        norm='L2',
+        time_shift_min=-10.,
+        time_shift_max=+10.,
+        time_shift_groups=['ZR','T'],
+        )
+
+    polarity_misfit = PolarityMisfit(
+        taup_model=model)
+
+
+    #
+    # Observed polarities can be attached to the data or passed through a 
+    # user-supplied dictionary or list in which +1 corresopnds to positive 
+    # first motion, -1 to negative first moation, and 0 to indeterminate or
+    # unpicked
+    #
+
+    polarities = np.array([-1, -1, -1, 1, 1, 0, 1, 1, -1, 1, 1, 1, 0, 1, 1, 1, -1, 1, 1, 0])
+
+
+"""
 
 
 WeightsComments="""
@@ -550,7 +598,7 @@ Origins_Hypocenter="""
 """
 
 
-MisfitDefinitions_DetailedAnalysis="""
+MisfitDefinitions_DetailedExample="""
     misfit_bw = Misfit(
         norm='L2',
         time_shift_min=-2.,
@@ -968,7 +1016,7 @@ Main_TestMisfit="""
 """
 
 
-WrapUp_DetailedAnalysis_FullMomentTensor="""
+WrapUp_DetailedAnalysis="""
     if comm.rank==0:
 
         results_sum = results_bw + results_rayleigh + results_love
@@ -1442,6 +1490,61 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 """
 
 
+WrapUp_WaveformsPolarities="""
+    if comm.rank==0:
+        print('Evaluating polarity misfit...\\n')
+
+    results_polarity = grid_search(
+        polarities, greens_bw, polarity_misfit, origin, grid)
+
+
+    if comm.rank==0:
+
+        results = results_bw + results_sw
+
+        # `grid` index corresponding to minimum misfit
+        idx = results.source_idxmin()
+
+        best_mt = grid.get(idx)
+        lune_dict = grid.get_dict(idx)
+        mt_dict = best_mt.as_dict()
+
+
+        #
+        # Generate figures and save results
+        #
+
+        print('Generating figures...\\n')
+
+        plot_data_greens2(event_id+'FMT_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
+            misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
+
+        plot_beachball(event_id+'FMT_beachball.png',
+            best_mt, stations, origin)
+
+        plot_misfit_lune(event_id+'FMT_misfit.png', results,
+            title='Waveform Misfit')
+
+        # generate polarity figures
+
+        plot_misfit_lune(event_id+'FMT_misfit_polarity.png', results_polarity,
+            show_best=False, title='Polarity Misfit')
+
+        # predicted polarities
+        predicted = polarity_misfit.get_predicted(greens, best_mt)
+
+        # station attributes
+        attrs = polarity_misfit.collect_attributes(polarities, greens)
+
+        plot_polarities(event_id+'FMT_beachball_polarity.png',
+            polarities, predicted, attrs, origin, best_mt)
+
+        print('\\nFinished\\n')
+
+"""
+
+
 WrapUp_TestGridSearch_DoubleCouple="""
 
     results = results_bw + results_sw
@@ -1588,7 +1691,7 @@ if __name__=='__main__':
     os.chdir(basepath())
 
 
-    with open('examples/DetailedAnalysis.FullMomentTensor.py', 'w') as file:
+    with open('examples/DetailedAnalysis.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
             replace(
@@ -1608,12 +1711,12 @@ if __name__=='__main__':
             'from mtuq.misfit import Misfit',
             'from mtuq.misfit.waveform import Misfit, estimate_sigma, calculate_norm_data'
             ))
-        file.write(Docstring_DetailedAnalysis_FullMomentTensor)
+        file.write(Docstring_DetailedAnalysis)
         file.write(Paths_Syngine)
         file.write(DataProcessingComments)
         file.write(DataProcessingDefinitions)
         file.write(MisfitComments)
-        file.write(MisfitDefinitions_DetailedAnalysis)
+        file.write(MisfitDefinitions_DetailedExample)
         file.write(WeightsComments)
         file.write(WeightsDefinitions)
         file.write(
@@ -1641,7 +1744,7 @@ if __name__=='__main__':
     results_love = grid_search(
         data_sw, greens_sw, misfit_love, origin, grid)\n"""
         )
-        file.write(WrapUp_DetailedAnalysis_FullMomentTensor)
+        file.write(WrapUp_DetailedAnalysis)
 
 
     with open('examples/GridSearch.DoubleCouple.py', 'w') as file:
@@ -1791,7 +1894,35 @@ if __name__=='__main__':
         file.write(WrapUp_SerialGridSearch_DoubleCouple)
 
 
-    with open('examples/test_SPECFEM3D_SGT.py', 'w') as file:
+    with open('examples/Waveforms+Polarities.py', 'w') as file:
+        file.write("#!/usr/bin/env python\n")
+        file.write(
+            replace(
+            Imports,
+            'DoubleCoupleGridRegular',
+            'FullMomentTensorGridSemiregular',
+            'plot_misfit_dc',
+            'plot_misfit_lune',
+            'plot_beachball',
+            'plot_beachball, plot_polarities',
+            'from mtuq.misfit import Misfit',
+            'from mtuq.misfit import WaveformMisfit, PolarityMisfit',
+            ))
+        file.write(Docstring_WaveformsPolarities)
+        file.write(Paths_Syngine)
+        file.write(DataProcessingComments)
+        file.write(DataProcessingDefinitions)
+        file.write(WaveformsPolaritiesMisfit)
+        file.write(WeightsComments)
+        file.write(WeightsDefinitions)
+        file.write(Grid_FullMomentTensor)
+        file.write(OriginComments)
+        file.write(OriginDefinitions)
+        file.write(Main_GridSearch)
+        file.write(WrapUp_WaveformsPolarities)
+
+
+    with open('tests/test_SPECFEM3D_SGT.py', 'w') as file:
         file.write("#!/usr/bin/env python\n")
         file.write(
             replace(

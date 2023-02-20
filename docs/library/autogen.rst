@@ -12,6 +12,7 @@ autogen
    mtuq.Origin
    mtuq.Station
    mtuq.graphics.plot_beachball
+   mtuq.graphics.plot_polarities
    mtuq.graphics.plot_data_greens1
    mtuq.graphics.plot_data_greens2
    mtuq.graphics.plot_waveforms1
@@ -65,7 +66,8 @@ autogen
    mtuq.MomentTensor
    mtuq.Wavelet
    mtuq.ProcessData
-   mtuq.Misfit
+   mtuq.PolarityMisfit
+   mtuq.WaveformMisfit
    mtuq.download_greens_tensors
    mtuq.open_db
    mtuq.read

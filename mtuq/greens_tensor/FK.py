@@ -45,8 +45,6 @@ class GreensTensor(GreensTensorBase):
         if self.include_force:
             self._precompute_force()
 
-        self._permute_array()
-
 
     def _precompute_mt(self):
         """ Recombines FK time series so they can be used in straightforward
@@ -57,8 +55,8 @@ class GreensTensor(GreensTensorBase):
         phi = np.deg2rad(self.azimuth)
         _j = 0
 
-        # the mathetical formulas here were obtained by reverse engineering
-        # FK/CAP
+        # The formulas below were obtained by reverse engineering FK
+
         for _i, component in enumerate(self.components):
             if component=='Z':
                 ZSS = self.select(channel="ZSS")[0].data
@@ -97,28 +95,21 @@ class GreensTensor(GreensTensorBase):
             else:
                 raise ValueError
 
-
-    def _precompute_force(self):
-        raise NotImplementedError()
-
-
-
-    def _permute_array(self):
-        """ Accounts for different basis conventions
-        """
-        # The mathematical formulas above are based on the North-East-Down
-        # convention, but mtuq works in the Up-South-East convention.
-        # We could get equivalent results by permuting the get_synthetics
-        # arguments every time it is called, but it is faster to permute the 
-        # whole array once and for all
-
-        array = self._array
-        array_copy = self._array.copy()
-
+        #
+        # FK uses a north-east-down basis convention, while mtuq uses an
+        # up-south-east basis convention, so a permuation is necessary
+        #
+        array_copy = array.copy()
         array[:, 0, :] =  array_copy[:, 2, :]
         array[:, 1, :] =  array_copy[:, 0, :]
         array[:, 2, :] =  array_copy[:, 1, :]
         array[:, 3, :] =  array_copy[:, 4, :]
         array[:, 4, :] = -array_copy[:, 5, :]
         array[:, 5, :] = -array_copy[:, 3, :]
+
+
+    def _precompute_force(self):
+        raise NotImplementedError()
+
+
 
