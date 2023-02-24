@@ -19,6 +19,7 @@ FILENAMES="\
     ../tests/test_misfit.py\
     ../tests/test_SerialGridSearch.DoubleCouple.3DSGT.py\
     ../tests/test_GridSearch.FullMomentTensor.3DSGT.py\
+    ../tests/test_SerialGridSearch.DoubleCouple.3DSGT.SeisCloud.py\
     "
 
 
