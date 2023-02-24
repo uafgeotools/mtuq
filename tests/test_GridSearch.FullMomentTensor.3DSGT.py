@@ -20,7 +20,7 @@ if __name__=='__main__':
     # Carries out grid search over all moment tensor parameters
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
+    #   mpirun -n <NPROC> python test_GridSearch.FullMomentTensor.3DSGT.py
     #   
 
 

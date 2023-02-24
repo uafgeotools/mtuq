@@ -23,12 +23,12 @@ if __name__=='__main__':
     #   python test_SerialGridSearch.DoubleCouple.3DSGT.SeisCloud.py
     #
     # A typical runtime is about 60 seconds. For faster results try
-    # SerialGridSearch.DoubleCouple.3DSGT.SeisCloud, which runs the same inversion in Serial
+    # test_SerialGridSearch.DoubleCouple.3DSGT.SeisCloud, which runs the same inversion in serial
     #
 
 
     #
-    # We will investigate the source process of an Mw~4.7 earthquake using data
+    # We will investigate the source process of an Mw~4.8 earthquake using data
     # from a regional seismic array
     #
 
