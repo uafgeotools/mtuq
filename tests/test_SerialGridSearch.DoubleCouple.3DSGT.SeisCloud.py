@@ -32,9 +32,9 @@ if __name__=='__main__':
     # from a regional seismic array
     #
 
-    path_greens = fullpath('data/examples/SPECFEM3D_SGT/greens_remote/socal3D')
+    path_greens = fullpath('data/greens_tensor/seiscloud/socal3D')
     path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
-    path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights_remote.dat')
+    path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
     event_id    = 'evt11071294'
     model       = 'socal3D'
     taup_model  = 'ak135'

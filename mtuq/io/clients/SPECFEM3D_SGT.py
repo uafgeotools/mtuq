@@ -137,7 +137,7 @@ class Client(ClientBase):
                     try:
                         for key in ('latitude','longitude','depth_in_m','elevation_in_m'):
                             assert origin[key] == self.origin[key]
-                    except AssertionError:
+                    except:
                         self.b_new_origin = True
 
                 stream = self.sgtMgr.get_greens_function(station, origin, b_new_origin=self.b_new_origin)

@@ -96,6 +96,7 @@ class Client(ClientBase):
         if self.include_mt:
             # Check if the Green's Function (GF) exists,
             # Read from the PKL file storing the GF or generate from SGT.
+
             prefix = station.id
             data_type = '3DGF'
             fmt = 'PKL'
@@ -134,15 +135,8 @@ class Client(ClientBase):
 
                 if not self.b_new_origin:
                     try:
-                        if origin.latitude != self.origin.latitude or origin.longitude != self.origin.longitude:
-                            self.b_new_origin = True
-                        else:
-                            try:
-                                if origin.depth_in_m != self.origin.depth_in_m:
-                                    self.b_new_origin = True
-                            except:
-                                if origin.elevation_in_m != self.origin.elevation_in_m:
-                                    self.b_new_origin = True
+                        for key in ('latitude','longitude','depth_in_m','elevation_in_m'):
+                            assert origin[key] == self.origin[key]
                     except:
                         self.b_new_origin = True
 
