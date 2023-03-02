@@ -11,7 +11,7 @@ from mtuq.graphics._gmt import read_cpt, _cpt_path
 
 def _plot_dc_matplotlib(filename, coords, 
     values_h_kappa, values_sigma_kappa, values_sigma_h,
-    best_dc=None, colormap='viridis',  figsize=(8., 8.), fontsize=14):
+    title=None, best_dc=None, colormap='viridis',  figsize=(8., 8.), fontsize=14):
 
     # prepare axes
     fig, axes = pyplot.subplots(2, 2,
