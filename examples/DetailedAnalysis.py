@@ -23,7 +23,7 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Peforms detailed analysis involving
+    # Performs detailed analysis involving
     #
     # - grid search over all moment tensor parameters, including magnitude
     # - separate body wave, Rayleigh wave and Love wave data categories

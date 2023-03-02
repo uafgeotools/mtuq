@@ -260,3 +260,10 @@ class WaveformMisfit(object):
         return deepcopy(synthetics)
 
 
+
+#
+# for backward compatibility
+#
+Misfit = WaveformMisfit
+
+
