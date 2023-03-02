@@ -32,7 +32,6 @@ class GreensTensor(GreensTensorBase):
 
 
 
-
     def _precompute(self):
         """ Computes numpy arrays used by get_synthetics
         """

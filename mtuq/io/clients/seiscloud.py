@@ -1,6 +1,7 @@
 
 import os.path
 import seisgen
+from seisclient.seisclient import SeisClient
 import obspy
 import numpy as np
 import pickle
@@ -11,8 +12,7 @@ from mtuq.util.signal import resample
 
 
 class Client(ClientBase):
-    """ SPECFEM3D strain Green's tensor database client based on `seisgen
-    <https://github.com/Liang-Ding/seisgen>`_
+    """ Client obtaining the SPECFEM3D strain Green's tensor from a remote database https://seis.cloud
 
     .. rubric:: Usage
 
@@ -20,7 +20,7 @@ class Client(ClientBase):
 
     .. code::
 
-        from mtuq.io.clients.SPECFEM3D_SGT import Client
+        from mtuq.io.clients.seiscloud import Client
         db = Client(path_or_url)
 
     Then the database client can be used to generate GreensTensors:
@@ -33,8 +33,12 @@ class Client(ClientBase):
     .. note ::
 
         For instructions on creating SPECFEM3D/3D_GLOBE strain Green's tensor
-        databases, see `seisgen documentation 
+        databases, see `SEISGEN documentation
         <https://github.com/Liang-Ding/seisgen>`_
+
+        For information of SeisCloud and SeisClient, see:
+        <https://seis.cloud>`_
+        <https://github.com/Liang-Ding/seisclient>`_
 
 
     """
@@ -55,17 +59,13 @@ class Client(ClientBase):
         self.b_new_origin = True
         self.origin = 0
 
-    def set_local_db(self, sgt_database_folder, model3D_folder, info_grid_file):
-        """ Set and utilize the local database. """
-        try:
-            self.sgtMgr = seisgen.DSGTMgr(sgt_database_folder, model3D_folder, info_grid_file)
-            self.b_initial_db = True
-        except:
-            raise Exception
+        # use the default model name to initialize seisclient.
+        self.set_remote_db()
 
-    def set_remote_db(self):
+    def set_remote_db(self, model=None):
         """ Set and utilize the remote database. """
-        raise NotImplementedError
+        self.seiscloud = SeisClient()
+        self.b_initial_db = True
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
@@ -129,9 +129,9 @@ class Client(ClientBase):
                         pass
 
             if b_generate:
-                # Generate Green's function from SGT.
+                # Download (generate) Green's function from SGT.
                 if not self.b_initial_db:
-                    raise Exception
+                    raise Exception("Remote database is not initialized!")
 
                 if not self.b_new_origin:
                     try:
@@ -140,14 +140,14 @@ class Client(ClientBase):
                     except:
                         self.b_new_origin = True
 
-                stream = self.sgtMgr.get_greens_function(station, origin, b_new_origin=self.b_new_origin)
+                stream = self.seiscloud.get_greens_3DMT(model=self.model, station=station, origin=origin, save_dir=self.path)
 
                 if self.b_new_origin:
                     self.origin = origin
                     self.b_new_origin = False
 
                 try:
-                    # save the GF as pickle file for future use.
+                    # save 3D Greens functions to file.
                     with open(GF_file_path, 'wb') as f:
                         pickle.dump(stream, f)
                 except:
@@ -156,7 +156,6 @@ class Client(ClientBase):
 
         if self.include_force:
             raise NotImplementedError
-
 
         # what are the start and end times of the data?
         t1_new = float(station.starttime)
@@ -180,7 +179,7 @@ class Client(ClientBase):
 
         tags = [
             'model:%s' % self.model,
-            'solver:%s' % 'SPECFEM3D',
+            'solver:%s' % 'SeisCloud',
              ]
 
         return GreensTensor(traces=[trace for trace in stream],

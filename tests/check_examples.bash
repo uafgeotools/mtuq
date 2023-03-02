@@ -17,7 +17,9 @@ FILENAMES="\
     ../tests/test_grid_search_mt.py\
     ../tests/test_grid_search_mt_depth.py\
     ../tests/test_misfit.py\
-    ../tests/test_SPECFEM3D_SGT.py\
+    ../tests/test_SerialGridSearch.DoubleCouple.3DSGT.py\
+    ../tests/test_GridSearch.FullMomentTensor.3DSGT.py\
+    ../tests/test_SerialGridSearch.DoubleCouple.3DSGT.SeisCloud.py\
     "
 
 

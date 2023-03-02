@@ -52,6 +52,7 @@ ENTRY_POINTS = {
         'SPECFEM3D_SAC = mtuq.io.clients.SPECFEM3D_SAC:Client',
         'SPECFEM3D_SGT = mtuq.io.clients.SPECFEM3D_SGT:Client',
         'SPECFEM3D_PKL = mtuq.io.clients.SPECFEM3D_SGT:Client',
+        'SEISCLOUD = mtuq.io.clients.seiscloud:Client',
         'SYNGINE = mtuq.io.clients.syngine:Client',
         ]
     }
@@ -99,6 +100,7 @@ setup(
         "tables",
         "obspy",
         "seisgen",
+        "seisclient",
         "retry",
         "flake8",
         "pytest",

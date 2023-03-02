@@ -20,14 +20,14 @@ if __name__=='__main__':
     # Carries out grid search over all moment tensor parameters
     #
     # USAGE
-    #   mpirun -n <NPROC> python GridSearch.FullMomentTensor.py
+    #   mpirun -n <NPROC> python test_GridSearch.FullMomentTensor.3DSGT.py
     #   
 
 
     path_greens = fullpath('data/examples/SPECFEM3D_SGT/greens/socal3D')
     path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
     path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
-    event_id    = 'evt11056825'
+    event_id    = 'evt11071294'
     model       = 'socal3D'
     taup_model  = 'ak135'
 
@@ -38,23 +38,23 @@ if __name__=='__main__':
 
     process_bw = ProcessData(
         filter_type='Bandpass',
-        freq_min= 0.1,
-        freq_max= 0.333,
+        freq_min= 0.05,
+        freq_max= 0.125,
         pick_type='taup',
         taup_model=taup_model,
         window_type='body_wave',
-        window_length=15.,
+        window_length=30.,
         capuaf_file=path_weights,
         )
 
     process_sw = ProcessData(
         filter_type='Bandpass',
-        freq_min=0.025,
-        freq_max=0.0625,
+        freq_min=0.033333,
+        freq_max=0.125,
         pick_type='taup',
         taup_model=taup_model,
         window_type='surface_wave',
-        window_length=150.,
+        window_length=100.,
         capuaf_file=path_weights,
         )
 
@@ -66,15 +66,15 @@ if __name__=='__main__':
 
     misfit_bw = Misfit(
         norm='L2',
-        time_shift_min=-2.,
-        time_shift_max=+2.,
+        time_shift_min=-3.,
+        time_shift_max=+3.,
         time_shift_groups=['ZR'],
         )
 
     misfit_sw = Misfit(
         norm='L2',
-        time_shift_min=-10.,
-        time_shift_max=+10.,
+        time_shift_min=-3.,
+        time_shift_max=+3.,
         time_shift_groups=['ZR','T'],
         )
 
@@ -93,7 +93,7 @@ if __name__=='__main__':
 
     grid = FullMomentTensorGridSemiregular(
         npts_per_axis=10,
-        magnitudes=[4.4, 4.5, 4.6, 4.7])
+        magnitudes=[4.5, 4.6, 4.7, 4.8])
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -108,11 +108,11 @@ if __name__=='__main__':
     #
 
     origin = Origin({
-        'time': '2019-07-04T18:39:44.0000Z',
-        'latitude': 35.601333,
-        'longitude': -117.597,
-        'depth_in_m': 2810.0,
-        'id': 'evt11056825'
+        'time': '2019-07-12T13:11:37.0000Z',
+        'latitude': 35.638333,
+        'longitude': -117.585333,
+        'depth_in_m': 9950.0,
+        'id': 'evt11071294'
         })
 
 
@@ -129,7 +129,7 @@ if __name__=='__main__':
         data = read(path_data, format='sac', 
             event_id=event_id,
             station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity']) 
+            tags=['units:cm', 'type:velocity'])
 
 
         data.sort_by_distance()
