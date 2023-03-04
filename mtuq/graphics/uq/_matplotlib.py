@@ -49,6 +49,7 @@ def _plot_dc_matplotlib(filename, coords,
     _set_dc_labels(axes, fontsize=fontsize)
 
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 
@@ -121,6 +122,7 @@ def _plot_depth_matplotlib(filename, depths, values,
          pyplot.ylabel(ylabel, fontsize=fontsize)
 
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 def _plot_omega_matplotlib(filename, omega, values,
@@ -141,6 +143,7 @@ def _plot_omega_matplotlib(filename, omega, values,
          pyplot.ylabel(ylabel, fontsize=fontsize)
 
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 #
