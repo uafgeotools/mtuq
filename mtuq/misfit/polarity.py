@@ -59,9 +59,9 @@ class PolarityMisfit(object):
     .. rubric:: Other input arguments that may be required, depending on the above
 
     ``taup_model`` (`str`): Name of built-in ObsPy TauP model or path to custom
-    ObsPy TauP model, required for `type='taup'`
+    ObsPy TauP model, required for `type=taup`
 
-    ``FK_database`` (`str`): Path to FK database, required for for `type='FK_metadata'`.
+    ``FK_database`` (`str`): Path to FK database, required for for `type=FK_metadata`.
 
     """
 
@@ -122,7 +122,7 @@ class PolarityMisfit(object):
 
 
     def get_observed(self, data):
-        """ Extracts observed polarities from given data
+        """ Extracts observed polarities from data
         """
 
         if isinstance(data, mtuq.Dataset):
@@ -141,7 +141,7 @@ class PolarityMisfit(object):
 
 
     def get_predicted(self, greens, sources):
-        """ Calculates polarities given Green's functions and sources
+        """ Calculates predicted polarities
         """
 
         if type(sources) == mtuq.MomentTensor:
@@ -181,9 +181,7 @@ class PolarityMisfit(object):
 
 
     def collect_attributes(self, data, greens):
-        """ Collect station attributes
-
-        Useful for beachball plots and other things
+        """ Collect polarity-related attributes (used for beachball plots)
         """
 
         if self.method=='taup':

@@ -69,7 +69,7 @@ class Client(ClientBase):
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
-        """ Reads Green's tensors
+        """ Extracts Green's tensors from database
 
         Returns a ``GreensTensorList`` in which each element corresponds to a
         (station, origin) pair from the given lists
