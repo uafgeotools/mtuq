@@ -11,7 +11,7 @@ from mtuq.graphics._gmt import read_cpt, _cpt_path
 
 def _plot_dc_matplotlib(filename, coords, 
     values_h_kappa, values_sigma_kappa, values_sigma_h,
-    best_dc=None, colormap='viridis',  figsize=(8., 8.), fontsize=14):
+    title=None, best_dc=None, colormap='viridis',  figsize=(8., 8.), fontsize=14):
 
     # prepare axes
     fig, axes = pyplot.subplots(2, 2,
@@ -49,6 +49,7 @@ def _plot_dc_matplotlib(filename, coords,
     _set_dc_labels(axes, fontsize=fontsize)
 
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 
@@ -121,6 +122,7 @@ def _plot_depth_matplotlib(filename, depths, values,
          pyplot.ylabel(ylabel, fontsize=fontsize)
 
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 def _plot_omega_matplotlib(filename, omega, values,
@@ -141,6 +143,7 @@ def _plot_omega_matplotlib(filename, omega, values,
          pyplot.ylabel(ylabel, fontsize=fontsize)
 
     pyplot.savefig(filename)
+    pyplot.close()
 
 
 #

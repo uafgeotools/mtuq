@@ -74,8 +74,8 @@ class WaveformMisfit(object):
 
     .. rubric:: Optimization Levels
 
-    Because misfit evaluation is our most computationally expensive task, we 
-    have implemented three different versions: 
+    Because waveform misfit evaluation is the most computationally expensive 
+    task, we have implemented three different versions: 
 
     - a readable pure Python version (``mtuq.misfit.level0``)
 
@@ -258,5 +258,12 @@ class WaveformMisfit(object):
             set_attributes=True)
 
         return deepcopy(synthetics)
+
+
+
+#
+# for backward compatibility
+#
+Misfit = WaveformMisfit
 
 

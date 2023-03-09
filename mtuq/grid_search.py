@@ -355,7 +355,7 @@ def open_ds(filename, format=None):
     File containing grid search results
 
     ``format`` (`str`):
-    File format (`NetCDF` or `HDF5`)
+    File format ('NetCDF' or 'HDF5')
 
     """
     if not format:

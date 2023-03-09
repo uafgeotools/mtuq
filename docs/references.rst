@@ -1,9 +1,11 @@
 References
 ----------
 
+[`Alvizuri2018`] C. Alvizuri and C. Tape (2018), Full Moment Tensor Analysis of Nuclear Explosions in North Korea, SRL, https://doi.org/10.1785/0220180158
+
 [`Minson2008`]] S.E. Minson and D.S. Dreger (2008), Stable inversions for complete moment tensors, GJI, 174: 585-592. https://doi.org/10.1111/j.1365-246X.2008.03797.xo
 
-[`Silwal2016`] Vipul Silwal and C. Tape (2016), Seismic moment tensors and estimated uncertainties in southern Alaska, JGR, https://doi.org/10.1002/2015JB012588
+[`Silwal2016`] V. Silwal and C. Tape (2016), Seismic moment tensors and estimated uncertainties in southern Alaska, JGR, https://doi.org/10.1002/2015JB012588
 
 [`Tape2012`] W. Tape and C. Tape (2012), A geometric setting for moment tensors, GJI, https://doi.org/10.1111/j.1365-246X.2012.05491.x
 

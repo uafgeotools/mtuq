@@ -18,7 +18,7 @@ Before running any of the scripts, users must first `install MTUQ <https://uafge
 Serial example
 --------------
 
-The simplest example is `SerialGridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  After running the script, users can check their output against this `expected result <https://github.com/rmodrak/mtbench/blob/figures/Silwal2016_syngine/20090407201255351.png>`_.
+The simplest example is `SerialGridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/SerialGridSearch.DoubleCouple.py>`_.  After running the script, users can check their output against this `expected result <https://github.com/rmodrak/mtbench/blob/FiguresSilwal2016/SerialGridSearch.DoubleCouple.png>`_.
 
 A typical runtime is about 60 seconds.  For faster results, `GridSearch.DoubleCouple.py <https://github.com/uafgeotools/mtuq/blob/master/examples/GridSearch.DoubleCouple.py>`_ runs the same inversion in parallel.
 

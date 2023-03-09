@@ -96,9 +96,7 @@ class Helper(object):
 
     def get_L2_norm(self, source, index, it):
         """
-        Given source and component, calculates L2 norm of data and shifted 
-        synthetics using
-
+        Calculates L2 norm of data and shifted synthetics via
         ||s - d||^2 = s^2 + d^2 - 2sd
         """
         misfit = 0
@@ -137,8 +135,7 @@ class Helper(object):
 
     def get_L1_norm(self, source, index, start, stop):
         """
-        Given source and component, calculates L2 norm of data and shifted 
-        synthetics using
+        Calculates L1 norm of data and shifted synthetics
         """
         synthetics = self.get_synthetics(source)
 
@@ -148,6 +145,9 @@ class Helper(object):
 
 
     def get_synthetics(self, source):
+        """ 
+        Generates synthetic waveforms using entire set of Green's functions
+        """
         if source != self.source:
             self.source = source
             self.synthetics = self.greens.get_synthetics(source)

@@ -92,8 +92,43 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
 
 
 
-def plot_marginal_dc():
-    raise NotImplementedError
+def plot_marginal_dc(filename, ds, var, **kwargs):
+    """ Plots marginal likelihood values over strike, dip, slip
+
+    .. rubric :: Required input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+   ``var`` (`float` or `array`):
+    Data variance
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_dc.html>`_
+
+    """
+    defaults(kwargs, {
+        'colormap': 'hot_r',
+        'squeeze': 'max',
+        })
+
+    _check(ds)
+
+    if issubclass(type(ds), DataArray):
+        marginals = _marginals_dc_regular(ds, var)
+
+    elif issubclass(type(ds), DataFrame):
+        warn('plot_marginal_dc() not implemented for irregularly-spaced grids.\n'
+             'No figure will be generated.')
+        return
+
+    _plot_dc(filename, marginals, **kwargs)
 
 
 
@@ -247,7 +282,16 @@ def _likelihoods_dc_regular(da, var):
 def _marginals_dc_regular(da, var):
     """ For each moment tensor orientation, calculate marginal likelihood
     """
-    raise NotImplementedError
+    likelihoods = da.copy()
+    likelihoods.values = np.exp(-likelihoods.values/(2.*var))
+    likelihoods.values /= likelihoods.values.sum()
+
+    marginals = likelihoods.sum(dim=('origin_idx', 'rho', 'v', 'w'))
+    marginals.values /= marginals.values.sum()
+
+    return marginals.assign_attrs({
+        'best_dc': _max_dc(marginals),
+        })
 
 
 def _variance_reduction_dc_regular(da, data_norm):
