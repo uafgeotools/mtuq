@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
-from mtuq.event import Origin
+from mtuq.event import Origin, MomentTensor
 from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_dc
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
@@ -236,6 +236,10 @@ if __name__=='__main__':
         # save misfit surface
         results.save(event_id+'DC_misfit.nc')
 
-
+        # making the cmt solution
+        MW = best_mt.magnitude()
+        MomentTensor.cmt(origin, event_id, mt_dict, MW)
+        
+        
         print('\nFinished\n')
 

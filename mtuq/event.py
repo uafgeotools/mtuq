@@ -1,6 +1,6 @@
 
 import numpy as np
-import obspy
+import obspy, re
 from obspy.core import UTCDateTime
 
 from mtuq.util import AttribDict, asarray
@@ -157,6 +157,36 @@ class MomentTensor(object):
 
     #def to_lune(self):
     #    raise NotImplementedError
+
+
+   # Added cmt solutions
+    def cmt(origin, event_id, mt_dict, MW):
+    	""" Adds cmt solution file for the particular event
+    	"""
+        # collect information about best-fitting source
+        ot = str(origin.time)
+        Ms = (MW-2.07)/0.67
+        mb = (MW-1.03)/0.85
+        cmt = ('PDE' + '  ' +ot[0:4]+ '  '+ot[5:7]+'  '+ot[8:10]+'  '
+        +ot[11:13]+'  '+ot[14:16]+'  '+ot[17:22]+'  '+str(origin.latitude)[0:7]+'  '
+        +str(origin.longitude)[0:7]+'  '+str(origin.depth_in_m*10**(-3))[0:4]+'  '
+        +str(mb)[0:3]+'  '+str(Ms)[0:3]+'  '+event_id,
+        'event name:      '+event_id,
+        'time shift:      '+str(0.00),
+        'half duration:   '+str(0.00),
+        'latitude:        '+str(origin.latitude)[0:7],
+        'longitude:       '+str(origin.longitude)[0:7],
+        'depth:           '+str(origin.depth_in_m*10**(-3))[0:4],
+        mt_dict)
+        with open('CMTSOLUTION' , 'w') as out_file:
+                        out_file.write(str(cmt))
+        with open("CMTSOLUTION",'r') as file:
+            for line in file:
+                data = re.sub(r"[\([{})\]]", "", line)
+                new_string = data.replace("'","")
+                solution = new_string.replace(', ','\n')
+        with open('CMTSOLUTION' , 'w') as out_file:
+                        out_file.write(str(solution))
 
 
 
