@@ -11,36 +11,35 @@ from mtuq.util.signal import m_to_deg
 class PolarityMisfit(object):
     """ Polarity misfit function
 
-    .. note:: 
-
-      *Convention* : Positive vertical first motions are encoded as +1 and
-      negative vertical first motions are encoded as -1. Unpicked or 
-      indeterminate first motions can be encoded as 0.
-
-
     .. rubric:: Usage
 
-    Evaluating polarity misfit is a two-step procedure:
+    Evaluating polarity misfit is a two-step procedure.
+
+    First, the user supplies parameters such as the method used to calculate
+    predicted polarities (see below for detailed parameter descriptions):
 
     .. code::
 
-        function_handle = PolarityMisfit(**parameters)
-        values = function_handle(data, greens, sources)
+        polarity_misfit = PolarityMisfit(**parameters)
 
-    First, the user supplies parameters such as the method used to calculate
-    predicted polarities (see below for detailed parameter descriptions).
+    Second, the user invokes the misfit function:
 
-    Second, the user invokes the misfit function, which
+    .. code::
 
-    - collects observed polarities from the `data` argument, which can be
+        values = polarity_misfit(data, greens, sources)
+
+    During misfit evaluation
+
+    - observed polarities are collected from the `data` argument, which can be
       either a list of integers or a `Dataset` with observed polarity values
       attached (see convention below for more information)
 
-    - calculates predicted polarities from the `greens` argument (see parameter
-      descriptions below for more information)
+    - predicted polarities are calculated from the `greens` argument (see 
+      parameter descriptions below for more information)
 
-    - returns a NumPy array of length `len(sources)` giving the number of
+    - a NumPy array of length `len(sources)` is returned, giving the number of
       mismatches between observed and predicted
+
 
     .. rubric:: Parameters
 
@@ -62,6 +61,12 @@ class PolarityMisfit(object):
     ObsPy TauP model, required for `type=taup`
 
     ``FK_database`` (`str`): Path to FK database, required for for `type=FK_metadata`.
+
+    .. note:: 
+
+      *Convention* : Positive vertical first motions are encoded as +1 and
+      negative vertical first motions are encoded as -1. Unpicked or 
+      indeterminate first motions can be encoded as 0.
 
     """
 
