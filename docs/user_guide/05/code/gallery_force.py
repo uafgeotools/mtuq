@@ -13,7 +13,7 @@ from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 from mtuq.graphics import plot_misfit_force, plot_likelihood_force, plot_magnitude_tradeoffs_force
-from mtbench import calculate_sigma
+from mtbench import estimate_sigma
 
 
 
@@ -141,7 +141,7 @@ if __name__=='__main__':
         results = results_sw
 
         # source index corresponding to minimum misfit
-        idx = results.idxmin('source')
+        idx = results.source_idxmin()
 
         best_source = grid.get(idx)
         force_dict = grid.get_dict(idx)
@@ -164,7 +164,7 @@ if __name__=='__main__':
 
         print('Plotting likelihoods...\n')
 
-        sigma = calculate_sigma(data_sw, greens_sw,
+        sigma = estimate_sigma(data_sw, greens_sw,
             best_source, misfit_sw.norm, ['Z','R'],
             misfit_sw.time_shift_min, misfit_sw.time_shift_max)
 
