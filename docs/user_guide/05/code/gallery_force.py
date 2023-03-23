@@ -13,7 +13,7 @@ from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 
 from mtuq.graphics import plot_misfit_force, plot_likelihood_force, plot_magnitude_tradeoffs_force
-from mtbench import estimate_sigma
+from mtuq.misfit.waveform import estimate_sigma
 
 
 

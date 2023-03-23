@@ -14,7 +14,7 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 from mtuq.graphics import plot_misfit_lune, plot_likelihood_lune,\
     plot_marginal_vw, plot_magnitude_tradeoffs_lune
-from mtbench import estimate_sigma
+from mtuq.misfit.waveform import estimate_sigma
 
 
 
