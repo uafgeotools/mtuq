@@ -3,7 +3,7 @@ import os
 import re
 import numpy as np
 
-from os.path import exists
+from os.path import abspath, exists, join
 from obspy.core import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
 from mtuq.util import fullpath, unzip, url2uuid, urlopen_with_retry
@@ -74,34 +74,34 @@ def download_unzip_mt_response(url, model, station, origin, verbose=True):
     try:
        dirname = os.environ['SYNGINE_CACHE']
     except:
-       dirname = 'data/greens_tensor/syngine/cache/'
+       dirname = fullpath('data/greens_tensor/syngine/cache/')
 
-    fullname = fullpath(dirname, str(url2uuid(url)))
+    path = abspath(join(dirname, str(url2uuid(url))))
 
-    if exists(fullname):
+    if exists(path):
         # if unzipped directory already exists, return its absolute path
-        return fullname
+        return path
 
-    elif exists(fullname+'.zip'):
+    elif exists(path+'.zip'):
         try:
             # if zip file already exists, try unzipping it
-            unzip(fullname+'.zip')
-            return fullname
+            unzip(path+'.zip')
+            return path
         except BadZipFile:
             # if zip file is corrupt, remove it
-            os.remove(fullname+'.zip')
+            os.remove(path+'.zip')
 
     if verbose:
         print(' Downloading Green''s functions for station %s' 
               % station.station)
 
     # download zip file
-    urlopen_with_retry(url, fullname+'.zip')
+    urlopen_with_retry(url, path+'.zip')
 
     # unzip
-    unzip(fullname+'.zip')
+    unzip(path+'.zip')
 
-    return fullname
+    return path
 
 
 def download_synthetics(url, model, station, origin, source):

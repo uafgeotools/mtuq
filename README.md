@@ -1,6 +1,6 @@
 # mtuq
 
-![Build Status](https://github.com/uafgeotools/mtuq/actions/workflows/python-app.yaml/badge.svg)
+[![Build Status](https://github.com/uafgeotools/mtuq/actions/workflows/python-app.yaml/badge.svg)](https://github.com/rmodrak/mtuq/blob/master/.github/workflows/python-app.yaml)
 [![SCOPED](https://img.shields.io/endpoint?url=https://runkit.io/wangyinz/scoped/branches/master/MTUQ)](https://github.com/SeisSCOPED/container/pkgs/container/MTUQ)
 
 MTUQ provides *m*oment *t*ensor estimates and *u*ncertainty *q*uantification from broadband seismic data.  
