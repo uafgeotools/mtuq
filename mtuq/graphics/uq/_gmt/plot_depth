@@ -126,12 +126,12 @@ fi
 gmt psbasemap $proj_arg $area_arg -BneSW -Bxaf"${xlabel_arg}" -Byaf"${ylabel_arg}" -Xc -Yr4. -K > $ps
 
 
-
+gmt makecpt -Cabyss -T0.7/1/0.002 -D -I > dep.cpt
 ## plot misfit versus depth
 if [ -f "$mt_data" ]; then
-    gmt psmeca $mt_data -N -Sm$diameter $proj_arg $area_arg -G0/0/0 -O -K >> $ps
+    gmt psmeca $mt_data -N -Sm$diameter $proj_arg $area_arg -Zdep.cpt -O -K >> $ps
 
-    gmt psxy $ascii_data -Sd$tinyval $proj_arg $area_arg -O -K >> $ps
+    gmt psscale -DjCB+w3i+o0/-4c+h -Cdep.cpt -Bxaf+l"confidence" $proj_arg $area_arg -O -K >> $ps
 else
     gmt psxy $ascii_data -Sd$radius $proj_arg $area_arg -G0/0/0 -O -K >> $ps
 fi

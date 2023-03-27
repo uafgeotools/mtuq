@@ -141,7 +141,7 @@ def _call(shell_script, filename, data, supplemental_data=None,
 
 
 
-def _plot_depth_gmt(filename, depths, values,
+def _plot_depth_gmt(filename, depths, values, unc,
         magnitudes=None, lune_array=None,
         title='', xlabel='', ylabel='', fontsize=16.):
 
@@ -168,6 +168,7 @@ def _plot_depth_gmt(filename, depths, values,
 
     if lune_array is not None:
         data2 = _parse_lune_array2(data[:,0], data[:,1], lune_array)
+        data2[::,2] = unc
         _savetxt(ascii_file_2, data2)
 
     if magnitudes is not None:
@@ -256,7 +257,7 @@ def _parse_limits(values):
 
     minval = masked.min()
     maxval = masked.max()
-    exp = _exponent(masked)
+    exp = np.floor(np.log10(np.max(np.abs(masked))))
 
     if -1 <= exp <= 2:
         return minval, maxval, 0
@@ -264,6 +265,7 @@ def _parse_limits(values):
     else:
         minval /= 10**exp
         maxval /= 10**exp
+        masked /= 10**exp
         return minval, maxval, exp
 
 

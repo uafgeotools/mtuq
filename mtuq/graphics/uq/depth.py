@@ -16,7 +16,7 @@ from mtuq.util.math import to_Mw
 
 
 
-def plot_misfit_depth(filename, ds, origins, **kwargs):
+def plot_misfit_depth(filename, ds, unc, test, min_misfit, origins1, **kwargs):
     """ Plots misfit versus depth
 
     .. rubric :: Required input arguments
@@ -49,12 +49,10 @@ def plot_misfit_depth(filename, ds, origins, **kwargs):
         da = _misfit_regular(ds)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_misfit_depth() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        da = ds.reset_index()
 
 
-    _plot_depth(filename, da, origins, **kwargs)
+    _plot_depth(filename, da, unc, test, min_misfit, origins1, **kwargs)
 
 
 
@@ -123,7 +121,7 @@ def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
     raise NotImplementedError
 
 
-def _plot_depth(filename, da, origins, title='',
+def _plot_depth(filename, da, unc, test, min_misfit, origins1, title='',
     xlabel='auto', ylabel='', show_magnitudes=False, show_tradeoffs=False,
     backend=_plot_depth_gmt):
 
@@ -152,30 +150,30 @@ def _plot_depth(filename, da, origins, title='',
 
     """
 
-    npts = len(origins)
+    npts = len(origins1)
 
     depths = np.empty(npts)
-    values = np.empty(npts)
-    for _i, origin in enumerate(origins):
-        depths[_i] = origin.depth_in_m
-        values[_i] = da.values[_i]
+    values = min_misfit
+    for _i, origin1 in enumerate(origins1):
+        depths[_i] = origin1.depth_in_m
 
     magnitudes = None
     if show_magnitudes:
         magnitudes = np.empty(npts)
         for _i in range(npts):
-            magnitudes[_i] = to_Mw(da[_i].coords['rho'])
+            magnitudes[_i] = to_Mw(da['rho'][_i])
 
     lune_array = None
     if show_tradeoffs:
         lune_array = np.empty((npts, 6))
         for _i in range(npts):
-            lune_array[_i, 0] = da[_i].coords['rho']
-            lune_array[_i, 1] = da[_i].coords['v']
-            lune_array[_i, 2] = da[_i].coords['w']
-            lune_array[_i, 3] = da[_i].coords['kappa']
-            lune_array[_i, 4] = da[_i].coords['sigma']
-            lune_array[_i, 5] = da[_i].coords['h']
+            lune_array[_i, 0] = da['rho'][_i]
+            lune_array[_i, 1] = da['v'][_i]
+            lune_array[_i, 2] = da['w'][_i]
+            lune_array[_i, 3] = da['kappa'][_i]
+            lune_array[_i, 4] = da['sigma'][_i]
+            lune_array[_i, 5] = da['h'][_i]
+    lune_array = test
 
     if xlabel=='auto' and (depths.max() < 10000.):
        xlabel = 'Depth (m)'
@@ -186,6 +184,7 @@ def _plot_depth(filename, da, origins, title='',
     backend(filename,
         depths,
         values,
+        unc,
         magnitudes=magnitudes,
         lune_array=lune_array,
         xlabel=xlabel,
