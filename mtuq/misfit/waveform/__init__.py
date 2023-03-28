@@ -19,19 +19,24 @@ class WaveformMisfit(object):
 
     .. rubric:: Usage
 
-    Evaluating misfit is a two-step procedure:
+    Evaluating misfit is a two-step procedure. 
+
+    First, the user supplies parameters such as the type of norm (see below for
+    detailed argument descriptions):
 
     .. code::
 
-        function_handle = Misfit(**parameters)
-        values = function_handle(data, greens, sources)
+        misfit = Misfit(**parameters)
 
-    In the first step, the user supplies parameters such as the type of norm
-    (see below for detailed argument descriptions).
+    Second, the user supplies data, Green's functions, and sources:
 
-    In the second step, the user supplies data, Green's functions, and sources.
-    Synthetics are then generated and compared with data, and a NumPy array of 
-    misfit values is returned of the same length as `sources`.
+    .. code::
+
+        values = misfit(data, greens, sources)
+
+    During misfit evaluation, synthetics are then generated and compared with 
+    data, and a NumPy array of  misfit values is returned of the same length as
+    `sources`.
 
 
     .. rubric:: Parameters

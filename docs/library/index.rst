@@ -148,7 +148,7 @@ Low-level misfit modules
 ------------------------
 
 .. note::
-    Misfit evaluation is the most computationally intensive task performed by this package.  These classes provide low-level access to non-optimized and optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.Misfit``.
+    Waveform misfit evaluation is the most computationally intensive task performed by this package.  These classes provide low-level access to non-optimized and optimized versions of the misfit function  (the former exists to check correctness of the latter).  Normally users can avoid this complexity by simply calling ``mtuq.misfit.WaveformMisfit``.
 
 ============================================================================================================  ============================================================================================================
 `mtuq.misfit.waveform.level0.misfit <generated/mtuq.misfit.waveform.level0.html>`_                             Easy-to-read pure Python implementation
