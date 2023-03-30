@@ -1,18 +1,23 @@
 
 # 
-# graphics/uq/omega.py - uncertainty quantification over moment tensor angular distance
+# graphics/uq/omega.py - uncertainty quantification over force or moment tensor
+# angular distance
 #
 
 import numpy as np
 
+from mtuq import Force, MomentTensor
 from mtuq.graphics.uq._matplotlib import _plot_omega_matplotlib
+from mtuq.grid_search import DataArray, DataFrame
 from mtuq.util import warn
 from mtuq.util.math import to_mij
 from pandas import DataFrame
 
+ISO = MomentTensor([1.,1.,1.,1.,1.,1.])
 
 
-def plot_pdf(filename, df, var, nbins=50, backend=_plot_omega_matplotlib, **kwargs):
+
+def plot_pdf(filename, df, var, m0=None, nbins=50, **kwargs):
     """ Plots probability density function over angular distance
 
     .. rubric :: Input arguments
@@ -31,12 +36,12 @@ def plot_pdf(filename, df, var, nbins=50, backend=_plot_omega_matplotlib, **kwar
         warn('plot_pdf requires randomly-drawn grid')
         return
 
-    omega, pdf = _calculate_pdf(df, var, nbins)
-    backend(filename, omega, pdf, **kwargs)
+    omega, pdf = _calculate_pdf(df, var, m0=m0, nbins=nbins)
+    _plot_omega(filename, omega, pdf, **kwargs)
 
 
 
-def plot_cdf(filename, df, var, nbins=50, backend=_plot_omega_matplotlib, **kwargs):
+def plot_cdf(filename, df, var, nbins=50, **kwargs):
     """ Plots cumulative distribution function over angular distance
 
     .. rubric :: Input arguments
@@ -55,59 +60,75 @@ def plot_cdf(filename, df, var, nbins=50, backend=_plot_omega_matplotlib, **kwar
         warn('plot_cdf requires randomly-drawn grid')
         return
 
-    omega, pdf = _calculate_pdf(df, var, nbins)
-    backend(filename, omega, np.cumsum(pdf), **kwargs)
+    omega, pdf = _calculate_pdf(df, var, m0=m0, nbins=nbins)
+    _plot_omega(filename, omega, np.cumsum(pdf), **kwargs)
 
 
 
-def plot_screening_curve(filename, ds, var, **kwargs):
+def plot_screening_curve(filename, ds, var, nbins=50,
+    backend=_plot_omega_matplotlib, **kwargs):
     """ Plots explosion screening curve
 
     In other words, plots probability density function that results from 
     integrating outward in angular distance from an isotropic moment tensor
     """
-
     if issubclass(type(ds), DataArray):
-        omega, values = _screening_curve_regular(ds, var)
+        omega, values = _screening_curve_regular(ds, var, nbins=nbins)
 
     elif issubclass(type(ds), DataFrame):
-        omega, values = _screening_curve_random(ds, var)
+        omega, values = _screening_curve_random(ds, var, nbins=nbins)
 
-    backend(filename, omega, values, **kwargs)
+    _plot_omega(filename, omega, values, **kwargs)
 
 
 
-def _calculate_pdf(df, var, nbins):
+def _plot_omega(filename, omega, values, backend=_plot_omega_matplotlib):
+    backend(filename, omega, values)
+
+
+
+def _calculate_pdf(df, var, m0=None, nbins=50, normalize=False):
     """ Calculates probability density function over angular distance
     """
 
-    # convert misfit to likelihood
+    # convert DataFrame to NumPy array
+    if _type(df)=='MomentTensor':
+        array = _to_array(df)
+
+    elif _type(df)=='Force':
+        raise NotImplementedError
+
+    else:
+        raise TypeError
+
+    if type(m0)==MomentTensor:
+        # convert from lune to GCMT parameters
+        m0 = m0.as_vector()
+
+    elif type(m0)==Force:
+        raise NotImplementedError
+
+    elif not m0:
+        # use maximum likelihood estimate
+        idx = _argmax(df)
+        m0 = array[idx,:]
+
+
+    #
+    # calculate likelihoods and corresponding angular distances
+    #
+
     df = df.copy()
     df = np.exp(-df/(2.*var))
-
-    # convert from lune to Cartesian parameters
-    mt_array = _to_array(df)
-
-    # maximum likelihood estimate
-    idx = _argmax(df)
-    mt_best = mt_array[idx,:]
-
-    # structure containing randomly-sampled likelihoods
     samples = df[0].values
 
-
-    #
-    # calculate angular distance
-    #
-
     # vectorized dot product
-    omega_array = np.dot(mt_array, mt_best)
-    omega_array /= np.sum(mt_best**2)**0.5
-    omega_array /= np.sum(mt_array**2, axis=1)**0.5
+    omega = np.dot(array, m0)
+    omega /= np.sum(m0**2)**0.5
+    omega /= np.sum(array**2, axis=1)**0.5
 
-    # calculate angles in degrees
-    omega_array = np.arccos(omega_array)
-    omega_array *= 180./np.pi
+    omega = np.arccos(omega)
+    omega *= 180./np.pi
 
 
     #
@@ -118,10 +139,12 @@ def _calculate_pdf(df, var, nbins):
     edges = np.linspace(0., 180., nbins+1)
     delta = np.diff(edges)
 
-    # bin likelihoods by angular distance
     likelihoods = np.zeros(nbins)
+    counts = np.zeros(nbins)
+
+    # bin likelihoods by angular distance
     for _i in range(nbins):
-        indices = np.argwhere(np.abs(omega_array - centers[_i]) < delta[_i])
+        indices = np.argwhere(np.abs(omega - centers[_i]) < delta[_i])
 
         if indices.size==0:
             print('Encountered empty bin')
@@ -129,6 +152,13 @@ def _calculate_pdf(df, var, nbins):
 
         for index in indices:
             likelihoods[_i] += samples[index]
+            counts[_i] += 1
+
+    if normalize:
+        mask = np.argwhere(counts > 0)
+        likelihoods[mask] /= counts[mask]
+        centers = centers[mask]
+        likelihoods = likelihoods[mask]
 
     likelihoods /= sum(likelihoods)
     likelihoods /= 180.
@@ -136,8 +166,9 @@ def _calculate_pdf(df, var, nbins):
     return centers, likelihoods
 
 
-def _screening_curve_random(df, var):
-    raise NotImplementedError
+def _screening_curve_random(df, var, nbins=50):
+    return _calculate_pdf(df, var, m0=ISO, nbins=nbins, normalize=True)
+
 
 def _screening_curve_regular(da, var):
     raise NotImplementedError
@@ -172,7 +203,33 @@ def _to_array(df):
         raise TypeError
 
 
+def _type(ds):
+
+    try:
+        # DataArray
+        dims = ds.dims
+    except:
+        # DataFrame
+        ds = ds.copy()
+        ds = ds.reset_index()
+        dims = list(ds.columns.values)
+
+    if 'rho' in dims\
+       and 'v' in dims\
+       and 'w' in dims\
+       and 'kappa' in dims\
+       and 'sigma' in dims\
+       and 'h' in dims:
+        return 'MomentTensor'
+
+    elif 'F0' in dims\
+       and 'phi' in dims\
+       and 'h' in dims:
+        return 'Force'
+
+
 def isuniform(ds):
     if issubclass(type(ds), DataFrame):
         return True
+
 
