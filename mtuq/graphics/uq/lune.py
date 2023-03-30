@@ -23,7 +23,8 @@ from mtuq.graphics.uq.vw import\
     _misfit_vw_regular, _misfit_vw_random,\
     _likelihoods_vw_regular, _likelihoods_vw_random,\
     _marginals_vw_regular, _marginals_vw_random,\
-    _variance_reduction_vw_regular, _magnitudes_vw_regular
+    _variance_reduction_vw_regular, _variance_reduction_vw_random,\
+    _magnitudes_vw_regular
 from mtuq.graphics.uq._gmt import _parse_best_lune
 
 
