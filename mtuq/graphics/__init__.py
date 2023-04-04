@@ -32,6 +32,9 @@ from mtuq.graphics.uq.hypocenter import\
 from mtuq.graphics.waveforms import\
     plot_waveforms1, plot_waveforms2, plot_data_greens1, plot_data_greens2
 
+from mtuq.graphics.uq.omega import\
+    plot_cdf, plot_pdf, plot_screening_curve
+
 from mtuq.graphics.uq import\
     likelihood_analysis
 

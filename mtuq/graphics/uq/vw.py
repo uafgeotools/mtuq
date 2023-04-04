@@ -452,7 +452,7 @@ def _marginals_vw_random(df, var, **kwargs):
     return da
 
 
-def _variance_reduction_vw_random(df, data_norm):
+def _variance_reduction_vw_random(df, data_norm, **kwargs):
     """ For each source type, extracts minimum misfit
     """
     df = df.copy()
