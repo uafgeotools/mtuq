@@ -121,8 +121,10 @@ class Client(ClientBase):
         dt_new = float(station.delta)
 
         # what are the start and end times of the Green's function?
-        t1_old = float(stream[0].stats.starttime)
-        t2_old = float(stream[0].stats.endtime)
+        # (SPECFEM3D_GLOBE defines these begin and end times relative to
+        # peak excitation time)
+        t1_old = float(stream[0].stats.sac['b'])
+        t2_old = float(stream[0].stats.sac['e'])
         dt_old = float(stream[0].stats.delta)
         t1_old += float(origin.time)
         t2_old += float(origin.time)
