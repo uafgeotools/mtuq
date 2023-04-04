@@ -13,11 +13,9 @@ from mtuq.util import warn
 from mtuq.util.math import to_mij
 from pandas import DataFrame
 
-ISO = MomentTensor([1.,1.,1.,1.,1.,1.])
 
 
-
-def plot_pdf(filename, df, var, m0=None, nbins=50, **kwargs):
+def plot_pdf(filename, df, var, m0=None, nbins=50, normalized=False, **kwargs):
     """ Plots probability density function over angular distance
 
     .. rubric :: Input arguments
@@ -31,17 +29,25 @@ def plot_pdf(filename, df, var, m0=None, nbins=50, **kwargs):
     ``var`` (`float` or `array`):
     Data variance
 
+    ``nbins`` (`int`):
+    Number of angular distance bins
+
+    ``normalized`` (`bool`):
+    Normalize each angular distance bin by volume of corresponding shell?
+
     """
     if not isuniform(df):
         warn('plot_pdf requires randomly-drawn grid')
         return
 
-    omega, pdf = _calculate_pdf(df, var, m0=m0, nbins=nbins)
+    omega, pdf = _calculate_pdf(df, var, m0=m0, nbins=nbins, 
+        normalized=normalized)
+
     _plot_omega(filename, omega, pdf, **kwargs)
 
 
 
-def plot_cdf(filename, df, var, nbins=50, **kwargs):
+def plot_cdf(filename, df, var, nbins=50, normalized=False, **kwargs):
     """ Plots cumulative distribution function over angular distance
 
     .. rubric :: Input arguments
@@ -55,22 +61,40 @@ def plot_cdf(filename, df, var, nbins=50, **kwargs):
     ``var`` (`float` or `array`):
     Data variance
 
+    ``nbins`` (`int`):
+    Number of angular distance bins
+
+    ``normalized`` (`bool`): 
+    Normalize each angular distance bin by volume of corresponding shell?
+
     """
     if not isuniform(df):
         warn('plot_cdf requires randomly-drawn grid')
         return
 
-    omega, pdf = _calculate_pdf(df, var, m0=m0, nbins=nbins)
+    omega, pdf = _calculate_pdf(df, var, m0=m0, nbins=nbins, 
+        normalized=normalized)
+
     _plot_omega(filename, omega, np.cumsum(pdf), **kwargs)
 
 
 
-def plot_screening_curve(filename, ds, var, nbins=50,
-    backend=_plot_omega_matplotlib, **kwargs):
-    """ Plots explosion screening curve
+def plot_screening_curve(filename, ds, var, nbins=50, **kwargs):
+    """ Plots explosion screening curve (maximum likelihood versus angular
+    distance)
 
-    In other words, plots probability density function that results from 
-    integrating outward in angular distance from an isotropic moment tensor
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``df`` (`DataFrame`):
+    Data structure containing moment tensors and corresponding misfit values
+
+    ``var`` (`float` or `array`):
+    Data variance
+
+    ``nbins`` (`int`):
+    Number of angular distance bins
+
     """
     if issubclass(type(ds), DataArray):
         omega, values = _screening_curve_regular(ds, var, nbins=nbins)
@@ -83,17 +107,53 @@ def plot_screening_curve(filename, ds, var, nbins=50,
 
 
 def _plot_omega(filename, omega, values, backend=_plot_omega_matplotlib):
+    # currently, does nothing except call backend
     backend(filename, omega, values)
 
 
 
-def _calculate_pdf(df, var, m0=None, nbins=50, normalize=False):
-    """ Calculates probability density function over angular distance
-    """
+#
+# for extracting PDFs and explosion screening curves
+#
 
-    # convert DataFrame to NumPy array
+ISO = MomentTensor([1.,1.,1.,0.,0.,0.])
+
+
+def _calculate_pdf(df, var, m0=None, nbins=50, normalized=False):
+    """ Calculates marginal probability density function over angular distance
+    """
+    likelihoods = np.exp(-df.copy()/(2.*var))
+
+    return _map_omega(likelihoods, lambda pts: sum(pts), m0=m0, nbins=nbins,
+        normalized=normalized)
+
+
+def _screening_curve_random(df, var, nbins=50):
+    """ Calculates explosion screening curve from randomly-drawn samples
+    """
+    likelihoods = np.exp(-df.copy()/(2.*var))
+
+    return _map_omega(likelihoods, lambda pts: pts.max(), m0=ISO, nbins=nbins,
+        normalized=False)
+
+
+def _screening_curve_regular(da, var):
+    """ Calculates explosion screening curve from regularly-spaced samples
+    """
+    raise NotImplementedError
+
+
+
+#
+# operations over angular distance
+#
+
+def _calculate_omega(df, m0=None):
+    """ Calculates angular distances between vectors from DataFrame
+    """
+    # extract vectors from DataFrame
     if _type(df)=='MomentTensor':
-        array = _to_array(df)
+        m = _to_array(df)
 
     elif _type(df)=='Force':
         raise NotImplementedError
@@ -101,77 +161,77 @@ def _calculate_pdf(df, var, m0=None, nbins=50, normalize=False):
     else:
         raise TypeError
 
+    # extract reference vector
     if type(m0)==MomentTensor:
-        # convert from lune to GCMT parameters
+        # convert from lune to mij parameters
         m0 = m0.as_vector()
 
     elif type(m0)==Force:
         raise NotImplementedError
 
     elif not m0:
-        # use maximum likelihood estimate
+        # assume df holds likelihoods, try maximum likelihood estimate
         idx = _argmax(df)
-        m0 = array[idx,:]
-
-
-    #
-    # calculate likelihoods and corresponding angular distances
-    #
-
-    df = df.copy()
-    df = np.exp(-df/(2.*var))
-    samples = df[0].values
+        m0 = m[idx,:]
 
     # vectorized dot product
-    omega = np.dot(array, m0)
-    omega /= np.sum(m0**2)**0.5
-    omega /= np.sum(array**2, axis=1)**0.5
+    dp = np.dot(m, m0)
+    dp /= np.sum(m0**2)**0.5
+    dp /= np.sum(m**2, axis=1)**0.5
 
-    omega = np.arccos(omega)
-    omega *= 180./np.pi
+    # return angles as NumPy array
+    omega = 180./np.pi * np.arccos(dp)
+    return omega
 
 
-    #
-    # Monte Carlo integration
-    #
 
+def _map_omega(df, func, m0=None, nbins=50, normalized=False):
+    """ Maps function over angular distance bins
+    """
+    omega = _calculate_omega(df, m0=m0)
+
+    centers, binned, counts =  _bin_omega(omega, df[0].values, nbins=nbins)
+
+    values = np.zeros(len(binned))
+    for _i in range(len(binned)):
+        values[_i] = func(binned[_i])
+
+    # normalize each bin by volume of angular distance shell?
+    if normalized:
+        values /= counts
+
+    return centers, values
+
+
+
+def _bin_omega(omega, values, nbins=50, mask_empty=True):
+    """ Bins by angular distance
+    """
     centers = np.linspace(0, 180., nbins+2)[1:-1]
     edges = np.linspace(0., 180., nbins+1)
     delta = np.diff(edges)
 
-    likelihoods = np.zeros(nbins)
+    binned = []
     counts = np.zeros(nbins)
 
-    # bin likelihoods by angular distance
     for _i in range(nbins):
         indices = np.argwhere(np.abs(omega - centers[_i]) < delta[_i])
 
         if indices.size==0:
             print('Encountered empty bin')
+            binned += [[]]
             continue
 
-        for index in indices:
-            likelihoods[_i] += samples[index]
-            counts[_i] += 1
+        binned += [values[indices]]
+        counts[_i] = len(indices)
 
-    if normalize:
-        mask = np.argwhere(counts > 0)
-        likelihoods[mask] /= counts[mask]
-        centers = centers[mask]
-        likelihoods = likelihoods[mask]
+    # exclude empty bins?
+    if mask_empty:
+        mask = np.argwhere(counts > 0).squeeze()
+        return centers[mask], [binned[_i] for _i in mask.tolist()], counts[mask]
 
-    likelihoods /= sum(likelihoods)
-    likelihoods /= 180.
-
-    return centers, likelihoods
-
-
-def _screening_curve_random(df, var, nbins=50):
-    return _calculate_pdf(df, var, m0=ISO, nbins=nbins, normalize=True)
-
-
-def _screening_curve_regular(da, var):
-    raise NotImplementedError
+    else:
+        return centers, binned, counts
 
 
 #
