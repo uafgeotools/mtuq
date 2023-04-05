@@ -16,21 +16,8 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Grid search integration test
+    # Grid search integration test using SPECFEM3D Green's functions
     #
-    # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
-    # except here we use a coarser grid, and at the end we assert that the test
-    # result equals the expected result
-    #
-    # The compare against CAP/FK:
-    #
-    # cap.pl -H0.02 -P1/15/60 -p1 -S2/10/0 -T15/150 -D1/1/0.5 -C0.1/0.333/0.025/0.0625 -Y1 -Zweight_test.dat -Mscak_34 -m4.5 -I1/1/10/10/10 -R0/0/0/0/0/360/0/90/-180/180 20090407201255351
-    #
-    # Note however that CAP uses a different method for defining regular grids
-    #
-    # This script is specifically test changes that might affect the reading and use of Green's Functions
-    # generated in SPECFEM3D
-
 
     # by default, the script runs with figure generation and error checking
     # turned on
