@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import os
 import numpy as np
@@ -17,32 +16,27 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Carries out grid search over 64,000 double couple moment tensors
-    #
-    # USAGE
-    #   python test_SerialGridSearch.DoubleCouple.3DSGT.SeisCloud.py
-    #
-    # A typical runtime is about 60 seconds. For faster results try
-    # test_SerialGridSearch.DoubleCouple.3DSGT.SeisCloud, which runs the same inversion in serial
+    # Grid search integration test using SPECFEM3D strain Green's tensors
     #
 
+    # by default, the script runs with figure generation and error checking
+    # turned on
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no_checks', action='store_true')
+    parser.add_argument('--no_figures', action='store_true')
+    args = parser.parse_args()
+    run_checks = (not args.no_checks)
+    run_figures = (not args.no_figures)
 
-    #
-    # We will investigate the source process of an Mw~4.8 earthquake using data
-    # from a regional seismic array
-    #
 
-    path_greens = fullpath('data/greens_tensor/seiscloud/socal3D')
+    path_greens = fullpath('data/examples/SPECFEM3D_SGT/greens/socal3D')
     path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
     path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
     event_id    = 'evt11071294'
     model       = 'socal3D'
     taup_model  = 'ak135'
 
-
-    #
-    # Body and surface wave measurements will be made separately
-    #
 
     process_bw = ProcessData(
         filter_type='Bandpass',
@@ -67,11 +61,6 @@ if __name__=='__main__':
         )
 
 
-    #
-    # For our objective function, we will use a sum of body and surface wave
-    # contributions
-    #
-
     misfit_bw = Misfit(
         norm='L2',
         time_shift_min=-3.,
@@ -88,32 +77,19 @@ if __name__=='__main__':
 
 
     #
-    # User-supplied weights control how much each station contributes to the
-    # objective function
-    #
-
-    station_id_list = parse_station_codes(path_weights)
-
-
-    #
     # Next, we specify the moment tensor grid and source-time function
     #
 
     grid = DoubleCoupleGridRegular(
-        npts_per_axis=10,
-        magnitudes=[4.5, 4.6, 4.7, 4.8])
+        npts_per_axis=5,
+        magnitudes=[4.5])
 
     wavelet = Trapezoid(
         magnitude=4.5)
 
 
-    #
-    # Origin time and location will be fixed. For an example in which they
-    # vary, see examples/GridSearch.DoubleCouple+Magnitude+Depth.py
-    #
-    # See also Dataset.get_origins(), which attempts to create Origin objects
-    # from waveform metadata
-    #
+    station_id_list = parse_station_codes(path_weights)
+
 
     origin = Origin({
         'time': '2019-07-12T13:11:37.0000Z',
@@ -132,7 +108,7 @@ if __name__=='__main__':
     data = read(path_data, format='sac',
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity'])
+        tags=['units:cm', 'type:velocity']) 
 
 
     data.sort_by_distance()
@@ -143,8 +119,9 @@ if __name__=='__main__':
     data_bw = data.map(process_bw)
     data_sw = data.map(process_sw)
 
-    print('Download Greens functions...\n')
-    db = open_db(path_greens, format='SEISCLOUD', model='socal3D')
+
+    print('Reading Greens functions...\n')
+    db = open_db(path_greens, format='SPECFEM3D_SGT', model=model)
     greens = db.get_greens_tensors(stations, origin)
 
 
@@ -159,59 +136,58 @@ if __name__=='__main__':
     #
 
     print('Evaluating body wave misfit...\n')
-    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, grid)
+    results_bw = grid_search(data_bw, greens_bw, misfit_bw, origin, grid, 0)
 
     print('Evaluating surface wave misfit...\n')
-    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid)
+    results_sw = grid_search(data_sw, greens_sw, misfit_sw, origin, grid, 0)
 
 
 
     results = results_bw + results_sw
 
-    # `grid` index corresponding to minimum misfit
+    # source corresponding to minimum misfit
     idx = results.source_idxmin()
-
     best_mt = grid.get(idx)
     lune_dict = grid.get_dict(idx)
-    mt_dict = best_mt.as_dict()
+
+    if run_figures:
+
+        plot_data_greens2(event_id+'DC_waveforms.png',
+            data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw, 
+            misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
+
+        plot_beachball(event_id+'DC_beachball.png',
+            best_mt, None, None)
 
 
-    #
-    # Generate figures and save results
-    #
+    if run_checks:
+        def isclose(a, b, atol=1.e6, rtol=1.e-6):
+            # the default absolute tolerance (1.e6) is several orders of 
+            # magnitude less than the moment of an Mw=0 event
 
-    print('Generating figures...\n')
+            for _a, _b, _bool in zip(
+                a, b, np.isclose(a, b, atol=atol, rtol=rtol)):
 
-    plot_data_greens2(event_id+'DC_waveforms.png',
-        data_bw, data_sw, greens_bw, greens_sw, process_bw, process_sw,
-        misfit_bw, misfit_sw, stations, origin, best_mt, lune_dict)
+                print('%s:  %.e <= %.1e + %.1e * %.1e' %\
+                    ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b)))
+            print('')
 
+            return np.all(
+                np.isclose(a, b, atol=atol, rtol=rtol))
 
-    plot_beachball(event_id+'DC_beachball.png',
-        best_mt, stations, origin)
+        print(best_mt.as_vector())
 
+        if not isclose(best_mt.as_vector(),
+            np.array([
+                  3.53944548e-01,
+                 -6.42283879e+15,
+                  6.42283879e+15,
+                 -1.71822051e+15,
+                  1.24836027e+15,
+                 -2.08690683e+15,
+                 ])
+            ):
+            raise Exception(
+                "Grid search result differs from previous mtuq result")
 
-    plot_misfit_dc(event_id+'DC_misfit.png', results)
-
-
-    print('Saving results...\n')
-
-    # collect information about best-fitting source
-    merged_dict = merge_dicts(
-        mt_dict,
-        lune_dict,
-        {'M0': best_mt.moment()},
-        {'Mw': best_mt.magnitude()},
-        origin,
-        )
-
-    # save best-fitting source
-    save_json(event_id+'DC_solution.json', merged_dict)
-
-
-    # save misfit surface
-    results.save(event_id+'DC_misfit.nc')
-
-
-    print('\nFinished\n')
-
+        print('SUCCESS\n')

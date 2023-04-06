@@ -39,7 +39,7 @@ if __name__=='__main__':
     #
     #
     # USAGE
-    #   mpirun -n <NPROC> python Misfit_vs_Likelihood.py
+    #   mpirun -n <NPROC> python DetailedAnalysis.py
     #   
     #
     # This is the most complicated example. For simpler ones, see
@@ -1922,47 +1922,47 @@ if __name__=='__main__':
         file.write(WrapUp_WaveformsPolarities)
 
 
-    with open('tests/test_SPECFEM3D_SGT.py', 'w') as file:
-        file.write("#!/usr/bin/env python\n")
-        file.write(
-            replace(
-            Imports,
-            'DoubleCoupleGridRegular',
-            'FullMomentTensorGridSemiregular',
-            'plot_misfit_dc',
-            'plot_misfit_lune',
-            ))
-        file.write(Docstring_GridSearch_FullMomentTensor)
-        file.write(Paths_SPECFEM3D_SGT)
-        file.write(DataProcessingComments)
-        file.write(
-            replace(
-            DataProcessingDefinitions,
-            'taup_model=model',
-            'taup_model=taup_model',
-            ))
-        file.write(MisfitComments)
-        file.write(MisfitDefinitions)
-        file.write(WeightsComments)
-        file.write(WeightsDefinitions)
-        file.write(Grid_FullMomentTensor)
-        file.write(OriginComments)
-        file.write(OriginDefinitions_SPECFEM3D_SGT)
-        file.write(
-            replace(
-            Main_GridSearch,
-            'greens = download_greens_tensors\(stations, origin, model\)',
-            'db = open_db(path_greens, format=\'SPECFEM3D_SGT\', model=model)\n        '
-           +'greens = db.get_greens_tensors(stations, origin)',
-           ))
-        file.write(
-            replace(
-            WrapUp_GridSearch,
-            'DC',
-            'FMT',
-            'plot_misfit_dc',
-            'plot_misfit_lune',
-            ))
+    #with open('tests/test_SPECFEM3D_SGT.py', 'w') as file:
+    #    file.write("#!/usr/bin/env python\n")
+    #    file.write(
+    #        replace(
+    #        Imports,
+    #        'DoubleCoupleGridRegular',
+    #        'FullMomentTensorGridSemiregular',
+    #        'plot_misfit_dc',
+    #        'plot_misfit_lune',
+    #        ))
+    #    file.write(Docstring_GridSearch_FullMomentTensor)
+    #    file.write(Paths_SPECFEM3D_SGT)
+    #    file.write(DataProcessingComments)
+    #    file.write(
+    #        replace(
+    #        DataProcessingDefinitions,
+    #        'taup_model=model',
+    #        'taup_model=taup_model',
+    #        ))
+    #    file.write(MisfitComments)
+    #    file.write(MisfitDefinitions)
+    #    file.write(WeightsComments)
+    #    file.write(WeightsDefinitions)
+    #    file.write(Grid_FullMomentTensor)
+    #    file.write(OriginComments)
+    #    file.write(OriginDefinitions_SPECFEM3D_SGT)
+    #    file.write(
+    #        replace(
+    #        Main_GridSearch,
+    #        'greens = download_greens_tensors\(stations, origin, model\)',
+    #        'db = open_db(path_greens, format=\'SPECFEM3D_SGT\', model=model)\n        '
+    #       +'greens = db.get_greens_tensors(stations, origin)',
+    #       ))
+    #    file.write(
+    #        replace(
+    #        WrapUp_GridSearch,
+    #        'DC',
+    #        'FMT',
+    #        'plot_misfit_dc',
+    #        'plot_misfit_lune',
+    #        ))
 
 
     with open('tests/test_grid_search_mt.py', 'w') as file:
