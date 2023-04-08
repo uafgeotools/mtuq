@@ -198,7 +198,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
            }
 
           // Skip traces that have been assigned zero weight
-          if (fabs(weights(ista, ic)) < 1e-6) {
+          if (fabs(weights(ista, ic)) < 1.e-6) {
               if (debug_level>1) {
                 if (isrc==0) {
                   printf(" skipping trace: %d %d\n", ista, ic);
@@ -245,7 +245,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
           }
 
           // Skip traces that have been assigned zero weight
-          if (fabs(weights(ista, ic)) < 1e-6) {
+          if (fabs(weights(ista, ic)) < 1.e-6) {
               continue;
           }
 
