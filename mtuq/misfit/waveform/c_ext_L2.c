@@ -145,6 +145,19 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
   }
 
   //
+  // Print the weights for each component of each station, with numbering to keep track of things
+  //
+
+  if (debug_level>1) {
+    printf("The weights: \n");
+    for (ista=0; ista<NSTA; ista++) {
+      for (ic=0; ic<NC; ic++) {
+        printf("  %d %d %f \n", ista, ic, weights(ista, ic));
+      }
+    }
+  }
+
+  //
   // Iterate over sources
   //
 
@@ -168,7 +181,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
         /*
 
         Finds the shift between data and synthetics that yields the maximum
-        cross-correlation value across all components in the given component 
+        cross-correlation value across all components in the given component
         group, subject to the (time_shift_min, time_shift_max) constraint
 
         */
@@ -185,7 +198,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
            }
 
           // Skip traces that have been assigned zero weight
-          if (((int) weights(ista,ic))==0) {
+          if (fabs(weights(ista, ic)) < 1e-6) {
               if (debug_level>1) {
                 if (isrc==0) {
                   printf(" skipping trace: %d %d\n", ista, ic);
@@ -229,10 +242,10 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
           // Skip components not in the component group being considered
           if (((int) groups(igrp,ic))==0) {
             continue;
-          } 
+          }
 
           // Skip traces that have been assigned zero weight
-          if (((int) weights(ista,ic))==0) {
+          if (fabs(weights(ista, ic)) < 1e-6) {
               continue;
           }
 
@@ -249,11 +262,17 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
           // calculate sd
           for (ig=0; ig<NG; ig++) {
-            L2_tmp -= 2.*greens_data(ista,ic,ig,itpad) * sources(isrc, ig); 
+            L2_tmp -= 2.*greens_data(ista,ic,ig,itpad) * sources(isrc, ig);
           }
 
           if (hybrid_norm==0) {
               // L2 norm
+              // Print the weight value
+              if (debug_level>1) {
+                if (isrc==0) {
+                  printf(" weight: %d %d %f \n", ista, ic, weights(ista, ic));
+                }
+              }
               L2_sum += dt * weights(ista,ic) * L2_tmp;
           }
           else {
@@ -273,7 +292,7 @@ static PyObject *misfit(PyObject *self, PyObject *args) {
 
 
 //
-// Boilerplate 
+// Boilerplate
 //
 
 static PyMethodDef methods[] = {
