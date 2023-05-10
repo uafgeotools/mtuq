@@ -40,7 +40,9 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     #
     data = _get_data(data, stations, components)
     greens = _get_greens(greens, stations, components)
-    sources = _to_array(sources)
+    if not isinstance(sources, (np.ndarray)):
+        sources = _to_array(sources)
+    # sources = _to_array(sources)
 
     # sanity checks
     _check(data, greens, sources)
