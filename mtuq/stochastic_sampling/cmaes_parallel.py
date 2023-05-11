@@ -128,6 +128,7 @@ class parallel_CMA_ES(object):
         else:
             self.mutant_lists = None
         # Scatter the splited mutant_lists across processes.
+        self.counteval += self.lmbda
         self.scattered_mutants = self.comm.scatter(self.mutant_lists, root=0)
 
     def mean_diff(self, new, old):
@@ -309,11 +310,6 @@ class parallel_CMA_ES(object):
         diffs[diffs > 180] = -(360 - diffs[diffs > 180])
         return diffs
 
-    def update_step_size(self):
-        # Step size control
-        if self.rank == 0:
-            self.ps = (1-self.cs)*self.ps + np.sqrt(self.cs*(2-self.cs)*self.mueff) * self.invsqrtC @ (self.mean_diff(self.xmean, self.xold) / self.sigma)
-
     def mean_diff(self, new, old):
         # Compute mean change, and apply circular difference for wrapped repair methods (implying periodic parameters)
         diff = new-old
@@ -324,18 +320,42 @@ class parallel_CMA_ES(object):
                 diff[_i] = angular_diff
         return diff
 
+    def update_step_size(self):
+        # Step size control
+        if self.rank == 0:
+            self.ps = (1-self.cs)*self.ps + np.sqrt(self.cs*(2-self.cs)*self.mueff) * self.invsqrtC @ (self.mean_diff(self.xmean, self.xold) / self.sigma)
+
+
     def update_covariance(self):
         # Covariance matrix adaptation
         if self.rank == 0:
-            if np.linalg.norm(self.ps)/np.sqrt(1-(1-self.cs)**(2*self.counteval/self.lmbda))/self.chin < 1.4 + 2/(self.n+1):
+            ps_norm = np.linalg.norm(self.ps)
+            condition = ps_norm / np.sqrt(1 - (1 - self.cs) ** (2 * (self.counteval // self.lmbda + 1))) / self.chin
+            threshold = 1.4 + 2 / (self.n + 1)
+
+            if condition < threshold:
                 self.hsig = 1
-            if np.linalg.norm(self.ps)/np.sqrt(1-(1-self.cs)**(2*self.counteval/self.lmbda))/self.chin >= 1.4 + 2/(self.n+1):
+            else:
                 self.hsig = 0
-            self.pc = (1-self.cc) * self.pc + self.hsig * np.sqrt(self.cc*(2-self.cc)*self.mueff) * (self.mean_diff(self.xmean, self.xold)) / self.sigma
+
+            self.dhsig = (1 - self.hsig)*self.cc*(2-self.cc)
+
+            self.pc = (1 - self.cc) * self.pc + self.hsig * np.sqrt(self.cc * (2 - self.cc) * self.mueff) * self.mean_diff(self.xmean, self.xold) / self.sigma
 
             artmp = (1/self.sigma) * self.mean_diff(self.mutants[:,0:int(self.mu)], self.xold)
-            self.C = (1-self.c1-self.cmu) * self.C + self.c1 * (self.pc@self.pc.T + (1-self.hsig) * self.cc*(2-self.cc) * self.C) + self.cmu * artmp @ np.diag(self.weights.T[0]) @ artmp.T
+            # Old version - from the pureCMA Matlab implementation on Wikipedia
+            # self.C = (1-self.c1-self.cmu) * self.C + self.c1 * (self.pc@self.pc.T + (1-self.hsig) * self.cc*(2-self.cc) * self.C) + self.cmu * artmp @ np.diag(self.weights.T[0]) @ artmp.T
+            # Old version - from CMA-ES tutorial by Hansen et al. (2016) - https://arxiv.org/pdf/1604.00772.pdf
+            # self.C = (1 + self.c1*self.dhsig - self.c1 - self.cmu*np.sum(self.weights)) * self.C + self.c1 * self.pc@self.pc.T + self.cmu * artmp @ np.diag(self.weights.T[0]) @ artmp.T
+
+            # New version - from the purecma python implementation on GitHub - September, 2017, version 3.0.0
+            # https://github.com/CMA-ES/pycma/blob/development/cma/purecma.py
+            self.C *= 1 + self.c1*self.dhsig - self.c1 - self.cmu * sum(self.weights) # Discount factor
+            self.C += self.c1 * self.pc @ self.pc.T # Rank one update (pc.pc^T is a matrix of rank 1) 
+            self.C += self.cmu * artmp @ np.diag(self.weights.T[0]) @ artmp.T # Rank mu update, supported by the mu best individuals
+
             # Adapt step size
+            # We do sigma_i+1 = sigma_i * exp((cs/damps)*(||ps||/E[N(0,I)]) - 1) only now as artmp needs sigma_i
             self.sigma = self.sigma * np.exp((self.cs/self.damps)*(np.linalg.norm(self.ps)/self.chin - 1))
 
             if self.counteval - self.eigeneval > self.lmbda/(self.c1+self.cmu)/self.n/10:
@@ -345,6 +365,8 @@ class parallel_CMA_ES(object):
                 self.D = np.array([self.D]).T
                 self.D = np.sqrt(self.D)
                 self.invsqrtC = self.B @ np.diag(self.D[:,0]**-1) @ self.B.T
+        
+        self.iteration = self.counteval//self.lmbda
 
     def update_mean(self):
         # Update the mean
