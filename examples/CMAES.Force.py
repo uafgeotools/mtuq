@@ -28,7 +28,7 @@ if __name__=='__main__':
     event_id=     '20090407201255351'
     model=        'ak135'
     mode =        'greens' # 'database' or 'greens'
-    mode =        'database' # 'database' or 'greens'
+    # mode =        'database' # 'database' or 'greens'
 
     #
     # Body and surface wave measurements will be made separately
@@ -160,13 +160,13 @@ if __name__=='__main__':
         greens_bw = comm.bcast(greens_bw, root=0)
         greens_sw = comm.bcast(greens_sw, root=0)
     elif mode == 'database':
-        db = open_db('/Users/julienthurin/Downloads/model/ak135f/', format='AxiSEM', include_mt=False, include_force=True)
+        db = open_db('/Users/julienthurin/Downloads/model/ak135f/', format='AxiSEM')
 
     #
     # The main computational work starts now
     #
     if mode == 'database':
-        parameter_list = initialise_force(F0_range=[1e10, 1e16], depth=[30000, 40000])
+        parameter_list = initialise_force()
     elif mode == 'greens':
         parameter_list = initialise_force(F0_range=[1e10, 1e16])
 
@@ -174,8 +174,8 @@ if __name__=='__main__':
     PROCESS = [process_bw, process_sw]
     MISFIT = [misfit_bw, misfit_sw]
 
-    CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=24)
-    CMA.sigma = 1
+    CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=240)
+    CMA.sigma = 0.2
     iter = 120
     for i in range(iter):
         if comm.rank==0:
@@ -194,9 +194,9 @@ if __name__=='__main__':
         CMA.update_covariance()
 
         # if i = 0 or multiple of 10 and Last iteration:
-        if i == 0 or i % 10 == 0 or i == iter-1:
-            CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+        # if i == 0 or i % 10 == 0 or i == iter-1:
+        #     CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
         
         # if i == 0 or Last iteration:
-        # if i == 0 or i == iter-1:
-        #     CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+        if i == 0 or i == iter-1:
+            CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
