@@ -11,7 +11,20 @@ from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 from mtuq.stochastic_sampling import initialise_mt
 from mtuq.stochastic_sampling.cmaes_parallel import parallel_CMA_ES
+import matplotlib.pyplot as plt
+from mtuq.util.signal import to_gamma, to_delta
 
+def plot_lune(CMA):
+    A = CMA.mutants_logger_list
+    LIST = A.copy()
+    v = LIST['v']
+    w = LIST['w']
+    m = LIST['misfit']
+    V,W = CMA._datalogger(mean=True)['v'], CMA._datalogger(mean=True)['w']
+
+    plt.scatter(to_gamma(v), to_delta(w), c=np.log(m))
+    plt.scatter(to_gamma(V), to_delta(W), c='red', marker='x', zorder=10000000)
+    plt.show()
 
 
 if __name__=='__main__':
@@ -193,26 +206,17 @@ if __name__=='__main__':
         CMA.update_mean()
         CMA.update_step_size()
         CMA.update_covariance()
-        plot_lune(CMA)
+        # -- WORK IN PROGRESS --
+        # Debug plot
 
-        # pause to update the plot
-        plt.pause(0.01)
+        # plot_lune(CMA)
+        # plt.pause(0.01)
+        # -- END OF WORK IN PROGRESS --
 
-
-        # if i = 0 or multiple of 10
+        # if i = 0 or multiple of 10 and Last iteration:
         # if i == 0 or i % 10 == 0 or i == iter-1:
-        # if i == 0 or i == iter-1:
-            # CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
-
-
-def plot_lune(CMA):
-    A = CMA.mutants_logger_list
-    LIST = A.copy()
-    v = LIST['v']
-    w = LIST['w']
-    m = LIST['misfit']
-    V,W = CMA._datalogger(mean=True)['v'], CMA._datalogger(mean=True)['w']
-
-    plt.scatter(to_gamma(v), to_delta(w), c=np.log(m))
-    plt.scatter(to_gamma(V), to_delta(W), c='red', marker='x', zorder=10000000)
-    plt.show()
+        #     CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+        
+        # if i == 0 or Last iteration:
+        if i == 0 or i == iter-1:
+            CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
