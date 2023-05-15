@@ -69,12 +69,38 @@ class CMAESParameters:
 
 
 def initialise_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitude_range=None):
+    '''
+    Initialise the CMA-ES parameters for moment tensor inversion.
+    
+    Parameters
+    ----------
+    Mw_range : list
+        List of the lower and upper bound of the moment magnitude. In Mw.
+    depth_range : list
+        List of the lower and upper bound of the depth of the moment tensor. In m.
+    latitude_range : list
+        List of the lower and upper bound of the latitude of the moment tensor. In degrees.
+    longitude_range : list
+        List of the lower and upper bound of the longitude of the moment tensor. In degrees.
+
+    Returns
+    -------
+    parameters_list : list
+
+    Usage
+    -----
+    .. code::
+
+        parameters_list = initialise_mt(Mw_range=[4,5], depth_range=[0,10000], latitude_range=[-90,90], longitude_range=[-180,180])
+
+    '''
+
     # Defining the inverted parameters to initialise the CMA-ES
     # The order expected by CMA-ES is set to 'Mw, v, w, kappa, sigma, h, depth, latitude, longitude', with depth, lat and lon being completely optional.
 
     Mw = CMAESParameters('Mw', Mw_range[0], Mw_range[1], scaling='log', repair='rand_based', projection=to_rho)
-    v = CMAESParameters('v', -1/3, 1/3, scaling='linear', repair='rand_based')
-    w = CMAESParameters('w', (-3/8*np.pi), (3/8*np.pi), scaling='linear', repair='rand_based')
+    v = CMAESParameters('v', -1/3, 1/3, scaling='linear', repair='reinitialize')
+    w = CMAESParameters('w', (-3/8*np.pi), (3/8*np.pi), scaling='linear', repair='reinitialize')
     kappa = CMAESParameters('kappa', 0, 360, scaling='linear', repair='wrapping')
     sigma = CMAESParameters('sigma', -90, 90, scaling='linear', repair='rand_based')
     h = CMAESParameters('h', 0, 1, scaling='linear', repair='rand_based')
@@ -95,5 +121,52 @@ def initialise_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitu
 
     return(parameters_list)
 
-def initialise_force(depth=None, latitude=None, longitude=None):
-    raise NotImplementedError
+def initialise_force(F0_range = [1e11, 1e14], depth=None, latitude=None, longitude=None):
+    '''
+    Initialise the CMA-ES parameters for force source inversion.
+
+    Parameters
+    ----------
+    F0_range : list
+        List of the lower and upper bound of the force source amplitude. In N. (Typical ranges are 1e11 to 1e14 N)
+    depth : list
+        List of the lower and upper bound of the depth of the force source. In m.
+    latitude : list
+        List of the lower and upper bound of the latitude of the force source. In degrees.
+    longitude : list
+        List of the lower and upper bound of the longitude of the force source. In degrees.
+
+    Returns
+    -------
+    parameters_list : list
+        List of the CMA-ES parameters for force source inversion. 
+
+    Usage
+    -----
+    .. code::
+
+        parameters_list = initialise_force(F0_range = [1e11, 1e14], depth=[0,10000], latitude=[-90,90], longitude=[-180,180])
+    '''
+
+    # Defining the inverted parameters to initialise the CMA-ES for force source
+    # The order expected by CMA-ES is set to 'F0, phi, h, depth, latitude, longitude', with depth, lat and lon being completely optional.
+
+    F0 = CMAESParameters('F0', F0_range[0], F0_range[1], scaling='log', repair='rand_based')
+    phi = CMAESParameters('phi', 0, 360, scaling='linear', repair='wrapping')
+    h = CMAESParameters('h', -1, 1, scaling='linear', repair='rand_based')
+
+    parameters_list = [F0, phi, h]
+
+    if depth:
+        depth = CMAESParameters('depth', depth[0], depth[1])
+        parameters_list += [depth]
+
+    if latitude:
+        latitude = CMAESParameters('latitude', latitude[0], latitude[1])
+        parameters_list += [latitude]
+    
+    if longitude:
+        longitude = CMAESParameters('longitude', longitude[0], longitude[1])
+        parameters_list += [longitude]
+
+    return(parameters_list)
