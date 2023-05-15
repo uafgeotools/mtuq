@@ -531,7 +531,11 @@ class parallel_CMA_ES(object):
             elif self.mode == 'force':
                 best_source = Force(solution_grid.get(0))
             lune_dict = solution_grid.get_dict(0)
-            greens = db.get_greens_tensors(stations, final_origin)
+            mode = 'db' if isinstance(db, AxiSEM_Client) else 'greens'
+            if mode == 'db':
+                greens = db.get_greens_tensors(stations, final_origin)
+            elif mode == 'greens':
+                greens = db
 
             if len(data) == len(process) == len(misfit) == 2:
                 greens_0 = greens.map(process[0])
