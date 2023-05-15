@@ -157,7 +157,7 @@ if __name__=='__main__':
             greens = download_greens_tensors(stations, origin, model, include_mt=False, include_force=True)
             # ------------------
             # Alternatively, if you have a local AxiSEM database, you can use:
-            # db = open_db('/Users/julienthurin/Downloads/model/ak135f/', format='AxiSEM', include_mt=False, include_force=True)
+            # db = open_db('/Path/to/Axisem/Database/ak135f/', format='AxiSEM', include_mt=False, include_force=True)
             # greens = db.get_greens_tensors(stations, origin, model)
             # ------------------
             greens.convolve(wavelet)
@@ -183,7 +183,7 @@ if __name__=='__main__':
         greens_sw = comm.bcast(greens_sw, root=0)
     elif mode == 'database':
         # This mode expects the path to a local AxiSEM database to be specified 
-        db = open_db('/Users/julienthurin/Downloads/model/ak135f/', format='AxiSEM', include_mt=False, include_force=True)
+        db = open_db('/Path/to/Axisem/Database/ak135f/', format='AxiSEM', include_mt=False, include_force=True)
 
     #
     # The main computational work starts now
