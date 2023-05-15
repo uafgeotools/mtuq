@@ -12,7 +12,7 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 from mtuq.stochastic_sampling import initialise_mt
 from mtuq.stochastic_sampling.cmaes_parallel import parallel_CMA_ES
 import matplotlib.pyplot as plt
-from mtuq.util.signal import to_gamma, to_delta
+from mtuq.util.math import to_gamma, to_delta
 
 def plot_lune(CMA):
     ''' Temporary function to plot the lune distribution of mutants. This
@@ -178,7 +178,7 @@ if __name__=='__main__':
             greens = download_greens_tensors(stations, origin, model)
             # ------------------
             # Alternatively, if you have a local AxiSEM database, you can use:
-            # db = open_db('/Path/to/Axisem/Database/ak135f/', format='AxiSEM')
+            # db = open_db('/Path/To/Axisem/Database/ak135f/', format='AxiSEM')
             # greens = db.get_greens_tensors(stations, origin, model)
             # ------------------            
             greens.convolve(wavelet)
@@ -204,7 +204,7 @@ if __name__=='__main__':
         greens_sw = comm.bcast(greens_sw, root=0)
     elif mode == 'database':
         # This mode expects the path to a local AxiSEM database to be specified 
-        db = open_db('/Path/to/Axisem/Database/ak135f/', format='AxiSEM')
+        db = open_db('/Path/To/Axisem/Database/ak135f/', format='AxiSEM')
 
     #
     # The main computational work starts now
@@ -221,7 +221,7 @@ if __name__=='__main__':
     popsize = 24 # -- CMA-ES population size (you can play with this value)
     CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=popsize)
     CMA.sigma = 1
-    iter = 10
+    iter = 120
     for i in range(iter):
         # ------------------
         # At the moment the full CMA-ES algorithm is executed in this loop.
@@ -254,9 +254,15 @@ if __name__=='__main__':
         # -- END OF WORK IN PROGRESS --
 
         # if i = 0 or multiple of 10 and Last iteration:
-        # if i == 0 or i % 10 == 0 or i == iter-1:
-        #     CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+        if i == 0 or i % 10 == 0 or i == iter-1:
+            if mode == 'database':
+                CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+            elif mode == 'greens':
+                CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
         
         # if i == 0 or Last iteration:
-        if i == 0 or i == iter-1:
-            CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+        # if i == 0 or i == iter-1:
+        #     if mode == 'database':
+        #         CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+        #     elif mode == 'greens':
+        #         CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
