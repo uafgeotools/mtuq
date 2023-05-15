@@ -1,18 +1,17 @@
 import numpy as np
 import pandas as pd
 from mtuq.util.cmaes import *
-from mtuq.util.math import to_mij, to_rtp, to_rho
-from mtuq.grid.force import to_force
+from mtuq.util.math import to_mij, to_rtp
 import mpi4py.MPI as MPI
 from mtuq.greens_tensor import GreensTensor
 from mtuq import MTUQDataFrame
-from mtuq.grid.moment_tensor import UnstructuredGrid, to_mt
-from mtuq.grid.force import UnstructuredGrid, to_force
+from mtuq.grid.moment_tensor import UnstructuredGrid
+from mtuq.grid.force import UnstructuredGrid
 from mtuq.graphics import plot_data_greens2, plot_data_greens1
 from mtuq.io.clients.AxiSEM_NetCDF import Client as AxiSEM_Client
 from mtuq.greens_tensor.base import GreensTensorList
 from mtuq.dataset import Dataset
-from mtuq.event import MomentTensor
+from mtuq.event import MomentTensor, Force
 
 # class CMA_ES(object):
 
@@ -59,14 +58,20 @@ class parallel_CMA_ES(object):
         self.sigma = 0.5 # Default initial gaussian variance for all parameters.
         self.catalog_origin = origin
         self.counteval = 0
+
+        print('CMA-ES: Initializing...')
+
         if not callback_function == None:
+            print('A')
             self.callback = callback_function
         elif 'Mw' in self._parameters_names or 'kappa' in self._parameters_names:
+            print('B')
             self.callback = to_mij
             self.mij_args = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
             self.mode = 'mt'
-        elif 'F0' in self._parameters_names == 3:
-            self.callback = to_force
+        elif 'F0' in self._parameters_names:
+            print('C')
+            self.callback = to_rtp
             self.mode = 'force'
 
         # Main user input: lmbda is the number of mutants. If no lambda is given, it will determine the number of mutants based on the number of parameters.
@@ -521,7 +526,10 @@ class parallel_CMA_ES(object):
                 solution_grid = UnstructuredGrid(dims=('F0', 'phi', 'h'), coords=(mean_solution), callback=self.callback)
 
             final_origin = final_origin[0]
-            best_source = MomentTensor(solution_grid.get(0))
+            if self.mode == 'mt':
+                best_source = MomentTensor(solution_grid.get(0))
+            elif self.mode == 'force':
+                best_source = Force(solution_grid.get(0))
             lune_dict = solution_grid.get_dict(0)
             greens = db.get_greens_tensors(stations, final_origin)
 

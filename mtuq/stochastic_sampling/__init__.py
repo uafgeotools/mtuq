@@ -1,3 +1,3 @@
 from mtuq.stochastic_sampling.cmaes import CMA_ES
 from mtuq.stochastic_sampling.cmaes_parallel import parallel_CMA_ES
-from mtuq.stochastic_sampling.variable_encoder import CMAESParameters, initialise_mt
+from mtuq.stochastic_sampling.variable_encoder import CMAESParameters, initialise_mt, initialise_force
