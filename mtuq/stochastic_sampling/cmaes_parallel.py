@@ -273,7 +273,6 @@ class parallel_CMA_ES(object):
                     print('WARNING: Greens mode is not compatible with latitude, longitude or depth parameters. Consider using a local Axisem database instead.')
                 return None
 
-
     def gather_mutants(self, verbose=False):
         self.mutants = self.comm.gather(self.scattered_mutants, root=0)
         if self.rank == 0:
@@ -324,7 +323,6 @@ class parallel_CMA_ES(object):
         # Step size control
         if self.rank == 0:
             self.ps = (1-self.cs)*self.ps + np.sqrt(self.cs*(2-self.cs)*self.mueff) * self.invsqrtC @ (self.mean_diff(self.xmean, self.xold) / self.sigma)
-
 
     def update_covariance(self):
         # Covariance matrix adaptation
@@ -380,7 +378,6 @@ class parallel_CMA_ES(object):
             self.mean_logger_list=self.mean_logger_list.append(
                                 self._datalogger(mean=True), ignore_index=True)
 
-
     def create_origins(self):
         
         # Check which of the three origin modifiers are in the parameters
@@ -406,7 +403,6 @@ class parallel_CMA_ES(object):
                 setattr(self.origins[-1], 'latitude', latitude[i])
             if 'longitude' in self._parameters_names:
                 setattr(self.origins[-1], 'longitude', longitude[i])
-
 
     def return_candidate_solution(self, id=None):
         # Only required on rank 0
@@ -492,7 +488,6 @@ class parallel_CMA_ES(object):
             columns=columns_labels
             )
             return(MTUQDataFrame(da))
-
 
     def solve(self, data, process, misfit, stations, db, wavelet, iterations=1, verbose=False, plot_waveforms=True):
         for it in range(iterations):
