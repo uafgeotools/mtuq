@@ -175,7 +175,7 @@ if __name__=='__main__':
 
         if mode == 'greens':
             print('Reading Greens functions...\n')
-            greens = download_greens_tensors(stations, origin, model, include_mt=False, include_force=True)
+            greens = download_greens_tensors(stations, origin, model)
             # ------------------
             # Alternatively, if you have a local AxiSEM database, you can use:
             # db = open_db('/Path/to/Axisem/Database/ak135f/', format='AxiSEM')
@@ -212,7 +212,6 @@ if __name__=='__main__':
     if mode == 'database':
         parameter_list = initialise_mt(Mw_range=[4,6], depth_range=[30000, 55000])
     elif mode == 'greens':
-        parameter_list = initialise_mt(Mw_range=[4,6])
         parameter_list = initialise_mt(Mw_range=[4,6])
 
     DATA = [data_bw, data_sw]
