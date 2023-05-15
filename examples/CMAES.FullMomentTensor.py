@@ -175,9 +175,9 @@ if __name__=='__main__':
     PROCESS = [process_bw, process_sw]
     MISFIT = [misfit_bw, misfit_sw]
 
-    CMA = parallel_CMA_ES(parameter_list , origin=origin)
-    CMA.sigma = 3
-    iter = 120
+    CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=240)
+    CMA.sigma = 0.2
+    iter = 10
     for i in range(iter):
         if comm.rank==0:
             print('Iteration %d\n' % i)
@@ -193,8 +193,26 @@ if __name__=='__main__':
         CMA.update_mean()
         CMA.update_step_size()
         CMA.update_covariance()
+        plot_lune(CMA)
+
+        # pause to update the plot
+        plt.pause(0.01)
+
+
         # if i = 0 or multiple of 10
         # if i == 0 or i % 10 == 0 or i == iter-1:
-        if i == 0 or i == iter-1:
-            CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+        # if i == 0 or i == iter-1:
+            # CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
 
+
+def plot_lune(CMA):
+    A = CMA.mutants_logger_list
+    LIST = A.copy()
+    v = LIST['v']
+    w = LIST['w']
+    m = LIST['misfit']
+    V,W = CMA._datalogger(mean=True)['v'], CMA._datalogger(mean=True)['w']
+
+    plt.scatter(to_gamma(v), to_delta(w), c=np.log(m))
+    plt.scatter(to_gamma(V), to_delta(W), c='red', marker='x', zorder=10000000)
+    plt.show()
