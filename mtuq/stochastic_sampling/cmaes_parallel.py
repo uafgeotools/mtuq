@@ -59,21 +59,6 @@ class parallel_CMA_ES(object):
         self.catalog_origin = origin
         self.counteval = 0
 
-        print('CMA-ES: Initializing...')
-
-        if not callback_function == None:
-            print('A')
-            self.callback = callback_function
-        elif 'Mw' in self._parameters_names or 'kappa' in self._parameters_names:
-            print('B')
-            self.callback = to_mij
-            self.mij_args = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
-            self.mode = 'mt'
-        elif 'F0' in self._parameters_names:
-            print('C')
-            self.callback = to_rtp
-            self.mode = 'force'
-
         # Main user input: lmbda is the number of mutants. If no lambda is given, it will determine the number of mutants based on the number of parameters.
         if lmbda == None:
             self.lmbda = int(4 + np.floor(3*np.log(len(self._parameters))))
