@@ -228,7 +228,10 @@ if __name__=='__main__':
 
         # if i = 0 or multiple of 10 and Last iteration:
         if i == 0 or i % 10 == 0 or i == iter-1:
-            CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+            if mode == 'database':
+                CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+            elif mode == 'greens':
+                CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
         
         # if i == 0 or Last iteration:
         # if i == 0 or i == iter-1:
