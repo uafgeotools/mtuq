@@ -99,8 +99,8 @@ def initialise_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitu
     # The order expected by CMA-ES is set to 'Mw, v, w, kappa, sigma, h, depth, latitude, longitude', with depth, lat and lon being completely optional.
 
     Mw = CMAESParameters('Mw', Mw_range[0], Mw_range[1], scaling='log', repair='rand_based', projection=to_rho)
-    v = CMAESParameters('v', -1/3, 1/3, scaling='linear', repair='reinitialize')
-    w = CMAESParameters('w', (-3/8*np.pi), (3/8*np.pi), scaling='linear', repair='reinitialize')
+    v = CMAESParameters('v', -1/3, 1/3, scaling='linear', repair='rand_based')
+    w = CMAESParameters('w', (-3/8*np.pi), (3/8*np.pi), scaling='linear', repair='rand_based')
     kappa = CMAESParameters('kappa', 0, 360, scaling='linear', repair='wrapping')
     sigma = CMAESParameters('sigma', -90, 90, scaling='linear', repair='rand_based')
     h = CMAESParameters('h', 0, 1, scaling='linear', repair='rand_based')
