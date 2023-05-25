@@ -227,7 +227,7 @@ if __name__=='__main__':
     PROCESS = [process_bw, process_sw]
     MISFIT = [misfit_bw, misfit_sw]
 
-    popsize = 24 # -- CMA-ES population size (you can play with this value)
+    popsize = 24 # -- CMA-ES population size - number of mutants (you can play with this value)
     CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=popsize)
     CMA.sigma = 5
     iter = 120
@@ -272,4 +272,5 @@ if __name__=='__main__':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
             elif mode == 'greens':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
-            plot_misfit_lune(event_id+'FMT_misfit.png', CMA.mutants_logger_list, backend=_plot_lune_matplotlib)
+            result = CMA.mutants_logger_list
+            plot_misfit_lune(event_id+'FMT_misfit.png', result, backend=_plot_lune_matplotlib)
