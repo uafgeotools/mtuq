@@ -1,5 +1,5 @@
-
 import numpy as np
+import math
 
 from matplotlib import pyplot
 from os.path import exists
@@ -7,6 +7,101 @@ from xarray import DataArray
 
 from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
+from mtuq.graphics.uq._gmt import _parse_vw, _parse_lune_array
+
+# Define a pure matplotlib backend as an alternative to GMT
+# It should behave as similarly as possible to the GMT backend 
+# and take the same input arguments
+def _plot_lune_matplotlib(filename, longitude, latitude, values, 
+    best_vw=None, lune_array=None, colormap='hot_r', title=None, **kwargs):
+
+    """ Plots DataArray values on the eigenvalue lune (requires GMT)
+
+    .. rubric :: Keyword arguments
+
+    ``colormap`` (`str`):
+    Color palette used for plotting values
+    (choose from GMT or MTUQ built-ins)
+
+    ``show_best`` (`bool`):
+    Show where best-fitting moment tensor falls on lune
+
+    ``show_tradeoffs`` (`bool`):
+    Show how focal mechanism trades off with lune coordinates
+
+    ``title`` (`str`):
+    Optional figure title
+
+    ``backend`` (`function`):
+    Choose from `_plot_lune_gmt` (default) or user-supplied function
+
+    """
+
+    # Check if contour is in kwargs
+    if 'contour' in kwargs:
+        contour = kwargs['contour']
+    else:
+        contour = False
+
+
+    fig, ax = _generate_lune()
+
+    # Transform data to Hammer projection
+    # Create a grid for pcollormesh from longitude and latitude arrays
+    x, y = np.meshgrid(longitude, latitude)
+    x, y = _hammer_projection(x, y)
+
+    # Plot data
+    # if min and max are more than 2 orders of magnitude apart, use the percentile method
+    # to filter out outliers
+    if not contour:
+        if np.nanmax(values)/np.nanmin(values) > 100:
+            vmin, vmax = np.nanpercentile(np.asarray(values), [0,90])
+            im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto')
+        else:
+            im = ax.pcolormesh(x, y, values, cmap=colormap, shading='auto')
+    else:
+        # Plot using contourf
+        levels = 20 if contour is True else int(contour)
+        im = ax.contourf(x, y, values, cmap=colormap, levels=levels)
+        # if np.nanmax(values)/np.nanmin(values) > 100:
+        #     vmin, vmax = np.nanpercentile(np.asarray(values), [0,90])
+        #     im = ax.contourf(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, levels=levels)
+        # else:
+        #     im = ax.contourf(x, y, values, cmap=colormap, levels=levels)
+
+    # Plot best-fitting moment tensor
+    if best_vw is not None:
+        best_vw = _parse_vw(best_vw)
+        gamma, delta = _hammer_projection(
+            best_vw[0], best_vw[1])
+        ax.scatter(gamma, delta, s=240, facecolors='none', edgecolors='chartreuse', zorder=1000)
+
+    # Plot tradeoffs
+    if lune_array is not None:
+        gamma, delta = _hammer_projection(
+            lune_array[:,0], lune_array[:,1])
+        ax.plot(gamma, delta, 'w.', markersize=1)
+
+    # Set axis limits
+    ax.set_xlim(-30.5, 30.5)
+    ax.set_ylim(-90, 90)
+
+    # Set axis labels
+    ax.set_xlabel('Gamma')
+    ax.set_ylabel('Delta')
+
+    cb = pyplot.colorbar(im, location='bottom', ax=ax, pad=0.001, fraction=0.02)
+    cb.set_label('l2-misfit')
+    # Set title
+    if title is not None:
+        ax.set_title(title)
+        
+    # Save figure
+    pyplot.tight_layout()
+    pyplot.savefig(filename, dpi=300, bbox_inches='tight')
+    pyplot.close()
+
 
 
 def _plot_dc_matplotlib(filename, coords, 
@@ -229,3 +324,96 @@ def _set_dc_labels(axes, **kwargs):
     # lower left panel
     axes[1][0].axis('off')
 
+# Define the Hammer projection function for matplotlib backend
+def _hammer_projection(lon, lat):
+    lon = np.radians(lon)
+    lat = np.radians(lat)
+    alpha = np.sqrt(1 + np.cos(lat) * np.cos(lon / 2))
+    x = (2 * np.sqrt(2) * np.cos(lat) * np.sin(lon / 2)) / alpha
+    y = (np.sqrt(2) * np.sin(lat)) / alpha
+    return np.degrees(x), np.degrees(y)
+
+
+def _generate_lune(ax=None):
+    if ax is None:
+        fig = pyplot.figure(figsize=(2.5, 8))
+        ax = fig.add_subplot(111)
+        ax.set_axis_off()
+    else:
+        fig = ax.figure
+
+    # Generate curved gridlines
+    num_lines = 7
+    lon_lines = np.linspace(-30, 30, num_lines * 2 + 1)
+    lat_lines = np.linspace(-90, 90, num_lines)
+
+    for lon_line in lon_lines:
+        lat_line = np.linspace(-90, 90, 1000)
+        x_line, y_line = _hammer_projection(np.full_like(lat_line, lon_line), lat_line)
+        ax.plot(x_line, y_line, 'k--', linewidth=0.5, alpha=0.5)
+
+    for lat_line in lat_lines:
+        lon_line = np.linspace(-30, 30, 1000)
+        x_line, y_line = _hammer_projection(lon_line, np.full_like(lon_line, lat_line))
+        ax.plot(x_line, y_line, 'k--', linewidth=0.5, alpha=0.5)
+
+    _plot_lune_arcs(ax, _compute_lune_arcs())
+    # Transform data to Hammer projection
+
+    return fig, ax
+
+def _compute_center_of_minimum_distance(lon_a, lat_a, lon_b, lat_b, iterations):
+    if iterations == 0:
+        return [(lon_a, lat_a), (lon_b, lat_b)]
+    
+    # Convert coordinates to radians
+    lon_a_rad = math.radians(lon_a)
+    lat_a_rad = math.radians(lat_a)
+    lon_b_rad = math.radians(lon_b)
+    lat_b_rad = math.radians(lat_b)
+    
+    # Convert lat/lon to cartesian coordinates
+    x_a = math.cos(lat_a_rad) * math.cos(lon_a_rad)
+    y_a = math.cos(lat_a_rad) * math.sin(lon_a_rad)
+    z_a = math.sin(lat_a_rad)
+    
+    x_b = math.cos(lat_b_rad) * math.cos(lon_b_rad)
+    y_b = math.cos(lat_b_rad) * math.sin(lon_b_rad)
+    z_b = math.sin(lat_b_rad)
+    
+    # Compute barycenter of the points in cartesian coordinates
+    x_mid = (x_a + x_b) / 2
+    y_mid = (y_a + y_b) / 2
+    z_mid = (z_a + z_b) / 2
+    
+    # Convert cartesian coordinate to latitude and longitude for the midpoint
+    lat_mid_rad = math.atan2(z_mid, math.sqrt(x_mid**2 + y_mid**2))
+    lon_mid_rad = math.atan2(y_mid, x_mid)
+    
+    # Convert midpoint lat and lon from radians to degrees
+    lat_mid = math.degrees(lat_mid_rad)
+    lon_mid = math.degrees(lon_mid_rad)
+    
+    # Recursive calls
+    coordinates = []
+    coordinates.extend(_compute_center_of_minimum_distance(lon_a, lat_a, lon_mid, lat_mid, iterations - 1))
+    coordinates.extend(_compute_center_of_minimum_distance(lon_mid, lat_mid, lon_b, lat_b, iterations - 1))
+    
+    return coordinates
+
+def _compute_lune_arcs():
+    arc_points = [
+    [-30, 35.2644, 30, 54.7356],
+    [-30, -54.7356, 30, -35.2644],
+    [-30, 35.2644, 30, -35.2644]
+]
+    arcs = []
+    for arc in arc_points:
+        arcs.append(_compute_center_of_minimum_distance(arc[0], arc[1], arc[2], arc[3], 3))
+    return arcs
+
+def _plot_lune_arcs(axis, arcs):
+    for arc in arcs:
+        lon = [x[0] for x in arc]
+        lat = [x[1] for x in arc]
+        axis.plot(*_hammer_projection(lon, lat), color='lightgrey', linewidth=1, zorder=100)
