@@ -15,6 +15,7 @@ from mtuq.util.math import closed_interval, open_interval, to_delta, to_gamma, t
 from os.path import exists
 
 
+
 def plot_misfit_dc(filename, ds, **kwargs):
     """ Plots misfit values over strike, dip, slip
 
@@ -44,9 +45,10 @@ def plot_misfit_dc(filename, ds, **kwargs):
         misfit = _misfit_dc_regular(ds)
         
     elif issubclass(type(ds), DataFrame):
-        warn('plot_misfit_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        # warn('plot_misfit_dc() not implemented for irregularly-spaced grids.\n'
+            #  'No figure will be generated.')
+        misfit = _misfit_dc_random(ds)
+        # return
 
     _plot_dc(filename, misfit, **kwargs)
 
@@ -235,6 +237,13 @@ def _plot_dc(filename, da, show_best=True, colormap='hot',
 
     else:
         raise ValueError
+    
+    if values_h_kappa.dtype == 'object':
+        values_h_kappa = np.asarray(values_h_kappa, dtype=float)
+    if values_sigma_kappa.dtype == 'object':
+        values_sigma_kappa = np.asarray(values_sigma_kappa, dtype=float)
+    if values_sigma_h.dtype == 'object':
+        values_sigma_h = np.asarray(values_sigma_h, dtype=float)
 
     backend(filename,
         da.coords,
@@ -259,6 +268,15 @@ def _misfit_dc_regular(da):
         'best_mt': _min_mt(da),
         'best_dc': _min_dc(da),
         })
+
+def _misfit_dc_random(df, **kwargs):
+    df = df.copy()
+    df = df.reset_index()
+    da = _bin_dc_regular_2(df, lambda df: df.min(), **kwargs)
+
+    return da.assign_attrs({
+        'best_dc': _min_dc(da),
+    })
 
 
 def _likelihoods_dc_regular(da, var):
@@ -351,6 +369,105 @@ def _max_dc(da):
     return dc_vals
 
 
+def _bin_dc_semiregular(df, handle, npts=40, **kwargs):
+    """ Bins irregularly-spaced moment tensors orientations into square cells
+    to plot dc-misfit grids
+    """
+    # Orientation bins
+    kappa_bins = open_interval(0., 360, npts)
+    sigma_bins = open_interval(-90., 90., npts)
+    h_bins = open_interval(0., 1., npts)
+
+    binned = np.empty((npts, npts, npts))
+    binned[:]   = np.nan
+    
+    # check if values fall within bin
+
+
+def _bin_dc_regular(df, handle, npts=40, **kwargs):
+    """ Bins irregularly-spaced moment tensors orientations into square cells
+    to plot dc-misfit grids
+    """
+    # Orientation bins
+    kappa_min, kappa_max = 0, 360
+    sigma_min, sigma_max = -90, 90
+    h_min, h_max = 0, 1
+
+    kappa_centers = open_interval(kappa_min, kappa_max, npts)
+    sigma_centers = open_interval(sigma_min, sigma_max, npts)
+    h_centers = open_interval(h_min, h_max, npts)
+
+    kappa_edges = closed_interval(kappa_min, kappa_max, npts + 1)
+    sigma_edges = closed_interval(sigma_min, sigma_max, npts + 1)
+    h_edges = closed_interval(h_min, h_max, npts + 1)
+
+    binned = np.empty((npts, npts, npts))
+    binned[:] = np.nan
+
+    for i in range(npts):
+        print(i)
+        for j in range(npts):
+            for k in range(npts):
+                kappa_subset = df.loc[df['kappa'].between(kappa_edges[k], kappa_edges[k + 1])]
+                ks_subset = kappa_subset.loc[kappa_subset['sigma'].between(sigma_edges[j], sigma_edges[j + 1])]
+                ksw_subset = ks_subset.loc[ks_subset['h'].between(h_edges[i], h_edges[i + 1])]
+
+                if len(ksw_subset) > 0:
+                    binned[i, j, k] = handle(ksw_subset.iloc[-1])
+
+    return DataArray(
+        dims=('kappa', 'sigma', 'h'),
+        coords=(kappa_centers, sigma_centers, h_centers),
+        data=binned.transpose()
+        )
+
+def _bin_dc_regular_2(df, handle, npts=12, **kwargs):
+    """ Bins irregularly-spaced moment tensors orientations into square cells
+    to plot dc-misfit grids
+    """
+    # Orientation bins
+    kappa_min, kappa_max = 0, 360
+    sigma_min, sigma_max = -90, 90
+    h_min, h_max = 0, 1
+
+    kappa_centers = open_interval(kappa_min, kappa_max, npts*3)
+    sigma_centers = open_interval(sigma_min, sigma_max, npts*2)
+    h_centers = open_interval(h_min, h_max, npts)
+
+    kappa_edges = closed_interval(kappa_min, kappa_max, npts*3 + 1)
+    sigma_edges = closed_interval(sigma_min, sigma_max, npts*2 + 1)
+    h_edges = closed_interval(h_min, h_max, npts + 1)
+
+    # Prepare the data arrays
+    kappa_vals = df['kappa'].values
+    sigma_vals = df['sigma'].values
+    h_vals = df['h'].values
+
+    # Compute the 3D histogram
+    hist, edges = np.histogramdd(
+        np.column_stack((kappa_vals, sigma_vals, h_vals)),
+        bins=(kappa_edges, sigma_edges, h_edges)
+    )
+
+    # Process the binned data
+    binned = np.empty_like(hist, dtype=object)
+    binned[:] = None
+    nonzero_bins = hist.nonzero()
+    for idx in zip(*nonzero_bins):
+        subset = df.loc[(kappa_vals >= kappa_edges[idx[0]]) &
+                        (kappa_vals < kappa_edges[idx[0] + 1]) &
+                        (sigma_vals >= sigma_edges[idx[1]]) &
+                        (sigma_vals < sigma_edges[idx[1] + 1]) &
+                        (h_vals >= h_edges[idx[2]]) &
+                        (h_vals < h_edges[idx[2] + 1])]
+        if len(subset) > 0:
+            binned[idx] = handle((subset['misfit']))
+
+    return DataArray(
+        dims=('h', 'sigma', 'kappa'),
+        coords=(h_centers, sigma_centers, kappa_centers),
+        data=binned.transpose()
+        )
 
 def _check(ds):
     """ Checks data structures

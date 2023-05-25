@@ -61,6 +61,13 @@ if __name__=='__main__':
     # spent fetching and pre-processing greens functions. This can be sped up by using a
     # larger number of cores, but the scaling is not perfect. (e.g. 24 cores is not 24x faster)
     # ---------------------------------------------------------------------
+    # CMA-ES algorithm
+    # 1 - Initialise the CMA-ES algorithm with a set of mutants
+    # 2 - Evaluate the misfit of each mutant
+    # 3 - Sort the mutants by misfit (best to worst), the best mutants are used to update the
+    #     mean and covariance matrix of the next generation (50% of the population retained)
+    # 4 - Update the mean and covariance matrix of the next generation
+    # 5 - Repeat steps 2-4 until the ensemble of mutants converges
 
     path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
