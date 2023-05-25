@@ -535,7 +535,10 @@ def _bin_vw_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normali
             if len(subset)==0:
                 print("Encountered empty bin")
 
-            binned[_i, _j] = handle(subset[0])
+            try :
+                binned[_i, _j] = handle(subset[0])
+            except:
+                binned[_i, _j] = handle(subset)[-1]
 
             if normalize:
               # normalize by area of cell
