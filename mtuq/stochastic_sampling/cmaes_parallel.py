@@ -12,6 +12,8 @@ from mtuq.io.clients.AxiSEM_NetCDF import Client as AxiSEM_Client
 from mtuq.greens_tensor.base import GreensTensorList
 from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
+from mtuq.graphics.uq._matplotlib import _hammer_projection, _generate_lune
+from mtuq.util.math import to_gamma, to_delta
 
 # class CMA_ES(object):
 
@@ -73,7 +75,7 @@ class parallel_CMA_ES(object):
         
         self.fig = None
         self.ax = None
-        
+
         # Main user input: lmbda is the number of mutants. If no lambda is given, it will determine the number of mutants based on the number of parameters.
         if lmbda == None:
             self.lmbda = int(4 + np.floor(3*np.log(len(self._parameters))))
@@ -194,7 +196,7 @@ class parallel_CMA_ES(object):
             # Check if latitude longitude AND depth are absent from the parameters list
             if not any(x in self._parameters_names for x in ['depth', 'latitude', 'longitude']):
                 # If so, use the catalog origin, and make one copy per mutant to match the number of mutants.
-                if self.rank == 0:
+                if self.rank == 0 and verbose == True:
                     print('using catalog origin')
                 self.origins = [self.catalog_origin]
                 self.local_greens = db.get_greens_tensors(stations, self.origins)
@@ -214,7 +216,7 @@ class parallel_CMA_ES(object):
                 return self.misfit_val.T
             # If one of the three is present, create a list of origins (one for each mutant), and load the corresponding local greens functions.
             else:
-                if self.rank == 0:
+                if self.rank == 0 and verbose == True:
                     print('creating new origins list')
                 self.create_origins()
                 if verbose == True:
@@ -256,7 +258,7 @@ class parallel_CMA_ES(object):
             # Check if latitude longitude AND depth are absent from the parameters list
             if not any(x in self._parameters_names for x in ['depth', 'latitude', 'longitude']):
                 # If so, use the catalog origin, and make one copy per mutant to match the number of mutants.
-                if self.rank == 0:
+                if self.rank == 0 and verbose == True:
                     print('using catalog origin')
                 self.origins = [self.catalog_origin]
                 self.local_greens = db
@@ -418,7 +420,7 @@ class parallel_CMA_ES(object):
                 return_x = self.xmean
             self.transformed_mean = np.zeros_like(return_x)
             for _i, param in enumerate(self._parameters):
-                print(param.scaling)
+                # Print paramter scaling if verbose
                 if param.scaling == 'linear':
                     self.transformed_mean[_i] = linear_transform(return_x[_i], param.lower_bound, param.upper_bound)
                 elif param.scaling == 'log':
@@ -474,7 +476,6 @@ class parallel_CMA_ES(object):
             if mean==True:
                 self.transformed_mean = np.zeros_like(self.xmean)
                 for _i, param in enumerate(self._parameters):
-                    print(param.scaling)
                     if param.scaling == 'linear':
                         self.transformed_mean[_i] = linear_transform(self.xmean[_i], param.lower_bound, param.upper_bound)
                     elif param.scaling == 'log':
