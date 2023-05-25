@@ -238,6 +238,9 @@ if __name__=='__main__':
             print('Iteration %d\n' % i)
         CMA.draw_mutants()
         if mode == 'database':
+            # It using the database mode, the catalog origin and process functions are required.
+            # As with the grid-search, we can separate Body-wave and Surface waves misfit. It is also possible to
+            # Split the misfit into different time-shift groups (e.g. b-ZR, s-ZR, s-T, etc.)
             mis_bw = CMA.eval_fitness(data_bw, stations, misfit_bw, db, origin,  process_bw, wavelet, verbose=False)
             mis_sw = CMA.eval_fitness(data_sw, stations, misfit_sw, db, origin,  process_sw, wavelet, verbose=False)
         elif mode == 'greens':
@@ -251,6 +254,7 @@ if __name__=='__main__':
 
         # -- WORK IN PROGRESS --
         # To vizualize the CMA-ES scatter plot as it iterates - feel free to comment out
+        # TODO: Integrate this as an option in the CMA-ES "solve" method in the future.
         CMA.scatter_plot()
         plt.pause(0.01)
         # -- END OF WORK IN PROGRESS --
