@@ -13,6 +13,8 @@ from mtuq.stochastic_sampling import initialise_mt
 from mtuq.stochastic_sampling.cmaes_parallel import parallel_CMA_ES
 import matplotlib.pyplot as plt
 from mtuq.util.math import to_gamma, to_delta
+from mtuq.graphics.uq.lune import plot_misfit_lune
+from mtuq.graphics.uq._matplotlib import _plot_lune_matplotlib
 
 def plot_lune(CMA):
     ''' Temporary function to plot the lune distribution of mutants. This
@@ -218,9 +220,9 @@ if __name__=='__main__':
     PROCESS = [process_bw, process_sw]
     MISFIT = [misfit_bw, misfit_sw]
 
-    popsize = 48 # -- CMA-ES population size (you can play with this value)
+    popsize = 24 # -- CMA-ES population size (you can play with this value)
     CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=popsize)
-    CMA.sigma = 3
+    CMA.sigma = 5
     iter = 120
     for i in range(iter):
         # ------------------
@@ -259,3 +261,4 @@ if __name__=='__main__':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
             elif mode == 'greens':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
+            plot_misfit_lune(event_id+'FMT_misfit.png', CMA.mutants_logger_list, backend=_plot_lune_matplotlib)
