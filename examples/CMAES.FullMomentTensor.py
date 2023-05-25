@@ -218,9 +218,9 @@ if __name__=='__main__':
     PROCESS = [process_bw, process_sw]
     MISFIT = [misfit_bw, misfit_sw]
 
-    popsize = 24 # -- CMA-ES population size (you can play with this value)
+    popsize = 48 # -- CMA-ES population size (you can play with this value)
     CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=popsize)
-    CMA.sigma = 1
+    CMA.sigma = 3
     iter = 120
     for i in range(iter):
         # ------------------
@@ -246,11 +246,11 @@ if __name__=='__main__':
         CMA.update_mean()
         CMA.update_step_size()
         CMA.update_covariance()
-        # -- WORK IN PROGRESS --
-        # Debug plot
 
-        # plot_lune(CMA)
-        # plt.pause(0.01)
+        # -- WORK IN PROGRESS --
+        # To vizualize the CMA-ES scatter plot as it iterates - feel free to comment out
+        CMA.scatter_plot()
+        plt.pause(0.01)
         # -- END OF WORK IN PROGRESS --
 
         # if i = 0 or multiple of 10 and Last iteration:
@@ -259,10 +259,3 @@ if __name__=='__main__':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
             elif mode == 'greens':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
-        
-        # if i == 0 or Last iteration:
-        # if i == 0 or i == iter-1:
-        #     if mode == 'database':
-        #         CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
-        #     elif mode == 'greens':
-        #         CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
