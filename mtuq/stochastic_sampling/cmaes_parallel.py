@@ -70,7 +70,10 @@ class parallel_CMA_ES(object):
         elif 'F0' in self._parameters_names:
             self.callback = to_rtp
             self.mode = 'force'
-
+        
+        self.fig = None
+        self.ax = None
+        
         # Main user input: lmbda is the number of mutants. If no lambda is given, it will determine the number of mutants based on the number of parameters.
         if lmbda == None:
             self.lmbda = int(4 + np.floor(3*np.log(len(self._parameters))))
@@ -563,3 +566,23 @@ class parallel_CMA_ES(object):
             raise ValueError("database must be either an AxiSEM_Client object or a GreensTensorList object")
         if isinstance(db, AxiSEM_Client) and (process is None or wavelet is None):
             raise ValueError("process_function and wavelet must be specified if database is an AxiSEM_Client")
+
+    def scatter_plot(self, path=None, id=None):
+        if self.rank == 0:
+            if self.fig is None:  # Check if fig is None
+                self.fig, self.ax = _generate_lune()
+
+            v = np.asarray(self.mutants_logger_list['v'])
+            w = np.asarray(self.mutants_logger_list['w'])
+            m = np.asarray(self.mutants_logger_list['misfit'])
+            V,W = self._datalogger(mean=True)['v'], self._datalogger(mean=True)['w']
+
+            v, w = _hammer_projection(to_gamma(v), to_delta(w))
+            V, W = _hammer_projection(to_gamma(V), to_delta(W))
+
+            vmin, vmax = np.percentile(np.asarray(m), [0,90])
+
+            self.ax.scatter(v, w, c=m, s=2, vmin=vmin, vmax=vmax)
+            self.ax.scatter(V, W, c='red', marker='x', zorder=10000000)
+
+            self.fig.canvas.draw()
