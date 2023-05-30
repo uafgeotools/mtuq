@@ -272,7 +272,7 @@ def _misfit_dc_regular(da):
 def _misfit_dc_random(df, **kwargs):
     df = df.copy()
     df = df.reset_index()
-    da = _bin_dc_regular_2(df, lambda df: df.min(), **kwargs)
+    da = _bin_dc_regular(df, lambda df: df.min(), **kwargs)
 
     return da.assign_attrs({
         'best_dc': _min_dc(da),
@@ -369,22 +369,7 @@ def _max_dc(da):
     return dc_vals
 
 
-def _bin_dc_semiregular(df, handle, npts=40, **kwargs):
-    """ Bins irregularly-spaced moment tensors orientations into square cells
-    to plot dc-misfit grids
-    """
-    # Orientation bins
-    kappa_bins = open_interval(0., 360, npts)
-    sigma_bins = open_interval(-90., 90., npts)
-    h_bins = open_interval(0., 1., npts)
-
-    binned = np.empty((npts, npts, npts))
-    binned[:]   = np.nan
-    
-    # check if values fall within bin
-
-
-def _bin_dc_regular(df, handle, npts=40, **kwargs):
+def _bin_dc_regular(df, handle, npts=15, **kwargs):
     """ Bins irregularly-spaced moment tensors orientations into square cells
     to plot dc-misfit grids
     """
@@ -399,43 +384,6 @@ def _bin_dc_regular(df, handle, npts=40, **kwargs):
 
     kappa_edges = closed_interval(kappa_min, kappa_max, npts + 1)
     sigma_edges = closed_interval(sigma_min, sigma_max, npts + 1)
-    h_edges = closed_interval(h_min, h_max, npts + 1)
-
-    binned = np.empty((npts, npts, npts))
-    binned[:] = np.nan
-
-    for i in range(npts):
-        print(i)
-        for j in range(npts):
-            for k in range(npts):
-                kappa_subset = df.loc[df['kappa'].between(kappa_edges[k], kappa_edges[k + 1])]
-                ks_subset = kappa_subset.loc[kappa_subset['sigma'].between(sigma_edges[j], sigma_edges[j + 1])]
-                ksw_subset = ks_subset.loc[ks_subset['h'].between(h_edges[i], h_edges[i + 1])]
-
-                if len(ksw_subset) > 0:
-                    binned[i, j, k] = handle(ksw_subset.iloc[-1])
-
-    return DataArray(
-        dims=('kappa', 'sigma', 'h'),
-        coords=(kappa_centers, sigma_centers, h_centers),
-        data=binned.transpose()
-        )
-
-def _bin_dc_regular_2(df, handle, npts=12, **kwargs):
-    """ Bins irregularly-spaced moment tensors orientations into square cells
-    to plot dc-misfit grids
-    """
-    # Orientation bins
-    kappa_min, kappa_max = 0, 360
-    sigma_min, sigma_max = -90, 90
-    h_min, h_max = 0, 1
-
-    kappa_centers = open_interval(kappa_min, kappa_max, npts*3)
-    sigma_centers = open_interval(sigma_min, sigma_max, npts*2)
-    h_centers = open_interval(h_min, h_max, npts)
-
-    kappa_edges = closed_interval(kappa_min, kappa_max, npts*3 + 1)
-    sigma_edges = closed_interval(sigma_min, sigma_max, npts*2 + 1)
     h_edges = closed_interval(h_min, h_max, npts + 1)
 
     # Prepare the data arrays

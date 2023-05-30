@@ -68,7 +68,7 @@ class CMAESParameters:
             self.grid = None
 
 
-def initialise_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitude_range=None):
+def initialise_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitude_range=None, src_type='mt'):
     '''
     Initialise the CMA-ES parameters for moment tensor inversion.
     
@@ -118,6 +118,14 @@ def initialise_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitu
     if longitude_range:
         longitude = CMAESParameters('longitude', longitude_range[0], longitude_range[1])
         parameters_list += [longitude]
+        
+    if src_type == 'deviatoric':
+        # Remove the w parameter from the list
+        parameters_list.pop(2)
+    elif src_type == 'dc':
+        # Remove the v and w parameters from the list
+        parameters_list.pop(1)
+        parameters_list.pop(1)
 
     return(parameters_list)
 

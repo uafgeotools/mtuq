@@ -69,6 +69,12 @@ class parallel_CMA_ES(object):
             self.callback = to_mij
             self.mij_args = ['rho', 'v', 'w', 'kappa', 'sigma', 'h']
             self.mode = 'mt'
+            if not 'w' in self._parameters_names and 'v' in self._parameters_names:
+                self.mode = 'mt_dev'
+                self.mij_args = ['rho', 'w', 'kappa', 'sigma', 'h']
+            elif not 'v' in self._parameters_names and not 'w' in self._parameters_names:
+                self.mode = 'mt_dc'
+                self.mij_args = ['rho', 'kappa', 'sigma', 'h']
         elif 'F0' in self._parameters_names:
             self.callback = to_rtp
             self.mode = 'force'
@@ -165,6 +171,10 @@ class parallel_CMA_ES(object):
         """
         Evaluate the misfit for each mutant of the population.
 
+        Note:
+            The ordering of parameters should follow the ordering of the input variables of the callback function.
+            This is done automatically by using the initialize_mt() and initialize_force() functions.
+
         Args:
             data (mtuq.Dataset): the data to fit.
             stations (list): the list of stations.
@@ -186,9 +196,18 @@ class parallel_CMA_ES(object):
 
         self._transform_mutants()
 
-        # Using callback for mt or force inversion
+        # Using callback for mt or force inversion -- These are pre-determined mode used in conjunction with the initialize_mt() and initialize_force() methods
         if self.mode == 'mt':
             self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[0:6]))
+        elif self.mode == 'mt_dev':
+            # Compensate for the lack of 'w' in the parameters list by putting a column of 0 in the 3nd position when calling the callback
+            self.extended_mutants = np.insert(self.transformed_mutants[0:5], 2, 0, axis=0)
+            self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
+        elif self.mode == 'mt_dc':
+            # Compensate for the lack of 'v' and 'w' in the parameters list by putting columns of 0's in the 2nd and 3rd position when calling the callback
+            self.extended_mutants = np.insert(self.transformed_mutants[0:4], 1, 0, axis=0)
+            self.extended_mutants = np.insert(self.extended_mutants, 2, 0, axis=0)
+            self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
         elif self.mode == 'force':
             self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[0:3]))
 
@@ -523,11 +542,20 @@ class parallel_CMA_ES(object):
             # Solution grid will change depending on the mode (mt or force)
             if self.mode == 'mt':
                 solution_grid = UnstructuredGrid(dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),coords=(mean_solution),callback=self.callback)
+            elif self.mode == 'mt_dev':
+                # Pad missing w value with 0:
+                mean_solution = np.insert(mean_solution, 2, 0, axis=0)
+                solution_grid = UnstructuredGrid(dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),coords=(mean_solution),callback=self.callback)
+            elif self.mode == 'mt_dc':
+                # Padd missing v and w value with 0:
+                mean_solution = np.insert(mean_solution, 1, 0, axis=0)
+                mean_solution = np.insert(mean_solution, 2, 0, axis=0)
+                solution_grid = UnstructuredGrid(dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),coords=(mean_solution),callback=self.callback)
             elif self.mode == 'force':
                 solution_grid = UnstructuredGrid(dims=('F0', 'phi', 'h'), coords=(mean_solution), callback=self.callback)
 
             final_origin = final_origin[0]
-            if self.mode == 'mt':
+            if self.mode == 'mt' or self.mode == 'mt_dev' or self.mode == 'mt_dc':
                 best_source = MomentTensor(solution_grid.get(0))
             elif self.mode == 'force':
                 best_source = Force(solution_grid.get(0))
@@ -573,17 +601,28 @@ class parallel_CMA_ES(object):
             if self.fig is None:  # Check if fig is None
                 self.fig, self.ax = _generate_lune()
 
-            v = np.asarray(self.mutants_logger_list['v'])
-            w = np.asarray(self.mutants_logger_list['w'])
+            # define v as by values from self.mutants_logger_list if it exists, otherwise pad with values of zeroes
             m = np.asarray(self.mutants_logger_list['misfit'])
-            V,W = self._datalogger(mean=True)['v'], self._datalogger(mean=True)['w']
+
+            if 'v' in self.mutants_logger_list:
+                v = np.asarray(self.mutants_logger_list['v'])
+            else:
+                v = np.zeros_like(m)
+
+            if 'w' in self.mutants_logger_list:
+                w = np.asarray(self.mutants_logger_list['w'])
+            else:
+                w = np.zeros_like(m)
+
+            if 'v' in self.mutants_logger_list and 'w' in self.mutants_logger_list:
+                V,W = self._datalogger(mean=True)['v'], self._datalogger(mean=True)['w']
+                V, W = _hammer_projection(to_gamma(V), to_delta(W))
+                self.ax.scatter(V, W, c='red', marker='x', zorder=10000000)
 
             v, w = _hammer_projection(to_gamma(v), to_delta(w))
-            V, W = _hammer_projection(to_gamma(V), to_delta(W))
 
             vmin, vmax = np.percentile(np.asarray(m), [0,90])
 
             self.ax.scatter(v, w, c=m, s=2, vmin=vmin, vmax=vmax)
-            self.ax.scatter(V, W, c='red', marker='x', zorder=10000000)
 
             self.fig.canvas.draw()

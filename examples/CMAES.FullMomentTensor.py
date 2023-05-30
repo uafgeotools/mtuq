@@ -218,16 +218,21 @@ if __name__=='__main__':
     #
     # The main computational work starts now
     #
+    
+    # Defining source type (FMT, deviatoric or DC)
+    src_type = 'deviatoric' # 'mt', 'deviatoric' or 'dc'
+
     if mode == 'database':
-        parameter_list = initialise_mt(Mw_range=[4,6], depth_range=[30000, 55000])
+        parameter_list = initialise_mt(Mw_range=[4,6], depth_range=[30000, 55000], latitude_range=[61.0, 61.8], longitude_range=[-150.0, -149.0])
     elif mode == 'greens':
         parameter_list = initialise_mt(Mw_range=[4,6])
+        parameter_list = initialise_mt(Mw_range=[4,6], src_type=src_type)
 
     DATA = [data_bw, data_sw]
     PROCESS = [process_bw, process_sw]
     MISFIT = [misfit_bw, misfit_sw]
 
-    popsize = 24 # -- CMA-ES population size - number of mutants (you can play with this value)
+    popsize = 48 # -- CMA-ES population size - number of mutants (you can play with this value)
     CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=popsize)
     CMA.sigma = 5
     iter = 120
@@ -262,8 +267,9 @@ if __name__=='__main__':
         # -- WORK IN PROGRESS --
         # To vizualize the CMA-ES scatter plot as it iterates - feel free to comment out
         # TODO: Integrate this as an option in the CMA-ES "solve" method in the future.
-        CMA.scatter_plot()
-        plt.pause(0.01)
+        if comm.rank==0 and src_type == 'mt':
+            CMA.scatter_plot()
+            plt.pause(0.01)
         # -- END OF WORK IN PROGRESS --
 
         # if i = 0 or multiple of 10 and Last iteration:
@@ -272,5 +278,7 @@ if __name__=='__main__':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
             elif mode == 'greens':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
-            result = CMA.mutants_logger_list
-            plot_misfit_lune(event_id+'FMT_misfit.png', result, backend=_plot_lune_matplotlib)
+            
+            if src_type == 'mt':
+                result = CMA.mutants_logger_list
+                plot_misfit_lune(event_id+'FMT_misfit.png', result, backend=_plot_lune_matplotlib)
