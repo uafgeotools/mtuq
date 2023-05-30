@@ -68,7 +68,7 @@ class CMAESParameters:
             self.grid = None
 
 
-def initialise_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitude_range=None, src_type='mt'):
+def initialize_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitude_range=None, src_type='mt'):
     '''
     Initialise the CMA-ES parameters for moment tensor inversion.
     
@@ -129,7 +129,7 @@ def initialise_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitu
 
     return(parameters_list)
 
-def initialise_force(F0_range = [1e11, 1e14], depth=None, latitude=None, longitude=None):
+def initialize_force(F0_range = [1e11, 1e14], depth=None, latitude=None, longitude=None):
     '''
     Initialise the CMA-ES parameters for force source inversion.
 
