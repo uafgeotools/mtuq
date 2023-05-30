@@ -127,12 +127,20 @@ def _plot_dc_matplotlib(filename, coords,
     #     sigma = slip
     #     h = cos(dip)
 
+    vals = np.append(np.append(values_sigma_kappa.ravel(), values_sigma_kappa.ravel()),(values_sigma_h.ravel()))
+    # If min and max are more than 2 orders of magnitude apart, use the percentile method
+    # to filter out outliers
+    if np.nanmax(vals)/np.nanmin(vals) > 10:
+        vmin, vmax = np.nanpercentile(vals, [0,90])
+    else:
+        vmin, vmax = np.nanpercentile(vals, [0,100])
+
     # plot surfaces
-    _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa, colormap)
+    _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa.T, colormap, vmin=vmin, vmax=vmax)
 
-    _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa, colormap)
+    _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa.T, colormap, vmin=vmin, vmax=vmax)
 
-    _pcolor(axes[1][1], coords['sigma'], coords['h'], values_sigma_h, colormap)
+    _pcolor(axes[1][1], coords['sigma'], coords['h'], values_sigma_h.T, colormap, vmin=vmin, vmax=vmax)
 
     # optional markers
     if best_dc:
