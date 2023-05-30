@@ -9,7 +9,7 @@ from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
-from mtuq.stochastic_sampling import initialise_mt
+from mtuq.stochastic_sampling import initialize_mt
 from mtuq.stochastic_sampling.cmaes_parallel import parallel_CMA_ES
 import matplotlib.pyplot as plt
 from mtuq.util.math import to_gamma, to_delta
@@ -220,13 +220,13 @@ if __name__=='__main__':
     #
     
     # Defining source type (FMT, deviatoric or DC)
-    src_type = 'deviatoric' # 'mt', 'deviatoric' or 'dc'
+    src_type = 'dc' # 'full', 'deviatoric' or 'dc'
 
     if mode == 'database':
-        parameter_list = initialise_mt(Mw_range=[4,6], depth_range=[30000, 55000], latitude_range=[61.0, 61.8], longitude_range=[-150.0, -149.0])
+        parameter_list = initialize_mt(Mw_range=[4,6], depth_range=[30000, 55000], latitude_range=[61.0, 61.8], longitude_range=[-150.0, -149.0])
     elif mode == 'greens':
-        parameter_list = initialise_mt(Mw_range=[4,6])
-        parameter_list = initialise_mt(Mw_range=[4,6], src_type=src_type)
+        parameter_list = initialize_mt(Mw_range=[4,6])
+        parameter_list = initialize_mt(Mw_range=[4,6], src_type=src_type)
 
     DATA = [data_bw, data_sw]
     PROCESS = [process_bw, process_sw]

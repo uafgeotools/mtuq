@@ -9,7 +9,7 @@ from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
-from mtuq.stochastic_sampling import initialise_force
+from mtuq.stochastic_sampling import initialize_force
 from mtuq.stochastic_sampling.cmaes_parallel import parallel_CMA_ES
 
 
@@ -196,9 +196,9 @@ if __name__=='__main__':
     # The main computational work starts now
     #
     if mode == 'database':
-        parameter_list = initialise_force(F0_range=[1e10, 1e16], depth=[30000, 40000])
+        parameter_list = initialize_force(F0_range=[1e10, 1e16], depth=[30000, 40000])
     elif mode == 'greens':
-        parameter_list = initialise_force(F0_range=[1e10, 1e16])
+        parameter_list = initialize_force(F0_range=[1e10, 1e16])
 
     DATA = [data_bw, data_sw]
     PROCESS = [process_bw, process_sw]
