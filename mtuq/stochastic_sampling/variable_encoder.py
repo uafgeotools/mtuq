@@ -68,7 +68,7 @@ class CMAESParameters:
             self.grid = None
 
 
-def initialize_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitude_range=None, src_type='mt'):
+def initialize_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitude_range=None, src_type='full'):
     '''
     Initialise the CMA-ES parameters for moment tensor inversion.
     
@@ -82,6 +82,8 @@ def initialize_mt(Mw_range=[4,5], depth_range=None, latitude_range=None, longitu
         List of the lower and upper bound of the latitude of the moment tensor. In degrees.
     longitude_range : list
         List of the lower and upper bound of the longitude of the moment tensor. In degrees.
+    src_type : str
+        Source type. Either 'full', 'deviatoric' or 'dc'. Restrict the moment tensor search to a specific type by limiting the search space. Default is 'full' for full moment tensor.
 
     Returns
     -------
