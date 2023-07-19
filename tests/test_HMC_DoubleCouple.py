@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-sys.path.insert(1, '/scratch/l/liuqy/liangd/workspace/DPackages/seishmc/')
-
-
 import os
 import numpy as np
 
