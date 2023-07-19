@@ -101,6 +101,7 @@ setup(
         "obspy",
         "seisgen",
         "seisclient",
+        "seishmc",
         "retry",
         "flake8",
         "pytest",
