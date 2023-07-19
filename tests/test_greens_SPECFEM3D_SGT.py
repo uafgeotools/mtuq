@@ -30,9 +30,9 @@ if __name__=='__main__':
     run_figures = (not args.no_figures)
 
 
-    path_greens = fullpath('data/examples/SPECFEM3D/greens/socal3D')
-    path_data   = fullpath('data/examples/SPECFEM3D/data/*.[zrt]')
-    path_weights= fullpath('data/examples/SPECFEM3D/weights.dat')
+    path_greens = fullpath('data/examples/SPECFEM3D_SGT/greens/socal3D')
+    path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
+    path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
     event_id    = 'evt11071294'
     model       = 'socal3D'
     taup_model  = 'ak135'

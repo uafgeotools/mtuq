@@ -32,8 +32,8 @@ if __name__=='__main__':
 
 
     path_greens = fullpath('data/greens_tensor/seiscloud/')
-    path_data   = fullpath('data/examples/SPECFEM3D/data/*.[zrt]')
-    path_weights= fullpath('data/examples/SPECFEM3D/weights.dat')
+    path_data   = fullpath('data/examples/SPECFEM3D_SGT/data/*.[zrt]')
+    path_weights= fullpath('data/examples/SPECFEM3D_SGT/weights.dat')
     event_id    = 'evt11071294'
     model       = 'socal3D'
     taup_model  = 'ak135'
