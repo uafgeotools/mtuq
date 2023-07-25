@@ -112,7 +112,14 @@ class Client(ClientBase):
                 stream += trace
 
         if self.include_force:
-            raise NotImplementedError
+            #raise NotImplementedError
+            SUFFIXES = ['R.Fe','T.Fe','Z.Fe','R.Fn','T.Fn','Z.Fn','R.Fz','T.Fz','Z.Fz']
+            for suffix in SUFFIXES:
+                trace = obspy.read(
+                    self.path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
+                trace.stats.channel = suffix
+                trace.stats._component = suffix[0]
+                stream += trace
 
 
         # what are the start and end times of the data?
