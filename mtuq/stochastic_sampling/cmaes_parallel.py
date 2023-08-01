@@ -60,8 +60,10 @@ class parallel_CMA_ES(object):
         self.sigma = 0.5 # Default initial gaussian variance for all parameters.
         self.catalog_origin = origin
         self.counteval = 0
+        self._greens_tensors_cache = {} # Minor optimization for `db` mode with fixed origin. Will store the Green's tensors for each ProcessData() used in eval_fitness(). While it is recommanded to use the `greens` mode for fixed origin, this will make the computation faster in case `db` mode is used instead.
 
-        print('CMA-ES: Initializing...')
+        if self.rank == 0:
+            print('Initialising CMA-ES inversion for event %s' % self.event_id)
 
         if not callback_function == None:
             self.callback = callback_function
@@ -148,13 +150,14 @@ class parallel_CMA_ES(object):
         '''
         Compute mean change, and apply circular difference for wrapped repair methods (implying periodic parameters)
         '''
-        diff = new-old
+        diff = new - old
+        angular_diff = linear_transform(new[_i], 0, 360) - linear_transform(old[_i], 0, 360)
+        angular_diff = inverse_linear_transform((angular_diff + 180) % 360 - 180, 0, 360)
+
         for _i, param in enumerate(self._parameters):
             if param.repair == 'wrapping':
-                angular_diff = linear_transform(new[_i], 0, 360)-linear_transform(old[_i], 0, 360)
-                angular_diff = inverse_linear_transform((angular_diff+180)%360 - 180, 0, 360)
-                diff[_i] = angular_diff
-        return diff
+                diff[_i] = angular_diff[_i]
+        return diff 
 
     def circular_mean(self, id):
         '''
@@ -218,9 +221,22 @@ class parallel_CMA_ES(object):
                 if self.rank == 0 and verbose == True:
                     print('using catalog origin')
                 self.origins = [self.catalog_origin]
-                self.local_greens = db.get_greens_tensors(stations, self.origins)
-                self.local_greens.convolve(wavelet)
-                self.local_greens = self.local_greens.map(process)
+
+                key = self._get_greens_tensors_key(process)
+
+                # Only rank 0 fetches the data from the database
+                if self.rank == 0:
+                    if key not in self._greens_tensors_cache:
+                        self._greens_tensors_cache[key] = db.get_greens_tensors(stations, self.origins)
+                        self._greens_tensors_cache[key].convolve(wavelet)
+                        self._greens_tensors_cache[key] = self._greens_tensors_cache[key].map(process)
+                else:
+                    self._greens_tensors_cache[key] = None
+
+                # Rank 0 broadcasts the data to the others
+                self.local_greens = self.comm.bcast(self._greens_tensors_cache[key], root=0)
+
+                
                 self.local_misfit_val = misfit(data, self.local_greens, self.sources)
                 self.local_misfit_val = np.asarray(self.local_misfit_val).T
                 if verbose == True:
@@ -257,11 +273,20 @@ class parallel_CMA_ES(object):
                 end_time = MPI.Wtime()
                 if self.rank == 0:
                     print("Processing: " + str(end_time-start_time))
+                # DEBUG PRINT to check what is happening on each process: print the number of greens functions loaded on each process
+                if verbose == True:
+                    print("Number of greens functions loaded on process", self.rank, ":", len(self.local_greens))
+
+
                 # Compute misfit
                 start_time = MPI.Wtime()
                 self.local_misfit_val = [misfit(data, self.local_greens.select(origin), np.array([self.sources[_i]])) for _i, origin in enumerate(self.origins)]
                 self.local_misfit_val = np.asarray(self.local_misfit_val).T[0]
                 end_time = MPI.Wtime()
+
+                if verbose == True:
+                    print("local misfit is :", self.local_misfit_val) # - DEBUG PRINT
+
                 if self.rank == 0:
                     print("Misfit: " + str(end_time-start_time))
                 # Gather local misfit values
@@ -270,7 +295,6 @@ class parallel_CMA_ES(object):
                 self.misfit_val = self.comm.bcast(self.misfit_val, root=0)
                 self.misfit_val = np.asarray(np.concatenate(self.misfit_val))
                 self._misfit_holder += self.misfit_val
-                print(self.misfit_val)
                 return self.misfit_val
             
         elif mode == 'greens':
@@ -626,3 +650,7 @@ class parallel_CMA_ES(object):
             self.ax.scatter(v, w, c=m, s=2, vmin=vmin, vmax=vmax)
 
             self.fig.canvas.draw()
+
+    def _get_greens_tensors_key(self, process):
+        # Use the window_type attribute from the process object as the key.
+        return process.window_type
