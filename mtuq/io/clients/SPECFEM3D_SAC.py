@@ -9,7 +9,7 @@ from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
 
 
-SUFFIXES = [
+EXT_MT= [
     'Z.Mrr',
     'Z.Mtt',
     'Z.Mpp',
@@ -29,6 +29,19 @@ SUFFIXES = [
     'T.Mrp',
     'T.Mtp',
     ]
+
+EXT_FORCE = [
+    'R.Fe',
+    'T.Fe',
+    'Z.Fe',
+    'R.Fn',
+    'T.Fn',
+    'Z.Fn',
+    'R.Fz',
+    'T.Fz',
+    'Z.Fz',
+    ]
+
 
 
 class Client(ClientBase):
@@ -104,7 +117,7 @@ class Client(ClientBase):
             prefix = _try_wildcards(self.path, station)
             
         if self.include_mt:
-            for suffix in SUFFIXES:
+            for suffix in EXT_MT:
                 trace = obspy.read(
                     self.path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
                 trace.stats.channel = suffix
@@ -112,9 +125,7 @@ class Client(ClientBase):
                 stream += trace
 
         if self.include_force:
-            #raise NotImplementedError
-            SUFFIXES = ['R.Fe','T.Fe','Z.Fe','R.Fn','T.Fn','Z.Fn','R.Fz','T.Fz','Z.Fz']
-            for suffix in SUFFIXES:
+            for suffix in EXT_FORCE:
                 trace = obspy.read(
                     self.path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
                 trace.stats.channel = suffix
@@ -177,4 +188,5 @@ def _try_wildcards(path, station):
             return wildcard
     else:
         raise FileNotFoundError()
+
 
