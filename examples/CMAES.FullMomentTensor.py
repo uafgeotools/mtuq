@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from mtuq.util.math import to_gamma, to_delta
 from mtuq.graphics.uq.lune import plot_misfit_lune
 from mtuq.graphics.uq._matplotlib import _plot_lune_matplotlib
+from mtuq.graphics import plot_combined
 
 def plot_lune(CMA):
     ''' Temporary function to plot the lune distribution of mutants. This
@@ -33,6 +34,10 @@ def plot_lune(CMA):
 
     plt.scatter(to_gamma(v), to_delta(w), c=np.log(m))
     plt.scatter(to_gamma(V), to_delta(W), c='red', marker='x', zorder=10000000)
+
+    # Make sure the colorscale includes the 80% data percentile
+    plt.clim(np.log(np.percentile(m, 50)))
+
     plt.show()
 
 
@@ -73,7 +78,7 @@ if __name__=='__main__':
     path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_id=     '20090407201255351'
     model=        'ak135'
-    mode =        'greens' # 'database' or 'greens'
+    mode =        'database' # 'database' or 'greens'
     # mode =        'database' # 'database' or 'greens'
 
     #
@@ -204,38 +209,41 @@ if __name__=='__main__':
             greens_bw = None
             greens_sw = None
 
-
     stations = comm.bcast(stations, root=0)
     data_bw = comm.bcast(data_bw, root=0)
     data_sw = comm.bcast(data_sw, root=0)
+
     if mode == 'greens':
         greens_bw = comm.bcast(greens_bw, root=0)
         greens_sw = comm.bcast(greens_sw, root=0)
     elif mode == 'database':
         # This mode expects the path to a local AxiSEM database to be specified 
-        db = open_db('/Path/To/Axisem/Database/ak135f/', format='AxiSEM')
+        db = open_db('/Path/to/Axisem/Database/ak135f/', format='AxiSEM')
 
     #
     # The main computational work starts now
     #
     
-    # Defining source type (FMT, deviatoric or DC)
+    # Defining source type (full moment tensor, deviatoric moment tensor or double couple)
     src_type = 'dc' # 'full', 'deviatoric' or 'dc'
 
     if mode == 'database':
-        parameter_list = initialize_mt(Mw_range=[4,6], depth_range=[30000, 55000], latitude_range=[61.0, 61.8], longitude_range=[-150.0, -149.0])
+        # For a full search with depth, latitutde and longitude, use:
+        parameter_list = initialize_mt(Mw_range=[4,6], depth_range=[30000, 55000], latitude_range=[61.0, 61.8], longitude_range=[-150.0, -149.0], src_type=src_type)
+        # Alternatively, to fix the depth, latitude and longitude, use:
+        # parameter_list = initialize_mt(Mw_range=[4,6], src_type=src_type) # -- Note: This is not the recommanded use for fixed origin, prefer using the 'greens' mode
     elif mode == 'greens':
-        parameter_list = initialize_mt(Mw_range=[4,6])
         parameter_list = initialize_mt(Mw_range=[4,6], src_type=src_type)
 
+    # Creating list of important objects to be passed to plotting function later
     DATA = [data_bw, data_sw]
     PROCESS = [process_bw, process_sw]
     MISFIT = [misfit_bw, misfit_sw]
 
-    popsize = 48 # -- CMA-ES population size - number of mutants (you can play with this value)
+    popsize = 24 # -- CMA-ES population size - number of mutants (you can play with this value, 24 to 120 is a good range)
     CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=popsize)
-    CMA.sigma = 5
-    iter = 120
+    CMA.sigma = 5.0 # -- Initial standard deviation (4 ~ 5 seems to provide a balanced exploration/exploitation and avoid getting stuck in local minima)
+    iter = 120 # -- Number of iterations (you can play with this value, 120 to 240 is a good range)
     for i in range(iter):
         # ------------------
         # At the moment the full CMA-ES algorithm is executed in this loop.
@@ -264,14 +272,6 @@ if __name__=='__main__':
         CMA.update_step_size()
         CMA.update_covariance()
 
-        # -- WORK IN PROGRESS --
-        # To vizualize the CMA-ES scatter plot as it iterates - feel free to comment out
-        # TODO: Integrate this as an option in the CMA-ES "solve" method in the future.
-        if comm.rank==0 and src_type == 'mt':
-            CMA.scatter_plot()
-            plt.pause(0.01)
-        # -- END OF WORK IN PROGRESS --
-
         # if i = 0 or multiple of 10 and Last iteration:
         if i == 0 or i % 10 == 0 or i == iter-1:
             if mode == 'database':
@@ -279,6 +279,7 @@ if __name__=='__main__':
             elif mode == 'greens':
                 CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
             
-            if src_type == 'mt':
-                result = CMA.mutants_logger_list
-                plot_misfit_lune(event_id+'FMT_misfit.png', result, backend=_plot_lune_matplotlib)
+            if src_type == 'full' or src_type == 'deviatoric' or src_type == 'dc':
+                if comm.rank==0:
+                    result = CMA.mutants_logger_list
+                    plot_combined('combined.png', result, colormap='viridis')
