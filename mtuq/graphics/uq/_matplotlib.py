@@ -8,12 +8,13 @@ from xarray import DataArray
 from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
 from mtuq.graphics.uq._gmt import _parse_vw, _parse_lune_array
+import matplotlib.gridspec as gridspec
 
 # Define a pure matplotlib backend as an alternative to GMT
 # It should behave as similarly as possible to the GMT backend 
 # and take the same input arguments
 def _plot_lune_matplotlib(filename, longitude, latitude, values, 
-    best_vw=None, lune_array=None, colormap='hot_r', title=None, **kwargs):
+    best_vw=None, lune_array=None, colormap='viridis', title=None, **kwargs):
 
     """ Plots DataArray values on the eigenvalue lune (requires GMT)
 
@@ -52,30 +53,22 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     x, y = _hammer_projection(x, y)
 
     # Plot data
-    # if min and max are more than 2 orders of magnitude apart, use the percentile method
-    # to filter out outliers
+    # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
     if not contour:
-        if np.nanmax(values)/np.nanmin(values) > 100:
-            vmin, vmax = np.nanpercentile(np.asarray(values), [0,90])
-            im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto')
-        else:
-            im = ax.pcolormesh(x, y, values, cmap=colormap, shading='auto')
+        vmin, vmax = np.nanpercentile(np.asarray(values), [0,90])
+        im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto')
     else:
         # Plot using contourf
         levels = 20 if contour is True else int(contour)
         im = ax.contourf(x, y, values, cmap=colormap, levels=levels)
-        # if np.nanmax(values)/np.nanmin(values) > 100:
-        #     vmin, vmax = np.nanpercentile(np.asarray(values), [0,90])
-        #     im = ax.contourf(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, levels=levels)
-        # else:
-        #     im = ax.contourf(x, y, values, cmap=colormap, levels=levels)
+
 
     # Plot best-fitting moment tensor
     if best_vw is not None:
         best_vw = _parse_vw(best_vw)
         gamma, delta = _hammer_projection(
             best_vw[0], best_vw[1])
-        ax.scatter(gamma, delta, s=240, facecolors='none', edgecolors='chartreuse', zorder=1000)
+        _add_marker(ax, (gamma, delta))
 
     # Plot tradeoffs
     if lune_array is not None:
@@ -106,7 +99,9 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
 
 def _plot_dc_matplotlib(filename, coords, 
     values_h_kappa, values_sigma_kappa, values_sigma_h,
-    title=None, best_dc=None, colormap='viridis',  figsize=(8., 8.), fontsize=14):
+    title=None, best_dc=None,  figsize=(8., 8.), fontsize=14, **kwargs):
+
+    colormap = kwargs.get('colormap', 'viridis')
 
     # prepare axes
     fig, axes = pyplot.subplots(2, 2,
@@ -128,12 +123,9 @@ def _plot_dc_matplotlib(filename, coords,
     #     h = cos(dip)
 
     vals = np.append(np.append(values_sigma_kappa.ravel(), values_sigma_kappa.ravel()),(values_sigma_h.ravel()))
-    # If min and max are more than 2 orders of magnitude apart, use the percentile method
-    # to filter out outliers
-    if np.nanmax(vals)/np.nanmin(vals) > 10:
-        vmin, vmax = np.nanpercentile(vals, [0,90])
-    else:
-        vmin, vmax = np.nanpercentile(vals, [0,100])
+    # Plot data
+    # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
+    vmin, vmax = np.nanpercentile(vals, [0,90])
 
     # plot surfaces
     _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa.T, colormap, vmin=vmin, vmax=vmax)
