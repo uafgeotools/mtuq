@@ -174,8 +174,8 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
 
 
 
-def _plot_dc(filename, da, show_best=True, colormap='hot', 
-    backend=_plot_dc_matplotlib, squeeze='min', **kwargs):
+def _plot_dc(filename, da, show_best=True, backend=_plot_dc_matplotlib,
+    squeeze='min', **kwargs):
 
     """ Plots DataArray values over strike, dip, slip
 
