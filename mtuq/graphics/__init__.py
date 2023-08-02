@@ -7,6 +7,9 @@ from mtuq.graphics.attrs import\
 from mtuq.graphics.beachball import\
     plot_beachball, plot_polarities
 
+from mtuq.graphics.uq.combined_plots import\
+    plot_combined
+
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune,\
     plot_variance_reduction_lune, plot_magnitude_tradeoffs_lune, _plot_lune
