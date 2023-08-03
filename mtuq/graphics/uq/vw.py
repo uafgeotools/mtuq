@@ -497,7 +497,7 @@ def _bin_vw_regular(df, handle, npts_v=20, npts_w=40):
         )
 
 
-def _bin_vw_semiregular(df, handle, npts_v=20, npts_w=40, tightness=0.6, normalize=False):
+def _bin_vw_semiregular(df, handle, npts_v=20, npts_w=41, tightness=0.6, normalize=False):
     """ Bins irregularly-spaced moment tensors into rectangular v,w cells
     """
     # at which points will we plot values?

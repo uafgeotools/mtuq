@@ -22,3 +22,7 @@ docs/library/generated
 scripts/
 
 .git/
+
+examples/greens_mode/
+examples/db_mode/
+data/
