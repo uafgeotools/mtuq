@@ -55,7 +55,7 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     # Plot data
     # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
     if not contour:
-        vmin, vmax = np.nanpercentile(np.asarray(values), [0,90])
+        vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
         im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto')
     else:
         # Plot using contourf
@@ -125,7 +125,7 @@ def _plot_dc_matplotlib(filename, coords,
     vals = np.append(np.append(values_sigma_kappa.ravel(), values_sigma_kappa.ravel()),(values_sigma_h.ravel()))
     # Plot data
     # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
-    vmin, vmax = np.nanpercentile(vals, [0,90])
+    vmin, vmax = np.nanpercentile(vals, [0,75])
 
     # plot surfaces
     _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa.T, colormap, vmin=vmin, vmax=vmax)

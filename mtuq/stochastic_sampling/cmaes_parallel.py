@@ -14,6 +14,7 @@ from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
 from mtuq.graphics.uq._matplotlib import _hammer_projection, _generate_lune
 from mtuq.util.math import to_gamma, to_delta
+from mtuq.graphics import plot_combined
 
 # class CMA_ES(object):
 
@@ -170,7 +171,7 @@ class parallel_CMA_ES(object):
         return mean
 
     # Evaluate the misfit for each mutant of the population.
-    def eval_fitness(self, data, stations, misfit, db, origin=None, process=None, wavelet=None, verbose=False):
+    def eval_fitness(self, data, stations, misfit, db, process=None, wavelet=None, verbose=False):
         """
         Evaluate the misfit for each mutant of the population.
 
@@ -540,7 +541,12 @@ class parallel_CMA_ES(object):
 
     def solve(self, data, process, misfit, stations, db, wavelet, iterations=1, verbose=False, plot_waveforms=True):
         for it in range(iterations):
+            if self.rank == 0:
+                print("Iteration: %i" % (it))
+
             self.draw_mutants()
+
+
             total_misfit = np.zeros((self.lmbda, 1))
             for _i in range(len(data)):
                 total_misfit += self.eval_fitness(data[_i], stations, db, process[_i], misfit[_i], wavelet, verbose)
@@ -557,50 +563,210 @@ class parallel_CMA_ES(object):
                     self.plot_mean_waveforms(data, process, misfit, stations, db)
                 self.iteration += 1
 
-    def plot_mean_waveforms(self, data, process, misfit, stations, db):
 
-        if self.rank == 0:
+    def draw_eval_update(self, data_list, stations, misfit_list, process_list, greens_or_db_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, src_type=None, **kwargs):
 
-            mean_solution, final_origin = self.return_candidate_solution()
+        for i in range(iter):
+            if self.rank == 0:
+                print('Iteration %d\n' % (i + iter_count))
+            
+            self.draw_mutants()
 
-            # Solution grid will change depending on the mode (mt or force)
-            if self.mode == 'mt':
-                solution_grid = UnstructuredGrid(dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),coords=(mean_solution),callback=self.callback)
-            elif self.mode == 'mt_dev':
-                # Pad missing w value with 0:
-                mean_solution = np.insert(mean_solution, 2, 0, axis=0)
-                solution_grid = UnstructuredGrid(dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),coords=(mean_solution),callback=self.callback)
-            elif self.mode == 'mt_dc':
-                # Padd missing v and w value with 0:
-                mean_solution = np.insert(mean_solution, 1, 0, axis=0)
-                mean_solution = np.insert(mean_solution, 2, 0, axis=0)
-                solution_grid = UnstructuredGrid(dims=('rho', 'v', 'w', 'kappa', 'sigma', 'h'),coords=(mean_solution),callback=self.callback)
-            elif self.mode == 'force':
-                solution_grid = UnstructuredGrid(dims=('F0', 'phi', 'h'), coords=(mean_solution), callback=self.callback)
+            misfits = []
+            for j in range(len(data_list)):
+                data = data_list[j]
+                misfit = misfit_list[j]
+                
+                mode = 'db' if isinstance(greens_or_db_list, AxiSEM_Client) else 'greens'
+                # get greens[j] or db depending on mode from greens_or_db_list
+                greens = greens_or_db_list[j] if mode == 'greens' else None
+                db = greens_or_db_list if mode == 'db' else None
 
-            final_origin = final_origin[0]
-            if self.mode == 'mt' or self.mode == 'mt_dev' or self.mode == 'mt_dc':
-                best_source = MomentTensor(solution_grid.get(0))
-            elif self.mode == 'force':
-                best_source = Force(solution_grid.get(0))
-            lune_dict = solution_grid.get_dict(0)
-            mode = 'db' if isinstance(db, AxiSEM_Client) else 'greens'
-            if mode == 'db':
-                greens = db.get_greens_tensors(stations, final_origin)
-            elif mode == 'greens':
-                greens = db
+                if mode == 'db':
+                    misfit = self.eval_fitness(data, stations, misfit, db, process_list[j], wavelet, **kwargs)
+                elif mode == 'greens':
+                    misfit = self.eval_fitness(data, stations, misfit, greens,  **kwargs)
 
-            if len(data) == len(process) == len(misfit) == 2:
-                greens_0 = greens.map(process[0])
-                greens_1 = greens.map(process[1])
-                greens_1[0].tags[0]='model:ak135f_2s'
-                greens_0[0].tags[0]='model:ak135f_2s'
-                plot_data_greens2(self.event_id+'FMT_waveforms_mean_'+str(self.iteration)+'.png',data[0], data[1], greens_0, greens_1, process[0], process[1], misfit[0], misfit[1], stations, final_origin, best_source, lune_dict)
+                misfits.append(misfit)
 
-            if len(data) == len(process) == len(misfit) == 1:
-                greens_1 = greens.map(process[0])
-                greens_1[0].tags[0]='model:ak135f_2s'
-                plot_data_greens1(self.event_id+'FMT_waveforms_mean_'+str(self.iteration)+'.png',data, greens, process, misfit, stations, final_origin[0], best_source, lune_dict)
+            self.gather_mutants()
+            self.fitness_sort(sum(misfits))
+            self.update_mean()
+            self.update_step_size()
+            self.update_covariance()
+
+            if i == 0 or i % plot_interval == 0 or i == max_iter - 1:
+                self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, greens_or_db_list)
+
+                if src_type in ['full', 'deviatoric', 'dc']:
+                    if self.rank == 0:
+                        result = self.mutants_logger_list
+                        plot_combined('combined.png', result, colormap='viridis')
+
+
+    # Define a function to check draw_eval_update inputs
+    def _check_draw_eval_update_inputs(self, data_list, stations, misfit_list, process_list, greens_or_db_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, src_type=None, **kwargs):
+        if not isinstance(data_list, list):
+            raise TypeError("data_list must be a list of data objects")
+        if not isinstance(stations, list):
+            raise TypeError("stations must be a list of station objects")
+        if not isinstance(misfit_list, list):
+            raise TypeError("misfit_list must be a list of misfit objects")
+        if not isinstance(process_list, list):
+            raise TypeError("process_list must be a list of process objects")
+        if not isinstance(greens_or_db_list, list):
+            raise TypeError("greens_or_db_list must be a list of greens objects")
+        if not isinstance(iter, int):
+            raise TypeError("iter must be an integer")
+        if not isinstance(plot_interval, int):
+            raise TypeError("plot_interval must be an integer")
+        if not isinstance(iter_count, int):
+            raise TypeError("iter_count must be an integer")
+        if not isinstance(max_iter, int):
+            raise TypeError("max_iter must be an integer")
+        if not isinstance(src_type, str):
+            raise TypeError("src_type must be a string")
+        if not isinstance(kwargs, dict):
+            raise TypeError("kwargs must be a dictionary")
+
+        if len(data_list) != len(misfit_list):
+            raise ValueError("data_list and misfit_list must be the same length")
+        if len(data_list) != len(process_list):
+            raise ValueError("data_list and process_list must be the same length")
+        if len(data_list) != len(greens_or_db_list):
+            raise ValueError("data_list and greens_or_db_list must be the same length")
+
+        if src_type not in ['full', 'deviatoric', 'dc']:
+            raise ValueError("src_type must be either 'full', 'deviatoric', or 'dc'")
+
+        if iter < 1:
+            raise ValueError("iter must be greater than or equal to 1")
+        if plot_interval < 1:
+            raise ValueError("plot_interval must be greater than or equal to 1 or None")
+        if iter_count < 0:
+            raise ValueError("iter_count must be greater than or equal to 0")
+        if max_iter < 1:
+            raise ValueError("max_iter must be greater than or equal to 1")
+
+
+    # def plot_mean_waveforms(self, data, process, misfit, stations, db):
+    #     if self.rank != 0:
+    #         return  # Exit early if not rank 0
+
+    #     mean_solution, final_origin = self.return_candidate_solution()
+
+    #     # Solution grid will change depending on the mode (mt, mt_dev, mt_dc, or force)
+    #     modes = {
+    #         'mt': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+    #         'mt_dev': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+    #         'mt_dc': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+    #         'force': ('F0', 'phi', 'h'),
+    #     }
+
+    #     if self.mode not in modes:
+    #         raise ValueError("Invalid mode. Supported modes: 'mt', 'mt_dev', 'mt_dc', 'force'")
+
+    #     mode_dimensions = modes[self.mode]
+
+    #     if self.mode == 'mt_dev':
+    #         mean_solution = np.insert(mean_solution, 2, 0, axis=0)
+    #     elif self.mode == 'mt_dc':
+    #         mean_solution = np.insert(mean_solution, 1, 0, axis=0)
+    #         mean_solution = np.insert(mean_solution, 2, 0, axis=0)
+
+    #     solution_grid = UnstructuredGrid(dims=mode_dimensions, coords=mean_solution, callback=self.callback)
+
+    #     final_origin = final_origin[0]
+    #     if self.mode.startswith('mt'):
+    #         best_source = MomentTensor(solution_grid.get(0))
+    #     elif self.mode == 'force':
+    #         best_source = Force(solution_grid.get(0))
+
+    #     lune_dict = solution_grid.get_dict(0)
+
+    #     mode = 'db' if isinstance(db, AxiSEM_Client) else 'greens'
+    #     if mode == 'db':
+    #         greens = db.get_greens_tensors(stations, final_origin)
+    #     elif mode == 'greens':
+    #         greens = db
+
+    #     if len(data) == len(process) == len(misfit):
+    #         if len(data) == 2:
+    #             greens_0 = greens.map(process[0])
+    #             greens_1 = greens.map(process[1])
+    #             greens_1[0].tags[0] = 'model:ak135f_2s'
+    #             greens_0[0].tags[0] = 'model:ak135f_2s'
+    #             plot_data_greens2(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
+    #                             data[0], data[1], greens_0, greens_1, process[0], process[1],
+    #                             misfit[0], misfit[1], stations, final_origin, best_source, lune_dict)
+    #         elif len(data) == 1:
+    #             greens_1 = greens.map(process[0])
+    #             greens_1[0].tags[0] = 'model:ak135f_2s'
+    #             plot_data_greens1(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
+    #                             data, greens, process, misfit, stations, final_origin[0], best_source, lune_dict)
+    #     else:
+    #         raise ValueError("Data, process, and misfit lists must have the same length.")
+
+
+    def plot_mean_waveforms(self, data_list, process_list, misfit_list, stations, greens_or_db_list):
+        if self.rank != 0:
+            return  # Exit early if not rank 0
+
+        mean_solution, final_origin = self.return_candidate_solution()
+
+        # Solution grid will change depending on the mode (mt, mt_dev, mt_dc, or force)
+        modes = {
+            'mt': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+            'mt_dev': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+            'mt_dc': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
+            'force': ('F0', 'phi', 'h'),
+        }
+
+        if self.mode not in modes:
+            raise ValueError("Invalid mode. Supported modes: 'mt', 'mt_dev', 'mt_dc', 'force'")
+
+        mode_dimensions = modes[self.mode]
+
+        if self.mode == 'mt_dev':
+            mean_solution = np.insert(mean_solution, 2, 0, axis=0)
+        elif self.mode == 'mt_dc':
+            mean_solution = np.insert(mean_solution, 1, 0, axis=0)
+            mean_solution = np.insert(mean_solution, 2, 0, axis=0)
+
+        solution_grid = UnstructuredGrid(dims=mode_dimensions, coords=mean_solution, callback=self.callback)
+
+        final_origin = final_origin[0]
+        if self.mode.startswith('mt'):
+            best_source = MomentTensor(solution_grid.get(0))
+        elif self.mode == 'force':
+            best_source = Force(solution_grid.get(0))
+
+        lune_dict = solution_grid.get_dict(0)
+
+        # for i in range(len(data_list)):
+        data = data_list
+        process = process_list
+        misfit = misfit_list
+        greens_or_db = greens_or_db_list
+
+        mode = 'db' if isinstance(greens_or_db, AxiSEM_Client) else 'greens'
+        if mode == 'db':
+            _greens = greens_or_db.get_greens_tensors(stations, final_origin)
+            greens = [None] * len(process_list)
+            for i in range(len(process_list)):
+                greens[i] = _greens.map(process_list[i])
+                greens[i][0].tags[0] = 'model:ak135f_2s'
+        elif mode == 'greens':
+            greens = greens_or_db
+
+        if len(process) == 2:
+            plot_data_greens2(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
+                            data[0], data[1], greens[0], greens[1], process[0], process[1],
+                            misfit[0], misfit[1], stations, final_origin, best_source, lune_dict)
+        elif len(process) == 1:
+            plot_data_greens1(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
+                            data, greens, process, misfit, stations, final_origin[0], best_source, lune_dict)
+
 
     def _transform_mutants(self):
         self.transformed_mutants = np.zeros_like(self.scattered_mutants)
