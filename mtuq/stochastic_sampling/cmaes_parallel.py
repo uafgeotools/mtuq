@@ -200,20 +200,22 @@ class parallel_CMA_ES(object):
 
         self._transform_mutants()
 
-        # Using callback for mt or force inversion -- These are pre-determined mode used in conjunction with the initialize_mt() and initialize_force() methods
-        if self.mode == 'mt':
-            self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[0:6]))
-        elif self.mode == 'mt_dev':
-            # Compensate for the lack of 'w' in the parameters list by putting a column of 0 in the 3nd position when calling the callback
-            self.extended_mutants = np.insert(self.transformed_mutants[0:5], 2, 0, axis=0)
-            self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
-        elif self.mode == 'mt_dc':
-            # Compensate for the lack of 'v' and 'w' in the parameters list by putting columns of 0's in the 2nd and 3rd position when calling the callback
-            self.extended_mutants = np.insert(self.transformed_mutants[0:4], 1, 0, axis=0)
-            self.extended_mutants = np.insert(self.extended_mutants, 2, 0, axis=0)
-            self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
-        elif self.mode == 'force':
-            self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[0:3]))
+        self._generate_sources()
+
+        # # Using callback for mt or force inversion -- These are pre-determined mode used in conjunction with the initialize_mt() and initialize_force() methods
+        # if self.mode == 'mt':
+        #     self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[0:6]))
+        # elif self.mode == 'mt_dev':
+        #     # Compensate for the lack of 'w' in the parameters list by putting a column of 0 in the 3nd position when calling the callback
+        #     self.extended_mutants = np.insert(self.transformed_mutants[0:5], 2, 0, axis=0)
+        #     self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
+        # elif self.mode == 'mt_dc':
+        #     # Compensate for the lack of 'v' and 'w' in the parameters list by putting columns of 0's in the 2nd and 3rd position when calling the callback
+        #     self.extended_mutants = np.insert(self.transformed_mutants[0:4], 1, 0, axis=0)
+        #     self.extended_mutants = np.insert(self.extended_mutants, 2, 0, axis=0)
+        #     self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
+        # elif self.mode == 'force':
+        #     self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[0:3]))
 
         if mode == 'db':
             # Check if latitude longitude AND depth are absent from the parameters list
@@ -649,66 +651,25 @@ class parallel_CMA_ES(object):
             raise ValueError("max_iter must be greater than or equal to 1")
 
 
-    # def plot_mean_waveforms(self, data, process, misfit, stations, db):
-    #     if self.rank != 0:
-    #         return  # Exit early if not rank 0
-
-    #     mean_solution, final_origin = self.return_candidate_solution()
-
-    #     # Solution grid will change depending on the mode (mt, mt_dev, mt_dc, or force)
-    #     modes = {
-    #         'mt': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
-    #         'mt_dev': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
-    #         'mt_dc': ('rho', 'v', 'w', 'kappa', 'sigma', 'h'),
-    #         'force': ('F0', 'phi', 'h'),
-    #     }
-
-    #     if self.mode not in modes:
-    #         raise ValueError("Invalid mode. Supported modes: 'mt', 'mt_dev', 'mt_dc', 'force'")
-
-    #     mode_dimensions = modes[self.mode]
-
-    #     if self.mode == 'mt_dev':
-    #         mean_solution = np.insert(mean_solution, 2, 0, axis=0)
-    #     elif self.mode == 'mt_dc':
-    #         mean_solution = np.insert(mean_solution, 1, 0, axis=0)
-    #         mean_solution = np.insert(mean_solution, 2, 0, axis=0)
-
-    #     solution_grid = UnstructuredGrid(dims=mode_dimensions, coords=mean_solution, callback=self.callback)
-
-    #     final_origin = final_origin[0]
-    #     if self.mode.startswith('mt'):
-    #         best_source = MomentTensor(solution_grid.get(0))
-    #     elif self.mode == 'force':
-    #         best_source = Force(solution_grid.get(0))
-
-    #     lune_dict = solution_grid.get_dict(0)
-
-    #     mode = 'db' if isinstance(db, AxiSEM_Client) else 'greens'
-    #     if mode == 'db':
-    #         greens = db.get_greens_tensors(stations, final_origin)
-    #     elif mode == 'greens':
-    #         greens = db
-
-    #     if len(data) == len(process) == len(misfit):
-    #         if len(data) == 2:
-    #             greens_0 = greens.map(process[0])
-    #             greens_1 = greens.map(process[1])
-    #             greens_1[0].tags[0] = 'model:ak135f_2s'
-    #             greens_0[0].tags[0] = 'model:ak135f_2s'
-    #             plot_data_greens2(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
-    #                             data[0], data[1], greens_0, greens_1, process[0], process[1],
-    #                             misfit[0], misfit[1], stations, final_origin, best_source, lune_dict)
-    #         elif len(data) == 1:
-    #             greens_1 = greens.map(process[0])
-    #             greens_1[0].tags[0] = 'model:ak135f_2s'
-    #             plot_data_greens1(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
-    #                             data, greens, process, misfit, stations, final_origin[0], best_source, lune_dict)
-    #     else:
-    #         raise ValueError("Data, process, and misfit lists must have the same length.")
-
-
     def plot_mean_waveforms(self, data_list, process_list, misfit_list, stations, greens_or_db_list):
+        """
+        Plots the mean waveforms using the base mtuq waveform plots (mtuq.graphics.waveforms).
+
+        Depending on the mode, different parameters are inserted into the mean solution (padding w or v with 0s for instance)
+        If green's functions a provided directly, they are used as is. Otherwise, extrace green's function from Axisem database and preprocess them.
+        Support only 1 or 2 waveform groups (body and surface waves, or surface waves only)
+
+        Args:
+            data_list: A list of data to be plotted (typically `data_bw` and `data_sw`).
+            process_list: A list of processes for each data (typically `process_bw` and `process_sw`).
+            misfit_list: A list of misfits for each data (typically `misfit_bw` and `misfit_sw`).
+            stations: A list of stations.
+            greens_or_db_list: Either an AxiSEM_Client instance or a list of GreensTensors (typically `greens_bw` and `greens_sw`).
+
+        Raises:
+            ValueError: If the mode is not 'mt', 'mt_dev', 'mt_dc', or 'force'.
+        """
+
         if self.rank != 0:
             return  # Exit early if not rank 0
 
@@ -727,6 +688,7 @@ class parallel_CMA_ES(object):
 
         mode_dimensions = modes[self.mode]
 
+        # Pad mean_solution based on moment tensor mode (deviatoric or double couple)
         if self.mode == 'mt_dev':
             mean_solution = np.insert(mean_solution, 2, 0, axis=0)
         elif self.mode == 'mt_dc':
@@ -743,7 +705,7 @@ class parallel_CMA_ES(object):
 
         lune_dict = solution_grid.get_dict(0)
 
-        # for i in range(len(data_list)):
+        # Assignments for brevity (might be removed later)
         data = data_list
         process = process_list
         misfit = misfit_list
@@ -759,6 +721,7 @@ class parallel_CMA_ES(object):
         elif mode == 'greens':
             greens = greens_or_db
 
+        # Plot based on the number of ProcessData objects in the process_list
         if len(process) == 2:
             plot_data_greens2(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
                             data[0], data[1], greens[0], greens[1], process[0], process[1],
@@ -769,6 +732,22 @@ class parallel_CMA_ES(object):
 
 
     def _transform_mutants(self):
+        """
+        Transforms local mutants on each process based on the parameters scaling and projection settings.
+
+        For each parameter, depending on its scaling setting ('linear' or 'log'), 
+        it applies a transformation to the corresponding elements of scattered_mutants.
+        If a projection is specified, it applies this projection to the transformed values.
+
+        Attributes:
+            scattered_mutants: A 2D numpy array with the original mutant data. When MPI is used, correspond to the local mutants on each process.
+            _parameters: A list of Parameter objects, each with attributes 'scaling', 'lower_bound', 'upper_bound', 
+            and 'projection' specifying how to transform the corresponding scattered_mutants.
+
+        Raises:
+            ValueError: If an unrecognized scaling is provided.
+        """        
+
         self.transformed_mutants = np.zeros_like(self.scattered_mutants)
         for i, param in enumerate(self._parameters):
             if param.scaling == 'linear':
@@ -781,17 +760,38 @@ class parallel_CMA_ES(object):
                 self.transformed_mutants[i] = np.asarray(list(map(param.projection, self.transformed_mutants[i])))
 
     def _check_greens_input_combination(self, db, process, wavelet):
+        """
+        Checks the validity of the given parameters.
+
+        Raises a ValueError if the database object is not an AxiSEM_Client or GreensTensorList, 
+        or if the process function and wavelet are not defined when the database object is an AxiSEM_Client.
+
+        Args:
+            db: The database object to check, expected to be an instance of either AxiSEM_Client or GreensTensorList.
+            process: The process function to be used if the database is an AxiSEM_Client.
+            wavelet: The wavelet to be used if the database is an AxiSEM_Client.
+
+        Raises:
+            ValueError: If the input combination of db, process, and wavelet is invalid.
+        """
+
         if not isinstance(db, (AxiSEM_Client, GreensTensorList)):
             raise ValueError("database must be either an AxiSEM_Client object or a GreensTensorList object")
         if isinstance(db, AxiSEM_Client) and (process is None or wavelet is None):
             raise ValueError("process_function and wavelet must be specified if database is an AxiSEM_Client")
 
-    def scatter_plot(self, path=None, id=None):
+    def _scatter_plot(self):
+        """
+        Generates a scatter plot of the mutants and the current mean solution
+        
+        Return: 
+        Matplotlib figure object (also retrived by self.fig)
+        """
         if self.rank == 0:
             if self.fig is None:  # Check if fig is None
                 self.fig, self.ax = _generate_lune()
 
-            # define v as by values from self.mutants_logger_list if it exists, otherwise pad with values of zeroes
+            # Define v as by values from self.mutants_logger_list if it exists, otherwise pad with values of zeroes
             m = np.asarray(self.mutants_logger_list['misfit'])
 
             if 'v' in self.mutants_logger_list:
@@ -803,20 +803,75 @@ class parallel_CMA_ES(object):
                 w = np.asarray(self.mutants_logger_list['w'])
             else:
                 w = np.zeros_like(m)
-
-            if 'v' in self.mutants_logger_list and 'w' in self.mutants_logger_list:
+            
+            # Handling the mean solution
+            if self.mode == 'mt':
                 V,W = self._datalogger(mean=True)['v'], self._datalogger(mean=True)['w']
-                V, W = _hammer_projection(to_gamma(V), to_delta(W))
-                self.ax.scatter(V, W, c='red', marker='x', zorder=10000000)
+            elif self.mode == 'mt_dev':
+                V = self._datalogger(mean=True)['v']
+                W = 0
+            elif self.mode == 'mt_dc':
+                V = W = 0
 
+            # Projecting the mean solution onto the lune
+            V, W = _hammer_projection(to_gamma(V), to_delta(W))
+            self.ax.scatter(V, W, c='red', marker='x', zorder=10000000)
+            # Projecting the mutants onto the lune
             v, w = _hammer_projection(to_gamma(v), to_delta(w))
 
-            vmin, vmax = np.percentile(np.asarray(m), [0,90])
 
-            self.ax.scatter(v, w, c=m, s=2, vmin=vmin, vmax=vmax)
+            vmin, vmax = np.percentile(np.asarray(m), [0,75])
+
+            self.ax.scatter(v, w, c=m, s=3, vmin=vmin, vmax=vmax, zorder=100)
 
             self.fig.canvas.draw()
+            return self.fig
 
     def _get_greens_tensors_key(self, process):
-        # Use the window_type attribute from the process object as the key.
+        """
+        Get the body-wave or surface-wave key for the GreensTensors object from the ProcessData object.
+        """
         return process.window_type
+
+    def _generate_sources(self):
+        """
+        Generate sources by calling the callback function on transformed data according to the set mode.
+        
+        Depending on the mode, the method selects a subset of transformed mutants, possibly extending
+        it with zero-filled columns at specific positions, and then passes the processed data to the
+        callback function. The results are stored in a contiguous NumPy array in self.sources.
+
+        Raises:
+            ValueError: If an unsupported mode is provided.
+
+        Attributes:
+            mode: A string representing the mode of operation, which can be 'mt', 'mt_dev', 'mt_dc', or 'force'.
+            transformed_mutants: A 2D numpy array that contains the transformed data to be processed.
+            callback: A callable that is used to process the data.
+        """
+
+        # Mapping between modes and respective slices or insertion positions for processing.
+        mode_to_indices = {
+            'mt': (0, 6),        # For 'mt', a slice from the first 6 elements of transformed_mutants is used.
+            'mt_dev': (0, 5, 2), # For 'mt_dev', a zero column is inserted at position 2 after slicing the first 5 elements.
+            'mt_dc': (0, 4, 1, 2), # For 'mt_dc', zero columns are inserted at positions 1 and 2 after slicing the first 4 elements.
+            'force': (0, 3),     # For 'force', a slice from the first 3 elements of transformed_mutants is used.
+        }
+
+        # Check the mode's validity. Raise an error if the mode is unsupported.
+        if self.mode not in mode_to_indices:
+            raise ValueError(f'Invalid mode: {self.mode}')
+
+        # Get the slice or insertion positions based on the current mode.
+        indices = mode_to_indices[self.mode]
+
+        # If the mode is 'mt' or 'force', take a slice from transformed_mutants and pass it to the callback.
+        if self.mode in ['mt', 'force']:
+            self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[indices[0]:indices[1]]))
+        else:
+            # For 'mt_dev' and 'mt_dc' modes, insert zeros at specific positions after slicing transformed_mutants.
+            self.extended_mutants = self.transformed_mutants[indices[0]:indices[1]]
+            for insertion_index in indices[2:]:
+                self.extended_mutants = np.insert(self.extended_mutants, insertion_index, 0, axis=0)
+            # Pass the processed data to the callback, and save the result as a contiguous array in self.sources.
+            self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
