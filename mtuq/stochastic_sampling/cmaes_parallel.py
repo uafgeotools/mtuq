@@ -127,33 +127,37 @@ class parallel_CMA_ES(object):
     # Where the CMA-ES Routine happens --------------------------------------------------------------
     def draw_mutants(self):
         '''
+        draw_mutants method
+        
         This function is responsible for drawing `self.lmbda` mutants from a Gaussian distribution on the root process. 
         It also applies the corresponding repair method for each of the parameters and then scatters the splitted list of mutants across all the computing processes.
 
-        .. attributes ::
-        self.lmbda : int
+        .. rubric:: Attributes
+
+        self.lmbda (int):
             The number of mutants to be generated.
-        self.xmean : array
+        self.xmean (array):
             The mean value of the distribution from which mutants are drawn.
-        self.sigma : float
+        self.sigma (float):
             The standard deviation of the distribution.
-        self.B : array
+        self.B (array):
             Eigenvectors of the covariance matrix (directions).
-        self.D : array
+        self.D (array):
             Eigenvalues of the covariance matrix (amplitudes).
-        self.n : int
+        self.n (int):
             Number of parameter to be inverted.
-        self.mutants : array
+        self.mutants (array):
             The generated mutants. Each column corresponds to a mutant.
-        self._parameters : list
+        self._parameters (list):
             A list of parameter objects, where each parameter has its own repair method.
-        self.size : int
+        self.size (int):
             The number of processes.
-        self.mutant_lists : list
+        self.mutant_lists (list):
             A list of mutants divided amongst all processes.
-        self.counteval : int
+        self.counteval (int):
             Counter for the total number of misfit evaluations.
         '''
+
         if self.rank == 0:
             # Hardcode the bounds of CMA-ES search. This forces the relative scaling between parameters.
             bounds = [0,10]
@@ -336,6 +340,34 @@ class parallel_CMA_ES(object):
                 return None
     # Gather the mutants from each process and concatenate them into a single array.
     def gather_mutants(self, verbose=False):
+        '''
+        gather_mutants method
+
+        This function gathers mutants from all processes into the root process. It also uses the datalogger to construct the mutants_logger_list.
+
+        .. rubric :: Usage
+
+        The method is used as follows:
+
+        .. code::
+
+            gather_mutants(verbose=False)
+
+        .. rubric:: Parameters
+
+        verbose (bool):
+            If set to True, prints the concatenated mutants, their shapes, and types. Default is False.
+
+        .. rubric:: Attributes
+
+        self.mutants (array):
+            The gathered and concatenated mutants. This attribute is set to None for non-root processes after gathering.
+        self.transformed_mutants (array):
+            The gathered and concatenated transformed mutants. This attribute is set to None for non-root processes after gathering.
+        self.mutants_logger_list (list):
+            The list to which the datalogger is appended.
+        '''
+
         self.mutants = self.comm.gather(self.scattered_mutants, root=0)
         if self.rank == 0:
             self.mutants = np.concatenate(self.mutants, axis=1)
@@ -356,11 +388,40 @@ class parallel_CMA_ES(object):
                             self._datalogger(mean=False))
     # Sort the mutants by fitness
     def fitness_sort(self, misfit):
-        # Sort by fitness
+        """
+        fitness_sort method
+
+        This function sorts the mutants by fitness, and updates the misfit_holder.
+
+        .. rubric :: Usage
+
+        The method is used as follows:
+
+        .. code::
+
+            fitness_sort(misfit)
+
+        .. rubric:: Parameters
+
+        misfit (array):
+
+            The misfit array to sort the mutants by. Can be the sum of body and surface wave misfits, or the misfit of a single wave type.
+
+        .. rubric:: Attributes
+
+        self.mutants (array):
+            The sorted mutants.
+        self.transformed_mutants (array):
+            The sorted transformed mutants.
+        self._misfit_holder (array):
+            The updated misfit_holder. Reset to 0 after sorting.
+
+        """
+        
         if self.rank == 0:
             self.mutants = self.mutants[:,np.argsort(misfit.T)[0]]
             self.transformed_mutants = self.transformed_mutants[:,np.argsort(misfit.T)[0]]
-            self._misfit_holder *= 0
+        self._misfit_holder *= 0
     # Update step size
     def update_step_size(self):
         # Step size control
