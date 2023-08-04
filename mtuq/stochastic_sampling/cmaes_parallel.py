@@ -36,6 +36,7 @@ class parallel_CMA_ES(object):
         cma_es = parallel_CMA_ES(**parameters)
         cma_es.solve(data, process, misfit, stations, db, wavelet, iterations=10)
 
+        .. note ::
         In the first step, the user supplies parameters such as the number of mutants, the list of inverted parameters, the catalog origin, etc. (see below for detailed argument descriptions).
 
         In the second step, the user supplies data, data process, misfit type, stations list, an Axisem Green's function database, a source wavelet and a number of iterations on which to carry the CMA-ES inversion (number of generations).
@@ -123,99 +124,107 @@ class parallel_CMA_ES(object):
         self.chin = self.n**0.5 * (1 - 1 / ( 4 * self.n) + 1 / (21 * self.n**2))
         self.mutants = np.zeros((self.n, self.lmbda))
 
+    # Where the CMA-ES Routine happens --------------------------------------------------------------
     def draw_mutants(self):
         '''
-        Function that randomly draw `self.lmbda` mutants from a Gaussian repartition on the root process. It then applies the corresponding repair method for each of the parameters, and scatter the splitted list of muttant accross all the computing processes.
+        This function is responsible for drawing `self.lmbda` mutants from a Gaussian distribution on the root process. 
+        It also applies the corresponding repair method for each of the parameters and then scatters the splitted list of mutants across all the computing processes.
+
+        .. attributes ::
+        self.lmbda : int
+            The number of mutants to be generated.
+        self.xmean : array
+            The mean value of the distribution from which mutants are drawn.
+        self.sigma : float
+            The standard deviation of the distribution.
+        self.B : array
+            Eigenvectors of the covariance matrix (directions).
+        self.D : array
+            Eigenvalues of the covariance matrix (amplitudes).
+        self.n : int
+            Number of parameter to be inverted.
+        self.mutants : array
+            The generated mutants. Each column corresponds to a mutant.
+        self._parameters : list
+            A list of parameter objects, where each parameter has its own repair method.
+        self.size : int
+            The number of processes.
+        self.mutant_lists : list
+            A list of mutants divided amongst all processes.
+        self.counteval : int
+            Counter for the total number of misfit evaluations.
         '''
         if self.rank == 0:
-            # Hardcode the bounds of CMA-ES search for safety.
+            # Hardcode the bounds of CMA-ES search. This forces the relative scaling between parameters.
             bounds = [0,10]
+
+            # Randomly draw initial mutants from a Gaussian distribution
             for i in range(self.lmbda):
                 mutant = self.xmean + self.sigma * self.B @ (self.D * np.random.randn(self.n,1))
                 self.mutants[:,i] = mutant.T
+
             # Loop through all parameters to get their repair methods
             for _i, param in enumerate(self.mutants):
                 if not self._parameters[_i].repair == None:
                     # If samples are out of the [0,10] range, apply repair method
-                    while array_in_bounds(self.mutants[_i], 0, 10) == False:
+                    while array_in_bounds(self.mutants[_i], bounds[0], bounds[1]) == False:
                         print('repairing '+self._parameters[_i].name+' with '+self._parameters[_i].repair+' method')
                         Repair(self._parameters[_i].repair, self.mutants[_i], self.xmean[_i])
+
+            # Split the list of mutants evenly across all processes
             self.mutant_lists = np.array_split(self.mutants, self.size, axis=1)
         else:
             self.mutant_lists = None
         # Scatter the splited mutant_lists across processes.
-        self.counteval += self.lmbda
         self.scattered_mutants = self.comm.scatter(self.mutant_lists, root=0)
 
-    def mean_diff(self, new, old):
-        '''
-        Compute mean change, and apply circular difference for wrapped repair methods (implying periodic parameters)
-        '''
-        diff = new - old
-        angular_diff = linear_transform(new[_i], 0, 360) - linear_transform(old[_i], 0, 360)
-        angular_diff = inverse_linear_transform((angular_diff + 180) % 360 - 180, 0, 360)
-
-        for _i, param in enumerate(self._parameters):
-            if param.repair == 'wrapping':
-                diff[_i] = angular_diff[_i]
-        return diff 
-
-    def circular_mean(self, id):
-        '''
-        Compute the circular mean on the "id"th parameter. Ciruclar mean allows to compute mean of the samples on a periodic space.
-        '''
-        param = self.mutants[id]
-        a = linear_transform(param, 0, 360)-180
-        mean = np.rad2deg(np.arctan2(np.sum(np.sin(np.deg2rad(a[range(int(self.mu))]))*self.weights.T), np.sum(np.cos(np.deg2rad(a[range(int(self.mu))]))*self.weights.T)))+180
-        mean = inverse_linear_transform(mean, 0, 360)
-        return mean
-
+        # Increase the counter of misfit evaluations (each mutant drawn now will be evaluated once)
+        self.counteval += self.lmbda
     # Evaluate the misfit for each mutant of the population.
-    def eval_fitness(self, data, stations, misfit, db, process=None, wavelet=None, verbose=False):
+    def eval_fitness(self, data, stations, misfit, db_or_greens_list, process=None, wavelet=None, verbose=False):
         """
-        Evaluate the misfit for each mutant of the population.
+        eval_fitness method
 
-        Note:
-            The ordering of parameters should follow the ordering of the input variables of the callback function.
-            This is done automatically by using the initialize_mt() and initialize_force() functions.
+        This method evaluates the misfit for each mutant of the population.
 
-        Args:
-            data (mtuq.Dataset): the data to fit.
-            stations (list): the list of stations.
-            misfit (mtuq.WaveformMisfit): the misfit function.
-            db (mtuq.AxiSEM_Client or mtuq.GreensTensorList): Preprocessed Greens functions or local databse (for origin search).
-            origin (mtuq.event.Origin): the catalog origin of the event in db mode.
-            process (mtuq.ProcessData): the processing function to apply to the Greens functions.
-            wavelet (mtuq.wavelet): the wavelet to convolve with the Greens functions.
-            verbose (bool): whether to print debug information.
+        .. rubric :: Usage
 
-        Returns:
-            The misfit values for each mutant of the population.
+        The usage is as follows:
+
+        .. code::
+
+            if mode == 'db':
+                eval_fitness(data, stations, misfit, db, process, wavelet)
+            elif mode == 'greens':
+                eval_fitness(data, stations, misfit, greens, process = None, wavelet = None)
+
+        .. note ::
+        The ordering of the CMA_ES parameters should follow the ordering of the input variables of the callback function, but this is dealt with internally if using the initialize_mt() and initialize_force() functions.
+
+        .. rubric:: Parameters
+
+        data (mtuq.Dataset): the data to fit (body waves, surface waves).
+        stations (list): the list of stations.
+        misfit (mtuq.WaveformMisfit): the associated mtuq.Misfit object.
+        db (mtuq.AxiSEM_Client or mtuq.GreensTensorList): Preprocessed Greens functions or local database (for origin search).
+        process (mtuq.ProcessData, optional): the processing function to apply to the Greens functions.
+        wavelet (mtuq.wavelet, optional): the wavelet to convolve with the Greens functions.
+        verbose (bool, optional): whether to print debug information.
+
+        .. rubric:: Returns
+
+        The misfit values for each mutant of the population.
+
         """
         # Check if the input parameters are valid
-        self._check_greens_input_combination(db, process, wavelet)
+        self._check_greens_input_combination(db_or_greens_list, process, wavelet)
 
         # Use consistent coding style and formatting
-        mode = 'db' if isinstance(db, AxiSEM_Client) else 'greens'
+        mode = 'db' if isinstance(db_or_greens_list, AxiSEM_Client) else 'greens'
 
         self._transform_mutants()
 
         self._generate_sources()
-
-        # # Using callback for mt or force inversion -- These are pre-determined mode used in conjunction with the initialize_mt() and initialize_force() methods
-        # if self.mode == 'mt':
-        #     self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[0:6]))
-        # elif self.mode == 'mt_dev':
-        #     # Compensate for the lack of 'w' in the parameters list by putting a column of 0 in the 3nd position when calling the callback
-        #     self.extended_mutants = np.insert(self.transformed_mutants[0:5], 2, 0, axis=0)
-        #     self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
-        # elif self.mode == 'mt_dc':
-        #     # Compensate for the lack of 'v' and 'w' in the parameters list by putting columns of 0's in the 2nd and 3rd position when calling the callback
-        #     self.extended_mutants = np.insert(self.transformed_mutants[0:4], 1, 0, axis=0)
-        #     self.extended_mutants = np.insert(self.extended_mutants, 2, 0, axis=0)
-        #     self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
-        # elif self.mode == 'force':
-        #     self.sources = np.ascontiguousarray(self.callback(*self.transformed_mutants[0:3]))
 
         if mode == 'db':
             # Check if latitude longitude AND depth are absent from the parameters list
@@ -230,7 +239,7 @@ class parallel_CMA_ES(object):
                 # Only rank 0 fetches the data from the database
                 if self.rank == 0:
                     if key not in self._greens_tensors_cache:
-                        self._greens_tensors_cache[key] = db.get_greens_tensors(stations, self.origins)
+                        self._greens_tensors_cache[key] = db_or_greens_list.get_greens_tensors(stations, self.origins)
                         self._greens_tensors_cache[key].convolve(wavelet)
                         self._greens_tensors_cache[key] = self._greens_tensors_cache[key].map(process)
                 else:
@@ -262,7 +271,7 @@ class parallel_CMA_ES(object):
                         print(X)
                 # Load, convolve and process local greens function
                 start_time = MPI.Wtime()
-                self.local_greens = db.get_greens_tensors(stations, self.origins)
+                self.local_greens = db_or_greens_list.get_greens_tensors(stations, self.origins)
                 end_time = MPI.Wtime()
                 if self.rank == 0:
                     print("Fetching greens tensor: " + str(end_time-start_time))
@@ -307,7 +316,7 @@ class parallel_CMA_ES(object):
                 if self.rank == 0 and verbose == True:
                     print('using catalog origin')
                 self.origins = [self.catalog_origin]
-                self.local_greens = db
+                self.local_greens = db_or_greens_list
                 self.local_misfit_val = misfit(data, self.local_greens, self.sources)
                 self.local_misfit_val = np.asarray(self.local_misfit_val).T
                 if verbose == True:
@@ -325,7 +334,7 @@ class parallel_CMA_ES(object):
                 if self.rank == 0:
                     print('WARNING: Greens mode is not compatible with latitude, longitude or depth parameters. Consider using a local Axisem database instead.')
                 return None
-
+    # Gather the mutants from each process and concatenate them into a single array.
     def gather_mutants(self, verbose=False):
         self.mutants = self.comm.gather(self.scattered_mutants, root=0)
         if self.rank == 0:
@@ -345,38 +354,19 @@ class parallel_CMA_ES(object):
 
         self.mutants_logger_list = self.mutants_logger_list.append(
                             self._datalogger(mean=False))
-
+    # Sort the mutants by fitness
     def fitness_sort(self, misfit):
         # Sort by fitness
         if self.rank == 0:
             self.mutants = self.mutants[:,np.argsort(misfit.T)[0]]
             self.transformed_mutants = self.transformed_mutants[:,np.argsort(misfit.T)[0]]
             self._misfit_holder *= 0
-
-    def smallestAngle(self, targetAngles, currentAngles) -> np.ndarray:
-        # Subtract the angles, constraining the value to [0, 360)
-        diffs = (targetAngles - currentAngles) % 360
-
-        # If we are more than 180 we're taking the long way around.
-        # Let's instead go in the shorter, negative direction
-        diffs[diffs > 180] = -(360 - diffs[diffs > 180])
-        return diffs
-
-    def mean_diff(self, new, old):
-        # Compute mean change, and apply circular difference for wrapped repair methods (implying periodic parameters)
-        diff = new-old
-        for _i, param in enumerate(self._parameters):
-            if param.repair == 'wrapping':
-                angular_diff = self.smallestAngle(linear_transform(new[_i], 0, 360), linear_transform(old[_i], 0, 360))
-                angular_diff = inverse_linear_transform(angular_diff, 0, 360)
-                diff[_i] = angular_diff
-        return diff
-
+    # Update step size
     def update_step_size(self):
         # Step size control
         if self.rank == 0:
             self.ps = (1-self.cs)*self.ps + np.sqrt(self.cs*(2-self.cs)*self.mueff) * self.invsqrtC @ (self.mean_diff(self.xmean, self.xold) / self.sigma)
-
+    # Update covariance matrix
     def update_covariance(self):
         # Covariance matrix adaptation
         if self.rank == 0:
@@ -418,7 +408,7 @@ class parallel_CMA_ES(object):
                 self.invsqrtC = self.B @ np.diag(self.D[:,0]**-1) @ self.B.T
         
         self.iteration = self.counteval//self.lmbda
-
+    # Update mean
     def update_mean(self):
         # Update the mean
         if self.rank == 0:
@@ -430,7 +420,37 @@ class parallel_CMA_ES(object):
                     self.xmean[_i] = self.circular_mean(_i)
             self.mean_logger_list=self.mean_logger_list.append(
                                 self._datalogger(mean=True), ignore_index=True)
+    # Utility functions --------------------------------------------------------------
+    # Mean related utilities ---------------------------------------------------------
+    def circular_mean(self, id):
+        '''
+        Compute the circular mean on the "id"th parameter. Ciruclar mean allows to compute mean of the samples on a periodic space.
+        '''
+        param = self.mutants[id]
+        a = linear_transform(param, 0, 360)-180
+        mean = np.rad2deg(np.arctan2(np.sum(np.sin(np.deg2rad(a[range(int(self.mu))]))*self.weights.T), np.sum(np.cos(np.deg2rad(a[range(int(self.mu))]))*self.weights.T)))+180
+        mean = inverse_linear_transform(mean, 0, 360)
+        return mean
 
+    def smallestAngle(self, targetAngles, currentAngles) -> np.ndarray:
+        # Subtract the angles, constraining the value to [0, 360)
+        diffs = (targetAngles - currentAngles) % 360
+
+        # If we are more than 180 we're taking the long way around.
+        # Let's instead go in the shorter, negative direction
+        diffs[diffs > 180] = -(360 - diffs[diffs > 180])
+        return diffs
+
+    def mean_diff(self, new, old):
+        # Compute mean change, and apply circular difference for wrapped repair methods (implying periodic parameters)
+        diff = new-old
+        for _i, param in enumerate(self._parameters):
+            if param.repair == 'wrapping':
+                angular_diff = self.smallestAngle(linear_transform(new[_i], 0, 360), linear_transform(old[_i], 0, 360))
+                angular_diff = inverse_linear_transform(angular_diff, 0, 360)
+                diff[_i] = angular_diff
+        return diff
+    # -------------------------------------------------------------------------------
     def create_origins(self):
         
         # Check which of the three origin modifiers are in the parameters
@@ -508,6 +528,8 @@ class parallel_CMA_ES(object):
         """
         The datalogger save in memory all of the CMA-ES mutant drawn and evaluated during the inversion. This allows quickly access the inversion recods in order to plot the misfit. The data is stored within a pandas.DataFrame().
 
+        Note
+        ----------
         When mean=False the datalogger stores the coordinates of each mutants (Mw, v, w, kappa, sigma,...) and misfit at the current iterations.
 
         When mean=True the datalogger stores the coordinates of the mean mutant at the current iterations. The mean mutant's misfit is not evaluated and thus only its coordinates are returned.
@@ -541,32 +563,7 @@ class parallel_CMA_ES(object):
             )
             return(MTUQDataFrame(da))
 
-    def solve(self, data, process, misfit, stations, db, wavelet, iterations=1, verbose=False, plot_waveforms=True):
-        for it in range(iterations):
-            if self.rank == 0:
-                print("Iteration: %i" % (it))
-
-            self.draw_mutants()
-
-
-            total_misfit = np.zeros((self.lmbda, 1))
-            for _i in range(len(data)):
-                total_misfit += self.eval_fitness(data[_i], stations, db, process[_i], misfit[_i], wavelet, verbose)
-            self.counteval += self.lmbda
-            self.gather_mutants()
-            self.fitness_sort(total_misfit)
-
-            # CMA-ES update and adaptation steps
-            self.update_mean()
-            self.update_step_size()
-            self.update_covariance()
-            if self.rank == 0:
-                if plot_waveforms==True:
-                    self.plot_mean_waveforms(data, process, misfit, stations, db)
-                self.iteration += 1
-
-
-    def draw_eval_update(self, data_list, stations, misfit_list, process_list, greens_or_db_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, src_type=None, **kwargs):
+    def Solve(self, data_list, stations, misfit_list, process_list, db_or_greens_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, src_type=None, **kwargs):
 
         for i in range(iter):
             if self.rank == 0:
@@ -579,10 +576,10 @@ class parallel_CMA_ES(object):
                 data = data_list[j]
                 misfit = misfit_list[j]
                 
-                mode = 'db' if isinstance(greens_or_db_list, AxiSEM_Client) else 'greens'
-                # get greens[j] or db depending on mode from greens_or_db_list
-                greens = greens_or_db_list[j] if mode == 'greens' else None
-                db = greens_or_db_list if mode == 'db' else None
+                mode = 'db' if isinstance(db_or_greens_list, AxiSEM_Client) else 'greens'
+                # get greens[j] or db depending on mode from db_or_greens_list
+                greens = db_or_greens_list[j] if mode == 'greens' else None
+                db = db_or_greens_list if mode == 'db' else None
 
                 if mode == 'db':
                     misfit = self.eval_fitness(data, stations, misfit, db, process_list[j], wavelet, **kwargs)
@@ -598,16 +595,14 @@ class parallel_CMA_ES(object):
             self.update_covariance()
 
             if i == 0 or i % plot_interval == 0 or i == max_iter - 1:
-                self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, greens_or_db_list)
+                self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, db_or_greens_list)
 
                 if src_type in ['full', 'deviatoric', 'dc']:
                     if self.rank == 0:
                         result = self.mutants_logger_list
                         plot_combined('combined.png', result, colormap='viridis')
 
-
-    # Define a function to check draw_eval_update inputs
-    def _check_draw_eval_update_inputs(self, data_list, stations, misfit_list, process_list, greens_or_db_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, src_type=None, **kwargs):
+    def _check_draw_eval_update_inputs(self, data_list, stations, misfit_list, process_list, db_or_greens_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, src_type=None, **kwargs):
         if not isinstance(data_list, list):
             raise TypeError("data_list must be a list of data objects")
         if not isinstance(stations, list):
@@ -616,8 +611,8 @@ class parallel_CMA_ES(object):
             raise TypeError("misfit_list must be a list of misfit objects")
         if not isinstance(process_list, list):
             raise TypeError("process_list must be a list of process objects")
-        if not isinstance(greens_or_db_list, list):
-            raise TypeError("greens_or_db_list must be a list of greens objects")
+        if not isinstance(db_or_greens_list, list):
+            raise TypeError("db_or_greens_list must be a list of greens objects")
         if not isinstance(iter, int):
             raise TypeError("iter must be an integer")
         if not isinstance(plot_interval, int):
@@ -635,8 +630,8 @@ class parallel_CMA_ES(object):
             raise ValueError("data_list and misfit_list must be the same length")
         if len(data_list) != len(process_list):
             raise ValueError("data_list and process_list must be the same length")
-        if len(data_list) != len(greens_or_db_list):
-            raise ValueError("data_list and greens_or_db_list must be the same length")
+        if len(data_list) != len(db_or_greens_list):
+            raise ValueError("data_list and db_or_greens_list must be the same length")
 
         if src_type not in ['full', 'deviatoric', 'dc']:
             raise ValueError("src_type must be either 'full', 'deviatoric', or 'dc'")
@@ -650,8 +645,7 @@ class parallel_CMA_ES(object):
         if max_iter < 1:
             raise ValueError("max_iter must be greater than or equal to 1")
 
-
-    def plot_mean_waveforms(self, data_list, process_list, misfit_list, stations, greens_or_db_list):
+    def plot_mean_waveforms(self, data_list, process_list, misfit_list, stations, db_or_greens_list):
         """
         Plots the mean waveforms using the base mtuq waveform plots (mtuq.graphics.waveforms).
 
@@ -659,14 +653,16 @@ class parallel_CMA_ES(object):
         If green's functions a provided directly, they are used as is. Otherwise, extrace green's function from Axisem database and preprocess them.
         Support only 1 or 2 waveform groups (body and surface waves, or surface waves only)
 
-        Args:
+        Arguments
+        ----------
             data_list: A list of data to be plotted (typically `data_bw` and `data_sw`).
             process_list: A list of processes for each data (typically `process_bw` and `process_sw`).
             misfit_list: A list of misfits for each data (typically `misfit_bw` and `misfit_sw`).
             stations: A list of stations.
-            greens_or_db_list: Either an AxiSEM_Client instance or a list of GreensTensors (typically `greens_bw` and `greens_sw`).
+            db_or_greens_list: Either an AxiSEM_Client instance or a list of GreensTensors (typically `greens_bw` and `greens_sw`).
 
-        Raises:
+        Raises
+        ----------
             ValueError: If the mode is not 'mt', 'mt_dev', 'mt_dc', or 'force'.
         """
 
@@ -709,7 +705,7 @@ class parallel_CMA_ES(object):
         data = data_list
         process = process_list
         misfit = misfit_list
-        greens_or_db = greens_or_db_list
+        greens_or_db = db_or_greens_list
 
         mode = 'db' if isinstance(greens_or_db, AxiSEM_Client) else 'greens'
         if mode == 'db':
@@ -729,56 +725,6 @@ class parallel_CMA_ES(object):
         elif len(process) == 1:
             plot_data_greens1(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
                             data, greens, process, misfit, stations, final_origin[0], best_source, lune_dict)
-
-
-    def _transform_mutants(self):
-        """
-        Transforms local mutants on each process based on the parameters scaling and projection settings.
-
-        For each parameter, depending on its scaling setting ('linear' or 'log'), 
-        it applies a transformation to the corresponding elements of scattered_mutants.
-        If a projection is specified, it applies this projection to the transformed values.
-
-        Attributes:
-            scattered_mutants: A 2D numpy array with the original mutant data. When MPI is used, correspond to the local mutants on each process.
-            _parameters: A list of Parameter objects, each with attributes 'scaling', 'lower_bound', 'upper_bound', 
-            and 'projection' specifying how to transform the corresponding scattered_mutants.
-
-        Raises:
-            ValueError: If an unrecognized scaling is provided.
-        """        
-
-        self.transformed_mutants = np.zeros_like(self.scattered_mutants)
-        for i, param in enumerate(self._parameters):
-            if param.scaling == 'linear':
-                self.transformed_mutants[i] = linear_transform(self.scattered_mutants[i], param.lower_bound, param.upper_bound)
-            elif param.scaling == 'log':
-                self.transformed_mutants[i] = logarithmic_transform(self.scattered_mutants[i], param.lower_bound, param.upper_bound)
-            else:
-                raise ValueError("Unrecognized scaling, must be linear or log")
-            if param.projection is not None:
-                self.transformed_mutants[i] = np.asarray(list(map(param.projection, self.transformed_mutants[i])))
-
-    def _check_greens_input_combination(self, db, process, wavelet):
-        """
-        Checks the validity of the given parameters.
-
-        Raises a ValueError if the database object is not an AxiSEM_Client or GreensTensorList, 
-        or if the process function and wavelet are not defined when the database object is an AxiSEM_Client.
-
-        Args:
-            db: The database object to check, expected to be an instance of either AxiSEM_Client or GreensTensorList.
-            process: The process function to be used if the database is an AxiSEM_Client.
-            wavelet: The wavelet to be used if the database is an AxiSEM_Client.
-
-        Raises:
-            ValueError: If the input combination of db, process, and wavelet is invalid.
-        """
-
-        if not isinstance(db, (AxiSEM_Client, GreensTensorList)):
-            raise ValueError("database must be either an AxiSEM_Client object or a GreensTensorList object")
-        if isinstance(db, AxiSEM_Client) and (process is None or wavelet is None):
-            raise ValueError("process_function and wavelet must be specified if database is an AxiSEM_Client")
 
     def _scatter_plot(self):
         """
@@ -827,11 +773,34 @@ class parallel_CMA_ES(object):
             self.fig.canvas.draw()
             return self.fig
 
-    def _get_greens_tensors_key(self, process):
+    def _transform_mutants(self):
         """
-        Get the body-wave or surface-wave key for the GreensTensors object from the ProcessData object.
-        """
-        return process.window_type
+        Transforms local mutants on each process based on the parameters scaling and projection settings.
+
+        For each parameter, depending on its scaling setting ('linear' or 'log'), 
+        it applies a transformation to the corresponding elements of scattered_mutants.
+        If a projection is specified, it applies this projection to the transformed values.
+
+        Attributes
+        ----------
+            scattered_mutants: A 2D numpy array with the original mutant data. When MPI is used, correspond to the local mutants on each process.
+            _parameters: A list of Parameter objects, each with attributes 'scaling', 'lower_bound', 'upper_bound', 
+            and 'projection' specifying how to transform the corresponding scattered_mutants.
+
+        Raises:
+            ValueError: If an unrecognized scaling is provided.
+        """        
+
+        self.transformed_mutants = np.zeros_like(self.scattered_mutants)
+        for i, param in enumerate(self._parameters):
+            if param.scaling == 'linear':
+                self.transformed_mutants[i] = linear_transform(self.scattered_mutants[i], param.lower_bound, param.upper_bound)
+            elif param.scaling == 'log':
+                self.transformed_mutants[i] = logarithmic_transform(self.scattered_mutants[i], param.lower_bound, param.upper_bound)
+            else:
+                raise ValueError("Unrecognized scaling, must be linear or log")
+            if param.projection is not None:
+                self.transformed_mutants[i] = np.asarray(list(map(param.projection, self.transformed_mutants[i])))
 
     def _generate_sources(self):
         """
@@ -841,10 +810,12 @@ class parallel_CMA_ES(object):
         it with zero-filled columns at specific positions, and then passes the processed data to the
         callback function. The results are stored in a contiguous NumPy array in self.sources.
 
-        Raises:
+        Raises
+        ----------
             ValueError: If an unsupported mode is provided.
 
-        Attributes:
+        Attributes
+        ----------
             mode: A string representing the mode of operation, which can be 'mt', 'mt_dev', 'mt_dc', or 'force'.
             transformed_mutants: A 2D numpy array that contains the transformed data to be processed.
             callback: A callable that is used to process the data.
@@ -875,3 +846,32 @@ class parallel_CMA_ES(object):
                 self.extended_mutants = np.insert(self.extended_mutants, insertion_index, 0, axis=0)
             # Pass the processed data to the callback, and save the result as a contiguous array in self.sources.
             self.sources = np.ascontiguousarray(self.callback(*self.extended_mutants[0:6]))
+
+    def _get_greens_tensors_key(self, process):
+        """
+        Get the body-wave or surface-wave key for the GreensTensors object from the ProcessData object.
+        """
+        return process.window_type
+
+    def _check_greens_input_combination(self, db, process, wavelet):
+        """
+        Checks the validity of the given parameters.
+
+        Raises a ValueError if the database object is not an AxiSEM_Client or GreensTensorList, 
+        or if the process function and wavelet are not defined when the database object is an AxiSEM_Client.
+
+        Arguments
+        ----------
+            db: The database object to check, expected to be an instance of either AxiSEM_Client or GreensTensorList.
+            process: The process function to be used if the database is an AxiSEM_Client.
+            wavelet: The wavelet to be used if the database is an AxiSEM_Client.
+
+        Raises
+        ----------
+            ValueError: If the input combination of db, process, and wavelet is invalid.
+        """
+
+        if not isinstance(db, (AxiSEM_Client, GreensTensorList)):
+            raise ValueError("database must be either an AxiSEM_Client object or a GreensTensorList object")
+        if isinstance(db, AxiSEM_Client) and (process is None or wavelet is None):
+            raise ValueError("process_function and wavelet must be specified if database is an AxiSEM_Client")
