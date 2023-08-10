@@ -482,7 +482,6 @@ class parallel_CMA_ES(object):
             self.mean_logger_list=self.mean_logger_list.append(
                                 self._datalogger(mean=True), ignore_index=True)
     # Utility functions --------------------------------------------------------------
-    # Mean related utilities ---------------------------------------------------------
     def circular_mean(self, id):
         '''
         Compute the circular mean on the "id"th parameter. Ciruclar mean allows to compute mean of the samples on a periodic space.
@@ -494,6 +493,33 @@ class parallel_CMA_ES(object):
         return mean
 
     def smallestAngle(self, targetAngles, currentAngles) -> np.ndarray:
+        """
+        smallestAngle method
+
+        This function calculates the smallest angle (in degrees) between two given sets of angles. It computes the difference between the target and current angles, making sure the result stays within the range [0, 360). If the resulting difference is more than 180, it is adjusted to go in the shorter, negative direction.
+
+        .. rubric :: Usage
+
+        The method is used as follows:
+
+        .. code::
+
+            smallest_diff = smallestAngle(targetAngles, currentAngles)
+
+        .. rubric:: Parameters
+
+        targetAngles (np.ndarray):
+            An array containing the target angles in degrees.
+        currentAngles (np.ndarray):
+            An array containing the current angles in degrees.
+
+        .. rubric:: Returns
+
+        diffs (np.ndarray):
+            An array containing the smallest difference in degrees between the target and current angles.
+
+        """
+
         # Subtract the angles, constraining the value to [0, 360)
         diffs = (targetAngles - currentAngles) % 360
 
@@ -511,7 +537,7 @@ class parallel_CMA_ES(object):
                 angular_diff = inverse_linear_transform(angular_diff, 0, 360)
                 diff[_i] = angular_diff
         return diff
-    # -------------------------------------------------------------------------------
+
     def create_origins(self):
         
         # Check which of the three origin modifiers are in the parameters
@@ -587,14 +613,16 @@ class parallel_CMA_ES(object):
 
     def _datalogger(self, mean=False):
         """
-        The datalogger save in memory all of the CMA-ES mutant drawn and evaluated during the inversion. This allows quickly access the inversion recods in order to plot the misfit. The data is stored within a pandas.DataFrame().
+        _datalogger method
+
+        This method saves in memory all of the CMA-ES mutants drawn and evaluated during the inversion. This allows quick access to the inversion records in order to plot the misfit. The data is stored within a pandas.DataFrame().
 
         Note
         ----------
-        When mean=False the datalogger stores the coordinates of each mutants (Mw, v, w, kappa, sigma,...) and misfit at the current iterations.
+        When mean=False, the datalogger stores the coordinates of each mutant (Mw, v, w, kappa, sigma,...) and misfit at the current iteration.
 
-        When mean=True the datalogger stores the coordinates of the mean mutant at the current iterations. The mean mutant's misfit is not evaluated and thus only its coordinates are returned.
-        """
+        When mean=True, the datalogger stores the coordinates of the mean mutant at the current iteration. The mean mutant's misfit is not evaluated, thus only its coordinates are returned.
+            """
         if self.rank == 0:
             if mean==False:
                 coordinates = self.transformed_mutants.T
@@ -624,7 +652,47 @@ class parallel_CMA_ES(object):
             )
             return(MTUQDataFrame(da))
 
-    def Solve(self, data_list, stations, misfit_list, process_list, db_or_greens_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, src_type=None, **kwargs):
+    def Solve(self, data_list, stations, misfit_list, process_list, db_or_greens_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, **kwargs):
+        """
+        Solves for the best-fitting source model using the CMA-ES algorithm. This is the master method used in inversions. 
+
+        This method iteratively draws mutants, evaluates their fitness based on misfits between synthetic and observed data, and updates the mean and covariance of the CMA-ES distribution. At specified intervals, it also plots mean waveforms and results for visualization.
+
+        Parameters
+        ----------
+        data_list : list
+            List of observed data sets. (e.g. [data_sw] or [data_bw, data_sw])
+        stations : list
+            List of stations (generally obtained from mtuq method data.get_stations())
+        misfit_list : list
+            List of mtuq misfit objects (e.g. [misfit_sw] or [misfit_bw, misfit_sw]).
+        process_list : list
+            List of mtuq ProcessData objects to apply to data (e.g. [process_sw] or [process_bw, process_sw]).
+        db_or_greens_list : list or AxiSEM_Client object
+            Either an AxiSEM database client or a mtuq GreensTensorList.
+        iter : int
+            Number of iterations to perform.
+        wavelet : object, optional
+            Wavelet for source time function. Default is None. Required when db_or_greens_list is an AxiSEM database client.
+        plot_interval : int, optional
+            Interval at which plots of mean waveforms and results should be generated. Default is 10.
+        iter_count : int, optional
+            Current iteration count, useful for resuming. Default is 0.
+        max_iter : int, optional
+            Maximum number of iterations to perform. Default is 100. A stoping criterion will be implemented in the future.
+        src_type : str, optional
+            Type of source model, one of ['full', 'deviatoric', 'dc']. Default is full.
+        **kwargs
+            Additional keyword arguments passed to eval_fitness method.
+
+        Returns
+        -------
+        None
+
+        Note
+        ----
+        This method is the wrapper that automate the execution of the CMA-ES algorithm. It is the default workflow for Moment tensor and Force inversion and should not work with a "custom" inversion (multiple-sub events, source time function, etc.). It interacts with the  `draw_mutants`, `eval_fitness`, `gather_mutants`, `fitness_sort`, `update_mean`, `update_step_size` and `update_covariance`. 
+        """
 
         for i in range(iter):
             if self.rank == 0:
@@ -658,7 +726,7 @@ class parallel_CMA_ES(object):
             if i == 0 or i % plot_interval == 0 or i == max_iter - 1:
                 self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, db_or_greens_list)
 
-                if src_type in ['full', 'deviatoric', 'dc']:
+                if self.mode in ['mt', 'mt-dc', 'mt-dev']:
                     if self.rank == 0:
                         result = self.mutants_logger_list
                         plot_combined('combined.png', result, colormap='viridis')
