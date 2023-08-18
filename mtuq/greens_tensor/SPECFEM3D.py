@@ -75,6 +75,28 @@ class GreensTensor(GreensTensorBase):
 
 
     def _precompute_force(self):
-        raise NotImplementedError
+        #raise NotImplementedError
+        """ Assembles NumPy arrays used in force linear combination
+        """
+
+        array = self._array
+        phi = np.deg2rad(self.azimuth)
+        _j = 0
+
+        for _i, component in enumerate(self.components):
+            if component=='Z':
+                array[_i, _j+0, :] = self.select(channel="Z.Fe")[0].data
+                array[_i, _j+1, :] = self.select(channel="Z.Fn")[0].data
+                array[_i, _j+2, :] = self.select(channel="Z.Fz")[0].data
+
+            elif component=='R':
+                array[_i, _j+0, :] = self.select(channel="R.Fe")[0].data
+                array[_i, _j+1, :] = self.select(channel="R.Fn")[0].data
+                array[_i, _j+2, :] = self.select(channel="R.Fz")[0].data
+
+            elif component=='T':
+                array[_i, _j+0, :] = self.select(channel="T.Fe")[0].data
+                array[_i, _j+1, :] = self.select(channel="T.Fn")[0].data
+                array[_i, _j+2, :] = self.select(channel="T.Fz")[0].data
 
 
