@@ -14,9 +14,7 @@ class GreensTensor(GreensTensorBase):
 
       SPECFEM3D Green's functions describe the impulse response of a general
       inhomogeneous medium.  Time series represent vertical, radial, and 
-      transverse displacement in units of m*(N-m)^-1 
-      (FIXME: DOUBLE CHECK UNITS)
-
+      transverse velocity in units of m*(N-m)^-1 s^-1
     """
     def __init__(self, *args, **kwargs):
         super(GreensTensor, self).__init__(*args, **kwargs)
@@ -24,8 +22,8 @@ class GreensTensor(GreensTensorBase):
         if 'type:greens' not in self.tags:
             self.tags += ['type:greens']
 
-        if 'type:displacement' not in self.tags:
-            self.tags += ['type:displacement']
+        if 'type:velocity' not in self.tags:
+            self.tags += ['type:velocity']
 
         if 'units:m' not in self.tags:
             self.tags += ['units:m']
