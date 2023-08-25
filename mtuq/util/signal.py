@@ -14,11 +14,17 @@ def cut(trace, t1, t2):
     t2: desired end time
     """
     if t1 < float(trace.stats.starttime):
+
+        _debug_msg(trace, t1, t2)
+
         raise Exception('The chosen window begins before the trace.  Consider '
            'using a later window, or to automatically pad the beginning of the '
            'trace with zeros, use mtuq.util.signal.resample instead')
 
     if t2 > float(trace.stats.endtime):
+
+        _debug_msg(trace, t1, t2)
+
         raise Exception('The chosen window ends after the trace.  Consider '
            'using an earlier window, or to automatically pad the end of the '
            'trace with zeros, use mtuq.util.signal.resample instead')
@@ -209,7 +215,11 @@ def check_components(stream):
     components = set()
     for component in get_components(stream):
         if component in components:
-           raise Exception('Multiple %s components in stream' % component)
+            try:
+                print('trace.id:', stream.select(component=component)[0].id)
+            except:
+                pass
+            raise Exception('Multiple %s components in stream' % component)
         components.add(component)
 
 
@@ -257,4 +267,18 @@ def isempty(dataset):
         return True
     else:
         return False
+
+
+def _debug_msg(trace, t1, t2):
+        print()
+        print(trace.id)
+        print('starttime:', trace.stats.starttime)
+        print('endtime:  ', trace.stats.endtime)
+        print()
+        print('starttime (float):', float(trace.stats.starttime))
+        print('endtime (float):  ', float(trace.stats.endtime))
+        print()
+        print('t1:', t1)
+        print('t2:', t2)
+        print()
 
