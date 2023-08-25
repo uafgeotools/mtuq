@@ -111,7 +111,7 @@ class GreensTensor(GreensTensorBase):
 
         #
         # Minson2008 uses a north-east-down basis convention, while mtuq uses an
-        # up-south-east basis convention, so a permuation is necessary
+        # up-south-east basis convention, so a permutation is necessary
         #
         array_copy = array.copy()
         array[:, 0, :] =  array_copy[:, 2, :]
