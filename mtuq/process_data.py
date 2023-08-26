@@ -565,17 +565,16 @@ class ProcessData(object):
 
 
             elif self.window_type == 'group_velocity':
-                # surface-wave window based on given group velocity
-
-                group_arrival = distance_in_m/self.group_velocity
+                # surface-wave window based on given group velocity [m/s]
 
                 # window_alignment=0.0 - windows starts at group arrival
                 # window_alignment=0.5 - windows centeredon group arrival
                 # window_alignment=1.0 - windows ends at group arrival
-                phi = self.window_alignment
+                group_arrival = distance_in_m/self.group_velocity
+                alignment = self.window_alignment
 
-                starttime = group_arrival - self.window_length*phi
-                endtime = group_arrival + self.window_length*(1.-phi)
+                starttime = group_arrival - self.window_length*alignment
+                endtime = group_arrival + self.window_length*(1.-alignment)
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
@@ -583,8 +582,10 @@ class ProcessData(object):
 
             elif self.window_type == 'min_max':
                 # experimental window type defined by minimum and maximum 
-                # groups velocities (results in distance-dependent window 
-                # lengths, which may not work with other MTUQ functions)
+                # group velocities [m/s] 
+
+                # WARNING - results in distance-dependent window lengths,
+                # which may not work with other MTUQ functions
 
                 starttime = distance_in_m/self.v_max
                 endtime = distance_in_m/self.v_min
