@@ -543,8 +543,7 @@ class ProcessData(object):
             #
 
             if self.window_type == 'body_wave':
-
-                # reproduces CAPUAF body wave window
+                # reproduces cut-and-paste body wave window
 
                 starttime = picks['P'] - 0.4*self.window_length
                 endtime = starttime + self.window_length
@@ -554,8 +553,7 @@ class ProcessData(object):
 
 
             elif self.window_type == 'surface_wave':
-
-                # reproduces CAPUAF surface wave window
+                # reproduces cut-and-paste surface wave window
 
                 starttime = picks['S'] - 0.3*self.window_length
                 endtime = starttime + self.window_length
@@ -565,7 +563,6 @@ class ProcessData(object):
 
 
             elif self.window_type == 'group_velocity':
-
                 # window centered on given group arrival
 
                 group_arrival = distance_in_m/self.group_velocity
@@ -578,13 +575,15 @@ class ProcessData(object):
 
 
             elif self.window_type == 'minmax':
-                # window defined by minimum and maximum group velocities
+                # experimental window type defined by minimum and maximum 
+                # groups velocities (results in time-dependent window lengths,
+                # which may not work with other MTUQ functions)
 
                 starttime = distance_in_m/self.v_max
                 endtime = distance_in_m/self.v_min
 
+                # optionally, enforce minimum window length
                 if endtime - starttime < self.window_length:
-                    # optionally, enforce minimum window length
                     average_time = (starttime + endtime)/2.
                     starttime = average_time - self.window_length/2.
                     endtime = average_time + self.window_length/2.
