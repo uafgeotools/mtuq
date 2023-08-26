@@ -270,6 +270,10 @@ def isempty(dataset):
 
 
 def _debug_msg(trace, t1, t2):
+        #
+        # can be useful for debugging cut() and resample() exceptions and
+        # other temporal out-of-bounds errors
+        #
         print()
         print(trace.id)
         print('starttime:', trace.stats.starttime)
@@ -281,4 +285,30 @@ def _debug_msg(trace, t1, t2):
         print('t1:', t1)
         print('t2:', t2)
         print()
+
+
+
+def _window_warnings(window_type, window_length):
+    if window_type=='minmax':
+        print(
+              '  \n'
+              '  WARNING:'
+              '  \n'
+              '  \n'
+              '  Experimental distance-dependent window lengths may not be \n'
+              '  supported by all MTUQ functions.'
+              '  \n'
+             )
+
+        if not window_length:
+            print(
+                  '  A minimum window length of %f s will be enforced.'
+                  '  \n'
+                  % window_length
+                  )
+        else:
+            print(
+                  '  No minimum window length will be enforced.'
+                  '\n'
+                  )
 

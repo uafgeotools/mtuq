@@ -10,7 +10,7 @@ from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists
 from mtuq.util import AttribDict, warn
 from mtuq.util.cap import WeightParser, taper
-from mtuq.util.signal import cut, get_arrival, m_to_deg
+from mtuq.util.signal import cut, get_arrival, m_to_deg, _window_warnings
 
 
 class ProcessData(object):
@@ -79,10 +79,16 @@ class ProcessData(object):
     ``window_type`` (`str`)
 
     - ``'body_wave'``
-      chooses window starttime before P arrival
+      regional-distance body-wave window
 
     - ``'surface_wave'``
-      chooses window starttime after S arrival
+      regional-distance surface-wave window
+
+    - ``'group_velocity'``
+      window centered on given group velocity
+
+    - ``'minmax'``
+      window defined by minimum and maximum velocities (experimental)
 
     - ``None``
       no windows will be applied
@@ -111,6 +117,15 @@ class ProcessData(object):
 
     ``freq`` (`float`)
     Required for `filter_type=lowpass` or `filter_type=highpass`
+
+    ``group_velocity`` (`float`)
+    Group velocity in m/s, required for `window_type=group_velocity`
+
+    ``v_min`` (`float`)
+    Minimum velocity in m/s, required for `window_type=minmax`
+
+    ``v_max`` (`float`)
+    Maximum velocity in m/s, required for `window_type=minmax`
 
     ``window_length`` (`float`)
     window length in seconds
@@ -243,15 +258,32 @@ class ProcessData(object):
              # nothing to check now
              pass
 
+        elif self.window_type == 'group_velocity':
+            assert 'group_velocity' in parameters
+            assert parameters['group_velocity'] >= 0.
+            self.group_velocity = parameters['group_velocity']
+
+        elif self.window_type == 'minmax':
+            assert 'v_min' in parameters
+            assert 'v_max' in parameters
+            assert 0. <= parameters['v_min']
+            assert parameters['v_min'] <= parameters['v_max']
+            assert parameters['v_max'] <= np.inf
+            self.v_min = parameters['v_min']
+            self.v_max = parameters['v_max']
+            _window_warnings(self.window_type, self.window_length)
+
         else:
              raise ValueError('Bad parameter: window_type')
 
 
-        if self.window_type:
-            if self.window_length is None:
-                 raise ValueError('Must be defined: window_length')
+        if self.window_type is not None:
 
-            assert self.window_length > 0
+            if self.window_type is None:
+                ValueError('Must be defined: window_length')
+
+            if self.window_length <= 0:
+                ValueError
 
 
         if self.padding:
@@ -511,17 +543,51 @@ class ProcessData(object):
             #
 
             if self.window_type == 'body_wave':
+
                 # reproduces CAPUAF body wave window
+
                 starttime = picks['P'] - 0.4*self.window_length
                 endtime = starttime + self.window_length
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
 
+
             elif self.window_type == 'surface_wave':
+
                 # reproduces CAPUAF surface wave window
+
                 starttime = picks['S'] - 0.3*self.window_length
                 endtime = starttime + self.window_length
+
+                starttime += float(origin.time)
+                endtime += float(origin.time)
+
+
+            elif self.window_type == 'group_velocity':
+
+                # window centered on given group arrival
+
+                group_arrival = distance_in_m/self.group_velocity
+
+                starttime = group_arrival - self.window_length/2. 
+                endtime = group_arrival + self.window_length/2. 
+
+                starttime += float(origin.time)
+                endtime += float(origin.time)
+
+
+            elif self.window_type == 'minmax':
+                # window defined by minimum and maximum group velocities
+
+                starttime = distance_in_m/self.v_max
+                endtime = distance_in_m/self.v_min
+
+                if endtime - starttime < self.window_length:
+                    # optionally, enforce minimum window length
+                    average_time = (starttime + endtime)/2.
+                    starttime = average_time - self.window_length/2.
+                    endtime = average_time + self.window_length/2.
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
@@ -530,6 +596,7 @@ class ProcessData(object):
             else:
                 starttime = trace.stats.starttime
                 endtime = trace.stats.endtime
+
 
             #
             # part 4b: apply statics
