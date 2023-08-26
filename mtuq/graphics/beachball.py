@@ -351,7 +351,7 @@ def _meca_pygmt(fig, mt):
         region=PYGMT_REGION,
         projection=PYGMT_PROJECTION,
 
-        G='grey50',
+        compressionfill='grey50',
         no_clip=False,
         M=True,
         )
