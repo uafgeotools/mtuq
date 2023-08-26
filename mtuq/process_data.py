@@ -174,9 +174,6 @@ class ProcessData(object):
         if window_type:
             window_type = window_type.lower()
 
-        if pick_type:
-            pick_type = pick_type.lower()
-
         self.filter_type = filter_type
         self.window_type = window_type
         self.pick_type = pick_type
