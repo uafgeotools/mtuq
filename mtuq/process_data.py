@@ -258,6 +258,7 @@ class ProcessData(object):
             assert parameters['group_velocity'] >= 0.
             self.group_velocity = parameters['group_velocity']
             self.window_alignment = getattr(parameters, 'window_alignment', 0.5)
+            assert 0. <= self.window_alignment <= 1.
 
         elif self.window_type == 'min_max':
             assert 'v_min' in parameters
@@ -475,10 +476,14 @@ class ProcessData(object):
             for trace in traces:
                 try:
                     component = trace.stats.channel[-1].upper()
-                    if self.window_type=='body_wave':
-                        weight = self.weights[id]['body_wave_'+component]
+
+                    if self.window_type == 'body_wave':
+                        key = 'body_wave_'+component
                     else:
-                        weight = self.weights[id]['surface_wave_'+component]
+                        key = 'surface_wave_'+component
+
+                    weight = self.weights[id][key]
+
                 except:
                     weight = None
 
@@ -536,8 +541,6 @@ class ProcessData(object):
                 picks['S'] = sac_headers.t6
 
 
-        print('B', len(traces))
-
         for trace in traces:
 
             #
@@ -567,10 +570,11 @@ class ProcessData(object):
             elif self.window_type == 'group_velocity':
                 # surface-wave window based on given group velocity [m/s]
 
-                # window_alignment=0.0 - windows starts at group arrival
-                # window_alignment=0.5 - windows centeredon group arrival
-                # window_alignment=1.0 - windows ends at group arrival
                 group_arrival = distance_in_m/self.group_velocity
+
+                # alignment=0.0 - window starts at group arrival
+                # alignment=0.5 - window centered on group arrival
+                # alignment=1.0 - window ends at group arrival
                 alignment = self.window_alignment
 
                 starttime = group_arrival - self.window_length*alignment
@@ -630,9 +634,15 @@ class ProcessData(object):
                     component = trace.stats.channel[-1].upper()
 
                 try:
-                    key = self.window_type +'_'+ component
+                    if self.window_type == 'body_wave':
+                        key = 'body_wave_'+component
+
+                    else:
+                        key = 'surface_wave_'+component
+
                     static = self.statics[id][key]
                     trace.static_time_shift = static
+
                 except:
                     print('Error reading static time shift: %s' % id)
                     continue
@@ -668,5 +678,4 @@ class ProcessData(object):
             taper(trace.data)
 
 
-        print('E', len(traces))
         return traces
