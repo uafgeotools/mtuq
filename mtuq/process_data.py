@@ -85,10 +85,10 @@ class ProcessData(object):
       regional-distance surface-wave window
 
     - ``'group_velocity'``
-      window centered on given group velocity
+      surface-wave window centered on given group velocity
 
-    - ``'minmax'``
-      window defined by minimum and maximum velocities (experimental)
+    - ``'min_max'``
+      surface-wave window defined by minimum and maximum velocities (experimental)
 
     - ``None``
       no windows will be applied
@@ -122,10 +122,10 @@ class ProcessData(object):
     Group velocity in m/s, required for `window_type=group_velocity`
 
     ``v_min`` (`float`)
-    Minimum velocity in m/s, required for `window_type=minmax`
+    Minimum velocity in m/s, required for `window_type=min_max`
 
     ``v_max`` (`float`)
-    Maximum velocity in m/s, required for `window_type=minmax`
+    Maximum velocity in m/s, required for `window_type=min_max`
 
     ``window_length`` (`float`)
     window length in seconds
@@ -168,14 +168,14 @@ class ProcessData(object):
         if not window_type:
             warn("No windows will be applied")
 
-        if window_type and not pick_type:
-            raise Exception("Undefined parameter: pick_type")
-
         if filter_type:
             filter_type = filter_type.lower()
 
         if window_type:
-            filter_type = filter_type.lower()
+            window_type = window_type.lower()
+
+        if pick_type:
+            pick_type = pick_type.lower()
 
         self.filter_type = filter_type
         self.window_type = window_type
@@ -251,19 +251,18 @@ class ProcessData(object):
              pass
 
         elif self.window_type == 'body_wave':
-             # nothing to check now
-             pass
+            assert pick_type is not None, "Must be defined: pick_type"
 
         elif self.window_type == 'surface_wave':
-             # nothing to check now
-             pass
+            assert pick_type is not None, "Must be defined: pick_type"
 
         elif self.window_type == 'group_velocity':
             assert 'group_velocity' in parameters
             assert parameters['group_velocity'] >= 0.
             self.group_velocity = parameters['group_velocity']
+            self.window_alignment = getattr(parameters, 'window_alignment', 0.5)
 
-        elif self.window_type == 'minmax':
+        elif self.window_type == 'min_max':
             assert 'v_min' in parameters
             assert 'v_max' in parameters
             assert 0. <= parameters['v_min']
@@ -334,7 +333,7 @@ class ProcessData(object):
                     self.scaling_coefficient = 1.e5
 
 
-            elif self.window_type == 'surface_wave':
+            else:
                 if self.scaling_power is None:
                     self.scaling_power = 0.5
 
@@ -422,7 +421,6 @@ class ProcessData(object):
         for trace in traces:
             trace.attrs = AttribDict()
 
-
         #
         # part 1: filter traces
         #
@@ -480,7 +478,10 @@ class ProcessData(object):
             for trace in traces:
                 try:
                     component = trace.stats.channel[-1].upper()
-                    weight = self.weights[id][self.window_type+'_'+component]
+                    if self.window_type=='body_wave':
+                        weight = self.weights[id]['body_wave_'+component]
+                    else:
+                        weight = self.weights[id]['surface_wave_'+component]
                 except:
                     weight = None
 
@@ -493,7 +494,10 @@ class ProcessData(object):
         # part 3: determine phase picks
         #
 
-        if self.pick_type == 'user_supplied':
+        if not self.pick_type:
+             pass
+
+        elif self.pick_type == 'user_supplied':
             picks = self.picks[id]
 
         else:
@@ -502,7 +506,7 @@ class ProcessData(object):
             if self.pick_type=='taup':
                 with warnings.catch_warnings():
                     # supress obspy warning that gets raised even when taup is
-                    # used correctly (someone should submit an obspy fix)
+                    # used correctly (someone should submit an ObsPy fix)
                     warnings.filterwarnings('ignore')
                     arrivals = self._taup.get_travel_times(
                         origin.depth_in_m/1000.,
@@ -535,6 +539,7 @@ class ProcessData(object):
                 picks['S'] = sac_headers.t6
 
 
+        print('B', len(traces))
 
         for trace in traces:
 
@@ -563,21 +568,26 @@ class ProcessData(object):
 
 
             elif self.window_type == 'group_velocity':
-                # window centered on given group arrival
+                # surface-wave window based on given group velocity
 
                 group_arrival = distance_in_m/self.group_velocity
 
-                starttime = group_arrival - self.window_length/2. 
-                endtime = group_arrival + self.window_length/2. 
+                # window_alignment=0.0 - windows starts at group arrival
+                # window_alignment=0.5 - windows centeredon group arrival
+                # window_alignment=1.0 - windows ends at group arrival
+                phi = self.window_alignment
+
+                starttime = group_arrival - self.window_length*phi
+                endtime = group_arrival + self.window_length*(1.-phi)
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
 
 
-            elif self.window_type == 'minmax':
+            elif self.window_type == 'min_max':
                 # experimental window type defined by minimum and maximum 
-                # groups velocities (results in time-dependent window lengths,
-                # which may not work with other MTUQ functions)
+                # groups velocities (results in distance-dependent window 
+                # lengths, which may not work with other MTUQ functions)
 
                 starttime = distance_in_m/self.v_max
                 endtime = distance_in_m/self.v_min
@@ -660,4 +670,5 @@ class ProcessData(object):
             taper(trace.data)
 
 
+        print('E', len(traces))
         return traces
