@@ -329,7 +329,7 @@ def plot_data_greens2(filename,
 def _initialize(nrows=None, ncolumns=None, column_width_ratios=None, 
     header=None, height=None, width=None, margin_top=0.25, margin_bottom=0.25,
     margin_left=0.25, margin_right=0.25, header_height=1.5, 
-    station_labels=True, station_label_width=0.4):
+    station_labels=True, station_label_width=0.5):
 
     if header:
         height += header_height

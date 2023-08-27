@@ -14,8 +14,13 @@ def station_label_writer(ax, station, origin, units='km'):
         station.latitude,
         station.longitude)
 
-    # display station name
-    label = '.'.join([station.network,station.station])
+    # construct station label
+    if len(station.location) > 1:
+        label = station.network + '.' + station.station + '.' + station.location
+    else:
+        label = station.network + '.' + station.station
+
+    # display station label
     pyplot.text(0.2,0.50, label, fontsize=11, transform=ax.transAxes)
 
     # display distance
