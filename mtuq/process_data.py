@@ -75,6 +75,9 @@ class ProcessData(object):
     - ``'user_supplied'``
       reads P, S arrival times from columns 8, 10 of `capuaf_file`
 
+    - ``None``
+      no phase picks will be calculated
+
 
     ``window_type`` (`str`)
 
@@ -95,15 +98,15 @@ class ProcessData(object):
 
 
     ``apply_statics`` (`bool`)
-    whether or not to apply static time shifts from columns 11-13 of `capuaf_file`
+    Whether or not to apply static time shifts from columns 11-13 of `capuaf_file`
 
 
     ``apply_weights`` (`bool`)
-    whether or not to apply objective function weights from columns 3-8 of `capuaf_file`
+    Whether or not to apply objective function weights from columns 3-8 of `capuaf_file`
 
 
     ``apply_scaling`` (`bool`)
-    whether or not to apply distance-dependent amplitude scaling
+    Whether or not to apply distance-dependent amplitude scaling
 
 
 
@@ -120,6 +123,10 @@ class ProcessData(object):
 
     ``group_velocity`` (`float`)
     Group velocity in m/s, required for `window_type=group_velocity`
+
+    ``alignment`` (`float`)
+    Optional window alignment for `window_type=group_velocity`
+    (`float` between 0. and 1.)
 
     ``v_min`` (`float`)
     Minimum velocity in m/s, required for `window_type=min_max`
@@ -194,7 +201,6 @@ class ProcessData(object):
         #
         # check filter parameters
         #
-
         if not self.filter_type:
             # nothing to check
             pass
@@ -242,7 +248,6 @@ class ProcessData(object):
         #
         # check window parameters
         #
-        #
         if not self.window_type:
              # nothing to check now
              pass
@@ -257,8 +262,8 @@ class ProcessData(object):
             assert 'group_velocity' in parameters
             assert parameters['group_velocity'] >= 0.
             self.group_velocity = parameters['group_velocity']
-            self.window_alignment = getattr(parameters, 'window_alignment', 0.5)
-            assert 0. <= self.window_alignment <= 1.
+            self.alignment = getattr(parameters, 'window_alignment', 0.5)
+            assert 0. <= self.alignment <= 1.
 
         elif self.window_type == 'min_max':
             assert 'v_min' in parameters
@@ -573,9 +578,9 @@ class ProcessData(object):
                 group_arrival = distance_in_m/self.group_velocity
 
                 # alignment=0.0 - window starts at group arrival
-                # alignment=0.5 - window centered on group arrival
+                # alignment=0.5 - window centered on group arrival (default)
                 # alignment=1.0 - window ends at group arrival
-                alignment = self.window_alignment
+                alignment = self.alignment
 
                 starttime = group_arrival - self.window_length*alignment
                 endtime = group_arrival + self.window_length*(1.-alignment)
