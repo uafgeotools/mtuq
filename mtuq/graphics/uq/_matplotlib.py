@@ -56,11 +56,11 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
     if not contour:
         vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
-        im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto')
+        im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
     else:
         # Plot using contourf
         levels = 20 if contour is True else int(contour)
-        im = ax.contourf(x, y, values, cmap=colormap, levels=levels)
+        im = ax.contourf(x, y, values, cmap=colormap, levels=levels, zorder=10)
 
 
     # Plot best-fitting moment tensor
