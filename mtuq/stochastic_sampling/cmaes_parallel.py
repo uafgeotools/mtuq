@@ -727,6 +727,7 @@ class parallel_CMA_ES(object):
                 self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, db_or_greens_list)
 
                 if self.mode in ['mt', 'mt-dc', 'mt-dev']:
+                    print('Printing results for iteration %d\n' % (i + iter_count))
                     if self.rank == 0:
                         result = self.mutants_logger_list
                         plot_combined('combined.png', result, colormap='viridis')
@@ -895,7 +896,7 @@ class parallel_CMA_ES(object):
             v, w = _hammer_projection(to_gamma(v), to_delta(w))
 
 
-            vmin, vmax = np.percentile(np.asarray(m), [0,75])
+            vmin, vmax = np.percentile(np.asarray(m), [0,90])
 
             self.ax.scatter(v, w, c=m, s=3, vmin=vmin, vmax=vmax, zorder=100)
 
