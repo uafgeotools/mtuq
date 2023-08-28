@@ -10,7 +10,7 @@ from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 from mtuq.stochastic_sampling import initialize_force
-from mtuq.stochastic_sampling.cmaes_parallel import parallel_CMA_ES
+from mtuq.stochastic_sampling.cmaes_parallel import CMA_ES
 
 
 
@@ -205,7 +205,7 @@ if __name__=='__main__':
     MISFIT = [misfit_bw, misfit_sw]
 
     popsize = 24 # -- CMA-ES population size (you can play with this value)
-    CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=popsize)
+    CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize)
     CMA.sigma = 1 # -- CMA-ES step size, defined as 1 standard deviation of the initial parameter distribution (you can play with this value)
     iter = 120
     for i in range(iter):
