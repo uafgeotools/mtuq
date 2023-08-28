@@ -10,14 +10,14 @@ from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 from mtuq.stochastic_sampling import initialize_mt
-from mtuq.stochastic_sampling.cmaes_parallel import parallel_CMA_ES
+from mtuq.stochastic_sampling.cmaes import CMA_ES
 import matplotlib.pyplot as plt
 from mtuq.util.math import to_gamma, to_delta
 from mtuq.graphics.uq.lune import plot_misfit_lune
 from mtuq.graphics.uq._matplotlib import _plot_lune_matplotlib
 from mtuq.graphics import plot_combined
 
-def plot_lune(CMA):
+def plot_lune(CMA, p):
     ''' Temporary function to plot the lune distribution of mutants. This
     plot will produce a scatter plot of the mutants, with the current best
     solution marked with a red cross, on a "lune coordinate" rectangle.
@@ -42,14 +42,14 @@ def plot_lune(CMA):
     LIST = A.copy()
     v = LIST['v']
     w = LIST['w']
-    m = LIST['misfit']
+    m = np.asarray(LIST['misfit'])
     V,W = CMA._datalogger(mean=True)['v'], CMA._datalogger(mean=True)['w']
 
-    plt.scatter(to_gamma(v), to_delta(w), c=np.log(m))
+    plt.scatter(to_gamma(v), to_delta(w), c=np.asarray(m))
+    plt.clim(0, (np.percentile(m, p)))
     plt.scatter(to_gamma(V), to_delta(W), c='red', marker='x', zorder=10000000)
 
     # Make sure the colorscale includes the 75% data percentile
-    plt.clim(np.log(np.percentile(m, 75)))
 
     plt.show()
 
@@ -239,7 +239,7 @@ if __name__=='__main__':
     #
     
     # Defining source type (full moment tensor, deviatoric moment tensor or double couple)
-    src_type = 'full' # 'full', 'deviatoric' or 'dc'
+    src_type = 'deviatoric' # 'full', 'deviatoric' or 'dc'
 
     if mode == 'database':
         # For a full search with depth, latitutde and longitude, use:
@@ -256,9 +256,9 @@ if __name__=='__main__':
     GREENS = [greens_bw, greens_sw] if mode == 'greens' else None  # add more as needed
 
     popsize = 24 # -- CMA-ES population size - number of mutants (you can play with this value, 24 to 120 is a good range)
-    CMA = parallel_CMA_ES(parameter_list , origin=origin, lmbda=popsize)
+    CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize)
     CMA.sigma = 5.0 # -- Initial standard deviation (4 ~ 5 seems to provide a balanced exploration/exploitation and avoid getting stuck in local minima)
-    iter = 120 # -- Number of iterations (you can play with this value, 120 to 240 is a good range)
+    iter = 60 # -- Number of iterations (you can play with this value, 120 to 240 is a good range)
 
     if mode == 'database':
         CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10, max_iter=iter)

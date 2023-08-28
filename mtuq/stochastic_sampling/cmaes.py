@@ -19,7 +19,7 @@ from mtuq.graphics import plot_combined
 # class CMA_ES(object):
 
 
-class parallel_CMA_ES(object):
+class CMA_ES(object):
 
     def __init__(self, parameters_list, lmbda=None, data=None, GFclient=None, origin=None, callback_function=None, event_id=''):
         '''
