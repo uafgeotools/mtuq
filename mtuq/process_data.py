@@ -650,7 +650,7 @@ class ProcessData(object):
 
                 except:
                     print('Error reading static time shift: %s' % id)
-                    continue
+                    static = 0.
 
                 if 'type:greens' in tags:
                     starttime -= static
