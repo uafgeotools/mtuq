@@ -727,8 +727,8 @@ class CMA_ES(object):
                 self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, db_or_greens_list)
 
                 if self.mode in ['mt', 'mt-dc', 'mt-dev']:
-                    print('Printing results for iteration %d\n' % (i + iter_count))
                     if self.rank == 0:
+                        print('Plotting results for iteration %d\n' % (i + iter_count))
                         result = self.mutants_logger_list
                         plot_combined('combined.png', result, colormap='viridis')
 
