@@ -854,7 +854,7 @@ class CMA_ES(object):
                             misfit[0], misfit[1], stations, final_origin, best_source, lune_dict)
         elif len(process) == 1:
             plot_data_greens1(self.event_id + 'FMT_waveforms_mean_' + str(self.iteration) + '.png',
-                            data, greens, process, misfit, stations, final_origin[0], best_source, lune_dict)
+                            data[0], greens[0], process[0], misfit[0], stations, final_origin, best_source, lune_dict)
 
     def _scatter_plot(self):
         """
