@@ -10,7 +10,7 @@ from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists
 from mtuq.util import AttribDict, warn
 from mtuq.util.cap import WeightParser, taper
-from mtuq.util.signal import cut, get_arrival, m_to_deg
+from mtuq.util.signal import cut, get_arrival, m_to_deg, _window_warnings
 
 
 class ProcessData(object):
@@ -75,29 +75,38 @@ class ProcessData(object):
     - ``'user_supplied'``
       reads P, S arrival times from columns 8, 10 of `capuaf_file`
 
+    - ``None``
+      no phase picks will be calculated
+
 
     ``window_type`` (`str`)
 
     - ``'body_wave'``
-      chooses window starttime before P arrival
+      regional-distance body-wave window
 
     - ``'surface_wave'``
-      chooses window starttime after S arrival
+      regional-distance surface-wave window
+
+    - ``'group_velocity'``
+      surface-wave window centered on given group velocity
+
+    - ``'min_max'``
+      surface-wave window defined by minimum and maximum velocities (experimental)
 
     - ``None``
       no windows will be applied
 
 
     ``apply_statics`` (`bool`)
-    whether or not to apply static time shifts from columns 11-13 of `capuaf_file`
+    Whether or not to apply static time shifts from columns 11-13 of `capuaf_file`
 
 
     ``apply_weights`` (`bool`)
-    whether or not to apply objective function weights from columns 3-8 of `capuaf_file`
+    Whether or not to apply objective function weights from columns 3-8 of `capuaf_file`
 
 
     ``apply_scaling`` (`bool`)
-    whether or not to apply distance-dependent amplitude scaling
+    Whether or not to apply distance-dependent amplitude scaling
 
 
 
@@ -111,6 +120,19 @@ class ProcessData(object):
 
     ``freq`` (`float`)
     Required for `filter_type=lowpass` or `filter_type=highpass`
+
+    ``group_velocity`` (`float`)
+    Group velocity in m/s, required for `window_type=group_velocity`
+
+    ``alignment`` (`float`)
+    Optional window alignment for `window_type=group_velocity`
+    (`float` between 0. and 1.)
+
+    ``v_min`` (`float`)
+    Minimum velocity in m/s, required for `window_type=min_max`
+
+    ``v_max`` (`float`)
+    Maximum velocity in m/s, required for `window_type=min_max`
 
     ``window_length`` (`float`)
     window length in seconds
@@ -153,14 +175,11 @@ class ProcessData(object):
         if not window_type:
             warn("No windows will be applied")
 
-        if window_type and not pick_type:
-            raise Exception("Undefined parameter: pick_type")
-
         if filter_type:
             filter_type = filter_type.lower()
 
         if window_type:
-            filter_type = filter_type.lower()
+            window_type = window_type.lower()
 
         self.filter_type = filter_type
         self.window_type = window_type
@@ -182,7 +201,6 @@ class ProcessData(object):
         #
         # check filter parameters
         #
-
         if not self.filter_type:
             # nothing to check
             pass
@@ -230,28 +248,44 @@ class ProcessData(object):
         #
         # check window parameters
         #
-        #
         if not self.window_type:
              # nothing to check now
              pass
 
         elif self.window_type == 'body_wave':
-             # nothing to check now
-             pass
+            assert pick_type is not None, "Must be defined: pick_type"
 
         elif self.window_type == 'surface_wave':
-             # nothing to check now
-             pass
+            assert pick_type is not None, "Must be defined: pick_type"
+
+        elif self.window_type == 'group_velocity':
+            assert 'group_velocity' in parameters
+            assert parameters['group_velocity'] >= 0.
+            self.group_velocity = parameters['group_velocity']
+            self.alignment = getattr(parameters, 'window_alignment', 0.5)
+            assert 0. <= self.alignment <= 1.
+
+        elif self.window_type == 'min_max':
+            assert 'v_min' in parameters
+            assert 'v_max' in parameters
+            assert 0. <= parameters['v_min']
+            assert parameters['v_min'] <= parameters['v_max']
+            assert parameters['v_max'] <= np.inf
+            self.v_min = parameters['v_min']
+            self.v_max = parameters['v_max']
+            _window_warnings(self.window_type, self.window_length)
 
         else:
              raise ValueError('Bad parameter: window_type')
 
 
-        if self.window_type:
-            if self.window_length is None:
-                 raise ValueError('Must be defined: window_length')
+        if self.window_type is not None:
 
-            assert self.window_length > 0
+            if self.window_type is None:
+                ValueError('Must be defined: window_length')
+
+            if self.window_length <= 0:
+                ValueError
 
 
         if self.padding:
@@ -302,7 +336,7 @@ class ProcessData(object):
                     self.scaling_coefficient = 1.e5
 
 
-            elif self.window_type == 'surface_wave':
+            else:
                 if self.scaling_power is None:
                     self.scaling_power = 0.5
 
@@ -390,7 +424,6 @@ class ProcessData(object):
         for trace in traces:
             trace.attrs = AttribDict()
 
-
         #
         # part 1: filter traces
         #
@@ -448,7 +481,14 @@ class ProcessData(object):
             for trace in traces:
                 try:
                     component = trace.stats.channel[-1].upper()
-                    weight = self.weights[id][self.window_type+'_'+component]
+
+                    if self.window_type == 'body_wave':
+                        key = 'body_wave_'+component
+                    else:
+                        key = 'surface_wave_'+component
+
+                    weight = self.weights[id][key]
+
                 except:
                     weight = None
 
@@ -461,7 +501,10 @@ class ProcessData(object):
         # part 3: determine phase picks
         #
 
-        if self.pick_type == 'user_supplied':
+        if not self.pick_type:
+             pass
+
+        elif self.pick_type == 'user_supplied':
             picks = self.picks[id]
 
         else:
@@ -470,7 +513,7 @@ class ProcessData(object):
             if self.pick_type=='taup':
                 with warnings.catch_warnings():
                     # supress obspy warning that gets raised even when taup is
-                    # used correctly (someone should submit an obspy fix)
+                    # used correctly (someone should submit an ObsPy fix)
                     warnings.filterwarnings('ignore')
                     arrivals = self._taup.get_travel_times(
                         origin.depth_in_m/1000.,
@@ -503,7 +546,6 @@ class ProcessData(object):
                 picks['S'] = sac_headers.t6
 
 
-
         for trace in traces:
 
             #
@@ -511,17 +553,57 @@ class ProcessData(object):
             #
 
             if self.window_type == 'body_wave':
-                # reproduces CAPUAF body wave window
+                # reproduces cut-and-paste body wave window
+
                 starttime = picks['P'] - 0.4*self.window_length
                 endtime = starttime + self.window_length
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
 
+
             elif self.window_type == 'surface_wave':
-                # reproduces CAPUAF surface wave window
+                # reproduces cut-and-paste surface wave window
+
                 starttime = picks['S'] - 0.3*self.window_length
                 endtime = starttime + self.window_length
+
+                starttime += float(origin.time)
+                endtime += float(origin.time)
+
+
+            elif self.window_type == 'group_velocity':
+                # surface-wave window based on given group velocity [m/s]
+
+                group_arrival = distance_in_m/self.group_velocity
+
+                # alignment=0.0 - window starts at group arrival
+                # alignment=0.5 - window centered on group arrival (default)
+                # alignment=1.0 - window ends at group arrival
+                alignment = self.alignment
+
+                starttime = group_arrival - self.window_length*alignment
+                endtime = group_arrival + self.window_length*(1.-alignment)
+
+                starttime += float(origin.time)
+                endtime += float(origin.time)
+
+
+            elif self.window_type == 'min_max':
+                # experimental window type defined by minimum and maximum 
+                # group velocities [m/s] 
+
+                # WARNING - results in distance-dependent window lengths,
+                # which may not work with other MTUQ functions
+
+                starttime = distance_in_m/self.v_max
+                endtime = distance_in_m/self.v_min
+
+                # optionally, enforce minimum window length
+                if endtime - starttime < self.window_length:
+                    average_time = (starttime + endtime)/2.
+                    starttime = average_time - self.window_length/2.
+                    endtime = average_time + self.window_length/2.
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
@@ -530,6 +612,7 @@ class ProcessData(object):
             else:
                 starttime = trace.stats.starttime
                 endtime = trace.stats.endtime
+
 
             #
             # part 4b: apply statics
@@ -556,12 +639,18 @@ class ProcessData(object):
                     component = trace.stats.channel[-1].upper()
 
                 try:
-                    key = self.window_type +'_'+ component
+                    if self.window_type == 'body_wave':
+                        key = 'body_wave_'+component
+
+                    else:
+                        key = 'surface_wave_'+component
+
                     static = self.statics[id][key]
                     trace.static_time_shift = static
+
                 except:
                     print('Error reading static time shift: %s' % id)
-                    continue
+                    static = 0.
 
                 if 'type:greens' in tags:
                     starttime -= static

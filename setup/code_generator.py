@@ -1320,12 +1320,25 @@ WrapUp_GridSearch="""
 
         results = results_bw + results_sw
 
-        # `grid` index corresponding to minimum misfit
+        #
+        # Collect information about best-fitting source
+        #
+
+        # index of best-fitting moment tensor
         idx = results.source_idxmin()
 
+        # MomentTensor object
         best_mt = grid.get(idx)
+
+        # dictionary of lune parameters
         lune_dict = grid.get_dict(idx)
+
+        # dictionary of Mij parameters
         mt_dict = best_mt.as_dict()
+
+        merged_dict = merge_dicts(
+            mt_dict, lune_dict, {'M0': best_mt.moment()},
+            {'Mw': best_mt.magnitude()}, origin)
 
 
         #
@@ -1348,15 +1361,6 @@ WrapUp_GridSearch="""
 
         print('Saving results...\\n')
 
-        # collect information about best-fitting source
-        merged_dict = merge_dicts(
-            mt_dict,
-            lune_dict,
-            {'M0': best_mt.moment()},
-            {'Mw': best_mt.magnitude()},
-            origin,
-            )
-
         # save best-fitting source
         save_json(event_id+'DC_solution.json', merged_dict)
 
@@ -1376,14 +1380,25 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
         results = results_bw + results_sw
 
+        #
+        # Collect information about best-fitting source
+        #
+
         origin_idx = results.origin_idxmin()
         best_origin = origins[origin_idx]
 
         source_idx = results.source_idxmin()
         best_mt = grid.get(source_idx)
 
+        # dictionary of lune parameters
         lune_dict = grid.get_dict(source_idx)
+
+        # dictionary of Mij parameters
         mt_dict = best_mt.as_dict()
+
+        merged_dict = merge_dicts(
+            mt_dict, lune_dict, {'M0': best_mt.moment()},
+            {'Mw': best_mt.magnitude()}, best_origin)
 
 
         #
@@ -1406,15 +1421,6 @@ WrapUp_GridSearch_DoubleCoupleMagnitudeDepth="""
 
 
         print('Saving results...\\n')
-
-        # collect information about best-fitting source
-        merged_dict = merge_dicts(
-            mt_dict,
-            lune_dict,
-            {'M0': best_mt.moment()},
-            {'Mw': best_mt.magnitude()},
-            best_origin,
-            )
 
         # save best-fitting source
         save_json(event_id+'DC+Z_solution.json', merged_dict)
@@ -1440,13 +1446,25 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
     results = results_bw + results_sw
 
-    # `grid` index corresponding to minimum misfit
+    #
+    # Collect information about best-fitting source
+    #
+
+    # index of best-fitting moment tensor
     idx = results.source_idxmin()
 
+    # MomentTensor object
     best_mt = grid.get(idx)
+
+    # dictionary of lune parameters
     lune_dict = grid.get_dict(idx)
+
+    # dictionary of Mij parameters
     mt_dict = best_mt.as_dict()
 
+    merged_dict = merge_dicts(
+        mt_dict, lune_dict, {'M0': best_mt.moment()},
+        {'Mw': best_mt.magnitude()}, origin)
 
     #
     # Generate figures and save results
@@ -1467,15 +1485,6 @@ WrapUp_SerialGridSearch_DoubleCouple="""
 
 
     print('Saving results...\\n')
-
-    # collect information about best-fitting source
-    merged_dict = merge_dicts(
-        mt_dict,
-        lune_dict,
-        {'M0': best_mt.moment()},
-        {'Mw': best_mt.magnitude()},
-        origin,
-        )
 
     # save best-fitting source
     save_json(event_id+'DC_solution.json', merged_dict)
