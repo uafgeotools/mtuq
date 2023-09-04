@@ -15,6 +15,8 @@ from mtuq.event import MomentTensor, Force
 from mtuq.graphics.uq._matplotlib import _hammer_projection, _generate_lune
 from mtuq.util.math import to_gamma, to_delta
 from mtuq.graphics import plot_combined
+from mtuq.misfit import Misfit, PolarityMisfit
+from mtuq.misfit.waveform import calculate_norm_data 
 
 # class CMA_ES(object):
 
@@ -711,11 +713,14 @@ class CMA_ES(object):
                 db = db_or_greens_list if mode == 'db' else None
 
                 if mode == 'db':
-                    misfit = self.eval_fitness(data, stations, misfit, db, process_list[j], wavelet, **kwargs)
+                    misfit_values = self.eval_fitness(data, stations, misfit, db, process_list[j], wavelet, **kwargs)
                 elif mode == 'greens':
-                    misfit = self.eval_fitness(data, stations, misfit, greens,  **kwargs)
+                    misfit_values = self.eval_fitness(data, stations, misfit, greens,  **kwargs)
 
-                misfits.append(misfit)
+                norm = self._get_data_norm(data, misfit)
+
+                misfits.append(misfit_values/norm)
+
 
             self.gather_mutants()
             self.fitness_sort(sum(misfits))
@@ -836,6 +841,17 @@ class CMA_ES(object):
         process = process_list
         misfit = misfit_list
         greens_or_db = db_or_greens_list
+
+
+        # Check for the occurences of mtuq.misfit.polarity.PolarityMisfit in misfit_list:
+        # if present, remove the corresponding data, greens, process and misfit from the lists
+        # Run backward to avoid index errors
+        for i in range(len(misfit_list)-1, -1, -1):
+            if isinstance(misfit_list[i], PolarityMisfit):
+                del data[i]
+                del process[i]
+                del misfit[i]
+                del greens_or_db[i]
 
         mode = 'db' if isinstance(greens_or_db, AxiSEM_Client) else 'greens'
         if mode == 'db':
@@ -1005,3 +1021,26 @@ class CMA_ES(object):
             raise ValueError("database must be either an AxiSEM_Client object or a GreensTensorList object")
         if isinstance(db, AxiSEM_Client) and (process is None or wavelet is None):
             raise ValueError("process_function and wavelet must be specified if database is an AxiSEM_Client")
+        
+    def _get_data_norm(self, data, misfit):
+        """
+        Compute the norm of the data using the calculate_norm_data function.
+
+        Arguments
+        ----------
+            data: The evaluated processed data.
+            misfit: The misfit object used to evaluate the data object
+
+        """
+
+        # If misfit type is Polarity misfit, use the sum of the absolute values of the data as number of used stations.
+        if isinstance(misfit, PolarityMisfit):
+            return np.sum(np.abs(data))
+        # Else, use the calculate_norm_data function.
+        else:
+            if isinstance(misfit.time_shift_groups, str):
+                components = list(misfit.time_shift_groups)
+            elif isinstance(misfit.time_shift_groups, list):
+                components = list("".join(misfit.time_shift_groups))
+            
+            return calculate_norm_data(data, misfit.norm, components)

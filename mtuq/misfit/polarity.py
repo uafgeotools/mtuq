@@ -156,12 +156,20 @@ class PolarityMisfit(object):
         elif type(sources) == mtuq.Force:
             raise NotImplementedError
 
+        elif type(sources) == np.ndarray:
+            # Check if sources is a 2D array with shape (n,6)
+            if len(sources.shape) == 2 and sources.shape[1] == 6:
+                _calculate = _polarities_mt
+            else:
+                raise TypeError
+
         elif _type(sources.dims) == 'MomentTensor':
             sources = _to_array(sources)
             _calculate = _polarities_mt
 
         elif _type(sources.dims) == 'Force':
             raise NotImplementedError
+                
         else:
             raise TypeError
 
