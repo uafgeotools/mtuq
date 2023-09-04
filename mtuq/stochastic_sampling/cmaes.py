@@ -860,7 +860,7 @@ class CMA_ES(object):
                 del data[i]
                 del process[i]
                 del misfit[i]
-                del greens_or_db[i]
+                del greens[i]
 
         # Plot based on the number of ProcessData objects in the process_list
         if len(process) == 2:
