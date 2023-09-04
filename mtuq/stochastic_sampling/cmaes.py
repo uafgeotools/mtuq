@@ -842,6 +842,15 @@ class CMA_ES(object):
         misfit = misfit_list
         greens_or_db = db_or_greens_list
 
+        mode = 'db' if isinstance(greens_or_db, AxiSEM_Client) else 'greens'
+        if mode == 'db':
+            _greens = greens_or_db.get_greens_tensors(stations, final_origin)
+            greens = [None] * len(process_list)
+            for i in range(len(process_list)):
+                greens[i] = _greens.map(process_list[i])
+                greens[i][0].tags[0] = 'model:ak135f_2s'
+        elif mode == 'greens':
+            greens = greens_or_db
 
         # Check for the occurences of mtuq.misfit.polarity.PolarityMisfit in misfit_list:
         # if present, remove the corresponding data, greens, process and misfit from the lists
@@ -852,16 +861,6 @@ class CMA_ES(object):
                 del process[i]
                 del misfit[i]
                 del greens_or_db[i]
-
-        mode = 'db' if isinstance(greens_or_db, AxiSEM_Client) else 'greens'
-        if mode == 'db':
-            _greens = greens_or_db.get_greens_tensors(stations, final_origin)
-            greens = [None] * len(process_list)
-            for i in range(len(process_list)):
-                greens[i] = _greens.map(process_list[i])
-                greens[i][0].tags[0] = 'model:ak135f_2s'
-        elif mode == 'greens':
-            greens = greens_or_db
 
         # Plot based on the number of ProcessData objects in the process_list
         if len(process) == 2:
