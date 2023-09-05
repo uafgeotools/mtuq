@@ -855,8 +855,8 @@ class CMA_ES(object):
         # Check for the occurences of mtuq.misfit.polarity.PolarityMisfit in misfit_list:
         # if present, remove the corresponding data, greens, process and misfit from the lists
         # Run backward to avoid index errors
-        for i in range(len(misfit_list)-1, -1, -1):
-            if isinstance(misfit_list[i], PolarityMisfit):
+        for i in range(len(misfit)-1, -1, -1):
+            if isinstance(misfit[i], PolarityMisfit):
                 del data[i]
                 del process[i]
                 del misfit[i]
