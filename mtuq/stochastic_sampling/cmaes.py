@@ -341,7 +341,7 @@ class CMA_ES(object):
                     print('WARNING: Greens mode is not compatible with latitude, longitude or depth parameters. Consider using a local Axisem database instead.')
                 return None
     # Gather the mutants from each process and concatenate them into a single array.
-    def gather_mutants(self, verbose=False):
+    def gather_mutants(self, verbose=True):
         '''
         gather_mutants method
 
@@ -369,6 +369,11 @@ class CMA_ES(object):
         self.mutants_logger_list (list):
             The list to which the datalogger is appended.
         '''
+
+        # Printing the mutants on each process, their shapes and types for debugging purposes
+        if verbose == True:
+            print(self.scattered_mutants, '\n', 'shape is', np.shape(self.scattered_mutants), '\n', 'type is', type(self.scattered_mutants))
+
 
         self.mutants = self.comm.gather(self.scattered_mutants, root=0)
         if self.rank == 0:
@@ -704,8 +709,8 @@ class CMA_ES(object):
 
             misfits = []
             for j in range(len(data_list)):
-                data = data_list[j]
-                misfit = misfit_list[j]
+                current_data = data_list[j]
+                current_misfit = misfit_list[j]
                 
                 mode = 'db' if isinstance(db_or_greens_list, AxiSEM_Client) else 'greens'
                 # get greens[j] or db depending on mode from db_or_greens_list
@@ -713,14 +718,16 @@ class CMA_ES(object):
                 db = db_or_greens_list if mode == 'db' else None
 
                 if mode == 'db':
-                    misfit_values = self.eval_fitness(data, stations, misfit, db, process_list[j], wavelet, **kwargs)
+                    misfit_values = self.eval_fitness(current_data, stations, current_misfit, db, process_list[j], wavelet, **kwargs)
                 elif mode == 'greens':
-                    misfit_values = self.eval_fitness(data, stations, misfit, greens,  **kwargs)
+                    misfit_values = self.eval_fitness(current_data, stations, current_misfit, greens,  **kwargs)
 
-                norm = self._get_data_norm(data, misfit)
+                # norm = self._get_data_norm(data, misfit)
 
-                misfits.append(misfit_values/norm)
+                misfits.append(misfit_values)
 
+                # # Print the local lists on each process:
+                # print('Misfit on process %d: %s' % (self.rank, str(misfit_values)))
 
             self.gather_mutants()
             self.fitness_sort(sum(misfits))
@@ -730,7 +737,6 @@ class CMA_ES(object):
 
             if i == 0 or i % plot_interval == 0 or i == max_iter - 1:
                 self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, db_or_greens_list)
-
                 if self.mode in ['mt', 'mt-dc', 'mt-dev']:
                     if self.rank == 0:
                         print('Plotting results for iteration %d\n' % (i + iter_count))
@@ -837,9 +843,9 @@ class CMA_ES(object):
         lune_dict = solution_grid.get_dict(0)
 
         # Assignments for brevity (might be removed later)
-        data = data_list
-        process = process_list
-        misfit = misfit_list
+        data = data_list.copy()
+        process = process_list.copy()
+        misfit = misfit_list.copy()
         greens_or_db = db_or_greens_list
 
         mode = 'db' if isinstance(greens_or_db, AxiSEM_Client) else 'greens'
