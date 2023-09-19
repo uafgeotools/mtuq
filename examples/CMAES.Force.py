@@ -10,7 +10,7 @@ from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 from mtuq.stochastic_sampling import initialize_force
-from mtuq.stochastic_sampling.cmaes_parallel import CMA_ES
+from mtuq.stochastic_sampling.cmaes import CMA_ES
 
 
 
