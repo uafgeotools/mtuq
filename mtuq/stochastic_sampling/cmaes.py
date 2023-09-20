@@ -17,7 +17,7 @@ from mtuq.util.math import to_gamma, to_delta
 from mtuq.graphics import plot_combined
 from mtuq.misfit import Misfit, PolarityMisfit
 from mtuq.misfit.waveform import calculate_norm_data 
-
+from mtuq.process_data import ProcessData
 # class CMA_ES(object):
 
 
@@ -659,7 +659,7 @@ class CMA_ES(object):
             )
             return(MTUQDataFrame(da))
 
-    def Solve(self, data_list, stations, misfit_list, process_list, db_or_greens_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, **kwargs):
+    def Solve(self, data_list, stations, misfit_list, process_list, db_or_greens_list, max_iter=100, wavelet=None, plot_interval=10, iter_count=0, **kwargs):
         """
         Solves for the best-fitting source model using the CMA-ES algorithm. This is the master method used in inversions. 
 
@@ -677,16 +677,14 @@ class CMA_ES(object):
             List of mtuq ProcessData objects to apply to data (e.g. [process_sw] or [process_bw, process_sw]).
         db_or_greens_list : list or AxiSEM_Client object
             Either an AxiSEM database client or a mtuq GreensTensorList.
-        iter : int
-            Number of iterations to perform.
+        max_iter : int, optional
+            Maximum number of iterations to perform. Default is 100. A stoping criterion will be implemented in the future.
         wavelet : object, optional
             Wavelet for source time function. Default is None. Required when db_or_greens_list is an AxiSEM database client.
         plot_interval : int, optional
             Interval at which plots of mean waveforms and results should be generated. Default is 10.
         iter_count : int, optional
-            Current iteration count, useful for resuming. Default is 0.
-        max_iter : int, optional
-            Maximum number of iterations to perform. Default is 100. A stoping criterion will be implemented in the future.
+            Current iteration count, should be useful for resuming. Default is 0.
         src_type : str, optional
             Type of source model, one of ['full', 'deviatoric', 'dc']. Default is full.
         **kwargs
@@ -701,7 +699,11 @@ class CMA_ES(object):
         This method is the wrapper that automate the execution of the CMA-ES algorithm. It is the default workflow for Moment tensor and Force inversion and should not work with a "custom" inversion (multiple-sub events, source time function, etc.). It interacts with the  `draw_mutants`, `eval_fitness`, `gather_mutants`, `fitness_sort`, `update_mean`, `update_step_size` and `update_covariance`. 
         """
 
-        for i in range(iter):
+        if self.rank == 0:
+            # Check Solve inputs
+            self._check_Solve_inputs(data_list, stations, misfit_list, process_list, db_or_greens_list, max_iter, wavelet, plot_interval, iter_count)
+
+        for i in range(max_iter):
             if self.rank == 0:
                 print('Iteration %d\n' % (i + iter_count))
             
@@ -722,7 +724,9 @@ class CMA_ES(object):
                 elif mode == 'greens':
                     misfit_values = self.eval_fitness(current_data, stations, current_misfit, greens,  **kwargs)
 
-                # norm = self._get_data_norm(data, misfit)
+                norm = self._get_data_norm(current_data, current_misfit)
+                        
+                misfit_values = misfit_values/norm
 
                 misfits.append(misfit_values)
 
@@ -730,7 +734,7 @@ class CMA_ES(object):
                 # print('Misfit on process %d: %s' % (self.rank, str(misfit_values)))
 
             self.gather_mutants()
-            self.fitness_sort(sum(misfits))
+            self.fitness_sort(sum(misfits)/len(misfits))
             self.update_mean()
             self.update_step_size()
             self.update_covariance()
@@ -742,49 +746,6 @@ class CMA_ES(object):
                         print('Plotting results for iteration %d\n' % (i + iter_count))
                         result = self.mutants_logger_list
                         plot_combined('combined.png', result, colormap='viridis')
-
-    def _check_draw_eval_update_inputs(self, data_list, stations, misfit_list, process_list, db_or_greens_list, iter, wavelet=None, plot_interval=10, iter_count=0, max_iter=100, src_type=None, **kwargs):
-        if not isinstance(data_list, list):
-            raise TypeError("data_list must be a list of data objects")
-        if not isinstance(stations, list):
-            raise TypeError("stations must be a list of station objects")
-        if not isinstance(misfit_list, list):
-            raise TypeError("misfit_list must be a list of misfit objects")
-        if not isinstance(process_list, list):
-            raise TypeError("process_list must be a list of process objects")
-        if not isinstance(db_or_greens_list, list):
-            raise TypeError("db_or_greens_list must be a list of greens objects")
-        if not isinstance(iter, int):
-            raise TypeError("iter must be an integer")
-        if not isinstance(plot_interval, int):
-            raise TypeError("plot_interval must be an integer")
-        if not isinstance(iter_count, int):
-            raise TypeError("iter_count must be an integer")
-        if not isinstance(max_iter, int):
-            raise TypeError("max_iter must be an integer")
-        if not isinstance(src_type, str):
-            raise TypeError("src_type must be a string")
-        if not isinstance(kwargs, dict):
-            raise TypeError("kwargs must be a dictionary")
-
-        if len(data_list) != len(misfit_list):
-            raise ValueError("data_list and misfit_list must be the same length")
-        if len(data_list) != len(process_list):
-            raise ValueError("data_list and process_list must be the same length")
-        if len(data_list) != len(db_or_greens_list):
-            raise ValueError("data_list and db_or_greens_list must be the same length")
-
-        if src_type not in ['full', 'deviatoric', 'dc']:
-            raise ValueError("src_type must be either 'full', 'deviatoric', or 'dc'")
-
-        if iter < 1:
-            raise ValueError("iter must be greater than or equal to 1")
-        if plot_interval < 1:
-            raise ValueError("plot_interval must be greater than or equal to 1 or None")
-        if iter_count < 0:
-            raise ValueError("iter_count must be greater than or equal to 0")
-        if max_iter < 1:
-            raise ValueError("max_iter must be greater than or equal to 1")
 
     def plot_mean_waveforms(self, data_list, process_list, misfit_list, stations, db_or_greens_list):
         """
@@ -846,7 +807,9 @@ class CMA_ES(object):
         data = data_list.copy()
         process = process_list.copy()
         misfit = misfit_list.copy()
-        greens_or_db = db_or_greens_list
+        greens_or_db = db_or_greens_list.copy() if isinstance(db_or_greens_list, list) else db_or_greens_list
+
+        # greens_or_db = db_or_greens_list
 
         mode = 'db' if isinstance(greens_or_db, AxiSEM_Client) else 'greens'
         if mode == 'db':
@@ -1026,7 +989,47 @@ class CMA_ES(object):
             raise ValueError("database must be either an AxiSEM_Client object or a GreensTensorList object")
         if isinstance(db, AxiSEM_Client) and (process is None or wavelet is None):
             raise ValueError("process_function and wavelet must be specified if database is an AxiSEM_Client")
+
+    def _check_Solve_inputs(self, data_list, stations, misfit_list, process_list, db_or_greens_list, max_iter=100, wavelet=None, plot_interval=10, iter_count=0, **kwargs):
+        """
+        Checks the validity of input arguments for the Solve method.
         
+        Raises
+        ------
+        ValueError : If any of the inputs are invalid.
+        """
+
+        if not isinstance(data_list, list):
+            if isinstance(data_list, Dataset):
+                data_list = [data_list]
+            else:
+                raise ValueError("`data_list` should be a list of mtuq Dataset or an array containing polarities.")
+        if not isinstance(stations, list):
+            raise ValueError("`stations` should be a list of mtuq Station objects.")
+        if not isinstance(misfit_list, list):
+            if isinstance(misfit_list, PolarityMisfit) or isinstance(misfit_list, Misfit):
+                misfit_list = [misfit_list]
+            else:
+                raise ValueError("`misfit_list` should be a list of mtuq Misfit objects.")
+        if not isinstance(process_list, list):
+            if isinstance(process_list, ProcessData):
+                process_list = [process_list]
+            else:
+                raise ValueError("`process_list` should be a list of mtuq ProcessData objects.")
+        if not isinstance(db_or_greens_list, list):
+            if isinstance(db_or_greens_list, AxiSEM_Client) or isinstance(db_or_greens_list, GreensTensorList):
+                db_or_greens_list = [db_or_greens_list]
+            else:
+                raise ValueError("`db_or_greens_list` should be a list of either mtuq AxiSEM_Client or GreensTensorList objects.")
+        if not isinstance(max_iter, int):
+            raise ValueError("`max_iter` should be an integer.")
+        if any(isinstance(db, AxiSEM_Client) for db in db_or_greens_list) and wavelet is None:
+            raise ValueError("wavelet must be specified if database is an AxiSEM_Client")
+        if not isinstance(plot_interval, int):
+            raise ValueError("`plot_interval` should be an integer.")
+        if iter_count is not None and not isinstance(iter_count, int):
+            raise ValueError("`iter_count` should be an integer or None.")            
+
     def _get_data_norm(self, data, misfit):
         """
         Compute the norm of the data using the calculate_norm_data function.
