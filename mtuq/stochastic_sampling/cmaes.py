@@ -265,7 +265,7 @@ class CMA_ES(object):
                 # Broadcast the gathered values and concatenate to return across processes.
                 self.misfit_val = self.comm.bcast(self.misfit_val, root=0)
                 self.misfit_val = np.asarray(np.concatenate(self.misfit_val)).T
-                self._misfit_holder += self.misfit_val.T
+                # self._misfit_holder += self.misfit_val.T
                 return self.misfit_val.T
             # If one of the three is present, create a list of origins (one for each mutant), and load the corresponding local greens functions.
             else:
@@ -312,7 +312,7 @@ class CMA_ES(object):
                 # Broadcast the gathered values and concatenate to return across processes.
                 self.misfit_val = self.comm.bcast(self.misfit_val, root=0)
                 self.misfit_val = np.asarray(np.concatenate(self.misfit_val))
-                self._misfit_holder += self.misfit_val
+                # self._misfit_holder += self.misfit_val
                 return self.misfit_val
             
         elif mode == 'greens':
@@ -333,7 +333,7 @@ class CMA_ES(object):
                 # Broadcast the gathered values and concatenate to return across processes.
                 self.misfit_val = self.comm.bcast(self.misfit_val, root=0)
                 self.misfit_val = np.asarray(np.concatenate(self.misfit_val)).T
-                self._misfit_holder += self.misfit_val.T
+                # self._misfit_holder += self.misfit_val.T
                 return self.misfit_val.T
             # If one of the three is present, issue a warning and break.
             else:
@@ -341,7 +341,7 @@ class CMA_ES(object):
                     print('WARNING: Greens mode is not compatible with latitude, longitude or depth parameters. Consider using a local Axisem database instead.')
                 return None
     # Gather the mutants from each process and concatenate them into a single array.
-    def gather_mutants(self, verbose=True):
+    def gather_mutants(self, verbose=False):
         '''
         gather_mutants method
 
@@ -659,7 +659,7 @@ class CMA_ES(object):
             )
             return(MTUQDataFrame(da))
 
-    def Solve(self, data_list, stations, misfit_list, process_list, db_or_greens_list, max_iter=100, wavelet=None, plot_interval=10, iter_count=0, **kwargs):
+    def Solve(self, data_list, stations, misfit_list, process_list, db_or_greens_list, max_iter=100, wavelet=None, plot_interval=10, iter_count=0, misfit_weights=None, **kwargs):
         """
         Solves for the best-fitting source model using the CMA-ES algorithm. This is the master method used in inversions. 
 
@@ -687,6 +687,8 @@ class CMA_ES(object):
             Current iteration count, should be useful for resuming. Default is 0.
         src_type : str, optional
             Type of source model, one of ['full', 'deviatoric', 'dc']. Default is full.
+        misfit_weights : list, optional
+            List of misfit weights. Default is None for equal weights.
         **kwargs
             Additional keyword arguments passed to eval_fitness method.
 
@@ -702,6 +704,20 @@ class CMA_ES(object):
         if self.rank == 0:
             # Check Solve inputs
             self._check_Solve_inputs(data_list, stations, misfit_list, process_list, db_or_greens_list, max_iter, wavelet, plot_interval, iter_count)
+
+
+        # Handling of the misfit weights. If not provided, equal weights are used, otherwise the weights are used to derive percentages.
+        if misfit_weights is None:
+            misfit_weights = [1.0] * len(data_list)
+        elif len(misfit_weights) != len(data_list):
+            raise ValueError("Length of misfit_weights must match the length of data_list.")
+
+        total_weight = sum(misfit_weights)
+        if total_weight == 0:
+            raise ValueError("Sum of weights cannot be zero.")
+
+        misfit_weights = [w/total_weight for w in misfit_weights]
+
 
         for i in range(max_iter):
             if self.rank == 0:
@@ -725,24 +741,26 @@ class CMA_ES(object):
                     misfit_values = self.eval_fitness(current_data, stations, current_misfit, greens,  **kwargs)
 
                 norm = self._get_data_norm(current_data, current_misfit)
-                        
+                
                 misfit_values = misfit_values/norm
-
+                self._misfit_holder += misfit_values
                 misfits.append(misfit_values)
 
                 # # Print the local lists on each process:
                 # print('Misfit on process %d: %s' % (self.rank, str(misfit_values)))
 
             self.gather_mutants()
-            self.fitness_sort(sum(misfits)/len(misfits))
+            # self.fitness_sort(sum(misfits)/len(misfits))
+            weighted_misfits = [w * m for w, m in zip(misfit_weights, misfits)]
+            self.fitness_sort(sum(weighted_misfits)/len(misfits))
             self.update_mean()
             self.update_step_size()
             self.update_covariance()
 
             if i == 0 or i % plot_interval == 0 or i == max_iter - 1:
-                self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, db_or_greens_list)
-                if self.mode in ['mt', 'mt-dc', 'mt-dev']:
-                    if self.rank == 0:
+                if self.rank == 0:
+                    self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, db_or_greens_list)
+                    if self.mode in ['mt', 'mt-dc', 'mt-dev']:
                         print('Plotting results for iteration %d\n' % (i + iter_count))
                         result = self.mutants_logger_list
                         plot_combined('combined.png', result, colormap='viridis')
