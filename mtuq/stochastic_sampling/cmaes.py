@@ -705,7 +705,6 @@ class CMA_ES(object):
             # Check Solve inputs
             self._check_Solve_inputs(data_list, stations, misfit_list, process_list, db_or_greens_list, max_iter, wavelet, plot_interval, iter_count)
 
-
         # Handling of the misfit weights. If not provided, equal weights are used, otherwise the weights are used to derive percentages.
         if misfit_weights is None:
             misfit_weights = [1.0] * len(data_list)
@@ -742,17 +741,18 @@ class CMA_ES(object):
 
                 norm = self._get_data_norm(current_data, current_misfit)
                 
-                misfit_values = misfit_values/norm
-                self._misfit_holder += misfit_values
+                misfit_values = misfit_values/norm                    
+                # self._misfit_holder += misfit_values
                 misfits.append(misfit_values)
 
                 # # Print the local lists on each process:
                 # print('Misfit on process %d: %s' % (self.rank, str(misfit_values)))
 
-            self.gather_mutants()
-            # self.fitness_sort(sum(misfits)/len(misfits))
             weighted_misfits = [w * m for w, m in zip(misfit_weights, misfits)]
-            self.fitness_sort(sum(weighted_misfits)/len(misfits))
+            total_missfit = sum(weighted_misfits)/len(misfits)
+            self._misfit_holder += total_missfit
+            self.gather_mutants()
+            self.fitness_sort(total_missfit)
             self.update_mean()
             self.update_step_size()
             self.update_covariance()
@@ -760,10 +760,20 @@ class CMA_ES(object):
             if i == 0 or i % plot_interval == 0 or i == max_iter - 1:
                 if self.rank == 0:
                     self.plot_mean_waveforms(data_list, process_list, misfit_list, stations, db_or_greens_list)
-                    if self.mode in ['mt', 'mt-dc', 'mt-dev']:
+                    if self.mode in ['mt', 'mt_dc', 'mt_dev']:
                         print('Plotting results for iteration %d\n' % (i + iter_count))
                         result = self.mutants_logger_list
-                        plot_combined('combined.png', result, colormap='viridis')
+
+                        # Handling the mean solution
+                        if self.mode == 'mt':
+                            V,W = self._datalogger(mean=True)['v'], self._datalogger(mean=True)['w']
+                        elif self.mode == 'mt_dev':
+                            V = self._datalogger(mean=True)['v']
+                            W = 0
+                        elif self.mode == 'mt_dc':
+                            V = W = 0
+
+                        plot_combined('combined.png', result, colormap='viridis', best_vw = (V,W))
 
     def plot_mean_waveforms(self, data_list, process_list, misfit_list, stations, db_or_greens_list):
         """
@@ -800,7 +810,7 @@ class CMA_ES(object):
         }
 
         if self.mode not in modes:
-            raise ValueError("Invalid mode. Supported modes: 'mt', 'mt_dev', 'mt_dc', 'force'")
+            raise ValueError("Invalid mode. Supported modes for the plotting functions in the Solve method: 'mt', 'mt_dev', 'mt_dc', 'force'")
 
         mode_dimensions = modes[self.mode]
 
