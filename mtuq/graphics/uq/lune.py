@@ -236,10 +236,19 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
     if not issubclass(type(da), DataArray):
         raise Exception()
 
-    best_vw = None
     lune_array = None
 
-    if show_best or show_mt:
+    # Workaround for CMA-ES plotting function:
+    # If not best_vw in **kwargs, then we define it as None. 
+    # If in **kwargs, allocate best_vw variable with its value and remove it from **kwargs. 
+    # Print a warning when best_vw is provided in **kwargs as it is not the default behavior.
+    best_vw = kwargs.get('best_vw', None)
+    if best_vw is not None:
+        del kwargs['best_vw']
+        warn("best_vw is not the default behavior. If you want to use it, please use the show_best keyword argument.")
+
+    if (show_best or show_mt) and best_vw is None:
+        print("Using attribute values for vw")
         if 'best_vw' in da.attrs:
             best_vw = da.attrs['best_vw']
         else:
