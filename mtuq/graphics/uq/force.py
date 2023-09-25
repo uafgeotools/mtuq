@@ -363,9 +363,12 @@ def _bin(df, handle, npts_phi=60, npts_h=30):
                 print("Encountered empty bin\n"
                       "phi: %f, %f\n"
                       "h: %f, %f\n" %
-                      (phi[_j], phi[_j+1], h[_i], h[_i+1]) )
+                      (phi[_j], phi[_j+1], h[_i], h[_i+1]))
 
-            binned[_i, _j] = handle(subset[0])
+            try :
+                binned[_i, _j] = handle(subset[0])
+            except:
+                binned[_i, _j] = handle(subset)[-1]
 
     return DataArray(
         dims=('phi', 'h'),
