@@ -208,9 +208,37 @@ def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
 
     _plot_lune(filename, marginals, **kwargs)
 
+def plot_polarity_lune(filename, ds, **kwargs):
+    """ Plots best-fitting polarity values on eigenvalue lune (only implemented using the matplotlib backend)
+
+    .. rubric :: Required input arguments
+
+    ``filename`` (`str`):
+    Name of output image file
+
+    ``ds`` (`DataArray` or `DataFrame`):
+    Data structure containing moment tensors and corresponding polarity misfit values
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_lune.html>`_
+    """
+
+    _check(ds)
+    ds = ds.copy()
+
+    if issubclass(type(ds), DataArray):
+        polarities = _misfit_vw_regular(ds)
+
+    elif issubclass(type(ds), DataFrame):
+        raise NotImplementedError
+
+    _plot_lune(filename, polarities, backend=_plot_lune_matplotlib, plot_type='scatter', **kwargs)
 
 def _plot_lune(filename, da, show_best=True, show_mt=False,
-    show_tradeoffs=False, backend=_plot_lune_gmt, **kwargs):
+    show_tradeoffs=False, backend=_plot_lune_gmt, plot_type='contour', **kwargs):
 
     """ Plots DataArray values on the eigenvalue lune (requires GMT)
 
@@ -273,6 +301,7 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
         da.values.transpose(),
         best_vw=best_vw,
         lune_array=lune_array,
+        plot_type=plot_type,
         **kwargs)
 
 

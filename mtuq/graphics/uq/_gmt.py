@@ -14,7 +14,7 @@ from six import string_types
 
 
 def _plot_lune_gmt(filename, lon, lat, values, best_vw=None, lune_array=None,
-    **kwargs):
+    plot_type='contour', **kwargs):
 
     if _nothing_to_plot(values):
         return

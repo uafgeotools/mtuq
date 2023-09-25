@@ -59,7 +59,7 @@ def plot_combined(filename, ds, **kwargs):
     # Create a temporary file for the lune plot
     with tempfile.NamedTemporaryFile(suffix=".png") as tmpfile_lune:
         # Generate the lune plot
-        _plot_lune(tmpfile_lune.name, misfit_lune, backend=_plot_lune_matplotlib, **kwargs)
+        _plot_lune(tmpfile_lune.name, misfit_lune, backend=_plot_lune_matplotlib, plot_type='colormesh', **kwargs)
 
         # Load the lune plot into an image
         img_lune = plt.imread(tmpfile_lune.name)

@@ -8,42 +8,56 @@ from xarray import DataArray
 from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
 from mtuq.graphics.uq._gmt import _parse_vw, _parse_lune_array
-import matplotlib.gridspec as gridspec
+from matplotlib.colors import BoundaryNorm
 
 # Define a pure matplotlib backend as an alternative to GMT
 # It should behave as similarly as possible to the GMT backend 
 # and take the same input arguments
 def _plot_lune_matplotlib(filename, longitude, latitude, values, 
-    best_vw=None, lune_array=None, colormap='viridis', title=None, **kwargs):
+    best_vw=None, lune_array=None, colormap='viridis', title=None, plot_type='contour', **kwargs):
 
-    """ Plots DataArray values on the eigenvalue lune (requires GMT)
+    """ Plots DataArray values on the eigenvalue lune (requires matplotlib)
 
     .. rubric :: Keyword arguments
+    filename : str
+        Name of output image file
 
-    ``colormap`` (`str`):
-    Color palette used for plotting values
-    (choose from GMT or MTUQ built-ins)
+    longitude : array_like (xarray.DataArray or numpy.ndarray)
+        Array of longitudes
 
-    ``show_best`` (`bool`):
-    Show where best-fitting moment tensor falls on lune
+    latitude : array_like (xarray.DataArray or numpy.ndarray)
+        Array of latitudes
 
-    ``show_tradeoffs`` (`bool`):
-    Show how focal mechanism trades off with lune coordinates
+    values : array_like (xarray.DataArray or numpy.ndarray)
+        Array of values
 
-    ``title`` (`str`):
-    Optional figure title
+    best_vw : list
+        List of two floats representing the best-fitting eigenvalues
 
-    ``backend`` (`function`):
-    Choose from `_plot_lune_gmt` (default) or user-supplied function
+    lune_array : array_like (xarray.DataArray or numpy.ndarray)
+        Used to plot beachball tradeoffs on the lune
+
+    colormap : str
+        Name of colormap
+
+    title : str
+        Title of plot
+
+    plot_type : str
+        Type of plot. Can be either contour, colormesh or scatter
 
     """
 
-    # Check if contour is in kwargs
-    if 'contour' in kwargs:
-        contour = kwargs['contour']
-    else:
-        contour = False
+    # Check plot_type. Can be either contour or colormesh
+    if plot_type not in ['contour', 'colormesh', 'scatter']:
+        raise Exception('plot_type must be either contour or colormesh')
 
+
+    # # Check 
+    # if 'contour' in kwargs:
+    #     contour = kwargs['contour']
+    # else:
+    #     contour = False
 
     fig, ax = _generate_lune()
 
@@ -54,13 +68,19 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
 
     # Plot data
     # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
-    if not contour:
+    if plot_type == 'colormesh':
         vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
         im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
-    else:
+    elif plot_type == 'contour':
         # Plot using contourf
-        levels = 20 if contour is True else int(contour)
+        levels = 20
         im = ax.contourf(x, y, values, cmap=colormap, levels=levels, zorder=10)
+    elif plot_type == 'scatter':
+        # Prepare colormap
+        boundaries = np.linspace(0, 5, 6)
+        norm = BoundaryNorm(boundaries, ncolors=256, clip=False)
+        # Plot using scatter
+        im = ax.scatter(x, y, c=values, cmap='Spectral_r', norm=norm, zorder=100)
 
 
     # Plot best-fitting moment tensor
@@ -68,7 +88,8 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
         best_vw = _parse_vw(best_vw)
         gamma, delta = _hammer_projection(
             best_vw[0], best_vw[1])
-        _add_marker(ax, (gamma, delta))
+        if plot_type not in ['scatter']:
+            _add_marker(ax, (gamma, delta))
 
     # Plot tradeoffs
     if lune_array is not None:
@@ -84,8 +105,14 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     ax.set_xlabel('Gamma')
     ax.set_ylabel('Delta')
 
-    cb = pyplot.colorbar(im, location='bottom', ax=ax, pad=0.001, fraction=0.02)
-    cb.set_label('l2-misfit')
+    # if plot type is colormesh or contour:
+    if plot_type in ['colormesh', 'contour']:
+        cb = pyplot.colorbar(im, location='bottom', ax=ax, pad=0.001, fraction=0.02)
+        cb.set_label('l2-misfit')
+    elif plot_type == 'scatter':
+        cb = pyplot.colorbar(im, location='bottom', ax=ax, pad=0.001, fraction=0.02, ticks=boundaries, extend='max')
+        cb.set_label('Mismatching polarities')
+
     # Set title
     if title is not None:
         ax.set_title(title)
