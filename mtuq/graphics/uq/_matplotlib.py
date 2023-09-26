@@ -7,8 +7,14 @@ from xarray import DataArray
 
 from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
-from mtuq.graphics.uq._gmt import _parse_vw, _parse_lune_array
+from mtuq.graphics.uq._gmt import _parse_vw, _parse_lune_array, _parse_force
 from matplotlib.colors import BoundaryNorm
+from matplotlib import ticker
+from mtuq.util.math import wrap_180
+from scipy import interpolate
+
+def cbformat(st, pos):
+    return '{:.1E}'.format(st)
 
 # Define a pure matplotlib backend as an alternative to GMT
 # It should behave as similarly as possible to the GMT backend 
@@ -51,13 +57,6 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     # Check plot_type. Can be either contour or colormesh
     if plot_type not in ['contour', 'colormesh', 'scatter']:
         raise Exception('plot_type must be either contour or colormesh')
-
-
-    # # Check 
-    # if 'contour' in kwargs:
-    #     contour = kwargs['contour']
-    # else:
-    #     contour = False
 
     fig, ax = _generate_lune()
 
@@ -122,6 +121,97 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     pyplot.savefig(filename, dpi=300, bbox_inches='tight')
     pyplot.close()
 
+def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='viridis', title=None, plot_type='contour', **kwargs):
+    """ Plots DataArray values on the force sphere (requires matplotlib)
+
+    .. rubric :: Keyword arguments
+    filename : str
+        Name of output image file
+
+    phi : array_like (xarray.DataArray or numpy.ndarray)
+        Array of longitudes centered eastward, increasing anticlockwise (E = O°, N=90°, W=180°, S=270°)
+
+    h : array_like (xarray.DataArray or numpy.ndarray)
+        Array of colatitudes (from -1 to 1)
+
+    values : array_like (xarray.DataArray or numpy.ndarray)
+        Array of values
+
+    best_force : list
+        List of two floats representing the best-fitting force direction
+
+    colormap : str
+        Name of colormap
+
+    title : str
+        Title of plot
+
+    plot_type : str
+        Type of plot. Can be either contour, colormesh or scatter
+
+    """
+
+    # Check plot_type. Can be either contour or colormesh
+    if plot_type not in ['contour', 'colormesh', 'scatter']:
+        raise Exception('plot_type must be either contour or colormesh')
+
+    fig, ax = _generate_sphere()
+
+    # Transform data to Hammer projection
+    # Create a grid for pcollormesh from longitude and latitude arrays
+    latitude = np.degrees(np.pi/2 - np.arccos(h))
+    longitude = wrap_180(phi + 90)
+    x, y = np.meshgrid(longitude, latitude)
+    x, y = _hammer_projection(x, y)
+
+    if plot_type == 'colormesh':
+        vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
+        im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
+    elif plot_type == 'contour':
+        # Plot using contourf
+        levels = 20
+        im = ax.tricontourf(x.flatten(), y.flatten(), values.flatten(), cmap=colormap, levels=levels, zorder=10)
+    elif plot_type == 'scatter':
+        # Prepare colormap
+        boundaries = np.linspace(0, 5, 6)
+        norm = BoundaryNorm(boundaries, ncolors=256, clip=False)
+        # Plot using scatter
+        im = ax.scatter(x, y, c=values, cmap='Spectral_r', norm=norm, zorder=100)
+
+    # Plot best-fitting force orientation
+    if best_force is not None:
+        best_force = _parse_force(best_force)
+        x_best, y_best = _hammer_projection(
+            best_force[0], best_force[1])
+        if plot_type not in ['scatter']:
+            _add_marker(ax, (x_best, y_best))
+
+    # Set axis limits
+    ax.set_xlim(-180, 180)
+    ax.set_ylim(-90, 90)
+
+    # Set axis labels
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+
+    # if plot type is colormesh or contour:
+    if plot_type in ['colormesh', 'contour']:
+        cbmin, cbmax = im.get_clim()
+        ticks = np.linspace(cbmin, cbmax, 3)
+        cb = pyplot.colorbar(im, ticks=ticks, location='bottom', ax=ax, pad=0.001, fraction=0.02)
+        cb.set_label('l2-misfit')
+    elif plot_type == 'scatter':
+        cb = pyplot.colorbar(im, location='bottom', ax=ax, pad=0.001, fraction=0.02, ticks=boundaries, extend='max')
+        cb.set_label('Mismatching polarities')
+
+    # Set title
+    if title is not None:
+        ax.set_title(title)
+        
+    # Save figure
+    pyplot.tight_layout()
+    pyplot.savefig(filename, dpi=300, bbox_inches='tight')
+    pyplot.close()
 
 
 def _plot_dc_matplotlib(filename, coords, 
@@ -267,7 +357,6 @@ def _plot_omega_matplotlib(filename, omega, values,
     pyplot.savefig(filename)
     pyplot.close()
 
-
 #
 # utility functions
 #
@@ -389,6 +478,36 @@ def _generate_lune(ax=None):
 
     return fig, ax
 
+def _generate_sphere(ax=None):
+    if ax is None:
+        fig = pyplot.figure(figsize=(8, 4))
+        ax = fig.add_subplot(111)
+        ax.set_axis_off()
+    else:
+        fig = ax.figure
+
+    # Generate curved gridlines
+    num_lines = 7
+    lon_lines = np.linspace(-180, 180, num_lines * 2 + 1)
+    lat_lines = np.linspace(-90, 90, num_lines*2+1)
+
+    for lon_line in lon_lines:
+        lat_line = np.linspace(-90, 90, 1000)
+        x_line, y_line = _hammer_projection(np.full_like(lat_line, lon_line), lat_line)
+        ax.plot(x_line, y_line, 'k--', linewidth=0.5, alpha=0.5)
+
+    for lat_line in lat_lines:
+        lon_line = np.linspace(-185, 185, 1000)
+        x_line, y_line = _hammer_projection(lon_line, np.full_like(lon_line, lat_line))
+        ax.plot(x_line, y_line, 'k--', linewidth=0.5, alpha=0.5)
+
+    _plot_sphere_arcs(ax, _compute_sphere_arcs())
+    _plot_directions_text(ax)
+    # Transform data to Hammer projection
+
+    return fig, ax
+
+
 def _compute_center_of_minimum_distance(lon_a, lat_a, lon_b, lat_b, iterations):
     if iterations == 0:
         return [(lon_a, lat_a), (lon_b, lat_b)]
@@ -436,11 +555,39 @@ def _compute_lune_arcs():
 ]
     arcs = []
     for arc in arc_points:
-        arcs.append(_compute_center_of_minimum_distance(arc[0], arc[1], arc[2], arc[3], 3))
+        arcs.append(_compute_center_of_minimum_distance(arc[0], arc[1], arc[2], arc[3], 6))
     return arcs
 
 def _plot_lune_arcs(axis, arcs):
     for arc in arcs:
         lon = [x[0] for x in arc]
         lat = [x[1] for x in arc]
-        axis.plot(*_hammer_projection(lon, lat), color='lightgrey', linewidth=1, zorder=100)
+        axis.plot(*_hammer_projection(lon, lat), color='silver', linewidth=1.5, zorder=100)
+
+def _compute_sphere_arcs():
+    arc_points = [
+    [0, -90, 0, -10],
+    [0, 10, 0, 90],
+    [-90, -90, -90, -10],
+    [-90, 10, -90, 90],
+    [90, -90, 90, -10],
+    [90, 10, 90, 90],
+    [-180,-90,-180, 90],
+    [180,-90,180, 90]
+    ]
+
+    arcs = []
+    for arc in arc_points:
+        arcs.append(_compute_center_of_minimum_distance(arc[0], arc[1], arc[2], arc[3], 6))
+    return arcs
+
+def _plot_sphere_arcs(axis, arcs):
+    for arc in arcs:
+        lon = [x[0] for x in arc]
+        lat = [x[1] for x in arc]
+        axis.plot(*_hammer_projection(lon, lat), color='silver', linewidth=1.5, zorder=100)
+        
+def _plot_directions_text(axis):
+    axis.text(0,0,'S', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
+    axis.text(88,0,'E', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
+    axis.text(-88,0,'W', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
