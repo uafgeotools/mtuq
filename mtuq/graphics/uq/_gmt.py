@@ -14,7 +14,7 @@ from six import string_types
 
 
 def _plot_lune_gmt(filename, lon, lat, values, best_vw=None, lune_array=None,
-    plot_type='contour', **kwargs):
+    **kwargs):
 
     if _nothing_to_plot(values):
         return
@@ -39,7 +39,7 @@ def _plot_vw_gmt(filename, lon, lat, values, best_vw=None, lune_array=None,
         marker_coords=best_vw, **kwargs)
 
 
-def _plot_force_gmt(filename, phi, h, values, best_force=None, plot_type='contour', **kwargs):
+def _plot_force_gmt(filename, phi, h, values, best_force=None, **kwargs):
 
     if _nothing_to_plot(values):
         return

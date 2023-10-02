@@ -238,7 +238,7 @@ def plot_polarity_lune(filename, ds, **kwargs):
     _plot_lune(filename, polarities, backend=_plot_lune_matplotlib, plot_type='scatter', **kwargs)
 
 def _plot_lune(filename, da, show_best=True, show_mt=False,
-    show_tradeoffs=False, backend=_plot_lune_gmt, plot_type='contour', **kwargs):
+    show_tradeoffs=False, backend=_plot_lune_gmt, **kwargs):
 
     """ Plots DataArray values on the eigenvalue lune (requires GMT)
 
@@ -301,7 +301,6 @@ def _plot_lune(filename, da, show_best=True, show_mt=False,
         da.values.transpose(),
         best_vw=best_vw,
         lune_array=lune_array,
-        plot_type=plot_type,
         **kwargs)
 
 

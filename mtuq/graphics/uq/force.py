@@ -164,7 +164,7 @@ def plot_magnitude_tradeoffs_force(filename, ds, **kwargs):
 
 
 def _plot_force(filename, da, show_best=True, show_tradeoffs=False, 
-    backend=_plot_force_gmt, plot_type='contour', **kwargs):
+    backend=_plot_force_gmt, **kwargs):
 
     """ Plots values with respect to force orientation (requires GMT)
 
@@ -200,7 +200,6 @@ def _plot_force(filename, da, show_best=True, show_tradeoffs=False,
         da.coords['h'], 
         da.values.transpose(),
         best_force=best_force,
-        plot_type=plot_type,
         **kwargs)
 
 #
