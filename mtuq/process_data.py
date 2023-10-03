@@ -63,20 +63,20 @@ class ProcessData(object):
     ``pick_type`` (`str`)
 
     - ``'taup'``
-      calculates P, S arrival times from Tau-P model
+      calculates P, S travel times from Tau-P model
       (uses `obspy.taup.TauPyModel.get_arrival_times`)
 
     - ``'FK_metadata'``
-      reads P, S arrival times from FK metadata
+      reads P, S travel times from FK metadata
 
     - ``'SAC_metadata'``
-      reads P, S arrival times from SAC metadata fields `t5`, `t6`
+      reads P, S travel times from SAC metadata fields `t5`, `t6`
 
     - ``'user_supplied'``
-      reads P, S arrival times from columns 8, 10 of `capuaf_file`
+      reads P, S travel times from columns 8, 10 of `capuaf_file`
 
     - ``None``
-      no phase picks will be calculated
+      no P,S travel times will be calculated
 
 
     ``window_type`` (`str`)
@@ -121,6 +121,9 @@ class ProcessData(object):
     ``freq`` (`float`)
     Required for `filter_type=lowpass` or `filter_type=highpass`
 
+    ``window_length`` (`float`)
+    Window length in seconds
+
     ``group_velocity`` (`float`)
     Group velocity in m/s, required for `window_type=group_velocity`
 
@@ -134,11 +137,8 @@ class ProcessData(object):
     ``v_max`` (`float`)
     Maximum velocity in m/s, required for `window_type=min_max`
 
-    ``window_length`` (`float`)
-    window length in seconds
-
     ``padding`` (`list`)
-    amount by which Green's functions will be padded relative to data
+    Amount by which Green's functions will be padded relative to data
 
     ``taup_model`` (`str`)
     Name of built-in ObsPy TauP model or path to custom ObsPy TauP model,
