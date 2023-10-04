@@ -154,7 +154,8 @@ class PolarityMisfit(object):
             _calculate = _polarities_mt
 
         elif type(sources) == mtuq.Force:
-            raise NotImplementedError
+            sources = sources.as_vector().reshape((1,3))
+            _calculate = _polarities_force
 
         elif type(sources) == np.ndarray:
             # Check if sources is a 2D array with shape (n,6)
@@ -168,7 +169,8 @@ class PolarityMisfit(object):
             _calculate = _polarities_mt
 
         elif _type(sources.dims) == 'Force':
-            raise NotImplementedError
+            sources = _to_array(sources)
+            _calculate = _polarities_force
                 
         else:
             raise TypeError
@@ -307,7 +309,7 @@ def _polarities_mt(mt_array, takeoff, azimuth):
            2*(mt_array[:, 3]*drc[:, 0]*drc[:, 2] -
               mt_array[:, 4]*drc[:, 1]*drc[:, 2] -
               mt_array[:, 5]*drc[:, 0]*drc[:, 1])
-
+        
         polarities[cth > 0, _i] = +1
         polarities[cth < 0, _i] = -1
 
@@ -315,8 +317,50 @@ def _polarities_mt(mt_array, takeoff, azimuth):
 
 
 def _polarities_force(force_array, takeoff_array, azimuth_array):
-    raise NotImplementedError
+    """
+    Calculate the first motion polarity at a receiver location.
+    
+    :param force_array: Force vector array (n,3)
+    :param takeoff_array: Takeoff angle array (n)
+    :param azimuth_array: Azimuth angle array (n)
 
+    :returns: Polarity array (n)
+    """
+
+    n1, n2 = force_array.shape
+    if n2 != 3:
+        raise Exception('Inconsistent dimensions')
+    
+    n3, n4 = len(takeoff_array), len(azimuth_array)
+    if n3 != n4:
+        raise Exception('Inconsistent dimensions')
+    
+    # prepare arrays
+    polarities = np.zeros((n1, n3))
+    drc = np.empty((n1, 3))
+    takeoff_array = np.deg2rad(takeoff_array)
+    azimuth_array = np.deg2rad(azimuth_array)
+
+    for _i, angles in enumerate(zip(takeoff_array, azimuth_array)):
+        sth = np.sin(angles[0])
+        cth = np.cos(angles[0])
+        sphi = np.sin(angles[1])
+        cphi = np.cos(angles[1])
+
+        drc[:, 0] = -cth  # Negative as the angle is measured from the downward direction
+        drc[:, 1] = -sth * cphi  # South component
+        drc[:, 2] = sth * sphi    # East component
+
+
+        # Calculate the radial component of the force
+        f_R = np.einsum('ij,ij->i', force_array, drc) # (Equivalent to f_R = np.sum(force_array * drc, axis=1))
+        
+        polarities[f_R > 0, _i] = +1
+        polarities[f_R < 0, _i] = -1
+
+    return polarities
+
+    
 
 def _get_azimuths(greens):
     return np.array([stream.azimuth for stream in greens])
@@ -357,4 +401,38 @@ def _check(greens, method):
     #    print('  Polarities are from: %s' % method)
     #    print()
 
+def _test_force_polarities():
+    """
+    Test function for _polarities_force
 
+    In the following, we test for:
+    f[-1,0,0], azimuth = 0, takeoff = 0: Downward force, directly downward ray path should give positive polarity.
+    f[1,0,0], azimuth = 0, takeoff = 0: Upward force, directly downward ray path should give negative polarity.
+    f[0,1,0], azimuth = 0, takeoff = 90: Southward force, horizontal northward ray path should give negative polarity.
+    f[0,-1,0], azimuth = 0, takeoff = 90: Northward force, horizontal northward ray path should give positive polarity.
+    f[0,0,1], azimuth = 90, takeoff = 90: Eastward force, horizontal eastward ray path should give positive polarity.
+    f[0,0,-1], azimuth = 90, takeoff = 90: Westward force, horizontal eastward ray path should give negative polarity.
+
+    :returns: 0 if test passes, 1 if test fails
+    """    
+    # Test cases
+    test_cases = [
+        (np.array([[-1, 0, 0]]), [0], [0], 1),
+        (np.array([[1, 0, 0]]), [0], [0], -1),
+        (np.array([[0, 1, 0]]), [90], [0], -1),
+        (np.array([[0, -1, 0]]), [90], [0], 1),
+        (np.array([[0, 0, 1]]), [90], [90], 1),
+        (np.array([[0, 0, -1]]), [90], [90], -1),
+    ]
+
+    # Verification
+    for i, (force, takeoff, azimuth, expected) in enumerate(test_cases):
+        polarity = _polarities_force(force, takeoff, azimuth)[0, 0]
+        print(f"Test case {i+1}: Polarity = {polarity}, Expected: {expected}")
+
+        if polarity != expected:
+            print(f"Test case {i+1} failed.")
+            return 1
+    
+    print("All test cases passed.")
+    return 0
