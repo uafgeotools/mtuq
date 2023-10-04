@@ -104,7 +104,7 @@ def plot_waveforms1(filename,
 
         ir += 1
 
-    pyplot.savefig(filename)
+    _save(filename)
     pyplot.close()
 
 
@@ -221,7 +221,7 @@ def plot_waveforms2(filename,
 
         ir += 1
 
-    pyplot.savefig(filename)
+    _save(filename)
     pyplot.close()
 
 
@@ -598,6 +598,10 @@ def _prepare_header(model, solver, source, source_dict, origin, *args):
 
     else:
         raise TypeError
+
+
+def _save(filename):
+    pyplot.savefig(filename, transparent=True)
 
 
 def _get_tag(tags, pattern):
