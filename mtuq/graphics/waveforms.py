@@ -467,9 +467,6 @@ def _plot(axis, dat, syn, label=None):
     axis.plot(t, s[start:stop], 'r', linewidth=1.25, 
         clip_on=False, zorder=10)
 
-    # prevents traces from getting clipped
-    axis.patch.set_alpha(0.)
-
 
 def _add_component_labels1(axes, body_wave_labels=True, surface_wave_labels=True):
     """ Displays component name above each column
@@ -580,6 +577,7 @@ def _hide_axes(axes):
             col.spines['left'].set_visible(False)
             col.get_xaxis().set_ticks([])
             col.get_yaxis().set_ticks([])
+            col.patch.set_visible(False)
 
 
 def _prepare_header(model, solver, source, source_dict, origin, *args):
@@ -601,7 +599,7 @@ def _prepare_header(model, solver, source, source_dict, origin, *args):
 
 
 def _save(filename):
-    pyplot.savefig(filename, transparent=True)
+    pyplot.savefig(filename)
 
 
 def _get_tag(tags, pattern):
