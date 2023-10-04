@@ -162,6 +162,7 @@ def _plot_depth_gmt(filename, depths, values,
 
     data = np.column_stack((depths, values))
     minval, maxval, exp = _parse_limits(data[:,-1])
+    data[:,-1] /= 10.**exp
 
     # write values to be plotted as ASCII table
     _savetxt(ascii_file_1, data)
