@@ -418,22 +418,7 @@ def _plot_ZR(axes, ic, dat, syn, component,
 
     _plot(axis, dat, syn)
 
-    # THIS PART WAS COMMENTED OUT BEFORE THE WORKSHOP FOR A QUICK WORKAROUND
-    # WE NEED A PROPER WAY OF DEALING WITH CUSTOM AMPLITUDE BY ADDING AN OPTION
-    # # normalize amplitudes
-    # if normalize=='trace_amplitude':
-    #     max_trace = _max(dat, syn)
-    #     ylim = [-3*max_trace, +3*max_trace]
-    #     axis.set_ylim(*ylim)
-    # elif normalize=='station_amplitude':
-    #     max_stream = _max(stream_dat, stream_syn)
-    #     ylim = [-3*max_stream, +3*max_stream]
-    #     axis.set_ylim(*ylim)
-    # elif normalize=='maximum_amplitude':
-    #     ylim = [-2*max_amplitude, +2*max_amplitude]
-    #     axis.set_ylim(*ylim)
-
-    # normalize amplitude - using same scaling parameters as surface waves
+    # normalize amplitude
     if normalize=='trace_amplitude':
         max_trace = _max(dat, syn)
         ylim = [-1.5*max_trace, +1.5*max_trace]
@@ -445,6 +430,7 @@ def _plot_ZR(axes, ic, dat, syn, component,
     elif normalize=='maximum_amplitude':
         ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
         axis.set_ylim(*ylim)
+
 
     if trace_label_writer is not None:
         trace_label_writer(axis, dat, syn, total_misfit)
