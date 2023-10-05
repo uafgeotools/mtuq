@@ -40,11 +40,16 @@ Finally, install PyGMT:
 
 .. code::
 
-    conda install pygmt
+    conda install 'pygmt>=0.9'
 
 .. note::
 
-    PyGMT is only used for generating figures. If `conda install pygmt` fails, MTUQ will attempt to fall back to GMT or ObsPy.  We note that some versions of GMT and ObsPy do not plot full moment tensors `correctly <https://github.com/obspy/obspy/issues/2388>`_.
+    PyGMT installation has been finicky at times, so we include it as a separate step after the main env.yaml-based installation. 
+
+
+.. note::
+
+    If PyGMT installation fails, most MTUQ functions will still work, but some plotting functions will fall back to GMT or ObsPy.  We note that some versions of GMT and ObsPy do not plot `full moment tensors <https://github.com/obspy/obspy/issues/2388>`_ correctly.
 
 
 

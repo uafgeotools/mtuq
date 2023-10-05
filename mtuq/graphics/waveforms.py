@@ -104,7 +104,7 @@ def plot_waveforms1(filename,
 
         ir += 1
 
-    pyplot.savefig(filename)
+    _save(filename)
     pyplot.close()
 
 
@@ -221,7 +221,7 @@ def plot_waveforms2(filename,
 
         ir += 1
 
-    pyplot.savefig(filename)
+    _save(filename)
     pyplot.close()
 
 
@@ -418,22 +418,7 @@ def _plot_ZR(axes, ic, dat, syn, component,
 
     _plot(axis, dat, syn)
 
-    # THIS PART WAS COMMENTED OUT BEFORE THE WORKSHOP FOR A QUICK WORKAROUND
-    # WE NEED A PROPER WAY OF DEALING WITH CUSTOM AMPLITUDE BY ADDING AN OPTION
-    # # normalize amplitudes
-    # if normalize=='trace_amplitude':
-    #     max_trace = _max(dat, syn)
-    #     ylim = [-3*max_trace, +3*max_trace]
-    #     axis.set_ylim(*ylim)
-    # elif normalize=='station_amplitude':
-    #     max_stream = _max(stream_dat, stream_syn)
-    #     ylim = [-3*max_stream, +3*max_stream]
-    #     axis.set_ylim(*ylim)
-    # elif normalize=='maximum_amplitude':
-    #     ylim = [-2*max_amplitude, +2*max_amplitude]
-    #     axis.set_ylim(*ylim)
-
-    # normalize amplitude - using same scaling parameters as surface waves
+    # normalize amplitude
     if normalize=='trace_amplitude':
         max_trace = _max(dat, syn)
         ylim = [-1.5*max_trace, +1.5*max_trace]
@@ -445,6 +430,7 @@ def _plot_ZR(axes, ic, dat, syn, component,
     elif normalize=='maximum_amplitude':
         ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
         axis.set_ylim(*ylim)
+
 
     if trace_label_writer is not None:
         trace_label_writer(axis, dat, syn, total_misfit)
@@ -466,9 +452,6 @@ def _plot(axis, dat, syn, label=None):
         clip_on=False, zorder=10)
     axis.plot(t, s[start:stop], 'r', linewidth=1.25, 
         clip_on=False, zorder=10)
-
-    # prevents traces from getting clipped
-    axis.patch.set_alpha(0.)
 
 
 def _add_component_labels1(axes, body_wave_labels=True, surface_wave_labels=True):
@@ -580,6 +563,7 @@ def _hide_axes(axes):
             col.spines['left'].set_visible(False)
             col.get_xaxis().set_ticks([])
             col.get_yaxis().set_ticks([])
+            col.patch.set_visible(False)
 
 
 def _prepare_header(model, solver, source, source_dict, origin, *args):
@@ -598,6 +582,10 @@ def _prepare_header(model, solver, source, source_dict, origin, *args):
 
     else:
         raise TypeError
+
+
+def _save(filename):
+    pyplot.savefig(filename)
 
 
 def _get_tag(tags, pattern):
