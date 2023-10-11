@@ -749,7 +749,7 @@ class CMA_ES(object):
                 # print('Misfit on process %d: %s' % (self.rank, str(misfit_values)))
 
             weighted_misfits = [w * m for w, m in zip(misfit_weights, misfits)]
-            total_missfit = sum(weighted_misfits)/len(misfits)
+            total_missfit = sum(weighted_misfits)
             self._misfit_holder += total_missfit
             self.gather_mutants()
             self.fitness_sort(total_missfit)
