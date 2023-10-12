@@ -83,7 +83,7 @@ if __name__=='__main__':
     data = read(path_data, format='sac',
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity'])
+        tags=['units:m', 'type:velocity'])
 
 
     data.sort_by_distance()
