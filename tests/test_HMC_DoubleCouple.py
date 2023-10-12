@@ -22,7 +22,7 @@ if __name__=='__main__':
     # Carries out Hamiltonian Monte Carlo (HMC) sampling over double couple moment tensors
     #
     # USAGE
-    #   mpirun -n <NPROC> python HMC.DoubleCouple.py
+    #   mpirun -n <NPROC> python test_HMC_DoubleCouple.py
     #
     #
 
