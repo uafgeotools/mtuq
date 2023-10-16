@@ -11,6 +11,8 @@ from mtuq.util import fullpath
 from mtuq.util.cap import parse_station_codes, Trapezoid
 from mtuq.stochastic_sampling import initialize_force
 from mtuq.stochastic_sampling.cmaes import CMA_ES
+from mtuq.graphics import plot_misfit_force
+from mtuq.graphics.uq._matplotlib import _plot_force_matplotlib
 
 
 
@@ -200,46 +202,57 @@ if __name__=='__main__':
     elif mode == 'greens':
         parameter_list = initialize_force(F0_range=[1e10, 1e16])
 
-    DATA = [data_bw, data_sw]
-    PROCESS = [process_bw, process_sw]
-    MISFIT = [misfit_bw, misfit_sw]
+    DATA = [data_bw, data_sw]  # add more as needed
+    MISFIT = [misfit_bw, misfit_sw]  # add more as needed
+    PROCESS = [process_bw, process_sw]  # add more as needed
+    GREENS = [greens_bw, greens_sw] if mode == 'greens' else None  # add more as needed
 
     popsize = 24 # -- CMA-ES population size (you can play with this value)
     CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize)
     CMA.sigma = 1 # -- CMA-ES step size, defined as 1 standard deviation of the initial parameter distribution (you can play with this value)
     iter = 120
-    for i in range(iter):
-        # ------------------
-        # At the moment the full CMA-ES algorithm is executed in this loop.
-        # In the future, we will add a 'Solve' method to the CMA_ES class
-        # that will perform the optimisation in a single call given some 
-        # input parameters.
-        # 
-        # Algorithm is described in:
-        # Hansen, N. (2016) The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772
-        # ------------------
-        if comm.rank==0:
-            print('Iteration %d\n' % i)
-        CMA.draw_mutants()
-        if mode == 'database':
-            mis_bw = CMA.eval_fitness(data_bw, stations, misfit_bw, db, origin,  process_bw, wavelet, verbose=False)
-            mis_sw = CMA.eval_fitness(data_sw, stations, misfit_sw, db, origin,  process_sw, wavelet, verbose=False)
-        elif mode == 'greens':
-            mis_bw = CMA.eval_fitness(data_bw, stations, misfit_bw, greens_bw)
-            mis_sw = CMA.eval_fitness(data_sw, stations, misfit_sw, greens_sw)
-        CMA.gather_mutants()
-        CMA.fitness_sort(mis_bw+mis_sw)
-        CMA.update_mean()
-        CMA.update_step_size()
-        CMA.update_covariance()
 
-        # if i = 0 or multiple of 10 and Last iteration:
-        if i == 0 or i % 10 == 0 or i == iter-1:
-            if mode == 'database':
-                CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
-            elif mode == 'greens':
-                CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
+    if mode == 'database':
+        CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10)
+    elif mode == 'greens':
+        CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, misfit_weights=[1., 10.])
+
+    result = CMA.mutants_logger_list # -- This is the list of mutants (i.e. the population) at each iteration
+
+    plot_misfit_force('misfit_force.png', result, backend=_plot_force_matplotlib)
+
+    # for i in range(iter):
+    #     # ------------------
+    #     # At the moment the full CMA-ES algorithm is executed in this loop.
+    #     # In the future, we will add a 'Solve' method to the CMA_ES class
+    #     # that will perform the optimisation in a single call given some 
+    #     # input parameters.
+    #     # 
+    #     # Algorithm is described in:
+    #     # Hansen, N. (2016) The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772
+    #     # ------------------
+    #     if comm.rank==0:
+    #         print('Iteration %d\n' % i)
+    #     CMA.draw_mutants()
+    #     if mode == 'database':
+    #         mis_bw = CMA.eval_fitness(data_bw, stations, misfit_bw, db, origin,  process_bw, wavelet, verbose=False)
+    #         mis_sw = CMA.eval_fitness(data_sw, stations, misfit_sw, db, origin,  process_sw, wavelet, verbose=False)
+    #     elif mode == 'greens':
+    #         mis_bw = CMA.eval_fitness(data_bw, stations, misfit_bw, greens_bw)
+    #         mis_sw = CMA.eval_fitness(data_sw, stations, misfit_sw, greens_sw)
+    #     CMA.gather_mutants()
+    #     CMA.fitness_sort(mis_bw+mis_sw)
+    #     CMA.update_mean()
+    #     CMA.update_step_size()
+    #     CMA.update_covariance()
+
+    #     # if i = 0 or multiple of 10 and Last iteration:
+    #     if i == 0 or i % 10 == 0 or i == iter-1:
+    #         if mode == 'database':
+    #             CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+    #         elif mode == 'greens':
+    #             CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
         
-        # if i == 0 or Last iteration:
-        # if i == 0 or i == iter-1:
-        #     CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+    #     # if i == 0 or Last iteration:
+    #     # if i == 0 or i == iter-1:
+    #     #     CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)

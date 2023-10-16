@@ -232,14 +232,13 @@ if __name__=='__main__':
         greens = comm.bcast(greens, root=0)
     elif mode == 'database':
         # This mode expects the path to a local AxiSEM database to be specified 
-        db = open_db('/Users/julienthurin/Downloads/model/ak135f/', format='AxiSEM')
-
+        db = open_db('/Path/To/Axisem/Database/ak135f/', format='AxiSEM')
     #
     # The main computational work starts now
     #
     
     # Defining source type (full moment tensor, deviatoric moment tensor or double couple)
-    src_type = 'deviatoric' # 'full', 'deviatoric' or 'dc'
+    src_type = 'full' # 'full', 'deviatoric' or 'dc'
 
     if mode == 'database':
         # For a full search with depth, latitutde and longitude, use:
@@ -255,15 +254,15 @@ if __name__=='__main__':
     PROCESS = [process_bw, process_sw]  # add more as needed
     GREENS = [greens_bw, greens_sw] if mode == 'greens' else None  # add more as needed
 
-    popsize = 24 # -- CMA-ES population size - number of mutants (you can play with this value, 24 to 120 is a good range)
+    popsize = 48 # -- CMA-ES population size - number of mutants (you can play with this value, 24 to 120 is a good range)
     CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize)
     CMA.sigma = 5.0 # -- Initial standard deviation (4 ~ 5 seems to provide a balanced exploration/exploitation and avoid getting stuck in local minima)
     iter = 60 # -- Number of iterations (you can play with this value, 120 to 240 is a good range)
 
     if mode == 'database':
-        CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10, max_iter=iter)
+        CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10)
     elif mode == 'greens':
-        CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, max_iter=iter)
+        CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, misfit_weights=[2., 3.])
 
     result = CMA.mutants_logger_list # -- This is the list of mutants (i.e. the population) at each iteration
     # This is a mtuq.grid_search.MTUQDataFrame object, which is the same as when conducting a random grid-search
