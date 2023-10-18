@@ -170,7 +170,11 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
     elif plot_type == 'contour':
         # Plot using contourf
         levels = 20
-        im = ax.tricontourf(x.flatten(), y.flatten(), values.flatten(), cmap=colormap, levels=levels, zorder=10)
+        mask = ~np.isfinite(values)
+        x_masked = x[~mask]
+        y_masked = y[~mask]
+        values_masked = values[~mask]
+        im = ax.tricontourf(x_masked.flatten(), y_masked.flatten(), values_masked.flatten(), cmap=colormap, levels=126, zorder=10)
     elif plot_type == 'scatter':
         # Prepare colormap
         boundaries = np.linspace(0, 5, 6)
