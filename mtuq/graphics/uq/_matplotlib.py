@@ -165,8 +165,28 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
     x, y = _hammer_projection(x, y)
 
     if plot_type == 'colormesh':
+        # A tweak is needed for plotting quad-based colormesh, as the longitude axis doesn't increase monotically 
+        # Due to the wrap-around (0 deg centered on the easet), it is easier to split the array in two and 
+        # plot them separately
+
+        # Find the index of the discontinuity, where the longitude goes from 180 to -180
+        discontinuity_index = np.where(longitude < 0)[0][0]
+
+        # Split the arrays at the discontinuity
+        lon1 = longitude[:discontinuity_index]
+        lon2 = longitude[discontinuity_index:]
+        values1 = values[:, :discontinuity_index]
+        values2 = values[:, discontinuity_index:]
+
+        # Mesh, project onto the Hammer projection and plot
+        x1, y1 = np.meshgrid(lon1, latitude)
+        x2, y2 = np.meshgrid(lon2, latitude)
+        x1, y1 = _hammer_projection(x1, y1)
+        x2, y2 = _hammer_projection(x2, y2)
         vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
-        im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
+        im = ax.pcolormesh(x1, y1, values1, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
+        im = ax.pcolormesh(x2, y2, values2, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
+
     elif plot_type == 'contour':
         # Plot using contourf
         levels = 20
