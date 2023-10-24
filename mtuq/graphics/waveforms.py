@@ -100,7 +100,7 @@ def plot_waveforms1(filename,
                 continue
 
             _plot_ZRT(axes[ir], 1, dat, syn, component, 
-                normalize, trace_labels, max_amplitude, total_misfit)
+                normalize, trace_label_writer, max_amplitude, total_misfit)
 
         ir += 1
 
