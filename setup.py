@@ -19,6 +19,14 @@ def get_compile_args():
     if compiler.endswith("icc"):
         compile_args += ['-fast']
         compile_args += ['-march=native']
+
+    elif compiler.endswith("gcc"):
+        compile_args += ['-Ofast']
+        compile_args += ['-march=native']
+
+    elif compiler.endswith("clang"):
+        compile_args += ['-Ofast']
+
     else:
         compile_args += ['-Ofast']
         compile_args += ['-march=native']
