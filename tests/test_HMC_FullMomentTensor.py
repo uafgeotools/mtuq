@@ -17,11 +17,14 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
 if __name__=='__main__':
+
+    print('WARNING: need to update Greens functions from velocity to displacement?')
+
     #
     # Carries out Hamiltonian Monte Carlo (HMC) sampling over full moment tensors
     #
     # USAGE
-    #   mpirun -n <NPROC> python HMC.FullMomentTensor.py
+    #   mpirun -n <NPROC> python test_HMC_FullMomentTensor.py
     #
     #
 
