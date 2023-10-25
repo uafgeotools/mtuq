@@ -1676,7 +1676,7 @@ Main_BenchmarkCAP="""
         if run_figures:
             plot_waveforms2('cap_vs_mtuq_'+str(_i)+'.png',
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-                stations, origin, trace_labels=False)
+                stations, origin, trace_label_writer=None)
 
         if run_checks:
             compare_cap_mtuq(
@@ -1692,7 +1692,7 @@ Main_BenchmarkCAP="""
 
         plot_waveforms2('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-            stations, origin, trace_labels=False, normalize=False)
+            stations, origin, trace_label_writer=None, normalize=False)
 
     print('\\nSUCCESS\\n')
 
