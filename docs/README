@@ -19,10 +19,12 @@ HOW TO UPDATE DOCS
    Modify the sphinx autosummary source code by adding  'jinja2.ext.do' to the jinja
    Environment() extensions list
 
-   See for example this line of the source code:
+   See in particular this line of the autosummary source code:
+
    https://github.com/sphinx-doc/sphinx/blob/a6032e852a650c070aed66f0790e612905159f15/sphinx/ext/autosummary/generate.py#L111
 
    See also:
+
    https://stackoverflow.com/questions/39858191/do-statement-not-working-in-jinja
 
 
