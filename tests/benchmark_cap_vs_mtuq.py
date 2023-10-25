@@ -173,7 +173,7 @@ if __name__=='__main__':
     print('Reading data...\n')
     data = read(path_data, format='sac', 
         event_id=event_id,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
     data.sort_by_distance()
 

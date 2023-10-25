@@ -753,7 +753,7 @@ Main_GridSearch="""
         data = read(path_data, format='sac', 
             event_id=event_id,
             station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity']) 
+            tags=['units:m', 'type:velocity']) 
 
 
         data.sort_by_distance()
@@ -817,7 +817,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     data = read(path_data, format='sac',
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
 
     data.sort_by_distance()
@@ -864,7 +864,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     data = read(path_data, format='sac', 
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
     data.sort_by_distance()
     stations = data.get_stations()
@@ -910,7 +910,7 @@ Main_TestGraphics="""
     data = read(path_data, format='sac',
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity'])
+        tags=['units:m', 'type:velocity'])
 
 
     data.sort_by_distance()
@@ -1636,7 +1636,7 @@ Main_BenchmarkCAP="""
     print('Reading data...\\n')
     data = read(path_data, format='sac', 
         event_id=event_id,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
     data.sort_by_distance()
 
