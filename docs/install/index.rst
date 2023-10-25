@@ -1,14 +1,13 @@
 Installation
 ============
 
-We recommend installing MTUQ under Anaconda or Miniconda, which, if not already present, can be obtained following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+We recommend installing MTUQ under Anaconda or Miniconda, which, if not already present, can be obtained following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
-To install MTUQ, first create a conda virtual environment:
+To install MTUQ, create a conda virtual environment:
 
 .. code::
 
-   conda config --prepend channels conda-forge
    conda create -n mtuq python=3
 
 
@@ -49,6 +48,6 @@ Finally, install PyGMT:
 
 **Troubleshooting**
 
-For a discussion of common issues, please see our `troubleshooting page <https://uafgeotools.github.io/mtuq/install/issues.html>`_.
+For troubleshooting common installation issues, please `see here <https://uafgeotools.github.io/mtuq/install/issues.html>`_.
 
 

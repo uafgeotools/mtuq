@@ -3,17 +3,23 @@
 Installation on Apple M1 and Apple M2 Macs
 ------------------------------------------
 
-A modified installation procedure may be necessary on Apple M1 and Apple M2 Macs.
+Newer Mac computers use proprietary Apple processors based on the ARM64 architecture.  On these and other ARM64 systems, a modified `conda env` command is necessary
+
+.. code::
+
+   conda env update --file env_arm64.yaml
+
+but otherwise users can follow the normal installation procedure.
 
 For more information, please see:
 
-`MTUQ installation on Apple M1 and Apple M2 Macs <https://uafgeotools.github.io/mtuq/install/arm64.html>`_
+`MTUQ installation on ARM64 systems <https://uafgeotools.github.io/mtuq/install/arm64.html>`_
 
 
 Installation under virutalenv
 -----------------------------
 
-For most users, we recommend installing MTUQ under conda.  In rare cases, however, it seems that MTUQ can be more easily installed under virtualenv.
+For most users, we recommend installing MTUQ under conda.  However, in rare cases it seems that MTUQ can be more easily installed under virtualenv.
 
 For more information, please see:
 

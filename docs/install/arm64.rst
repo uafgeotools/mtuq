@@ -1,12 +1,11 @@
 
-Installation on ARM64 systems, including Apple M1 and Apple M2
-==============================================================
+Installation on ARM64 systems
+=============================
 
-First create a conda virtual environment:
+To install MTUQ on ARM64 systems, create a conda virtual environment:
 
 .. code::
 
-   conda config --prepend channels conda-forge
    conda create -n mtuq python=3
 
 
@@ -52,4 +51,14 @@ Finally, install PyGMT:
 
 .. note::
 
-    Once linux-aarch64 and osx-arm64 builds are contributed to the Instaseis `conda-forge <https://anaconda.org/conda-forge/instaseis>`_ channel, the above workaround should be unnecessary.
+    Users may receive the following Instaseis warning message:
+
+    `UserWarning: Please don't install from a tarball. Use the proper pypi release or install from git.`
+
+    Now that Instaseis PyPI releases are no longer maintained, the above message can be ignored.
+
+
+.. note::
+
+    If `linux-aarch64` or `osx-arm64` builds are ever added to the Instaseis `conda-forge channel <https://anaconda.org/conda-forge/instaseis>`_, the above workaround may become unnecessary.
+
