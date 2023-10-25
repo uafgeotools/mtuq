@@ -39,7 +39,7 @@ Finally, install PyGMT:
 
 .. code::
 
-    conda install 'pygmt>=0.9'
+    conda install 'pygmt=0.9'
 
 .. note::
 
