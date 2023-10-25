@@ -31,7 +31,7 @@ Install Instaseis:
 
 .. code::
 
-    git clone https://github.com/devel/sstaehler/instaseis.git
+    git clone https://github.com/sstaehler/instaseis.git
     cd instaseis
     pip install -e .
 

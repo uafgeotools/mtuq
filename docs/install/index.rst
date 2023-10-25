@@ -49,6 +49,6 @@ Finally, install PyGMT:
 
 **Troubleshooting**
 
-For discussion for a discussion of known issues, please see our `troubleshooting page <https://uafgeotools.github.io/mtuq/install/issues.html>`_.
+For a discussion of common issues, please see our `troubleshooting page <https://uafgeotools.github.io/mtuq/install/issues.html>`_.
 
 

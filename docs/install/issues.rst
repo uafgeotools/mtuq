@@ -23,7 +23,7 @@ For more information, please see:
 Troubleshooting PyGMT installation
 ----------------------------------
 
-To avoid a known issues with PyGMT installation under conda, it is necessary to specify a minimum PyGMT version as follows:
+To avoid a known issue with PyGMT installation under conda, it is necessary to specify a minimum PyGMT version as follows:
 
 .. code::
 
