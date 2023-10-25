@@ -1,4 +1,3 @@
-# for installation on ARM64 systems, including Apple M1 and Apple M2
 
 channels:
   - defaults
@@ -10,6 +9,7 @@ dependencies:
   - numpy 
   - scipy 
   - obspy 
+  - instaseis 
   - pandas 
   - xarray 
   - netCDF4
@@ -21,9 +21,7 @@ dependencies:
   - pytest
   - pip
   - pip:
-    - git+https://github.com/sstaehler/instaseis.git
     - tables
     - seisgen
     - seishmc
     - -e .
-

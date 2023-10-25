@@ -29,7 +29,6 @@ def get_compile_args():
 
     else:
         compile_args += ['-Ofast']
-        compile_args += ['-march=native']
 
     return compile_args
 
