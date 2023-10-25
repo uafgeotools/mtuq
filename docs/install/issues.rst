@@ -29,6 +29,8 @@ For more information, please see:
 Troubleshooting PyGMT installation
 ----------------------------------
 
+MTUQ uses full moment tensor plotting functions from the PyGMT graphics library.
+
 To avoid a known issue with PyGMT installation under conda, it is necessary to specify a minimum PyGMT version as follows:
 
 .. code::
@@ -43,5 +45,7 @@ A more conservative approach, which avoids suspected problems with PyGMT 0.10 re
     conda install 'pygmt=0.9'
 
 
-If PyGMT installation fails, most MTUQ functions will still work, but some plotting functions will fall back to GMT or ObsPy.  We note that some versions of GMT and ObsPy do not plot `full moment tensors <https://github.com/obspy/obspy/issues/2388>`_ correctly.
+If PyGMT installation fails, most MTUQ functions will still work, but some plotting functions will fall back to GMT or ObsPy.  
+
+We note that some versions of GMT and ObsPy do not plot `full moment tensors <https://github.com/obspy/obspy/issues/2388>`_ correctly.
 

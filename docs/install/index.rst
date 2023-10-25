@@ -1,7 +1,7 @@
 Installation
 ============
 
-We recommend installing MTUQ under Anaconda or Miniconda, which, if not already present, can be obtained following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+We recommend installing MTUQ under Anaconda or Miniconda, which if not already present can be obtained following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
 To install MTUQ, create a conda virtual environment:

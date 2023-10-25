@@ -25,15 +25,6 @@ Install MTUQ in editable mode:
    conda env update --file env_arm64.yaml
 
 
-Install Instaseis:
-
-
-.. code::
-
-    git clone https://github.com/sstaehler/instaseis.git
-    cd instaseis
-    pip install -e .
-
 Unpack seismic waveforms used by examples:
 
 .. code::
