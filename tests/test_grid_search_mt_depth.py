@@ -18,9 +18,14 @@ if __name__=='__main__':
     #
     # Grid search integration test
     #
-    # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
-    # except here we included mangitude and depth and use a coarser grid
+    # For speed, the script tests the iterative machinery for depth
+    # searches in a somewhat degenerate case, using only a length one 
+    # container
     #
+    # For a depth search in the more usual sense, see
+    # examples/GridSearch.DoubleCouple+Magnitude+Depth.py
+    #
+
 
     # by default, the script runs with figure generation and error checking
     # turned on
@@ -118,7 +123,7 @@ if __name__=='__main__':
     data = read(path_data, format='sac', 
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
     data.sort_by_distance()
     stations = data.get_stations()

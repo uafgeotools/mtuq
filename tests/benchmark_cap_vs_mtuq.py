@@ -173,7 +173,7 @@ if __name__=='__main__':
     print('Reading data...\n')
     data = read(path_data, format='sac', 
         event_id=event_id,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
     data.sort_by_distance()
 
@@ -213,7 +213,7 @@ if __name__=='__main__':
         if run_figures:
             plot_waveforms2('cap_vs_mtuq_'+str(_i)+'.png',
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-                stations, origin, trace_labels=False)
+                stations, origin, trace_label_writer=None)
 
         if run_checks:
             compare_cap_mtuq(
@@ -229,7 +229,7 @@ if __name__=='__main__':
 
         plot_waveforms2('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-            stations, origin, trace_labels=False, normalize=False)
+            stations, origin, trace_label_writer=None, normalize=False)
 
     print('\nSUCCESS\n')
 

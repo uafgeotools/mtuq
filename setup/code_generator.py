@@ -175,9 +175,14 @@ if __name__=='__main__':
     #
     # Grid search integration test
     #
-    # This script is similar to examples/SerialGridSearch.DoubleCouple.py,
-    # except here we included mangitude and depth and use a coarser grid
+    # For speed, the script tests the iterative machinery for depth
+    # searches in a somewhat degenerate case, using only a length one 
+    # container
     #
+    # For a depth search in the more usual sense, see
+    # examples/GridSearch.DoubleCouple+Magnitude+Depth.py
+    #
+
 """
 
 
@@ -748,7 +753,7 @@ Main_GridSearch="""
         data = read(path_data, format='sac', 
             event_id=event_id,
             station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity']) 
+            tags=['units:m', 'type:velocity']) 
 
 
         data.sort_by_distance()
@@ -812,7 +817,7 @@ Main1_SerialGridSearch_DoubleCouple="""
     data = read(path_data, format='sac',
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
 
     data.sort_by_distance()
@@ -859,7 +864,7 @@ Main_TestGridSearch_DoubleCoupleMagnitudeDepth="""
     data = read(path_data, format='sac', 
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
     data.sort_by_distance()
     stations = data.get_stations()
@@ -905,7 +910,7 @@ Main_TestGraphics="""
     data = read(path_data, format='sac',
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity'])
+        tags=['units:m', 'type:velocity'])
 
 
     data.sort_by_distance()
@@ -1631,7 +1636,7 @@ Main_BenchmarkCAP="""
     print('Reading data...\\n')
     data = read(path_data, format='sac', 
         event_id=event_id,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
     data.sort_by_distance()
 
@@ -1671,7 +1676,7 @@ Main_BenchmarkCAP="""
         if run_figures:
             plot_waveforms2('cap_vs_mtuq_'+str(_i)+'.png',
                 cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-                stations, origin, trace_labels=False)
+                stations, origin, trace_label_writer=None)
 
         if run_checks:
             compare_cap_mtuq(
@@ -1687,7 +1692,7 @@ Main_BenchmarkCAP="""
 
         plot_waveforms2('cap_vs_mtuq_data.png',
             cap_bw, cap_sw, mtuq_bw, mtuq_sw, 
-            stations, origin, trace_labels=False, normalize=False)
+            stations, origin, trace_label_writer=None, normalize=False)
 
     print('\\nSUCCESS\\n')
 

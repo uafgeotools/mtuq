@@ -18,11 +18,14 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 
 if __name__=='__main__':
+
+    print('WARNING: need to update Greens functions from velocity to displacement?')
+
     #
     # Carries out Hamiltonian Monte Carlo (HMC) sampling over double couple moment tensors
     #
     # USAGE
-    #   mpirun -n <NPROC> python HMC.DoubleCouple.py
+    #   mpirun -n <NPROC> python test_HMC_DoubleCouple.py
     #
     #
 
@@ -128,7 +131,7 @@ if __name__=='__main__':
         data = read(path_data, format='sac',
             event_id=event_id,
             station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity'])
+            tags=['units:m', 'type:velocity'])
 
 
         data.sort_by_distance()

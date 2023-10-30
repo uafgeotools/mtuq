@@ -8,7 +8,16 @@
 # of numpy, it will be understood as (type, (1,)) / '(1,)type'.
 
 import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore',
+    category=FutureWarning)
+
+
+# Suppress Instaseis warning that gets raised unnecessarily during git+https
+# installation
+
+warnings.filterwarnings(action='ignore',
+     message='.*'+'Use the proper pypi release or install from git.'+'.*')
+
                                                                              
 
 #
