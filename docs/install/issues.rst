@@ -1,7 +1,9 @@
 
+Troubleshooting
+===============
 
-Installation on Apple M1 and Apple M2 Macs
-------------------------------------------
+MTUQ installation on Apple M1 and Apple M2 Macs
+-----------------------------------------------
 
 Newer Mac computers use proprietary Apple processors based on the ARM64 architecture.  On these and other ARM64 systems, a modified `conda env` command is necessary
 
@@ -16,8 +18,8 @@ For more information, please see:
 `MTUQ installation on ARM64 systems <https://uafgeotools.github.io/mtuq/install/arm64.html>`_
 
 
-Installation under virutalenv
------------------------------
+MTUQ installation under virutalenv
+----------------------------------
 
 For most users, we recommend installing MTUQ under conda.  However, in rare cases it seems that MTUQ can be more easily installed under virtualenv.
 
@@ -26,8 +28,8 @@ For more information, please see:
 `MTUQ installation under virtualenv <https://uafgeotools.github.io/mtuq/install/virtualenv.html>`_
 
 
-Troubleshooting PyGMT installation
-----------------------------------
+PyGMT installation
+------------------
 
 MTUQ uses full moment tensor plotting functions from the PyGMT graphics library.
 
