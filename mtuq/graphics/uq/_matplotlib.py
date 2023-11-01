@@ -269,11 +269,11 @@ def _plot_dc_matplotlib(filename, coords,
     vmin, vmax = np.nanpercentile(vals, [0,75])
 
     # plot surfaces
-    _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa.T, colormap, vmin=vmin, vmax=vmax)
+    _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa, colormap, vmin=vmin, vmax=vmax)
 
-    _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa.T, colormap, vmin=vmin, vmax=vmax)
+    _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa, colormap, vmin=vmin, vmax=vmax)
 
-    _pcolor(axes[1][1], coords['sigma'], coords['h'], values_sigma_h.T, colormap, vmin=vmin, vmax=vmax)
+    _pcolor(axes[1][1], coords['sigma'], coords['h'], values_sigma_h, colormap, vmin=vmin, vmax=vmax)
 
     # optional markers
     if best_dc:
