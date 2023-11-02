@@ -163,7 +163,7 @@ def initialize_force(F0_range = [1e11, 1e14], depth=None, latitude=None, longitu
 
     F0 = CMAESParameters('F0', F0_range[0], F0_range[1], scaling='log', repair='rand_based')
     phi = CMAESParameters('phi', 0, 360, scaling='linear', repair='wrapping')
-    h = CMAESParameters('h', -1, 1, scaling='linear', repair='rand_based')
+    h = CMAESParameters('h', -1, 1, scaling='linear', repair='reinitialize')
 
     parameters_list = [F0, phi, h]
 
