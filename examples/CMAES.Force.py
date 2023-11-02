@@ -198,24 +198,22 @@ if __name__=='__main__':
     # The main computational work starts now
     #
     if mode == 'database':
-        parameter_list = initialize_force(F0_range=[1e10, 1e16], depth=[30000, 40000])
+        parameter_list = initialize_force(F0_range=[1e10, 1e12], depth=[0, 1000])
     elif mode == 'greens':
         parameter_list = initialize_force(F0_range=[1e10, 1e12])
-
-    parameter_list[2].repair='reinitialize'
 
     DATA = [data_sw]  # add more as needed
     MISFIT = [misfit_sw]  # add more as needed
     PROCESS = [process_sw]  # add more as needed
     GREENS = [greens_sw] if mode == 'greens' else None  # add more as needed
 
-    popsize = 256 # -- CMA-ES population size (you can play with this value)
+    popsize = 48 # -- CMA-ES population size (you can play with this value)
     CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize)
     CMA.sigma = 2 # -- CMA-ES step size, defined as 1 standard deviation of the initial parameter distribution (you can play with this value, higher values are best for exploration and are generaly worth it)
-    iter = 60 # -- Number of iterations (you can play with this value)
+    iter = 120 # -- Number of iterations (you can play with this value)
 
     if mode == 'database':
-        CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10)
+        CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10, misfit_weights=[1.])
     elif mode == 'greens':
         CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, misfit_weights=[1.])
 
