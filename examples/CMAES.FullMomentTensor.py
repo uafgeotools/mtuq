@@ -260,7 +260,7 @@ if __name__=='__main__':
     iter = 60 # -- Number of iterations (you can play with this value, 120 to 240 is a good range)
 
     if mode == 'database':
-        CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10)
+        CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10, misfit_weights=[2., 3.])
     elif mode == 'greens':
         CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, misfit_weights=[2., 3.])
 
