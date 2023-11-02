@@ -208,7 +208,7 @@ if __name__=='__main__':
     GREENS = [greens_sw] if mode == 'greens' else None  # add more as needed
 
     popsize = 48 # -- CMA-ES population size (you can play with this value)
-    CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize)
+    CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize, event_id=event_id)
     CMA.sigma = 2 # -- CMA-ES step size, defined as 1 standard deviation of the initial parameter distribution (you can play with this value, higher values are best for exploration and are generaly worth it)
     iter = 120 # -- Number of iterations (you can play with this value)
 
@@ -222,7 +222,7 @@ if __name__=='__main__':
     result = CMA.mutants_logger_list # -- This is the list of mutants (i.e. the population) at each iteration
 
     # Plotting the result - plot_type can be 'colormesh' or 'contour', but in the case of CMA-ES, colormesh gives better result than a contour plot 
-    plot_misfit_force('misfit_force.png', result, backend=_plot_force_matplotlib, plot_type='colormesh')
+    plot_misfit_force(event_id+'_misfit_force.png', result, backend=_plot_force_matplotlib, plot_type='colormesh')
 
     if comm.rank==0:
         print('\nFinished\n')

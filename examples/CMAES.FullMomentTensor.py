@@ -255,7 +255,7 @@ if __name__=='__main__':
     GREENS = [greens_bw, greens_sw] if mode == 'greens' else None  # add more as needed
 
     popsize = 48 # -- CMA-ES population size - number of mutants (you can play with this value, 24 to 120 is a good range)
-    CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize)
+    CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize, event_id=event_id)
     CMA.sigma = 5.0 # -- Initial standard deviation (4 ~ 5 seems to provide a balanced exploration/exploitation and avoid getting stuck in local minima)
     iter = 60 # -- Number of iterations (you can play with this value, 120 to 240 is a good range)
 
