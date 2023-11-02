@@ -49,8 +49,8 @@ if __name__=='__main__':
     # 4 - Update the mean and covariance matrix of the next generation
     # 5 - Repeat steps 2-4 until the ensemble of mutants converges
 
-    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
-    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
+    path_data=    fullpath('data/examples/20210809074550/*[ZRT].sac')
+    path_weights= fullpath('data/examples/20210809074550/weights.dat')
     event_id=     '20090407201255351'
     model=        'ak135'
     mode =        'greens' # 'database' or 'greens'
@@ -96,8 +96,8 @@ if __name__=='__main__':
 
     misfit_sw = Misfit(
         norm='L2',
-        time_shift_min=-10.,
-        time_shift_max=+10.,
+        time_shift_min=-35.,
+        time_shift_max=+35.,
         time_shift_groups=['ZR','T'],
         )
 
@@ -116,7 +116,7 @@ if __name__=='__main__':
     #
 
     wavelet = Trapezoid(
-        magnitude=4.5)
+        magnitude=8)
 
 
     #
@@ -129,10 +129,10 @@ if __name__=='__main__':
     #
 
     origin = Origin({
-        'time': '2009-04-07T20:12:55.000000Z',
-        'latitude': 61.454200744628906,
-        'longitude': -149.7427978515625,
-        'depth_in_m': 33033.599853515625,
+        'time': '2021-08-09T07:45:50.000000Z',
+        'latitude': 61.24,
+        'longitude': -147.96,
+        'depth_in_m': 0,
         })
 
 
@@ -149,7 +149,7 @@ if __name__=='__main__':
         data = read(path_data, format='sac', 
             event_id=event_id,
             station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity']) 
+            tags=['units:m', 'type:velocity']) 
 
 
         data.sort_by_distance()
@@ -200,59 +200,31 @@ if __name__=='__main__':
     if mode == 'database':
         parameter_list = initialize_force(F0_range=[1e10, 1e16], depth=[30000, 40000])
     elif mode == 'greens':
-        parameter_list = initialize_force(F0_range=[1e10, 1e16])
+        parameter_list = initialize_force(F0_range=[1e10, 1e12])
 
-    DATA = [data_bw, data_sw]  # add more as needed
-    MISFIT = [misfit_bw, misfit_sw]  # add more as needed
-    PROCESS = [process_bw, process_sw]  # add more as needed
-    GREENS = [greens_bw, greens_sw] if mode == 'greens' else None  # add more as needed
+    parameter_list[2].repair='reinitialize'
 
-    popsize = 24 # -- CMA-ES population size (you can play with this value)
+    DATA = [data_sw]  # add more as needed
+    MISFIT = [misfit_sw]  # add more as needed
+    PROCESS = [process_sw]  # add more as needed
+    GREENS = [greens_sw] if mode == 'greens' else None  # add more as needed
+
+    popsize = 256 # -- CMA-ES population size (you can play with this value)
     CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize)
-    CMA.sigma = 1 # -- CMA-ES step size, defined as 1 standard deviation of the initial parameter distribution (you can play with this value)
-    iter = 120
+    CMA.sigma = 2 # -- CMA-ES step size, defined as 1 standard deviation of the initial parameter distribution (you can play with this value, higher values are best for exploration and are generaly worth it)
+    iter = 60 # -- Number of iterations (you can play with this value)
 
     if mode == 'database':
         CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10)
     elif mode == 'greens':
-        CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, misfit_weights=[1., 10.])
+        CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, misfit_weights=[1.])
 
+    #  --- Plotting force misfit result
+    # CMA.mutants_logger_list returns an object similar to mtuq defautl grid search result, which is compatible with all plotting functions
     result = CMA.mutants_logger_list # -- This is the list of mutants (i.e. the population) at each iteration
 
-    plot_misfit_force('misfit_force.png', result, backend=_plot_force_matplotlib)
+    # Plotting the result - plot_type can be 'colormesh' or 'contour', but in the case of CMA-ES, colormesh gives better result than a contour plot 
+    plot_misfit_force('misfit_force.png', result, backend=_plot_force_matplotlib, plot_type='colormesh')
 
-    # for i in range(iter):
-    #     # ------------------
-    #     # At the moment the full CMA-ES algorithm is executed in this loop.
-    #     # In the future, we will add a 'Solve' method to the CMA_ES class
-    #     # that will perform the optimisation in a single call given some 
-    #     # input parameters.
-    #     # 
-    #     # Algorithm is described in:
-    #     # Hansen, N. (2016) The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772
-    #     # ------------------
-    #     if comm.rank==0:
-    #         print('Iteration %d\n' % i)
-    #     CMA.draw_mutants()
-    #     if mode == 'database':
-    #         mis_bw = CMA.eval_fitness(data_bw, stations, misfit_bw, db, origin,  process_bw, wavelet, verbose=False)
-    #         mis_sw = CMA.eval_fitness(data_sw, stations, misfit_sw, db, origin,  process_sw, wavelet, verbose=False)
-    #     elif mode == 'greens':
-    #         mis_bw = CMA.eval_fitness(data_bw, stations, misfit_bw, greens_bw)
-    #         mis_sw = CMA.eval_fitness(data_sw, stations, misfit_sw, greens_sw)
-    #     CMA.gather_mutants()
-    #     CMA.fitness_sort(mis_bw+mis_sw)
-    #     CMA.update_mean()
-    #     CMA.update_step_size()
-    #     CMA.update_covariance()
-
-    #     # if i = 0 or multiple of 10 and Last iteration:
-    #     if i == 0 or i % 10 == 0 or i == iter-1:
-    #         if mode == 'database':
-    #             CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
-    #         elif mode == 'greens':
-    #             CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db=greens)
-        
-    #     # if i == 0 or Last iteration:
-    #     # if i == 0 or i == iter-1:
-    #     #     CMA.plot_mean_waveforms(DATA, PROCESS, MISFIT, stations, db)
+    if comm.rank==0:
+        print('\nFinished\n')
