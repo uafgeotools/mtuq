@@ -198,6 +198,17 @@ class Force(object):
             #    asarray(array), convention, 'USE')
 
 
+    def as_dict(self):
+        """ Returns dictionary in `up-south-east` convention
+        """
+        array = self._array
+        return {
+            'Fr': array[0],
+            'Ft': array[1],
+            'Fp': array[2],
+            }
+
+
     def as_vector(self):
         """ Returns 1D NumPy array in `up-south-east` convention
         """

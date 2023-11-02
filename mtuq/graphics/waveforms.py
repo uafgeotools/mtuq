@@ -10,11 +10,12 @@ from collections import defaultdict
 from matplotlib.font_manager import FontProperties
 from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
+from mtuq.graphics.annotations import trace_label_writer, station_label_writer,\
+    _getattr
 from mtuq.graphics.header import MomentTensorHeader, ForceHeader
 from mtuq.util import warn
 from mtuq.util.signal import get_components, m_to_deg
 from obspy import Stream, Trace
-from obspy.geodetics import gps2dist_azimuth
 
 
 #
@@ -29,9 +30,8 @@ def plot_waveforms1(filename,
         header=None,
         total_misfit=1., 
         normalize='maximum_amplitude',
-        trace_labels=True,
-        station_labels=True,
-        station_label_units='km',
+        trace_label_writer=trace_label_writer,
+        station_label_writer=station_label_writer,
         ):
 
     """ Creates data/synthetics comparison figure with 3 columns (Z, R, T)
@@ -55,7 +55,7 @@ def plot_waveforms1(filename,
        margin_right=0.5,
        header=header,
        header_height=1.5,
-       station_labels=station_labels,
+       station_labels=bool(station_label_writer),
        )
 
     _add_component_labels1(axes)
@@ -75,9 +75,8 @@ def plot_waveforms1(filename,
             continue
 
         # add station labels
-        if station_labels:
-            _add_station_labels(axes[ir][0], stations[_i], origin,
-                units=station_label_units)
+        if station_label_writer is not None:
+            station_label_writer(axes[ir][0], stations[_i], origin)
 
         #
         # plot traces
@@ -101,11 +100,11 @@ def plot_waveforms1(filename,
                 continue
 
             _plot_ZRT(axes[ir], 1, dat, syn, component, 
-                normalize, trace_labels, max_amplitude, total_misfit)
+                normalize, trace_label_writer, max_amplitude, total_misfit)
 
         ir += 1
 
-    pyplot.savefig(filename)
+    _save(filename)
     pyplot.close()
 
 
@@ -121,9 +120,8 @@ def plot_waveforms2(filename,
         total_misfit_bw=1., 
         total_misfit_sw=1., 
         normalize='maximum_amplitude',
-        trace_labels=True,
-        station_labels=True,
-        station_label_units='km',
+        trace_label_writer=trace_label_writer,
+        station_label_writer=station_label_writer,
         ):
 
 
@@ -145,7 +143,7 @@ def plot_waveforms2(filename,
        width=10.,
        header=header,
        header_height=2.,
-       station_labels=station_labels,
+       station_labels=bool(station_label_writer),
        )
 
     _add_component_labels2(axes)
@@ -168,9 +166,8 @@ def plot_waveforms2(filename,
             continue
 
         # add station labels
-        if station_labels:
-            _add_station_labels(axes[ir][0], stations[_i], origin,
-                units=station_label_units)
+        if station_label_writer is not None:
+            station_label_writer(axes[ir][0], stations[_i], origin)
 
         #
         # plot body wave traces
@@ -194,7 +191,7 @@ def plot_waveforms2(filename,
                 continue
 
             _plot_ZR(axes[ir], 1, dat, syn, component, 
-                normalize, trace_labels, max_amplitude_bw, total_misfit_bw)
+                normalize, trace_label_writer, max_amplitude_bw, total_misfit_bw)
 
 
         #
@@ -219,12 +216,12 @@ def plot_waveforms2(filename,
                 continue
 
             _plot_ZRT(axes[ir], 3, dat, syn, component,
-                normalize, trace_labels, max_amplitude_sw, total_misfit_sw)
+                normalize, trace_label_writer, max_amplitude_sw, total_misfit_sw)
 
 
         ir += 1
 
-    pyplot.savefig(filename)
+    _save(filename)
     pyplot.close()
 
 
@@ -332,7 +329,7 @@ def plot_data_greens2(filename,
 def _initialize(nrows=None, ncolumns=None, column_width_ratios=None, 
     header=None, height=None, width=None, margin_top=0.25, margin_bottom=0.25,
     margin_left=0.25, margin_right=0.25, header_height=1.5, 
-    station_labels=True, station_label_width=0.4):
+    station_labels=True, station_label_width=0.5):
 
     if header:
         height += header_height
@@ -375,7 +372,7 @@ def _initialize(nrows=None, ncolumns=None, column_width_ratios=None,
 
 
 def _plot_ZRT(axes, ic, dat, syn, component, 
-    normalize='maximum_amplitude', trace_labels=False,
+    normalize='maximum_amplitude', trace_label_writer=None,
     max_amplitude=1., total_misfit=1.):
 
     # plot traces
@@ -403,12 +400,12 @@ def _plot_ZRT(axes, ic, dat, syn, component,
         ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
         axis.set_ylim(*ylim)
 
-    if trace_labels:
-        _add_trace_labels(axis, dat, syn, total_misfit)
+    if trace_label_writer is not None:
+        trace_label_writer(axis, dat, syn, total_misfit)
 
 
 def _plot_ZR(axes, ic, dat, syn, component, 
-    normalize='maximum_amplitude', trace_labels=False,
+    normalize='maximum_amplitude', trace_label_writer=None,
     max_amplitude=1., total_misfit=1.):
 
     # plot traces
@@ -421,22 +418,7 @@ def _plot_ZR(axes, ic, dat, syn, component,
 
     _plot(axis, dat, syn)
 
-    # THIS PART WAS COMMENTED OUT BEFORE THE WORKSHOP FOR A QUICK WORKAROUND
-    # WE NEED A PROPER WAY OF DEALING WITH CUSTOM AMPLITUDE BY ADDING AN OPTION
-    # # normalize amplitudes
-    # if normalize=='trace_amplitude':
-    #     max_trace = _max(dat, syn)
-    #     ylim = [-3*max_trace, +3*max_trace]
-    #     axis.set_ylim(*ylim)
-    # elif normalize=='station_amplitude':
-    #     max_stream = _max(stream_dat, stream_syn)
-    #     ylim = [-3*max_stream, +3*max_stream]
-    #     axis.set_ylim(*ylim)
-    # elif normalize=='maximum_amplitude':
-    #     ylim = [-2*max_amplitude, +2*max_amplitude]
-    #     axis.set_ylim(*ylim)
-
-    # normalize amplitude - using same scaling parameters as surface waves
+    # normalize amplitude
     if normalize=='trace_amplitude':
         max_trace = _max(dat, syn)
         ylim = [-1.5*max_trace, +1.5*max_trace]
@@ -449,8 +431,9 @@ def _plot_ZR(axes, ic, dat, syn, component,
         ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
         axis.set_ylim(*ylim)
 
-    if trace_labels:
-        _add_trace_labels(axis, dat, syn, total_misfit)
+
+    if trace_label_writer is not None:
+        trace_label_writer(axis, dat, syn, total_misfit)
 
 
 def _plot(axis, dat, syn, label=None):
@@ -469,9 +452,6 @@ def _plot(axis, dat, syn, label=None):
         clip_on=False, zorder=10)
     axis.plot(t, s[start:stop], 'r', linewidth=1.25, 
         clip_on=False, zorder=10)
-
-    # prevents traces from getting clipped
-    axis.patch.set_alpha(0.)
 
 
 def _add_component_labels1(axes, body_wave_labels=True, surface_wave_labels=True):
@@ -520,70 +500,6 @@ def _add_component_labels2(axes, body_wave_labels=True, surface_wave_labels=True
         transform=ax.transAxes)
 
 
-def _add_station_labels(ax, station, origin, units='km'):
-    """ Displays station id, distance, and azimuth to the left of current axes
-    """
-    distance_in_m, azimuth, _ = gps2dist_azimuth(
-        origin.latitude,
-        origin.longitude,
-        station.latitude,
-        station.longitude)
-
-    # display station name
-    label = '.'.join([station.network, station.station])
-    pyplot.text(0.2,0.50, label, fontsize=11, transform=ax.transAxes)
-
-    # display distance
-    if units=='m':
-        label = '%d m' % round(distance_in_m)
-
-    elif units=='km':
-        label = '%d km' % round(distance_in_m/1000.)
-
-    elif units=='deg':
-        label = '%d%s' % (round(m_to_deg(distance_in_m)), u'\N{DEGREE SIGN}')
-
-    pyplot.text(0.2,0.35, label, fontsize=11, transform=ax.transAxes)
-
-    # display azimuth
-    azimuth =  '%d%s' % (round(azimuth), u'\N{DEGREE SIGN}')
-    pyplot.text(0.2,0.20, azimuth, fontsize=11, transform=ax.transAxes)
-
-
-def _add_trace_labels(axis, dat, syn, total_misfit=1.):
-    """ Adds CAPUAF-style annotations to current axes
-    """
-    ymin = axis.get_ylim()[0]
-
-    s = syn.data
-    d = dat.data
-
-    # display cross-correlation time shift
-    time_shift = 0.
-    time_shift += _getattr(syn, 'time_shift', np.nan)
-    time_shift += _getattr(dat, 'static_time_shift', 0)
-    axis.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=11)
-
-    # display maximum cross-correlation coefficient
-    Ns = np.dot(s,s)**0.5
-    Nd = np.dot(d,d)**0.5
-    if Ns*Nd > 0.:
-        max_cc = np.correlate(s, d, 'valid').max()
-        max_cc /= (Ns*Nd)
-        axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=11)
-    else:
-        max_cc = np.nan
-        axis.text(0.,(2/4.)*ymin, '%.2f' %max_cc, fontsize=11)
-
-    # display percent of total misfit
-    misfit = _getattr(syn, 'misfit', np.nan)
-    misfit /= total_misfit
-    if misfit >= 0.1:
-        axis.text(0.,(3/4.)*ymin, '%.1f' %(100.*misfit), fontsize=11)
-    else:
-        axis.text(0.,(3/4.)*ymin, '%.2f' %(100.*misfit), fontsize=11)
-
-
 #
 # utility functions
 #
@@ -614,18 +530,6 @@ def _isempty(dataset):
         return True
     else:
         return bool(_count([dataset])==0)
-
-
-def _getattr(trace, name, *args):
-    if len(args)==1:
-        if not hasattr(trace, 'attrs'):
-            return args[0]
-        else:
-            return getattr(trace.attrs, name, args[0])
-    elif len(args)==0:
-        return getattr(trace.attrs, name)
-    else:
-        raise TypeError("Wrong number of arguments")
 
 
 def _max(dat, syn):
@@ -659,6 +563,7 @@ def _hide_axes(axes):
             col.spines['left'].set_visible(False)
             col.get_xaxis().set_ticks([])
             col.get_yaxis().set_ticks([])
+            col.patch.set_visible(False)
 
 
 def _prepare_header(model, solver, source, source_dict, origin, *args):
@@ -677,6 +582,10 @@ def _prepare_header(model, solver, source, source_dict, origin, *args):
 
     else:
         raise TypeError
+
+
+def _save(filename):
+    pyplot.savefig(filename)
 
 
 def _get_tag(tags, pattern):

@@ -56,7 +56,7 @@ def grid_search(data, greens, misfit, origins, sources,
 
     ``msg_interval`` (`int`):
     How frequently, as a percentage of total evaluations, should progress 
-    messages be displayed? (value between 0 and 100)
+    messages be displayed? (`int` between 0 and 100)
 
 
     ``timed`` (`bool`):

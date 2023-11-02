@@ -1,14 +1,13 @@
 Installation
 ============
 
-We recommend installing MTUQ under Anaconda or Miniconda, which can be obtained following these `instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_, if not already present.
+We recommend installing MTUQ under Anaconda or Miniconda, which if not already present can be obtained following `these instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 
-To install MTUQ, first create a conda virtual environment:
+To install MTUQ, create a conda virtual environment:
 
 .. code::
 
-   conda config --prepend channels conda-forge
    conda create -n mtuq python=3
 
 
@@ -40,16 +39,15 @@ Finally, install PyGMT:
 
 .. code::
 
-    conda install pygmt
+    conda install 'pygmt=0.9'
 
 .. note::
 
-    PyGMT is only used for generating figures. If `conda install pygmt` fails, MTUQ will attempt to fall back to GMT or ObsPy.  We note that some versions of GMT and ObsPy do not plot full moment tensors `correctly <https://github.com/obspy/obspy/issues/2388>`_.
+    PyGMT installation has been finicky at times, so we include it as a separate step after the main env.yaml-based installation. 
 
 
+**Troubleshooting**
 
-**Alternative method**
-
-For installation under `virtualenv` instead, see `here <https://uafgeotools.github.io/mtuq/install/env_virtualenv.html>`_.
+For troubleshooting common installation issues, please `see here <https://uafgeotools.github.io/mtuq/install/issues.html>`_.
 
 

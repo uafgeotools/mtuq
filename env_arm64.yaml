@@ -1,0 +1,29 @@
+# for installation on ARM64 systems, including Apple M1 and Apple M2
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - conda-build
+  - python=3
+  - numpy 
+  - scipy 
+  - obspy 
+  - pandas 
+  - xarray 
+  - netCDF4
+  - h5py 
+  - mpi4py
+  - retry
+  - flake8
+  - nose
+  - pytest
+  - pip
+  - pip:
+    - git+https://github.com/sstaehler/instaseis.git
+    - tables
+    - seisgen
+    - seishmc
+    - -e .
+

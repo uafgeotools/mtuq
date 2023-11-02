@@ -147,7 +147,7 @@ if __name__=='__main__':
         data = read(path_data, format='sac', 
             event_id=event_id,
             station_id_list=station_id_list,
-            tags=['units:cm', 'type:velocity']) 
+            tags=['units:m', 'type:velocity']) 
 
 
         data.sort_by_distance()
@@ -205,14 +205,25 @@ if __name__=='__main__':
 
         results = results_bw + results_sw
 
+        #
+        # Collect information about best-fitting source
+        #
+
         origin_idx = results.origin_idxmin()
         best_origin = origins[origin_idx]
 
         source_idx = results.source_idxmin()
         best_mt = grid.get(source_idx)
 
+        # dictionary of lune parameters
         lune_dict = grid.get_dict(source_idx)
+
+        # dictionary of Mij parameters
         mt_dict = best_mt.as_dict()
+
+        merged_dict = merge_dicts(
+            mt_dict, lune_dict, {'M0': best_mt.moment()},
+            {'Mw': best_mt.magnitude()}, best_origin)
 
 
         #
@@ -235,15 +246,6 @@ if __name__=='__main__':
 
 
         print('Saving results...\n')
-
-        # collect information about best-fitting source
-        merged_dict = merge_dicts(
-            mt_dict,
-            lune_dict,
-            {'M0': best_mt.moment()},
-            {'Mw': best_mt.magnitude()},
-            best_origin,
-            )
 
         # save best-fitting source
         save_json(event_id+'DC+Z_solution.json', merged_dict)

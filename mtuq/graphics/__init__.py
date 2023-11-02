@@ -1,4 +1,7 @@
 
+import matplotlib
+from os.path import dirname, join
+
 
 from mtuq.graphics.attrs import\
     plot_time_shifts, plot_amplitude_ratios, plot_log_amplitude_ratios,\
@@ -43,12 +46,14 @@ from mtuq.graphics.uq import\
     likelihood_analysis
 
 
-# use Helvetica if available
-for fontname in ['Helvetica', 'Arial']:
-    try:
-        import matplotlib
-        matplotlib.rcParams['font.sans-serif'] = fontname
-        matplotlib.rcParams['font.family'] = "sans-serif"
-        break
-    except:
-        continue
+# use Nimbus Sans L as default font
+try:
+    import matplotlib.font_manager as font_manager
+    path = join(dirname(__file__), '__fonts')
+    for font in font_manager.findSystemFonts(path):
+        font_manager.fontManager.addfont(font)
+    matplotlib.rcParams['font.family'] = "Nimbus Sans L"
+
+except:
+    pass
+

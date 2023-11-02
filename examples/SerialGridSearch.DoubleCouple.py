@@ -129,7 +129,7 @@ if __name__=='__main__':
     data = read(path_data, format='sac',
         event_id=event_id,
         station_id_list=station_id_list,
-        tags=['units:cm', 'type:velocity']) 
+        tags=['units:m', 'type:velocity']) 
 
 
     data.sort_by_distance()
@@ -165,13 +165,25 @@ if __name__=='__main__':
 
     results = results_bw + results_sw
 
-    # `grid` index corresponding to minimum misfit
+    #
+    # Collect information about best-fitting source
+    #
+
+    # index of best-fitting moment tensor
     idx = results.source_idxmin()
 
+    # MomentTensor object
     best_mt = grid.get(idx)
+
+    # dictionary of lune parameters
     lune_dict = grid.get_dict(idx)
+
+    # dictionary of Mij parameters
     mt_dict = best_mt.as_dict()
 
+    merged_dict = merge_dicts(
+        mt_dict, lune_dict, {'M0': best_mt.moment()},
+        {'Mw': best_mt.magnitude()}, origin)
 
     #
     # Generate figures and save results
@@ -192,15 +204,6 @@ if __name__=='__main__':
 
 
     print('Saving results...\n')
-
-    # collect information about best-fitting source
-    merged_dict = merge_dicts(
-        mt_dict,
-        lune_dict,
-        {'M0': best_mt.moment()},
-        {'Mw': best_mt.magnitude()},
-        origin,
-        )
 
     # save best-fitting source
     save_json(event_id+'DC_solution.json', merged_dict)
