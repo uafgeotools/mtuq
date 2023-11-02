@@ -861,11 +861,11 @@ class CMA_ES(object):
 
         # Plot based on the number of ProcessData objects in the process_list
         if len(process) == 2:
-            plot_data_greens2(self.event_id + 'Waveforms_mean_' + str(self.iteration) + '.png',
+            plot_data_greens2(self.event_id + '_waveforms_mean_' + str(self.iteration) + '.png',
                             data[0], data[1], greens[0], greens[1], process[0], process[1],
                             misfit[0], misfit[1], stations, final_origin, best_source, lune_dict)
         elif len(process) == 1:
-            plot_data_greens1(self.event_id + 'Waveforms_mean_' + str(self.iteration) + '.png',
+            plot_data_greens1(self.event_id + '_waveforms_mean_' + str(self.iteration) + '.png',
                             data[0], greens[0], process[0], misfit[0], stations, final_origin, best_source, lune_dict)
 
     def _scatter_plot(self):
