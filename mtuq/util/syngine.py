@@ -24,10 +24,16 @@ GREENS_TENSOR_FILENAMES = [
     'greensfunction_XX.GF001..TDS.sac',
     ]
 
-SYNTHETICS_FILENAMES = [
+SYNTHETICS_FILENAMES_BX = [
     'XX.S0001.SE.BXZ.sac',
     'XX.S0001.SE.BXR.sac',
     'XX.S0001.SE.BXT.sac',
+    ]
+
+SYNTHETICS_FILENAMES_MX = [
+    'XX.S0001.SE.MXZ.sac',
+    'XX.S0001.SE.MXR.sac',
+    'XX.S0001.SE.MXT.sac',
     ]
 
 SYNGINE_MODELS = [

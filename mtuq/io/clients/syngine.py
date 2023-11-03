@@ -1,6 +1,7 @@
 
 import obspy
 import numpy as np
+import os
 
 from obspy.core import Stream
 from mtuq.greens_tensor.syngine import GreensTensor
@@ -9,7 +10,7 @@ from mtuq.util.signal import resample
 from mtuq.util import unzip
 from mtuq.util.syngine import download_unzip_mt_response, download_force_response,\
      resolve_model,\
-     GREENS_TENSOR_FILENAMES, SYNTHETICS_FILENAMES
+     GREENS_TENSOR_FILENAMES, SYNTHETICS_FILENAMES_BX, SYNTHETICS_FILENAMES_MX
 
 
 
@@ -95,11 +96,23 @@ class Client(ClientBase):
                 dirnames += [unzip(filename)]
 
             for _i, dirname in enumerate(dirnames):
-                for filename in SYNTHETICS_FILENAMES:
-                    stream += obspy.read(dirname+'/'+filename, format='sac')
+                # Attempt to read using the BX naming convention
+                files_read = False
+                for filename in SYNTHETICS_FILENAMES_BX:
+                    file_path = os.path.join(dirname, filename)
+                    if os.path.isfile(file_path):
+                        stream += obspy.read(file_path, format='sac')
+                        stream[-1].stats.channel = stream[-1].stats.channel[-1] + str(_i)
+                        files_read = True
 
-                    # overwrite channel attribute
-                    stream[-1].stats.channel = stream[-1].stats.channel[-1]+str(_i)
+                # If no files were read with the BX naming convention, try the MX naming convention
+                if not files_read:
+                    for filename in SYNTHETICS_FILENAMES_MX:
+                        file_path = os.path.join(dirname, filename)
+                        if os.path.isfile(file_path):
+                            stream += obspy.read(file_path, format='sac')
+                            stream[-1].stats.channel = stream[-1].stats.channel[-1] + str(_i)
+
 
 
         # what are the start and end times of the data?
