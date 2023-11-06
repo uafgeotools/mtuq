@@ -256,7 +256,8 @@ if __name__=='__main__':
 
     popsize = 48 # -- CMA-ES population size - number of mutants (you can play with this value, 24 to 120 is a good range)
     CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize, event_id=event_id)
-    CMA.sigma = 5.0 # -- Initial standard deviation (4 ~ 5 seems to provide a balanced exploration/exploitation and avoid getting stuck in local minima)
+    CMA.sigma = 5.0 # -- CMA-ES step size, defined as the standard deviation of the population can be ajusted here (4 ~ 5 seems to provide a balanced exploration/exploitation and avoid getting stuck in local minima). 
+    # The default value is otherwise 1 standard deviation (you can play with this value)
     iter = 60 # -- Number of iterations (you can play with this value, 120 to 240 is a good range)
 
     if mode == 'database':
@@ -273,7 +274,7 @@ if __name__=='__main__':
 
     if comm.rank==0:
         print('\nFinished\n')
-        
+
     # ================================================================================================
     # FOR EDUCATIONAL PURPOSE -- This is what is happening under the hood in the Solve function
     # ================================================================================================

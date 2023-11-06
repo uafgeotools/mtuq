@@ -209,7 +209,8 @@ if __name__=='__main__':
 
     popsize = 48 # -- CMA-ES population size (you can play with this value)
     CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize, event_id=event_id)
-    CMA.sigma = 3 # -- CMA-ES step size, defined the standard deviation of the initial parameter distribution (you can play with this value, higher values are best for exploration and are generaly worth it)
+    CMA.sigma = 3 # -- CMA-ES step size, defined as the standard deviation of the population can be ajusted here (3 ~ 4 seems to provide a balanced exploration/exploitation and avoid getting stuck in local minima). 
+    # The default value is otherwise 1 standard deviation (you can play with this value)
     iter = 80 # -- Number of iterations (you can play with this value)
 
     if mode == 'database':
