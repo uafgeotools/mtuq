@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from mtuq.util.cmaes import *
 from mtuq.util.math import to_mij, to_rtp
-import mpi4py.MPI as MPI
+from mpi4py import MPI
 from mtuq.greens_tensor import GreensTensor
 from mtuq import MTUQDataFrame
 from mtuq.grid.moment_tensor import UnstructuredGrid
