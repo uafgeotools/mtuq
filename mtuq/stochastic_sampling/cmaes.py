@@ -14,7 +14,8 @@ from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
 from mtuq.graphics.uq._matplotlib import _hammer_projection, _generate_lune
 from mtuq.util.math import to_gamma, to_delta
-from mtuq.graphics import plot_combined
+from mtuq.graphics import plot_combined, plot_misfit_force
+from mtuq.graphics.uq._matplotlib import _plot_force_matplotlib
 from mtuq.misfit import Misfit, PolarityMisfit
 from mtuq.misfit.waveform import calculate_norm_data 
 from mtuq.process_data import ProcessData
@@ -383,6 +384,7 @@ class CMA_ES(object):
         else:
             self.mutants = None
 
+
         self.transformed_mutants = self.comm.gather(self.transformed_mutants, root=0)
         if self.rank == 0:
             self.transformed_mutants = np.concatenate(self.transformed_mutants, axis=1)
@@ -391,8 +393,18 @@ class CMA_ES(object):
         else:
             self.transformed_mutants = None
 
-        self.mutants_logger_list = self.mutants_logger_list.append(
-                            self._datalogger(mean=False))
+
+        if self.comm.rank == 0:
+            current_df = self._datalogger(mean=False)
+        # Log the mutants from _datalogger object
+        # If self.mutants_logger_list is empty, initialize it with the current DataFrame
+            if self.mutants_logger_list.empty:
+                self.mutants_logger_list = current_df
+            else:
+                # Concatenate the current DataFrame to the logger list
+                self.mutants_logger_list = pd.concat([self.mutants_logger_list, current_df], ignore_index=True)
+
+
     # Sort the mutants by fitness
     def fitness_sort(self, misfit):
         """
@@ -486,8 +498,17 @@ class CMA_ES(object):
                 if param.repair == 'wrapping':
                     print('computing wrapped mean for parameter:', param.name)
                     self.xmean[_i] = self.circular_mean(_i)
-            self.mean_logger_list=self.mean_logger_list.append(
-                                self._datalogger(mean=True), ignore_index=True)
+            
+            # Update the mean datalogger
+            current_mean_df = self._datalogger(mean=True)
+
+            # If self.mean_logger_list is empty, initialize it with the current DataFrame
+            if self.mean_logger_list.empty:
+                self.mean_logger_list = current_mean_df
+            else:
+                # Concatenate the current DataFrame to the logger list
+                self.mean_logger_list = pd.concat([self.mean_logger_list, current_mean_df], ignore_index=True)
+
     # Utility functions --------------------------------------------------------------
     def circular_mean(self, id):
         '''
@@ -742,11 +763,10 @@ class CMA_ES(object):
                 norm = self._get_data_norm(current_data, current_misfit)
                 
                 misfit_values = misfit_values/norm                    
-                # self._misfit_holder += misfit_values
                 misfits.append(misfit_values)
 
-                # # Print the local lists on each process:
-                # print('Misfit on process %d: %s' % (self.rank, str(misfit_values)))
+                # Print the local lists on each process:
+                # print('Misfit on process %d: %s' % (self.rank, str(misfit_values))) # Can be made into a debug print in the future
 
             weighted_misfits = [w * m for w, m in zip(misfit_weights, misfits)]
             total_missfit = sum(weighted_misfits)
@@ -773,7 +793,13 @@ class CMA_ES(object):
                         elif self.mode == 'mt_dc':
                             V = W = 0
 
-                        plot_combined('combined.png', result, colormap='viridis', best_vw = (V,W))
+                    # If mode is mt, mt_dev or mt_dc, plot the misfit map
+                    if self.mode in ['mt', 'mt_dev', 'mt_dc']:
+                        plot_combined(self.event_id+'_combined_misfit_map.png', result, colormap='viridis', best_vw = (V,W))
+                    elif self.mode == 'force':
+                        print('Plotting results for iteration %d\n' % (i + iter_count))
+                        result = self.mutants_logger_list
+                        plot_misfit_force(self.event_id+'_misfit_map.png', result, colormap='viridis', backend=_plot_force_matplotlib, plot_type='colormesh', best_force=self.return_candidate_solution()[0][1::])
 
     def plot_mean_waveforms(self, data_list, process_list, misfit_list, stations, db_or_greens_list):
         """

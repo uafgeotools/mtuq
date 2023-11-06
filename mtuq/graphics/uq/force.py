@@ -6,6 +6,7 @@
 import numpy as np
 
 from matplotlib import pyplot
+from six import b
 
 from mtuq.graphics.uq._gmt import _plot_force_gmt
 from mtuq.grid_search import DataFrame, DataArray, MTUQDataArray, MTUQDataFrame
@@ -188,12 +189,25 @@ def _plot_force(filename, da, show_best=True, show_tradeoffs=False,
         raise Exception()
 
 
-    best_force = None
-    if show_best:
+    # Workaround for CMA-ES plotting function:
+    # If not best_force in **kwargs, then we define it as None. 
+    # If in **kwargs, allocate best_force variable with its value and remove it from **kwargs. 
+    # Print a warning when best_force is provided in **kwargs as it is not the default behavior.
+    best_force = kwargs.get('best_force', None)
+    print("best_force: ", best_force)
+
+    if best_force is not None:
+        del kwargs['best_force']
+        warn("best_force is not the default behavior. If you want to use it, please use the show_best keyword argument.")
+
+    if show_best and best_force is None:
+        print("Using attribute values for force")
         if 'best_force' in da.attrs:
             best_force = da.attrs['best_force']
         else:
             warn("Best-fitting force not given")
+
+    print("After checks", best_force)
 
     backend(filename,
         da.coords['phi'],
