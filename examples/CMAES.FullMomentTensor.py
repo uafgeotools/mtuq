@@ -264,13 +264,16 @@ if __name__=='__main__':
     elif mode == 'greens':
         CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, misfit_weights=[2., 3.])
 
-    result = CMA.mutants_logger_list # -- This is the list of mutants (i.e. the population) at each iteration
-    # This is a mtuq.grid_search.MTUQDataFrame object, which is the same as when conducting a random grid-search
-    # It is therefore compatible with the "regular" plotting functions in mtuq.graphics 
-    fig = CMA._scatter_plot() # -- This is a scatter plot of the mutants at the last iteration
-    fig.savefig(event_id+'CMA-ES_final_step.png')
+    if comm.rank==0:
+        result = CMA.mutants_logger_list # -- This is the list of mutants (i.e. the population) at each iteration
+        # This is a mtuq.grid_search.MTUQDataFrame object, which is the same as when conducting a random grid-search
+        # It is therefore compatible with the "regular" plotting functions in mtuq.graphics 
+        fig = CMA._scatter_plot() # -- This is a scatter plot of the mutants at the last iteration
+        fig.savefig(event_id+'CMA-ES_final_step.png')
 
-
+    if comm.rank==0:
+        print('\nFinished\n')
+        
     # ================================================================================================
     # FOR EDUCATIONAL PURPOSE -- This is what is happening under the hood in the Solve function
     # ================================================================================================
