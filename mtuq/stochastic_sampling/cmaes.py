@@ -2,8 +2,7 @@ from re import L
 import numpy as np
 import pandas as pd
 from mtuq.util.cmaes import *
-from mtuq.util.math import to_mij, to_rtp
-from mpi4py import MPI
+from mtuq.util.math import to_mij, to_rtp, to_gamma, to_delta, wrap_180
 from mtuq.greens_tensor import GreensTensor
 from mtuq import MTUQDataFrame
 from mtuq.grid.moment_tensor import UnstructuredGrid
@@ -14,7 +13,7 @@ from mtuq.greens_tensor.base import GreensTensorList
 from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
 from mtuq.graphics.uq._matplotlib import _hammer_projection, _generate_lune, _generate_sphere
-from mtuq.util.math import to_gamma, to_delta, wrap_180
+from mtuq.util import is_mpi_env
 from mtuq.graphics import plot_combined, plot_misfit_force
 from mtuq.graphics.uq._matplotlib import _plot_force_matplotlib
 from mtuq.misfit import Misfit, PolarityMisfit
@@ -50,10 +49,17 @@ class CMA_ES(object):
         '''
 
         # Generate Class based MPI communicator
-        self.comm = MPI.COMM_WORLD
-        self.rank = self.comm.Get_rank()
-        self.size = self.comm.Get_size()
+        self.rank = 0
+        self.size = 1
 
+        if is_mpi_env():
+            from mpi4py import MPI
+            self.comm = MPI.COMM_WORLD
+            self.rank = self.comm.Get_rank()
+            self.size = self.comm.Get_size()
+
+            if self.size > lmbda:
+                raise Exception('Number of MPI processes exceeds population size')
 
         # Initialize parameters-tied variables.
         # Variables are initially shared across all processes, but most of the important computations will be carried on the root process (self.rank == 0) only.
