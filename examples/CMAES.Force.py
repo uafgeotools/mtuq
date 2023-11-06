@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 from mtuq import read, open_db, download_greens_tensors
-from mtuq.event import Origin
+from mtuq.event import Origin, Force
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath
@@ -209,20 +209,20 @@ if __name__=='__main__':
 
     popsize = 48 # -- CMA-ES population size (you can play with this value)
     CMA = CMA_ES(parameter_list , origin=origin, lmbda=popsize, event_id=event_id)
-    CMA.sigma = 2 # -- CMA-ES step size, defined as 1 standard deviation of the initial parameter distribution (you can play with this value, higher values are best for exploration and are generaly worth it)
-    iter = 120 # -- Number of iterations (you can play with this value)
+    CMA.sigma = 3 # -- CMA-ES step size, defined the standard deviation of the initial parameter distribution (you can play with this value, higher values are best for exploration and are generaly worth it)
+    iter = 80 # -- Number of iterations (you can play with this value)
 
     if mode == 'database':
         CMA.Solve(DATA, stations, MISFIT, PROCESS, db, iter, wavelet, plot_interval=10, misfit_weights=[1.])
     elif mode == 'greens':
         CMA.Solve(DATA, stations, MISFIT, PROCESS, GREENS, iter, plot_interval=10, misfit_weights=[1.])
 
-    #  --- Plotting force misfit result
-    # CMA.mutants_logger_list returns an object similar to mtuq defautl grid search result, which is compatible with all plotting functions
-    result = CMA.mutants_logger_list # -- This is the list of mutants (i.e. the population) at each iteration
-
-    # Plotting the result - plot_type can be 'colormesh' or 'contour', but in the case of CMA-ES, colormesh gives better result than a contour plot 
-    plot_misfit_force(event_id+'_misfit_force.png', result, backend=_plot_force_matplotlib, plot_type='colormesh')
+    if comm.rank==0:
+        result = CMA.mutants_logger_list # -- This is the list of mutants (i.e. the population) at each iteration
+        # This is a mtuq.grid_search.MTUQDataFrame object, which is the same as when conducting a random grid-search
+        # It is therefore compatible with the "regular" plotting functions in mtuq.graphics 
+        fig = CMA._scatter_plot() # -- This is a scatter plot of the mutants at the last iteration
+        fig.savefig(event_id+'CMA-ES_final_step.png')
 
     if comm.rank==0:
         print('\nFinished\n')
