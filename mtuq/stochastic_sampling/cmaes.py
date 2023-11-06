@@ -1,3 +1,4 @@
+from re import L
 import numpy as np
 import pandas as pd
 from mtuq.util.cmaes import *
@@ -12,8 +13,8 @@ from mtuq.io.clients.AxiSEM_NetCDF import Client as AxiSEM_Client
 from mtuq.greens_tensor.base import GreensTensorList
 from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
-from mtuq.graphics.uq._matplotlib import _hammer_projection, _generate_lune
-from mtuq.util.math import to_gamma, to_delta
+from mtuq.graphics.uq._matplotlib import _hammer_projection, _generate_lune, _generate_sphere
+from mtuq.util.math import to_gamma, to_delta, wrap_180
 from mtuq.graphics import plot_combined, plot_misfit_force
 from mtuq.graphics.uq._matplotlib import _plot_force_matplotlib
 from mtuq.misfit import Misfit, PolarityMisfit
@@ -902,44 +903,73 @@ class CMA_ES(object):
         Matplotlib figure object (also retrived by self.fig)
         """
         if self.rank == 0:
-            if self.fig is None:  # Check if fig is None
-                self.fig, self.ax = _generate_lune()
+            # Check if mode is mt, mt_dev or mt_dc or force
+            if self.mode in ['mt', 'mt_dev', 'mt_dc']:
+                if self.fig is None:  
+                    self.fig, self.ax = _generate_lune()
 
-            # Define v as by values from self.mutants_logger_list if it exists, otherwise pad with values of zeroes
-            m = np.asarray(self.mutants_logger_list['misfit'])
+                # Define v as by values from self.mutants_logger_list if it exists, otherwise pad with values of zeroes
+                m = np.asarray(self.mutants_logger_list['misfit'])
 
-            if 'v' in self.mutants_logger_list:
-                v = np.asarray(self.mutants_logger_list['v'])
-            else:
-                v = np.zeros_like(m)
+                if 'v' in self.mutants_logger_list:
+                    v = np.asarray(self.mutants_logger_list['v'])
+                else:
+                    v = np.zeros_like(m)
 
-            if 'w' in self.mutants_logger_list:
-                w = np.asarray(self.mutants_logger_list['w'])
-            else:
-                w = np.zeros_like(m)
+                if 'w' in self.mutants_logger_list:
+                    w = np.asarray(self.mutants_logger_list['w'])
+                else:
+                    w = np.zeros_like(m)
+                
+                # Handling the mean solution
+                if self.mode == 'mt':
+                    V,W = self._datalogger(mean=True)['v'], self._datalogger(mean=True)['w']
+                elif self.mode == 'mt_dev':
+                    V = self._datalogger(mean=True)['v']
+                    W = 0
+                elif self.mode == 'mt_dc':
+                    V = W = 0
+
+                # Projecting the mean solution onto the lune
+                V, W = _hammer_projection(to_gamma(V), to_delta(W))
+                self.ax.scatter(V, W, c='red', marker='x', zorder=10000000)
+                # Projecting the mutants onto the lune
+                v, w = _hammer_projection(to_gamma(v), to_delta(w))
+
+
+                vmin, vmax = np.percentile(np.asarray(m), [0,90])
+
+                self.ax.scatter(v, w, c=m, s=3, vmin=vmin, vmax=vmax, zorder=100)
+
+                self.fig.canvas.draw()
+                return self.fig
             
-            # Handling the mean solution
-            if self.mode == 'mt':
-                V,W = self._datalogger(mean=True)['v'], self._datalogger(mean=True)['w']
-            elif self.mode == 'mt_dev':
-                V = self._datalogger(mean=True)['v']
-                W = 0
-            elif self.mode == 'mt_dc':
-                V = W = 0
+            elif self.mode == 'force':
+                if self.fig is None:
+                    self.fig, self.ax = _generate_sphere()
 
-            # Projecting the mean solution onto the lune
-            V, W = _hammer_projection(to_gamma(V), to_delta(W))
-            self.ax.scatter(V, W, c='red', marker='x', zorder=10000000)
-            # Projecting the mutants onto the lune
-            v, w = _hammer_projection(to_gamma(v), to_delta(w))
+                # phi and h will always be present in the mutants_logger_list
+                m = np.asarray(self.mutants_logger_list['misfit'])
+                phi, h = np.asarray(self.mutants_logger_list['phi']), np.asarray(self.mutants_logger_list['h'])
+                latitude = np.degrees(np.pi/2 - np.arccos(h))
+                longitude = wrap_180(phi + 90)
+                # Getting mean solution
+                PHI, H = self._datalogger(mean=True)['phi'], self._datalogger(mean=True)['h']
+                LATITUDE = np.asarray(np.degrees(np.pi/2 - np.arccos(H)))
+                LONGITUDE = wrap_180(np.asarray(PHI + 90))
+                
+                # Projecting the mean solution onto the sphere
+                LONGITUDE, LATITUDE = _hammer_projection(LONGITUDE, LATITUDE)
+                # Projecting the mutants onto the sphere
+                longitude, latitude = _hammer_projection(longitude, latitude)
 
+                vmin, vmax = np.percentile(np.asarray(m), [0,90])
 
-            vmin, vmax = np.percentile(np.asarray(m), [0,90])
+                self.ax.scatter(longitude, latitude, c=m, s=3, vmin=vmin, vmax=vmax, zorder=100)
+                self.ax.scatter(LONGITUDE, LATITUDE, c='red', marker='x', zorder=10000000)
+                return self.fig
+                
 
-            self.ax.scatter(v, w, c=m, s=3, vmin=vmin, vmax=vmax, zorder=100)
-
-            self.fig.canvas.draw()
-            return self.fig
 
     def _transform_mutants(self):
         """
