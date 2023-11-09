@@ -97,8 +97,6 @@ class Client(ClientBase):
             # Check if the Green's Function (GF) exists,
             # Read from the PKL file storing the GF or generate from SGT.
 
-            dep = str(int(np.ceil(origin.depth_in_m/1000.)))
-
             prefix = station.id
             data_type = '3DGF'
             fmt = 'PKL'
@@ -108,7 +106,7 @@ class Client(ClientBase):
                                                    np.round(origin.depth_in_m, 2),
                                                    data_type,
                                                    fmt)
-            GF_file_path = os.path.join(str(self.path+'/'+dep), str(GF_name))
+            GF_file_path = os.path.join(str(self.path), str(GF_name))
 
             b_exist = False
             b_generate = True
