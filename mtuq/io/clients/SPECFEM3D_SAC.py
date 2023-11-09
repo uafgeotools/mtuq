@@ -4,6 +4,7 @@ import obspy
 import numpy as np
 
 from obspy.core import Stream
+from os.path import join
 from mtuq.greens_tensor.SPECFEM3D import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
@@ -68,7 +69,8 @@ class Client(ClientBase):
     """
 
     def __init__(self, path_or_url=None, model=None, 
-                 include_mt=True, include_force=False):
+                 include_mt=True, include_force=False,
+                 units='km'):
 
         self.path = path_or_url
 
@@ -78,6 +80,13 @@ class Client(ClientBase):
 
         self.include_mt = include_mt
         self.include_force = include_force
+
+        if not units:
+            pass
+        elif units.lower() not in ['','m','km']:
+            raise ValueError
+            units = units.lower()
+        self.units = units
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
@@ -104,10 +113,20 @@ class Client(ClientBase):
         # read data
         stream = Stream()
         stream.id = station.id
-        dep = str(int(np.ceil(origin.depth_in_m/1000.)))
+
+        # optionally, append depth subdirectory to path
+        path = self.path
+        if hasattr(origin, 'depth_in_m'):
+           if self.units=='m':
+               subdir = str(int(np.ceil(origin.depth_in_m)))
+           elif self.units=='km':
+               subdir = str(int(np.ceil(origin.depth_in_m/1000.)))
+           else:
+               raise ValueError
+           path = join(path, subdir)
 
         # check if Green's functions exist for given station code
-        if _exists(self.path+'/'+dep+'/'+station.id+'.*.sac'):
+        if _exists(path+'/'+station.id+'.*.sac'):
             prefix = station.id
 
         else:
@@ -115,14 +134,12 @@ class Client(ClientBase):
                   'Trying other codes instead:'
                   % station.id)
 
-            prefix = _try_wildcards(self.path, dep, station)
+            prefix = _try_wildcards(path, station)
 
-        
-            
         if self.include_mt:
             for suffix in EXT_MT:
                 trace = obspy.read(
-                    self.path+'/'+dep+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
+                    path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
                 trace.stats.channel = suffix
                 trace.stats._component = suffix[0]
                 stream += trace
@@ -130,7 +147,7 @@ class Client(ClientBase):
         if self.include_force:
             for suffix in EXT_FORCE:
                 trace = obspy.read(
-                    self.path+'/'+dep+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
+                    path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
                 trace.stats.channel = suffix
                 trace.stats._component = suffix[0]
                 stream += trace
@@ -177,16 +194,16 @@ def _exists(wildcard):
     else:
         return False
 
-def _try_wildcards(path, dep, station):
+def _try_wildcards(path, station):
 
     wildcards = [ 
         station.network+'.'+station.station+'.*',
-        '*'            +'.'+station.station+'.*',
+        '*'+'.'+station.station+'.*',
         ] 
 
     for wildcard in wildcards:
         print('  "%s"' % wildcard)
-        if _exists(path+'/'+dep+'/'+wildcard+'.*.sac'):
+        if _exists(path+'/'+wildcard+'.*.sac'):
             print()
             return wildcard
     else:
