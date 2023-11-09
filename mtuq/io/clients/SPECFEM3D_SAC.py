@@ -104,9 +104,10 @@ class Client(ClientBase):
         # read data
         stream = Stream()
         stream.id = station.id
+        dep = str(int(np.ceil(origin.depth_in_m/1000.)))
 
         # check if Green's functions exist for given station code
-        if _exists(self.path+'/'+station.id+'.*.sac'):
+        if _exists(self.path+'/'+dep+'/'+station.id+'.*.sac'):
             prefix = station.id
 
         else:
@@ -114,12 +115,14 @@ class Client(ClientBase):
                   'Trying other codes instead:'
                   % station.id)
 
-            prefix = _try_wildcards(self.path, station)
+            prefix = _try_wildcards(self.path, dep, station)
+
+        
             
         if self.include_mt:
             for suffix in EXT_MT:
                 trace = obspy.read(
-                    self.path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
+                    self.path+'/'+dep+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
                 trace.stats.channel = suffix
                 trace.stats._component = suffix[0]
                 stream += trace
@@ -174,7 +177,7 @@ def _exists(wildcard):
     else:
         return False
 
-def _try_wildcards(path, station):
+def _try_wildcards(path, dep, station):
 
     wildcards = [ 
         station.network+'.'+station.station+'.*',
@@ -183,7 +186,7 @@ def _try_wildcards(path, station):
 
     for wildcard in wildcards:
         print('  "%s"' % wildcard)
-        if _exists(path+'/'+wildcard+'.*.sac'):
+        if _exists(path+'/'+dep+'/'+wildcard+'.*.sac'):
             print()
             return wildcard
     else:

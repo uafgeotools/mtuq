@@ -95,7 +95,7 @@ if __name__=='__main__':
         'time': '2019-07-12T13:11:37.0000Z',
         'latitude': 35.638333,
         'longitude': -117.585333,
-        'depth_in_m': 9950.0,
+        'depth_in_m': 10000.0,
         'id': 'evt11071294'
         })
 
@@ -149,6 +149,8 @@ if __name__=='__main__':
     idx = results.source_idxmin()
     best_mt = grid.get(idx)
     lune_dict = grid.get_dict(idx)
+
+    run_figures = True
 
     if run_figures:
 
