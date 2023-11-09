@@ -130,7 +130,7 @@ class Client(ClientBase):
         if self.include_force:
             for suffix in EXT_FORCE:
                 trace = obspy.read(
-                    self.path+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
+                    self.path+'/'+dep+'/'+prefix+'.'+suffix+'.sac', format='sac')[0]
                 trace.stats.channel = suffix
                 trace.stats._component = suffix[0]
                 stream += trace
