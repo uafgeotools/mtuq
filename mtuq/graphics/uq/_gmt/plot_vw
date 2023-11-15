@@ -1,12 +1,12 @@
 #!/bin/bash -e
 
 #
-# PLOT_LUNE
-#    plots values from ASCII file on eigenvalue lune
+# PLOT_VW
+#    plots values from ASCII file on vw rectangle
 #
 
 
-# add mtuq/graphics/_gmt to the path
+# add mtuq/graphics/uq/_gmt to the path
 export PATH=${PATH:+${PATH}:}$(dirname ${BASH_SOURCE[0]})
 source _gmt_functions
 
