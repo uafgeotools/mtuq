@@ -1,7 +1,7 @@
 
 channels:
-  - defaults
   - conda-forge
+  - defaults
 
 dependencies:
   - conda-build
@@ -9,7 +9,6 @@ dependencies:
   - numpy 
   - scipy 
   - obspy 
-  - instaseis 
   - pandas 
   - xarray 
   - netCDF4
@@ -21,6 +20,7 @@ dependencies:
   - pytest
   - pip
   - pip:
+    - git+https://github.com/rmodrak/instaseis.git
     - tables
     - seisgen
     - seishmc
