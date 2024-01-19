@@ -1299,11 +1299,11 @@ WrapUp_DetailedAnalysis="""
         # save processed waveforms as binary files
         os.makedirs(event_id+'FMT_waveforms', exist_ok=True)
 
-        data_bw.write(event_id+'FMT_waveforms/dat_bw.p')
-        data_sw.write(event_id+'FMT_waveforms/dat_sw.p')
+        data_bw.write(event_id+'FMT_waveforms/dat_bw')
+        data_sw.write(event_id+'FMT_waveforms/dat_sw')
 
-        synthetics_bw.write(event_id+'FMT_waveforms/syn_bw.p')
-        synthetics_sw.write(event_id+'FMT_waveforms/syn_sw.p')
+        synthetics_bw.write(event_id+'FMT_waveforms/syn_bw')
+        synthetics_sw.write(event_id+'FMT_waveforms/syn_sw')
 
 
         # save misfit surfaces as netCDF files

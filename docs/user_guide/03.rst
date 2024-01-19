@@ -54,7 +54,7 @@ To open an AxiSEM database client in MTUQ:
    db = open_db(path_to_NetCDF_file, format="AxiSEM")
 
 
-`FK <https://www.eas.slu.edu/People/LZhu/home.html>`_ simulates wave propagation in horizontally-layered elastic media using a frequency-wavenumber method.   FK  simulations create SAC files in a directory tree organized by model, event depth, and event distance.  Each SAC file represents a vertical, radial, or transverse velocity time series in units of 10^-20*cm*(dyne-cm)^-1 s^-1.
+`FK <https://www.eas.slu.edu/People/LZhu/home.html>`_ simulates wave propagation in horizontally-layered elastic media using a frequency-wavenumber integration method.   FK  simulations create SAC files in a directory tree organized by model, event depth, and event distance.  Each SAC file represents a vertical, radial, or transverse velocity time series in units of 10^-20*cm*(dyne-cm)^-1 s^-1.
 
 
 To open an FK database client in MTUQ:

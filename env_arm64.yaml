@@ -1,8 +1,7 @@
-# for installation on ARM64 systems, including Apple M1 and Apple M2
 
 channels:
-  - defaults
   - conda-forge
+  - defaults
 
 dependencies:
   - conda-build
@@ -21,9 +20,8 @@ dependencies:
   - pytest
   - pip
   - pip:
-    - git+https://github.com/sstaehler/instaseis.git
+    - git+https://github.com/rmodrak/instaseis.git
     - tables
     - seisgen
     - seishmc
     - -e .
-

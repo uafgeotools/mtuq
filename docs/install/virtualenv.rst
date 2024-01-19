@@ -1,7 +1,7 @@
 Installation under virtualenv
 =============================
 
-Install `virtualenv`, if not already present, following these `instructions <https://virtualenv.pypa.io/en/latest/installation.html>`_.
+Install virtualenv, if not already present, following these `instructions <https://virtualenv.pypa.io/en/latest/installation.html>`_.
 
 Create a virtual environment:
 
@@ -28,7 +28,7 @@ Install MTUQ:
    pip install -e .
 
 
-If `instaseis` installation fails, try:
+If Instaseis installation fails, try:
 
 .. code::
 

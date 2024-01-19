@@ -1,12 +1,11 @@
 #!/bin/bash -e
 
-
-# USAGE
-#   plot_mt_xy out filetype mt_file mw_file xmin xmax ymin ymax xlabel ylabel [title] [subtitle]
+#
+# PLOT_LATLON
 #
 
 
-# add mtuq/graphics/_gmt to the path
+# add mtuq/graphics/uq/_gmt to the path
 export PATH=${PATH:+${PATH}:}$(dirname ${BASH_SOURCE[0]})
 source _gmt_functions
 

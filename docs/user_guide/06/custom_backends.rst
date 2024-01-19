@@ -31,7 +31,7 @@ Note that the backend function contains hardcoded settings that improve the appe
       fig.basemap(
           region=gmt_region,
           projection=gmt_projection,
-          frame=["xa5", "ya2"],
+          frame=gmt_frame,
           )
 
       fig.coast(

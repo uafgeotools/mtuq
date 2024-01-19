@@ -1,6 +1,16 @@
 
-Installation on ARM64 systems
-=============================
+.. warning::
+
+   With newer versions of MTUQ, the same installation procedure works for Macs
+   as for other computers. Thus, the following modified procedure may no longer 
+   be necessary (though it should still continue to work).
+
+
+
+Modified installation procedure for Apple M1 and Apple M2 Macs
+==============================================================
+
+Newer Mac computers use proprietary Apple processors based on the ARM64 architecture.
 
 To install MTUQ on ARM64 systems, create a conda virtual environment:
 
@@ -37,16 +47,16 @@ Finally, install PyGMT:
 
 .. code::
 
-    conda install 'pygmt>=0.9'
+    conda install 'pygmt=0.9'
 
 
 .. note::
 
-    Users may receive the following Instaseis warning message:
+    Users may receive the following Instaseis warning:
 
     `UserWarning: Please don't install from a tarball. Use the proper pypi release or install from git.`
 
-    Now that Instaseis PyPI releases are no longer maintained, the above message can be ignored.
+    In fact, env_arm64.yaml does install Instaseis from git, and the above message can be ignored.
 
 
 .. note::
