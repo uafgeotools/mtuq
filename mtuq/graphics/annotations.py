@@ -79,14 +79,11 @@ def trace_label_writer(axis, dat, syn, total_misfit=1.):
 #
 
 def _getattr(trace, name, *args):
-    if len(args)==1:
-        if not hasattr(trace, 'attrs'):
-            return args[0]
-        else:
-            return getattr(trace.attrs, name, args[0])
-    elif len(args)==0:
+    # Check if trace has an 'attrs' attribute and if name is an attribute of trace.attrs
+    if hasattr(trace, 'attrs') and hasattr(trace.attrs, name):
         return getattr(trace.attrs, name)
-    else:
-        raise TypeError("Wrong number of arguments")
+    
+    # If not, check directly on trace's attributes
+    return getattr(trace, name, args[0] if args else None)
 
 
