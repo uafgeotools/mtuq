@@ -90,9 +90,6 @@ class ProcessData(object):
     - ``'group_velocity'``
       surface-wave window centered on given group velocity
 
-    - ``'min_max'``
-      surface-wave window defined by minimum and maximum velocities (experimental)
-
     - ``None``
       no windows will be applied
 
@@ -131,15 +128,9 @@ class ProcessData(object):
     ``group_velocity`` (`float`)
     Group velocity in m/s, required for `window_type=group_velocity`
 
-    ``alignment`` (`float`)
+    ``window_alignment`` (`float`)
     Optional window alignment for `window_type=group_velocity`
-    (`float` between 0. and 1.)
-
-    ``v_min`` (`float`)
-    Minimum velocity in m/s, required for `window_type=min_max`
-
-    ``v_max`` (`float`)
-    Maximum velocity in m/s, required for `window_type=min_max`
+    (`float` between 0. and 1., 0.5 default)
 
     ``time_shift_min`` (`float`)
     Required for `apply_padding=True`
@@ -194,13 +185,18 @@ class ProcessData(object):
          capuaf_file=None,
 
          # P and S pick parameters
-         # (body_wave and surface_wave windows are defined relative to
-         # P and S picks)
+         # (default body_wave and surface_wave windows are defined relative to
+         # P and S picks, which can be calculated on the fly from tau-P or
+         # read from FK database)
          taup_model=None,
          FK_database=None,
          FK_model=None,
 
-         ):
+         # any user-supplied keyword arguments not included above go into
+         # this dictionary 
+         # (can be helpful for user customization)
+         **parameters):
+
 
         if not filter_type:
             warn("No filter will be applied")
@@ -294,8 +290,8 @@ class ProcessData(object):
             assert 'group_velocity' in parameters
             assert parameters['group_velocity'] >= 0.
             self.group_velocity = parameters['group_velocity']
-            self.alignment = getattr(parameters, 'window_alignment', 0.5)
-            assert 0. <= self.alignment <= 1.
+            self.window_alignment = getattr(parameters, 'window_alignment', 0.5)
+            assert 0. <= self.window_alignment <= 1.
             assert window_length > 0.
             self.window_length = window_length
 
@@ -635,8 +631,8 @@ class ProcessData(object):
                 # alignment=1.0 - window ends at group arrival
                 alignment = self.alignment
 
-                starttime = group_arrival - self.window_length*alignment
-                endtime = group_arrival + self.window_length*(1.-alignment)
+                starttime = group_arrival - self.window_length*window_alignment
+                endtime = group_arrival + self.window_length*(1.-window_alignment)
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
@@ -673,7 +669,7 @@ class ProcessData(object):
 
             # STATIC CONVENTION:  A positive static time shift means synthetics
             # are arriving too early and need to be shifted forward in time 
-            # (positive shift) to match the observed data.
+            # (positive shift) to match the observed data
 
             if self.apply_statics:
                 try:
