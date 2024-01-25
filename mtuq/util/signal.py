@@ -168,8 +168,8 @@ def check_time_sampling(stream):
 
 def check_padding(dataset, time_shift_min, time_shift_max):
     # For greatest accuracy, Green's functions must be longer than data
-    # (i.e., Green's functions must begin +time_shift_max before data and
-    # end -time_shift_min after data.) 
+    # (i.e., Green's functions must begin -time_shift_min before data and
+    # end +time_shift_min after data.) 
     #
     # To achieve this, users can supply left and right padding lengths
     # via the `padding` parameter when calling `mtuq.ProcessData`.
@@ -189,12 +189,12 @@ def check_padding(dataset, time_shift_min, time_shift_max):
 
                 pad(trace, (time_shift_min, time_shift_max))
 
-                setattr(trace, 'npts_left', int(round(+time_shift_max/dt)))
-                setattr(trace, 'npts_right', int(round(-time_shift_min/dt)))
+                setattr(trace, 'npts_left', int(round(-time_shift_min/dt)))
+                setattr(trace, 'npts_right', int(round(+time_shift_max/dt)))
 
             else:
-                assert npts_left == int(round(+time_shift_max/dt))
-                assert npts_right == int(round(-time_shift_min/dt))
+                assert npts_left == int(round(-time_shift_min/dt))
+                assert npts_right == int(round(+time_shift_max/dt))
 
 
 def get_arrival(arrivals, phase):

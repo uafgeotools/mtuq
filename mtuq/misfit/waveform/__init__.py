@@ -132,6 +132,9 @@ class WaveformMisfit(object):
         assert norm in ['L1', 'L2', 'hybrid'],\
             ValueError("Bad input argument: norm")
 
+        assert time_shift_min <= 0.,\
+            ValueError("Bad input argument: time_shift_min")
+
         assert time_shift_max >= 0.,\
             ValueError("Bad input argument: time_shift_max")
 

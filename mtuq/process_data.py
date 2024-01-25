@@ -98,7 +98,7 @@ class ProcessData(object):
 
 
     ``apply_statics`` (`bool`)
-    Whether or not to apply static time shifts from columns 11-13 of `capuaf_file`
+    Whether or not to apply static time shifts from columns 11-12 of `capuaf_file`
 
 
     ``apply_weights`` (`bool`)
@@ -108,6 +108,10 @@ class ProcessData(object):
     ``apply_scaling`` (`bool`)
     Whether or not to apply distance-dependent amplitude scaling
 
+
+    ``apply_padding`` (`bool`)
+    Whether or not to use longer Green's window relative to observed data 
+    window (allows for more accurate cross-correlations)
 
 
     .. rubric:: Other input arguments that may be required, depending on the above
@@ -137,8 +141,11 @@ class ProcessData(object):
     ``v_max`` (`float`)
     Maximum velocity in m/s, required for `window_type=min_max`
 
-    ``padding`` (`list`)
-    Amount by which Green's functions will be padded relative to data
+    ``time_shift_min`` (`float`)
+    Required for `apply_padding=True`
+
+   ``time_shift_max`` (`float`)
+    Required for `apply_padding=True`
 
     ``taup_model`` (`str`)
     Name of built-in ObsPy TauP model or path to custom ObsPy TauP model,
@@ -248,15 +255,20 @@ class ProcessData(object):
         #
         # check window parameters
         #
+
         if not self.window_type:
              # nothing to check now
              pass
 
         elif self.window_type == 'body_wave':
             assert pick_type is not None, "Must be defined: pick_type"
+            assert window_length > 0.
+            self.window_length = window_length
 
         elif self.window_type == 'surface_wave':
             assert pick_type is not None, "Must be defined: pick_type"
+            assert window_length > 0.
+            self.window_length = window_length
 
         elif self.window_type == 'group_velocity':
             assert 'group_velocity' in parameters
@@ -264,6 +276,8 @@ class ProcessData(object):
             self.group_velocity = parameters['group_velocity']
             self.alignment = getattr(parameters, 'window_alignment', 0.5)
             assert 0. <= self.alignment <= 1.
+            assert window_length > 0.
+            self.window_length = window_length
 
         elif self.window_type == 'min_max':
             assert 'v_min' in parameters
@@ -273,7 +287,7 @@ class ProcessData(object):
             assert parameters['v_max'] <= np.inf
             self.v_min = parameters['v_min']
             self.v_max = parameters['v_max']
-            _window_warnings(self.window_type, self.window_length)
+            _window_warnings(window_type, window_length)
 
         else:
              raise ValueError('Bad parameter: window_type')
@@ -288,31 +302,44 @@ class ProcessData(object):
                 ValueError
 
 
-        if self.padding:
-            assert self.window_type is not None
+        if apply_padding:
 
+            assert self.time_shift_min <= 0.,\
+                ValueError("Bad parameter: time_shift_min")
 
-        if self.padding is None:
-             self.padding = (0., 0.)
+            assert self.time_shift_max >= 0.,\
+                ValueError("Bad parameter: time_shift_max")
+
+            self.time_shift_min = time_shift_min
+            self.time_shift_max = time_shift_max
+
+        self.apply_padding = apply_padding
+        self.apply_statics = apply_statics
+
 
 
         #
         # check phase pick parameters
         #
+
         if not self.pick_type:
              # nothing to check now
              pass
 
         elif self.pick_type == 'taup':
-            assert self.taup_model is not None
+            assert taup_model is not None
+            self.taup_model = taup_model
             self._taup = taup.TauPyModel(self.taup_model)
 
-
         elif self.pick_type == 'FK_metadata':
-            assert self.FK_database is not None
-            assert exists(self.FK_database)
+            assert FK_database is not None
+            assert exists(FK_database)
+
             if self.FK_model is None:
                 self.FK_model = basename(self.FK_database)
+
+            self.FK_database = FK_database
+            self.FK_model = FK_model
 
         elif self.pick_type == 'SAC_metadata':
              pass
@@ -646,15 +673,15 @@ class ProcessData(object):
                         key = 'surface_wave_'+component
 
                     static = self.statics[id][key]
-                    trace.static_time_shift = static
+                    trace.attrs.static_time_shift = static
 
                 except:
                     print('Error reading static time shift: %s' % id)
                     static = 0.
 
                 if 'type:greens' in tags:
-                    starttime -= static
-                    endtime -= static
+                    starttime += static
+                    endtime += static
 
 
             #
@@ -664,12 +691,14 @@ class ProcessData(object):
             # using a longer window for Green's functions than for data allows for
             # more accurate time-shift corrections
 
-            if 'type:greens' in tags:
-                starttime -= self.padding[0]
-                endtime += self.padding[1]
+            if self.apply_padding and\
+               'type:greens' in tags:
 
-                trace.attrs.npts_left = int(round(abs(self.padding[0])/dt))
-                trace.attrs.npts_right = int(round(abs(self.padding[1])/dt))
+                starttime += self.time_shift_min
+                endtime += self.time_shift_max
+
+                trace.attrs.npts_left = int(round(-self.time_shift_max/dt))
+                trace.attrs.npts_right = int(round(+self.time_shift_max/dt))
 
 
             #
