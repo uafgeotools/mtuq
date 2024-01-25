@@ -160,21 +160,47 @@ class ProcessData(object):
     """
 
     def __init__(self,
+
          filter_type=None,
          window_type=None,
          pick_type=None,
+
+         # for filter_type='Bandpass' 
+         # (specify corners in terms of frequency or period, but not both)
+         freq_min=None,
+         freq_max=None,
+         period_min=None,
+         period_max=None,
+
+         # for filter_type='Lowpass' or filter_type='Highpass'
+         # (specify corner in terms of frequency or period, but not both)
+         freq=None,
+         period=None,
+
+         # window parameters
          window_length=None,
-         padding=None,
-         taup_model=None,
-         FK_database=None,
-         FK_model=None,
+         apply_padding=False,
          apply_statics=False,
+         time_shift_min=None,
+         time_shift_max=None,
+
+         # data weighting parameters
+         # (control contribution of particular traces or components to the
+         # data misfit function)
          apply_weights=True,
          apply_scaling=True,
          scaling_power=None,
          scaling_coefficient=None,
          capuaf_file=None,
-         **parameters):
+
+         # P and S pick parameters
+         # (body_wave and surface_wave windows are defined relative to
+         # P and S picks)
+         taup_model=None,
+         FK_database=None,
+         FK_model=None,
+
+         ):
 
         if not filter_type:
             warn("No filter will be applied")
@@ -184,69 +210,63 @@ class ProcessData(object):
 
         if filter_type:
             filter_type = filter_type.lower()
+        self.filter_type = filter_type
 
         if window_type:
             window_type = window_type.lower()
-
-        self.filter_type = filter_type
         self.window_type = window_type
-        self.pick_type = pick_type
 
-        self.window_length = window_length
-        self.padding = padding
-        self.taup_model = taup_model
-        self.FK_database = FK_database
-        self.FK_model = FK_model
-        self.apply_weights = apply_weights
-        self.apply_statics = apply_statics
-        self.apply_scaling = apply_scaling
-        self.scaling_power = scaling_power
-        self.scaling_coefficient = scaling_coefficient
-        self.capuaf_file = capuaf_file
+        # note that we make pick_type case sensitive 
+        # (could be helpful because p,P s,S are meaningful differences?)
+        self.pick_type = pick_type
 
 
         #
         # check filter parameters
         #
+
         if not self.filter_type:
             # nothing to check
             pass
 
         elif self.filter_type == 'bandpass':
-            # allow filter corners to be specified in terms of either period [s]
-            # or frequency [Hz]
-            if 'period_min' in parameters and 'period_max' in parameters:
-                assert 'freq_min' not in parameters
-                assert 'freq_max' not in parameters
-                parameters['freq_min'] = parameters['period_max']**-1
-                parameters['freq_max'] = parameters['period_min']**-1
 
-            if 'freq_min' not in parameters: raise ValueError
-            if 'freq_max' not in parameters: raise ValueError
-            assert 0 < parameters['freq_min']
-            assert parameters['freq_min'] < parameters['freq_max']
-            assert parameters['freq_max'] < np.inf
-            self.freq_min = parameters['freq_min']
-            self.freq_max = parameters['freq_max']
+            # filter corners can be specified in terms of either period [s]
+            # or frequency [Hz], but not both
+            if period_min is not None and\
+               period_max is not None:
 
-        elif self.filter_type == 'lowpass':
-            if 'period' in parameters:
-                assert 'freq' not in parameters
-                parameters['freq'] = parameters['period']**-1
+                assert freq_min is None
+                assert freq_max is None
+                freq_min = period_max**-1
+                freq_max = period_min**-1
 
-            if 'freq' not in parameters: raise ValueError
-            assert 0 < parameters['freq']
-            assert parameters['freq'] < np.inf
-            self.freq = parameters['freq']
+            else:
+                assert freq_min is not None
+                assert freq_max is not None
 
-        elif self.filter_type == 'highpass':
-            if 'period' in parameters:
-                assert 'freq' not in parameters
-                parameters['freq'] = parameters['period']**-1
+            assert 0 < freq_min
+            assert freq_min < freq_max
+            assert freq_max < np.inf
 
-            if 'freq' not in parameters: raise ValueError
-            assert 0 <= parameters['freq'] < np.inf
-            self.freq = parameters['freq']
+            self.freq_min = freq_min
+            self.freq_max = freq_max
+
+
+        elif self.filter_type == 'lowpass' or\
+             self.filter_type == 'highpass':
+
+            # filter corner can be specified in terms of either period [s]
+            # or frequency [Hz], but not both
+            if period is not None:
+                assert freq is None
+                freq = period*-1
+            else:
+                assert freq is not None
+
+            assert 0 < freq < np.inf
+
+            self.freq = freq
 
         else:
              raise ValueError('Bad parameter: filter_type')
@@ -335,8 +355,8 @@ class ProcessData(object):
             assert FK_database is not None
             assert exists(FK_database)
 
-            if self.FK_model is None:
-                self.FK_model = basename(self.FK_database)
+            if FK_model is None:
+                FK_model = basename(FK_database)
 
             self.FK_database = FK_database
             self.FK_model = FK_model
@@ -354,21 +374,27 @@ class ProcessData(object):
         #
         # check weight parameters
         #
+        self.apply_scaling = apply_scaling
+        self.apply_weights = apply_weights
+
         if apply_scaling:
             if self.window_type == 'body_wave':
-                if self.scaling_power is None:
-                    self.scaling_power = 1.
+                if scaling_power is None:
+                    scaling_power = 1.
 
-                if self.scaling_coefficient is None:
-                    self.scaling_coefficient = 1.e5
-
+                if scaling_coefficient is None:
+                    scaling_coefficient = 1.e5
 
             else:
-                if self.scaling_power is None:
-                    self.scaling_power = 0.5
+                if scaling_power is None:
+                    scaling_power = 0.5
 
-                if self.scaling_coefficient is None:
-                    self.scaling_coefficient = 1.e5
+                if scaling_coefficient is None:
+                    scaling_coefficient = 1.e5
+
+            self.scaling_power = scaling_power
+            self.scaling_coefficient = scaling_coefficient
+
 
 
         #
@@ -379,9 +405,9 @@ class ProcessData(object):
            self.pick_type == 'user_supplied':
             assert capuaf_file is not None
 
-        if self.capuaf_file:
+        if capuaf_file:
             assert exists(capuaf_file)
-            parser = WeightParser(self.capuaf_file)
+            parser = WeightParser(capuaf_file)
 
         if self.apply_statics:
             self.statics = parser.parse_statics()
