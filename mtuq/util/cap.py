@@ -10,10 +10,11 @@ import obspy
 
 from collections import defaultdict
 from copy import deepcopy
+from io import TextIOBase
 from mtuq.event import MomentTensor
 from mtuq.util import AttribDict, warn
 from mtuq.wavelet import EarthquakeTrapezoid
-
+from os.path import exists
 
 
 #
@@ -27,8 +28,13 @@ class WeightParser(object):
 
         For more information, see github.com/uafseismo/capuaf/doc/capuaf_manual
     """
-    def __init__(self, path):
-        self._path = path
+    def __init__(self, file):
+        if isinstance(file, TextIOBase):
+            self._file = file
+        else:
+            assert exists(file)
+            self._file = open(file, "r")
+
 
     def _parse_code(self, string):
         return '.'.join(string.split('.')[1:4])
@@ -41,22 +47,24 @@ class WeightParser(object):
         return polarity
 
     def parse_weights(self, remove_unused=True):
+
+        self._file.seek(0)
+
         weights = defaultdict(AttribDict)
 
-        with open(self._path) as file:
-            reader = csv.reader(
-                filter(lambda row: row[0]!='#', file),
-                delimiter=' ',
-                skipinitialspace=True)
+        reader = csv.reader(
+            filter(lambda row: row[0]!='#', self._file),
+            delimiter=' ',
+            skipinitialspace=True)
 
-            for row in reader:
-                _code = self._parse_code(row[0])
+        for row in reader:
+            _code = self._parse_code(row[0])
 
-                weights[_code]['body_wave_Z'] = float(row[2])
-                weights[_code]['body_wave_R'] = float(row[3])
-                weights[_code]['surface_wave_Z'] = float(row[4])
-                weights[_code]['surface_wave_R'] = float(row[5])
-                weights[_code]['surface_wave_T'] = float(row[6])
+            weights[_code]['body_wave_Z'] = float(row[2])
+            weights[_code]['body_wave_R'] = float(row[3])
+            weights[_code]['surface_wave_Z'] = float(row[4])
+            weights[_code]['surface_wave_R'] = float(row[5])
+            weights[_code]['surface_wave_T'] = float(row[6])
 
         if remove_unused:
             unused = []
@@ -73,59 +81,68 @@ class WeightParser(object):
 
 
     def parse_picks(self):
+
+        self._file.seek(0)
+
         picks = defaultdict(AttribDict)
 
-        with open(self._path) as file:
-            reader = csv.reader(
-                filter(lambda row: row[0]!='#', file),
-                delimiter=' ',
-                skipinitialspace=True)
+        reader = csv.reader(
+            filter(lambda row: row[0]!='#', self._file),
+            delimiter=' ',
+            skipinitialspace=True)
 
-            for row in reader:
-                _code = self._parse_code(row[0])
-                picks[_code]['P'] = float(row[7])
-                picks[_code]['S'] = float(row[9])
+        for row in reader:
+            _code = self._parse_code(row[0])
+            picks[_code]['P'] = float(row[7])
+            picks[_code]['S'] = float(row[9])
 
         return picks
 
     def parse_polarity(self, remove_unused=True):
-        polarities = []
-        with open(self._path) as file:
-            reader = csv.reader(
-                filter(lambda row: row[0]!='#', file),
-                delimiter=' ',
-                skipinitialspace=True)
 
-            for row in reader:
-                if not float(row[2]) ==\
-                float(row[3]) ==\
-                float(row[4]) ==\
-                float(row[5]) ==\
-                float(row[6]) == 0:
-                    polarities+=[int(self._parse_polarity(row[0]))]
+        self._file.seek(0)
+
+        polarities = []
+
+        reader = csv.reader(
+            filter(lambda row: row[0]!='#', self._file),
+            delimiter=' ',
+            skipinitialspace=True)
+
+        for row in reader:
+            if not float(row[2]) ==\
+            float(row[3]) ==\
+            float(row[4]) ==\
+            float(row[5]) ==\
+            float(row[6]) == 0:
+                polarities+=[int(self._parse_polarity(row[0]))]
 
         return polarities
 
 
     def parse_statics(self):
+
+        self._file.seek(0)
+
         statics = defaultdict(AttribDict)
 
-        with open(self._path) as file:
-            reader = csv.reader(
-                filter(lambda row: row[0]!='#', file),
-                delimiter=' ',
-                skipinitialspace=True)
+        reader = csv.reader(
+            filter(lambda row: row[0]!='#', self._file),
+            delimiter=' ',
+            skipinitialspace=True)
 
-            for row in reader:
-                _code = self._parse_code(row[0])
+        for row in reader:
+            print(row)
+            _code = self._parse_code(row[0])
+            print(_code)
 
-                # CAPUAF does not implement body-wave statics
-                statics[_code]['body_wave_Z'] = 0.
-                statics[_code]['body_wave_R'] = 0.
+            # CAPUAF does not implement body-wave statics
+            statics[_code]['body_wave_Z'] = 0.
+            statics[_code]['body_wave_R'] = 0.
 
-                statics[_code]['surface_wave_Z'] = float(row[11])
-                statics[_code]['surface_wave_R'] = float(row[11])
-                statics[_code]['surface_wave_T'] = float(row[12])
+            statics[_code]['surface_wave_Z'] = float(row[11])
+            statics[_code]['surface_wave_R'] = float(row[11])
+            statics[_code]['surface_wave_T'] = float(row[12])
 
         return statics
 
