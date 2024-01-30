@@ -69,7 +69,7 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                     corr += np.correlate(s[_k].data, d[_k].data, 'valid')
                 
                 npts_shift = padding_left - corr.argmax()
-                time_shift = npts_shift*dt - (time_shift_min + time_shift_max)
+                cc_shift = npts_shift*dt - (time_shift_min + time_shift_max)
 
                 # what start and stop indices will correctly shift synthetics
                 # relative to data?
@@ -104,10 +104,15 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                         # keep track of trace attributes
                         #
 
-                        s[_k].attrs = AttribDict()
+                        if not hasattr(s[_k], 'attrs'):
+                            s[_k].attrs = AttribDict()
 
                         s[_k].attrs.misfit = value
 
+
+                        #
+                        # keep track of cross-correlation results
+                        #
                         s[_k].attrs.cc_max = corr.max()
                         
                         if Ns*Nd > 0:
@@ -116,14 +121,46 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                         else:
                             s[_k].attrs.normalized_cc_max = np.nan
 
-                        s[_k].attrs.time_shift = time_shift
-                        s[_k].attrs.start = start
-                        s[_k].attrs.stop = stop
+                        s[_k].attrs.cc_start = start
+                        s[_k].attrs.cc_stop = stop
+
+
+                        #
+                        # keep track of time-shift corrections
+                        # 
+
+                        # "static_shift" is an optional initial user-supplied 
+                        # time shift applied during data processing
+
+                        try:
+                            static_shift = d[_k].attrs.static_shift
+                        except:
+                            static_shift = 0.
+
+                        s[_k].attrs.static_shift = static_shift
+
+
+                        # "cc_shift" is the subsequent cross-correlation time shift 
+                        #  applied during misfit evaluation
+
+                        s[_k].attrs.cc_shift = cc_shift
+
+
+                        # "time_shift" is the total correction, or in other words
+                        # the sum of static and cross-correlation time shifts
+
+                        s[_k].attrs.time_shift = cc_shift + static_shift
+
+
+                        #
+                        # keep track of amplitude misfit
+                        #
 
                         s_max = s[_k].data[start:stop].max()
                         d_max = d[_k].data.max()
-                        s[_k].attrs.amplitude_ratio = d_max/s_max
-                        s[_k].attrs.log_amplitude_ratio = np.log(d_max/s_max)
+
+                        #s[_k].attrs.amplitude_ratio = d_max/s_max
+                        #s[_k].attrs.log_amplitude_ratio = np.log(d_max/s_max)
 
                         s[_k].attrs.norm = norm
                         s[_k].attrs.time_shift_min = time_shift_min

@@ -695,7 +695,7 @@ class ProcessData(object):
                         key = 'surface_wave_'+component
 
                     static = self.statics[id][key]
-                    trace.attrs.static_time_shift = static
+                    trace.attrs.static_shift = static
 
                 except:
                     print('Error reading static time shift: %s' % id)
