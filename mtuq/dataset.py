@@ -269,6 +269,10 @@ class Dataset(list):
         return new_ds
 
 
+    def copy(self):
+        return __copy__(self)
+
+
     def write(self, path, format='sac'):
         """ Writes a Python pickle of current dataset
         """

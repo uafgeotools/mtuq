@@ -486,6 +486,9 @@ class GreensTensorList(list):
         return new_ds
 
 
+    def copy(self):
+        return __copy__(self)
+
 
     def write(self, filename):
        """ Writes a Python pickle of current `GreensTensorList`
