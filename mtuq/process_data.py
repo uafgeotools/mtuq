@@ -194,8 +194,7 @@ class ProcessData(object):
          FK_model=None,
 
          # any user-supplied keyword arguments not included above go into
-         # this dictionary 
-         # (can be helpful for user customization)
+         # this dictionary (can be helpful for user customization)
          **parameters):
 
 
@@ -278,11 +277,13 @@ class ProcessData(object):
              pass
 
         elif self.window_type == 'body_wave':
+            # regional body-wave window in the manner of Zhu1996
             assert pick_type is not None, "Must be defined: pick_type"
             assert window_length > 0.
             self.window_length = window_length
 
         elif self.window_type == 'surface_wave':
+            # regional surface-wave window in the manner of Zhu1996
             assert pick_type is not None, "Must be defined: pick_type"
             assert window_length > 0.
             self.window_length = window_length
@@ -608,7 +609,8 @@ class ProcessData(object):
             #
 
             if self.window_type == 'body_wave':
-                # reproduces cut-and-paste body wave window
+                # regional body-wave window in the manner of Zhu1996
+                # (closely based on CAP code)
 
                 starttime = picks['P'] - 0.4*self.window_length
                 endtime = starttime + self.window_length
@@ -618,7 +620,8 @@ class ProcessData(object):
 
 
             elif self.window_type == 'surface_wave':
-                # reproduces cut-and-paste surface wave window
+                # regional surface-wave window in the manner of Zhu1996
+                # (closely based on CAP code)
 
                 starttime = picks['S'] - 0.3*self.window_length
                 endtime = starttime + self.window_length
