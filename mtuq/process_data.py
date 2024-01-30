@@ -5,6 +5,7 @@ import numpy as np
 import warnings
 
 from copy import deepcopy
+from io import TextIOBase
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists
@@ -303,6 +304,9 @@ class ProcessData(object):
             assert parameters['v_max'] <= np.inf
             self.v_min = parameters['v_min']
             self.v_max = parameters['v_max']
+
+            assert window_length >= 0.
+            self.window_length = window_length
             _window_warnings(window_type, window_length)
 
         else:
@@ -401,7 +405,9 @@ class ProcessData(object):
            self.pick_type == 'user_supplied':
             assert capuaf_file is not None
 
-        if capuaf_file:
+        if isinstance(capuaf_file, TextIOBase):
+            parser = WeightParser(capuaf_file)
+        else:
             assert exists(capuaf_file)
             parser = WeightParser(capuaf_file)
 
