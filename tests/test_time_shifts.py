@@ -13,6 +13,11 @@ from mtuq.util import AttribDict, fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 from mtuq.wavelet import Gabor
 from obspy import Stream, Trace
+from os.path import join
+
+
+run_figures = True
+#run_checks = True
 
 
 T_SYN = -2.5
@@ -87,6 +92,7 @@ class GreensTensor(GreensTensorBase):
         dirac_trace = Trace(Dirac(T_SYN), stats)
         super(GreensTensor, self).__init__([dirac_trace], station, origin)
         self.tags += ['type:greens']
+        self.tags += ['units:m']
 
     def _precompute(self):
         # Because we generate synthetics from only a single source (see mt
@@ -98,8 +104,8 @@ class GreensTensor(GreensTensorBase):
 mt = MomentTensor(np.array([1., 0., 0., 0., 0., 0.]))
 
 
-# we simplify how the data processing class is initialized, as we are only using
-# it to apply static time shifts
+# we simplify how the data processing class is initialized, as we are using it
+# only to apply static time shifts
 class ProcessData(ProcessDataBase):
 
     def __init__(self, apply_statics=False):
@@ -141,11 +147,15 @@ def add_panel(axis, data, greens, apply_statics=False, apply_cc=False):
     _plot_dat(axis, t, data, attrs)
     _plot_syn(axis, t, _get_synthetics(greens, mt), attrs)
 
+    _annotate(axis, attrs)
+
+    axis.set_xlabel('Time (s)')
+
     axis.set_xlim(-window_length/2., +window_length/2.)
+    axis.get_yaxis().set_ticks([])
 
 
 def _plot_dat(axis, t, data, attrs, pathspec='-k'):
-
     stream = data[0]
     trace = data[0][0]
     stats = trace.stats
@@ -154,18 +164,16 @@ def _plot_dat(axis, t, data, attrs, pathspec='-k'):
 
 
 def _plot_syn(axis, t, data, attrs, pathspec='-r'):
-
     stream = data[0]
     trace = data[0][0]
     stats = trace.stats
 
     idx1 = attrs.idx_start
     idx2 = attrs.idx_stop
-
     axis.plot(t, trace.data[idx1:idx2], pathspec)
 
 
-def _annotate():
+def _annotate(axis, attrs):
     pass
 
 
@@ -234,42 +242,52 @@ if __name__=='__main__':
     greens.convolve(source_wavelet)
 
 
-    fig, axes = pyplot.subplots(4, 1, figsize=(8.,10.))
+    if run_figures:
+        # loads fonts
+        import mtuq.graphics
 
-    print('')
-    print('Panel 0')
-    print('')
-
-    axes[0].set_title('Original misaligned data (black) and synthetics (red)')
-
-    add_panel(axes[0], data, greens, apply_statics=False, apply_cc=False)
-
-    print('')
-    print('Panel 1')
-    print('')
-
-    axes[1].set_title('Result using static time shift only')
-
-    add_panel(axes[1], data, greens, apply_statics=True, apply_cc=False)
+        from mtuq.graphics.header import _write_text
 
 
-    print('')
-    print('Panel 2')
-    print('')
-
-    axes[2].set_title('Result using cross-correlation time shift only')
-
-    add_panel(axes[2], data, greens, apply_statics=False, apply_cc=True)
+        fig, axes = pyplot.subplots(4, 1, figsize=(8.,10.))
+        pyplot.subplots_adjust(hspace=0.75)
 
 
-    print('')
-    print('Panel 3')
-    print('')
+        print('')
+        print('Panel 0')
+        print('')
 
-    axes[3].set_title('Result using static and cross-correlation time shifts')
+        axes[0].set_title('Original misaligned data (black) and synthetics (red)')
 
-    add_panel(axes[3], data, greens, apply_statics=True, apply_cc=True)
+        add_panel(axes[0], data, greens, apply_statics=False, apply_cc=False)
 
 
-    pyplot.savefig('time_shifts.png')
+        print('')
+        print('Panel 1')
+        print('')
+
+        axes[1].set_title('Result using static time shift only')
+
+        add_panel(axes[1], data, greens, apply_statics=True, apply_cc=False)
+
+
+        print('')
+        print('Panel 2')
+        print('')
+
+        axes[2].set_title('Result using cross-correlation time shift only')
+
+        add_panel(axes[2], data, greens, apply_statics=False, apply_cc=True)
+
+
+        print('')
+        print('Panel 3')
+        print('')
+
+        axes[3].set_title('Result using static and cross-correlation time shifts')
+
+        add_panel(axes[3], data, greens, apply_statics=True, apply_cc=True)
+
+        pyplot.savefig('time_shifts.png')
+
 
