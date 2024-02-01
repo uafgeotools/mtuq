@@ -478,7 +478,9 @@ class ProcessData(object):
             warn('Units not specified.')
 
         for trace in traces:
-            trace.attrs = AttribDict()
+            if not hasattr(trace, 'attrs'):
+                trace.attrs = AttribDict()
+
 
         #
         # part 1: filter traces
@@ -517,7 +519,6 @@ class ProcessData(object):
             tags[index] = 'type:displacement'
 
 
-
         #
         # part 2a: apply distance scaling
         #
@@ -553,6 +554,7 @@ class ProcessData(object):
                 else:
                     traces.remove(trace)
 
+
         #
         # part 3: determine phase picks
         #
@@ -568,7 +570,7 @@ class ProcessData(object):
 
             if self.pick_type=='taup':
                 with warnings.catch_warnings():
-                    # supress obspy warning that gets raised even when taup is
+                    # suppress obspy warning that gets raised even when taup is
                     # used correctly (someone should submit an ObsPy fix)
                     warnings.filterwarnings('ignore')
                     arrivals = self._taup.get_travel_times(
@@ -710,9 +712,11 @@ class ProcessData(object):
                     print('Error reading static time shift: %s' % id)
                     static = 0.
 
-                if 'type:greens' in tags:
-                    starttime += static
-                    endtime += static
+                if self.window_type is not None and\
+                   'type:greens' in tags:
+
+                    trace.stats.starttime += static
+
 
 
             #
@@ -728,8 +732,8 @@ class ProcessData(object):
                 starttime += self.time_shift_min
                 endtime += self.time_shift_max
 
-                trace.attrs.npts_left = int(round(-self.time_shift_max/dt))
-                trace.attrs.npts_right = int(round(+self.time_shift_max/dt))
+                trace.stats.npts_padding_left = int(round(-self.time_shift_max/dt))
+                trace.stats.npts_padding_right = int(round(+self.time_shift_max/dt))
 
 
             #
@@ -739,6 +743,9 @@ class ProcessData(object):
             # cuts trace and adjusts metadata
             if self.window_type is not None:
                 cut(trace, starttime, endtime)
+
+            elif self.apply_statics and 'type:greens' in tags:
+                print('Not implemented warning')
 
             taper(trace.data)
 
