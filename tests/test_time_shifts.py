@@ -174,7 +174,15 @@ def _plot_syn(axis, t, data, attrs, pathspec='-r'):
 
 
 def _annotate(axis, attrs):
-    pass
+
+    text = 'static_shift: %.1f' % attrs.static_shift
+    pyplot.text(0.02, 0.85, text, transform=axis.transAxes)
+
+    text = 'time_shift: %.1f' % attrs.time_shift
+    pyplot.text(0.02, 0.70, text, transform=axis.transAxes)
+
+    text = 'total_shift: %.1f' % attrs.total_shift
+    pyplot.text(0.02, 0.55, text, transform=axis.transAxes)
 
 
 def _get_synthetics(greens, mt):
@@ -206,10 +214,10 @@ if __name__=='__main__':
     # - "static_shift" is an initial user-supplied time shift applied during
     #   data processing
     #
-    # - "cc_shift" is a subsequent cross-correlation time shift applied during 
+    # - "time_shift" is a subsequent cross-correlation time shift applied during 
     #   misfit evaluation
     #
-    # - "time_shift" is the total correction, or in other words the sum of
+    # - "total_shift" is the total correction, or in other words the sum of
     #   static and cross-correlation time shifts
     #
 
@@ -246,9 +254,6 @@ if __name__=='__main__':
         # loads fonts
         import mtuq.graphics
 
-        from mtuq.graphics.header import _write_text
-
-
         fig, axes = pyplot.subplots(4, 1, figsize=(8.,10.))
         pyplot.subplots_adjust(hspace=0.75)
 
@@ -257,7 +262,7 @@ if __name__=='__main__':
         print('Panel 0')
         print('')
 
-        axes[0].set_title('Original misaligned data (black) and synthetics (red)')
+        axes[0].set_title('Original misaligned synthetics (red) and data (black)')
 
         add_panel(axes[0], data, greens, apply_statics=False, apply_cc=False)
 
