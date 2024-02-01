@@ -73,13 +73,13 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
                 # what start and stop indices will correctly shift synthetics
                 # relative to data?
-                start = padding_left - npts_shift
-                stop = start + npts
+                idx_start = padding_left - npts_shift
+                idx_stop = idx_start + npts
 
                 for _k in indices:
 
                     # substract data from shifted synthetics
-                    r = s[_k].data[start:stop] - d[_k].data
+                    r = s[_k].data[idx_start:idx_stop] - d[_k].data
 
                     # sum the resulting residuals
                     if norm=='L1':
@@ -96,40 +96,29 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                     except:
                         values[_i] += value
 
+
                     if set_attributes:
-                        Ns = np.dot(s[_k].data,s[_k].data)**0.5
-                        Nd = np.dot(d[_k].data,d[_k].data)**0.5
-
-                        #
-                        # keep track of trace attributes
-                        #
-
                         if not hasattr(s[_k], 'attrs'):
                             s[_k].attrs = AttribDict()
 
+                        #
+                        # waveform-related attributes
+                        #
+
+                        s[_k].attrs.norm = norm
+
                         s[_k].attrs.misfit = value
+
+                        s[_k].attrs.idx_start = idx_start
+                        s[_k].attrs.idx_stop = idx_stop
 
 
                         #
-                        # keep track of cross-correlation results
+                        # phase-related attributes
                         #
                         s[_k].attrs.cc_max = corr.max()
                         
-                        if Ns*Nd > 0:
-                            max_cc = np.correlate(s[_k].data,d[_k].data,'valid').max()
-                            s[_k].attrs.normalized_cc_max = max_cc/(Ns*Nd)
-                        else:
-                            s[_k].attrs.normalized_cc_max = np.nan
-
-                        s[_k].attrs.cc_start = start
-                        s[_k].attrs.cc_stop = stop
-
-
-                        #
-                        # keep track of time-shift corrections
-                        # 
-
-                        # "static_shift" is an optional initial user-supplied 
+                        # "static_shift" is an optional user-supplied
                         # time shift applied during data processing
 
                         try:
@@ -145,6 +134,18 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
                         s[_k].attrs.cc_shift = cc_shift
 
+                        Ns = np.dot(s[_k].data,s[_k].data)**0.5
+                        Nd = np.dot(d[_k].data,d[_k].data)**0.5
+
+                        if Ns*Nd > 0:
+                            max_cc = np.correlate(s[_k].data,d[_k].data,'valid').max()
+                            s[_k].attrs.normalized_cc_max = max_cc/(Ns*Nd)
+                        else:
+                            s[_k].attrs.normalized_cc_max = np.nan
+
+                        s[_k].attrs.time_shift_min = time_shift_min
+                        s[_k].attrs.time_shift_max = time_shift_max
+
 
                         # "time_shift" is the total correction, or in other words
                         # the sum of static and cross-correlation time shifts
@@ -153,18 +154,14 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
 
                         #
-                        # keep track of amplitude misfit
+                        # amplitude-related attributes
                         #
 
-                        s_max = s[_k].data[start:stop].max()
+                        s_max = s[_k].data[idx_start:idx_stop].max()
                         d_max = d[_k].data.max()
 
-                        #s[_k].attrs.amplitude_ratio = d_max/s_max
-                        #s[_k].attrs.log_amplitude_ratio = np.log(d_max/s_max)
-
-                        s[_k].attrs.norm = norm
-                        s[_k].attrs.time_shift_min = time_shift_min
-                        s[_k].attrs.time_shift_max = time_shift_max
+                        s[_k].attrs.amplitude_ratio = d_max/s_max
+                        s[_k].attrs.log_amplitude_ratio = np.log(d_max/s_max)
 
 
     return values
