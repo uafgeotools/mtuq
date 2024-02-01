@@ -6,43 +6,40 @@ from io import StringIO
 from matplotlib import pyplot
 from mtuq import Dataset, GreensTensorList, Origin, Station
 from mtuq.event import MomentTensor
-from mtuq.greens_tensor.base import GreensTensor as base
+from mtuq.greens_tensor.base import GreensTensor as GreensTensorBase
 from mtuq.misfit import Misfit
-from mtuq.process_data import ProcessData
-from mtuq.util import fullpath, merge_dicts, save_json
+from mtuq.process_data import ProcessData as ProcessDataBase
+from mtuq.util import AttribDict, fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
 from mtuq.wavelet import Gabor
 from obspy import Stream, Trace
 
 
-# for a meaningful test, observed and synthetic data must be misaligned
-T_SYN = 5.
-T_OBS = 10.
-T_OFF = T_OBS - T_SYN
+T_SYN = -2.5
+T_OBS = +2.5
 
 
-# choose any time discretization
-NT = 1501
+# observed and synthetic data must be misaligned 
+offset = T_OBS - T_SYN
+assert offset != 0.
+
+
+# use a static correction which very close, but not exact
+static = 0.9*offset
+
+
+# time discretization
+T1 = -20.
+T2 = +20.
 DT = 0.01
-T1 = 0.
 
-T2 = T1 + (NT-1)*DT
 TL = T2 - T1
+NT = int(round(TL/DT)) + 1
 t = np.linspace(T1, T1+(NT-1)*DT, NT)
-stats = {'npts': NT, 'delta': DT, 'starttime': T1, 'channel': 'Z',}
+stats = AttribDict({'npts': NT, 'delta': DT, 'starttime': T1, 'channel': 'Z',})
 
+window_length = 0.5*TL
 
-# choose any source wavelet
-source_wavelet = Gabor(a=1., b=3.*np.pi)
-
-
-# static time shifts are read from columns 11-12 below (for more information,
-# see github.com/uafseismo/capuaf/doc/capuaf_manual)
-capuaf_file = StringIO(
-    "EVT.NET.STA. 10 1 1 1 1 0 0. 0. 0 0 %f 0" % (T_OFF/2))
-
-
-# utility function defined relative to the chosen time discretization
 def Dirac(ts):
     it = int(round((ts - T1)/DT))
     array = np.zeros(NT)
@@ -50,8 +47,16 @@ def Dirac(ts):
     return array
 
 
-# just for input argument checking (values don't really matter)
+# optional source wavelet
+source_wavelet = Gabor(a=1., b=2.*np.pi)
 
+
+# mimics how static time shifts can be read from columns 11-12 of weight file
+# (for more information, see github.com/uafseismo/capuaf/doc/capuaf_manual)
+capuaf_file = StringIO("EVT.NET.STA. 10 1 1 1 1 0 0. 0. 0 0 %f 0" % static)
+
+
+# dummy values
 origin = Origin({
     'id': 'EVT',
     'time': '1970-01-01T00:00:00.000000Z',
@@ -59,7 +64,6 @@ origin = Origin({
     'longitude': 0.,
     'depth_in_m': 0.,
     })
-
 station = Station({
     'network': 'NET',
     'station': 'STA',
@@ -67,41 +71,119 @@ station = Station({
     'id': 'NET.STA.',
     'latitude': 0.,
     'longitude': 0.,
+    'npts': stats.npts,
+    'delta': stats.delta,
+    'starttime': stats.starttime,
     })
 
 
-# a single source suffices to test time-shift machinery (avoids an expensive
-# grid search)
-mt = MomentTensor(np.array([1., 0., 0., 0., 0., 0.])/100.)
-
-
-
-# we override the base Green's function class to use very simple 
-# Dirac delta functions, which are all we need to test the time shifts
-
-class GreensTensor(base):
+# we override the base Green's function class to use only Dirac delta functions,
+# which are all that we need to test time shifts
+class GreensTensor(GreensTensorBase):
 
     def __init__(self):
         # The key thing is that the Dirac delta function here is offset
         # relative to the observed data below
         dirac_trace = Trace(Dirac(T_SYN), stats)
         super(GreensTensor, self).__init__([dirac_trace], station, origin)
-
-        # Because we choose only a single source below, we only have to
-        # fill in certain elements of the Green's tensor array
-        self._set_components('Z')
-        self._array[0,0,:] = self[0].data
-
-    def _get_shape(self):
-        return 3,6,NT
+        self.tags += ['type:greens']
 
     def _precompute(self):
-        pass
+        # Because we generate synthetics from only a single source (see mt
+        # definition below), we only have to fill in certain elements
+        self._array[0,0,:] = self[0].data
 
-    def convolve(self, wavelet):
-        for _i in range(3):
-            self._array[0,_i,:] = np.convolve(
-                self._array[0,_i,:], wavelet, 'same')
+
+# a single source suffices to test time shifts
+mt = MomentTensor(np.array([1., 0., 0., 0., 0., 0.]))
+
+
+# we simplify how the data processing class is initialized, as we are only using
+# it to apply static time shifts
+class ProcessData(ProcessDataBase):
+
+    def __init__(self, apply_statics=False):
+
+        super(ProcessData, self).__init__(
+            apply_statics=apply_statics,
+            window_length=window_length,
+            window_type='min_max',
+            v_min=1.,v_max=1.,
+            apply_scaling=False,
+            apply_weights=False,
+            capuaf_file=capuaf_file)
+
+    def __call__(self, traces):
+        return super(ProcessData, self).__call__(
+           traces, station=station, origin=origin)
+
+
+def add_panel(axis, data, greens, apply_statics=False, apply_cc=False):
+
+    process_data = ProcessData(apply_statics)
+
+    # static time shifts applied now
+    data = data.copy().map(process_data)
+    greens = greens.copy().map(process_data)
+
+    if apply_cc:
+        misfit = Misfit(time_shift_min=-abs(offset), time_shift_max=+abs(offset))
+    else:
+        misfit = Misfit(time_shift_min=0., time_shift_max=0.)
+
+    # cross-correlation time shifts applied now
+    attrs = _get_attrs(data, greens, misfit)
+
+    # time discretization
+    t1, t2, nt = get_time_sampling(data)
+    t = np.linspace(t1, t2, nt)
+
+    _plot_dat(axis, t, data, attrs)
+    _plot_syn(axis, t, _get_synthetics(greens, mt), attrs)
+
+    axis.set_xlim(-window_length/2., +window_length/2.)
+
+
+def _plot_dat(axis, t, data, attrs, pathspec='-k'):
+
+    stream = data[0]
+    trace = data[0][0]
+    stats = trace.stats
+
+    axis.plot(t, trace.data, pathspec)
+
+
+def _plot_syn(axis, t, data, attrs, pathspec='-r'):
+
+    stream = data[0]
+    trace = data[0][0]
+    stats = trace.stats
+
+    idx1 = attrs.idx_start
+    idx2 = attrs.idx_stop
+
+    axis.plot(t, trace.data[idx1:idx2], pathspec)
+
+
+def _annotate():
+    pass
+
+
+def _get_synthetics(greens, mt):
+    return greens.get_synthetics(mt, components=['Z'])
+
+
+def _get_attrs(data, greens, misfit):
+    return misfit.collect_attributes(data, greens, mt)[0]['Z']
+
+
+def get_time_sampling(data):
+    stream = data[0]
+    t1 = float(stream[0].stats.starttime)
+    t2 = float(stream[0].stats.endtime)
+    nt = stream[0].data.size
+    return t1, t2, nt
+
 
 
 if __name__=='__main__':
@@ -113,8 +195,8 @@ if __name__=='__main__':
     # MTUQ distinguishes between the following different types of 
     # time-shift corrections
     # 
-    #  - "static_shift" is an initial user-supplied time shift applied during
-    #    data processing
+    # - "static_shift" is an initial user-supplied time shift applied during
+    #   data processing
     #
     # - "cc_shift" is a subsequent cross-correlation time shift applied during 
     #   misfit evaluation
@@ -137,125 +219,57 @@ if __name__=='__main__':
     # construct observed data
     trace_dirac = Trace(Dirac(T_OBS), stats)
     trace_convolved = source_wavelet.convolve(trace_dirac)
-    stream = Stream(trace_convolved)
 
+    trace = trace_convolved
+
+    stream = Stream(trace_convolved)
     stream.station = station
     stream.origin = origin
+
     data = Dataset([stream])
 
 
-    # contruct Green's functions
+    # construct observed data
     greens = GreensTensorList([GreensTensor()])
-    greens.convolve(source_wavelet.evaluate(np.linspace(-TL/2.,+TL/2.,NT)))
+    greens.convolve(source_wavelet)
 
 
-    process_data = ProcessData(
-        filter_type=None,
-        window_type=None,
-        apply_statics=True,
-        apply_weights=False,
-        capuaf_file=capuaf_file,
-        )
+    fig, axes = pyplot.subplots(4, 1, figsize=(8.,10.))
 
-    #
-    # generate figure
-    #
-    def _plot(axis, t, d, pathspec):
-        axis.plot(t, d[0][0].data, pathspec)
-        axis.set_xlim(0.,15.)
+    print('')
+    print('Panel 0')
+    print('')
 
-    fig, axes = pyplot.subplots(4, 1)
-
-    obs = data
-    syn = greens.get_synthetics(mt)
-
-
-    #
-    # panel 0
-    #
     axes[0].set_title('Original misaligned data (black) and synthetics (red)')
 
-    _plot(axes[0], t, obs, '-k')
-    _plot(axes[0], t, syn, '-r')
+    add_panel(axes[0], data, greens, apply_statics=False, apply_cc=False)
 
+    print('')
+    print('Panel 1')
+    print('')
 
-    #
-    # panel 1
-    #
     axes[1].set_title('Result using static time shift only')
 
-    process_data = ProcessData(
-        filter_type=None,
-        window_type=None,
-        apply_statics=True,
-        apply_weights=False,
-        capuaf_file=capuaf_file,
-        )
-
-    misfit = Misfit(
-        norm='L2',
-        time_shift_min=0.,
-        time_shift_max=0.,
-        )
-
-    processed_data = data.map(process_data)
-    processed_greens = greens.copy().map(process_data)
-
-    attrs = misfit.collect_attributes(processed_data, processed_greens, mt)[0]['Z']
-    print(attrs)
-
-    _plot(axes[1], t, obs, '-k')
-    _plot(axes[1], t + attrs.time_shift, syn, '-r')
+    add_panel(axes[1], data, greens, apply_statics=True, apply_cc=False)
 
 
-    #
-    # panel 2
-    #
+    print('')
+    print('Panel 2')
+    print('')
+
     axes[2].set_title('Result using cross-correlation time shift only')
 
-    misfit = Misfit(
-        norm='L2',
-        time_shift_min=-abs(T_OFF),
-        time_shift_max=+abs(T_OFF),
-        )
-
-    attrs = misfit.collect_attributes(data, greens.copy(), mt)[0]['Z']
-    print(attrs)
-
-    _plot(axes[2], t, obs, '-k')
-    _plot(axes[2], t + attrs.time_shift, syn, '-r')
+    add_panel(axes[2], data, greens, apply_statics=False, apply_cc=True)
 
 
-    #
-    # panel 3
-    #
+    print('')
+    print('Panel 3')
+    print('')
+
     axes[3].set_title('Result using static and cross-correlation time shifts')
 
-    process_data = ProcessData(
-        filter_type=None,
-        window_type=None,
-        apply_statics=True,
-        apply_weights=False,
-        capuaf_file=capuaf_file,
-        )
-
-    misfit = Misfit(
-        norm='L2',
-        time_shift_min=-abs(T_OFF),
-        time_shift_max=+abs(T_OFF),
-        )
-
-    # applies static time shift
-    processed_data = data.map(process_data)
-    processed_greens = greens.copy().map(process_data)
-
-    # applies cross-correlation time shift
-    attrs = misfit.collect_attributes(processed_data, processed_greens, mt)[0]['Z']
-    print(attrs)
-
-    _plot(axes[3], t, obs, '-k')
-    _plot(axes[3], t + attrs.time_shift, syn, '-r')
+    add_panel(axes[3], data, greens, apply_statics=True, apply_cc=True)
 
 
-    pyplot.savefig('tmp.png')
+    pyplot.savefig('time_shifts.png')
 
