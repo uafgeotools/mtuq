@@ -291,7 +291,7 @@ class Dataset(list):
 
 
     def write(self, path, format='sac'):
-        """ Writes a Python pickle of current dataset
+        """ Writes dataset to disk
         """
         if format.lower() == 'pickle':
 
@@ -310,5 +310,7 @@ class Dataset(list):
                     fullpath = '%s/%s.%s' % (path,filename,'sac')
                     trace.write(fullpath, format='sac')
                     
+        else:
+            raise ValueError('Unrecognized file format')
         
 

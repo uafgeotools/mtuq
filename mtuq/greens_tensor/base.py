@@ -338,8 +338,8 @@ class GreensTensorList(list):
         """
         processed = []
         for tensor in self:
-            processed +=\
-                [function(tensor, *args, **kwargs)]
+            processed += [function(tensor, *args, **kwargs)]
+
         return self.__class__(processed)
 
 
@@ -362,8 +362,8 @@ class GreensTensorList(list):
         processed = []
         for _i, tensor in enumerate(self):
             args = [sequence[_i] for sequence in sequences]
-            processed +=\
-                [function(tensor, *args)]
+            processed += [function(tensor, *args)]
+
         return self.__class__(processed)
 
 
@@ -417,7 +417,6 @@ class GreensTensorList(list):
 
         if (MPI.COMM_WORLD.Get_rank() == 0):
             return self.__class__(final_list)
-
 
 
     def convolve(self, wavelet):
