@@ -305,15 +305,15 @@ class GreensTensorList(list):
         if mode=='map':
             synthetics = Dataset()
             for _i, tensor in enumerate(self):
-                synthetics.append(
-                    tensor.get_synthetics(source, components=components[_i], **kwargs))
+                synthetics.append(tensor.get_synthetics(
+                    source, components=components[_i], stats=stats[_i], **kwargs))
             return synthetics
 
         elif mode=='apply':
             synthetics = Dataset()
             for tensor in self:
-                synthetics.append(
-                    tensor.get_synthetics(source, components=components, **kwargs))
+                synthetics.append(tensor.get_synthetics(
+                    source, components=components, stats=stats, **kwargs))
             return synthetics
 
         else:
