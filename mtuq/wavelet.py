@@ -209,8 +209,6 @@ def EarthquakeTrapezoid(rise_time=None, rupture_time=None):
         half_duration=(rise_time + rupture_time)/2.)
 
 
-
-
 #
 # exploration seismology "wavelets," defined in terms of dominant frequency
 #

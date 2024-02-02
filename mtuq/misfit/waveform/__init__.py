@@ -179,7 +179,7 @@ class WaveformMisfit(object):
             warn("Empty data set. No misfit evaluations will be carried out")
             return np.zeros((len(sources), 1))
 
-        # checks that the container legnths are consistent
+        # checks that the container lengths are consistent
         if len(data) != len(greens):
             raise Exception("Inconsistent container lengths\n\n  "+
                 "len(data): %d\n  len(greens): %d\n" %
@@ -222,7 +222,8 @@ class WaveformMisfit(object):
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
         synthetics = greens.get_synthetics(
-            source, components=data.get_components(), mode='map', inplace=True)
+            source, components=data.get_components(), stats=data.get_stats(),
+            mode='map', inplace=True)
 
         # attaches attributes to synthetics
         _ = level0.misfit(

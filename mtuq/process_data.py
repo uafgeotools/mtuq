@@ -17,6 +17,7 @@ from mtuq.util.signal import cut, get_arrival, m_to_deg, _window_warnings
 class ProcessData(object):
     """ An attempt at a one-size-fits-all data processing class
 
+
     .. rubric :: Usage
 
     Processing data is a two-step procedure. First, the user supplies parameters
@@ -131,12 +132,12 @@ class ProcessData(object):
 
     ``window_alignment`` (`float`)
     Optional window alignment for `window_type=group_velocity`
-    (`float` between 0. and 1., 0.5 default)
+    (`float` between 0. and 1.)
 
     ``time_shift_min`` (`float`)
     Required for `apply_padding=True`
 
-   ``time_shift_max`` (`float`)
+    ``time_shift_max`` (`float`)
     Required for `apply_padding=True`
 
     ``taup_model`` (`str`)

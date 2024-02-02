@@ -132,9 +132,7 @@ class WeightParser(object):
             skipinitialspace=True)
 
         for row in reader:
-            print(row)
             _code = self._parse_code(row[0])
-            print(_code)
 
             # CAPUAF does not implement body-wave statics
             statics[_code]['body_wave_Z'] = 0.
