@@ -44,7 +44,7 @@ MTUQ installation on Apple M1 and Apple M2 Macs
 
 Installation on Apple M1 and Apple M2 Macs is now possible using the default installation procedure.
 
-For older versions of MTUQ, a modified installation procedure may stil be necessary.  For more information, please see:
+For older versions of MTUQ, a modified installation procedure may still be necessary.  For more information, please see:
 
 `MTUQ installation on ARM64 systems <https://uafgeotools.github.io/mtuq/install/arm64.html>`_
 
