@@ -11,8 +11,8 @@ from mtuq.util.math import isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components
 
 
-def misfit(data, greens, sources, norm, total_shift_groups,
-    total_shift_min, total_shift_max, msg_handle, set_attributes=False):
+def misfit(data, greens, sources, norm, time_shift_groups,
+    time_shift_min, time_shift_max, msg_handle, set_attributes=False):
     """
     Waveform misfit function (non-optimized pure Python version)
 
@@ -50,14 +50,14 @@ def misfit(data, greens, sources, norm, total_shift_groups,
             npts = d[0].data.size
             dt = d[0].stats.delta
 
-            padding_left = int(round(+total_shift_max/dt))
-            padding_right = int(round(-total_shift_min/dt))
+            padding_left = int(round(+time_shift_max/dt))
+            padding_right = int(round(-time_shift_min/dt))
             npts_padding = padding_left + padding_right
 
             # array to hold cross correlations
             corr = np.zeros(npts_padding+1)
 
-            for group in total_shift_groups:
+            for group in time_shift_groups:
                 # Finds the time-shift between data and synthetics that yields
                 # the maximum cross-correlation value across all components in 
                 # a given group, subject to min/max constraints
@@ -66,10 +66,10 @@ def misfit(data, greens, sources, norm, total_shift_groups,
 
                 corr[:] = 0.
                 for _k in indices:
-                    corr += np.correlate(s[_k].data, d[_k].data, 'valid')
+                    corr += np.correlate(d[_k].data, s[_k].data, 'valid')
                 
-                npts_shift = padding_left - corr.argmax()
-                time_shift = npts_shift*dt - (total_shift_min + total_shift_max)
+                npts_shift = corr.argmax() - padding_right
+                time_shift = npts_shift*dt
 
                 # what start and stop indices will correctly shift synthetics
                 # relative to data?
@@ -116,6 +116,7 @@ def misfit(data, greens, sources, norm, total_shift_groups,
                         #
                         # phase-related attributes
                         #
+
                         s[_k].attrs.cc_max = corr.max()
                         
                         # "static_shift" is an optional user-supplied
@@ -130,7 +131,7 @@ def misfit(data, greens, sources, norm, total_shift_groups,
 
 
                         # "time_shift" is the subsequent cross-correlation time shift 
-                        #  applied during misfit evaluation
+                        # applied during misfit evaluation
 
                         s[_k].attrs.time_shift = time_shift
 
@@ -143,8 +144,8 @@ def misfit(data, greens, sources, norm, total_shift_groups,
                         else:
                             s[_k].attrs.normalized_cc_max = np.nan
 
-                        s[_k].attrs.total_shift_min = total_shift_min
-                        s[_k].attrs.total_shift_max = total_shift_max
+                        s[_k].attrs.time_shift_min = time_shift_min
+                        s[_k].attrs.time_shift_max = time_shift_max
 
 
                         # "total_shift" is the total correction, or in other words
@@ -162,7 +163,6 @@ def misfit(data, greens, sources, norm, total_shift_groups,
 
                         s[_k].attrs.amplitude_ratio = d_max/s_max
                         s[_k].attrs.log_amplitude_ratio = np.log(d_max/s_max)
-
 
     return values
 
