@@ -142,24 +142,27 @@ class GreensTensor(Stream):
         return nc, nr, nt
 
 
-    def _allocate_stream(self):
+    def _allocate_stream(self, stats=None):
         """ Allocates ObsPy stream used by `get_synthetics`
         """
         nc, nr, nt = self._get_shape()
 
+        if not stats:
+            stats = []
+            for component in self.components:
+                stats += [self[0].stats.copy()]
+                stats[-1].update({'npts': nt, 'channel': component})
+
         stream = Stream()
-        for component in self.components:
-            # add stats object
-            stats = self.station.copy()
-            stats.update({'npts': nt, 'channel': component})
+        for _i, component in enumerate(self.components):
             # add trace object
-            stream += Trace(np.zeros(nt), stats)
+            stream += Trace(np.zeros(nt), stats[_i])
 
         return stream
 
 
 
-    def get_synthetics(self, source, components=None, inplace=False):
+    def get_synthetics(self, source, components=None, stats=None, inplace=False):
         """ Generates synthetics through a linear combination of time series
 
         Returns an ObsPy stream
@@ -190,7 +193,7 @@ class GreensTensor(Stream):
         if inplace:
             synthetics = self._synthetics
         else:
-            synthetics = self._allocate_stream()
+            synthetics = self._allocate_stream(stats)
 
         for _i, component in enumerate(self.components):
             # Even with careful attention to index order, np.dot is very slow.
@@ -284,7 +287,7 @@ class GreensTensorList(list):
         return selected
 
 
-    def get_synthetics(self, source, components=None, mode='apply', **kwargs):
+    def get_synthetics(self, source, components=None, stats=None, mode='apply', **kwargs):
         """ Generates synthetics through a linear combination of time series
 
         Returns an MTUQ `Dataset`
@@ -487,7 +490,7 @@ class GreensTensorList(list):
 
 
     def copy(self):
-        return __copy__(self)
+        return self.__copy__()
 
 
     def write(self, filename):

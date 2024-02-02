@@ -207,6 +207,23 @@ class Dataset(list):
         return stations
 
 
+    def get_stats(self):
+        """ Returns trace metadata in nested lists
+        
+        .. note ::
+                
+          For Datasets created using ``mtuq.io.readers``, SAC header metadata
+          is used to populate the Station attributes
+        
+        """ 
+        stats = []
+        for stream in self:
+            stats += [[]]
+            for trace in stream:
+                stats[-1] += [trace.stats]
+        return stats
+
+
     def get_origins(self):
         """ Returns origin metadata from all streams as a `list` of 
         `mtuq.event.Origin` objects
@@ -270,7 +287,7 @@ class Dataset(list):
 
 
     def copy(self):
-        return __copy__(self)
+        return self.__copy__()
 
 
     def write(self, path, format='sac'):
