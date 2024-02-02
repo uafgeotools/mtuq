@@ -16,14 +16,14 @@ from obspy import Stream, Trace
 from os.path import join
 
 
-# observed and synthetic data will be misaligned by the following amount
+# observed and synthetic data will be misaligned
 T_SYN = -2.5
 T_OBS = +2.5
 offset = T_OBS - T_SYN
 assert offset != 0.
 
 
-# use a static correction which close, but not exact
+# use a static correction which is close, but not exact
 static = 0.9*offset
 
 
@@ -77,7 +77,7 @@ station = Station({
 
 
 # we override the base Green's function class to use only Dirac delta functions,
-# which are all that we need to test time shifts
+# which are all that we need for the test
 class GreensTensor(GreensTensorBase):
 
     def __init__(self):
@@ -98,8 +98,8 @@ class GreensTensor(GreensTensorBase):
 mt = MomentTensor(np.array([1., 0., 0., 0., 0., 0.]))
 
 
-# we simplify how the data processing class is initialized, as we are using it
-# only to apply static time shifts
+# we simplify how the data processing class is initialized, since we are using it
+# ONLY to apply static time shifts
 class ProcessData(ProcessDataBase):
 
     def __init__(self, apply_statics=False):
@@ -119,6 +119,7 @@ class ProcessData(ProcessDataBase):
 
 
 def add_panel(axis, data, greens, apply_statics=False, apply_cc=False):
+    # generates a single panel within larger output figure
 
     process_data = ProcessData(apply_statics)
 
@@ -150,6 +151,8 @@ def add_panel(axis, data, greens, apply_statics=False, apply_cc=False):
 
 
 def collect_attributes(data, greens, apply_statics=False, apply_cc=False):
+    # collects trace attributes, including all the different types of 
+    # time shifts described further below
 
     process_data = ProcessData(apply_statics)
     
@@ -256,14 +259,11 @@ if __name__=='__main__':
     trace_dirac = Trace(Dirac(T_OBS), stats)
     trace_convolved = source_wavelet.convolve(trace_dirac)
 
-    trace = trace_convolved
-
     stream = Stream(trace_convolved)
     stream.station = station
     stream.origin = origin
 
     data = Dataset([stream])
-
 
     # construct observed data
     greens = GreensTensorList([GreensTensor()])
@@ -271,6 +271,8 @@ if __name__=='__main__':
 
 
     if run_checks:
+        # later on it could be useful to include additional checks with
+        # asymmetric allowable time shifts?
 
         attrs = collect_attributes(data, greens, apply_statics=True, apply_cc=False)
         assert attrs.total_shift == attrs.static_shift == static
