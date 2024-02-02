@@ -66,20 +66,20 @@ def misfit(data, greens, sources, norm, time_shift_groups,
 
                 corr[:] = 0.
                 for _k in indices:
-                    corr += np.correlate(s[_k].data, d[_k].data, 'valid')
+                    corr += np.correlate(d[_k].data, s[_k].data, 'valid')
                 
-                npts_shift = padding_left - corr.argmax()
-                time_shift = npts_shift*dt - (time_shift_min + time_shift_max)
+                npts_shift = corr.argmax() - padding_right
+                time_shift = npts_shift*dt
 
                 # what start and stop indices will correctly shift synthetics
                 # relative to data?
-                start = padding_left - npts_shift
-                stop = start + npts
+                idx_start = padding_left - npts_shift
+                idx_stop = idx_start + npts
 
                 for _k in indices:
 
                     # substract data from shifted synthetics
-                    r = s[_k].data[start:stop] - d[_k].data
+                    r = s[_k].data[idx_start:idx_stop] - d[_k].data
 
                     # sum the resulting residuals
                     if norm=='L1':
@@ -96,39 +96,73 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                     except:
                         values[_i] += value
 
+
                     if set_attributes:
-                        Ns = np.dot(s[_k].data,s[_k].data)**0.5
-                        Nd = np.dot(d[_k].data,d[_k].data)**0.5
+                        if not hasattr(s[_k], 'attrs'):
+                            s[_k].attrs = AttribDict()
 
                         #
-                        # keep track of trace attributes
+                        # waveform-related attributes
                         #
 
-                        s[_k].attrs = AttribDict()
+                        s[_k].attrs.norm = norm
 
                         s[_k].attrs.misfit = value
 
+                        s[_k].attrs.idx_start = idx_start
+                        s[_k].attrs.idx_stop = idx_stop
+
+
+                        #
+                        # phase-related attributes
+                        #
+
                         s[_k].attrs.cc_max = corr.max()
                         
+                        # "static_shift" is an optional user-supplied
+                        # time shift applied during data processing
+
+                        try:
+                            static_shift = d[_k].attrs.static_shift
+                        except:
+                            static_shift = 0.
+
+                        s[_k].attrs.static_shift = static_shift
+
+
+                        # "time_shift" is the subsequent cross-correlation time shift 
+                        # applied during misfit evaluation
+
+                        s[_k].attrs.time_shift = time_shift
+
+                        Ns = np.dot(s[_k].data,s[_k].data)**0.5
+                        Nd = np.dot(d[_k].data,d[_k].data)**0.5
+
                         if Ns*Nd > 0:
                             max_cc = np.correlate(s[_k].data,d[_k].data,'valid').max()
                             s[_k].attrs.normalized_cc_max = max_cc/(Ns*Nd)
                         else:
                             s[_k].attrs.normalized_cc_max = np.nan
 
-                        s[_k].attrs.time_shift = time_shift
-                        s[_k].attrs.start = start
-                        s[_k].attrs.stop = stop
-
-                        s_max = s[_k].data[start:stop].max()
-                        d_max = d[_k].data.max()
-                        s[_k].attrs.amplitude_ratio = d_max/s_max
-                        s[_k].attrs.log_amplitude_ratio = np.log(d_max/s_max)
-
-                        s[_k].attrs.norm = norm
                         s[_k].attrs.time_shift_min = time_shift_min
                         s[_k].attrs.time_shift_max = time_shift_max
 
+
+                        # "total_shift" is the total correction, or in other words
+                        # the sum of static and cross-correlation time shifts
+
+                        s[_k].attrs.total_shift = time_shift + static_shift
+
+
+                        #
+                        # amplitude-related attributes
+                        #
+
+                        s_max = s[_k].data[idx_start:idx_stop].max()
+                        d_max = d[_k].data.max()
+
+                        s[_k].attrs.amplitude_ratio = d_max/s_max
+                        s[_k].attrs.log_amplitude_ratio = np.log(d_max/s_max)
 
     return values
 

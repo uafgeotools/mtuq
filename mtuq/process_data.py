@@ -5,6 +5,7 @@ import numpy as np
 import warnings
 
 from copy import deepcopy
+from io import TextIOBase
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
 from os.path import basename, exists
@@ -15,6 +16,7 @@ from mtuq.util.signal import cut, get_arrival, m_to_deg, _window_warnings
 
 class ProcessData(object):
     """ An attempt at a one-size-fits-all data processing class
+
 
     .. rubric :: Usage
 
@@ -90,15 +92,12 @@ class ProcessData(object):
     - ``'group_velocity'``
       surface-wave window centered on given group velocity
 
-    - ``'min_max'``
-      surface-wave window defined by minimum and maximum velocities (experimental)
-
     - ``None``
       no windows will be applied
 
 
     ``apply_statics`` (`bool`)
-    Whether or not to apply static time shifts from columns 11-13 of `capuaf_file`
+    Whether or not to apply static time shifts from columns 11-12 of `capuaf_file`
 
 
     ``apply_weights`` (`bool`)
@@ -108,6 +107,10 @@ class ProcessData(object):
     ``apply_scaling`` (`bool`)
     Whether or not to apply distance-dependent amplitude scaling
 
+
+    ``apply_padding`` (`bool`)
+    Whether or not to use longer Green's window relative to observed data 
+    window (allows for more accurate cross-correlations)
 
 
     .. rubric:: Other input arguments that may be required, depending on the above
@@ -127,18 +130,15 @@ class ProcessData(object):
     ``group_velocity`` (`float`)
     Group velocity in m/s, required for `window_type=group_velocity`
 
-    ``alignment`` (`float`)
+    ``window_alignment`` (`float`)
     Optional window alignment for `window_type=group_velocity`
     (`float` between 0. and 1.)
 
-    ``v_min`` (`float`)
-    Minimum velocity in m/s, required for `window_type=min_max`
+    ``time_shift_min`` (`float`)
+    Required for `apply_padding=True`
 
-    ``v_max`` (`float`)
-    Maximum velocity in m/s, required for `window_type=min_max`
-
-    ``padding`` (`list`)
-    Amount by which Green's functions will be padded relative to data
+    ``time_shift_max`` (`float`)
+    Required for `apply_padding=True`
 
     ``taup_model`` (`str`)
     Name of built-in ObsPy TauP model or path to custom ObsPy TauP model,
@@ -153,21 +153,51 @@ class ProcessData(object):
     """
 
     def __init__(self,
+
          filter_type=None,
          window_type=None,
          pick_type=None,
+
+         # for filter_type='Bandpass' 
+         # (specify corners in terms of frequency or period, but not both)
+         freq_min=None,
+         freq_max=None,
+         period_min=None,
+         period_max=None,
+
+         # for filter_type='Lowpass' or filter_type='Highpass'
+         # (specify corner in terms of frequency or period, but not both)
+         freq=None,
+         period=None,
+
+         # window parameters
          window_length=None,
-         padding=None,
-         taup_model=None,
-         FK_database=None,
-         FK_model=None,
+         apply_padding=False,
          apply_statics=False,
+         time_shift_min=None,
+         time_shift_max=None,
+
+         # data weighting parameters
+         # (control contribution of particular traces or components to the
+         # data misfit function)
          apply_weights=True,
          apply_scaling=True,
          scaling_power=None,
          scaling_coefficient=None,
          capuaf_file=None,
+
+         # P and S pick parameters
+         # (default body_wave and surface_wave windows are defined relative to
+         # P and S picks, which can be calculated on the fly from tau-P or
+         # read from FK database)
+         taup_model=None,
+         FK_database=None,
+         FK_model=None,
+
+         # any user-supplied keyword arguments not included above go into
+         # this dictionary (can be helpful for user customization)
          **parameters):
+
 
         if not filter_type:
             warn("No filter will be applied")
@@ -177,69 +207,63 @@ class ProcessData(object):
 
         if filter_type:
             filter_type = filter_type.lower()
+        self.filter_type = filter_type
 
         if window_type:
             window_type = window_type.lower()
-
-        self.filter_type = filter_type
         self.window_type = window_type
-        self.pick_type = pick_type
 
-        self.window_length = window_length
-        self.padding = padding
-        self.taup_model = taup_model
-        self.FK_database = FK_database
-        self.FK_model = FK_model
-        self.apply_weights = apply_weights
-        self.apply_statics = apply_statics
-        self.apply_scaling = apply_scaling
-        self.scaling_power = scaling_power
-        self.scaling_coefficient = scaling_coefficient
-        self.capuaf_file = capuaf_file
+        # note that we make pick_type case sensitive 
+        # (could be helpful because p,P s,S are meaningful differences?)
+        self.pick_type = pick_type
 
 
         #
         # check filter parameters
         #
+
         if not self.filter_type:
             # nothing to check
             pass
 
         elif self.filter_type == 'bandpass':
-            # allow filter corners to be specified in terms of either period [s]
-            # or frequency [Hz]
-            if 'period_min' in parameters and 'period_max' in parameters:
-                assert 'freq_min' not in parameters
-                assert 'freq_max' not in parameters
-                parameters['freq_min'] = parameters['period_max']**-1
-                parameters['freq_max'] = parameters['period_min']**-1
 
-            if 'freq_min' not in parameters: raise ValueError
-            if 'freq_max' not in parameters: raise ValueError
-            assert 0 < parameters['freq_min']
-            assert parameters['freq_min'] < parameters['freq_max']
-            assert parameters['freq_max'] < np.inf
-            self.freq_min = parameters['freq_min']
-            self.freq_max = parameters['freq_max']
+            # filter corners can be specified in terms of either period [s]
+            # or frequency [Hz], but not both
+            if period_min is not None and\
+               period_max is not None:
 
-        elif self.filter_type == 'lowpass':
-            if 'period' in parameters:
-                assert 'freq' not in parameters
-                parameters['freq'] = parameters['period']**-1
+                assert freq_min is None
+                assert freq_max is None
+                freq_min = period_max**-1
+                freq_max = period_min**-1
 
-            if 'freq' not in parameters: raise ValueError
-            assert 0 < parameters['freq']
-            assert parameters['freq'] < np.inf
-            self.freq = parameters['freq']
+            else:
+                assert freq_min is not None
+                assert freq_max is not None
 
-        elif self.filter_type == 'highpass':
-            if 'period' in parameters:
-                assert 'freq' not in parameters
-                parameters['freq'] = parameters['period']**-1
+            assert 0 < freq_min
+            assert freq_min < freq_max
+            assert freq_max < np.inf
 
-            if 'freq' not in parameters: raise ValueError
-            assert 0 <= parameters['freq'] < np.inf
-            self.freq = parameters['freq']
+            self.freq_min = freq_min
+            self.freq_max = freq_max
+
+
+        elif self.filter_type == 'lowpass' or\
+             self.filter_type == 'highpass':
+
+            # filter corner can be specified in terms of either period [s]
+            # or frequency [Hz], but not both
+            if period is not None:
+                assert freq is None
+                freq = period*-1
+            else:
+                assert freq is not None
+
+            assert 0 < freq < np.inf
+
+            self.freq = freq
 
         else:
              raise ValueError('Bad parameter: filter_type')
@@ -248,22 +272,31 @@ class ProcessData(object):
         #
         # check window parameters
         #
+
         if not self.window_type:
              # nothing to check now
              pass
 
         elif self.window_type == 'body_wave':
+            # regional body-wave window in the manner of Zhu1996
             assert pick_type is not None, "Must be defined: pick_type"
+            assert window_length > 0.
+            self.window_length = window_length
 
         elif self.window_type == 'surface_wave':
+            # regional surface-wave window in the manner of Zhu1996
             assert pick_type is not None, "Must be defined: pick_type"
+            assert window_length > 0.
+            self.window_length = window_length
 
         elif self.window_type == 'group_velocity':
             assert 'group_velocity' in parameters
             assert parameters['group_velocity'] >= 0.
             self.group_velocity = parameters['group_velocity']
-            self.alignment = getattr(parameters, 'window_alignment', 0.5)
-            assert 0. <= self.alignment <= 1.
+            self.window_alignment = getattr(parameters, 'window_alignment', 0.5)
+            assert 0. <= self.window_alignment <= 1.
+            assert window_length > 0.
+            self.window_length = window_length
 
         elif self.window_type == 'min_max':
             assert 'v_min' in parameters
@@ -273,46 +306,55 @@ class ProcessData(object):
             assert parameters['v_max'] <= np.inf
             self.v_min = parameters['v_min']
             self.v_max = parameters['v_max']
-            _window_warnings(self.window_type, self.window_length)
+
+            assert window_length >= 0.
+            self.window_length = window_length
+            _window_warnings(window_type, window_length)
 
         else:
              raise ValueError('Bad parameter: window_type')
 
 
-        if self.window_type is not None:
-
-            if self.window_type is None:
-                ValueError('Must be defined: window_length')
-
-            if self.window_length <= 0:
-                ValueError
-
-
-        if self.padding:
+        if apply_statics:
             assert self.window_type is not None
 
+        if apply_padding:
+            assert self.time_shift_min <= 0.,\
+                ValueError("Bad parameter: time_shift_min")
 
-        if self.padding is None:
-             self.padding = (0., 0.)
+            assert self.time_shift_max >= 0.,\
+                ValueError("Bad parameter: time_shift_max")
+
+            self.time_shift_min = time_shift_min
+            self.time_shift_max = time_shift_max
+
+        self.apply_padding = apply_padding
+        self.apply_statics = apply_statics
+
 
 
         #
         # check phase pick parameters
         #
+
         if not self.pick_type:
              # nothing to check now
              pass
 
         elif self.pick_type == 'taup':
-            assert self.taup_model is not None
+            assert taup_model is not None
+            self.taup_model = taup_model
             self._taup = taup.TauPyModel(self.taup_model)
 
-
         elif self.pick_type == 'FK_metadata':
-            assert self.FK_database is not None
-            assert exists(self.FK_database)
-            if self.FK_model is None:
-                self.FK_model = basename(self.FK_database)
+            assert FK_database is not None
+            assert exists(FK_database)
+
+            if FK_model is None:
+                FK_model = basename(FK_database)
+
+            self.FK_database = FK_database
+            self.FK_model = FK_model
 
         elif self.pick_type == 'SAC_metadata':
              pass
@@ -327,21 +369,27 @@ class ProcessData(object):
         #
         # check weight parameters
         #
+        self.apply_scaling = apply_scaling
+        self.apply_weights = apply_weights
+
         if apply_scaling:
             if self.window_type == 'body_wave':
-                if self.scaling_power is None:
-                    self.scaling_power = 1.
+                if scaling_power is None:
+                    scaling_power = 1.
 
-                if self.scaling_coefficient is None:
-                    self.scaling_coefficient = 1.e5
-
+                if scaling_coefficient is None:
+                    scaling_coefficient = 1.e5
 
             else:
-                if self.scaling_power is None:
-                    self.scaling_power = 0.5
+                if scaling_power is None:
+                    scaling_power = 0.5
 
-                if self.scaling_coefficient is None:
-                    self.scaling_coefficient = 1.e5
+                if scaling_coefficient is None:
+                    scaling_coefficient = 1.e5
+
+            self.scaling_power = scaling_power
+            self.scaling_coefficient = scaling_coefficient
+
 
 
         #
@@ -352,9 +400,11 @@ class ProcessData(object):
            self.pick_type == 'user_supplied':
             assert capuaf_file is not None
 
-        if self.capuaf_file:
+        if isinstance(capuaf_file, TextIOBase):
+            parser = WeightParser(capuaf_file)
+        else:
             assert exists(capuaf_file)
-            parser = WeightParser(self.capuaf_file)
+            parser = WeightParser(capuaf_file)
 
         if self.apply_statics:
             self.statics = parser.parse_statics()
@@ -422,7 +472,9 @@ class ProcessData(object):
             warn('Units not specified.')
 
         for trace in traces:
-            trace.attrs = AttribDict()
+            if not hasattr(trace, 'attrs'):
+                trace.attrs = AttribDict()
+
 
         #
         # part 1: filter traces
@@ -461,7 +513,6 @@ class ProcessData(object):
             tags[index] = 'type:displacement'
 
 
-
         #
         # part 2a: apply distance scaling
         #
@@ -497,6 +548,7 @@ class ProcessData(object):
                 else:
                     traces.remove(trace)
 
+
         #
         # part 3: determine phase picks
         #
@@ -512,7 +564,7 @@ class ProcessData(object):
 
             if self.pick_type=='taup':
                 with warnings.catch_warnings():
-                    # supress obspy warning that gets raised even when taup is
+                    # suppress obspy warning that gets raised even when taup is
                     # used correctly (someone should submit an ObsPy fix)
                     warnings.filterwarnings('ignore')
                     arrivals = self._taup.get_travel_times(
@@ -553,7 +605,8 @@ class ProcessData(object):
             #
 
             if self.window_type == 'body_wave':
-                # reproduces cut-and-paste body wave window
+                # regional body-wave window in the manner of Zhu1996
+                # (closely based on CAP code)
 
                 starttime = picks['P'] - 0.4*self.window_length
                 endtime = starttime + self.window_length
@@ -563,7 +616,8 @@ class ProcessData(object):
 
 
             elif self.window_type == 'surface_wave':
-                # reproduces cut-and-paste surface wave window
+                # regional surface-wave window in the manner of Zhu1996
+                # (closely based on CAP code)
 
                 starttime = picks['S'] - 0.3*self.window_length
                 endtime = starttime + self.window_length
@@ -582,8 +636,8 @@ class ProcessData(object):
                 # alignment=1.0 - window ends at group arrival
                 alignment = self.alignment
 
-                starttime = group_arrival - self.window_length*alignment
-                endtime = group_arrival + self.window_length*(1.-alignment)
+                starttime = group_arrival - self.window_length*window_alignment
+                endtime = group_arrival + self.window_length*(1.-window_alignment)
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
@@ -620,7 +674,7 @@ class ProcessData(object):
 
             # STATIC CONVENTION:  A positive static time shift means synthetics
             # are arriving too early and need to be shifted forward in time 
-            # (positive shift) to match the observed data.
+            # (positive shift) to match the observed data
 
             if self.apply_statics:
                 try:
@@ -646,15 +700,17 @@ class ProcessData(object):
                         key = 'surface_wave_'+component
 
                     static = self.statics[id][key]
-                    trace.static_time_shift = static
+                    trace.attrs.static_shift = static
 
                 except:
                     print('Error reading static time shift: %s' % id)
                     static = 0.
 
-                if 'type:greens' in tags:
-                    starttime -= static
-                    endtime -= static
+                if self.window_type is not None and\
+                   'type:greens' in tags:
+
+                    trace.stats.starttime += static
+
 
 
             #
@@ -664,12 +720,14 @@ class ProcessData(object):
             # using a longer window for Green's functions than for data allows for
             # more accurate time-shift corrections
 
-            if 'type:greens' in tags:
-                starttime -= self.padding[0]
-                endtime += self.padding[1]
+            if self.apply_padding and\
+               'type:greens' in tags:
 
-                trace.attrs.npts_left = int(round(abs(self.padding[0])/dt))
-                trace.attrs.npts_right = int(round(abs(self.padding[1])/dt))
+                starttime += self.time_shift_min
+                endtime += self.time_shift_max
+
+                trace.stats.npts_padding_left = int(round(-self.time_shift_max/dt))
+                trace.stats.npts_padding_right = int(round(+self.time_shift_max/dt))
 
 
             #
@@ -679,6 +737,9 @@ class ProcessData(object):
             # cuts trace and adjusts metadata
             if self.window_type is not None:
                 cut(trace, starttime, endtime)
+
+            elif self.apply_statics and 'type:greens' in tags:
+                print('Not implemented warning')
 
             taper(trace.data)
 

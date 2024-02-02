@@ -48,7 +48,7 @@ class GreensTensor(GreensTensorBase):
 
     def _precompute_mt(self):
         """ Recombines FK time series so they can be used in straightforward
-        liner combination with Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
+        linear combination with Mrr,Mtt,Mpp,Mrt,Mrp,Mtp
         """
 
         array = self._array

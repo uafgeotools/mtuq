@@ -49,10 +49,10 @@ def trace_label_writer(axis, dat, syn, total_misfit=1.):
     d = dat.data
 
     # display cross-correlation time shift
-    time_shift = 0.
-    time_shift += _getattr(syn, 'time_shift', np.nan)
-    time_shift += _getattr(dat, 'static_time_shift', 0)
-    axis.text(0.,(1/4.)*ymin, '%.2f' %time_shift, fontsize=11)
+    total_shift = 0.
+    total_shift += _getattr(syn, 'time_shift', np.nan)
+    total_shift += _getattr(dat, 'static_shift', 0)
+    axis.text(0.,(1/4.)*ymin, '%.2f' % total_shift, fontsize=11)
 
     # display maximum cross-correlation coefficient
     Ns = np.dot(s,s)**0.5

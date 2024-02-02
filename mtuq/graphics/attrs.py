@@ -9,8 +9,29 @@ from os.path import join
 from mtuq.util import defaults, warn
 
 
-def plot_time_shifts(dirname, attrs, stations, origin, **kwargs):
+def plot_time_shifts(dirname, attrs, stations, origin, key='total_shift', 
+    **kwargs):
+
     """ Plots how time shifts vary by location and component
+
+    By default, total time shifts are plotted. To plot just static or
+    cross-correlation time shifts, use ``key='static_shift'`` or 
+    ``key='time_shift'``, respectively
+
+    .. note ::
+
+        MTUQ distinguishes between the following different types of 
+        time shifts
+     
+        - `static_shift` is an initial user-supplied time shift applied during
+          data processing
+        
+        - `time_shift` is a subsequent cross-correlation time shift applied 
+          during misfit evaluation
+        
+        - `total_shift` is the total correction, or in other words the sum of
+          static and cross-correlation time shifts
+        
 
     .. rubric :: Required input arguments
 
@@ -37,7 +58,7 @@ def plot_time_shifts(dirname, attrs, stations, origin, **kwargs):
         'label': 'Time shift (s)',
         })
 
-    _plot_attrs(dirname, stations, origin, attrs, 'time_shift', **kwargs)
+    _plot_attrs(dirname, stations, origin, attrs, key, **kwargs)
 
 
 def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):

@@ -441,8 +441,9 @@ def _plot(axis, dat, syn, label=None):
     """
     t1,t2,nt,dt = _time_stats(dat)
 
-    start = _getattr(syn, 'start', 0)
-    stop = _getattr(syn, 'stop', len(syn.data))
+    # which start and stop indices will correctly align synthetics?
+    start = _getattr(syn, 'idx_start', 0)
+    stop = _getattr(syn, 'idx_stop', len(syn.data))
 
     t = np.linspace(0,t2-t1,nt,dt)
     d = dat.data

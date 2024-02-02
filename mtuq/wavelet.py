@@ -181,6 +181,14 @@ class Gaussian(Wavelet):
             np.exp(-0.5*((t-self.mu)/self.sigma)**2.)
 
 
+class Gabor(Wavelet):
+    def __init__(self, a=1., b=2.):
+        self.a = a
+        self.b = b
+
+    def evaluate(self, t):
+        return np.exp(-(self.a*t)**2.)*np.cos(self.b*t)
+
 
 #
 # earthquake seismology "source-time functions" defined in terms of earthquake
@@ -199,8 +207,6 @@ def EarthquakeTrapezoid(rise_time=None, rupture_time=None):
     return Trapezoid(
         rise_time=rise_time,
         half_duration=(rise_time + rupture_time)/2.)
-
-
 
 
 #

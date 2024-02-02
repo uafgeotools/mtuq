@@ -134,15 +134,17 @@ def upsample(data, dt_old, dt_new, nt_old, nt_new):
 
 
 def pad(trace, padding):
+
     dt = trace.stats.delta
 
     npts_padding = (
-        int(round(abs(padding[0])/dt)),
-        int(round(abs(padding[1])/dt)),
+        int(round(padding[0]/dt)),
+        int(round(padding[1]/dt)),
         )
-
     trace.data = np.pad(trace.data, npts_padding, 'constant')
-    trace.stats.starttime += abs(padding[0])
+    trace.stats.starttime -= abs(padding[0])
+    trace.stats.npts_padding_left = npts_padding[0]
+    trace.stats.npts_padding_right = npts_padding[1]
 
 
 def check_time_sampling(stream):
@@ -172,7 +174,7 @@ def check_padding(dataset, time_shift_min, time_shift_max):
     # end -time_shift_min after data.) 
     #
     # To achieve this, users can supply left and right padding lengths
-    # via the `padding` parameter when calling `mtuq.ProcessData`.
+    # when calling `mtuq.ProcessData`.
     #
     # If padding lengths were not supplied, then Green's functions will be
     # padded with zeros, which may result in less accurate time shifts
@@ -181,20 +183,20 @@ def check_padding(dataset, time_shift_min, time_shift_max):
         _, dt = get_time_sampling(stream)
 
         for trace in stream:
-            npts_left = getattr(trace, 'npts_left', 0)
-            npts_right = getattr(trace, 'npts_right', 0)
+            npts_padding_left = getattr(trace.stats, 'npts_padding_left', 0)
+            npts_padding_right = getattr(trace.stats, 'npts_padding_right', 0)
 
-            if (time_shift_min!=0 or time_shift_max!=0) and\
-               npts_left==0 and npts_right==0:
+            if (time_shift_min!=0. or time_shift_max!=0.) and\
+               npts_padding_left==0 and npts_padding_right==0:
 
-                pad(trace, (time_shift_min, time_shift_max))
+                pad(trace, (time_shift_max, -time_shift_min))
 
-                setattr(trace, 'npts_left', int(round(+time_shift_max/dt)))
-                setattr(trace, 'npts_right', int(round(-time_shift_min/dt)))
+                setattr(trace.stats, 'npts_padding_left', int(round(+time_shift_max/dt)))
+                setattr(trace.stats, 'npts_padding_right', int(round(-time_shift_min/dt)))
 
             else:
-                assert npts_left == int(round(+time_shift_max/dt))
-                assert npts_right == int(round(-time_shift_min/dt))
+                assert npts_padding_left == int(round(+time_shift_max/dt))
+                assert npts_padding_right == int(round(-time_shift_min/dt))
 
 
 def get_arrival(arrivals, phase):

@@ -207,6 +207,23 @@ class Dataset(list):
         return stations
 
 
+    def get_stats(self):
+        """ Returns trace metadata in nested lists
+        
+        .. note ::
+                
+          For Datasets created using ``mtuq.io.readers``, SAC header metadata
+          is used to populate the Station attributes
+        
+        """ 
+        stats = []
+        for stream in self:
+            stats += [[]]
+            for trace in stream:
+                stats[-1] += [trace.stats]
+        return stats
+
+
     def get_origins(self):
         """ Returns origin metadata from all streams as a `list` of 
         `mtuq.event.Origin` objects
@@ -269,8 +286,12 @@ class Dataset(list):
         return new_ds
 
 
+    def copy(self):
+        return self.__copy__()
+
+
     def write(self, path, format='sac'):
-        """ Writes a Python pickle of current dataset
+        """ Writes dataset to disk
         """
         if format.lower() == 'pickle':
 
@@ -289,5 +310,7 @@ class Dataset(list):
                     fullpath = '%s/%s.%s' % (path,filename,'sac')
                     trace.write(fullpath, format='sac')
                     
+        else:
+            raise ValueError('Unrecognized file format')
         
 
