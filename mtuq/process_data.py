@@ -315,17 +315,10 @@ class ProcessData(object):
              raise ValueError('Bad parameter: window_type')
 
 
-        if self.window_type is not None:
-
-            if self.window_type is None:
-                ValueError('Must be defined: window_length')
-
-            if self.window_length <= 0:
-                ValueError
-
+        if apply_statics:
+            assert self.window_type is not None
 
         if apply_padding:
-
             assert self.time_shift_min <= 0.,\
                 ValueError("Bad parameter: time_shift_min")
 
