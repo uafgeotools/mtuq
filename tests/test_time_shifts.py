@@ -16,20 +16,14 @@ from obspy import Stream, Trace
 from os.path import join
 
 
-run_figures = True
-#run_checks = True
-
-
+# observed and synthetic data will be misaligned by the following amount
 T_SYN = -2.5
 T_OBS = +2.5
-
-
-# observed and synthetic data must be misaligned 
 offset = T_OBS - T_SYN
 assert offset != 0.
 
 
-# use a static correction which very close, but not exact
+# use a static correction which close, but not exact
 static = 0.9*offset
 
 
@@ -155,6 +149,22 @@ def add_panel(axis, data, greens, apply_statics=False, apply_cc=False):
     axis.get_yaxis().set_ticks([])
 
 
+def collect_attributes(data, greens, apply_statics=False, apply_cc=False):
+
+    process_data = ProcessData(apply_statics)
+    
+    data = data.copy().map(process_data)
+    greens = greens.copy().map(process_data)
+    
+    if apply_cc:
+        misfit = Misfit(time_shift_min=-abs(offset), time_shift_max=+abs(offset))
+    else:
+        misfit = Misfit(time_shift_min=0., time_shift_max=0.)
+    
+    return _get_attrs(data, greens, misfit)
+
+
+
 def _plot_dat(axis, t, data, attrs, pathspec='-k'):
     stream = data[0]
     trace = data[0][0]
@@ -231,6 +241,16 @@ if __name__=='__main__':
     # expected alignment between data and synthetics
     #
 
+    # by default, the script runs with figure generation and error checking
+    # turned on
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no_checks', action='store_true')
+    parser.add_argument('--no_figures', action='store_true')
+    args = parser.parse_args()
+    run_checks = (not args.no_checks)
+    run_figures = (not args.no_figures)
+
 
     # construct observed data
     trace_dirac = Trace(Dirac(T_OBS), stats)
@@ -248,6 +268,20 @@ if __name__=='__main__':
     # construct observed data
     greens = GreensTensorList([GreensTensor()])
     greens.convolve(source_wavelet)
+
+
+    if run_checks:
+
+        attrs = collect_attributes(data, greens, apply_statics=True, apply_cc=False)
+        assert attrs.total_shift == attrs.static_shift == static
+
+        attrs = collect_attributes(data, greens, apply_statics=False, apply_cc=True)
+        assert attrs.total_shift == attrs.time_shift == offset
+
+        attrs = collect_attributes(data, greens, apply_statics=True, apply_cc=True)
+        assert attrs.static_shift == static
+        assert attrs.time_shift == offset - static
+        assert attrs.total_shift == offset
 
 
     if run_figures:
@@ -292,6 +326,7 @@ if __name__=='__main__':
         axes[3].set_title('Result using static and cross-correlation time shifts')
 
         add_panel(axes[3], data, greens, apply_statics=True, apply_cc=True)
+
 
         pyplot.savefig('time_shifts.png')
 
