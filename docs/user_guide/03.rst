@@ -79,9 +79,9 @@ Once opened, an AxiSEM or FK database client can be used to generate `GreensTens
 Computing Green's functions from 3D Earth models
 ------------------------------------------------
 
-MTUQ currently supports 3D Green's functions from SPECFEM3D.  
+MTUQ currently supports 3D Green's functions from SPECFEM3D/3D_GLOBE.  
 
-To generate a complete Green's function database for a given hypocenter and depth, six SPECFEM3D wavefield simulations are required.  Output must be saved as SAC files at individual stations using the following filename convention, which comes from `GRD_CMT3D <https://github.com/UTCompSeismo/GRD_CMT3D/tree/master/cmt3d>`_.  Place all SAC files corresponding to a single hypocenter and depth in the same directory as follows:
+To generate a complete Green's function database for a given hypocenter and depth, six SPECFEM3D wavefield simulations are required.  Output must be saved as/converted to SAC files at individual stations using the following filename convention, which comes from `GRD_CMT3D <https://github.com/UTCompSeismo/GRD_CMT3D/tree/master/cmt3d>`_.  Place all SAC files corresponding to a single hypocenter and depth in the same directory as follows:
 
 .. code ::
 

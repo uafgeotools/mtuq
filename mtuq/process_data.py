@@ -726,7 +726,7 @@ class ProcessData(object):
                 starttime += self.time_shift_min
                 endtime += self.time_shift_max
 
-                trace.stats.npts_padding_left = int(round(-self.time_shift_max/dt))
+                trace.stats.npts_padding_left = int(round(-self.time_shift_min/dt))
                 trace.stats.npts_padding_right = int(round(+self.time_shift_max/dt))
 
 
