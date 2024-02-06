@@ -56,6 +56,7 @@ ENTRY_POINTS = {
         'FK = mtuq.io.clients.FK_SAC:Client',
         'FK_SAC = mtuq.io.clients.FK_SAC:Client',
         'SPECFEM3D = mtuq.io.clients.SPECFEM3D_SAC:Client',
+        'SPECFEM3D_GLOBE = mtuq.io.clients.SPECFEM3D_SAC:Client',
         'SPECFEM3D_SAC = mtuq.io.clients.SPECFEM3D_SAC:Client',
         'SPECFEM3D_SGT = mtuq.io.clients.SPECFEM3D_SGT:Client',
         'SPECFEM3D_PKL = mtuq.io.clients.SPECFEM3D_SGT:Client',
