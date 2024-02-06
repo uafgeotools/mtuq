@@ -16,7 +16,7 @@ Data processing choices include filter type, window length, and many others. For
  
 
 
-With `mtuq.ProcessData`, the choice of data processing parameters is clearly separated from the application of the data processing function to the seismic data, resulting in a two-step procedure.
+With `mtuq.ProcessData`, the choice of data processing parameters is clearly separated from the application of the data processing function to seismic data, resulting in a two-step procedure.
 
 In the first step, the user supplies parameters to create a data processing function:
 
@@ -37,8 +37,7 @@ Data processing can also be applied to an entire `Dataset` at once:
 
     processed_data = mtuq.Dataset()
     for stream in raw_data:
-        processed_stream = process_data(stream)
-        processed_data += processed_stream
+        processed_data += process_data(stream)
 
 
 Or, more succinctly:
@@ -52,7 +51,7 @@ Or, more succinctly:
 Requirements for processed data
 -------------------------------
 
-For computational efficiency and software engineering reasons, processed traces must satisfy:
+Processed traces must satisfy:
 
 1. all traces must have the same sampling rate and number of samples
 2. all traces common to the same station must have the same startime and endtime
