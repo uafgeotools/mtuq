@@ -37,7 +37,7 @@ Older versions of the conda package manager can be very slow. For a significant 
 
     conda update -n base conda
 
-For reference, the largest potential speed up comes from the new `mamba <https://conda.org/blog/2023-11-06-conda-23-10-0-release>`_ dependency solver, which was `adopted <https://conda.org/blog/2023-11-06-conda-23-10-0-release>`_ in the 23.10 release.
+For reference, the largest potential speed up comes from the new `mamba <https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community>`_ dependency solver, which was `adopted <https://conda.org/blog/2023-11-06-conda-23-10-0-release>`_ in the 23.10 release.
 
 
 

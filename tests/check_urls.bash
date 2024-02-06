@@ -20,6 +20,8 @@ URLS="\
     https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html\
     https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/05/code/gallery_mt.py
     https://github.com/uafgeotools/mtuq/blob/master/docs/user_guide/05/code/gallery_force.py
+    https://conda.org/blog/2023-11-06-conda-23-10-0-release\
+    https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community\
     "
 
 
