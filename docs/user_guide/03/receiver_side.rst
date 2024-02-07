@@ -6,8 +6,8 @@
    To fill in missing documentation, feel free to submit a pull request.
 
 
-Working example
-===============
+Notes on receiver-side 3D Green's functions
+===========================================
 
 A working of example using receiver-side 3D Green's functions from SPECFEM3D in a moment tensor inversion:
 
