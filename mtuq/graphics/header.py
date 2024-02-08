@@ -129,7 +129,7 @@ class MomentTensorHeader(Base):
         if not process_bw:
             pass
         if not process_sw:
-            raise Excpetion()
+            raise Exception()
 
         if process_sw.freq_max > 1.:
             units = 'Hz'
@@ -291,7 +291,7 @@ class ForceHeader(Base):
         if not process_bw:
             pass
         if not process_sw:
-            raise Excpetion()
+            raise Exception()
 
         if process_sw.freq_max > 1.:
             units = 'Hz'
