@@ -31,7 +31,7 @@ We note that some versions of GMT and ObsPy do not plot `full moment tensors <ht
 Speeding up conda installs
 --------------------------
 
-Older versions of the conda package manager can be very slow. For a significant potential speed up, conda can be updated as follows:
+Older versions of the conda package manager can be very slow. For a potential speed up, conda can be updated as follows:
 
 .. code::
 

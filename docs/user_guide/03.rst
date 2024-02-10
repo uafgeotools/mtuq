@@ -2,7 +2,7 @@
 Acquiring Green's functions
 ===========================
 
-The response of a medium to an impulsive source is called a Green's function.  This page describes the role of Green's functions in source inversions, the types of Green's functions supported by MTUQ, and how these types can be obtained.
+The response of a medium to an impulsive source is called a Green's function.  This page describes the role of Green's functions in source inversions, the types of Green's functions supported by MTUQ, and how these different types can each be obtained.
 
 
 Role of Green's functions
@@ -53,7 +53,9 @@ Computing Green's functions from 1D Earth models
 
 MTUQ supports the following 1D Green's functions formats: AxiSEM (preferred) and FK.
 
-`AxiSEM <https://github.com/geodynamics/axisem>`_ performs spectral element wave simulations in radially-symmetric Earth models.  To generate synthetics in a format MTUQ natively supports, follow the instructions for in the `AxiSEM user manual <https://raw.githubusercontent.com/geodynamics/axisem/master/MANUAL/manual_axisem1.3.pdf>`_  under "Output wavefields in NetCDF format needed by instaseis."  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
+`AxiSEM <https://github.com/geodynamics/axisem>`_ performs spectral element wave simulations in radially-symmetric Earth models.  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
+
+To generate AxiSEM synthetics in a format MTUQ supports, follow the instructions in the `AxiSEM user manual <https://raw.githubusercontent.com/geodynamics/axisem/master/MANUAL/manual_axisem1.3.pdf>`_  under "Output wavefields in NetCDF format needed by instaseis."
 
 To open an AxiSEM database client in MTUQ:
 

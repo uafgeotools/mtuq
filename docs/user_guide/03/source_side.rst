@@ -1,7 +1,7 @@
 
 .. warning::
 
-   This page is currently just as stub. 
+   This page is currently just a stub. 
 
    To fill in missing documentation, feel free to submit a pull request.
 
