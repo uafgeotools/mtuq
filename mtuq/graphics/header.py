@@ -243,6 +243,23 @@ class MomentTensorHeader(Base):
 
         line = _focal_mechanism(self.lune_dict)
         line +=  ',   '+_gamma_delta(self.lune_dict)
+
+
+        # Get additional header info. Only N, Np and Ns possible at the moment, but this could change in the future
+        # Check which fields are present as attributes in MomentTensorHeader object. 
+        # Possible way to extend this is to create additional "formating" functions and call them here.
+        if hasattr(self, 'N') and hasattr(self, 'Np') and hasattr(self, 'Ns'):
+            self.additional_info = "N-Np-Ns : " + str(self.N) + "-" + str(self.Np) + "-" + str(self.Ns)
+        elif hasattr(self, 'N'):
+            self.additional_info = "N : " + str(self.N)
+        else:
+            self.additional_info = None
+
+        # After checking which fields are present, add them to the line
+        if self.additional_info:
+            line += ',   ' + self.additional_info
+
+        # Write the modified line
         _write_text(line, px, py, ax, fontsize=14)
 
 
@@ -366,6 +383,23 @@ class ForceHeader(Base):
         py -= 0.30
 
         line = _phi_theta(self.force_dict)
+
+        # Same as in MomentTensorHeader above.
+        if hasattr(self, 'N') and hasattr(self, 'Np') and hasattr(self, 'Ns'):
+            self.additional_info = "N-Np-Ns : " + str(self.N) + "-" + str(self.Np) + "-" + str(self.Ns)
+        elif hasattr(self, 'N'):
+            self.additional_info = "N : " + str(self.N)
+        else:
+            self.additional_info = None
+
+        # After checking which fields are present, add them to the line
+        if self.additional_info:
+            line += ',   ' + self.additional_info
+
+        # Write the modified line
+        _write_text(line, px, py, ax, fontsize=14)
+
+        # Write the modified line
         _write_text(line, px, py, ax, fontsize=14)
 
 
