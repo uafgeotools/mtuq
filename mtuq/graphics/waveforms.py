@@ -60,7 +60,25 @@ def plot_waveforms1(filename,
 
     _add_component_labels1(axes)
 
+    # determine maximum trace amplitudes
     max_amplitude = _max(data, synthetics)
+
+    # Calculate maximum amplitudes for dataset
+    max_amplitudes = np.asarray([
+        _max(data[i], synthetics[i]) if data[i] and synthetics[i] else 0.0 
+        for i in range(len(data))
+    ])
+
+
+    if normalize == 'median_amplitude':
+        max_amplitudes_median = np.median(max_amplitudes[max_amplitudes>0])
+        max_amplitudes = [max_amplitudes_median if data[i] and synthetics[i] else 0.0 for i in range(len(data))]
+    elif normalize == 'maximum_amplitude':
+        max_amplitudes = [max_amplitude if data[i] and synthetics[i] else 0.0 for i in range(len(data))]
+    elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
+        pass
+    else:
+        raise ValueError("Invalid normalization method specified.")
 
     #
     # loop over stations
@@ -100,7 +118,7 @@ def plot_waveforms1(filename,
                 continue
 
             _plot_ZRT(axes[ir], 1, dat, syn, component, 
-                normalize, trace_label_writer, max_amplitude, total_misfit)
+                normalize, trace_label_writer, max_amplitudes[_i], total_misfit)
 
         ir += 1
 
@@ -153,6 +171,31 @@ def plot_waveforms2(filename,
     max_amplitude_sw = _max(data_sw, synthetics_sw)
 
 
+    # Calculate maximum amplitudes for body wave and surface wave data
+    max_amplitudes_bw = np.asarray([
+        _max(data_bw[i], synthetics_bw[i]) if data_bw[i] and synthetics_bw[i] else 0.0 
+        for i in range(len(data_bw))
+    ])
+
+    max_amplitudes_sw = np.asarray([
+        _max(data_sw[i], synthetics_sw[i]) if data_sw[i] and synthetics_sw[i] else 0.0 
+        for i in range(len(data_sw))
+    ])
+
+    # Normalize amplitudes based on the specified method
+    if normalize == 'median_amplitude':
+        max_amplitudes_bw_median = np.median(max_amplitudes_bw[max_amplitudes_bw > 0])
+        max_amplitudes_sw_median = np.median(max_amplitudes_sw[max_amplitudes_sw > 0])
+        max_amplitudes_bw = [max_amplitudes_bw_median if data_bw[i] and synthetics_bw[i] else 0.0 for i in range(len(data_bw))]
+        max_amplitudes_sw = [max_amplitudes_sw_median if data_sw[i] and synthetics_sw[i] else 0.0 for i in range(len(data_sw))]
+    elif normalize == 'maximum_amplitude':
+        max_amplitudes_bw = [max_amplitude_bw if data_bw[i] and synthetics_bw[i] else 0.0 for i in range(len(data_bw))]
+        max_amplitudes_sw = [max_amplitude_sw if data_sw[i] and synthetics_sw[i] else 0.0 for i in range(len(data_sw))]
+    elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
+        pass
+    else:
+        raise ValueError("Invalid normalization method specified.")
+
     #
     # loop over stations
     #
@@ -191,8 +234,7 @@ def plot_waveforms2(filename,
                 continue
 
             _plot_ZR(axes[ir], 1, dat, syn, component, 
-                normalize, trace_label_writer, max_amplitude_bw, total_misfit_bw)
-
+                normalize, trace_label_writer, max_amplitudes_bw[_i], total_misfit_bw)
 
         #
         # plot surface wave traces
@@ -216,7 +258,7 @@ def plot_waveforms2(filename,
                 continue
 
             _plot_ZRT(axes[ir], 3, dat, syn, component,
-                normalize, trace_label_writer, max_amplitude_sw, total_misfit_sw)
+                normalize, trace_label_writer, max_amplitudes_sw[_i], total_misfit_sw)
 
 
         ir += 1
@@ -248,7 +290,7 @@ def plot_data_greens1(filename,
     total_misfit = misfit(data, greens.select(origin), source, optimization_level=0)
 
     # Get the number of stations used
-    N_total = len(stations)
+    N_total = _count([data])
 
     # prepare figure header
     if 'header' in kwargs:
@@ -382,7 +424,7 @@ def _initialize(nrows=None, ncolumns=None, column_width_ratios=None,
 
 def _plot_ZRT(axes, ic, dat, syn, component, 
     normalize='maximum_amplitude', trace_label_writer=None,
-    max_amplitude=1., total_misfit=1.):
+    normalization_amplitude=1., total_misfit=1.):
 
     # plot traces
     if component=='Z':
@@ -396,26 +438,21 @@ def _plot_ZRT(axes, ic, dat, syn, component,
 
     _plot(axis, dat, syn)
 
-    # normalize amplitude
+    # normalize amplitude -- logic for station_amplitude, median_amplitude, and maximum_amplitude is done at higher level
     if normalize=='trace_amplitude':
         max_trace = _max(dat, syn)
         ylim = [-1.5*max_trace, +1.5*max_trace]
         axis.set_ylim(*ylim)
-    elif normalize=='station_amplitude':
-        max_stream = _max(stream_dat, stream_syn)
-        ylim = [-1.5*max_stream, +1.5*max_stream]
-        axis.set_ylim(*ylim)
-    elif normalize=='maximum_amplitude':
-        ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
+    elif normalize=='station_amplitude' or normalize=='median_amplitude' or normalize=='maximum_amplitude':
+        ylim = [-1.25*normalization_amplitude, +1.25*normalization_amplitude]
         axis.set_ylim(*ylim)
 
     if trace_label_writer is not None:
         trace_label_writer(axis, dat, syn, total_misfit)
 
-
 def _plot_ZR(axes, ic, dat, syn, component, 
     normalize='maximum_amplitude', trace_label_writer=None,
-    max_amplitude=1., total_misfit=1.):
+    normalization_amplitude=1., total_misfit=1.):
 
     # plot traces
     if component=='Z':
@@ -427,23 +464,17 @@ def _plot_ZR(axes, ic, dat, syn, component,
 
     _plot(axis, dat, syn)
 
-    # normalize amplitude
+    # normalize amplitude -- logic for station_amplitude, median_amplitude, and maximum_amplitude is done at higher level
     if normalize=='trace_amplitude':
         max_trace = _max(dat, syn)
         ylim = [-1.5*max_trace, +1.5*max_trace]
         axis.set_ylim(*ylim)
-    elif normalize=='station_amplitude':
-        max_stream = _max(stream_dat, stream_syn)
-        ylim = [-1.5*max_stream, +1.5*max_stream]
+    elif normalize=='station_amplitude' or normalize=='median_amplitude' or normalize=='maximum_amplitude':
+        ylim = [-1.25*normalization_amplitude, +1.25*normalization_amplitude]
         axis.set_ylim(*ylim)
-    elif normalize=='maximum_amplitude':
-        ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
-        axis.set_ylim(*ylim)
-
 
     if trace_label_writer is not None:
         trace_label_writer(axis, dat, syn, total_misfit)
-
 
 def _plot(axis, dat, syn, label=None):
     """ Plots data and synthetics time series on current axes
@@ -459,9 +490,9 @@ def _plot(axis, dat, syn, label=None):
     s = syn.data
 
     axis.plot(t, d, 'k', linewidth=1.5,
-        clip_on=False, zorder=10)
+        clip_on=True, zorder=10)
     axis.plot(t, s[start:stop], 'r', linewidth=1.25, 
-        clip_on=False, zorder=10)
+        clip_on=True, zorder=10)
 
 
 def _add_component_labels1(axes, body_wave_labels=True, surface_wave_labels=True):
