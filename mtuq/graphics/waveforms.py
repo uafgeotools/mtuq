@@ -60,21 +60,14 @@ def plot_waveforms1(filename,
 
     _add_component_labels1(axes)
 
-    # determine maximum trace amplitudes
     max_amplitude = _max(data, synthetics)
 
-    # Calculate maximum amplitudes for dataset
-    max_amplitudes = np.asarray([
-        _max(data[i], synthetics[i]) if data[i] and synthetics[i] else 0.0 
-        for i in range(len(data))
-    ])
-
-
     if normalize == 'median_amplitude':
-        max_amplitudes_median = np.median(max_amplitudes[max_amplitudes>0])
-        max_amplitudes = [max_amplitudes_median if data[i] and synthetics[i] else 0.0 for i in range(len(data))]
+        # Using the updated _median_amplitude function to calculate the median of non-zero maximum amplitudes
+        max_amplitude_median = _median_amplitude(data, synthetics)
+        max_amplitudes = np.array([max_amplitude_median if len(data[i]) > 0 and len(synthetics[i]) > 0 else 0.0 for i in range(len(data))])
     elif normalize == 'maximum_amplitude':
-        max_amplitudes = [max_amplitude if data[i] and synthetics[i] else 0.0 for i in range(len(data))]
+        max_amplitudes = np.array([max_amplitude if len(data[i]) > 0 and len(synthetics[i]) > 0 else 0.0 for i in range(len(data))])
     elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
         pass
     else:
@@ -171,26 +164,17 @@ def plot_waveforms2(filename,
     max_amplitude_sw = _max(data_sw, synthetics_sw)
 
 
-    # Calculate maximum amplitudes for body wave and surface wave data
-    max_amplitudes_bw = np.asarray([
-        _max(data_bw[i], synthetics_bw[i]) if data_bw[i] and synthetics_bw[i] else 0.0 
-        for i in range(len(data_bw))
-    ])
-
-    max_amplitudes_sw = np.asarray([
-        _max(data_sw[i], synthetics_sw[i]) if data_sw[i] and synthetics_sw[i] else 0.0 
-        for i in range(len(data_sw))
-    ])
-
-    # Normalize amplitudes based on the specified method
     if normalize == 'median_amplitude':
-        max_amplitudes_bw_median = np.median(max_amplitudes_bw[max_amplitudes_bw > 0])
-        max_amplitudes_sw_median = np.median(max_amplitudes_sw[max_amplitudes_sw > 0])
-        max_amplitudes_bw = [max_amplitudes_bw_median if data_bw[i] and synthetics_bw[i] else 0.0 for i in range(len(data_bw))]
-        max_amplitudes_sw = [max_amplitudes_sw_median if data_sw[i] and synthetics_sw[i] else 0.0 for i in range(len(data_sw))]
+        # For body wave data and synthetics
+        bw_median = _median_amplitude(data_bw, synthetics_bw)
+        max_amplitudes_bw = np.array([bw_median if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+        
+        # For surface wave data and synthetics
+        sw_median = _median_amplitude(data_sw, synthetics_sw)
+        max_amplitudes_sw = np.array([sw_median if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
     elif normalize == 'maximum_amplitude':
-        max_amplitudes_bw = [max_amplitude_bw if data_bw[i] and synthetics_bw[i] else 0.0 for i in range(len(data_bw))]
-        max_amplitudes_sw = [max_amplitude_sw if data_sw[i] and synthetics_sw[i] else 0.0 for i in range(len(data_sw))]
+        max_amplitudes_bw = np.array([max_amplitude_bw if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+        max_amplitudes_sw = np.array([max_amplitude_sw if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
     elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
         pass
     else:
@@ -574,6 +558,19 @@ def _isempty(dataset):
 
 
 def _max(dat, syn):
+    """
+    Computes the maximum value between the maximum values of two input data objects (observed and synthetics).
+
+    Parameters:
+    dat (Trace, Stream, or Dataset): observed data.
+    syn (Trace, Stream, or Dataset): synthetics.
+
+    Returns:
+    float: The maximum value between the maximum values of the two input objects.
+
+    Raises:
+    TypeError: If the input objects are not of the same type (Trace, Stream, or Dataset).
+    """
     if type(dat)==type(syn)==Trace:
         return max(
             abs(dat.max()),
@@ -592,6 +589,43 @@ def _max(dat, syn):
     else:
         raise TypeError
 
+def _median_amplitude(data, synthetics):
+    """
+    Computes the median of the maximum non-zero amplitudes for pairs of data and synthetic traces.
+
+    Args:
+        data: A list of of observed data (can be Trace, Stream, or Dataset objects).
+        synthetics: A list of synthetic traces corresponding to the observed data.
+
+    Returns:
+        The median of the non-zero maximum amplitudes computed across all pairs.
+
+    Raises:
+        ValueError: If the lengths of data and synthetics lists differ.
+    """
+    # Validate input lengths
+    # If Trace directly input, make it a list
+    data = [data] if isinstance(data, Trace) else data
+    synthetics = [synthetics] if isinstance(synthetics, Trace) else synthetics
+    
+    # Validate lengths
+    if len(data) != len(synthetics):
+        raise ValueError("Data and synthetics lists must have the same length.")
+
+    max_amplitudes = []
+
+    # Iterate over pairs and handle empty traces - This gets a list of maximum amplitudes for each pair of data and synthetics
+    for dat, syn in zip(data, synthetics):
+        if not dat or not syn:
+            max_amplitudes.append(0)
+        else:
+            max_amplitudes.append(_max(dat, syn))
+
+    # Convert to NumPy array for efficient filtering
+    max_amplitudes = np.array(max_amplitudes)
+
+    # Compute median of non-zero values or return 0 if none exist 
+    return np.median(max_amplitudes[max_amplitudes > 0]) if np.any(max_amplitudes > 0) else 0.0
 
 
 def _hide_axes(axes):
@@ -606,7 +640,7 @@ def _hide_axes(axes):
             col.get_yaxis().set_ticks([])
             col.patch.set_visible(False)
 
-def station_number_header_decorator(header_function):
+def header_decorator(header_function):
     def wrapper(*args, **kwargs):
         # Call the original header function with all args except 'additional_header_info'
         header = header_function(*args, **{k: v for k, v in kwargs.items() if k != 'additional_header_info'})
@@ -620,8 +654,7 @@ def station_number_header_decorator(header_function):
     return wrapper
 
 
-
-@station_number_header_decorator
+@header_decorator
 def _prepare_header(model, solver, source, source_dict, origin, *args, **kwargs):
     # prepares figure header
 
