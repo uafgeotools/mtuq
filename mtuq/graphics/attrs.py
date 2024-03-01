@@ -62,6 +62,61 @@ def plot_time_shifts(dirname, attrs, stations, origin, key='total_shift',
 
     _plot_attrs(dirname, stations, origin, attrs, key, **kwargs)
 
+def plot_cross_corr(dirname, attrs, stations, origin, key='normalized_cc_max', 
+    **kwargs):
+
+    """ Plots how time shifts vary by location and component
+
+    By default, total time shifts are plotted. To plot just static or
+    cross-correlation time shifts, use ``key='static_shift'`` or 
+    ``key='time_shift'``, respectively
+
+    .. note ::
+
+        MTUQ distinguishes between the following different types of 
+        time shifts
+    
+        - `static_shift` is an initial user-supplied time shift applied during
+        data processing
+        
+        - `time_shift` is a subsequent cross-correlation time shift applied 
+        during misfit evaluation
+        
+        - `total_shift` is the total correction, or in other words the sum of
+        static and cross-correlation time shifts
+        
+
+    .. rubric :: Required input arguments
+
+    ``dirname`` (`str`):
+    Directory in which figures will be written
+
+    ``attrs`` (`list` of `AttribDict`):
+    List returned by misfit function's `collect_attributes` method
+
+    ``stations`` (`list` of `mtuq.Station` objects):
+    Used to plot station locations
+
+    ``origin`` (`mtuq.Origin` object):
+    Used to plot origin location
+
+
+    .. rubric :: Optional input arguments
+
+    For optional argument descriptions, 
+    `see here <mtuq.graphics._plot_attrs.html>`_
+
+    """
+    defaults(kwargs, {
+        'label': 'Maximum normalized CC',
+        'zero_centered': False,
+        'colormap': 'inferno',
+        'min_val': 0.0,
+        'max_val': 1.0,
+        })
+
+    _plot_attrs(dirname, stations, origin, attrs, key, **kwargs)
+
 
 def plot_amplitude_ratios(dirname, attrs, stations, origin, **kwargs):
     """ Plots how Aobs/Asyn varies by location and component
