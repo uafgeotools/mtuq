@@ -497,8 +497,14 @@ def _pygmt_backend(filename, values, active_stations, origin,
     text_line_val = 1
     header_lines = PyGMTUtilities.get_header(label, origin, filename, process)
     
+    # Add the header text to the plot
+    # Text spacing is based on longitude range and latitude buffer size.
+    lon_mean = np.max(longitudes) - (np.max(longitudes) - np.min(longitudes)) / 2
+    text_spacing = lat_buffer / 1.5
     for header_line in header_lines:
-        fig.text(x=-148, y=(max(latitudes) + lat_buffer)+(text_line_val)*0.25, text=header_line, font="14p,Helvetica-Bold,black", justify="MC", no_clip=True)
+        fig.text(x=lon_mean,
+                 y=max(latitudes) + lat_buffer + text_line_val*text_spacing,
+                 text=header_line, font="14p,Helvetica-Bold,black", justify="MC", no_clip=True)
         text_line_val += 1
 
     # Saving the figure
