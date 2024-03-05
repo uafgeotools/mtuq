@@ -65,26 +65,19 @@ def plot_time_shifts(dirname, attrs, stations, origin, key='total_shift',
 def plot_cross_corr(dirname, attrs, stations, origin, key='normalized_cc_max', 
     **kwargs):
 
-    """ Plots how time shifts vary by location and component
+    """ Plots how cross-correlation values vary by location and component
 
-    By default, total time shifts are plotted. To plot just static or
-    cross-correlation time shifts, use ``key='static_shift'`` or 
-    ``key='time_shift'``, respectively
+    By default, maximum normalized cross-correlation values are plotted. To plot just
+    maximum cross-correlation values, use ``key='cc_max'``
 
     .. note ::
 
-        MTUQ distinguishes between the following different types of 
-        time shifts
-    
-        - `static_shift` is an initial user-supplied time shift applied during
-        data processing
-        
-        - `time_shift` is a subsequent cross-correlation time shift applied 
-        during misfit evaluation
-        
-        - `total_shift` is the total correction, or in other words the sum of
-        static and cross-correlation time shifts
-        
+        MTUQ distinguishes between the following different types of
+        cross-correlation values
+
+        - `cc_max` is the maximum cross-correlation value
+
+        - `normalized_cc_max` is the maximum cross-correlation value normalized between 0 and 1
 
     .. rubric :: Required input arguments
 
