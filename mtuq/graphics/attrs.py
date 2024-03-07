@@ -738,12 +738,18 @@ class PyGMTUtilities:
         The prepared label.
 
         """
-        if label.startswith('$') and label.endswith('$'):
-            # Convert LaTeX to HTML for compatibility with PyGMT/GMT
-            return f"<math>{label[1:-1]}</math>"
-        else:
+
+        parts = label.split('$')
+        if len(parts) == 1:  # No '$' found
             return label
-        
+        new_text = ''
+        for i, part in enumerate(parts):
+            if i % 2 == 0:
+                new_text += part
+            else:
+                new_text += f"<math>{part}</math>"
+        return new_text
+     
     @staticmethod
     def get_header(label, origin, filename, process = None):
         """
