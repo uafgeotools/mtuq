@@ -22,17 +22,14 @@ def plot_time_shifts(dirname, attrs, stations, origin, key='total_shift',
 
     .. note ::
 
-        MTUQ distinguishes between the following different types of 
-        time shifts
-    
-        - `static_shift` is an initial user-supplied time shift applied during
-        data processing
+        MTUQ distinguishes between the following different types of time shifts:
+
+        - `static_shift` is an initial user-supplied time shift applied during data processing
         
-        - `time_shift` is a subsequent cross-correlation time shift applied 
-        during misfit evaluation
+        - `time_shift` is a subsequent cross-correlation time shift applied during misfit evaluation
         
-        - `total_shift` is the total correction, or in other words the sum of
-        static and cross-correlation time shifts
+        - `total_shift` is the total correction, or in other words the sum of static and cross-correlation time shifts
+
         
 
     .. rubric :: Required input arguments
@@ -207,7 +204,18 @@ def _plot_attrs(dirname, stations, origin, attrs, key,
     for details. Otherwise, defaults to a generic matplotlib `backend
     <mtuq.graphics.attrs._default_backend.html>`_.
 
+    
+    .. rubric ::  Standard pygmt backend
 
+    The standard `pygmt backend <mtuq.graphics.attrs._pygmt_backend.html>`_ is used to 
+    plot station attributes over a hillshaded map. Default calls to front_end functions 
+    can be supplemented with optional keyword arguments to customize the appearance of the plot. 
+
+    .. code ::
+        
+        from mtuq.graphics.attrs import _pygmt_backend
+        plot_time_shifts('./SW/tshift', attributes_sw, stations, origin,
+                        moment_tensor=best_mt, process=process_sw, backend=_pygmt_backend)
     """
 
     if backend is None:
@@ -244,7 +252,8 @@ def _default_backend(filename, values, stations, origin,
     colormap='coolwarm', zero_centered=True, colorbar=True,
     label='', width=5., height=5., **kwargs):
 
-    """ Default backend for all other `mtuq.graphics.attrs` functions
+    """ 
+    Default backend for all frontend `mtuq.graphics.attrs` functions
 
     The frontend functions perform only data manipulation. All graphics library
     calls occur in the backend
@@ -252,7 +261,7 @@ def _default_backend(filename, values, stations, origin,
     By isolating the graphics function calls in this way, users can completely
     interchange graphics libraries (matplotlib, GMT, PyGMT, and so on)
 
-    .. rubric::  Keyword arguments
+    .. rubric ::  Keyword arguments
 
     ``colormap`` (`str`):
     Matplotlib color palette
@@ -265,7 +274,6 @@ def _default_backend(filename, values, stations, origin,
 
     ``label`` (`str`):
     Optional colorbar label
-
 
     """
 
@@ -340,9 +348,79 @@ def _pygmt_backend(filename, values, active_stations, origin,
                 label='', width=5, moment_tensor=None, process=None,
                 stations_list=None, station_labels=True, min_val=None, max_val=None, **kwargs):
     """
-    PyGMT backend for plotting station attributes with hillshading using the
-    Miller Cylindrical projection, with an azimuth of 0/90 and a normalization
-    of t1 for the hillshade intensity.
+    PyGMT backend for plotting station attributes over a hillshaded map.
+    
+    .. note ::
+
+        This function requires the PyGMT library to be installed. 
+        If called while pygmt is not installed, the default matplotlib backend will be used.
+
+        The function accepts a number of optional keyword arguments to customize
+        the appearance of the plot. If passed to another backend, these arguments
+        will be ignored.
+
+    .. rubric ::  Required input arguments
+
+    ``filename`` (`str`):
+    The name of the file to which the figure will be saved. This should be passed by the frontend function. 
+    Expected filenames are in the format `component.png`, where `component` is the component of the data being plotted. 
+    This might be revised in the future to allow for more flexible naming conventions.
+
+    ``values`` (`list` of `float`):
+    List of values to be plotted for each station. The length of the list should match the number of stations.
+
+    ``active_stations`` (`list` of `mtuq.Station` objects):
+    List of stations to be plotted, with a value entry for each station in the `values` list.
+
+    ``origin`` (`mtuq.Origin` object):
+    Origin object used to plot the origin location.
+
+    .. rubric ::  Keyword arguments
+    
+    ``colormap`` (`str`):
+    GMT colormap name - see `GMT documentation <https://docs.generic-mapping-tools.org/6.5/reference/cpts.html>`
+
+    ``zero_centered`` (`bool`):
+    Whether or not the colormap is centered on zero
+
+    ``display_topo`` (`bool`):
+    Whether or not to display topography in the background -- will download the ETOPO1 topography file if not found
+
+    ``label`` (`str`):
+    Optional colorbar text label -- supports LaTeX expressions
+
+    ``width`` (`float`):
+    Width of the figure in inches -- default is 5 inches
+
+    ``moment_tensor`` (`mtuq.event.MomentTensor` or `np.ndarray`):
+    Moment tensor to plot as a beachball -- will plot a star at the origin if not provided
+    Can be either a `mtuq.event.MomentTensor` object or a 1D numpy array with the six independent components
+    [m_rr, m_tt, m_pp, m_rt, m_rp, m_tp]
+
+    ``process`` (`mtuq.ProcessData`):
+    ProcessData object used to determine the type of waves used for the window
+
+    ``stations_list`` (`list` of `mtuq.Station` objects):
+    List of all stations available before data processing -- will plot only active stations if not provided
+
+    ``station_labels`` (`bool`):
+    Whether or not to plot station labels -- default is True
+
+    ``min_val`` (`float`):
+    Minimum value for the colorbar -- will be determined automatically if not provided
+
+    ``max_val`` (`float`):
+    Maximum value for the colorbar -- will be determined automatically if not provided
+
+    .. rubric ::  Backend specific utility class
+
+    The PyGMTUtilities class is a utility class designed to enhance and simplify the usage of PyGMT for plotting.
+    It includes methods for calculating plotting regions with buffers, configuring colormaps, preparing LaTeX
+    annotations for PyGMT, and generating standardized headers for plots. Documentation for the PyGMTUtilities 
+    class can be found in the `PyGMTUtilities <mtuq.graphics.attrs.PyGMTUtilities.html>`_ module.
+
+
+    
     """
     import pygmt
 
@@ -506,8 +584,54 @@ def _pygmt_backend(filename, values, active_stations, origin,
     fig.savefig(filename, crop=True, dpi=300)
     
 class PyGMTUtilities:
+    """
+    Utility class for PyGMT plotting backend.
+
+    This class offers a set of static methods designed for enhancing and simplifying the usage of PyGMT 
+    for plotting by handling plotting regions, color maps, LaTeX annotations, and plot headers.
+
+    .. note ::
+        The class is designed to be used without instantiation due to its static methods. This approach 
+        helps in organizing code related to the PyGMT plotting backend and avoids confusion with other plotting backends.
+
+    Methods include calculating plotting regions with buffers, configuring colormaps, preparing LaTeX 
+    annotations for PyGMT, and generating standardized headers for plots.
+
+    Examples and more detailed method descriptions can be found in the documentation of each method.
+    """
+
     @staticmethod
     def calculate_plotting_region(stations, origin, buffer_percentage=0.1):
+        """
+        Calculates the region for plotting, including a buffer area around specified stations and origin.
+
+        .. rubric :: Parameters
+
+        ``stations`` (`list` of `mtuq.Station` objects):
+        The stations to be included in the plot.
+
+        ``origin`` (`mtuq.Origin` object):
+        The origin object is used to calculate the region for the plot in case the origin is outside the range of the stations.
+
+        ``buffer_percentage`` (`float`, optional):
+        The percentage of the total longitude and latitude range to be added as a buffer around the specified region.
+        Defaults to 0.1 (10%).
+
+        .. rubric :: Returns
+
+        ``region`` (`list` of `float`), ``lat_buffer`` (`float`):
+        A tuple containing the calculated region as a list `[west, east, south, north]` and the latitude buffer value.
+        The latitude buffer is returned to later be used for adjusting text spacing in the plot header.
+        
+        .. rubric :: Example
+
+        >>> region, lat_buffer = PyGMTUtilities.calculate_plotting_region(stations, origin)
+        >>> print(region)
+        [149.55, 151.45, -35.1, -32.9]
+        >>> print(lat_buffer)
+        0.22
+        """
+        
         longitudes = [station.longitude for station in stations] + [origin.longitude]
         latitudes = [station.latitude for station in stations] + [origin.latitude]
 
@@ -522,14 +646,35 @@ class PyGMTUtilities:
     @staticmethod
     def get_resolution(lon_range, lat_range):
         """
-        Determines the resolution based on the given longitude and latitude ranges.
+        Determines the appropriate PyGMT etopo grid resolution based on longitude and latitude ranges.
 
-        Args:
-        lon_range (float): The range of longitudes.
-        lat_range (float): The range of latitudes.
+        .. rubric :: Parameters
 
-        Returns:
-        str: pygmt etopo grid resolution based on the given ranges.
+        ``lon_range`` (`float`):
+        The longitudinal range of the area of interest.
+
+        ``lat_range`` (`float`):
+        The latitudinal range of the area of interest.
+
+        .. rubric :: Returns
+
+        ``resolution`` (`str`):
+        The resolution string for PyGMT, e.g., '01m', '15s', ...,  based on the size of the specified area.
+
+        .. note ::
+            The resolution is determined based on predefined thresholds for the ranges, aiming to balance 
+            detail and performance for different scales of geographic areas
+
+            - If lon_range > 10 or lat_range > 10, the resolution is '01m'.
+
+            - If lon_range > 5 or lat_range > 5, the resolution is '15s'.
+            
+            - If lon_range > 2 or lat_range > 2, the resolution is '03s'.
+            
+            - If lon_range > 1 or lat_range > 1, the resolution is '01s'.
+            
+            Otherwise, the resolution is '05m'.
+
         """
 
         if lon_range > 10 or lat_range > 10:
@@ -546,14 +691,31 @@ class PyGMTUtilities:
     @staticmethod
     def configure_colormap(colormap):
         """
-        Configures the colormap based on the given input - as conventions for matplotlib and pygmt can differ
+        Adjusts the given colormap name for compatibility with PyGMT and matplotlib conventions.
 
-        Args:
-            colormap (str): The name of the colormap.
+        .. rubric :: Parameters
 
-        Returns:
-            tuple: A tuple containing the modified colormap name and a flag indicating
-                   whether the colormap should be reversed.
+        ``colormap`` (`str`):
+        The name of the colormap to be used. If the colormap name ends with '_r', the colormap is
+        reversed, and the '_r' suffix is removed.
+
+        .. rubric :: Returns
+
+        ``colormap`` (`str`), ``cmap_reverse_flag`` (`bool`):
+        A tuple containing the adjusted colormap name and a boolean indicating whether the colormap should
+        be reversed.
+
+        .. note :: 
+
+            The method accept only colormaps that are available in PyGMT. For a list of available colormaps,
+
+        .. rubric :: Example
+
+        >>> colormap, reverse = PyGMTUtilities.configure_colormap('viridis_r')
+        >>> print(colormap)
+        viridis
+        >>> print(reverse)
+        True
         """
         cmap_reverse_flag = True if colormap.endswith('_r') else False
         colormap = colormap[:-2] if cmap_reverse_flag else colormap
@@ -562,13 +724,18 @@ class PyGMTUtilities:
     @staticmethod
     def prepare_latex_annotations(label):
         """
-        Prepares LaTeX annotations for plotting. Uses HTML for compatibility with PyGMT/GMT.
+        Prepares LaTeX annotations for plotting. Uses HTML tags instead 
+        of $•$ for compatibility with PyGMT/GMT.
 
-        Args:
-            label (str): The LaTeX label to be prepared.
+        .. rubric :: Parameters
 
-        Returns:
-            str: The prepared label.
+        ``label`` (`str`):
+        The LaTeX label to be prepared.
+
+        .. rubric :: Returns
+
+        ``str``:
+        The prepared label.
 
         """
         if label.startswith('$') and label.endswith('$'):
@@ -582,14 +749,24 @@ class PyGMTUtilities:
         """
         Generates a header for a plot based on the provided parameters.
 
-        Args:
-            label (str): The label for the plot. Defined in default kwargs.
-            origin (Origin): mtuq.event.Origin object.
-            filename (str): The filename of the plot. Defined by default the high-level function. Used to retrieve the component.
-            process (Process, optional): mtuq.process_data.ProcessData object for appropriate dataset.
+        .. rubric :: Parameters
 
-        Returns:
-            list: A list containing two lines of the header.
+        ``label`` (`str`):
+        The label for the plot. Usually defined in the frontend function.
+
+        ``origin`` (mtuq.Origin):
+        mtuq.event.Origin object, used to retrieve the event time and depth. 
+
+        ``filename`` (str):
+        The filename of the plot. Defined by default the high-level function. Used to retrieve the component.
+
+        ``process`` (Process, optional):
+        mtuq.process_data.ProcessData object for appropriate dataset.
+
+        .. rubric :: Returns
+
+        ``list``:
+        A list containing two lines of the header. [Label - (component)], [Event Time: (time) UTC, Depth: (depth) km]
         """
         if process is not None:
             # get type of waves used for the window
@@ -626,5 +803,23 @@ class PyGMTUtilities:
     
     @staticmethod
     def draw_coastlines(fig, area_thresh=100, water_color='paleturquoise', water_transparency=55):
+        """
+        Draws coastlines and fills water areas with a transparent blue shade.
+
+        .. rubric :: Parameters
+
+        ``fig`` (pygmt.Figure): 
+        The PyGMT figure object to which the coastlines and water areas will be added.
+
+        ``area_thresh`` (`int`, optional):
+        The minimum area of land to be displayed. Defaults to 100.
+
+        ``water_color`` (`str`, optional):
+        The color of the water areas. Defaults to 'paleturquoise'.
+
+        ``water_transparency`` (`int`, optional):
+        The transparency of the water areas. Defaults to 55.
+
+        """        
         fig.coast(shorelines=True, area_thresh=area_thresh)
         fig.coast(shorelines=False, water=water_color, transparency=water_transparency, area_thresh=area_thresh)
