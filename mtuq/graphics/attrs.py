@@ -364,15 +364,17 @@ def _pygmt_backend(filename, values, active_stations, origin,
     resolution = PyGMTUtilities.get_resolution(max(longitudes) - min(longitudes), max(latitudes) - min(latitudes))
     grid = pygmt.datasets.load_earth_relief(region=region, resolution=resolution)
 
-    # Define a grayscale colormap for topography
-    pygmt.makecpt(cmap='gray', series=[-7000, 7000])
-
     # Calculate the gradient (hillshade) grid with azimuth 0/300 and normalization t1
     # <https://www.pygmt.org/dev/gallery/images/grdgradient_shading.html>
     shade = pygmt.grdgradient(grid=grid, azimuth="0/300", normalize="t1")
+
+    # Define a grayscale colormap for topography
+    normal = pygmt.grdhisteq.equalize_grid(grid=grid, gaussian=True)
+    gray_cmap = pygmt.makecpt(cmap='gray', series=[np.min(normal.values), np.max((normal.values))])
+
     # Plot the hillshade grid as an image
     if display_topo:
-        fig.grdimage(grid=grid, shading=shade, projection=f'J{width}i', frame='a', cmap='gray', no_clip=True)
+        fig.grdimage(grid=normal, shading=shade, projection=f'J{width}i', frame='a', cmap=gray_cmap, no_clip=True)
 
     # Overlay coastlines
     PyGMTUtilities.draw_coastlines(fig)
@@ -463,9 +465,9 @@ def _pygmt_backend(filename, values, active_stations, origin,
             latitude=origin.latitude,
             depth=10,  # Depth is required, even if not used, set to a small number
             convention="mt",  # Use GMT's mt convention <https://www.pygmt.org/dev/api/generated/pygmt.Figure.meca.html>
-            compressionfill="red",
+            compressionfill="gray15",
             extensionfill="white",
-            pen="black"
+            pen="0.5p,black"
         )
         
     if station_labels is True:
@@ -592,7 +594,7 @@ class PyGMTUtilities:
         if process is not None:
             # get type of waves used for the window
             window_type = process.window_type
-            if window_type == 'surface_wave':
+            if window_type == 'surface_wave' or window_type == 'group_velocity':
                 window_type = 'Surface wave'
             elif window_type == 'body_wave':
                 window_type = 'Body wave'
