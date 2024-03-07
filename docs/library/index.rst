@@ -93,12 +93,13 @@ Depth and hypocenter visualization
 ============================================================================================================  ============================================================================================================
 
 
-Time shift and amplitude ratio visualization
+Station attributes visualization
 --------------------------------------------
 
 ============================================================================================================  ============================================================================================================
 `mtuq.graphics.plot_time_shifts <generated/mtuq.graphics.plot_time_shifts.html>`_                              Plots time shifts by location and component
 `mtuq.graphics.plot_amplitude_ratios <generated/mtuq.graphics.plot_amplitude_ratios.html>`_                    Plots amplitude ratios by location and component
+`mtuq.graphics.plot_cross_corr <generated/mtuq.graphics.plot_cross_corr.html>`_                                Plots normalized cross-correlation by location and component
 ============================================================================================================  ============================================================================================================
 
 
