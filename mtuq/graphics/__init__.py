@@ -5,7 +5,7 @@ from os.path import dirname, join
 
 from mtuq.graphics.attrs import\
     plot_time_shifts, plot_amplitude_ratios, plot_log_amplitude_ratios,\
-    _plot_attrs
+    _plot_attrs, plot_cross_corr, _pygmt_backend
 
 from mtuq.graphics.beachball import\
     plot_beachball, plot_polarities
