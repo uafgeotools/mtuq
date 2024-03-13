@@ -58,9 +58,9 @@ class PolarityMisfit(object):
     .. rubric:: Other input arguments that may be required, depending on the above
 
     ``taup_model`` (`str`): Name of built-in ObsPy TauP model or path to custom
-    ObsPy TauP model, required for `type=taup`
+    ObsPy TauP model, required for `method=taup`
 
-    ``FK_database`` (`str`): Path to FK database, required for for `type=FK_metadata`.
+    ``FK_database`` (`str`): Path to FK database, required for for `method=FK_metadata`.
 
     .. note:: 
 
