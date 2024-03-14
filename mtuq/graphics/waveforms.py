@@ -176,7 +176,8 @@ def plot_waveforms2(filename,
         max_amplitudes_bw = np.array([max_amplitude_bw if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
         max_amplitudes_sw = np.array([max_amplitude_sw if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
     elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
-        pass
+        max_amplitudes_bw = np.array([_max(data_bw[i], synthetics_bw[i]) if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+        max_amplitudes_sw = np.array([_max(data_sw[i], synthetics_sw[i]) if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
     else:
         raise ValueError("Invalid normalization method specified.")
 
