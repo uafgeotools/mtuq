@@ -1,13 +1,12 @@
 
 .. warning::
 
-   This page is currently just a stub. 
+   This page is still under construction.  To help improve the
+   documentation, feel free to submit a pull request.
 
-   To fill in missing documentation, feel free to submit a pull request.
 
-
-Notes on receiver-side 3D Green's functions
-===========================================
+Receiver-side 3D Green's functions
+==================================
 
 A working of example using receiver-side 3D Green's functions from SPECFEM3D in a moment tensor inversion:
 

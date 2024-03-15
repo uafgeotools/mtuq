@@ -1,49 +1,137 @@
 
 .. warning::
 
-   This page is currently just a stub. 
+   This page is still under construction.  To help improve the
+   documentation, feel free to submit a pull request.
 
-   To fill in missing documentation, feel free to submit a pull request.
+Source-side 3D Green's functions
+================================
+
+Generating source-side 3D Green's functions using SPECFEM3D/3D_GLOBE
+--------------------------------------------------------------------
+
+In principle, any 3D solver can be used to generate Green's functions, as long as the `requirements  <https://uafgeotools.github.io/mtuq/user_guide/03/source_side.html#requirements-for-mtuq-source-side-green-s-functions>`_ below are satisfied.  
+
+So far, however, the source-side Green's function machinery has been tested using only SPECFEM3D/3D_GLOBE.  To convert SPECFEM3D/3D_GLOBE output to MTUQ-compliant Green's functions, the following steps are necessary.
 
 
-Notes on source-side 3D Green's functions
-=========================================
+**Generate SAC binary files**
+
+SAC binary output format is natively supported by SPECFEM3D_GLOBE (in the parameter file, set `OUTPUT_SEISMOS_SAC_BINARY = .true.`).
+
+Unfortunately, SAC binary output format is not natively supported by SPECFEM3D, so it becomes necessary to manually convert SPECFEM3D output to SAC binary format.
+
+
+**Convert to SI units**
+
+MTUQ uses the fully SI convention described below. In contrast, SPECFEM3D/3D_GLOBE use a mixed SI and CGS convention, in which moment tensor elements are input in terms of dynes and centimeters, and seismograms are output in meters. As a result, it is necessary to scale SPECFEM3D/3D_GLOBE seismograms by 10^7 prior to using them as MTUQ Green's functions.
+
+
+**Additional amplitude scaling**
+
+In addition to converting to SI units, it is also necessary to account for any scaling factors in the SPECFEM3D/3D_GLOBE input files. Such scaling factors can enter, for example, through the `M_rr,M_tt,M_pp,M_rt,M_rp,M_tp` values in the moment tensor input file or through the `scaling factor <https://github.com/SPECFEM/specfem3d/blob/bf45798f3af9d792326a829de920fd944cf7c7dd/EXAMPLES/applications/homogeneous_halfspace_HEX27_elastic_no_absorbing/DATA/FORCESOLUTION#L8>`_ in the force input file.
+
+
+**Rotate to vertical, radial, transverse components**
+
+Conveniently, SPECFEM3D_GLOBE can be made to automatically rotate output seismograms into vertical, radial and transverse components (set `ROTATE_SEISMOGRAMS_RT = .true.` in the parameter file).
+
+No modifications are necessary on account of moment tensor basis convention, since MTUQ's `up-south-east` convention matches SPECFEM3D/3D_GLOBE's.
+
+
+
+
+Requirements for MTUQ source-side 3D Green's functions
+------------------------------------------------------
 
 **File format**
 
-- Currently, MTUQ reads source-side 3D Green's functions from SAC files
+Individual Green's functions must be written to SAC binary files.  
 
-- SAC output format is natively supported by SPECFEM3D_GLOBE, but not SPECFEM3D Cartesian (output from the latter can be manually converted)
+A total 18 SAC binary files are required to represent the response between a given hypocenter and station (corresponding to 6 moment tensor elements times 3 directions of motion).
+
 
 
 **Units convention**
 
-- MTUQ treats each individual SAC file as the response in meters to a unit (1 Newton-meter) force couple
+For a moment tensor inversion, each SAC binary file must give the response in meters to a 1 Newton-meter force couple.
 
-- Users must ensure that source-side Green's functions are normalized according to the above units
+For a force inversion, each SAC binary file must give the response in meters to a 1 Newton force.
+
+In both cases, MTUQ uses a fully SI units convention (compare with SPECFEM3D/3D_GLOBE notes, above).
+
 
 
 **Basis convention**
 
-- For moment tensors, MTUQ uses an `up-south-east` convention, identical to one the used by SPECFEM3D_GLOBE
+MTUQ uses an `up-south-east` basis convention in which `r` denotes up, `t` denotes south, and `p` denotes east.
+
+Green's functions must be rotated into into vertical `Z`, radial `R` and transverse `T` components relative to the source-receiver backazimuth.
+
+Place all seismograms for the same hypocenter in a single directory as follows:
+
+.. code ::
+
+  {event_id}/
+      {depth_in_km}/
+          {net}.{sta}.{loc}.Z.Mrr.sac
+          {net}.{sta}.{loc}.Z.Mtt.sac
+          {net}.{sta}.{loc}.Z.Mpp.sac
+          {net}.{sta}.{loc}.Z.Mrt.sac
+          {net}.{sta}.{loc}.Z.Mrp.sac
+          {net}.{sta}.{loc}.Z.Mtp.sac 
+          {net}.{sta}.{loc}.R.Mrr.sac
+          {net}.{sta}.{loc}.R.Mtt.sac
+          {net}.{sta}.{loc}.R.Mpp.sac
+          {net}.{sta}.{loc}.R.Mrt.sac
+          {net}.{sta}.{loc}.R.Mrp.sac
+          {net}.{sta}.{loc}.R.Mtp.sac
+          {net}.{sta}.{loc}.T.Mrr.sac
+          {net}.{sta}.{loc}.T.Mtt.sac
+          {net}.{sta}.{loc}.T.Mpp.sac
+          {net}.{sta}.{loc}.T.Mrt.sac
+          {net}.{sta}.{loc}.T.Mrp.sac
+          {net}.{sta}.{loc}.T.Mtp.sac
+          ...
+
+The corresponding convention for force responses is:
+
+.. code ::
+
+  {event_id}/
+      {depth_in_km}/
+          {net}.{sta}.{loc}.Z.Fr.sac
+          {net}.{sta}.{loc}.Z.Ft.sac
+          {net}.{sta}.{loc}.Z.Fp.sac
+          {net}.{sta}.{loc}.R.Fr.sac
+          {net}.{sta}.{loc}.R.Ft.sac
+          {net}.{sta}.{loc}.R.Fp.sac
+          {net}.{sta}.{loc}.T.Fr.sac
+          {net}.{sta}.{loc}.T.Fp.sac
+          {net}.{sta}.{loc}.T.Fp.sac
+          ...
 
 
 **Origin time convention**
 
-- For origin time, MTUQ uses a centroid convention (`more details <https://github.com/uafgeotools/mtuq/issues/140>`_), so that `t=0` in the `GreensTensor` time discretization corresponds to mean source excitation time
+For origin time, MTUQ uses a centroid convention (`more details <https://github.com/uafgeotools/mtuq/issues/140>`_), so that `t=0` in the `GreensTensor` time discretization corresponds to mean source excitation time.
 
-- MTUQ uses the `REF_TIME` header from the SPECFEM3D_GLOBE SAC output files, which gives the peak excitation of the source relative to the simulation start time
+MTUQ uses the begin time (`B`) and end time (`E`) headers from the SAC binary files to align the Green's functions relative to centroid origin time.  
 
-- MTUQ ignores the origin time given in the CMTSOLUTION file and `ORIGIN_TIME` header
+Currently, these are the only SAC headers used in reading Green's functions.
+
+(Note that different `SAC headers <https://ds.iris.edu/files/sac-manual/manual/file_format.html>`_ are required in reading `observed data <https://uafgeotools.github.io/mtuq/user_guide/02.html#file-format-metadata-and-data-processing-requirements>`_.)
 
 
-**Depth searches (experimental)**
 
-- Only depth searches are possible with source-side 3D Green's functions (no other hypocenter parameters)
+Hypocenter searches (experimental)
+----------------------------------
 
-- The current `depth search <https://github.com/uafgeotools/mtuq/blob/568e49a73817e4e2dbab1189210214da6906266f/mtuq/io/clients/SPECFEM3D_SAC.py#L117>`_ implementation is somewhat crude and experimental; consider local modifcations to suit your needs
+Currently, only searches over source depth are possible with source-side 3D Green's functions (no other hypocenter parameters).
 
-- To allow depth searches, create subdirectories for each centroid depth, as below
+The current `depth search <https://github.com/uafgeotools/mtuq/blob/568e49a73817e4e2dbab1189210214da6906266f/mtuq/io/clients/SPECFEM3D_SAC.py#L117>`_ implementation is especially crude and experimental (consider local modifications to suit your needs).
+
+To allow depth searches, create subdirectories for each centroid depth as follows:
 
 .. code ::
 

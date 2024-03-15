@@ -37,6 +37,12 @@ For a grid of regulary-spaced moment tensors, `ds` may look something like:
 
 
 
+.. note::
+
+    Moment tensor grids are implemented using the `rho, v, w, kappa, sigma, h` parameterization of `Tape2012 <https://uafgeotools.github.io/mtuq/references.html>`_ and `Tape2015 <https://uafgeotools.github.io/mtuq/references.html>`_, from which `formulas <https://github.com/rmodrak/mtpar>`_ converting to parameterizations can be derived.
+
+
+
 Misfit values
 """""""""""""
 

@@ -10,24 +10,21 @@ Role of Green's functions
 
 By combining Green's functions, it is possible to obtain synthetics from any moment tensor or force source.  Generating synthetics in this way is useful because it provides cost savings compared with on-the-fly wavefield simulations. Synthetics can then be compared with data to determine a best-fitting source.
 
+`GreensTensor` objects
+----------------------
+
+`GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to a set of Green's functions describing the medium response between a given hypocenter and station.
+
+Methods built into the `GreensTensor` class allow data processing and synthetics generation.  In particular, the `get_synthetics <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.get_synthetics.html#mtuq.GreensTensor.get_synthetics>`_ method accepts a `MomentTensor` or `Force` and returns corresponding synthetics.
+
+
 
 Green's function conventions
 ----------------------------
 
-MTUQ consistently uses an `up-south-east` `convention <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_ for internally storing Green's functions (as well as moment tensors and forces).
-
-A major goal of MTUQ is to avoid exposing users to unnecessary complexity. For Green's functions, MTUQ tries to accomplish this by understanding external conventions and converting to a common internal format. 
+A major goal of MTUQ is to avoid exposing users to unnecessary complexity. For Green's functions, MTUQ tries to accomplish this by understanding external conventions and converting to a common internal format.  Specifically, MTUQ uses an `up-south-east` `convention <https://docs.obspy.org/packages/autogen/obspy.imaging.mopad_wrapper.beach.html#supported-basis-systems>`_ for internally storing impulse responses corresponding to  individual force couples. (Moment tensors and forces are internally represented using the same `up-south-east` basis.)
 
 Under the hood, MTUQ deals with a variety of external conventions related to (1) the symmetry of the medium (for example, 1D media require fewer independent Green's functions than 3D media); (2) the choice of local Cartesian basis convention (for example, some authors employ `up-south-east`, others `north-east-down`). A sense of what's involved can be obtained by browsing the `source code <https://github.com/uafgeotools/mtuq/tree/master/mtuq/greens_tensor>`_ and references therein.
-
-
-
-`GreensTensor` objects
-----------------------
-
-`GreensTensor <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.html>`_ objects provide access to a set of Green's functions describing the medium response between a given station and origin.  
-
-Methods built into the `GreensTensor` class allow data processing and synthetics generation.  In particular, the `get_synthetics <https://uafgeotools.github.io/mtuq/library/generated/mtuq.GreensTensor.get_synthetics.html#mtuq.GreensTensor.get_synthetics>`_ method accepts a `MomentTensor` or `Force` and returns corresponding synthetics.
 
 
 
@@ -97,24 +94,25 @@ To generate a full set of Green's functions for a given hypocenter and depth, si
 .. code ::
 
   {event_id}/
-      {net}.{sta}.{loc}.Z.Mrr.sac
-      {net}.{sta}.{loc}.Z.Mtt.sac
-      {net}.{sta}.{loc}.Z.Mpp.sac
-      {net}.{sta}.{loc}.Z.Mrt.sac
-      {net}.{sta}.{loc}.Z.Mrp.sac
-      {net}.{sta}.{loc}.Z.Mtp.sac
-      {net}.{sta}.{loc}.R.Mrr.sac
-      {net}.{sta}.{loc}.R.Mtt.sac
-      {net}.{sta}.{loc}.R.Mpp.sac
-      {net}.{sta}.{loc}.R.Mrt.sac
-      {net}.{sta}.{loc}.R.Mrp.sac
-      {net}.{sta}.{loc}.R.Mtp.sac
-      {net}.{sta}.{loc}.T.Mrr.sac
-      {net}.{sta}.{loc}.T.Mtt.sac
-      {net}.{sta}.{loc}.T.Mpp.sac
-      {net}.{sta}.{loc}.T.Mrt.sac
-      {net}.{sta}.{loc}.T.Mrp.sac
-      {net}.{sta}.{loc}.T.Mtp.sac
+      {depth_in_m}/
+          {net}.{sta}.{loc}.Z.Mrr.sac
+          {net}.{sta}.{loc}.Z.Mtt.sac
+          {net}.{sta}.{loc}.Z.Mpp.sac
+          {net}.{sta}.{loc}.Z.Mrt.sac
+          {net}.{sta}.{loc}.Z.Mrp.sac
+          {net}.{sta}.{loc}.Z.Mtp.sac
+          {net}.{sta}.{loc}.R.Mrr.sac
+          {net}.{sta}.{loc}.R.Mtt.sac
+          {net}.{sta}.{loc}.R.Mpp.sac
+          {net}.{sta}.{loc}.R.Mrt.sac
+          {net}.{sta}.{loc}.R.Mrp.sac
+          {net}.{sta}.{loc}.R.Mtp.sac
+          {net}.{sta}.{loc}.T.Mrr.sac
+          {net}.{sta}.{loc}.T.Mtt.sac
+          {net}.{sta}.{loc}.T.Mpp.sac
+          {net}.{sta}.{loc}.T.Mrt.sac
+          {net}.{sta}.{loc}.T.Mrp.sac
+          {net}.{sta}.{loc}.T.Mtp.sac
 
 
 To open a SPECFEM3D/3D_GLOBE database client:
@@ -132,9 +130,9 @@ Once opened, the database client can be used to generate `GreensTensor <https://
    greens_tensors = db.get_greens_tensors(stations, origin)
 
 
-For more information, also see:
+For more information, see also:
 
-`Source-side SPECFEM3D/3D_GLOBE Green's functions <https://uafgeotools.github.io/mtuq/user_guide/03/source_side.html>`_
+`Source-side Green's function details (under construction) <https://uafgeotools.github.io/mtuq/user_guide/03/source_side.html>`_
 
-`Receiver-side SPECFEM3D/3D_GLOBE Green's functions (under construction) <https://uafgeotools.github.io/mtuq/user_guide/03/receiver_side.html>`_
+`Receiver-side Green's function details (under construction) <https://uafgeotools.github.io/mtuq/user_guide/03/receiver_side.html>`_
 
