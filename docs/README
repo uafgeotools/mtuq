@@ -14,7 +14,7 @@ HOW TO UPDATE DOCS
 >> ./build.bash
 
 
-3. If build fails with "Encountered unknown tag 'do', then try the following:
+3. If build fails with "Encountered unknown tag 'do'", try the following:
 
    Modify the sphinx autosummary source code by adding  'jinja2.ext.do' to the jinja
    Environment() extensions list

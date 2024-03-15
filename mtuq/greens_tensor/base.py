@@ -471,7 +471,7 @@ class GreensTensorList(list):
 
 
     def sort_by_function(self, function, reverse=False):
-        """ Sorts in-place using the python built-in `sort`
+        """ Sorts in-place by user-supplied function
         """
         self.sort(key=function, reverse=reverse)
 
