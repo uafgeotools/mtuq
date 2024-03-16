@@ -62,6 +62,17 @@ def plot_waveforms1(filename,
 
     max_amplitude = _max(data, synthetics)
 
+    if normalize == 'median_amplitude':
+        # Using the updated _median_amplitude function to calculate the median of non-zero maximum amplitudes
+        max_amplitude_median = _median_amplitude(data, synthetics)
+        max_amplitudes = np.array([max_amplitude_median if len(data[i]) > 0 and len(synthetics[i]) > 0 else 0.0 for i in range(len(data))])
+    elif normalize == 'maximum_amplitude':
+        max_amplitudes = np.array([max_amplitude if len(data[i]) > 0 and len(synthetics[i]) > 0 else 0.0 for i in range(len(data))])
+    elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
+        pass
+    else:
+        raise ValueError("Invalid normalization method specified.")
+
     #
     # loop over stations
     #
@@ -100,7 +111,7 @@ def plot_waveforms1(filename,
                 continue
 
             _plot_ZRT(axes[ir], 1, dat, syn, component, 
-                normalize, trace_label_writer, max_amplitude, total_misfit)
+                normalize, trace_label_writer, max_amplitudes[_i], total_misfit)
 
         ir += 1
 
@@ -153,6 +164,23 @@ def plot_waveforms2(filename,
     max_amplitude_sw = _max(data_sw, synthetics_sw)
 
 
+    if normalize == 'median_amplitude':
+        # For body wave data and synthetics
+        bw_median = _median_amplitude(data_bw, synthetics_bw)
+        max_amplitudes_bw = np.array([bw_median if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+        
+        # For surface wave data and synthetics
+        sw_median = _median_amplitude(data_sw, synthetics_sw)
+        max_amplitudes_sw = np.array([sw_median if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
+    elif normalize == 'maximum_amplitude':
+        max_amplitudes_bw = np.array([max_amplitude_bw if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+        max_amplitudes_sw = np.array([max_amplitude_sw if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
+    elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
+        max_amplitudes_bw = np.array([_max(data_bw[i], synthetics_bw[i]) if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+        max_amplitudes_sw = np.array([_max(data_sw[i], synthetics_sw[i]) if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
+    else:
+        raise ValueError("Invalid normalization method specified.")
+
     #
     # loop over stations
     #
@@ -191,8 +219,7 @@ def plot_waveforms2(filename,
                 continue
 
             _plot_ZR(axes[ir], 1, dat, syn, component, 
-                normalize, trace_label_writer, max_amplitude_bw, total_misfit_bw)
-
+                normalize, trace_label_writer, max_amplitudes_bw[_i], total_misfit_bw)
 
         #
         # plot surface wave traces
@@ -216,7 +243,7 @@ def plot_waveforms2(filename,
                 continue
 
             _plot_ZRT(axes[ir], 3, dat, syn, component,
-                normalize, trace_label_writer, max_amplitude_sw, total_misfit_sw)
+                normalize, trace_label_writer, max_amplitudes_sw[_i], total_misfit_sw)
 
 
         ir += 1
@@ -247,6 +274,9 @@ def plot_data_greens1(filename,
     # calculate total misfit for display in figure header
     total_misfit = misfit(data, greens.select(origin), source, optimization_level=0)
 
+    # Get the number of stations used
+    N_total = _count([data])
+
     # prepare figure header
     if 'header' in kwargs:
         header = kwargs.pop('header')
@@ -257,7 +287,8 @@ def plot_data_greens1(filename,
 
         header = _prepare_header(
             model, solver, source, source_dict, origin,
-            process_data, misfit, total_misfit)
+            process_data, misfit, total_misfit,
+            additional_header_info={'N': N_total})
 
     plot_waveforms1(filename,
         data, synthetics, stations, origin,
@@ -299,6 +330,10 @@ def plot_data_greens2(filename,
 
     total_misfit_sw = misfit_sw(
         data_sw, greens_sw.select(origin), source, optimization_level=0) 
+    
+    N_total = len(stations)
+    N_p_used = _count([data_bw])
+    N_s_used = _count([data_sw])
 
 
     # prepare figure header
@@ -312,7 +347,8 @@ def plot_data_greens2(filename,
         header = _prepare_header(
             model, solver, source, source_dict, origin,
             process_data_bw, process_data_sw,
-            misfit_bw, misfit_sw, total_misfit_bw, total_misfit_sw)
+            misfit_bw, misfit_sw, total_misfit_bw, total_misfit_sw, 
+            additional_header_info={'N': N_total, 'Np': N_p_used, 'Ns': N_s_used})
 
     plot_waveforms2(filename,
         data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
@@ -373,7 +409,7 @@ def _initialize(nrows=None, ncolumns=None, column_width_ratios=None,
 
 def _plot_ZRT(axes, ic, dat, syn, component, 
     normalize='maximum_amplitude', trace_label_writer=None,
-    max_amplitude=1., total_misfit=1.):
+    normalization_amplitude=1., total_misfit=1.):
 
     # plot traces
     if component=='Z':
@@ -387,26 +423,21 @@ def _plot_ZRT(axes, ic, dat, syn, component,
 
     _plot(axis, dat, syn)
 
-    # normalize amplitude
+    # normalize amplitude -- logic for station_amplitude, median_amplitude, and maximum_amplitude is done at higher level
     if normalize=='trace_amplitude':
         max_trace = _max(dat, syn)
         ylim = [-1.5*max_trace, +1.5*max_trace]
         axis.set_ylim(*ylim)
-    elif normalize=='station_amplitude':
-        max_stream = _max(stream_dat, stream_syn)
-        ylim = [-1.5*max_stream, +1.5*max_stream]
-        axis.set_ylim(*ylim)
-    elif normalize=='maximum_amplitude':
-        ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
+    elif normalize=='station_amplitude' or normalize=='median_amplitude' or normalize=='maximum_amplitude':
+        ylim = [-1.25*normalization_amplitude, +1.25*normalization_amplitude]
         axis.set_ylim(*ylim)
 
     if trace_label_writer is not None:
         trace_label_writer(axis, dat, syn, total_misfit)
 
-
 def _plot_ZR(axes, ic, dat, syn, component, 
     normalize='maximum_amplitude', trace_label_writer=None,
-    max_amplitude=1., total_misfit=1.):
+    normalization_amplitude=1., total_misfit=1.):
 
     # plot traces
     if component=='Z':
@@ -418,23 +449,17 @@ def _plot_ZR(axes, ic, dat, syn, component,
 
     _plot(axis, dat, syn)
 
-    # normalize amplitude
+    # normalize amplitude -- logic for station_amplitude, median_amplitude, and maximum_amplitude is done at higher level
     if normalize=='trace_amplitude':
         max_trace = _max(dat, syn)
         ylim = [-1.5*max_trace, +1.5*max_trace]
         axis.set_ylim(*ylim)
-    elif normalize=='station_amplitude':
-        max_stream = _max(stream_dat, stream_syn)
-        ylim = [-1.5*max_stream, +1.5*max_stream]
+    elif normalize=='station_amplitude' or normalize=='median_amplitude' or normalize=='maximum_amplitude':
+        ylim = [-1.25*normalization_amplitude, +1.25*normalization_amplitude]
         axis.set_ylim(*ylim)
-    elif normalize=='maximum_amplitude':
-        ylim = [-0.75*max_amplitude, +0.75*max_amplitude]
-        axis.set_ylim(*ylim)
-
 
     if trace_label_writer is not None:
         trace_label_writer(axis, dat, syn, total_misfit)
-
 
 def _plot(axis, dat, syn, label=None):
     """ Plots data and synthetics time series on current axes
@@ -450,9 +475,9 @@ def _plot(axis, dat, syn, label=None):
     s = syn.data
 
     axis.plot(t, d, 'k', linewidth=1.5,
-        clip_on=False, zorder=10)
+        clip_on=True, zorder=10)
     axis.plot(t, s[start:stop], 'r', linewidth=1.25, 
-        clip_on=False, zorder=10)
+        clip_on=True, zorder=10)
 
 
 def _add_component_labels1(axes, body_wave_labels=True, surface_wave_labels=True):
@@ -534,6 +559,19 @@ def _isempty(dataset):
 
 
 def _max(dat, syn):
+    """
+    Computes the maximum value between the maximum values of two input data objects (observed and synthetics).
+
+    Parameters:
+    dat (Trace, Stream, or Dataset): observed data.
+    syn (Trace, Stream, or Dataset): synthetics.
+
+    Returns:
+    float: The maximum value between the maximum values of the two input objects.
+
+    Raises:
+    TypeError: If the input objects are not of the same type (Trace, Stream, or Dataset).
+    """
     if type(dat)==type(syn)==Trace:
         return max(
             abs(dat.max()),
@@ -552,6 +590,43 @@ def _max(dat, syn):
     else:
         raise TypeError
 
+def _median_amplitude(data, synthetics):
+    """
+    Computes the median of the maximum non-zero amplitudes for pairs of data and synthetic traces.
+
+    Args:
+        data: A list of of observed data (can be Trace, Stream, or Dataset objects).
+        synthetics: A list of synthetic traces corresponding to the observed data.
+
+    Returns:
+        The median of the non-zero maximum amplitudes computed across all pairs.
+
+    Raises:
+        ValueError: If the lengths of data and synthetics lists differ.
+    """
+    # Validate input lengths
+    # If Trace directly input, make it a list
+    data = [data] if isinstance(data, Trace) else data
+    synthetics = [synthetics] if isinstance(synthetics, Trace) else synthetics
+    
+    # Validate lengths
+    if len(data) != len(synthetics):
+        raise ValueError("Data and synthetics lists must have the same length.")
+
+    max_amplitudes = []
+
+    # Iterate over pairs and handle empty traces - This gets a list of maximum amplitudes for each pair of data and synthetics
+    for dat, syn in zip(data, synthetics):
+        if not dat or not syn:
+            max_amplitudes.append(0)
+        else:
+            max_amplitudes.append(_max(dat, syn))
+
+    # Convert to NumPy array for efficient filtering
+    max_amplitudes = np.array(max_amplitudes)
+
+    # Compute median of non-zero values or return 0 if none exist 
+    return np.median(max_amplitudes[max_amplitudes > 0]) if np.any(max_amplitudes > 0) else 0.0
 
 
 def _hide_axes(axes):
@@ -566,8 +641,22 @@ def _hide_axes(axes):
             col.get_yaxis().set_ticks([])
             col.patch.set_visible(False)
 
+def header_decorator(header_function):
+    def wrapper(*args, **kwargs):
+        # Call the original header function with all args except 'additional_header_info'
+        header = header_function(*args, **{k: v for k, v in kwargs.items() if k != 'additional_header_info'})
+        
+        # Now handle the 'additional_header_info' specifically
+        additional_header_info = kwargs.get('additional_header_info', {})
+        for key, value in additional_header_info.items():
+            setattr(header, key, value)  # Dynamically add new attributes to the header object
 
-def _prepare_header(model, solver, source, source_dict, origin, *args):
+        return header
+    return wrapper
+
+
+@header_decorator
+def _prepare_header(model, solver, source, source_dict, origin, *args, **kwargs):
     # prepares figure header
 
     if len(args)==3:
