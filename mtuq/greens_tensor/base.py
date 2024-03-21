@@ -6,6 +6,7 @@ from copy import copy, deepcopy
 from mtuq.event import Origin
 from mtuq.station import Station
 from mtuq.dataset import Dataset
+from mtuq.util import Null
 from mtuq.util.signal import check_time_sampling
 from obspy.core import Stream, Trace
 from obspy.geodetics import gps2dist_azimuth
@@ -176,6 +177,9 @@ class GreensTensor(Stream):
         List containing zero or more of the following components: 
         ``Z``, ``R``, ``T``. (Defaults to ``['Z', 'R', 'T']``.)
         
+        ``stats`` (`obspy.Trace.Stats` object):
+        ObsPy Stats object that will be attached to the synthetics
+
         """
 
         if components is None:
@@ -300,9 +304,17 @@ class GreensTensorList(list):
         ``components`` (`list`):
         List containing zero or more of the following components: 
         ``Z``, ``R``, ``T``. (Defaults to ``['Z', 'R', 'T']``.)
+
+        ``stats`` (`obspy.Trace.Stats` object):
+        ObsPy Stats object that will be attached to the synthetics
         
         """
         if mode=='map':
+            if components is None:
+                components = [None for _ in range(len(self))]
+            if stats is None:
+                stats = [None for _ in range(len(self))]
+
             synthetics = Dataset()
             for _i, tensor in enumerate(self):
                 synthetics.append(tensor.get_synthetics(
