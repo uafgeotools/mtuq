@@ -162,7 +162,7 @@ class WaveformMisfit(object):
 
 
     def __call__(self, data, greens, sources, progress_handle=Null(), 
-        normalize=False, set_attributes=False, optimization_level=None):
+        normalize=None, set_attributes=False, optimization_level=None):
         """ Evaluates misfit on given data
         """
         if optimization_level is None:
@@ -210,7 +210,7 @@ class WaveformMisfit(object):
                 normalize=normalize)
 
 
-    def collect_attributes(self, data, greens, source):
+    def collect_attributes(self, data, greens, source, normalize=False):
         """ Collects misfit, time shifts and other attributes corresponding to 
         each trace
         """
@@ -247,7 +247,7 @@ class WaveformMisfit(object):
         return deepcopy(attrs)
 
 
-    def collect_synthetics(self, data, greens, source):
+    def collect_synthetics(self, data, greens, source, normalize=False):
         """ Collects synthetics with misfit, time shifts and other attributes attached
         """
         # checks that dataset is nonempty
@@ -267,7 +267,7 @@ class WaveformMisfit(object):
         _ = level0.misfit(
             data, greens, iterable(source), self.norm, self.time_shift_groups,
             self.time_shift_min, self.time_shift_max, msg_handle=Null(),
-            normalize=normalize, set_attributes=True)
+            normalize=False, set_attributes=True)
 
         return deepcopy(synthetics)
 
