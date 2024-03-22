@@ -189,17 +189,17 @@ if __name__=='__main__':
 
         print('Generating figures...\n')
 
-        plot_data_greens1(event_id+'FMT_waveforms1.png',
+        plot_data_greens1(event_id+'_force_waveforms.png',
             data_sw, greens_sw, process_sw, misfit_sw, stations, origin, best_force, direction_dict)
 
-        plot_misfit_force(event_id+'DC_misfit_force.png', results)
+        plot_misfit_force(event_id+'_force_misfit.png', results)
 
         print('Saving results...\n')
 
         # save best-fitting source
-        save_json(event_id+'Force_solution.json', merged_dict)
+        save_json(event_id+'_force_solution.json', merged_dict)
 
         # save misfit surface
-        results.save(event_id+'DC_misfit.nc')
+        results.save(event_id+'_force_misfit.nc')
 
         print('\nFinished\n')
