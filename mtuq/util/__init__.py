@@ -287,6 +287,9 @@ class Null(object):
     def __call__(self, *args, **kwargs):
         return self
 
+    def __getitem__(self, *args, **kwargs):
+        return None
+
     def __nonzero__(self):
         return False
 
