@@ -1,0 +1,32 @@
+
+Interpreting misfit evaluation results
+======================================
+
+Misfit function
+---------------
+
+MTUQ's waveform misfit functions evaluate 
+
+.. math::
+
+    E(m) = \Sigma \int | d(t) - s(t-t_s,m) |^2 dt
+
+where `d`are observed data `s(m)` are synthetic data, and $t_s$ is a cross-correlation time shift, and the sum is taken over stations and components.
+
+
+Variance reduction
+------------------
+
+
+.. math::
+
+    \frac{ \int | d(t) - s(t-t_s,m) |^2 dt }{\int | d(t) | |^2 dt}
+
+
+#Likelihood
+#----------
+
+
+
+#Data variance estimation
+#------------------------

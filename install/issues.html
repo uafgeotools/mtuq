@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Troubleshooting &#8212; MTUQ Documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="../_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          MTUQ</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick start</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/01.html">Learning Python and ObsPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/02.html">Acquiring seismic data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/03.html">Acquiring Green’s functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/04.html">Data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/05.html">Visualization galleries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/06.html">Additional topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../library/index.html">Library reference</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#pygmt-installation">PyGMT installation</a></li>
+<li><a class="reference internal" href="#speeding-up-conda-installs">Speeding up conda installs</a></li>
+<li><a class="reference internal" href="#mtuq-installation-on-apple-m1-and-apple-m2-macs">MTUQ installation on Apple M1 and Apple M2 Macs</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
+<section id="pygmt-installation">
+<h2>PyGMT installation<a class="headerlink" href="#pygmt-installation" title="Permalink to this headline">¶</a></h2>
+<p>MTUQ uses full moment tensor plotting functions from the PyGMT graphics library.</p>
+<p>To avoid a known issue with PyGMT installation under conda, it is necessary to specify a minimum PyGMT version as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="s1">&#39;pygmt&gt;=0.9&#39;</span>
+</pre></div>
+</div>
+<p>A more conservative approach, which avoids possible issues with PyGMT 0.10 releases, is to specify the more stable PyGMT 0.9 version:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="s1">&#39;pygmt=0.9&#39;</span>
+</pre></div>
+</div>
+<p>If PyGMT installation fails, most MTUQ functions will still work, but some plotting functions will fall back to GMT or ObsPy.</p>
+<p>We note that some versions of GMT and ObsPy do not plot <a class="reference external" href="https://github.com/obspy/obspy/issues/2388">full moment tensors</a> correctly.</p>
+</section>
+<section id="speeding-up-conda-installs">
+<h2>Speeding up conda installs<a class="headerlink" href="#speeding-up-conda-installs" title="Permalink to this headline">¶</a></h2>
+<p>Older versions of the conda package manager can be very slow. For a potential speed up, conda can be updated as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">update</span> <span class="o">-</span><span class="n">n</span> <span class="n">base</span> <span class="n">conda</span>
+</pre></div>
+</div>
+<p>For reference, the largest potential speed up comes from the new <a class="reference external" href="https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community">mamba</a> dependency solver, which was <a class="reference external" href="https://conda.org/blog/2023-11-06-conda-23-10-0-release">adopted</a> in the 23.10 release.</p>
+</section>
+<section id="mtuq-installation-on-apple-m1-and-apple-m2-macs">
+<h2>MTUQ installation on Apple M1 and Apple M2 Macs<a class="headerlink" href="#mtuq-installation-on-apple-m1-and-apple-m2-macs" title="Permalink to this headline">¶</a></h2>
+<p>Installation on Apple M1 and Apple M2 Macs is now possible using the default installation procedure.</p>
+<p>For older versions of MTUQ, a modified installation procedure may still be necessary.  For more information, please see:</p>
+<p><a class="reference external" href="https://uafgeotools.github.io/mtuq/install/arm64.html">MTUQ installation on ARM64 systems</a></p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
