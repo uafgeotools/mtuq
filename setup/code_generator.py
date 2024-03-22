@@ -1588,6 +1588,7 @@ WrapUp_TestGridSearch_DoubleCouple="""
 
                 print('%s:  %.e <= %.1e + %.1e * %.1e' %\\
                     ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b)))
+
             print('')
 
             return np.all(
