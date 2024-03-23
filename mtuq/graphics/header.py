@@ -15,7 +15,7 @@ from mtuq.util.math import to_delta_gamma
 
 
 class Base(object):
-    """ Base class for storing and writing text to a matplotlib figure
+    """ Base class for writing headers to matplotlib figures
     """
     def __init__(self):
         raise NotImplementedError("Must be implemented by subclass")
@@ -24,6 +24,9 @@ class Base(object):
     def _get_axis(self, height, fig=None):
         """ Returns matplotlib axes of given height along top of figure
         """
+        if hasattr(self, '_axis'):
+            return self._axis
+
         if fig is None:
             fig = pyplot.gcf()
         width, figure_height = fig.get_size_inches()
@@ -35,7 +38,9 @@ class Base(object):
         x0 = 0.
         y0 = 1.-height/figure_height
 
-        ax = fig.add_axes([x0, y0, 1., height/figure_height])
+        self._axis = fig.add_axes([x0, y0, 1., height/figure_height])
+        ax = self._axis
+
         ax.set_xlim([0., width])
         ax.set_ylim([0., height])
 
@@ -54,9 +59,10 @@ class Base(object):
         raise NotImplementedError("Must be implemented by subclass")
 
 
-
 class TextHeader(Base):
-    """ Prints header text from a list ((xp, yp, text), ...)
+    """ Generic text header
+
+    Prints header text from a list ((xp, yp, text), ...)
     """
     def __init__(self, items):
         # validates items
