@@ -87,28 +87,15 @@ class TextHeader(Base):
             _write_text(text, xp, yp, ax, **kwargs)
 
 
+class SourceHeader(Base):
+    """ Base class for moment tensor and force headers
 
-class MomentTensorHeader(Base):
-    """ Writes UAF-style moment tensor inversion summary to the top of a 
-    matplotlib figure
+    (Added to reduce duplication, still somewhat of an afterthought)
     """
-    def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
-        best_misfit_bw, best_misfit_sw, model, solver, mt, lune_dict, origin,
-        event_name=None):
 
-        if not event_name:
-           # YYYY-MM-DDTHH:MM:SS.??????Z
-           event_name = '%s' % origin.time
-
-           # trim of fraction of second
-           event_name = event_name[:-8]
-
-        self.event_name = event_name
-        self.origin = origin
-        self.magnitude = mt.magnitude()
-
-        depth_in_m = origin.depth_in_m
-        depth_in_km = origin.depth_in_m/1000.
+    def parse_origin(self):
+        depth_in_m = self.origin.depth_in_m
+        depth_in_km = self.origin.depth_in_m/1000.
         if depth_in_m < 1000.:
             self.depth_str = '%.0f m' % depth_in_m
         elif depth_in_km <= 100.:
@@ -117,46 +104,84 @@ class MomentTensorHeader(Base):
             self.depth_str = '%.0f km' % depth_in_km
 
 
-        self.model = model
-        self.solver = solver
-
-        self.mt = mt
-        self.lune_dict = lune_dict
-
-        self.process_bw = process_bw
-        self.process_sw = process_sw
-
-        self.norm = misfit_sw.norm
-
-        self.best_misfit_bw = best_misfit_bw
-        self.best_misfit_sw = best_misfit_sw
+    def parse_misfit(self):
+        # TODO - keep track of body and surface wave norms
+        self.norm = self.misfit_sw.norm
         self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
 
-        if not process_bw:
+
+    def parse_data_processing(self):
+        if not self.process_bw:
             pass
-        if not process_sw:
+        if not self.process_sw:
             raise Excpetion()
 
-        if process_sw.freq_max > 1.:
+        if self.process_sw.freq_max > 1.:
             units = 'Hz'
         else:
             units = 's'
 
-        if process_bw and units=='Hz':
+        if self.process_bw and units=='Hz':
             self.passband_bw = '%.1f - %.1f Hz' %\
-                (process_bw.freq_min, process_bw.freq_max)
+                (self.process_bw.freq_min, self.process_bw.freq_max)
 
-        elif process_bw and units=='s':
+        elif self.process_bw and units=='s':
             self.passband_bw = '%.1f - %.1f s' %\
-                (process_bw.freq_max**-1, process_bw.freq_min**-1)
+                (self.process_bw.freq_max**-1, self.process_bw.freq_min**-1)
 
-        if process_sw and units=='Hz':
+        if self.process_sw and units=='Hz':
             self.passband_sw = '%.1f - %.1f Hz' %\
-                (process_sw.freq_min, process_sw.freq_max)
+                (self.process_sw.freq_min, self.process_sw.freq_max)
 
-        elif process_sw and units=='s':
+        elif self.process_sw and units=='s':
             self.passband_sw = '%.1f - %.1f s' %\
-                (process_sw.freq_max**-1, process_sw.freq_min**-1)
+                (self.process_sw.freq_max**-1, self.process_sw.freq_min**-1)
+
+
+
+class MomentTensorHeader(SourceHeader):
+    """ Writes moment tensor inversion summary to the top of a 
+    matplotlib figure
+    """
+    def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
+        best_misfit_bw, best_misfit_sw, model, solver, mt, lune_dict, origin,
+        data=None, synthetics=None, mt_grid=None, event_name=None):
+
+        if not event_name:
+           # YYYY-MM-DDTHH:MM:SS.??????Z
+           event_name = '%s' % origin.time
+
+           # trim fraction of second
+           event_name = event_name[:-8]
+
+        self.event_name = event_name
+
+        # required arguments
+        self.process_bw = process_bw
+        self.process_sw = process_sw
+        self.misfit_bw = misfit_bw
+        self.misfit_sw = misfit_sw
+        self.best_misfit_bw = best_misfit_bw
+        self.best_misfit_sw = best_misfit_sw
+        self.model = model
+        self.solver = solver
+        self.mt = mt
+        self.lune_dict = lune_dict
+        self.origin = origin
+
+        # optional arguments, reserved for possible future use
+        # (or for use by subclasses)
+        self.data = data
+        self.synthetics = synthetics
+        self.mt_grid = mt_grid
+
+        # moment tensor-derived attributes
+        self.magnitude = mt.magnitude()
+
+
+        self.parse_origin()
+        self.parse_misfit()
+        self.parse_data_processing()
 
 
     def display_source(self, ax, height, width, offset):
@@ -173,7 +198,6 @@ class MomentTensorHeader(Base):
         #ax.add_collection(
         #    beach(self.mt, xy=(xp, yp), width=diameter,
         #    linewidth=0.5, facecolor='gray'))
-
 
         #
         # Instead, we must use this workaround
@@ -252,73 +276,46 @@ class MomentTensorHeader(Base):
         _write_text(line, px, py, ax, fontsize=14)
 
 
-class ForceHeader(Base):
+
+class ForceHeader(SourceHeader):
     """ Writes force inversion summary to the top of a matplotlib figure
     """
 
     def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
         best_misfit_bw, best_misfit_sw, model, solver, force, force_dict, origin,
-        event_name=None):
+        data=None, synthetics=None, force_grid=None, event_name=None):
 
         if not event_name:
            # YYYY-MM-DDTHH:MM:SS.??????Z
            event_name = '%s' % origin.time
 
-           # trim of fraction of second
+           # trim fraction of second
            event_name = event_name[:-8]
 
         self.event_name = event_name
-        self.origin = origin
 
-        depth_in_m = origin.depth_in_m
-        depth_in_km = origin.depth_in_m/1000.
-        if depth_in_m < 1000.:
-            self.depth_str = '%.0f m' % depth_in_m
-        elif depth_in_km <= 100.:
-            self.depth_str = '%.1f km' % depth_in_km
-        else:
-            self.depth_str = '%.0f km' % depth_in_km
-
-        self.model = model
-        self.solver = solver
-
-        self.force = force
-        self.force_dict = force_dict
-
+        # required arguments
         self.process_bw = process_bw
         self.process_sw = process_sw
-
-        self.norm = misfit_sw.norm
-
+        self.misfit_bw = misfit_bw
+        self.misfit_sw = misfit_sw
         self.best_misfit_bw = best_misfit_bw
         self.best_misfit_sw = best_misfit_sw
-        self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
+        self.model = model
+        self.solver = solver
+        self.force = force
+        self.force_dict = force_dict
+        self.origin = origin
 
-        if not process_bw:
-            pass
-        if not process_sw:
-            raise Excpetion()
+        # optional arguments, reserved for possible future use
+        # (or for use by subclasses)
+        self.data = data
+        self.synthetics = synthetics
+        self.force_grid = force_grid
 
-        if process_sw.freq_max > 1.:
-            units = 'Hz'
-        else:
-            units = 's'
-
-        if process_bw and units=='Hz':
-            self.passband_bw = '%.1f - %.1f Hz' %\
-                (process_bw.freq_min, process_bw.freq_max)
-
-        elif process_bw and units=='s':
-            self.passband_bw = '%.1f - %.1f s' %\
-                (process_bw.freq_max**-1, process_bw.freq_min**-1)
-
-        if process_sw and units=='Hz':
-            self.passband_sw = '%.1f - %.1f Hz' %\
-                (process_sw.freq_min, process_sw.freq_max)
-
-        elif process_sw and units=='s':
-            self.passband_sw = '%.1f - %.1f s' %\
-                (process_sw.freq_max**-1, process_sw.freq_min**-1)
+        self.parse_origin()
+        self.parse_misfit()
+        self.parse_data_processing()
 
 
     def write(self, height, width, margin_left, margin_top):
@@ -397,7 +394,6 @@ class ForceHeader(Base):
             pass
 
         ax.imshow(img, extent=(xp,xp+diameter,yp,yp+diameter))
-
 
 
 
