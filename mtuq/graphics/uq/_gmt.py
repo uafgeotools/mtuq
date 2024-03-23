@@ -69,7 +69,8 @@ def _plot_latlon_gmt(filename, lon, lat, values, best_latlon=None, lune_array=No
 
 def _call(shell_script, filename, data, supplemental_data=None,
     title='', colormap='viridis', flip_cpt=False, colorbar_type=1,
-    colorbar_label='', colorbar_limits=None, marker_coords=None, marker_type=0):
+    colorbar_label='', colorbar_limits=None, marker_coords=None, marker_type=0,
+    saturation=0.):
 
     #
     # Common wrapper for all GMT plotting functions involving 2D surfaces
@@ -94,6 +95,9 @@ def _call(shell_script, filename, data, supplemental_data=None,
         maxval /= 10.**exp
     except:
         minval, maxval, exp = _parse_limits(data[:,-1])
+
+    if saturation > 0.:
+        maxval = maxval - saturation*(maxval-minval)
 
     data[:,-1] /= 10.**exp
     cpt_step=(maxval-minval)/20.
