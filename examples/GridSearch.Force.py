@@ -18,19 +18,7 @@ from mtuq.misfit.waveform import calculate_norm_data
 
 if __name__=='__main__':
     #
-    # Carries out grid search over 64,000 double couple moment tensors
-    #
-    # USAGE
-    #   mpirun -n <NPROC> python GridSearch.DoubleCouple.py
-    #
-    # For a simpler example, see SerialGridSearch.DoubleCouple.py, 
-    # which runs the same inversion in serial
-    #
-
-
-    #
-    # We will investigate the source process of an Mw~4 earthquake using data
-    # from a regional seismic array
+    # Carries out grid search over force orientation and magnitude
     #
 
     path_data=    fullpath('data/examples/20210809074550/*[ZRT].sac')
@@ -40,7 +28,7 @@ if __name__=='__main__':
 
 
     #
-    # We are only using surface waves in this example. Check out the DC or FMT examples for multi-mode inversions.
+    # We are only using surface waves in this example. Check out the DC or FMT examples for multi-mode inversions
     #
 
     process_sw = ProcessData(
@@ -77,7 +65,7 @@ if __name__=='__main__':
 
 
     #
-    # Next, we specify the moment tensor grid and source-time function
+    # Next, we specify the force grid and source-time function
     #
     
     grid = ForceGridRegular(magnitudes_in_N=10**np.arange(9,12.1,0.1), npts_per_axis=90)
@@ -189,17 +177,17 @@ if __name__=='__main__':
 
         print('Generating figures...\n')
 
-        plot_data_greens1(event_id+'FMT_waveforms1.png',
+        plot_data_greens1(event_id+'_force_waveforms.png',
             data_sw, greens_sw, process_sw, misfit_sw, stations, origin, best_force, direction_dict)
 
-        plot_misfit_force(event_id+'DC_misfit_force.png', results)
+        plot_misfit_force(event_id+'_force_misfit.png', results)
 
         print('Saving results...\n')
 
         # save best-fitting source
-        save_json(event_id+'Force_solution.json', merged_dict)
+        save_json(event_id+'_force_solution.json', merged_dict)
 
         # save misfit surface
-        results.save(event_id+'DC_misfit.nc')
+        results.save(event_id+'_force_misfit.nc')
 
         print('\nFinished\n')

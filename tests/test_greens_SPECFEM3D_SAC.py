@@ -169,6 +169,7 @@ if __name__=='__main__':
 
                 print('%s:  %.e <= %.1e + %.1e * %.1e' %\
                     ('passed' if _bool else 'failed', abs(_a-_b), atol, rtol, abs(_b)))
+
             print('')
 
             return np.all(

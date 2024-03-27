@@ -94,7 +94,7 @@ To generate a full set of Green's functions for a given hypocenter and depth, si
 .. code ::
 
   {event_id}/
-      {depth_in_m}/
+      {depth_in_km}/
           {net}.{sta}.{loc}.Z.Mrr.sac
           {net}.{sta}.{loc}.Z.Mtt.sac
           {net}.{sta}.{loc}.Z.Mpp.sac

@@ -69,7 +69,8 @@ def _plot_latlon_gmt(filename, lon, lat, values, best_latlon=None, lune_array=No
 
 def _call(shell_script, filename, data, supplemental_data=None,
     title='', colormap='viridis', flip_cpt=False, colorbar_type=1,
-    colorbar_label='', colorbar_limits=None, marker_coords=None, marker_type=0):
+    colorbar_label='', cpt_limits=None, cpt_steps=20, 
+    cpt_clip=[0., 1.], marker_coords=None, marker_type=0):
 
     #
     # Common wrapper for all GMT plotting functions involving 2D surfaces
@@ -88,15 +89,28 @@ def _call(shell_script, filename, data, supplemental_data=None,
 
     # parse colorbar limits
     try:
-        minval, maxval = colorbar_limits
+        minval, maxval = cpt_limits
         exp = _exponent((minval, maxval))
         minval /= 10.**exp
         maxval /= 10.**exp
     except:
         minval, maxval, exp = _parse_limits(data[:,-1])
 
+    # optionally, clip colorbar limits to bring out more detail
+    try:
+        assert 0. <= cpt_clip[0] < cpt_clip[1]
+        minval = minval + cpt_clip[0]*(maxval - minval)
+    except:
+        pass
+    try:
+        assert cpt_clip[0] < cpt_clip[1] <= 1.
+        maxval = minval + cpt_clip[1]*(maxval - minval)
+    except:
+        pass
+
+
     data[:,-1] /= 10.**exp
-    cpt_step=(maxval-minval)/20.
+    cpt_step=(maxval-minval)/cpt_steps
 
     # write values to be plotted as ASCII table
     ascii_file_1 = _safename('tmp_'+filename+'_ascii1.txt')
