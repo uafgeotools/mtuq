@@ -145,7 +145,7 @@ class MomentTensorHeader(SourceHeader):
     """
     def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
         best_misfit_bw, best_misfit_sw, model, solver, mt, lune_dict, origin,
-        data=None, synthetics=None, mt_grid=None, event_name=None):
+        data_bw=None, data_sw=None, mt_grid=None, event_name=None):
 
         if not event_name:
            # YYYY-MM-DDTHH:MM:SS.??????Z
@@ -171,8 +171,8 @@ class MomentTensorHeader(SourceHeader):
 
         # optional arguments, reserved for possible future use
         # (or for use by subclasses)
-        self.data = data
-        self.synthetics = synthetics
+        self.data_bw = data_bw
+        self.data_sw = data_sw
         self.mt_grid = mt_grid
 
         # moment tensor-derived attributes
@@ -283,7 +283,7 @@ class ForceHeader(SourceHeader):
 
     def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
         best_misfit_bw, best_misfit_sw, model, solver, force, force_dict, origin,
-        data=None, synthetics=None, force_grid=None, event_name=None):
+        data_bw=None, data_sw=None, force_grid=None, event_name=None):
 
         if not event_name:
            # YYYY-MM-DDTHH:MM:SS.??????Z
@@ -309,8 +309,8 @@ class ForceHeader(SourceHeader):
 
         # optional arguments, reserved for possible future use
         # (or for use by subclasses)
-        self.data = data
-        self.synthetics = synthetics
+        self.data_bw = data_bw
+        self.data_sw = data_sw
         self.force_grid = force_grid
 
         self.parse_origin()
