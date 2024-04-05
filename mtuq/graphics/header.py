@@ -116,6 +116,7 @@ class SourceHeader(Base):
         if not self.process_sw:
             raise Exception()
 
+
         if self.process_sw.freq_max > 1.:
             units = 'Hz'
         else:

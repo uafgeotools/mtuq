@@ -33,6 +33,10 @@ For a grid of regulary-spaced forces, `ds` may look something like:
       * origin_idx  (origin_idx) int64 0
 
 
+.. note::
+
+    Force grids are implemented using parameters `F0, phi, h`, which are related to `r, phi, theta` spherical coordinates (`physics convention <https://en.wikipedia.org/wiki/Spherical_coordinate_system>`_) by `F0 = r`, `phi = phi`, `h = cos(theta)`.  In addition, `F0, phi, h` are related to geographic directions by these `formulas <https://uafgeotools.github.io/mtuq/_modules/mtuq/util/math.html#to_rtp>`_.
+
 
 Misfit values
 """""""""""""

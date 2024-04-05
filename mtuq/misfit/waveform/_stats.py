@@ -7,36 +7,62 @@ from mtuq.util.math import list_intersect_with_indices
 from mtuq.util.signal import get_components
 
 
-def calculate_norm_data(data, norm, components):
-    # error checking
-    assert norm in ('L1', 'L2')
+def calculate_norm_data(data, norm, components, apply_weights=True):
+    """ Calculates the norm of the given waveform data
+    """
+
+    # Here we try to mimic the implementation in
+    # mtuq/misfit/waveform/level0.py
+
+    # Mimicking the misfit function implementation helps ensure consistency
+    # between the misfit values (i.e. residual norms) and data norms
+
+    # The idea here is to use the regular misfit function machinery, but set 
+    # synthetics to zero, so that instead of the residual norm || d - s ||,
+    # we get the data norm || d - 0 ||
 
     norm_data = 0.
-    for _j, d in enumerate(data):
+
+    for _j, stream in enumerate(data):
         _components, indices = list_intersect_with_indices(
-            get_components(d), components)
+            get_components(stream), _flatten(components))
 
         if not indices:
             continue
 
         # time sampling scheme
-        npts = d[0].data.size
-        dt = d[0].stats.delta
+        npts = stream[0].data.size
+        dt = stream[0].stats.delta
 
         for _k in indices:
-            r = d[_k].data
+            d = stream[_k].data
 
             if norm=='L1':
-                norm_data += np.sum(np.abs(r))*dt
+                value = np.sum(np.abs(d))*dt
 
             elif norm=='L2':
-                norm_data += np.sum(r**2)*dt
+                value = np.sum(d**2)*dt
+
+            elif norm=='hybrid':
+                value = np.sqrt(np.sum(r**2))*dt
+
+            # optionally, applies user-supplied weights attached during
+            # process_data()
+            if apply_weights:
+                try:
+                    value *= d[_k].weight
+                except:
+                    pass
+
+            norm_data += value
 
     return norm_data
 
 
 def estimate_sigma(data, greens, best_source, norm, components,
     time_shift_min, time_shift_max):
+    """ Makes an a posteriori estimate of the data error standard deviation
+    """
 
     # error checking
     assert norm in ('L1', 'L2')
@@ -81,7 +107,6 @@ def estimate_sigma(data, greens, best_source, norm, components,
         stop = start + npts
 
         for _k in indices:
-
             # subtract data from shifted synthetics
             r = s[_k].data[start:stop] - d[_k].data
 
@@ -94,4 +119,18 @@ def estimate_sigma(data, greens, best_source, norm, components,
 
 
     return np.mean(residuals)**0.5
+
+
+
+def _flatten(lists):
+    # TODO - better implementation?
+
+    # example:
+    #   converts ['ZR','T'] to ['Z','R','T']
+
+    flattened = []
+    for list in lists:
+        for element in list:
+            flattened.append(element)
+    return flattened
 

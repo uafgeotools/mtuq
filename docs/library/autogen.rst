@@ -44,8 +44,11 @@ autogen
    mtuq.graphics.plot_time_shifts
    mtuq.graphics.plot_amplitude_ratios
    mtuq.graphics.plot_log_amplitude_ratios
+   mtuq.graphics.plot_cross_corr
    mtuq.graphics._plot_attrs
    mtuq.graphics.attrs._default_backend
+   mtuq.graphics.attrs._pygmt_backend
+   mtuq.graphics.attrs.PyGMTUtilities
    mtuq.grid.DeviatoricGridRandom
    mtuq.grid.DeviatoricGridSemiregular
    mtuq.grid.DoubleCoupleGridRandom

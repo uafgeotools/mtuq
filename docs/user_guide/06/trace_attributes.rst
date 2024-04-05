@@ -2,7 +2,7 @@
 Trace attributes
 ================
 
-At various points during an inversion, waveform differences, phase shifts, and other values are calculated from observed and synthetic seismic traces. Such `trace attribute` quantities provide important information about how data misfit varies by geographic location and seismic component.
+Waveform differences, time-shift corrections, and other values are calculated during an inversion on a trace-by-trace basis. Such `trace attributes` provide important information about how data misfit varies by geographic location and seismic component.
 
 
 Collecting trace attributes

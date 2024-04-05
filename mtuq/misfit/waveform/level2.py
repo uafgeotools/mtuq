@@ -7,6 +7,7 @@ See ``mtuq/misfit/waveform/__init__.py`` for more information
 import numpy as np
 import time
 from copy import deepcopy
+from mtuq.misfit.waveform._stats import _flatten, calculate_norm_data
 from mtuq.misfit.waveform.level1 import correlate
 from mtuq.util.math import to_mij, to_rtp
 from mtuq.util.signal import get_components, get_time_sampling
@@ -14,12 +15,18 @@ from mtuq.misfit.waveform import c_ext_L2
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
-    time_shift_min, time_shift_max, msg_handle, debug_level=0):
+    time_shift_min, time_shift_max, msg_handle, debug_level=0,
+    normalize=False):
     """
     Data misfit function (fast Python/C version)
 
     See ``mtuq/misfit/waveform/__init__.py`` for more information
     """
+
+    if normalize:
+        components = _flatten(time_shift_groups)
+        norm_data = calculate_norm_data(data, norm, components)
+
     #
     # collect metadata
     #
@@ -85,6 +92,9 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     if debug_level > 0:
       print('  Elapsed time (C extension) (s): %f' % \
           (time.time() - start_time))
+
+    if normalize:
+        results /= norm_data
 
     return results
 

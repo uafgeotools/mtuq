@@ -5,13 +5,14 @@ See ``mtuq/misfit/waveform/__init__.py`` for more information
 """
 
 import numpy as np
+from mtuq.misfit.waveform._stats import _flatten, calculate_norm_data
 from mtuq.util.math import correlate, isclose, list_intersect_with_indices
 from mtuq.util.signal import get_components, get_time_sampling
 
 
 
 def misfit(data, greens, sources, norm, time_shift_groups,
-    time_shift_min, time_shift_max, msg_handle):
+    time_shift_min, time_shift_max, msg_handle, normalize=False):
     """
     Waveform misfit function (fast pure Python version)
 
@@ -19,6 +20,10 @@ def misfit(data, greens, sources, norm, time_shift_groups,
     """
     helpers = []
     values = np.zeros((len(sources), 1))
+
+    if normalize:
+        components = _flatten(time_shift_groups)
+        norm_data = calculate_norm_data(data, norm, components)
 
     #
     # initialize Green's function machinery
@@ -83,6 +88,9 @@ def misfit(data, greens, sources, norm, time_shift_groups,
                         values[_i] += d[_k].weight * value
                     except:
                         values[_i] += value
+
+    if normalize:
+        values /= norm_data
 
     return values
 

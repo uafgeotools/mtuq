@@ -161,12 +161,15 @@ if __name__=='__main__':
             return super(ProcessData, self).__call__(
                traces, station=station, origin=origin)
 
+
+    #
+    # plotting functions
+    #
     def _plot_dat(axis, t, data, attrs, pathspec='-k'):
         stream = data[0]
         trace = data[0][0]
         stats = trace.stats
         axis.plot(t, trace.data, pathspec)
-
 
     def _plot_syn(axis, t, data, attrs, pathspec='-r'):
         stream = data[0]
@@ -175,7 +178,6 @@ if __name__=='__main__':
         idx1 = attrs.idx_start
         idx2 = attrs.idx_stop
         axis.plot(t, trace.data[idx1:idx2], pathspec)
-
 
     def _annotate(axis, attrs):
         text = 'static_shift: %.1f' % attrs.static_shift
@@ -187,14 +189,11 @@ if __name__=='__main__':
         text = 'total_shift: %.1f' % attrs.total_shift
         pyplot.text(0.02, 0.55, text, transform=axis.transAxes)
 
-
     def _get_synthetics(greens, mt):
         return greens.get_synthetics(mt, components=['Z'])
 
-
     def _get_attrs(data, greens, misfit):
         return misfit.collect_attributes(data, greens, mt)[0]['Z']
-
 
     def _get_time_sampling(data):
         stream = data[0]
