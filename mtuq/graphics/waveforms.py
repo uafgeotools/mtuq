@@ -180,7 +180,7 @@ def plot_waveforms2(filename,
         max_amplitudes_sw = np.array([_max(data_sw[i], synthetics_sw[i]) if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
     else:
         raise ValueError("Invalid normalization method specified.")
-
+    
     #
     # loop over stations
     #
@@ -220,6 +220,7 @@ def plot_waveforms2(filename,
 
             _plot_ZR(axes[ir], 1, dat, syn, component, 
                 normalize, trace_label_writer, max_amplitudes_bw[_i], total_misfit_bw)
+
 
         #
         # plot surface wave traces
@@ -274,9 +275,6 @@ def plot_data_greens1(filename,
     # calculate total misfit for display in figure header
     total_misfit = misfit(data, greens.select(origin), source, optimization_level=0)
 
-    # Get the number of stations used
-    N_total = _count([data])
-
     # prepare figure header
     if 'header' in kwargs:
         header = kwargs.pop('header')
@@ -287,8 +285,7 @@ def plot_data_greens1(filename,
 
         header = _prepare_header(
             model, solver, source, source_dict, origin,
-            process_data, misfit, total_misfit,
-            additional_header_info={'N': N_total})
+            process_data, misfit, total_misfit)
 
     plot_waveforms1(filename,
         data, synthetics, stations, origin,
@@ -330,10 +327,6 @@ def plot_data_greens2(filename,
 
     total_misfit_sw = misfit_sw(
         data_sw, greens_sw.select(origin), source, optimization_level=0) 
-    
-    N_total = len(stations)
-    N_p_used = _count([data_bw])
-    N_s_used = _count([data_sw])
 
 
     # prepare figure header
@@ -347,8 +340,7 @@ def plot_data_greens2(filename,
         header = _prepare_header(
             model, solver, source, source_dict, origin,
             process_data_bw, process_data_sw,
-            misfit_bw, misfit_sw, total_misfit_bw, total_misfit_sw, 
-            additional_header_info={'N': N_total, 'Np': N_p_used, 'Ns': N_s_used})
+            misfit_bw, misfit_sw, total_misfit_bw, total_misfit_sw)
 
     plot_waveforms2(filename,
         data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
@@ -435,6 +427,7 @@ def _plot_ZRT(axes, ic, dat, syn, component,
     if trace_label_writer is not None:
         trace_label_writer(axis, dat, syn, total_misfit)
 
+
 def _plot_ZR(axes, ic, dat, syn, component, 
     normalize='maximum_amplitude', trace_label_writer=None,
     normalization_amplitude=1., total_misfit=1.):
@@ -460,6 +453,7 @@ def _plot_ZR(axes, ic, dat, syn, component,
 
     if trace_label_writer is not None:
         trace_label_writer(axis, dat, syn, total_misfit)
+
 
 def _plot(axis, dat, syn, label=None):
     """ Plots data and synthetics time series on current axes
@@ -560,14 +554,14 @@ def _isempty(dataset):
 
 def _max(dat, syn):
     """
-    Computes the maximum value between the maximum values of two input data objects (observed and synthetics).
+    Computes the maximum value from a set of two input data objects (observed and synthetics).
 
     Parameters:
     dat (Trace, Stream, or Dataset): observed data.
     syn (Trace, Stream, or Dataset): synthetics.
 
     Returns:
-    float: The maximum value between the maximum values of the two input objects.
+    float: The maximum value for normalization purposes.
 
     Raises:
     TypeError: If the input objects are not of the same type (Trace, Stream, or Dataset).
@@ -641,22 +635,8 @@ def _hide_axes(axes):
             col.get_yaxis().set_ticks([])
             col.patch.set_visible(False)
 
-def header_decorator(header_function):
-    def wrapper(*args, **kwargs):
-        # Call the original header function with all args except 'additional_header_info'
-        header = header_function(*args, **{k: v for k, v in kwargs.items() if k != 'additional_header_info'})
-        
-        # Now handle the 'additional_header_info' specifically
-        additional_header_info = kwargs.get('additional_header_info', {})
-        for key, value in additional_header_info.items():
-            setattr(header, key, value)  # Dynamically add new attributes to the header object
 
-        return header
-    return wrapper
-
-
-@header_decorator
-def _prepare_header(model, solver, source, source_dict, origin, *args, **kwargs):
+def _prepare_header(model, solver, source, source_dict, origin, *args):
     # prepares figure header
 
     if len(args)==3:
