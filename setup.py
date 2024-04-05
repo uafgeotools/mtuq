@@ -100,7 +100,7 @@ setup(
     # (consider using a conda based installation instead)
     install_requires=[
         "numpy", 
-        "scipy",
+        "scipy<1.13.0",
         "pandas",
         "xarray",
         "netCDF4",
