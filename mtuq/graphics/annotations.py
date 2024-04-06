@@ -3,6 +3,8 @@ import numpy as np
 
 from matplotlib import pyplot
 from obspy.geodetics import gps2dist_azimuth
+# location to degree distance with obspy
+from obspy.geodetics import locations2degrees
 
 
 def station_label_writer(ax, station, origin, units='km'):
@@ -31,7 +33,8 @@ def station_label_writer(ax, station, origin, units='km'):
         label = '%d km' % round(distance_in_m/1000.)
 
     elif units=='deg':
-        label = '%d%s' % (round(m_to_deg(distance_in_m)), u'\N{DEGREE SIGN}')
+        label = '%d%s' % (round(locations2degrees(origin.latitude, origin.longitude,
+            station.latitude, station.longitude)), u'\N{DEGREE SIGN}')
 
     pyplot.text(0.2,0.35, label, fontsize=11, transform=ax.transAxes)
 
@@ -88,5 +91,4 @@ def _getattr(trace, name, *args):
         return getattr(trace.attrs, name)
     else:
         raise TypeError("Wrong number of arguments")
-
 
