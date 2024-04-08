@@ -76,6 +76,7 @@ autogen
    mtuq.read
    mtuq.io.clients.AxiSEM_NetCDF.Client
    mtuq.io.clients.FK_SAC.Client
+   mtuq.io.clients.CPS_SAC.Client
    mtuq.io.clients.SPECFEM3D_SGT.Client
    mtuq.io.clients.syngine.Client
    mtuq.io.readers.SAC.read
