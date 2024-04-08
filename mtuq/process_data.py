@@ -4,13 +4,12 @@ import obspy
 import numpy as np
 import warnings
 
-from os.path import basename, exists, isdir, join
 from os import listdir
 from copy import deepcopy
 from io import TextIOBase
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
-from os.path import basename, exists
+from os.path import basename, exists, isdir, join
 from mtuq.util import AttribDict, warn
 from mtuq.util.cap import WeightParser, taper
 from mtuq.util.signal import cut, get_arrival, m_to_deg, _window_warnings

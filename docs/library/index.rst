@@ -139,6 +139,7 @@ Database and web service clients
 ============================================================================================================  ============================================================================================================ 
 `mtuq.io.clients.AxiSEM_NetCDF.Client <generated/mtuq.io.clients.AxiSEM_NetCDF.Client.html>`_                  AxiSEM NetCDF database client based on instaseis
 `mtuq.io.clients.FK_SAC.Client <generated/mtuq.io.clients.FK_SAC.Client.html>`_                                FK database client
+`mtuq.io.clients.FK_SAC.Client <generated/mtuq.io.clients.CPS_SAC.Client.html>`_                                CPS database client
 `mtuq.io.clients.SPECFEM3D_SGT.Client <generated/mtuq.io.clients.SPECFEM3D_SGT.Client.html>`_                  SPECFEM3D/3D_GLOBE database client based on seisgen
 `mtuq.io.clients.syngine.Client <generated/mtuq.io.clients.syngine.Client.html>`_                              Syngine web service client
 ============================================================================================================  ============================================================================================================ 
