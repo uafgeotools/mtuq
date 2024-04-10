@@ -362,12 +362,12 @@ class ProcessData(object):
         elif self.pick_type == 'CPS_metadata':
             assert CPS_database is not None
             assert exists(CPS_database)
-
+            print(CPS_database)
             if CPS_model is None:
                 CPS_model = basename(CPS_database)
                 # Remove model name if no model is provided
-                CPS_database = CPS_database[:-(len(CPS_model + 1))]
-
+                # CPS_database = CPS_database[:-(len(CPS_model) + 1)]
+                print(CPS_database)
             self.CPS_database = CPS_database
             self.CPS_model = CPS_model
 
