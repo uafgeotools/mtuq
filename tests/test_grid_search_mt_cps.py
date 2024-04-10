@@ -42,9 +42,14 @@ if __name__ == '__main__':
     run_checks = (not args.no_checks)
     run_figures = (not args.no_figures)
 
-    path_greens = fullpath('data/tests/benchmark_cap/greens_cps/scak')
-    path_data = fullpath('data/examples/20090407201255351/*.[zrt]')
-    path_weights = fullpath('data/examples/20090407201255351/weights.dat')
+    # path_greens = fullpath('data/tests/benchmark_cap/greens_cps/scak')
+    # path_data = fullpath('data/examples/20090407201255351/*.[zrt]')
+    # path_weights = fullpath('data/examples/20090407201255351/weights.dat')
+
+    path_greens=  '/home/dockimble/src/mtuq/data/tests/benchmark_cap/greens_cps'
+    path_data=    '/home/dockimble/src/mtuq/data/examples/20090407201255351/*.[zrt]'
+    path_weights= '/home/dockimble/src/mtuq/data/examples/20090407201255351/weights.dat'    
+    
     event_id = '20090407201255351'
     model = 'scak'
 
@@ -54,6 +59,7 @@ if __name__ == '__main__':
         freq_max=0.333,
         pick_type='CPS_metadata',
         CPS_database=path_greens,
+        CPS_model=model,
         window_type='body_wave',
         window_length=15.,
         capuaf_file=path_weights,
@@ -65,6 +71,7 @@ if __name__ == '__main__':
         freq_max=0.0625,
         pick_type='CPS_metadata',
         CPS_database=path_greens,
+        CPS_model=model,
         window_type='surface_wave',
         window_length=150.,
         capuaf_file=path_weights,

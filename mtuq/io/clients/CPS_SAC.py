@@ -150,15 +150,14 @@ class Client(ClientBase):
             # Convert numeric folder names to integers
             numeric_folder_names_int = [int(folder)
                                         for folder in numeric_folder_names]
-
             # Find depth closest to our desired value
             dep_folder = numeric_folder_names[numeric_folder_names_int.index(min(numeric_folder_names_int,
                                                                                  key=lambda x: abs(x - int(dep_desired))))]
 
             # Find distance closest to our desired value
 
-            directory_path += '/' + dep_folder
-            all_files = listdir(directory_path)
+            # self.path += '/' + dep_folder
+            all_files = listdir(self.path + '/' + dep_folder)
             filenames_without_extensions_inline = [
                 filename.split('.')[0] for filename in all_files]
             filenames_without_letters = [filename for filename in filenames_without_extensions_inline if not any(

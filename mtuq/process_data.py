@@ -365,6 +365,8 @@ class ProcessData(object):
 
             if CPS_model is None:
                 CPS_model = basename(CPS_database)
+                # Remove model name if no model is provided
+                CPS_database = CPS_database[:-(len(CPS_model + 1))]
 
             self.CPS_database = CPS_database
             self.CPS_model = CPS_model
@@ -601,7 +603,7 @@ class ProcessData(object):
                 # Review all folders in CPS Green's Function directory. Folder
                 # names correspond with depth of source. Find the folder
                 # with a value closest to the one we are after.
-                all_entries = listdir(self.CPSdatabase)
+                all_entries = listdir(self.CPS_database)
 
                 # Filter out folder names that are numeric
                 numeric_folder_names = [entry for entry in all_entries
@@ -632,7 +634,7 @@ class ProcessData(object):
                     min(filenames_unique_int, key=lambda x: abs(x - int(dst_desired))))]
 
                 sac_headers = obspy.read('%s/%s/%s/%s%s.ZDD' %
-                                         (self.path, self.model,
+                                         (self.CPS_database, self.CPS_model,
                                           dep_folder, dst_value, dep_folder),
                                          format='sac')[0].stats.sac
 

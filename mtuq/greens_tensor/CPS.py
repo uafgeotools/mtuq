@@ -56,10 +56,10 @@ class GreensTensor(GreensTensorBase):
                 ZSS = self.select(channel="ZSS")[0].data
                 ZDS = self.select(channel="ZDS")[0].data
                 ZDD = self.select(channel="ZDD")[0].data
-                ZEP = self.select(channel="ZEP")[0].data
-                array[_i, _j+0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
-                array[_i, _j+1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEP/3.
-                array[_i, _j+2, :] =  ZDD/3. + ZEP/3.
+                ZEX = self.select(channel="ZEX")[0].data
+                array[_i, _j+0, :] =  ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEX/3.
+                array[_i, _j+1, :] = -ZSS/2. * np.cos(2*phi) - ZDD/6. + ZEX/3.
+                array[_i, _j+2, :] =  ZDD/3. + ZEX/3.
                 array[_i, _j+3, :] =  ZSS * np.sin(2*phi)
                 array[_i, _j+4, :] =  ZDS * np.cos(phi)
                 array[_i, _j+5, :] =  ZDS * np.sin(phi)
@@ -68,10 +68,10 @@ class GreensTensor(GreensTensorBase):
                 RSS = self.select(channel="RSS")[0].data
                 RDS = self.select(channel="RDS")[0].data
                 RDD = self.select(channel="RDD")[0].data
-                REP = self.select(channel="REP")[0].data
-                array[_i, _j+0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
-                array[_i, _j+1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REP/3.
-                array[_i, _j+2, :] =  RDD/3. + REP/3.
+                REX = self.select(channel="REX")[0].data
+                array[_i, _j+0, :] =  RSS/2. * np.cos(2*phi) - RDD/6. + REX/3.
+                array[_i, _j+1, :] = -RSS/2. * np.cos(2*phi) - RDD/6. + REX/3.
+                array[_i, _j+2, :] =  RDD/3. + REX/3.
                 array[_i, _j+3, :] =  RSS * np.sin(2*phi)
                 array[_i, _j+4, :] =  RDS * np.cos(phi)
                 array[_i, _j+5, :] =  RDS * np.sin(phi)

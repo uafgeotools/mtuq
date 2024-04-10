@@ -89,6 +89,8 @@ class PolarityMisfit(object):
         self.taup_model = taup_model
         self.FK_database = FK_database
         self.FK_model = FK_model
+        self.CPS_database = CPS_database
+        self.CPS_model = CPS_model
 
 
         #
@@ -214,6 +216,10 @@ class PolarityMisfit(object):
         elif self.method=='FK_metadata':
             takeoff_angles = _takeoff_angles_FK(
                 self.FK_database, greens)
+
+        elif self.method=='CPS_metadata':
+            takeoff_angles = _takeoff_angles_CPS(
+                self.CPS_database, greens)
 
         observed = self.get_observed(data)
 
@@ -342,7 +348,7 @@ def _model_type(greens):
     except:
         solver = 'Unknown'
 
-    if solver in ('AxiSEM', 'FK', 'syngine'):
+    if solver in ('AxiSEM', 'FK', 'CPS', 'syngine'):
         model_type = '1D model'
 
     elif solver in ('SPECFEM3D', 'SPECFEM3D_GLOBE'):
