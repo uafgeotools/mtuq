@@ -10,7 +10,7 @@ wd=$PWD
 
 for filename in \
     benchmark_cap/20090407201255351.tgz\
-    benchmark_cap/greens.tgz;
+    benchmark_cps/greens.tgz;
 do
     cd $wd
     cd $(dirname $filename)
