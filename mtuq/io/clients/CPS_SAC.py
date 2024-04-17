@@ -43,11 +43,14 @@ class Client(ClientBase):
     .. note::
 
       `GreensTensor`s are obtained by reading precomputed time series from an 
-      CPS directory tree.  
+      CPS directory tree with naming convention `ZZZz/RRRRrZZZz.EXT`,
+      where ZZZz gives the depth of the source, RRRRr gives the horizontal offset
+      between source and receiver, and EXT is the file extension related to
+      so-called fundamental sources.
 
     .. note::
 
-      The CPS directory tree convention permits us to represent offsets 
+      The above directory tree convention permits us to represent offsets 
       from 0 to 9999.9 km in 0.1 km increments and origin depths from 
       0 to 999.9 km in 0.1 km increments
 
@@ -246,5 +249,5 @@ def _listdir(path):
     # lists all subdirectories
     for name in listdir(path):
         if isdir(os.path.abspath(os.path.join(path, name))):
-          yield name
+            yield name
  
