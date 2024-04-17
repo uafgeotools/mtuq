@@ -6,7 +6,7 @@ import numpy as np
 from glob import glob
 from os.path import basename, exists, isdir, join
 from os import listdir
-from mtuq.greens_tensor.FK import GreensTensor
+from mtuq.greens_tensor.CPS import GreensTensor
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
 from obspy.core import Stream

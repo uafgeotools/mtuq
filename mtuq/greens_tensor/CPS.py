@@ -5,11 +5,6 @@ import numpy as np
 from mtuq.greens_tensor.base import GreensTensor as GreensTensorBase
 
 
-
-print('WARNING: CPS Greens functions are not fully tested yet')
-
-
-
 class GreensTensor(GreensTensorBase):
     """
     FK Green's tensor object
