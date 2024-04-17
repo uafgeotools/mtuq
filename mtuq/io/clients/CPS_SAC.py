@@ -130,7 +130,8 @@ class Client(ClientBase):
             offset_str = '%05d' % (10.*offset_km)
 
             # the file naming convention used by CPS for depth is ZZZz, which
-            # allows to represent depths up to 999.9 km in increments of 0.1 km
+            # allows us to represent depths up to 999.9 km 
+            # in increments of 0.1 km
             depth_str = '%04d' % (10.*depth_km)
 
 
