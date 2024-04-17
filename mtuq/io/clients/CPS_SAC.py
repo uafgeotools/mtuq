@@ -1,7 +1,9 @@
 
 import obspy
+import os
 import numpy as np
 
+from glob import glob
 from os.path import basename, exists, isdir, join
 from os import listdir
 from mtuq.greens_tensor.FK import GreensTensor
@@ -11,27 +13,12 @@ from obspy.core import Stream
 from obspy.geodetics import gps2dist_azimuth
 
 
-# FIX FOR CPS
-# An FK simulation outputs 12 SAC files each with filename extensions
-# 0,1,2,3,4,5,6,7,8,9,a,b.  The SAC files ending in .2 and .9 contain
-# only zero data, so we exclude them from the following list.
-# The order of traces in the list is the order in which CAP stores
-# the time series.
-
 # A CPS run where the file96 results are converted to SAC files produces
-
-POSITION = [
-    '8',  '5',             # t
-    '10', '7', '4', '2',   # r
-    '9',  '6', '3', '1',   # z
-]
-
 CHANNELS = [
     'TSS', 'TDS',
     'REX', 'RSS', 'RDS', 'RDD',
     'ZEX', 'ZSS', 'ZDS', 'ZDD',
 ]
-
 
 class Client(ClientBase):
     """  CPS database client
@@ -57,11 +44,13 @@ class Client(ClientBase):
       `GreensTensor`s are obtained by reading precomputed time series from an 
       CPS directory tree.  
 
+    .. note::
+
+      The CPS directory tree convention permits us to represent offsets 
+      from 0 to 9999.9 km in 0.1 km increments and origin depths from 
+      0 to 999.9 km in 0.1 km increments
 
 
-      Such trees contain SAC files organized by model, 
-      event depth, and event distance, as used by the `Zhu1994`
-      software packages.
 
     """
 
@@ -115,7 +104,7 @@ class Client(ClientBase):
 
         traces = []
 
-        distance_in_m, _, _ = gps2dist_azimuth(
+        offset_in_m, _, _ = gps2dist_azimuth(
             origin.latitude,
             origin.longitude,
             station.latitude,
@@ -126,57 +115,38 @@ class Client(ClientBase):
         t2_new = float(station.endtime)
         dt_new = float(station.delta)
 
-        # dep = str(int(round(origin.depth_in_m/1000.)))
-        # dep = str(int(np.ceil(origin.depth_in_m/1000.))).zfill(4)
-        dep_desired = "{:06.1f}".format(
-            np.ceil(origin.depth_in_m/1000.) * 10)[:-2]
-        # dep_folder_desired = dep[:-2]
-
-        # dst = str(int(round(distance_in_m/1000.)))
-        # dst = str(int(np.ceil(distance_in_m/1000.))).zfill(4)
-        dst_desired = "{:07.1f}".format(np.ceil(distance_in_m/1000.) * 10)[:-2]
-
         if self.include_mt:
+            fullpath = join(self.path, self.model)
 
-            # Review all folders in CPS Green's Function directory. Folder
-            # names correspond with depth of source. Find the folder
-            # with a value closest to the one we are after.
-            all_entries = listdir(self.path)
+            # closest depth for which Green's functions are available
+            depth_km = _closest_depth(fullpath, origin.depth_in_m/1000.)
 
-            # Filter out folder names that are numeric
-            numeric_folder_names = [entry for entry in all_entries
-                                    if entry.isdigit() and isdir(join(self.path, entry))]
+            # closest horizontal offset for which Green's functions are available
+            offset_km = _closest_offset(fullpath, depth_km, offset_in_m/1000.)
 
-            # Convert numeric folder names to integers
-            numeric_folder_names_int = [int(folder)
-                                        for folder in numeric_folder_names]
-            # Find depth closest to our desired value
-            dep_folder = numeric_folder_names[numeric_folder_names_int.index(min(numeric_folder_names_int,
-                                                                                 key=lambda x: abs(x - int(dep_desired))))]
+            # the file naming convention used by CPS for offset is RRRRr, which
+            # allows us to represent offsets up to 9999.9 km 
+            # in increments of 0.1 km
+            offset_str = '%05d' % (10.*offset_km)
 
-            # Find distance closest to our desired value
+            # the file naming convention used by CPS for depth is ZZZz, which
+            # allows to represent depths up to 999.9 km in increments of 0.1 km
+            depth_str = '%04d' % (10.*depth_km)
 
-            # self.path += '/' + dep_folder
-            all_files = listdir(self.path + '/' + dep_folder)
-            filenames_without_extensions_inline = [
-                filename.split('.')[0] for filename in all_files]
-            filenames_without_letters = [filename for filename in filenames_without_extensions_inline if not any(
-                char.isalpha() for char in filename)]
-            filenames_unique = [entry[:5]
-                                for entry in list(set(filenames_without_letters))]
-            filenames_unique_int = [int(filename)
-                                    for filename in filenames_unique]
-            dst_value = filenames_unique[filenames_unique_int.index(
-                min(filenames_unique_int, key=lambda x: abs(x - int(dst_desired))))]
 
             for _i, ext in enumerate(CHANNELS):
                 trace = obspy.read('%s/%s/%s/%s%s.%s' %
-                                   (self.path, self.model,
-                                    dep_folder, dst_value, dep_folder, ext),
+                                   (self.path, self.model, depth_str,
+                                    offset_str, depth_str, ext),
                                    format='sac')[0]
 
                 trace.stats.channel = CHANNELS[_i]
                 trace.stats._component = CHANNELS[_i][0]
+
+                # ad hoc workaround for difference between 
+                # CPS and FK conventions
+                if CHANNELS[_i].endswith('EX'):
+                    trace.stats.channel = trace.stats._component+'EP'
 
                 # what are the start and end times of the Green's function?
                 t1_old = float(origin.time)+float(trace.stats.starttime)
@@ -195,6 +165,9 @@ class Client(ClientBase):
 
                 traces += [trace]
 
+        if self.include_force:
+            raise NotImplementedError
+
         tags = [
             'model:%s' % self.model,
             'solver:%s' % 'CPS',
@@ -203,3 +176,63 @@ class Client(ClientBase):
         return GreensTensor(traces=[trace for trace in traces],
                             station=station, origin=origin, tags=tags,
                             include_mt=self.include_mt, include_force=self.include_force)
+
+
+#
+# utility functions
+#
+
+def _closest_depth(path, depth_km):
+    """ Searches CPS directory tree to find closest depth for which 
+    Green's functions are available
+    """
+    if not _listdir(path):
+        raise Exception('No subdirectories found: %s' % path)
+
+    depths = []
+    for subdir in _listdir(path):
+        # exclude improperly-formatted subdirectories
+        if len(subdir) != 4:
+            continue
+        if not subdir.isdigit():
+            continue
+
+        # convert to meters
+        depths += [float(subdir)/10.]
+      
+    closest_depth = min(depths, key=lambda z: abs(z - depth_km))
+    return closest_depth
+
+
+def _closest_offset(path, depth_km, offset_km):
+    """ Searches CPS directory tree to find closest horizontal offset for which 
+    Green's functions are available
+    """
+
+    # the file naming convention used by CPS is ZZZz/RRRRrZZZz.EXT
+    wildcard = '%s/%04d/?????%04d.ZEX' % (path, 10*depth_km, 10*depth_km)
+
+    if not glob(wildcard):
+        raise Exception('No Greens functions found: %s' % wildcard)
+
+    offsets = []
+    for fullname in glob(wildcard):
+        filename = os.path.basename(fullname)
+
+        # exclude improperly-formatted filenames
+        if not filename[0:9].isdigit():
+            continue
+
+        # convert to km
+        offsets += [float(filename[0:5])/10.]
+      
+    closest_offset = min(offsets, key=lambda r: abs(r - offset_km))
+    return closest_offset
+
+
+def _listdir(path):
+    # lists all subdirectories
+    for name in listdir(path):
+        if isdir(os.path.abspath(os.path.join(path, name))):
+          yield name
+ 
