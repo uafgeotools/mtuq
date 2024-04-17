@@ -13,11 +13,12 @@ from obspy.core import Stream
 from obspy.geodetics import gps2dist_azimuth
 
 
-# A CPS run where the file96 results are converted to SAC files produces
+# CPS workflow (solver + binary-to-SAC conversion) produces the following
+# individual time series
 CHANNELS = [
-    'TSS', 'TDS',
-    'REX', 'RSS', 'RDS', 'RDD',
     'ZEX', 'ZSS', 'ZDS', 'ZDD',
+    'REX', 'RSS', 'RDS', 'RDD',
+    'TSS', 'TDS',
 ]
 
 class Client(ClientBase):
@@ -183,7 +184,7 @@ class Client(ClientBase):
 # utility functions
 #
 
-def _closest_depth(path, depth_km):
+def _closest_depth(path, depth_km, thresh=1.):
     """ Searches CPS directory tree to find closest depth for which 
     Green's functions are available
     """
@@ -198,14 +199,19 @@ def _closest_depth(path, depth_km):
         if not subdir.isdigit():
             continue
 
-        # convert to meters
+        # convert to km
         depths += [float(subdir)/10.]
       
     closest_depth = min(depths, key=lambda z: abs(z - depth_km))
+
+    if (closest_depth - depth_km) > thresh:
+        print('Warning: Closest available Greens functions differ from given source '
+              'by %.f km vertically' % (closest_depth - depth_km))
+
     return closest_depth
 
 
-def _closest_offset(path, depth_km, offset_km):
+def _closest_offset(path, depth_km, offset_km, thresh=1.):
     """ Searches CPS directory tree to find closest horizontal offset for which 
     Green's functions are available
     """
@@ -228,6 +234,11 @@ def _closest_offset(path, depth_km, offset_km):
         offsets += [float(filename[0:5])/10.]
       
     closest_offset = min(offsets, key=lambda r: abs(r - offset_km))
+
+    if (closest_offset - offset_km) > thresh:
+        print('Warning: Closest available Greens functions differ from given source '
+              'by %.f km horizontally' % (closest_offset - offset_km))
+
     return closest_offset
 
 
