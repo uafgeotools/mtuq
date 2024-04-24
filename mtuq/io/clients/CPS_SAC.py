@@ -120,13 +120,11 @@ class Client(ClientBase):
         dt_new = float(station.delta)
 
         if self.include_mt:
-            fullpath = join(self.path, self.model)
-
             # closest depth for which Green's functions are available
-            depth_km = _closest_depth(fullpath, origin.depth_in_m/1000.)
+            depth_km = _closest_depth(self.path, origin.depth_in_m/1000.)
 
             # closest horizontal offset for which Green's functions are available
-            offset_km = _closest_offset(fullpath, depth_km, offset_in_m/1000.)
+            offset_km = _closest_offset(self.path, depth_km, offset_in_m/1000.)
 
             # the file naming convention used by CPS for offset is RRRRr, which
             # allows us to represent offsets up to 9999.9 km 
@@ -140,8 +138,8 @@ class Client(ClientBase):
 
 
             for _i, ext in enumerate(CHANNELS):
-                trace = obspy.read('%s/%s/%s/%s%s.%s' %
-                                   (self.path, self.model, depth_str,
+                trace = obspy.read('%s/%s/%s%s.%s' %
+                                   (self.path, depth_str,
                                     offset_str, depth_str, ext),
                                    format='sac')[0]
 
