@@ -1,8 +1,11 @@
 
 import obspy
+import os
 import numpy as np
 
-from os.path import basename, exists
+from glob import glob
+from os.path import basename, exists, isdir
+from os import listdir
 from mtuq.greens_tensor.FK import GreensTensor 
 from mtuq.io.clients.base import Client as ClientBase
 from mtuq.util.signal import resample
@@ -121,16 +124,15 @@ class Client(ClientBase):
         t2_new = float(station.endtime)
         dt_new = float(station.delta)
 
-        #dep = str(int(round(origin.depth_in_m/1000.)))
-        dep = str(int(np.ceil(origin.depth_in_m/1000.)))
-        #dst = str(int(round(distance_in_m/1000.)))
-        dst = str(int(np.ceil(distance_in_m/1000.)))
+        depth_km = _closest_depth(self.path, np.ceil(origin.depth_in_m/1000.))
+        offset_km = _closest_offset(self.path, depth_km, distance_in_m/1000.)
+
 
         if self.include_mt:
 
             for _i, ext in enumerate(EXTENSIONS):
-                trace = obspy.read('%s/%s_%s/%s.grn.%s' %
-                    (self.path, self.model, dep, dst, ext),
+                trace = obspy.read('%s/%s_%d/%d.grn.%s' %
+                    (self.path, self.model, depth_km, offset_km, ext),
                     format='sac')[0]
 
                 trace.stats.channel = CHANNELS[_i]
@@ -165,4 +167,81 @@ class Client(ClientBase):
 
 
 
+#
+# utility functions
+#
+
+def _closest_depth(path, depth_km, thresh_km=1.):
+    """ Searches FK directory tree to find closest depth for which 
+    Green's functions are available
+    """
+
+    if not _listdir(path):
+        raise Exception('No subdirectories found: %s' % path)
+
+    depths = []
+    for subdir in _listdir(path):
+        try:
+            # FK naming convention is {model}_{depth}
+            parts = subdir.split('_')
+            assert len(parts) == 2
+            assert parts[1].isdigit()
+        except:            
+            continue
+
+        # keep track of depths in km
+        depths += [float(parts[1])]
+
+    closest_depth = min(depths, key=lambda z: abs(z - depth_km))
+
+    if (closest_depth - depth_km) > thresh_km:
+        print('Warning: Closest available Greens functions differ from given source '
+              'by %.f km vertically' % (closest_depth - depth_km))
+        print('Warning: Depth displayed in figure header may be inaccurate')
+
+    return closest_depth
+
+
+def _closest_offset(path, depth_km, offset_km, thresh_km=1.):
+    """ Searches FK directory tree to find closest horizontal offset for which 
+    Green's functions are available
+    """
+
+    # the directory naming convention used by FK is {model}_{depth}
+    wildcard = '%s/*_%d' % (path, depth_km)
+
+    # the file naming convention used by FK is {offset}.grn.{extension}
+    wildcard = '%s/*.grn.0' % wildcard
+
+    if not glob(wildcard):
+        raise Exception('No Greens functions found: %s' % wildcard)
+
+    offsets = []
+    for fullname in glob(wildcard):
+        filename = os.path.basename(fullname)
+
+        # exclude improperly-formatted filenames
+        parts = filename.split('.')
+        if len(parts) != 3:
+            continue
+        if not parts[0].isdigit():
+            continue
+
+        # keep track of horizontal offsets in km
+        offsets += [float(parts[0])]
+
+    closest_offset = min(offsets, key=lambda r: abs(r - offset_km))
+
+    if (closest_offset - offset_km) > thresh_km:
+        print('Warning: Closest available Greens functions differ from given source '
+              'by %.f km horizontally' % (closest_offset - offset_km))
+
+    return closest_offset
+
+
+def _listdir(path):
+    # lists all subdirectories
+    for name in listdir(path):
+        if isdir(os.path.abspath(os.path.join(path, name))):
+            yield name
 
