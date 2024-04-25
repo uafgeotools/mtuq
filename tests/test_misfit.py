@@ -48,6 +48,7 @@ if __name__=='__main__':
     event_id=     '20090407201255351'
     model=        'scak'
 
+
     process_bw = ProcessData(
         filter_type='Bandpass',
         freq_min= 0.1,
