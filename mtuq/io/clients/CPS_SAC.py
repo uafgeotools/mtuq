@@ -21,6 +21,11 @@ CHANNELS = [
     'TSS', 'TDS',
 ]
 
+
+# disply prominent warning
+print('CPS client still under testing')
+
+
 class Client(ClientBase):
     """  CPS database client
 
@@ -185,7 +190,7 @@ class Client(ClientBase):
 # utility functions
 #
 
-def _closest_depth(path, depth_km, thresh=1.):
+def _closest_depth(path, depth_km, thresh_km=1.):
     """ Searches CPS directory tree to find closest depth for which 
     Green's functions are available
     """
@@ -205,20 +210,24 @@ def _closest_depth(path, depth_km, thresh=1.):
       
     closest_depth = min(depths, key=lambda z: abs(z - depth_km))
 
-    if (closest_depth - depth_km) > thresh:
+    if (closest_depth - depth_km) > thresh_km:
         print('Warning: Closest available Greens functions differ from given source '
               'by %.f km vertically' % (closest_depth - depth_km))
+        print('Warning: Depth displayed in figure header may be inaccurate')
 
     return closest_depth
 
 
-def _closest_offset(path, depth_km, offset_km, thresh=1.):
+def _closest_offset(path, depth_km, offset_km, thresh_km=1.):
     """ Searches CPS directory tree to find closest horizontal offset for which 
     Green's functions are available
     """
 
-    # the file naming convention used by CPS is ZZZz/RRRRrZZZz.EXT
-    wildcard = '%s/%04d/?????%04d.ZEX' % (path, 10*depth_km, 10*depth_km)
+    # the directory naming convention used by CPS is ZZZz
+    wildcard = '%s/%04d' % (path, 10*depth_km)
+
+    # the file naming convention used by CPS is RRRRrZZZz.EXT
+    wildcard = '%s/?????%04d.ZEX' % (wildcard, 10*depth_km)
 
     if not glob(wildcard):
         raise Exception('No Greens functions found: %s' % wildcard)
@@ -236,7 +245,7 @@ def _closest_offset(path, depth_km, offset_km, thresh=1.):
       
     closest_offset = min(offsets, key=lambda r: abs(r - offset_km))
 
-    if (closest_offset - offset_km) > thresh:
+    if (closest_offset - offset_km) > thresh_km:
         print('Warning: Closest available Greens functions differ from given source '
               'by %.f km horizontally' % (closest_offset - offset_km))
 
