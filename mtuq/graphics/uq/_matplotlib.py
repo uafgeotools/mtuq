@@ -1,5 +1,6 @@
 
 import numpy as np
+import math 
 
 from matplotlib import pyplot
 from os.path import exists
