@@ -8,6 +8,14 @@ from xarray import DataArray
 
 from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
+from mtuq.graphics.uq._gmt import _parse_vw, _parse_lune_array, _parse_force
+from matplotlib.colors import BoundaryNorm
+from matplotlib import ticker
+from mtuq.util.math import wrap_180
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+def cbformat(st, pos):
+    return '{:.1E}'.format(st)
 
 
 def _plot_dc_matplotlib(filename, coords, 
