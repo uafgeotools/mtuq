@@ -237,3 +237,42 @@ def _hammer_projection(lon, lat):
     x = (2 * np.sqrt(2) * np.cos(lat) * np.sin(lon / 2)) / alpha
     y = (np.sqrt(2) * np.sin(lat)) / alpha
     return np.degrees(x), np.degrees(y)
+
+def _compute_center_of_minimum_distance(lon_a, lat_a, lon_b, lat_b, iterations):
+    if iterations == 0:
+        return [(lon_a, lat_a), (lon_b, lat_b)]
+    
+    # Convert coordinates to radians
+    lon_a_rad = math.radians(lon_a)
+    lat_a_rad = math.radians(lat_a)
+    lon_b_rad = math.radians(lon_b)
+    lat_b_rad = math.radians(lat_b)
+    
+    # Convert lat/lon to cartesian coordinates
+    x_a = math.cos(lat_a_rad) * math.cos(lon_a_rad)
+    y_a = math.cos(lat_a_rad) * math.sin(lon_a_rad)
+    z_a = math.sin(lat_a_rad)
+    
+    x_b = math.cos(lat_b_rad) * math.cos(lon_b_rad)
+    y_b = math.cos(lat_b_rad) * math.sin(lon_b_rad)
+    z_b = math.sin(lat_b_rad)
+    
+    # Compute barycenter of the points in cartesian coordinates
+    x_mid = (x_a + x_b) / 2
+    y_mid = (y_a + y_b) / 2
+    z_mid = (z_a + z_b) / 2
+    
+    # Convert cartesian coordinate to latitude and longitude for the midpoint
+    lat_mid_rad = math.atan2(z_mid, math.sqrt(x_mid**2 + y_mid**2))
+    lon_mid_rad = math.atan2(y_mid, x_mid)
+    
+    # Convert midpoint lat and lon from radians to degrees
+    lat_mid = math.degrees(lat_mid_rad)
+    lon_mid = math.degrees(lon_mid_rad)
+    
+    # Recursive calls
+    coordinates = []
+    coordinates.extend(_compute_center_of_minimum_distance(lon_a, lat_a, lon_mid, lat_mid, iterations - 1))
+    coordinates.extend(_compute_center_of_minimum_distance(lon_mid, lat_mid, lon_b, lat_b, iterations - 1))
+    
+    return coordinates
