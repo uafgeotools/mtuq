@@ -293,3 +293,31 @@ def _plot_lune_arcs(axis, arcs):
         lon = [x[0] for x in arc]
         lat = [x[1] for x in arc]
         axis.plot(*_hammer_projection(lon, lat), color='silver', linewidth=1.5, zorder=100)
+
+def _compute_sphere_arcs():
+    arc_points = [
+    [0, -90, 0, -10],
+    [0, 10, 0, 90],
+    [-90, -90, -90, -10],
+    [-90, 10, -90, 90],
+    [90, -90, 90, -10],
+    [90, 10, 90, 90],
+    [-180,-90,-180, 90],
+    [180,-90,180, 90]
+    ]
+
+    arcs = []
+    for arc in arc_points:
+        arcs.append(_compute_center_of_minimum_distance(arc[0], arc[1], arc[2], arc[3], 6))
+    return arcs
+
+def _plot_sphere_arcs(axis, arcs):
+    for arc in arcs:
+        lon = [x[0] for x in arc]
+        lat = [x[1] for x in arc]
+        axis.plot(*_hammer_projection(lon, lat), color='silver', linewidth=1.5, zorder=100)
+        
+def _plot_directions_text(axis):
+    axis.text(0,0,'S', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
+    axis.text(88,0,'E', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
+    axis.text(-88,0,'W', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
