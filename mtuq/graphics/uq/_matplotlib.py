@@ -247,7 +247,9 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
 
 def _plot_dc_matplotlib(filename, coords, 
     values_h_kappa, values_sigma_kappa, values_sigma_h,
-    title=None, best_dc=None, colormap='viridis',  figsize=(8., 8.), fontsize=14):
+    title=None, best_dc=None,  figsize=(8., 8.), fontsize=14, **kwargs):
+
+    colormap = kwargs.get('colormap', 'viridis')
 
     # prepare axes
     fig, axes = pyplot.subplots(2, 2,
@@ -268,12 +270,17 @@ def _plot_dc_matplotlib(filename, coords,
     #     sigma = slip
     #     h = cos(dip)
 
+    vals = np.append(np.append(values_sigma_kappa.ravel(), values_sigma_kappa.ravel()),(values_sigma_h.ravel()))
+    # Plot data
+    # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
+    vmin, vmax = np.nanpercentile(vals, [0,75])
+
     # plot surfaces
-    _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa, colormap)
+    _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa.T, colormap, vmin=vmin, vmax=vmax)
 
-    _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa, colormap)
+    _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa.T, colormap, vmin=vmin, vmax=vmax)
 
-    _pcolor(axes[1][1], coords['sigma'], coords['h'], values_sigma_h, colormap)
+    _pcolor(axes[1][1], coords['sigma'], coords['h'], values_sigma_h.T, colormap, vmin=vmin, vmax=vmax)
 
     # optional markers
     if best_dc:
@@ -380,7 +387,6 @@ def _plot_omega_matplotlib(filename, omega, values,
 
     pyplot.savefig(filename)
     pyplot.close()
-
 
 #
 # utility functions
