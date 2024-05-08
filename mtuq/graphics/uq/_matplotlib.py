@@ -128,6 +128,123 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     pyplot.savefig(filename, dpi=300)
     pyplot.close()
 
+def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='viridis', title=None, plot_type='contour', **kwargs):
+    """ Plots DataArray values on the force sphere (requires matplotlib)
+
+    .. rubric :: Keyword arguments
+    filename : str
+        Name of output image file
+
+    phi : array_like (xarray.DataArray or numpy.ndarray)
+        Array of longitudes centered eastward, increasing anticlockwise (E = O°, N=90°, W=180°, S=270°)
+
+    h : array_like (xarray.DataArray or numpy.ndarray)
+        Array of colatitudes (from -1 to 1)
+
+    values : array_like (xarray.DataArray or numpy.ndarray)
+        Array of values
+
+    best_force : list
+        List of two floats representing the best-fitting force direction
+
+    colormap : str
+        Name of colormap
+
+    title : str
+        Title of plot
+
+    plot_type : str
+        Type of plot. Can be either contour, colormesh or scatter
+
+    """
+
+    # Check plot_type. Can be either contour or colormesh
+    if plot_type not in ['contour', 'colormesh', 'scatter']:
+        raise Exception('plot_type must be either contour or colormesh')
+
+    fig, ax = _generate_sphere()
+
+    # Transform data to Hammer projection
+    # Create a grid for pcollormesh from longitude and latitude arrays
+    latitude = np.degrees(np.pi/2 - np.arccos(h))
+    longitude = wrap_180(phi + 90)
+    x, y = np.meshgrid(longitude, latitude)
+    x, y = _hammer_projection(x, y)
+
+    if plot_type == 'colormesh':
+        # A tweak is needed for plotting quad-based colormesh, as the longitude axis doesn't increase monotically 
+        # Due to the wrap-around (0 deg centered on the easet), it is easier to split the array in two and 
+        # plot them separately
+
+        # Find the index of the discontinuity, where the longitude goes from 180 to -180
+        discontinuity_index = np.where(longitude < 0)[0][0]
+
+        # Split the arrays at the discontinuity
+        lon1 = longitude[:discontinuity_index]
+        lon2 = longitude[discontinuity_index:]
+        values1 = values[:, :discontinuity_index]
+        values2 = values[:, discontinuity_index:]
+
+        # Mesh, project onto the Hammer projection and plot
+        x1, y1 = np.meshgrid(lon1, latitude)
+        x2, y2 = np.meshgrid(lon2, latitude)
+        x1, y1 = _hammer_projection(x1, y1)
+        x2, y2 = _hammer_projection(x2, y2)
+        vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
+        im = ax.pcolormesh(x1, y1, values1, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
+        im = ax.pcolormesh(x2, y2, values2, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
+
+    elif plot_type == 'contour':
+        # Plot using contourf
+        levels = 20
+        mask = ~np.isfinite(values)
+        x_masked = x[~mask]
+        y_masked = y[~mask]
+        values_masked = values[~mask]
+        im = ax.tricontourf(x_masked.flatten(), y_masked.flatten(), values_masked.flatten(), cmap=colormap, levels=126, zorder=10)
+    elif plot_type == 'scatter':
+        # Prepare colormap
+        boundaries = np.linspace(0, 5, 6)
+        norm = BoundaryNorm(boundaries, ncolors=256, clip=False)
+        # Plot using scatter
+        im = ax.scatter(x, y, c=values, cmap='Spectral_r', norm=norm, zorder=100)
+
+    # Plot best-fitting force orientation
+    if best_force is not None:
+        best_force = _parse_force(best_force)
+        x_best, y_best = _hammer_projection(
+            best_force[0], best_force[1])
+        if plot_type not in ['scatter']:
+            _add_marker(ax, (x_best, y_best))
+
+    # Set axis limits
+    ax.set_xlim(-180, 180)
+    ax.set_ylim(-90, 90)
+
+    # Set axis labels
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+
+    # if plot type is colormesh or contour:
+    if plot_type in ['colormesh', 'contour']:
+        cbmin, cbmax = im.get_clim()
+        ticks = np.linspace(cbmin, cbmax, 3)
+        cb = pyplot.colorbar(im, ticks=ticks, location='bottom', ax=ax, pad=0.001, fraction=0.02)
+        cb.set_label('l2-misfit')
+    elif plot_type == 'scatter':
+        cb = pyplot.colorbar(im, location='bottom', ax=ax, pad=0.001, fraction=0.02, ticks=boundaries, extend='max')
+        cb.set_label('Mismatching polarities')
+
+    # Set title
+    if title is not None:
+        ax.set_title(title)
+        
+    # Save figure
+    pyplot.tight_layout()
+    pyplot.savefig(filename, dpi=300, bbox_inches='tight')
+    pyplot.close()
+
+
 def _plot_dc_matplotlib(filename, coords, 
     values_h_kappa, values_sigma_kappa, values_sigma_h,
     title=None, best_dc=None, colormap='viridis',  figsize=(8., 8.), fontsize=14):
