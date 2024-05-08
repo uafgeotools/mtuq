@@ -229,3 +229,11 @@ def _set_dc_labels(axes, **kwargs):
     # lower left panel
     axes[1][0].axis('off')
 
+# Define the Hammer projection function for matplotlib backend
+def _hammer_projection(lon, lat):
+    lon = np.radians(lon)
+    lat = np.radians(lat)
+    alpha = np.sqrt(1 + np.cos(lat) * np.cos(lon / 2))
+    x = (2 * np.sqrt(2) * np.cos(lat) * np.sin(lon / 2)) / alpha
+    y = (np.sqrt(2) * np.sin(lat)) / alpha
+    return np.degrees(x), np.degrees(y)
