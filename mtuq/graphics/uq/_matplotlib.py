@@ -17,6 +17,116 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 def cbformat(st, pos):
     return '{:.1E}'.format(st)
 
+# Define a pure matplotlib backend as an alternative to GMT
+# It should behave as similarly as possible to the GMT backend 
+# and take the same input arguments
+def _plot_lune_matplotlib(filename, longitude, latitude, values, 
+    best_vw=None, lune_array=None, colormap='viridis', title=None, plot_type='contour', **kwargs):
+
+    """ Plots DataArray values on the eigenvalue lune (requires matplotlib)
+
+    .. rubric :: Keyword arguments
+    filename : str
+        Name of output image file
+
+    longitude : array_like (xarray.DataArray or numpy.ndarray)
+        Array of longitudes
+
+    latitude : array_like (xarray.DataArray or numpy.ndarray)
+        Array of latitudes
+
+    values : array_like (xarray.DataArray or numpy.ndarray)
+        Array of values
+
+    best_vw : list
+        List of two floats representing the best-fitting eigenvalues
+
+    lune_array : array_like (xarray.DataArray or numpy.ndarray)
+        Used to plot beachball tradeoffs on the lune
+
+    colormap : str
+        Name of colormap
+
+    title : str
+        Title of plot
+
+    plot_type : str
+        Type of plot. Can be either contour, colormesh or scatter
+
+    """
+
+    # Check plot_type. Can be either contour or colormesh
+    if plot_type not in ['contour', 'colormesh', 'scatter']:
+        raise Exception('plot_type must be either contour or colormesh')
+
+    fig, ax = _generate_lune()
+
+    # Transform data to Hammer projection
+    # Create a grid for pcollormesh from longitude and latitude arrays
+    x, y = np.meshgrid(longitude, latitude)
+    x, y = _hammer_projection(x, y)
+
+    # Plot data
+    # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
+    if plot_type == 'colormesh':
+        vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
+        im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
+    elif plot_type == 'contour':
+        # Plot using contourf
+        levels = 20
+        im = ax.contourf(x, y, values, cmap=colormap, levels=levels, zorder=10)
+    elif plot_type == 'scatter':
+        # Prepare colormap
+        boundaries = np.linspace(0, 5, 6)
+        norm = BoundaryNorm(boundaries, ncolors=256, clip=False)
+        # Plot using scatter
+        im = ax.scatter(x, y, c=values, cmap='Spectral_r', norm=norm, zorder=100)
+
+
+    # Plot best-fitting moment tensor
+    if best_vw is not None:
+        best_vw = _parse_vw(best_vw)
+        gamma, delta = _hammer_projection(
+            best_vw[0], best_vw[1])
+        if plot_type not in ['scatter']:
+            _add_marker(ax, (gamma, delta))
+
+    # Plot tradeoffs
+    if lune_array is not None:
+        gamma, delta = _hammer_projection(
+            lune_array[:,0], lune_array[:,1])
+        ax.plot(gamma, delta, 'w.', markersize=1)
+
+    # Set axis limits
+    ax.set_xlim(-30.5, 30.5)
+    ax.set_ylim(-90, 90)
+
+    # Set axis labels
+    ax.set_xlabel('Gamma')
+    ax.set_ylabel('Delta')
+
+    # if plot type is colormesh or contour:
+    if plot_type in ['colormesh', 'contour']:
+        divider = make_axes_locatable(pyplot.gca())
+        cax = divider.append_axes("bottom", '2%', pad=0.001)
+        cb = pyplot.colorbar(im, cax=cax, orientation='horizontal', ticks=ticker.MaxNLocator(nbins=5))
+        cb.set_label('L2-Misfit')
+
+    elif plot_type == 'scatter':
+        divider = make_axes_locatable(pyplot.gca())
+        cax = divider.append_axes("bottom", '2%', pad=0.001)
+        cb = pyplot.colorbar(im, cax=cax, orientation='horizontal', ticks=boundaries, extend='max')
+        cb.set_label('Mismatching polarities')
+
+    # Set title
+    if title is not None:
+        ax.set_title(title)
+        
+    # Save figure
+    pyplot.tight_layout()
+    pyplot.subplots_adjust(left=0.1,right=0.9,top=0.95, bottom=0.08)
+    pyplot.savefig(filename, dpi=300)
+    pyplot.close()
 
 def _plot_dc_matplotlib(filename, coords, 
     values_h_kappa, values_sigma_kappa, values_sigma_h,
