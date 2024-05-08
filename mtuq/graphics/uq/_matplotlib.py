@@ -266,6 +266,36 @@ def _generate_lune(ax=None):
     # Transform data to Hammer projection
 
     return fig, ax
+
+def _generate_sphere(ax=None):
+    if ax is None:
+        fig = pyplot.figure(figsize=(8, 4))
+        ax = fig.add_subplot(111)
+        ax.set_axis_off()
+    else:
+        fig = ax.figure
+
+    # Generate curved gridlines
+    num_lines = 7
+    lon_lines = np.linspace(-180, 180, num_lines * 2 + 1)
+    lat_lines = np.linspace(-90, 90, num_lines*2+1)
+
+    for lon_line in lon_lines:
+        lat_line = np.linspace(-90, 90, 1000)
+        x_line, y_line = _hammer_projection(np.full_like(lat_line, lon_line), lat_line)
+        ax.plot(x_line, y_line, 'k--', linewidth=0.5, alpha=0.5)
+
+    for lat_line in lat_lines:
+        lon_line = np.linspace(-185, 185, 1000)
+        x_line, y_line = _hammer_projection(lon_line, np.full_like(lon_line, lat_line))
+        ax.plot(x_line, y_line, 'k--', linewidth=0.5, alpha=0.5)
+
+    _plot_sphere_arcs(ax, _compute_sphere_arcs())
+    _plot_directions_text(ax)
+    # Transform data to Hammer projection
+
+    return fig, ax
+
 def _compute_center_of_minimum_distance(lon_a, lat_a, lon_b, lat_b, iterations):
     if iterations == 0:
         return [(lon_a, lat_a), (lon_b, lat_b)]
