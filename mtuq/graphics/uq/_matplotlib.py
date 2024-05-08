@@ -276,3 +276,20 @@ def _compute_center_of_minimum_distance(lon_a, lat_a, lon_b, lat_b, iterations):
     coordinates.extend(_compute_center_of_minimum_distance(lon_mid, lat_mid, lon_b, lat_b, iterations - 1))
     
     return coordinates
+
+def _compute_lune_arcs():
+    arc_points = [
+    [-30, 35.2644, 30, 54.7356],
+    [-30, -54.7356, 30, -35.2644],
+    [-30, 35.2644, 30, -35.2644]
+]
+    arcs = []
+    for arc in arc_points:
+        arcs.append(_compute_center_of_minimum_distance(arc[0], arc[1], arc[2], arc[3], 6))
+    return arcs
+
+def _plot_lune_arcs(axis, arcs):
+    for arc in arcs:
+        lon = [x[0] for x in arc]
+        lat = [x[1] for x in arc]
+        axis.plot(*_hammer_projection(lon, lat), color='silver', linewidth=1.5, zorder=100)
