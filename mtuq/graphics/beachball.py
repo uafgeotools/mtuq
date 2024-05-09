@@ -18,15 +18,19 @@ from mtuq.event import MomentTensor
 from mtuq.graphics._gmt import _parse_filetype, _get_format_arg, _safename,\
     exists_gmt, gmt_major_version
 from mtuq.graphics._pygmt import exists_pygmt
+from mtuq.graphics.uq._matplotlib import _hammer_projection
 from mtuq.util import asarray, to_rgb, warn
 from mtuq.misfit.polarity import _takeoff_angle_taup
 from obspy.geodetics import gps2dist_azimuth
 from obspy.geodetics import kilometers2degrees as _to_deg
 from obspy.taup import TauPyModel
 from six import string_types
+from mtuq.util.beachball import offset_fibonacci_sphere,\
+    convert_sphere_points_to_angles, lambert_azimuthal_equal_area_projection,\
+    estimate_angle_on_lune, rotate_tensor, polarities_mt, rotate_points, _project_on_sphere
 
 
-def plot_beachball(filename, mt, stations, origin, **kwargs):
+def plot_beachball(filename, mt, stations, origin, backend=None, **kwargs):
     """ Plots focal mechanism and station locations
 
     .. rubric :: Required arguments
@@ -67,12 +71,15 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
     if type(mt)!=MomentTensor:
         raise TypeError
 
-    if exists_pygmt():
-        _plot_beachball_pygmt(filename, mt, stations, origin, **kwargs)
+    if backend is None:
+        backend = _plot_beachball_matplotlib
+        backend(filename, mt, stations, origin, **kwargs)
         return
-
-    if exists_gmt() and gmt_major_version() >= 6:
-        _plot_beachball_gmt(filename, mt, stations, origin, **kwargs)
+    elif backend == _plot_beachball_pygmt and exists_pygmt():
+        backend(filename, mt, stations, origin, **kwargs)
+        return
+    elif backend == _plot_beachball_gmt and exists_gmt() and gmt_major_version() >= 6:
+        backend(filename, mt, stations, origin, **kwargs)
         return
 
     try:
@@ -441,3 +448,100 @@ def _polar2(stations, **kwargs):
     __polar2(stations, **kwargs)
 
 
+def _plot_beachball_matplotlib(filename, mt_array, stations=None, origin=None, lat_lon=np.array([0, 0]), 
+                               scale=None, fig=None, ax=None, taup_model='ak135', **kwargs):
+    
+    from scipy.interpolate import griddata
+    
+    if type(mt_array) == MomentTensor:
+        mt_array = mt_array.as_vector().reshape(1, 6)
+    elif np.shape(mt_array) != (1, 6):
+        raise ValueError("Moment tensor array must be of shape (1, 6)")
+    if scale is None:
+        scale = 2.  # Default scale if not provided
+
+    # Generate points on the sphere using the Fibonacci method
+    points = offset_fibonacci_sphere(50000, 0, 360)
+    upper_hemisphere_mask = points[:, 1] >= 0
+    takeoff_angles, azimuths = convert_sphere_points_to_angles(points[upper_hemisphere_mask])
+    lambert_points = lambert_azimuthal_equal_area_projection(points[upper_hemisphere_mask], hemisphere='upper')
+    x_proj, z_proj = lambert_points.T
+
+    # Creating a meshgrid for interpolation
+    xi, zi = np.linspace(x_proj.min(), x_proj.max(), 600), np.linspace(z_proj.min(), z_proj.max(), 600)
+    xi, zi = np.meshgrid(xi, zi)
+
+    # Position and rotation on the lune
+    lat, lon = _hammer_projection(*lat_lon)
+    angle = estimate_angle_on_lune(lon, lat) 
+    XI, ZI = rotate_points(xi.copy(), zi.copy(), angle) # Rotate grid to match the direction of the pole.
+
+    # Polarities and radiation pattern calculation
+    polarities, radiations = polarities_mt(rotate_tensor(mt_array), takeoff_angles, azimuths)
+    radiations_grid = griddata((x_proj, z_proj), radiations, (XI, ZI), method='cubic') # Project according to the rotation
+
+    # Check if axes are provided
+    if fig is None or ax is None:
+        fig, ax = pyplot.subplots(figsize=(1171/300, 1171/300), dpi=300)
+        mode = 'MT_Only'
+    else:
+        mode = None
+
+    # Plotting the radiation pattern
+    ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100)
+    ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [0, np.inf], colors=['gray'], alpha=1, zorder=100)
+    # ax.contour(lat + xi * scale, lon + zi * scale, radiations_grid, [0], linewidths=0.4, zorder=100, cmap='Greys_r')
+    outer_circle = pyplot.Circle((lat, lon), scale-0.001*scale, color='gray', fill=False, linewidth=0.5, zorder=100)
+    ax.add_artist(outer_circle)
+
+    # Adjusting the axes properties
+    ax.set_aspect('equal')
+    if mode == 'MT_Only':
+        ax.axis('off')
+        ax.set_xlim(-1.1*scale, 1.1*scale)
+        ax.set_ylim(-1.1*scale, 1.1*scale)
+
+    if stations and origin:
+        _write_stations_matplotlib(stations, origin, taup_model, ax, scale=scale)
+
+    pyplot.tight_layout(pad=-0.8)
+    fig.savefig(filename, format='png', dpi=300)
+    pyplot.close(fig)
+    return
+
+def _write_stations_matplotlib(stations, origin, taup_model, ax, scale=1):
+
+    try:
+        taup = TauPyModel(model=taup_model)
+    except:
+        taup = None
+
+    for station in stations:
+
+        label = station.station
+        distance_in_m, azimuth, _ = gps2dist_azimuth(
+            origin.latitude,
+            origin.longitude,
+            station.latitude,
+            station.longitude)
+
+        takeoff_angle = _takeoff_angle_taup(
+            taup,
+            origin.depth_in_m/1000.,
+            _to_deg(distance_in_m/1000.))
+
+        x,y,z = _project_on_sphere(takeoff_angle, azimuth,scale=1)
+        # Project with lambert azimuthal equal area projection
+        if takeoff_angle <= 90:
+            projected_points = lambert_azimuthal_equal_area_projection(np.array([[x,y,z]]), hemisphere='upper')[0]*scale
+            # Plot a black circle at the projected point
+            ax.scatter(*projected_points, color='black', marker='o', s=15, zorder=101)
+        else:
+            projected_points = -lambert_azimuthal_equal_area_projection(np.array([[x,y,z]]), hemisphere='lower')[0]*scale
+            # Plot a x at the projected point
+            ax.scatter(*projected_points, color='black', marker='x', s=15, zorder=101)
+
+        # Add station label with a slight offset from the projected point
+        # y offset is scale*0.05
+        # Make the text centered on the projected point x axis
+        ax.text(projected_points[0], projected_points[1]+scale*0.05, label, ha='center', va='center', fontsize=6, zorder=101)
