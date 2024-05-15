@@ -285,7 +285,7 @@ def plot_data_greens1(filename,
 
         header = _prepare_header(
             model, solver, source, source_dict, origin,
-            process_data, misfit, total_misfit)
+            process_data, misfit, total_misfit, data_sw=data)
 
     plot_waveforms1(filename,
         data, synthetics, stations, origin,
@@ -340,7 +340,8 @@ def plot_data_greens2(filename,
         header = _prepare_header(
             model, solver, source, source_dict, origin,
             process_data_bw, process_data_sw,
-            misfit_bw, misfit_sw, total_misfit_bw, total_misfit_sw)
+            misfit_bw, misfit_sw, total_misfit_bw, total_misfit_sw,
+            data_bw=data_bw, data_sw=data_sw)
 
     plot_waveforms2(filename,
         data_bw, data_sw, synthetics_bw, synthetics_sw, stations, origin,
@@ -636,7 +637,7 @@ def _hide_axes(axes):
             col.patch.set_visible(False)
 
 
-def _prepare_header(model, solver, source, source_dict, origin, *args):
+def _prepare_header(model, solver, source, source_dict, origin, *args, **kwargs):
     # prepares figure header
 
     if len(args)==3:
@@ -644,11 +645,11 @@ def _prepare_header(model, solver, source, source_dict, origin, *args):
 
     if type(source)==MomentTensor:
         return MomentTensorHeader(
-            *args, model, solver, source, source_dict, origin)
+            *args, model, solver, source, source_dict, origin, **kwargs)
 
     elif type(source)==Force:
         return ForceHeader(
-            *args, model, solver, source, source_dict, origin)
+            *args, model, solver, source, source_dict, origin, **kwargs)
 
     else:
         raise TypeError

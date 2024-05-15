@@ -136,6 +136,27 @@ class SourceHeader(Base):
         elif self.process_sw and units=='s':
             self.passband_sw = '%.1f - %.1f s' %\
                 (self.process_sw.freq_max**-1, self.process_sw.freq_min**-1)
+            
+    def parse_station_counts(self):
+        def get_station_info(data_list):
+            station_ids = {sta.id for sta in data_list}
+            non_zero_traces = sum(1 for data in data_list if data.count() > 0)
+            return station_ids, non_zero_traces
+
+        station_ids = set()
+        self.N_p_used = 0
+        self.N_s_used = 0
+
+        if self.data_bw:
+            ids_bw, self.N_p_used = get_station_info(self.data_bw)
+            station_ids.update(ids_bw)
+
+        if self.data_sw:
+            ids_sw, self.N_s_used = get_station_info(self.data_sw)
+            station_ids.update(ids_sw)
+
+        # Set total number of unique stations
+        self.N_total = len(station_ids)
 
 
 
@@ -182,6 +203,7 @@ class MomentTensorHeader(SourceHeader):
         self.parse_origin()
         self.parse_misfit()
         self.parse_data_processing()
+        self.parse_station_counts()
 
 
     def display_source(self, ax, height, width, offset):
@@ -273,6 +295,12 @@ class MomentTensorHeader(SourceHeader):
 
         line = _focal_mechanism(self.lune_dict)
         line +=  ',   '+_gamma_delta(self.lune_dict)
+
+        if self.N_total and self.N_p_used and self.N_s_used:
+            line += ',   N-Np-Ns : %d-%d-%d' % (self.N_total, self.N_p_used, self.N_s_used)
+        elif self.N_s_used:
+            line += ',   N : %d' % self.N_s_used
+
         _write_text(line, px, py, ax, fontsize=14)
 
 
@@ -316,6 +344,7 @@ class ForceHeader(SourceHeader):
         self.parse_origin()
         self.parse_misfit()
         self.parse_data_processing()
+        self.parse_station_counts()
 
 
     def write(self, height, width, margin_left, margin_top):
@@ -369,6 +398,12 @@ class ForceHeader(SourceHeader):
         py -= 0.30
 
         line = _phi_theta(self.force_dict)
+
+        if self.N_total and self.N_p_used and self.N_s_used:
+            line += ',   N-Np-Ns : %d-%d-%d' % (self.N_total, self.N_p_used, self.N_s_used)
+        elif self.N_total:
+            line += ',   N : %d' % self.N_total
+
         _write_text(line, px, py, ax, fontsize=14)
 
 

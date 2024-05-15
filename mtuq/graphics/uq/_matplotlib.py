@@ -129,7 +129,7 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     # Save figure
     pyplot.tight_layout()
     pyplot.subplots_adjust(left=0.1,right=0.9,top=0.95, bottom=0.08)
-    pyplot.savefig(filename)
+    pyplot.savefig(filename, dpi=300)
     pyplot.close()
 
 def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='viridis', title=None, plot_type='contour', **kwargs):
@@ -373,9 +373,9 @@ def _plot_depth_matplotlib(filename, depths, values,
         # String formating to display only x.xx values
         magnitudes = ['{:.2f}'.format(m) for m in magnitudes]
         for i, magnitude in enumerate(magnitudes):
-            pyplot.text(depths[i]+0.03*(depths.max()-depths.min()), 
+            pyplot.text(depths[i], 
                         values[i]+0.03*(values.max()-values.min()), 
-                        magnitude, fontsize=fontsize-4)
+                        magnitude, fontsize=fontsize-6)
 
             
     if lune_array is not None:
@@ -403,7 +403,7 @@ def _plot_depth_matplotlib(filename, depths, values,
                                    fig=fig, ax=even_ax, color='black', lune_rotation=False, scale=0.05)
 
 
-    pyplot.savefig(filename)
+    pyplot.savefig(filename, dpi=300)
     pyplot.close()
 
 
