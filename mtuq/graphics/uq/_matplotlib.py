@@ -11,7 +11,7 @@ from mtuq.graphics._gmt import read_cpt, _cpt_path
 from mtuq.graphics.uq._gmt import _parse_vw, _parse_lune_array, _parse_force
 from matplotlib.colors import BoundaryNorm
 from matplotlib import ticker
-from mtuq.util.math import wrap_180
+from mtuq.util.math import wrap_180, to_delta_gamma, to_mij
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def cbformat(st, pos):
@@ -93,9 +93,13 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
 
     # Plot tradeoffs
     if lune_array is not None:
-        gamma, delta = _hammer_projection(
-            lune_array[:,0], lune_array[:,1])
-        ax.plot(gamma, delta, 'w.', markersize=1)
+        from mtuq.graphics.beachball import _plot_beachball_matplotlib
+        v, w = lune_array[:,1], lune_array[:,2]
+        gamma, delta = to_delta_gamma(v, w)
+        lat_lons=np.vstack([delta, gamma]).T
+        _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lat_lons=lat_lons,
+                                    fig=fig, ax=ax, color='black', lune_rotation=True)
+            # ax.scatter(delta, gamma)
 
     # Set axis limits
     ax.set_xlim(-30.5, 30.5)
@@ -125,7 +129,7 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     # Save figure
     pyplot.tight_layout()
     pyplot.subplots_adjust(left=0.1,right=0.9,top=0.95, bottom=0.08)
-    pyplot.savefig(filename, dpi=300)
+    pyplot.savefig(filename)
     pyplot.close()
 
 def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='viridis', title=None, plot_type='contour', **kwargs):
@@ -352,8 +356,8 @@ def _plot_depth_matplotlib(filename, depths, values,
         magnitudes=None, lune_array=None,
         title=None, xlabel=None, ylabel=None, figsize=(6., 6.), fontsize=16.):
 
-    pyplot.figure(figsize=figsize)
-    pyplot.plot(depths, values, 'k-')
+    fig, ax = pyplot.subplots(figsize=figsize)
+    ax.plot(depths, values, 'k-')
 
     if title:
         pyplot.title(title, fontsize=fontsize)
@@ -363,6 +367,41 @@ def _plot_depth_matplotlib(filename, depths, values,
 
     if ylabel:
          pyplot.ylabel(ylabel, fontsize=fontsize)
+
+    if magnitudes is not None:
+        # add magnitude text labels to each point
+        # String formating to display only x.xx values
+        magnitudes = ['{:.2f}'.format(m) for m in magnitudes]
+        for i, magnitude in enumerate(magnitudes):
+            pyplot.text(depths[i]+0.03*(depths.max()-depths.min()), 
+                        values[i]+0.03*(values.max()-values.min()), 
+                        magnitude, fontsize=fontsize-4)
+
+            
+    if lune_array is not None:
+        from mtuq.graphics.beachball import _plot_beachball_matplotlib
+
+        # Get current axis limits
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+
+        # Normalize depths and values to fit within [-1, 1] based on axis limits
+        depths_norm = 2 * (depths - xlim[0]) / (xlim[1] - xlim[0]) - 1
+        values_norm = 2 * (values - ylim[0]) / (ylim[1] - ylim[0]) - 1
+        
+        lat_lons = np.vstack([depths_norm, values_norm]).T
+
+        # Create a secondary axis with an even aspect ratio
+        bbox = ax.get_position()
+        even_ax = fig.add_axes(bbox, frameon=False)
+        even_ax.set_xlim(-1, 1)
+        even_ax.set_ylim(-1, 1)
+        even_ax.set_aspect('equal')
+        even_ax.axis('off')        
+
+        _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lat_lons=lat_lons,
+                                   fig=fig, ax=even_ax, color='black', lune_rotation=False, scale=0.05)
+
 
     pyplot.savefig(filename)
     pyplot.close()
