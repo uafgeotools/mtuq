@@ -500,11 +500,7 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
         xi, zi = np.linspace(x_proj.min(), x_proj.max(), 200), np.linspace(z_proj.min(), z_proj.max(), 200)
     xi, zi = np.meshgrid(xi, zi)
     
-    k=0
     for mt_array, lat_lon in zip(mt_arrays, lat_lons):
-
-        print(k)
-        k+=1
 
         if isinstance(mt_array, MomentTensor):
             mt_array = mt_array.as_vector().reshape(1, 6)
@@ -528,8 +524,8 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
         radiations_grid = griddata((x_proj, z_proj), radiations, (XI, ZI), method='cubic')  # Project according to the rotation
 
         # Plotting the radiation pattern
-        ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100)
-        ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [0, np.inf], colors=[color], alpha=1, zorder=100)
+        ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100, antialiased=True)
+        ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [0, np.inf], colors=[color], alpha=1, zorder=100, antialiased=True)
         outer_circle = pyplot.Circle((lat, lon), scale-0.001*scale, color='gray', fill=False, linewidth=0.5, zorder=100)
         ax.add_artist(outer_circle)
 
@@ -543,9 +539,9 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
     if stations and origin:
         _write_stations_matplotlib(stations, origin, taup_model, ax, scale=scale)
 
-    pyplot.tight_layout(pad=-0.8)
     if filename:
-        fig.savefig(filename, format='png', dpi=300)
+        pyplot.tight_layout(pad=-0.8)
+        fig.savefig(filename, dpi=300)
         pyplot.close(fig)
     return
 
