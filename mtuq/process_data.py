@@ -410,12 +410,8 @@ class ProcessData(object):
         if self.apply_statics or\
            self.apply_weights or\
            self.pick_type == 'user_supplied':
-            assert capuaf_file is not None
 
-        if isinstance(capuaf_file, TextIOBase):
-            parser = WeightParser(capuaf_file)
-        else:
-            assert exists(capuaf_file)
+            assert capuaf_file is not None
             parser = WeightParser(capuaf_file)
 
         if self.apply_statics:
