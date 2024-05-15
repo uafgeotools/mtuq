@@ -448,51 +448,90 @@ def _polar2(stations, **kwargs):
     __polar2(stations, **kwargs)
 
 
-def _plot_beachball_matplotlib(filename, mt_array, stations=None, origin=None, lat_lon=np.array([0, 0]), 
-                               scale=None, fig=None, ax=None, taup_model='ak135', **kwargs):
+def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, lat_lons=None, 
+                               scale=None, fig=None, ax=None, taup_model='ak135', color='gray', 
+                               lune_rotation=False, **kwargs):
     
     from scipy.interpolate import griddata
-    
-    if type(mt_array) == MomentTensor:
-        mt_array = mt_array.as_vector().reshape(1, 6)
-    elif np.shape(mt_array) != (1, 6):
-        raise ValueError("Moment tensor array must be of shape (1, 6)")
+
+    if lat_lons is not None:
+        if len(lat_lons) != len(mt_arrays):
+            raise ValueError("This function either takes a single moment tensor or a list of moment\
+                              tensors with corresponding latitudes and longitudes. lat_lons must be\
+                              provided and have the same length as mt_arrays")
+    else:
+        if isinstance(mt_arrays, MomentTensor):
+            lat_lons = np.array([[0, 0]])
+            mt_arrays = mt_arrays.as_vector().reshape(1, 6)
+        elif np.shape(mt_arrays) == (6,):
+            lat_lons = np.array([[0, 0]])
+            mt_arrays = mt_arrays.reshape(1, 6)
+        elif np.shape(mt_arrays) == (1, 6):
+            lat_lons = np.array([[0, 0]])
+        else:
+            raise ValueError("This function either takes a single moment tensor or a list of moment\
+                              tensors with corresponding latitudes and longitudes. You're trying to\
+                              provide a single object that is not a valid moment tensor.")
+
     if scale is None:
         scale = 2.  # Default scale if not provided
-
-    # Generate points on the sphere using the Fibonacci method
-    points = offset_fibonacci_sphere(50000, 0, 360)
-    upper_hemisphere_mask = points[:, 1] >= 0
-    takeoff_angles, azimuths = convert_sphere_points_to_angles(points[upper_hemisphere_mask])
-    lambert_points = lambert_azimuthal_equal_area_projection(points[upper_hemisphere_mask], hemisphere='upper')
-    x_proj, z_proj = lambert_points.T
-
-    # Creating a meshgrid for interpolation
-    xi, zi = np.linspace(x_proj.min(), x_proj.max(), 600), np.linspace(z_proj.min(), z_proj.max(), 600)
-    xi, zi = np.meshgrid(xi, zi)
-
-    # Position and rotation on the lune
-    lat, lon = _hammer_projection(*lat_lon)
-    angle = estimate_angle_on_lune(lon, lat) 
-    XI, ZI = rotate_points(xi.copy(), zi.copy(), angle) # Rotate grid to match the direction of the pole.
-
-    # Polarities and radiation pattern calculation
-    polarities, radiations = polarities_mt(rotate_tensor(mt_array), takeoff_angles, azimuths)
-    radiations_grid = griddata((x_proj, z_proj), radiations, (XI, ZI), method='cubic') # Project according to the rotation
 
     # Check if axes are provided
     if fig is None or ax is None:
         fig, ax = pyplot.subplots(figsize=(1171/300, 1171/300), dpi=300)
         mode = 'MT_Only'
     else:
-        mode = None
+        mode = 'Scatter MT'
 
-    # Plotting the radiation pattern
-    ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100)
-    ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [0, np.inf], colors=['gray'], alpha=1, zorder=100)
-    # ax.contour(lat + xi * scale, lon + zi * scale, radiations_grid, [0], linewidths=0.4, zorder=100, cmap='Greys_r')
-    outer_circle = pyplot.Circle((lat, lon), scale-0.001*scale, color='gray', fill=False, linewidth=0.5, zorder=100)
-    ax.add_artist(outer_circle)
+    # Generate points on the sphere using the Fibonacci method (common for all tensors)
+    if mode == 'MT_Only':
+        points = offset_fibonacci_sphere(50000, 0, 360)
+    elif mode == 'Scatter MT':
+        points = offset_fibonacci_sphere(5000, 0, 360)
+    upper_hemisphere_mask = points[:, 1] >= 0
+    takeoff_angles, azimuths = convert_sphere_points_to_angles(points[upper_hemisphere_mask])
+    lambert_points = lambert_azimuthal_equal_area_projection(points[upper_hemisphere_mask], hemisphere='upper')
+    x_proj, z_proj = lambert_points.T
+
+    # Creating a meshgrid for interpolation (common for all tensors)
+    if mode == 'MT_Only':
+        xi, zi = np.linspace(x_proj.min(), x_proj.max(), 600), np.linspace(z_proj.min(), z_proj.max(), 600)
+    elif mode == 'Scatter MT':
+        xi, zi = np.linspace(x_proj.min(), x_proj.max(), 200), np.linspace(z_proj.min(), z_proj.max(), 200)
+    xi, zi = np.meshgrid(xi, zi)
+    
+    k=0
+    for mt_array, lat_lon in zip(mt_arrays, lat_lons):
+
+        print(k)
+        k+=1
+
+        if isinstance(mt_array, MomentTensor):
+            mt_array = mt_array.as_vector().reshape(1, 6)
+        elif np.shape(mt_array) != (6):
+            mt_array = mt_array.reshape(1, 6)
+        elif np.shape(mt_array) != (1, 6):
+            raise ValueError("Each moment tensor array must be of shape (1, 6)")
+
+        # Position and rotation on the lune
+        if lune_rotation:
+            lat, lon = _hammer_projection(*lat_lon)
+            angle = estimate_angle_on_lune(lon, lat)
+        else:
+            lat, lon = lat_lon
+            angle = 0
+
+        XI, ZI = rotate_points(xi.copy(), zi.copy(), angle)  # Rotate grid to match the direction of the pole
+
+        # Polarities and radiation pattern calculation
+        polarities, radiations = polarities_mt(rotate_tensor(mt_array), takeoff_angles, azimuths)
+        radiations_grid = griddata((x_proj, z_proj), radiations, (XI, ZI), method='cubic')  # Project according to the rotation
+
+        # Plotting the radiation pattern
+        ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100)
+        ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [0, np.inf], colors=[color], alpha=1, zorder=100)
+        outer_circle = pyplot.Circle((lat, lon), scale-0.001*scale, color='gray', fill=False, linewidth=0.5, zorder=100)
+        ax.add_artist(outer_circle)
 
     # Adjusting the axes properties
     ax.set_aspect('equal')
@@ -505,9 +544,11 @@ def _plot_beachball_matplotlib(filename, mt_array, stations=None, origin=None, l
         _write_stations_matplotlib(stations, origin, taup_model, ax, scale=scale)
 
     pyplot.tight_layout(pad=-0.8)
-    fig.savefig(filename, format='png', dpi=300)
-    pyplot.close(fig)
+    if filename:
+        fig.savefig(filename, format='png', dpi=300)
+        pyplot.close(fig)
     return
+
 
 def _write_stations_matplotlib(stations, origin, taup_model, ax, scale=1):
 
