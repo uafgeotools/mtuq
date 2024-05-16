@@ -51,6 +51,9 @@ class PolarityMisfit(object):
     - ``'FK_metadata'``
       Read polarities from FK database
 
+    - ``'CPS_metadata'``
+      Read polarities from CPS database
+
     - ``'waveform'``
       Determine polarity from full-waveform synthetics (not implemented yet)
 
@@ -75,6 +78,8 @@ class PolarityMisfit(object):
         taup_model='ak135',
         FK_database=None,
         FK_model=None,
+        CPS_database=None,
+        CPS_model=None,
         **parameters):
 
         if not method:
@@ -84,6 +89,8 @@ class PolarityMisfit(object):
         self.taup_model = taup_model
         self.FK_database = FK_database
         self.FK_model = FK_model
+        self.CPS_database = CPS_database
+        self.CPS_model = CPS_model
 
 
         #
@@ -98,6 +105,12 @@ class PolarityMisfit(object):
             assert exists(self.FK_database)
             if self.FK_model is None:
                 self.FK_model = basename(self.FK_database)
+
+        elif self.method == 'CPS_metadata':
+            assert self.CPS_database is not None
+            assert exists(self.CPS_database)
+            if self.CPS_model is None:
+                self.CPS_model = basename(self.CPS_database)
 
         else:
             raise TypeError('Bad parameter: method')
@@ -179,6 +192,13 @@ class PolarityMisfit(object):
 
             predicted = _calculate(sources, takeoff_angles, azimuths)
 
+        elif self.method == 'CPS_metadata':
+            takeoff_angles = _takeoff_angles_CPS(self.CPS_database, greens)
+
+            azimuths = _get_azimuths(greens)
+
+            predicted = _calculate(sources, takeoff_angles, azimuths)
+
         elif self.method=='waveform':
             raise NotImplementedError
 
@@ -196,6 +216,10 @@ class PolarityMisfit(object):
         elif self.method=='FK_metadata':
             takeoff_angles = _takeoff_angles_FK(
                 self.FK_database, greens)
+
+        elif self.method=='CPS_metadata':
+            takeoff_angles = _takeoff_angles_CPS(
+                self.CPS_database, greens)
 
         observed = self.get_observed(data)
 
@@ -324,7 +348,7 @@ def _model_type(greens):
     except:
         solver = 'Unknown'
 
-    if solver in ('AxiSEM', 'FK', 'syngine'):
+    if solver in ('AxiSEM', 'FK', 'CPS', 'syngine'):
         model_type = '1D model'
 
     elif solver in ('SPECFEM3D', 'SPECFEM3D_GLOBE'):

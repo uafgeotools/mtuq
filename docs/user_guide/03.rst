@@ -48,7 +48,7 @@ A limitation of syngine is that Green's functions can be downloaded only on a st
 Computing Green's functions from 1D Earth models
 ------------------------------------------------
 
-MTUQ supports the following 1D Green's functions formats: AxiSEM (preferred) and FK.
+MTUQ supports the following 1D Green's functions formats: AxiSEM (preferred), FK, and CPS.
 
 `AxiSEM <https://github.com/geodynamics/axisem>`_ performs spectral element wave simulations in radially-symmetric Earth models.  AxiSEM NetCDF files can be used to retrieve vertical, radial, and transverse  displacement in units of m*(N-m)^-1.
 

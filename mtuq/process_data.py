@@ -4,11 +4,12 @@ import obspy
 import numpy as np
 import warnings
 
+from os import listdir
 from copy import deepcopy
 from io import TextIOBase
 from obspy import taup
 from obspy.geodetics import gps2dist_azimuth
-from os.path import basename, exists
+from os.path import basename, exists, isdir, join
 from mtuq.util import AttribDict, warn
 from mtuq.util.cap import WeightParser, taper
 from mtuq.util.signal import cut, get_arrival, m_to_deg, _window_warnings
@@ -70,6 +71,9 @@ class ProcessData(object):
 
     - ``'FK_metadata'``
       reads P, S travel times from FK metadata
+
+    - ``'CPS_metadata'``
+      reads P, S travel times from CPS metadata
 
     - ``'SAC_metadata'``
       reads P, S travel times from SAC metadata fields `t5`, `t6`
@@ -147,6 +151,9 @@ class ProcessData(object):
     ``FK_database`` (`str`)
     Path to FK database, required for `pick_type=FK_metadata`
 
+    ``CPS_database`` (`str`)
+    Path to CPS database, required for `pick_type=CPS_metadata`
+
     ``capuaf_file`` (`str`)
     Path to `CAPUAF`-style text file, required for `pick_type=user_supplied`
 
@@ -154,50 +161,51 @@ class ProcessData(object):
 
     def __init__(self,
 
-         filter_type=None,
-         window_type=None,
-         pick_type=None,
+                 filter_type=None,
+                 window_type=None,
+                 pick_type=None,
 
-         # for filter_type='Bandpass' 
-         # (specify corners in terms of frequency or period, but not both)
-         freq_min=None,
-         freq_max=None,
-         period_min=None,
-         period_max=None,
+                 # for filter_type='Bandpass'
+                 # (specify corners in terms of frequency or period, but not both)
+                 freq_min=None,
+                 freq_max=None,
+                 period_min=None,
+                 period_max=None,
 
-         # for filter_type='Lowpass' or filter_type='Highpass'
-         # (specify corner in terms of frequency or period, but not both)
-         freq=None,
-         period=None,
+                 # for filter_type='Lowpass' or filter_type='Highpass'
+                 # (specify corner in terms of frequency or period, but not both)
+                 freq=None,
+                 period=None,
 
-         # window parameters
-         window_length=None,
-         apply_padding=False,
-         apply_statics=False,
-         time_shift_min=None,
-         time_shift_max=None,
+                 # window parameters
+                 window_length=None,
+                 apply_padding=False,
+                 apply_statics=False,
+                 time_shift_min=None,
+                 time_shift_max=None,
 
-         # data weighting parameters
-         # (control contribution of particular traces or components to the
-         # data misfit function)
-         apply_weights=True,
-         apply_scaling=True,
-         scaling_power=None,
-         scaling_coefficient=None,
-         capuaf_file=None,
+                 # data weighting parameters
+                 # (control contribution of particular traces or components to the
+                 # data misfit function)
+                 apply_weights=True,
+                 apply_scaling=True,
+                 scaling_power=None,
+                 scaling_coefficient=None,
+                 capuaf_file=None,
 
-         # P and S pick parameters
-         # (default body_wave and surface_wave windows are defined relative to
-         # P and S picks, which can be calculated on the fly from tau-P or
-         # read from FK database)
-         taup_model=None,
-         FK_database=None,
-         FK_model=None,
+                 # P and S pick parameters
+                 # (default body_wave and surface_wave windows are defined relative to
+                 # P and S picks, which can be calculated on the fly from tau-P or
+                 # read from FK or CPS database)
+                 taup_model=None,
+                 FK_database=None,
+                 FK_model=None,
+                 CPS_database=None,
+                 CPS_model=None,
 
-         # any user-supplied keyword arguments not included above go into
-         # this dictionary (can be helpful for user customization)
-         **parameters):
-
+                 # any user-supplied keyword arguments not included above go into
+                 # this dictionary (can be helpful for user customization)
+                 **parameters):
 
         if not filter_type:
             warn("No filter will be applied")
@@ -213,10 +221,9 @@ class ProcessData(object):
             window_type = window_type.lower()
         self.window_type = window_type
 
-        # note that we make pick_type case sensitive 
+        # note that we make pick_type case sensitive
         # (could be helpful because p,P s,S are meaningful differences?)
         self.pick_type = pick_type
-
 
         #
         # check filter parameters
@@ -249,9 +256,8 @@ class ProcessData(object):
             self.freq_min = freq_min
             self.freq_max = freq_max
 
-
         elif self.filter_type == 'lowpass' or\
-             self.filter_type == 'highpass':
+                self.filter_type == 'highpass':
 
             # filter corner can be specified in terms of either period [s]
             # or frequency [Hz], but not both
@@ -266,16 +272,15 @@ class ProcessData(object):
             self.freq = freq
 
         else:
-             raise ValueError('Bad parameter: filter_type')
-
+            raise ValueError('Bad parameter: filter_type')
 
         #
         # check window parameters
         #
 
         if not self.window_type:
-             # nothing to check now
-             pass
+            # nothing to check now
+            pass
 
         elif self.window_type == 'body_wave':
             # regional body-wave window in the manner of Zhu1996
@@ -293,7 +298,8 @@ class ProcessData(object):
             assert 'group_velocity' in parameters
             assert parameters['group_velocity'] >= 0.
             self.group_velocity = parameters['group_velocity']
-            self.window_alignment = getattr(parameters, 'window_alignment', 0.5)
+            self.window_alignment = getattr(
+                parameters, 'window_alignment', 0.5)
             assert 0. <= self.window_alignment <= 1.
             assert window_length > 0.
             self.window_length = window_length
@@ -312,17 +318,16 @@ class ProcessData(object):
             _window_warnings(window_type, window_length)
 
         else:
-             raise ValueError('Bad parameter: window_type')
-
+            raise ValueError('Bad parameter: window_type')
 
         if apply_statics:
             assert self.window_type is not None
 
         if apply_padding:
-            assert self.time_shift_min <= 0.,\
+            assert self.time_shift_min <= 0., \
                 ValueError("Bad parameter: time_shift_min")
 
-            assert self.time_shift_max >= 0.,\
+            assert self.time_shift_max >= 0., \
                 ValueError("Bad parameter: time_shift_max")
 
             self.time_shift_min = time_shift_min
@@ -331,15 +336,13 @@ class ProcessData(object):
         self.apply_padding = apply_padding
         self.apply_statics = apply_statics
 
-
-
         #
         # check phase pick parameters
         #
 
         if not self.pick_type:
-             # nothing to check now
-             pass
+            # nothing to check now
+            pass
 
         elif self.pick_type == 'taup':
             assert taup_model is not None
@@ -356,15 +359,26 @@ class ProcessData(object):
             self.FK_database = FK_database
             self.FK_model = FK_model
 
+        elif self.pick_type == 'CPS_metadata':
+            assert CPS_database is not None
+            assert exists(CPS_database)
+            print(CPS_database)
+            if CPS_model is None:
+                CPS_model = basename(CPS_database)
+                # Remove model name if no model is provided
+                # CPS_database = CPS_database[:-(len(CPS_model) + 1)]
+                print(CPS_database)
+            self.CPS_database = CPS_database
+            self.CPS_model = CPS_model
+
         elif self.pick_type == 'SAC_metadata':
-             pass
+            pass
 
         elif self.pick_type == 'user_supplied':
-             pass
+            pass
 
         else:
-             raise ValueError('Bad parameter: pick_type, %s' % self.pick_type)
-
+            raise ValueError('Bad parameter: pick_type, %s' % self.pick_type)
 
         #
         # check weight parameters
@@ -390,20 +404,14 @@ class ProcessData(object):
             self.scaling_power = scaling_power
             self.scaling_coefficient = scaling_coefficient
 
-
-
         #
         # parse text files
         #
         if self.apply_statics or\
            self.apply_weights or\
            self.pick_type == 'user_supplied':
-            assert capuaf_file is not None
 
-        if isinstance(capuaf_file, TextIOBase):
-            parser = WeightParser(capuaf_file)
-        else:
-            assert exists(capuaf_file)
+            assert capuaf_file is not None
             parser = WeightParser(capuaf_file)
 
         if self.apply_statics:
@@ -414,9 +422,6 @@ class ProcessData(object):
 
         if self.pick_type == 'user_supplied':
             self.picks = parser.parse_picks()
-
-
-
 
     def __call__(self, traces, station=None, origin=None, overwrite=False):
         '''
@@ -475,7 +480,6 @@ class ProcessData(object):
             if not hasattr(trace, 'attrs'):
                 trace.attrs = AttribDict()
 
-
         #
         # part 1: filter traces
         #
@@ -486,8 +490,8 @@ class ProcessData(object):
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
                 trace.filter('bandpass', zerophase=False,
-                          freqmin=self.freq_min,
-                          freqmax=self.freq_max)
+                             freqmin=self.freq_min,
+                             freqmax=self.freq_max)
 
         elif self.filter_type == 'lowpass':
             for trace in traces:
@@ -495,7 +499,7 @@ class ProcessData(object):
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
                 trace.filter('lowpass', zerophase=False,
-                          freq=self.freq)
+                             freq=self.freq)
 
         elif self.filter_type == 'highpass':
             for trace in traces:
@@ -503,7 +507,7 @@ class ProcessData(object):
                 trace.detrend('linear')
                 trace.taper(0.05, type='hann')
                 trace.filter('highpass', zerophase=False,
-                          freq=self.freq)
+                             freq=self.freq)
 
         if 'type:velocity' in tags:
             # convert to displacement
@@ -512,7 +516,6 @@ class ProcessData(object):
             index = tags.index('type:velocity')
             tags[index] = 'type:displacement'
 
-
         #
         # part 2a: apply distance scaling
         #
@@ -520,7 +523,7 @@ class ProcessData(object):
         if self.apply_scaling:
             for trace in traces:
                 trace.data *=\
-                     (distance_in_m/self.scaling_coefficient)**self.scaling_power
+                    (distance_in_m/self.scaling_coefficient)**self.scaling_power
 
         #
         # part 2b: apply user-supplied data weights
@@ -548,13 +551,12 @@ class ProcessData(object):
                 else:
                     traces.remove(trace)
 
-
         #
         # part 3: determine phase picks
         #
 
         if not self.pick_type:
-             pass
+            pass
 
         elif self.pick_type == 'user_supplied':
             picks = self.picks[id]
@@ -562,7 +564,7 @@ class ProcessData(object):
         else:
             picks = dict()
 
-            if self.pick_type=='taup':
+            if self.pick_type == 'taup':
                 with warnings.catch_warnings():
                     # suppress obspy warning that gets raised even when taup is
                     # used correctly (someone should submit an ObsPy fix)
@@ -580,23 +582,65 @@ class ProcessData(object):
                 except:
                     picks['S'] = get_arrival(arrivals, 'S')
 
-
-            elif self.pick_type=='FK_metadata':
+            elif self.pick_type == 'FK_metadata':
                 sac_headers = obspy.read('%s/%s_%s/%s.grn.0' %
-                    (self.FK_database,
-                     self.FK_model,
-                     str(int(np.ceil(origin.depth_in_m/1000.))),
-                     str(int(np.ceil(distance_in_m/1000.)))),
-                    format='sac')[0].stats.sac
+                                         (self.FK_database,
+                                          self.FK_model,
+                                          str(int(np.ceil(origin.depth_in_m/1000.))),
+                                             str(int(np.ceil(distance_in_m/1000.)))),
+                                         format='sac')[0].stats.sac
                 picks['P'] = sac_headers.t1
                 picks['S'] = sac_headers.t2
 
+            elif self.pick_type == 'CPS_metadata':
+                dep_desired = "{:06.1f}".format(
+                    np.ceil(origin.depth_in_m/1000.) * 10)[:-2]
 
-            elif self.pick_type=='SAC_metadata':
+                # Review all folders in CPS Green's Function directory. Folder
+                # names correspond with depth of source. Find the folder
+                # with a value closest to the one we are after.
+                all_entries = listdir(self.CPS_database)
+
+                # Filter out folder names that are numeric
+                numeric_folder_names = [entry for entry in all_entries
+                                        if entry.isdigit() and isdir(join(self.CPS_database, entry))]
+
+                # Convert numeric folder names to integers
+                numeric_folder_names_int = [int(folder)
+                                            for folder in numeric_folder_names]
+
+                # Find depth closest to our desired value
+                dep_folder = numeric_folder_names[numeric_folder_names_int.index(min(numeric_folder_names_int,
+                                                                                     key=lambda x: abs(x - int(dep_desired))))]
+
+                dst_desired = "{:07.1f}".format(
+                    np.ceil(distance_in_m/1000.) * 10)[:-2]
+
+                directory_path = self.CPS_database + '/' + dep_folder
+                all_files = listdir(directory_path)
+                filenames_without_extensions_inline = [
+                    filename.split('.')[0] for filename in all_files]
+                filenames_without_letters = [filename for filename in filenames_without_extensions_inline if not any(
+                    char.isalpha() for char in filename)]
+                filenames_unique = [entry[:5]
+                                    for entry in list(set(filenames_without_letters))]
+                filenames_unique_int = [int(filename)
+                                        for filename in filenames_unique]
+                dst_value = filenames_unique[filenames_unique_int.index(
+                    min(filenames_unique_int, key=lambda x: abs(x - int(dst_desired))))]
+
+                sac_headers = obspy.read('%s/%s/%s/%s%s.ZDD' %
+                                         (self.CPS_database, self.CPS_model,
+                                          dep_folder, dst_value, dep_folder),
+                                         format='sac')[0].stats.sac
+
+                picks['P'] = sac_headers.a
+                picks['S'] = sac_headers.t0
+
+            elif self.pick_type == 'SAC_metadata':
                 sac_headers = traces[0].sac
                 picks['P'] = sac_headers.t5
                 picks['S'] = sac_headers.t6
-
 
         for trace in traces:
 
@@ -614,7 +658,6 @@ class ProcessData(object):
                 starttime += float(origin.time)
                 endtime += float(origin.time)
 
-
             elif self.window_type == 'surface_wave':
                 # regional surface-wave window in the manner of Zhu1996
                 # (closely based on CAP code)
@@ -624,7 +667,6 @@ class ProcessData(object):
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
-
 
             elif self.window_type == 'group_velocity':
                 # surface-wave window based on given group velocity [m/s]
@@ -637,15 +679,15 @@ class ProcessData(object):
                 alignment = self.alignment
 
                 starttime = group_arrival - self.window_length*window_alignment
-                endtime = group_arrival + self.window_length*(1.-window_alignment)
+                endtime = group_arrival + \
+                    self.window_length*(1.-window_alignment)
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
 
-
             elif self.window_type == 'min_max':
-                # experimental window type defined by minimum and maximum 
-                # group velocities [m/s] 
+                # experimental window type defined by minimum and maximum
+                # group velocities [m/s]
 
                 # WARNING - results in distance-dependent window lengths,
                 # which may not work with other MTUQ functions
@@ -662,18 +704,16 @@ class ProcessData(object):
                 starttime += float(origin.time)
                 endtime += float(origin.time)
 
-
             else:
                 starttime = trace.stats.starttime
                 endtime = trace.stats.endtime
-
 
             #
             # part 4b: apply statics
             #
 
             # STATIC CONVENTION:  A positive static time shift means synthetics
-            # are arriving too early and need to be shifted forward in time 
+            # are arriving too early and need to be shifted forward in time
             # (positive shift) to match the observed data
 
             if self.apply_statics:
@@ -711,8 +751,6 @@ class ProcessData(object):
 
                     trace.stats.starttime += static
 
-
-
             #
             # part 4c: apply padding
             #
@@ -726,9 +764,10 @@ class ProcessData(object):
                 starttime += self.time_shift_min
                 endtime += self.time_shift_max
 
-                trace.stats.npts_padding_left = int(round(-self.time_shift_min/dt))
-                trace.stats.npts_padding_right = int(round(+self.time_shift_max/dt))
-
+                trace.stats.npts_padding_left = int(
+                    round(-self.time_shift_min/dt))
+                trace.stats.npts_padding_right = int(
+                    round(+self.time_shift_max/dt))
 
             #
             # part 4d: cut and taper trace
@@ -742,6 +781,5 @@ class ProcessData(object):
                 print('Not implemented warning')
 
             taper(trace.data)
-
 
         return traces

@@ -22,3 +22,9 @@ docs/library/generated
 scripts/
 
 .git/
+
+data/tests/benchmark_cap/20090407201255351/*
+data/tests/benchmark_cap/greens/*
+data/tests/benchmark_cap/greens_cps/*
+data/tests/benchmark_cap/20090407201255351/*
+data/examples/*
