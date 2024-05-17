@@ -22,8 +22,8 @@ CHANNELS = [
 ]
 
 
-# disply prominent warning
-print('CPS client still under testing')
+# display prominent warning
+print('WARNING: CPS client still under testing...\n')
 
 
 class Client(ClientBase):
