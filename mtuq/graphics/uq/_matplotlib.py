@@ -21,7 +21,7 @@ def cbformat(st, pos):
 # It should behave as similarly as possible to the GMT backend 
 # and take the same input arguments
 def _plot_lune_matplotlib(filename, longitude, latitude, values, 
-    best_vw=None, lune_array=None, colormap='viridis', title=None, plot_type='contour', **kwargs):
+    best_vw=None, lune_array=None, colormap='viridis', plot_type='contour', **kwargs):
 
     """ Plots DataArray values on the eigenvalue lune (requires matplotlib)
 
@@ -70,7 +70,7 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
     if plot_type == 'colormesh':
         vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
-        im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
+        im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='nearest', zorder=10)
     elif plot_type == 'contour':
         # Plot using contourf
         levels = 20
@@ -114,7 +114,10 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
         divider = make_axes_locatable(pyplot.gca())
         cax = divider.append_axes("bottom", '2%', pad=0.001)
         cb = pyplot.colorbar(im, cax=cax, orientation='horizontal', ticks=ticker.MaxNLocator(nbins=5))
-        cb.set_label('L2-Misfit')
+        if 'colorbar_label' in kwargs:
+            cb.set_label(kwargs['colorbar_label'])
+        else:
+            cb.set_label('l2-misfit')
 
     elif plot_type == 'scatter':
         divider = make_axes_locatable(pyplot.gca())
@@ -122,10 +125,10 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
         cb = pyplot.colorbar(im, cax=cax, orientation='horizontal', ticks=boundaries, extend='max')
         cb.set_label('Mismatching polarities')
 
-    # Set title
-    if title is not None:
-        ax.set_title(title)
-        
+    # Set the title if provided
+    if 'title' in kwargs:
+        ax.set_title(kwargs['title'])
+
     # Save figure
     pyplot.tight_layout()
     pyplot.subplots_adjust(left=0.1,right=0.9,top=0.95, bottom=0.08)
