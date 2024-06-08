@@ -1,8 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.interpolate import griddata
-from mtuq.graphics.uq._matplotlib import _generate_lune, _hammer_projection
-
+from mtuq.graphics.uq._matplotlib import _hammer_projection
 
 def offset_fibonacci_sphere(samples=1000, epsilon=0.36, equator_points=180):
     equator_axis = 'y'
@@ -133,3 +130,37 @@ def _project_on_sphere(takeoff_angle, azimuth, scale=2.0):
     z = r*np.cos(takeoff_angle)
 
     return -y,-z,-x
+
+def _generate_sphere_points(mode):
+    """Generates points on the unit sphere using the offset Fibonacci algorithm.
+    This function returns only the half sphere in the XZ plane.
+
+    :: mode :: str
+        'MT_Only' : Ideal for a single, large beachball 
+        'Scatter MT' : Reduced precision for a scatter plot of beachballs
+    
+    """
+    if mode == 'MT_Only':
+        points = offset_fibonacci_sphere(50000, 0, 360)
+    elif mode == 'Scatter MT':
+        points = offset_fibonacci_sphere(5000, 0, 360)
+    upper_hemisphere_mask = points[:, 1] >= 0
+    return points, upper_hemisphere_mask
+
+def _adjust_scale_based_on_axes(ax, scale):
+    """
+    Adjusts the beachball scale based on the extent of the x and y axes of the given plot.
+    This will ensure consistent beachball sizes across different plots regardless of the axis extent.
+
+    Parameters:
+        ax (matplotlib.axes.Axes): The axes object representing the plot.
+        scale (float): The scale value to be adjusted.
+
+    Returns:
+        float: The adjusted scale value.
+    """
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    axis_extent = min(xlim[1] - xlim[0], ylim[1] - ylim[0])
+    scale *= (axis_extent / 10.0)  # Adjust scale based on axis extent
+    return scale

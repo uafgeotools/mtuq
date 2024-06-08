@@ -2,9 +2,9 @@
 # graphics/beachball.py - first motion "beachball" plots
 #
 
-# - uses PyGMT if present to plot beachballs
+# - uses Matplotlib by default
+# - uses PyGMT if present as an option
 # - if PyGMT is not present, attempts to fall back to GMT >=6
-# - if GMT >=6 is not present, attempts to fall back to ObsPy
 
 
 import obspy.imaging.beachball
@@ -25,9 +25,9 @@ from obspy.geodetics import gps2dist_azimuth
 from obspy.geodetics import kilometers2degrees as _to_deg
 from obspy.taup import TauPyModel
 from six import string_types
-from mtuq.util.beachball import offset_fibonacci_sphere,\
-    convert_sphere_points_to_angles, lambert_azimuthal_equal_area_projection,\
-    estimate_angle_on_lune, rotate_tensor, polarities_mt, rotate_points, _project_on_sphere
+from mtuq.util.beachball import convert_sphere_points_to_angles, lambert_azimuthal_equal_area_projection,\
+    estimate_angle_on_lune, rotate_tensor, polarities_mt, rotate_points, _project_on_sphere,\
+    _adjust_scale_based_on_axes, _generate_sphere_points
 
 
 def plot_beachball(filename, mt, stations, origin, backend=None, **kwargs):
@@ -93,7 +93,7 @@ def plot_beachball(filename, mt, stations, origin, backend=None, **kwargs):
         warn("plot_beachball: Plotting failed")
 
 
-def plot_polarities(filename, observed, predicted, stations, origin, mt, **kwargs):
+def plot_polarities(filename, observed, predicted, stations, origin, mt, backend=None, **kwargs):
     """ Plots first-motion polarities
 
     .. rubric :: Required arguments
@@ -117,10 +117,17 @@ def plot_polarities(filename, observed, predicted, stations, origin, mt, **kwarg
     Moment tensor object
 
     """
+    if backend is None:
+        backend = _plot_beachball_matplotlib
+
+        polarity_data = np.vstack((observed, predicted))
+
+        backend(filename, mt, stations, origin, polarity_data=polarity_data, **kwargs)
+        return
+    
     if exists_pygmt():
         _plot_polarities_pygmt(filename, observed, predicted,
             stations, origin, mt, **kwargs)
-
     else:
         raise Exception('Requires PyGMT')
 
@@ -450,7 +457,7 @@ def _polar2(stations, **kwargs):
 
 def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, lat_lons=None, 
                                scale=None, fig=None, ax=None, taup_model='ak135', color='gray', 
-                               lune_rotation=False, **kwargs):
+                               lune_rotation=False, polarity_data=None, **kwargs):
     
     from scipy.interpolate import griddata
 
@@ -483,12 +490,11 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
     else:
         mode = 'Scatter MT'
 
+    # Compute the axis limits and adjust the scale
+    adjusted_scale = _adjust_scale_based_on_axes(ax, scale)
+
     # Generate points on the sphere using the Fibonacci method (common for all tensors)
-    if mode == 'MT_Only':
-        points = offset_fibonacci_sphere(50000, 0, 360)
-    elif mode == 'Scatter MT':
-        points = offset_fibonacci_sphere(5000, 0, 360)
-    upper_hemisphere_mask = points[:, 1] >= 0
+    points, upper_hemisphere_mask = _generate_sphere_points(mode)
     takeoff_angles, azimuths = convert_sphere_points_to_angles(points[upper_hemisphere_mask])
     lambert_points = lambert_azimuthal_equal_area_projection(points[upper_hemisphere_mask], hemisphere='upper')
     x_proj, z_proj = lambert_points.T
@@ -524,20 +530,22 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
         radiations_grid = griddata((x_proj, z_proj), radiations, (XI, ZI), method='cubic')  # Project according to the rotation
 
         # Plotting the radiation pattern
-        ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100, antialiased=True)
-        ax.contourf(lat + xi * scale, lon + zi * scale, radiations_grid, [0, np.inf], colors=[color], alpha=1, zorder=100, antialiased=True)
-        outer_circle = pyplot.Circle((lat, lon), scale-0.001*scale, color='gray', fill=False, linewidth=0.5, zorder=100)
+        ax.contourf(lat + xi * adjusted_scale, lon + zi * adjusted_scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100, antialiased=True)
+        ax.contourf(lat + xi * adjusted_scale, lon + zi * adjusted_scale, radiations_grid, [0, np.inf], colors=[color], alpha=1, zorder=100, antialiased=True)
+        outer_circle = pyplot.Circle((lat, lon), adjusted_scale-0.001*adjusted_scale, color='gray', fill=False, linewidth=0.5, zorder=100)
         ax.add_artist(outer_circle)
 
     # Adjusting the axes properties
     ax.set_aspect('equal')
     if mode == 'MT_Only':
         ax.axis('off')
-        ax.set_xlim(-1.1*scale, 1.1*scale)
-        ax.set_ylim(-1.1*scale, 1.1*scale)
+        ax.set_xlim(-1.1*adjusted_scale, 1.1*adjusted_scale)
+        ax.set_ylim(-1.1*adjusted_scale, 1.1*adjusted_scale)
 
-    if stations and origin:
-        _write_stations_matplotlib(stations, origin, taup_model, ax, scale=scale)
+    if stations and origin and polarity_data is None:
+        _plot_stations(stations, origin, taup_model, ax, scale=adjusted_scale)
+    elif stations and origin and polarity_data is not None:
+        _plot_stations(stations, origin, taup_model, ax, polarity_data, scale=adjusted_scale) 
 
     if filename:
         pyplot.tight_layout(pad=-0.8)
@@ -546,15 +554,51 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
     return
 
 
-def _write_stations_matplotlib(stations, origin, taup_model, ax, scale=1):
+def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1):
+    """
+    Plots seismic stations on a matplotlib axis with optional polarity data.
+
+    Parameters:
+    stations (list): List of station objects containing latitude, longitude, and station name.
+    origin (object): Origin object containing latitude, longitude, and depth information.
+    taup_model (str): TauP model name for calculating takeoff angles.
+    ax (matplotlib.axes.Axes): Matplotlib axis to plot the stations.
+    polarity_data (tuple, optional): Tuple of observed and predicted polarity arrays.
+    scale (float, optional): Scale factor for the plotted points. Default is 1.
+
+    Raises:
+    ValueError: If polarity_data is provided but not in the correct format.
+    """
 
     try:
         taup = TauPyModel(model=taup_model)
     except:
         taup = None
 
-    for station in stations:
+    # Polarity categories if polarity data is provided
+    if polarity_data is not None and len(polarity_data) == 2:
+        if len(polarity_data) != 2:
+            raise ValueError("Polarity data must be a tuple of two arrays: observed and predicted")
 
+        observed, predicted = polarity_data[0], polarity_data[1]
+        observed = observed.flatten()
+        predicted = predicted.flatten()
+
+        up_matched = [station for _i, station in enumerate(stations)
+                      if observed[_i] == predicted[_i] == 1]
+        down_matched = [station for _i, station in enumerate(stations)
+                        if observed[_i] == predicted[_i] == -1]
+        up_unmatched = [station for _i, station in enumerate(stations)
+                        if (observed[_i] == 1) and (predicted[_i] == -1)]
+        down_unmatched = [station for _i, station in enumerate(stations)
+                          if (observed[_i] == -1) and (predicted[_i] == 1)]
+        unpicked = [station for _i, station in enumerate(stations)
+                    if (observed[_i] != +1) and (observed[_i] != -1)]
+    # No polarity data, so no categorization needed
+    else:
+        up_matched = down_matched = up_unmatched = down_unmatched = unpicked = []
+
+    for station in stations:
         label = station.station
         distance_in_m, azimuth, _ = gps2dist_azimuth(
             origin.latitude,
@@ -564,21 +608,32 @@ def _write_stations_matplotlib(stations, origin, taup_model, ax, scale=1):
 
         takeoff_angle = _takeoff_angle_taup(
             taup,
-            origin.depth_in_m/1000.,
-            _to_deg(distance_in_m/1000.))
+            origin.depth_in_m / 1000.,
+            _to_deg(distance_in_m / 1000.))
 
-        x,y,z = _project_on_sphere(takeoff_angle, azimuth,scale=1)
-        # Project with lambert azimuthal equal area projection
+        x, y, z = _project_on_sphere(takeoff_angle, azimuth, scale=1)
         if takeoff_angle <= 90:
-            projected_points = lambert_azimuthal_equal_area_projection(np.array([[x,y,z]]), hemisphere='upper')[0]*scale
-            # Plot a black circle at the projected point
-            ax.scatter(*projected_points, color='black', marker='o', s=15, zorder=101)
+            projected_points = lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='upper')[0] * scale
         else:
-            projected_points = -lambert_azimuthal_equal_area_projection(np.array([[x,y,z]]), hemisphere='lower')[0]*scale
-            # Plot a x at the projected point
-            ax.scatter(*projected_points, color='black', marker='x', s=15, zorder=101)
+            projected_points = -lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='lower')[0] * scale
 
-        # Add station label with a slight offset from the projected point
-        # y offset is scale*0.05
-        # Make the text centered on the projected point x axis
-        ax.text(projected_points[0], projected_points[1]+scale*0.05, label, ha='center', va='center', fontsize=6, zorder=101)
+        # Render the station based on its category if polarity data is provided
+        if polarity_data is not None:
+            _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, unpicked, station, projected_points)
+        else:
+            ax.scatter(*projected_points, color='black', marker='o' if takeoff_angle <= 90 else 'x', s=15, zorder=101)
+
+        ax.text(projected_points[0], projected_points[1] + scale * 0.05, label, ha='center', va='center', fontsize=6, zorder=101)
+
+
+def _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, unpicked, station, projected_points):
+    if station in up_matched:
+        ax.scatter(*projected_points, color='chartreuse', marker='^', s=15, zorder=101)
+    elif station in down_matched:
+        ax.scatter(*projected_points, color='chartreuse', marker='v', s=15, zorder=101)
+    elif station in up_unmatched:
+        ax.scatter(*projected_points, color='red', marker='^', s=15, zorder=101)
+    elif station in down_unmatched:
+        ax.scatter(*projected_points, color='red', marker='v', s=15, zorder=101)
+    elif station in unpicked:
+        ax.scatter(*projected_points, color='black', marker='x', s=15, facecolors='black', zorder=101)
