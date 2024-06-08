@@ -55,6 +55,9 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
 
     """
 
+    if _nothing_to_plot(values):
+        return
+
     # Check plot_type. Can be either contour or colormesh
     if plot_type not in ['contour', 'colormesh', 'scatter']:
         raise Exception('plot_type must be either contour or colormesh')
@@ -98,7 +101,7 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
         gamma, delta = to_delta_gamma(v, w)
         lat_lons=np.vstack([delta, gamma]).T
         _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lat_lons=lat_lons,
-                                    fig=fig, ax=ax, color='black', lune_rotation=True)
+                                    fig=fig, ax=ax, color='black', lune_rotation=True, scale=0.3)
             # ax.scatter(delta, gamma)
 
     # Set axis limits
@@ -164,6 +167,9 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
         Type of plot. Can be either contour, colormesh or scatter
 
     """
+
+    if _nothing_to_plot(values):
+        return
 
     # Check plot_type. Can be either contour or colormesh
     if plot_type not in ['contour', 'colormesh', 'scatter']:
@@ -377,8 +383,8 @@ def _plot_depth_matplotlib(filename, depths, values,
         magnitudes = ['{:.2f}'.format(m) for m in magnitudes]
         for i, magnitude in enumerate(magnitudes):
             pyplot.text(depths[i], 
-                        values[i]+0.03*(values.max()-values.min()), 
-                        magnitude, fontsize=fontsize-6)
+                        values[i]+0.045*(values.max()-values.min()), 
+                        magnitude, fontsize=fontsize-6, ha='center')
 
             
     if lune_array is not None:
@@ -388,6 +394,12 @@ def _plot_depth_matplotlib(filename, depths, values,
         xlim = ax.get_xlim()
         ylim = ax.get_ylim()
 
+        # Pad the limits to make the beachballs fit better
+        xlim = (xlim[0] - 0.05*(xlim[1]-xlim[0]), xlim[1] + 0.05*(xlim[1]-xlim[0]))
+        ylim = (ylim[0] - 0.025*(ylim[1]-ylim[0]), ylim[1] + 0.025*(ylim[1]-ylim[0]))
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
         # Normalize depths and values to fit within [-1, 1] based on axis limits
         depths_norm = 2 * (depths - xlim[0]) / (xlim[1] - xlim[0]) - 1
         values_norm = 2 * (values - ylim[0]) / (ylim[1] - ylim[0]) - 1
@@ -395,6 +407,8 @@ def _plot_depth_matplotlib(filename, depths, values,
         lat_lons = np.vstack([depths_norm, values_norm]).T
 
         # Create a secondary axis with an even aspect ratio
+        # This is a trick so that we'll always have round beahcball even though
+        # the axes are always going to be very different scales.
         bbox = ax.get_position()
         even_ax = fig.add_axes(bbox, frameon=False)
         even_ax.set_xlim(-1, 1)
@@ -403,10 +417,10 @@ def _plot_depth_matplotlib(filename, depths, values,
         even_ax.axis('off')        
 
         _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lat_lons=lat_lons,
-                                   fig=fig, ax=even_ax, color='black', lune_rotation=False, scale=0.05)
+                                   fig=fig, ax=even_ax, color='black', lune_rotation=False, scale=0.3)
 
 
-    pyplot.savefig(filename, dpi=300)
+    pyplot.savefig(filename, dpi=300, bbox_inches='tight')
     pyplot.close()
 
 
@@ -448,8 +462,8 @@ def _centers_to_edges(v):
     return v
 
 
-def _add_marker(axis, coords):
-    axis.scatter(*coords, s=250,
+def _add_marker(axis, coords, size=250):
+    axis.scatter(*coords, s=size,
         marker='o',
         facecolors='none',
         edgecolors=[0,1,0],
@@ -663,3 +677,65 @@ def _plot_directions_text(axis):
     axis.text(0,0,'S', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
     axis.text(88,0,'E', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
     axis.text(-88,0,'W', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
+
+def _plot_latlon_matplotlib(filename, lon, lat, values, best_latlon=None, lune_array=None,
+    **kwargs):
+    print('developping...')
+
+    if _nothing_to_plot(values):
+        return
+    
+    data = np.column_stack((lon, lat, values))
+    from scipy.interpolate import griddata, SmoothBivariateSpline
+
+    lon_buffer = (lon.max() - lon.min())*0.1
+    lat_buffer = (lat.max() - lat.min())*0.1
+
+    # Create a slightly larger grid for extrapolation
+    grid_lon, grid_lat = np.meshgrid(np.linspace(lon.min() - lon_buffer, lon.max() + lon_buffer, 100),
+                                    np.linspace(lat.min() - lat_buffer, lat.max() + lat_buffer, 100))
+
+    # Interpolation using SmoothBivariateSpline
+    spline = SmoothBivariateSpline(lon, lat, values, s=2)
+    grid_values = spline.ev(grid_lon, grid_lat)
+
+    # Create the plot
+    fig, ax = pyplot.subplots(figsize=(10, 8))
+
+    # Contour plot
+    contour = ax.contourf(grid_lon, grid_lat, grid_values, cmap='viridis', levels=20)
+
+    # Create a divider for the existing axes instance
+    divider = make_axes_locatable(ax)
+    # Append axes to the right of ax, with the same height
+    cax = divider.append_axes("right", size="4%", pad=0.2)
+
+    # Add a color bar
+    cbar = pyplot.colorbar(contour, cax=cax)
+    if 'colorbar_label' in kwargs:
+        cbar.set_label(kwargs['colorbar_label'])
+    else:
+        cbar.set_label('l2-misfit')
+
+    if lune_array is not None:
+        from mtuq.graphics.beachball import _plot_beachball_matplotlib
+        for lune in lune_array:
+            lat_lons=np.vstack([lon, lat]).T
+            _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lat_lons=lat_lons,
+                                        fig=fig, ax=ax, color='black', lune_rotation=False, scale=0.4)
+
+    if best_latlon is not None:
+        _add_marker(ax, best_latlon, size=800)
+
+    # Set labels and title
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    ax.set_title('Contour Plot with Latitude and Longitude')
+    ax.set_aspect('equal')
+
+    ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+    ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+
+    pyplot.tight_layout()
+    pyplot.savefig(filename, dpi=300, bbox_inches='tight')
+    pyplot.close()
