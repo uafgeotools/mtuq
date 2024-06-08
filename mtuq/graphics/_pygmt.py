@@ -1,6 +1,5 @@
 
 import numpy as np
-from mtuq import Force
 
 
 def exists_pygmt():
@@ -11,7 +10,7 @@ def exists_pygmt():
         return False
 
 
-def plot_force(filename, force_dict):
+def plot_force_pygmt(filename, force_dict):
 
     import pygmt
     fig = pygmt.Figure()
