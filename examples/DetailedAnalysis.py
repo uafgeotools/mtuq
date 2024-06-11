@@ -436,7 +436,7 @@ if __name__=='__main__':
             results_sum, show_tradeoffs=True, title='Orientation tradeoffs')
 
         plot_magnitude_tradeoffs_lune(event_id+'FMT_tradeoffs/magnitude.png',
-            results_sum, title='Magnitude tradeoffs')
+            results_sum, title='Magnitude tradeoffs', colorbar_label='Mw')
 
         print()
 
