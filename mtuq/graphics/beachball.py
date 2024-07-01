@@ -621,19 +621,19 @@ def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1
         if polarity_data is not None:
             _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, unpicked, station, projected_points)
         else:
-            ax.scatter(*projected_points, color='black', marker='o' if takeoff_angle <= 90 else 'x', s=15, zorder=101)
+            ax.scatter(*projected_points, color='black', marker='o' if takeoff_angle <= 90 else 'x', s=25, zorder=101)
 
-        ax.text(projected_points[0], projected_points[1] + scale * 0.05, label, ha='center', va='center', fontsize=6, zorder=101)
+        ax.text(projected_points[0], projected_points[1] + scale * 0.05, label, ha='center', va='center', fontsize=10, zorder=101)
 
 
 def _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, unpicked, station, projected_points):
     if station in up_matched:
-        ax.scatter(*projected_points, color='chartreuse', marker='^', s=15, zorder=101)
+        ax.scatter(*projected_points, color='chartreuse', marker='^', s=25, zorder=101)
     elif station in down_matched:
-        ax.scatter(*projected_points, color='chartreuse', marker='v', s=15, zorder=101)
+        ax.scatter(*projected_points, color='chartreuse', marker='v', s=25, zorder=101)
     elif station in up_unmatched:
-        ax.scatter(*projected_points, color='red', marker='^', s=15, zorder=101)
+        ax.scatter(*projected_points, color='red', marker='^', s=25, zorder=101)
     elif station in down_unmatched:
-        ax.scatter(*projected_points, color='red', marker='v', s=15, zorder=101)
+        ax.scatter(*projected_points, color='red', marker='v', s=25, zorder=101)
     elif station in unpicked:
-        ax.scatter(*projected_points, color='black', marker='x', s=15, facecolors='black', zorder=101)
+        ax.scatter(*projected_points, color='black', marker='x', s=25, facecolors='black', zorder=101)
