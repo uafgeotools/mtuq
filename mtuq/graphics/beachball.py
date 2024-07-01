@@ -455,26 +455,26 @@ def _polar2(stations, **kwargs):
     __polar2(stations, **kwargs)
 
 
-def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, lat_lons=None, 
+def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, lon_lats=None, 
                                scale=None, fig=None, ax=None, taup_model='ak135', color='gray', 
                                lune_rotation=False, polarity_data=None, **kwargs):
     
     from scipy.interpolate import griddata
 
-    if lat_lons is not None:
-        if len(lat_lons) != len(mt_arrays):
+    if lon_lats is not None:
+        if len(lon_lats) != len(mt_arrays):
             raise ValueError("This function either takes a single moment tensor or a list of moment\
-                              tensors with corresponding latitudes and longitudes. lat_lons must be\
+                              tensors with corresponding latitudes and longitudes. lon_lats must be\
                               provided and have the same length as mt_arrays")
     else:
         if isinstance(mt_arrays, MomentTensor):
-            lat_lons = np.array([[0, 0]])
+            lon_lats = np.array([[0, 0]])
             mt_arrays = mt_arrays.as_vector().reshape(1, 6)
         elif np.shape(mt_arrays) == (6,):
-            lat_lons = np.array([[0, 0]])
+            lon_lats = np.array([[0, 0]])
             mt_arrays = mt_arrays.reshape(1, 6)
         elif np.shape(mt_arrays) == (1, 6):
-            lat_lons = np.array([[0, 0]])
+            lon_lats = np.array([[0, 0]])
         else:
             raise ValueError("This function either takes a single moment tensor or a list of moment\
                               tensors with corresponding latitudes and longitudes. You're trying to\
@@ -506,7 +506,7 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
         xi, zi = np.linspace(x_proj.min(), x_proj.max(), 200), np.linspace(z_proj.min(), z_proj.max(), 200)
     xi, zi = np.meshgrid(xi, zi)
     
-    for mt_array, lat_lon in zip(mt_arrays, lat_lons):
+    for mt_array, lon_lat in zip(mt_arrays, lon_lats):
 
         if isinstance(mt_array, MomentTensor):
             mt_array = mt_array.as_vector().reshape(1, 6)
@@ -517,10 +517,10 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
 
         # Position and rotation on the lune
         if lune_rotation:
-            lat, lon = _hammer_projection(*lat_lon)
+            lon, lat = _hammer_projection(*lon_lat)
             angle = estimate_angle_on_lune(lon, lat)
         else:
-            lat, lon = lat_lon
+            lon, lat = lon_lat
             angle = 0
 
         XI, ZI = rotate_points(xi.copy(), zi.copy(), angle)  # Rotate grid to match the direction of the pole
@@ -530,9 +530,9 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
         radiations_grid = griddata((x_proj, z_proj), radiations, (XI, ZI), method='cubic')  # Project according to the rotation
 
         # Plotting the radiation pattern
-        ax.contourf(lat + xi * adjusted_scale, lon + zi * adjusted_scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100, antialiased=True)
-        ax.contourf(lat + xi * adjusted_scale, lon + zi * adjusted_scale, radiations_grid, [0, np.inf], colors=[color], alpha=1, zorder=100, antialiased=True)
-        outer_circle = pyplot.Circle((lat, lon), adjusted_scale-0.001*adjusted_scale, color='gray', fill=False, linewidth=0.5, zorder=100)
+        ax.contourf(lon + xi * adjusted_scale, lat + zi * adjusted_scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100, antialiased=True)
+        ax.contourf(lon + xi * adjusted_scale, lat + zi * adjusted_scale, radiations_grid, [0, np.inf], colors=[color], alpha=1, zorder=100, antialiased=True)
+        outer_circle = pyplot.Circle((lon, lat), adjusted_scale-0.001*adjusted_scale, color='gray', fill=False, linewidth=0.5, zorder=100)
         ax.add_artist(outer_circle)
 
     # Adjusting the axes properties

@@ -98,9 +98,9 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     if lune_array is not None:
         from mtuq.graphics.beachball import _plot_beachball_matplotlib
         v, w = lune_array[:,1], lune_array[:,2]
-        gamma, delta = to_delta_gamma(v, w)
-        lat_lons=np.vstack([delta, gamma]).T
-        _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lat_lons=lat_lons,
+        delta, gamma = to_delta_gamma(v, w)
+        lon_lats=np.vstack([gamma, delta]).T
+        _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lon_lats=lon_lats,
                                     fig=fig, ax=ax, color='black', lune_rotation=True, scale=0.3)
             # ax.scatter(delta, gamma)
 
@@ -404,7 +404,7 @@ def _plot_depth_matplotlib(filename, depths, values,
         depths_norm = 2 * (depths - xlim[0]) / (xlim[1] - xlim[0]) - 1
         values_norm = 2 * (values - ylim[0]) / (ylim[1] - ylim[0]) - 1
         
-        lat_lons = np.vstack([depths_norm, values_norm]).T
+        lon_lats = np.vstack([depths_norm, values_norm]).T
 
         # Create a secondary axis with an even aspect ratio
         # This is a trick so that we'll always have round beahcball even though
@@ -416,7 +416,7 @@ def _plot_depth_matplotlib(filename, depths, values,
         even_ax.set_aspect('equal')
         even_ax.axis('off')        
 
-        _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lat_lons=lat_lons,
+        _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lon_lats=lon_lats,
                                    fig=fig, ax=even_ax, color='black', lune_rotation=False, scale=0.3)
 
 
@@ -696,7 +696,7 @@ def _plot_latlon_matplotlib(filename, lon, lat, values, best_latlon=None, lune_a
                                     np.linspace(lat.min() - lat_buffer, lat.max() + lat_buffer, 100))
 
     # Interpolation using SmoothBivariateSpline
-    spline = SmoothBivariateSpline(lon, lat, values, s=2)
+    spline = SmoothBivariateSpline(x=lon, y=lat, z=values, s=3, kx=2, ky=2)
     grid_values = spline.ev(grid_lon, grid_lat)
 
     # Create the plot
@@ -720,8 +720,8 @@ def _plot_latlon_matplotlib(filename, lon, lat, values, best_latlon=None, lune_a
     if lune_array is not None:
         from mtuq.graphics.beachball import _plot_beachball_matplotlib
         for lune in lune_array:
-            lat_lons=np.vstack([lon, lat]).T
-            _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lat_lons=lat_lons,
+            lon_lats=np.vstack([lon, lat]).T
+            _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lon_lats=lon_lats,
                                         fig=fig, ax=ax, color='black', lune_rotation=False, scale=0.4)
 
     if best_latlon is not None:
