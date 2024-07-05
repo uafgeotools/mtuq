@@ -547,8 +547,8 @@ def _generate_lune(ax=None):
 
     # Generate curved gridlines
     num_lines = 7
-    lon_lines = np.linspace(-30, 30, num_lines * 2 + 1)
-    lat_lines = np.linspace(-90, 90, num_lines)
+    lon_lines = np.linspace(-30, 30, num_lines)
+    lat_lines = np.linspace(-90, 90, num_lines * 2 + 1)
 
     for lon_line in lon_lines:
         lat_line = np.linspace(-90, 90, 1000)
