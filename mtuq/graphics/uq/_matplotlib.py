@@ -14,6 +14,8 @@ from matplotlib import ticker
 from mtuq.util.math import wrap_180, to_delta_gamma, to_mij
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+import warnings
+
 def cbformat(st, pos):
     return '{:.1E}'.format(st)
 
@@ -57,6 +59,8 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
 
     if _nothing_to_plot(values):
         return
+    
+    _development_warning()
 
     # Check plot_type. Can be either contour or colormesh
     if plot_type not in ['contour', 'colormesh', 'scatter']:
@@ -171,6 +175,8 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
     if _nothing_to_plot(values):
         return
 
+    _development_warning()
+
     # Check plot_type. Can be either contour or colormesh
     if plot_type not in ['contour', 'colormesh', 'scatter']:
         raise Exception('plot_type must be either contour or colormesh')
@@ -261,6 +267,8 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
 def _plot_dc_matplotlib(filename, coords, 
     values_h_kappa, values_sigma_kappa, values_sigma_h,
     title=None, best_dc=None,  figsize=(8., 8.), fontsize=14, **kwargs):
+
+    _development_warning()
 
     colormap = kwargs.get('colormap', 'viridis')
 
@@ -360,10 +368,11 @@ def _plot_vw_matplotlib(filename, v, w, values, best_vw=None, lune_array=None,
     pyplot.close()
 
 
-
 def _plot_depth_matplotlib(filename, depths, values,
         magnitudes=None, lune_array=None,
         title=None, xlabel=None, ylabel=None, figsize=(6., 6.), fontsize=16.):
+    
+    _development_warning()
 
     fig, ax = pyplot.subplots(figsize=figsize)
     ax.plot(depths, values, 'k-')
@@ -420,6 +429,69 @@ def _plot_depth_matplotlib(filename, depths, values,
                                    fig=fig, ax=even_ax, color='black', lune_rotation=False, scale=0.3)
 
 
+    pyplot.savefig(filename, dpi=300, bbox_inches='tight')
+    pyplot.close()
+
+def _plot_latlon_matplotlib(filename, lon, lat, values, best_latlon=None, lune_array=None,
+    **kwargs):
+
+    if _nothing_to_plot(values):
+        return
+    
+    _development_warning()
+    
+    data = np.column_stack((lon, lat, values))
+    from scipy.interpolate import griddata, SmoothBivariateSpline
+
+    lon_buffer = (lon.max() - lon.min())*0.1
+    lat_buffer = (lat.max() - lat.min())*0.1
+
+    # Create a slightly larger grid for extrapolation
+    grid_lon, grid_lat = np.meshgrid(np.linspace(lon.min() - lon_buffer, lon.max() + lon_buffer, 100),
+                                    np.linspace(lat.min() - lat_buffer, lat.max() + lat_buffer, 100))
+
+    # Interpolation using SmoothBivariateSpline
+    spline = SmoothBivariateSpline(x=lon, y=lat, z=values, s=3, kx=2, ky=2)
+    grid_values = spline.ev(grid_lon, grid_lat)
+
+    # Create the plot
+    fig, ax = pyplot.subplots(figsize=(10, 8))
+
+    # Contour plot
+    contour = ax.contourf(grid_lon, grid_lat, grid_values, cmap='viridis', levels=20)
+
+    # Create a divider for the existing axes instance
+    divider = make_axes_locatable(ax)
+    # Append axes to the right of ax, with the same height
+    cax = divider.append_axes("right", size="4%", pad=0.2)
+
+    # Add a color bar
+    cbar = pyplot.colorbar(contour, cax=cax)
+    if 'colorbar_label' in kwargs:
+        cbar.set_label(kwargs['colorbar_label'])
+    else:
+        cbar.set_label('l2-misfit')
+
+    if lune_array is not None:
+        from mtuq.graphics.beachball import _plot_beachball_matplotlib
+        for lune in lune_array:
+            lon_lats=np.vstack([lon, lat]).T
+            _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lon_lats=lon_lats,
+                                        fig=fig, ax=ax, color='black', lune_rotation=False, scale=0.4)
+
+    if best_latlon is not None:
+        _add_marker(ax, best_latlon, size=800)
+
+    # Set labels and title
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    ax.set_title('Contour Plot with Latitude and Longitude')
+    ax.set_aspect('equal')
+
+    ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+    ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+
+    pyplot.tight_layout()
     pyplot.savefig(filename, dpi=300, bbox_inches='tight')
     pyplot.close()
 
@@ -678,64 +750,9 @@ def _plot_directions_text(axis):
     axis.text(88,0,'E', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
     axis.text(-88,0,'W', verticalalignment='center', horizontalalignment='center', color='silver', zorder=100)
 
-def _plot_latlon_matplotlib(filename, lon, lat, values, best_latlon=None, lune_array=None,
-    **kwargs):
-    print('developping...')
 
-    if _nothing_to_plot(values):
-        return
-    
-    data = np.column_stack((lon, lat, values))
-    from scipy.interpolate import griddata, SmoothBivariateSpline
-
-    lon_buffer = (lon.max() - lon.min())*0.1
-    lat_buffer = (lat.max() - lat.min())*0.1
-
-    # Create a slightly larger grid for extrapolation
-    grid_lon, grid_lat = np.meshgrid(np.linspace(lon.min() - lon_buffer, lon.max() + lon_buffer, 100),
-                                    np.linspace(lat.min() - lat_buffer, lat.max() + lat_buffer, 100))
-
-    # Interpolation using SmoothBivariateSpline
-    spline = SmoothBivariateSpline(x=lon, y=lat, z=values, s=3, kx=2, ky=2)
-    grid_values = spline.ev(grid_lon, grid_lat)
-
-    # Create the plot
-    fig, ax = pyplot.subplots(figsize=(10, 8))
-
-    # Contour plot
-    contour = ax.contourf(grid_lon, grid_lat, grid_values, cmap='viridis', levels=20)
-
-    # Create a divider for the existing axes instance
-    divider = make_axes_locatable(ax)
-    # Append axes to the right of ax, with the same height
-    cax = divider.append_axes("right", size="4%", pad=0.2)
-
-    # Add a color bar
-    cbar = pyplot.colorbar(contour, cax=cax)
-    if 'colorbar_label' in kwargs:
-        cbar.set_label(kwargs['colorbar_label'])
-    else:
-        cbar.set_label('l2-misfit')
-
-    if lune_array is not None:
-        from mtuq.graphics.beachball import _plot_beachball_matplotlib
-        for lune in lune_array:
-            lon_lats=np.vstack([lon, lat]).T
-            _plot_beachball_matplotlib(None, to_mij(*lune_array.T), lon_lats=lon_lats,
-                                        fig=fig, ax=ax, color='black', lune_rotation=False, scale=0.4)
-
-    if best_latlon is not None:
-        _add_marker(ax, best_latlon, size=800)
-
-    # Set labels and title
-    ax.set_xlabel('Longitude')
-    ax.set_ylabel('Latitude')
-    ax.set_title('Contour Plot with Latitude and Longitude')
-    ax.set_aspect('equal')
-
-    ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
-    ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
-
-    pyplot.tight_layout()
-    pyplot.savefig(filename, dpi=300, bbox_inches='tight')
-    pyplot.close()
+def _development_warning():
+    warnings.warn(
+        "\n You are using the new matplotlib visualization backend, which is currently being tested. \n The figures might look slightly different from previous results using the GMT backend. \n If you encounter any issues or unexpected behavior, please report them on GitHub.",
+        UserWarning
+    )

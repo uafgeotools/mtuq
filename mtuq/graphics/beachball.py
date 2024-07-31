@@ -29,6 +29,8 @@ from mtuq.util.beachball import convert_sphere_points_to_angles, lambert_azimuth
     estimate_angle_on_lune, rotate_tensor, polarities_mt, rotate_points, _project_on_sphere,\
     _adjust_scale_based_on_axes, _generate_sphere_points
 
+import warnings
+
 
 def plot_beachball(filename, mt, stations, origin, backend=None, **kwargs):
     """ Plots focal mechanism and station locations
@@ -461,6 +463,8 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
     
     from scipy.interpolate import griddata
 
+    _development_warning_beachball()
+
     if lon_lats is not None:
         if len(lon_lats) != len(mt_arrays):
             raise ValueError("This function either takes a single moment tensor or a list of moment\
@@ -637,3 +641,9 @@ def _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, 
         ax.scatter(*projected_points, color='red', marker='v', s=25, zorder=101)
     elif station in unpicked:
         ax.scatter(*projected_points, color='black', marker='x', s=25, facecolors='black', zorder=101)
+
+def _development_warning_beachball():
+    warnings.warn(
+        "\n You are plotting a moment tensor with the new matplotlib visualization backend, which is currently being tested. \n This implementation is not based on psmeca, but is an approximation based on interpolation of the radiation coefficients computed on the surface of the moment tensor. \n If you encounter any issues or unexpected behavior, please report them on GitHub.",
+        UserWarning
+    )
