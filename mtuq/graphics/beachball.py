@@ -28,6 +28,7 @@ from six import string_types
 from mtuq.util.beachball import convert_sphere_points_to_angles, lambert_azimuthal_equal_area_projection,\
     estimate_angle_on_lune, rotate_tensor, polarities_mt, rotate_points, _project_on_sphere,\
     _adjust_scale_based_on_axes, _generate_sphere_points
+from mtuq.util.math import mat_to_vec, vec_to_mat
 
 import warnings
 
@@ -498,16 +499,16 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
     adjusted_scale = _adjust_scale_based_on_axes(ax, scale)
 
     # Generate points on the sphere using the Fibonacci method (common for all tensors)
-    points, upper_hemisphere_mask = _generate_sphere_points(mode)
-    takeoff_angles, azimuths = convert_sphere_points_to_angles(points[upper_hemisphere_mask])
-    lambert_points = lambert_azimuthal_equal_area_projection(points[upper_hemisphere_mask], hemisphere='upper')
+    points, lower_hemisphere_mask = _generate_sphere_points(mode)
+    takeoff_angles, azimuths = convert_sphere_points_to_angles(points[lower_hemisphere_mask])
+    lambert_points = lambert_azimuthal_equal_area_projection(points[lower_hemisphere_mask], hemisphere='lower')
     x_proj, z_proj = lambert_points.T
 
     # Creating a meshgrid for interpolation (common for all tensors)
     if mode == 'MT_Only':
         xi, zi = np.linspace(x_proj.min(), x_proj.max(), 600), np.linspace(z_proj.min(), z_proj.max(), 600)
     elif mode == 'Scatter MT':
-        xi, zi = np.linspace(x_proj.min(), x_proj.max(), 200), np.linspace(z_proj.min(), z_proj.max(), 200)
+        xi, zi = np.linspace(x_proj.min(), x_proj.max(), 300), np.linspace(z_proj.min(), z_proj.max(), 300)
     xi, zi = np.meshgrid(xi, zi)
     
     for mt_array, lon_lat in zip(mt_arrays, lon_lats):
@@ -530,7 +531,7 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
         XI, ZI = rotate_points(xi.copy(), zi.copy(), angle)  # Rotate grid to match the direction of the pole
 
         # Polarities and radiation pattern calculation
-        polarities, radiations = polarities_mt(rotate_tensor(mt_array), takeoff_angles, azimuths)
+        polarities, radiations = polarities_mt(mt_array, takeoff_angles, azimuths)
         radiations_grid = griddata((x_proj, z_proj), radiations, (XI, ZI), method='cubic')  # Project according to the rotation
 
         # Plotting the radiation pattern
@@ -616,10 +617,10 @@ def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1
             _to_deg(distance_in_m / 1000.))
 
         x, y, z = _project_on_sphere(takeoff_angle, azimuth, scale=1)
-        if takeoff_angle <= 90:
-            projected_points = lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='upper')[0] * scale
+        if takeoff_angle >= 90:
+            projected_points = -lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='upper')[0] * scale
         else:
-            projected_points = -lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='lower')[0] * scale
+            projected_points = lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='lower')[0] * scale
 
         # Render the station based on its category if polarity data is provided
         if polarity_data is not None:

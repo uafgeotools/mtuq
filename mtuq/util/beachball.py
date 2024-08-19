@@ -2,7 +2,7 @@ import numpy as np
 from mtuq.graphics.uq._matplotlib import _hammer_projection
 
 def offset_fibonacci_sphere(samples=1000, epsilon=0.36, equator_points=180):
-    equator_axis = 'y'
+    equator_axis = 'x'
     total_points = samples + equator_points
     points = np.empty((total_points, 3))  # Pre-allocate array
     goldenRatio = (1 + 5**0.5) / 2
@@ -36,8 +36,9 @@ def offset_fibonacci_sphere(samples=1000, epsilon=0.36, equator_points=180):
 def convert_sphere_points_to_angles(points):
     x, y, z = points[:, 0], points[:, 1], points[:, 2]
 
-    azimuth = np.arctan2(y, x)
-    azimuth = np.rad2deg(azimuth) % 360
+    # Adjusting azimuth to have 0° at North (positive y-axis) and 90° at East (positive x-axis)
+    azimuth = np.arctan2(x, y)  # Swap x and y in the arctan2 function
+    azimuth = np.rad2deg(azimuth) % 360  # Convert from radians to degrees
 
     r = np.sqrt(x**2 + y**2 + z**2)
     takeoff_angle = np.arccos(z / r)
@@ -46,8 +47,9 @@ def convert_sphere_points_to_angles(points):
     return takeoff_angle, azimuth
 
 
-def lambert_azimuthal_equal_area_projection(points, hemisphere='upper'):
-    x, z, y = points[:, 0], points[:, 1], points[:, 2]
+
+def lambert_azimuthal_equal_area_projection(points, hemisphere='lower'):
+    x, y, z = points[:, 0], points[:, 1], points[:, 2]
     if hemisphere == 'upper':
         z = -z
     x_proj = x * np.sqrt(1 / (1 - z))
@@ -119,17 +121,19 @@ def estimate_angle_on_lune(lon, lat):
 
 def _project_on_sphere(takeoff_angle, azimuth, scale=2.0):
     # Convert takeoff and azimuth angles to radians
-    takeoff_angle += 180
+    takeoff_angle += 180  # Adjust takeoff angle as needed
     takeoff_angle = np.deg2rad(takeoff_angle)
     azimuth = np.deg2rad(azimuth)
     r = scale
 
     # Calculate the x, y, z coordinates of the point on the unit sphere
-    x = r*np.sin(takeoff_angle)*np.cos(azimuth)
-    y = r*np.sin(takeoff_angle)*np.sin(azimuth)
-    z = r*np.cos(takeoff_angle)
+    x = r * np.sin(takeoff_angle) * np.sin(azimuth)  # East
+    y = r * np.sin(takeoff_angle) * np.cos(azimuth)  # North
+    z = r * np.cos(takeoff_angle)  # Up
 
-    return -y,-z,-x
+    # Return values aligned with the USE coordinate system:
+    return -x, -y, z  # Ensure Up (z), South (x), East (y)
+
 
 def _generate_sphere_points(mode):
     """Generates points on the unit sphere using the offset Fibonacci algorithm.
@@ -141,11 +145,11 @@ def _generate_sphere_points(mode):
     
     """
     if mode == 'MT_Only':
-        points = offset_fibonacci_sphere(50000, 0, 360)
+        xyz_coords = offset_fibonacci_sphere(50000, 0, 360)
     elif mode == 'Scatter MT':
-        points = offset_fibonacci_sphere(5000, 0, 360)
-    upper_hemisphere_mask = points[:, 1] >= 0
-    return points, upper_hemisphere_mask
+        xyz_coords = offset_fibonacci_sphere(5000, 0, 360)
+    lower_hemisphere_mask = xyz_coords[:, 2] <= 0 # Only return the lower hemisphere, where z <= 0
+    return xyz_coords, lower_hemisphere_mask
 
 def _adjust_scale_based_on_axes(ax, scale):
     """
