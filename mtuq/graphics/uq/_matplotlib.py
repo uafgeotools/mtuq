@@ -9,8 +9,9 @@ from xarray import DataArray
 from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
 from mtuq.graphics.uq._gmt import _parse_vw, _parse_lune_array, _parse_force
-from matplotlib.colors import BoundaryNorm
 from matplotlib import ticker
+from matplotlib.colors import BoundaryNorm
+import matplotlib.patheffects as path_effects
 from mtuq.util.math import wrap_180, to_delta_gamma, to_mij
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -391,10 +392,75 @@ def _plot_depth_matplotlib(filename, depths, values,
         # String formating to display only x.xx values
         magnitudes = ['{:.2f}'.format(m) for m in magnitudes]
         for i, magnitude in enumerate(magnitudes):
-            pyplot.text(depths[i], 
+            text = pyplot.text(depths[i], 
                         values[i]+0.045*(values.max()-values.min()), 
-                        magnitude, fontsize=fontsize-6, ha='center')
+                        magnitude, fontsize=fontsize-6, ha='center', zorder=2000)
+                    # Adding a white stroke around the text
+            text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), 
+                                   path_effects.Normal()])
 
+    # Fit a parabola to the best-fit depth
+    imin = np.argmin(values)
+    
+    if imin == 0:
+        # Best fit at the left edge, use first three points
+        x1, y1 = depths[0], values[0]
+        x2, y2 = depths[1], values[1]
+        x3, y3 = depths[2], values[2]
+    elif imin == len(depths) - 1:
+        # Best fit at the right edge, use last three points
+        x1, y1 = depths[-3], values[-3]
+        x2, y2 = depths[-2], values[-2]
+        x3, y3 = depths[-1], values[-1]
+    else:
+        # Best fit not at an edge, use the point and its neighbors
+        x1, y1 = depths[imin-1], values[imin-1]
+        x2, y2 = depths[imin], values[imin]
+        x3, y3 = depths[imin+1], values[imin+1]
+    
+    # Calculate coefficients for the parabola (y = ax^2 + bx + c)
+    denom = (x1-x2)*(x1-x3)*(x2-x3)
+    a = (x3*(y2-y1) + x2*(y1-y3) + x1*(y3-y2)) / denom
+    b = (x3**2*(y1-y2) + x2**2*(y3-y1) + x1**2*(y2-y3)) / denom
+    c = (x2*x3*(x2-x3)*y1 + x3*x1*(x3-x1)*y2 + x1*x2*(x1-x2)*y3) / denom
+    
+
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+
+    # Generate parabola points
+    x_parabola = np.linspace(min(depths)-0.1*(max(depths)-min(depths)), 
+                                max(depths)+0.1*(max(depths)-min(depths)), 100)
+
+    y_parabola = a*x_parabola**2 + b*x_parabola + c
+
+    best_fit_depth = -b / (2*a) 
+    best_fit_value = a * best_fit_depth**2 + b * best_fit_depth + c
+    print('Best fitting depth:', best_fit_depth)
+
+    percentage = 0.05  # Define the percentage of the best fit value to use as a threshold
+    delta_y = percentage * best_fit_value
+    y_threshold = best_fit_value + delta_y
+
+    # Step 3: Get the roots where the parabola equals the threshold
+    discriminant = np.sqrt(b**2 - 4*a*(c - y_threshold))
+
+    x1 = (-b + discriminant) / (2 * a)
+    x2 = (-b - discriminant) / (2 * a)
+
+    # Step 4: Calculate the uncertainty k
+    k = abs(x2 - x1) / 2
+    print('Uncertainty: ±', k)
+    
+    ax.hlines(y=y_threshold, xmin=x1, xmax=x2, colors='gray', linestyles='dashed', label='5% Threshold')
+    ax.plot(best_fit_depth, ylim[0], marker='v', color='white', markersize=10, 
+            markeredgecolor='black', markeredgewidth=2, clip_on=False)
+
+    # Plot the parabola
+    ax.plot(x_parabola, y_parabola, '--', color='gray')
+    # ax.legend()
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
             
     if lune_array is not None:
         from mtuq.graphics.beachball import _plot_beachball_matplotlib
@@ -541,7 +607,7 @@ def _add_marker(axis, coords, size=250):
         edgecolors=[0,1,0],
         linewidths=1.75,
         clip_on=False,
-        zorder=100,
+        zorder=200,
         )
 
 
