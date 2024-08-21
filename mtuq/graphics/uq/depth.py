@@ -125,7 +125,7 @@ def plot_marginal_depth(filename, ds, origins, var=None, **kwargs):
 
 def _plot_depth(filename, da, origins, title='',
     xlabel='auto', ylabel='', show_magnitudes=False, show_tradeoffs=False,
-    backend=_plot_depth_gmt):
+    backend=_plot_depth_matplotlib):
 
     """ Plots DataArray values versus depth (requires GMT)
 

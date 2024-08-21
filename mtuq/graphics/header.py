@@ -10,7 +10,8 @@ from matplotlib import pyplot
 from matplotlib.font_manager import FontProperties
 from mtuq.event import MomentTensor
 from mtuq.graphics.beachball import plot_beachball
-from mtuq.graphics._pygmt import exists_pygmt, plot_force
+from mtuq.graphics._pygmt import exists_pygmt, plot_force_pygmt
+from mtuq.graphics._matplotlib import plot_force_matplotlib
 from mtuq.util.math import to_delta_gamma
 
 
@@ -407,9 +408,9 @@ class ForceHeader(SourceHeader):
         _write_text(line, px, py, ax, fontsize=14)
 
 
-    def display_source(self, ax, height, width, offset):
+    def display_source(self, ax, height, width, offset, backend=plot_force_matplotlib):
 
-        if not exists_pygmt():
+        if backend==plot_force_pygmt and not exists_pygmt():
             return
 
         # image size
@@ -419,11 +420,11 @@ class ForceHeader(SourceHeader):
         xp = offset
         yp = 0.075*height
 
-        plot_force('tmp.png', self.force_dict)
+        backend('tmp.png', self.force_dict)
         img = pyplot.imread('tmp.png')
 
         try:
-            os.remove('tmp.png')
+            # os.remove('tmp.png')
             os.remove('tmp.ps')
         except:
             pass

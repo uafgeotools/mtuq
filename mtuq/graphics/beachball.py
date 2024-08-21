@@ -2,9 +2,9 @@
 # graphics/beachball.py - first motion "beachball" plots
 #
 
-# - uses PyGMT if present to plot beachballs
+# - uses Matplotlib by default
+# - uses PyGMT if present as an option
 # - if PyGMT is not present, attempts to fall back to GMT >=6
-# - if GMT >=6 is not present, attempts to fall back to ObsPy
 
 
 import obspy.imaging.beachball
@@ -18,15 +18,21 @@ from mtuq.event import MomentTensor
 from mtuq.graphics._gmt import _parse_filetype, _get_format_arg, _safename,\
     exists_gmt, gmt_major_version
 from mtuq.graphics._pygmt import exists_pygmt
+from mtuq.graphics.uq._matplotlib import _hammer_projection
 from mtuq.util import asarray, to_rgb, warn
 from mtuq.misfit.polarity import _takeoff_angle_taup
 from obspy.geodetics import gps2dist_azimuth
 from obspy.geodetics import kilometers2degrees as _to_deg
 from obspy.taup import TauPyModel
 from six import string_types
+from mtuq.util.beachball import convert_sphere_points_to_angles, lambert_azimuthal_equal_area_projection,\
+    estimate_angle_on_lune, rotate_tensor, polarities_mt, rotate_points, _project_on_sphere,\
+    _adjust_scale_based_on_axes, _generate_sphere_points
+
+import warnings
 
 
-def plot_beachball(filename, mt, stations, origin, **kwargs):
+def plot_beachball(filename, mt, stations, origin, backend=None, **kwargs):
     """ Plots focal mechanism and station locations
 
     .. rubric :: Required arguments
@@ -67,12 +73,15 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
     if type(mt)!=MomentTensor:
         raise TypeError
 
-    if exists_pygmt():
-        _plot_beachball_pygmt(filename, mt, stations, origin, **kwargs)
+    if backend is None:
+        backend = _plot_beachball_matplotlib
+        backend(filename, mt, stations, origin, **kwargs)
         return
-
-    if exists_gmt() and gmt_major_version() >= 6:
-        _plot_beachball_gmt(filename, mt, stations, origin, **kwargs)
+    elif backend == _plot_beachball_pygmt and exists_pygmt():
+        backend(filename, mt, stations, origin, **kwargs)
+        return
+    elif backend == _plot_beachball_gmt and exists_gmt() and gmt_major_version() >= 6:
+        backend(filename, mt, stations, origin, **kwargs)
         return
 
     try:
@@ -86,7 +95,7 @@ def plot_beachball(filename, mt, stations, origin, **kwargs):
         warn("plot_beachball: Plotting failed")
 
 
-def plot_polarities(filename, observed, predicted, stations, origin, mt, **kwargs):
+def plot_polarities(filename, observed, predicted, stations, origin, mt, backend=None, **kwargs):
     """ Plots first-motion polarities
 
     .. rubric :: Required arguments
@@ -110,10 +119,17 @@ def plot_polarities(filename, observed, predicted, stations, origin, mt, **kwarg
     Moment tensor object
 
     """
+    if backend is None:
+        backend = _plot_beachball_matplotlib
+
+        polarity_data = np.vstack((observed, predicted))
+
+        backend(filename, mt, stations, origin, polarity_data=polarity_data, **kwargs)
+        return
+    
     if exists_pygmt():
         _plot_polarities_pygmt(filename, observed, predicted,
             stations, origin, mt, **kwargs)
-
     else:
         raise Exception('Requires PyGMT')
 
@@ -441,3 +457,193 @@ def _polar2(stations, **kwargs):
     __polar2(stations, **kwargs)
 
 
+def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, lon_lats=None, 
+                               scale=None, fig=None, ax=None, taup_model='ak135', color='gray', 
+                               lune_rotation=False, polarity_data=None, **kwargs):
+    
+    from scipy.interpolate import griddata
+
+    _development_warning_beachball()
+
+    if lon_lats is not None:
+        if len(lon_lats) != len(mt_arrays):
+            raise ValueError("This function either takes a single moment tensor or a list of moment\
+                              tensors with corresponding latitudes and longitudes. lon_lats must be\
+                              provided and have the same length as mt_arrays")
+    else:
+        if isinstance(mt_arrays, MomentTensor):
+            lon_lats = np.array([[0, 0]])
+            mt_arrays = mt_arrays.as_vector().reshape(1, 6)
+        elif np.shape(mt_arrays) == (6,):
+            lon_lats = np.array([[0, 0]])
+            mt_arrays = mt_arrays.reshape(1, 6)
+        elif np.shape(mt_arrays) == (1, 6):
+            lon_lats = np.array([[0, 0]])
+        else:
+            raise ValueError("This function either takes a single moment tensor or a list of moment\
+                              tensors with corresponding latitudes and longitudes. You're trying to\
+                              provide a single object that is not a valid moment tensor.")
+
+    if scale is None:
+        scale = 2.  # Default scale if not provided
+
+    # Check if axes are provided
+    if fig is None or ax is None:
+        fig, ax = pyplot.subplots(figsize=(1171/300, 1171/300), dpi=300)
+        mode = 'MT_Only'
+    else:
+        mode = 'Scatter MT'
+
+    # Compute the axis limits and adjust the scale
+    adjusted_scale = _adjust_scale_based_on_axes(ax, scale)
+
+    # Generate points on the sphere using the Fibonacci method (common for all tensors)
+    points, lower_hemisphere_mask = _generate_sphere_points(mode)
+    takeoff_angles, azimuths = convert_sphere_points_to_angles(points[lower_hemisphere_mask])
+    lambert_points = lambert_azimuthal_equal_area_projection(points[lower_hemisphere_mask], hemisphere='lower')
+    x_proj, z_proj = lambert_points.T
+
+    # Creating a meshgrid for interpolation (common for all tensors)
+    if mode == 'MT_Only':
+        xi, zi = np.linspace(x_proj.min(), x_proj.max(), 600), np.linspace(z_proj.min(), z_proj.max(), 600)
+    elif mode == 'Scatter MT':
+        xi, zi = np.linspace(x_proj.min(), x_proj.max(), 300), np.linspace(z_proj.min(), z_proj.max(), 300)
+    xi, zi = np.meshgrid(xi, zi)
+    
+    for mt_array, lon_lat in zip(mt_arrays, lon_lats):
+
+        if isinstance(mt_array, MomentTensor):
+            mt_array = mt_array.as_vector().reshape(1, 6)
+        elif np.shape(mt_array) != (6):
+            mt_array = mt_array.reshape(1, 6)
+        elif np.shape(mt_array) != (1, 6):
+            raise ValueError("Each moment tensor array must be of shape (1, 6)")
+
+        # Position and rotation on the lune
+        if lune_rotation:
+            lon, lat = _hammer_projection(*lon_lat)
+            angle = estimate_angle_on_lune(lon, lat)
+        else:
+            lon, lat = lon_lat
+            angle = 0
+
+        XI, ZI = rotate_points(xi.copy(), zi.copy(), angle)  # Rotate grid to match the direction of the pole
+
+        # Polarities and radiation pattern calculation
+        polarities, radiations = polarities_mt(mt_array, takeoff_angles, azimuths)
+        radiations_grid = griddata((x_proj, z_proj), radiations, (XI, ZI), method='cubic')  # Project according to the rotation
+
+        # Plotting the radiation pattern
+        ax.contourf(lon + xi * adjusted_scale, lat + zi * adjusted_scale, radiations_grid, [-np.inf, 0], colors=['white'], alpha=1, zorder=100, antialiased=True)
+        ax.contourf(lon + xi * adjusted_scale, lat + zi * adjusted_scale, radiations_grid, [0, np.inf], colors=[color], alpha=1, zorder=100, antialiased=True)
+        outer_circle = pyplot.Circle((lon, lat), adjusted_scale-0.001*adjusted_scale, color='gray', fill=False, linewidth=0.5, zorder=100)
+        ax.add_artist(outer_circle)
+
+    # Adjusting the axes properties
+    ax.set_aspect('equal')
+    if mode == 'MT_Only':
+        ax.axis('off')
+        ax.set_xlim(-1.1*adjusted_scale, 1.1*adjusted_scale)
+        ax.set_ylim(-1.1*adjusted_scale, 1.1*adjusted_scale)
+
+    if stations and origin and polarity_data is None:
+        _plot_stations(stations, origin, taup_model, ax, scale=adjusted_scale)
+    elif stations and origin and polarity_data is not None:
+        _plot_stations(stations, origin, taup_model, ax, polarity_data, scale=adjusted_scale) 
+
+    if filename:
+        pyplot.tight_layout(pad=-0.8)
+        fig.savefig(filename, dpi=300)
+        pyplot.close(fig)
+    return
+
+
+def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1):
+    """
+    Plots seismic stations on a matplotlib axis with optional polarity data.
+
+    Parameters:
+    stations (list): List of station objects containing latitude, longitude, and station name.
+    origin (object): Origin object containing latitude, longitude, and depth information.
+    taup_model (str): TauP model name for calculating takeoff angles.
+    ax (matplotlib.axes.Axes): Matplotlib axis to plot the stations.
+    polarity_data (tuple, optional): Tuple of observed and predicted polarity arrays.
+    scale (float, optional): Scale factor for the plotted points. Default is 1.
+
+    Raises:
+    ValueError: If polarity_data is provided but not in the correct format.
+    """
+
+    try:
+        taup = TauPyModel(model=taup_model)
+    except:
+        taup = None
+
+    # Polarity categories if polarity data is provided
+    if polarity_data is not None and len(polarity_data) == 2:
+        if len(polarity_data) != 2:
+            raise ValueError("Polarity data must be a tuple of two arrays: observed and predicted")
+
+        observed, predicted = polarity_data[0], polarity_data[1]
+        observed = observed.flatten()
+        predicted = predicted.flatten()
+
+        up_matched = [station for _i, station in enumerate(stations)
+                      if observed[_i] == predicted[_i] == 1]
+        down_matched = [station for _i, station in enumerate(stations)
+                        if observed[_i] == predicted[_i] == -1]
+        up_unmatched = [station for _i, station in enumerate(stations)
+                        if (observed[_i] == 1) and (predicted[_i] == -1)]
+        down_unmatched = [station for _i, station in enumerate(stations)
+                          if (observed[_i] == -1) and (predicted[_i] == 1)]
+        unpicked = [station for _i, station in enumerate(stations)
+                    if (observed[_i] != +1) and (observed[_i] != -1)]
+    # No polarity data, so no categorization needed
+    else:
+        up_matched = down_matched = up_unmatched = down_unmatched = unpicked = []
+
+    for station in stations:
+        label = station.station
+        distance_in_m, azimuth, _ = gps2dist_azimuth(
+            origin.latitude,
+            origin.longitude,
+            station.latitude,
+            station.longitude)
+
+        takeoff_angle = _takeoff_angle_taup(
+            taup,
+            origin.depth_in_m / 1000.,
+            _to_deg(distance_in_m / 1000.))
+
+        x, y, z = _project_on_sphere(takeoff_angle, azimuth, scale=1)
+        if takeoff_angle >= 90:
+            projected_points = -lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='upper')[0] * scale
+        else:
+            projected_points = lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='lower')[0] * scale
+
+        # Render the station based on its category if polarity data is provided
+        if polarity_data is not None:
+            _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, unpicked, station, projected_points)
+        else:
+            ax.scatter(*projected_points, color='black', marker='o' if takeoff_angle <= 90 else 'x', s=25, zorder=101)
+
+        ax.text(projected_points[0], projected_points[1] + scale * 0.05, label, ha='center', va='center', fontsize=10, zorder=101)
+
+
+def _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, unpicked, station, projected_points):
+    if station in up_matched:
+        ax.scatter(*projected_points, color='chartreuse', marker='^', s=25, zorder=101)
+    elif station in down_matched:
+        ax.scatter(*projected_points, color='chartreuse', marker='v', s=25, zorder=101)
+    elif station in up_unmatched:
+        ax.scatter(*projected_points, color='red', marker='^', s=25, zorder=101)
+    elif station in down_unmatched:
+        ax.scatter(*projected_points, color='red', marker='v', s=25, zorder=101)
+    elif station in unpicked:
+        ax.scatter(*projected_points, color='black', marker='x', s=25, facecolors='black', zorder=101)
+
+def _development_warning_beachball():
+    warnings.warn(
+        "\n You are plotting a moment tensor with the new matplotlib visualization backend, which is currently being tested. \n This implementation is not based on psmeca, but is an approximation based on interpolation of the radiation coefficients computed on the surface of the moment tensor. \n If you encounter any issues or unexpected behavior, please report them on GitHub.",
+        UserWarning
+    )

@@ -16,6 +16,7 @@ import xarray
 from matplotlib import pyplot
 from mtuq.grid_search import DataArray, DataFrame, MTUQDataArray, MTUQDataFrame
 from mtuq.graphics.uq._gmt import _plot_lune_gmt
+from mtuq.graphics.uq._matplotlib import _plot_lune_matplotlib
 from mtuq.util import defaults, warn
 from mtuq.util.math import lune_det, to_gamma, to_delta
 
@@ -209,7 +210,7 @@ def plot_magnitude_tradeoffs_lune(filename, ds, **kwargs):
 
 
 def _plot_lune(filename, da, show_best=True, show_mt=False,
-    show_tradeoffs=False, backend=_plot_lune_gmt, **kwargs):
+    show_tradeoffs=False, backend=_plot_lune_matplotlib, **kwargs):
 
     """ Plots DataArray values on the eigenvalue lune (requires GMT)
 

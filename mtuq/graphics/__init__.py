@@ -8,7 +8,7 @@ from mtuq.graphics.attrs import\
     _plot_attrs, plot_cross_corr, _pygmt_backend
 
 from mtuq.graphics.beachball import\
-    plot_beachball, plot_polarities
+    plot_beachball, plot_polarities, _plot_beachball_matplotlib
 
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune,\

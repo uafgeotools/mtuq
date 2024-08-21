@@ -232,7 +232,7 @@ if __name__=='__main__':
         # generate polarity figures
 
         plot_misfit_lune(event_id+'FMT_misfit_polarity.png', results_polarity,
-            show_best=False, title='Polarity Misfit')
+            show_best=False, title='Polarity Misfit', plot_type='scatter')
 
         # predicted polarities
         predicted = polarity_misfit.get_predicted(greens, best_mt)

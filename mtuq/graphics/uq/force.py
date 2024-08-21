@@ -8,6 +8,7 @@ import numpy as np
 from matplotlib import pyplot
 
 from mtuq.graphics.uq._gmt import _plot_force_gmt
+from mtuq.graphics.uq._matplotlib import _plot_force_matplotlib
 from mtuq.grid_search import DataFrame, DataArray, MTUQDataArray, MTUQDataFrame
 from mtuq.util import defaults, warn
 from mtuq.util import dataarray_idxmin, dataarray_idxmax
@@ -164,7 +165,7 @@ def plot_magnitude_tradeoffs_force(filename, ds, **kwargs):
 
 
 def _plot_force(filename, da, show_best=True, show_tradeoffs=False, 
-    backend=_plot_force_gmt, **kwargs):
+    backend=_plot_force_matplotlib, **kwargs):
 
     """ Plots values with respect to force orientation (requires GMT)
 
@@ -195,7 +196,7 @@ def _plot_force(filename, da, show_best=True, show_tradeoffs=False,
         else:
             warn("Best-fitting force not given")
 
-    _plot_force_gmt(filename,
+    backend(filename,
         da.coords['phi'],
         da.coords['h'], 
         da.values.transpose(),
