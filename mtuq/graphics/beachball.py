@@ -28,7 +28,6 @@ from six import string_types
 from mtuq.util.beachball import convert_sphere_points_to_angles, lambert_azimuthal_equal_area_projection,\
     estimate_angle_on_lune, rotate_tensor, polarities_mt, rotate_points, _project_on_sphere,\
     _adjust_scale_based_on_axes, _generate_sphere_points
-from mtuq.util.math import mat_to_vec, vec_to_mat
 
 import warnings
 
