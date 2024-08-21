@@ -1238,7 +1238,7 @@ WrapUp_DetailedAnalysis="""
             results_sum, show_tradeoffs=True, title='Orientation tradeoffs')
 
         plot_magnitude_tradeoffs_lune(event_id+'FMT_tradeoffs/magnitude.png',
-            results_sum, title='Magnitude tradeoffs')
+            results_sum, title='Magnitude tradeoffs', colorbar_label='Mw')
 
         print()
 
@@ -1543,7 +1543,7 @@ WrapUp_WaveformsPolarities="""
         # generate polarity figures
 
         plot_misfit_lune(event_id+'FMT_misfit_polarity.png', results_polarity,
-            show_best=False, title='Polarity Misfit')
+            show_best=False, title='Polarity Misfit', plot_type='scatter')
 
         # predicted polarities
         predicted = polarity_misfit.get_predicted(greens, best_mt)
