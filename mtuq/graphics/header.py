@@ -109,6 +109,9 @@ class SourceHeader(Base):
         # TODO - keep track of body and surface wave norms
         self.norm = self.misfit_sw.norm
         self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
+        
+        if self.best_misfit_sw_supp:
+            self.best_misfit += self.best_misfit_sw_supp
 
 
     def parse_data_processing(self):
@@ -167,7 +170,7 @@ class MomentTensorHeader(SourceHeader):
     """
     def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
         best_misfit_bw, best_misfit_sw, model, solver, mt, lune_dict, origin,
-        data_bw=None, data_sw=None, mt_grid=None, event_name=None):
+        data_bw=None, data_sw=None, mt_grid=None, event_name=None, **kwargs):
 
         if not event_name:
            # YYYY-MM-DDTHH:MM:SS.??????Z
@@ -196,6 +199,11 @@ class MomentTensorHeader(SourceHeader):
         self.data_bw = data_bw
         self.data_sw = data_sw
         self.mt_grid = mt_grid
+
+        # handle optional supplementary data
+        self.data_sw_supp = kwargs.get('data_sw_supp', None)
+        self.best_misfit_sw_supp = kwargs.get('best_misfit_sw_supp', None)
+        self.misfit_sw_supp = kwargs.get('misfit_sw_supp', None)
 
         # moment tensor-derived attributes
         self.magnitude = mt.magnitude()
@@ -312,7 +320,7 @@ class ForceHeader(SourceHeader):
 
     def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
         best_misfit_bw, best_misfit_sw, model, solver, force, force_dict, origin,
-        data_bw=None, data_sw=None, force_grid=None, event_name=None):
+        data_bw=None, data_sw=None, force_grid=None, event_name=None, **kwargs):
 
         if not event_name:
            # YYYY-MM-DDTHH:MM:SS.??????Z
@@ -341,6 +349,10 @@ class ForceHeader(SourceHeader):
         self.data_bw = data_bw
         self.data_sw = data_sw
         self.force_grid = force_grid
+
+        # handle optional supplementary data
+        self.data_sw_supp = kwargs.get('data_sw_supp', None)
+        self.best_misfit_sw_supp = kwargs.get('best_misfit_sw_supp', None)
 
         self.parse_origin()
         self.parse_misfit()
