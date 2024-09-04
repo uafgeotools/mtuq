@@ -586,8 +586,8 @@ def plot_data_greens3(filename,
             model, solver, source, source_dict, origin,
             process_data_bw, process_data_rayleigh, misfit_bw, misfit_rayleigh,
             total_misfit_bw, total_misfit_rayleigh, best_misfit_sw_supp=total_misfit_love,
-            misfit_sw_supp = misfit_love, data_bw=data_bw, data_rayleigh=data_rayleigh,
-            data_love=data_love)
+            misfit_sw_supp = misfit_love, data_bw=data_bw, data_sw=data_rayleigh,
+            data_sw_supp=data_love)
 
     plot_waveforms3(filename,
         data_bw, data_rayleigh, data_love,

@@ -143,24 +143,34 @@ class SourceHeader(Base):
             
     def parse_station_counts(self):
         def get_station_info(data_list):
-            station_ids = {sta.id for sta in data_list}
-            non_zero_traces = sum(1 for data in data_list if data.count() > 0)
-            return station_ids, non_zero_traces
+            station_ids = {sta.id for sta in data_list if sta.count() > 0}
+            return station_ids
 
-        station_ids = set()
+        station_ids_bw = set()
+        station_ids_sw = set()
         self.N_p_used = 0
         self.N_s_used = 0
 
         if self.data_bw:
-            ids_bw, self.N_p_used = get_station_info(self.data_bw)
-            station_ids.update(ids_bw)
+            station_ids_bw = get_station_info(self.data_bw)
+            self.N_p_used = len(station_ids_bw)
 
         if self.data_sw:
-            ids_sw, self.N_s_used = get_station_info(self.data_sw)
-            station_ids.update(ids_sw)
+            station_ids_sw = get_station_info(self.data_sw)
+            self.N_s_used = len(station_ids_sw)
 
+        if self.data_sw_supp:
+            # Update sw with any unique additional stations from sw_supp not already in sw
+            station_ids_supp = get_station_info(self.data_sw_supp)
+            new_ids_supp = station_ids_supp - station_ids_sw
+            self.N_s_used += len(new_ids_supp)
+            station_ids_sw.update(new_ids_supp)
+
+        # Combine unique stations from bw and sw sets
+        all_station_ids = station_ids_bw.union(station_ids_sw)
+        
         # Set total number of unique stations
-        self.N_total = len(station_ids)
+        self.N_total = len(all_station_ids)
 
 
 
