@@ -676,11 +676,11 @@ class ProcessData(object):
                 # alignment=0.0 - window starts at group arrival
                 # alignment=0.5 - window centered on group arrival (default)
                 # alignment=1.0 - window ends at group arrival
-                alignment = self.alignment
+                # alignment = self.alignment
 
-                starttime = group_arrival - self.window_length*window_alignment
+                starttime = group_arrival - self.window_length*self.window_alignment
                 endtime = group_arrival + \
-                    self.window_length*(1.-window_alignment)
+                    self.window_length*(1.-self.window_alignment)
 
                 starttime += float(origin.time)
                 endtime += float(origin.time)
