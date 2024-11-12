@@ -271,8 +271,8 @@ def plot_waveforms3(filename,
         station_label_writer=station_label_writer,
         ):
 
-    """ Creates data/synthetics comparison figure with 6 columns 
-    (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
+    """ Creates data/synthetics comparison figure with 5 columns 
+    (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T), for three data groups
     """
 
     # how many stations have at least one trace?
@@ -541,10 +541,10 @@ def plot_data_greens3(filename,
         source_dict,
         **kwargs):
 
-    """ Creates data/synthetics comparison figure with 6 columns 
+    """ Creates data/synthetics comparison figure with 5 columns 
     (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
 
-    Different input arguments, same result as plot_waveforms2, but for three data groups.
+    Different input arguments, same result as plot_waveforms3. Considers three data groups.
     """
 
     # collect synthetic waveforms with misfit attributes attached
@@ -587,7 +587,7 @@ def plot_data_greens3(filename,
             process_data_bw, process_data_rayleigh, misfit_bw, misfit_rayleigh,
             total_misfit_bw, total_misfit_rayleigh, best_misfit_sw_supp=total_misfit_love,
             misfit_sw_supp = misfit_love, data_bw=data_bw, data_sw=data_rayleigh,
-            data_sw_supp=data_love)
+            data_sw_supp=data_love, process_love=process_data_love)
 
     plot_waveforms3(filename,
         data_bw, data_rayleigh, data_love,

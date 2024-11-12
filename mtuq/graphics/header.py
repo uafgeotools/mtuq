@@ -119,6 +119,8 @@ class SourceHeader(Base):
             pass
         if not self.process_sw:
             raise Exception()
+        if not self.process_love:
+            pass
 
         if self.process_sw.freq_max > 1.:
             units = 'Hz'
@@ -140,6 +142,15 @@ class SourceHeader(Base):
         elif self.process_sw and units=='s':
             self.passband_sw = '%.1f - %.1f s' %\
                 (self.process_sw.freq_max**-1, self.process_sw.freq_min**-1)
+            
+        if self.process_love:
+            if units=='Hz':
+                self.passband_love = '%.1f - %.1f Hz' %\
+                    (self.process_love.freq_min, self.process_love.freq_max)
+
+            elif units=='s':
+                self.passband_love = '%.1f - %.1f s' %\
+                    (self.process_love.freq_max**-1, self.process_love.freq_min**-1)
             
     def parse_station_counts(self):
         def get_station_info(data_list):
@@ -214,6 +225,7 @@ class MomentTensorHeader(SourceHeader):
         self.data_sw_supp = kwargs.get('data_sw_supp', None)
         self.best_misfit_sw_supp = kwargs.get('best_misfit_sw_supp', None)
         self.misfit_sw_supp = kwargs.get('misfit_sw_supp', None)
+        self.process_love = kwargs.get('process_love', None)
 
         # moment tensor-derived attributes
         self.magnitude = mt.magnitude()
@@ -295,7 +307,15 @@ class MomentTensorHeader(SourceHeader):
         px += 0.00
         py -= 0.30
 
-        if self.process_bw and self.process_bw:
+        if self.process_bw and self.process_sw and self.process_love:
+            line = ('body waves: %s (%.1f s), ' 
+                    'Rayleigh: %s (%.1f s), ' 
+                    'Love: %s (%.1f s)') %\
+                (self.passband_bw, self.process_bw.window_length,
+                    self.passband_sw, self.process_sw.window_length,
+                    self.passband_love, self.process_love.window_length)
+
+        elif self.process_bw and self.process_sw:
             line = ('body waves:  %s (%.1f s),  ' +\
                     'surface waves: %s (%.1f s)') %\
                     (self.passband_bw, self.process_bw.window_length,
@@ -363,6 +383,7 @@ class ForceHeader(SourceHeader):
         # handle optional supplementary data
         self.data_sw_supp = kwargs.get('data_sw_supp', None)
         self.best_misfit_sw_supp = kwargs.get('best_misfit_sw_supp', None)
+        self.process_love = kwargs.get('process_love', None)
 
         self.parse_origin()
         self.parse_misfit()
@@ -403,9 +424,17 @@ class ForceHeader(SourceHeader):
         px += 0.00
         py -= 0.30
 
-        if self.process_bw and self.process_bw:
+        if self.process_bw and self.process_sw and self.process_love:
             line = ('body waves:  %s (%.1f s),  ' +\
-                    'surface waves: %s (%.1f s) ') %\
+                    'Rayleigh waves: %s (%.1f s),  ' +\
+                    'Love waves: %s (%.1f s)') %\
+                    (self.passband_bw, self.process_bw.window_length,
+                     self.passband_sw, self.process_sw.window_length,
+                     self.passband_love, self.process_love.window_length)
+
+        elif self.process_bw and self.process_sw:
+            line = ('body waves:  %s (%.1f s),  ' +\
+                    'surface waves: %s (%.1f s)') %\
                     (self.passband_bw, self.process_bw.window_length,
                      self.passband_sw, self.process_sw.window_length)
 
