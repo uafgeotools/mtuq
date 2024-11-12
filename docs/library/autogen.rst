@@ -15,8 +15,10 @@ autogen
    mtuq.graphics.plot_polarities
    mtuq.graphics.plot_data_greens1
    mtuq.graphics.plot_data_greens2
+   mtuq.graphics.plot_data_greens3
    mtuq.graphics.plot_waveforms1
    mtuq.graphics.plot_waveforms2
+   mtuq.graphics.plot_waveforms3
    mtuq.graphics.plot_likelihood_lune
    mtuq.graphics.plot_marginal_lune
    mtuq.graphics.plot_misfit_lune
