@@ -22,10 +22,6 @@ CHANNELS = [
 ]
 
 
-# display prominent warning
-print('WARNING: CPS client still under testing...\n')
-
-
 class Client(ClientBase):
     """  CPS database client
 
