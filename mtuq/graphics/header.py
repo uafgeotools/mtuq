@@ -109,6 +109,9 @@ class SourceHeader(Base):
         # TODO - keep track of body and surface wave norms
         self.norm = self.misfit_sw.norm
         self.best_misfit = self.best_misfit_bw + self.best_misfit_sw
+        
+        if self.best_misfit_sw_supp:
+            self.best_misfit += self.best_misfit_sw_supp
 
 
     def parse_data_processing(self):
@@ -116,6 +119,8 @@ class SourceHeader(Base):
             pass
         if not self.process_sw:
             raise Exception()
+        if not self.process_sw_supp:
+            pass
 
         if self.process_sw.freq_max > 1.:
             units = 'Hz'
@@ -138,26 +143,45 @@ class SourceHeader(Base):
             self.passband_sw = '%.1f - %.1f s' %\
                 (self.process_sw.freq_max**-1, self.process_sw.freq_min**-1)
             
+        if self.process_sw_supp:
+            if units=='Hz':
+                self.passband_love = '%.1f - %.1f Hz' %\
+                    (self.process_sw_supp.freq_min, self.process_sw_supp.freq_max)
+
+            elif units=='s':
+                self.passband_love = '%.1f - %.1f s' %\
+                    (self.process_sw_supp.freq_max**-1, self.process_sw_supp.freq_min**-1)
+            
     def parse_station_counts(self):
         def get_station_info(data_list):
-            station_ids = {sta.id for sta in data_list}
-            non_zero_traces = sum(1 for data in data_list if data.count() > 0)
-            return station_ids, non_zero_traces
+            station_ids = {sta.id for sta in data_list if sta.count() > 0}
+            return station_ids
 
-        station_ids = set()
+        station_ids_bw = set()
+        station_ids_sw = set()
         self.N_p_used = 0
         self.N_s_used = 0
 
         if self.data_bw:
-            ids_bw, self.N_p_used = get_station_info(self.data_bw)
-            station_ids.update(ids_bw)
+            station_ids_bw = get_station_info(self.data_bw)
+            self.N_p_used = len(station_ids_bw)
 
         if self.data_sw:
-            ids_sw, self.N_s_used = get_station_info(self.data_sw)
-            station_ids.update(ids_sw)
+            station_ids_sw = get_station_info(self.data_sw)
+            self.N_s_used = len(station_ids_sw)
 
+        if self.data_sw_supp:
+            # Update sw with any unique additional stations from sw_supp not already in sw
+            station_ids_supp = get_station_info(self.data_sw_supp)
+            new_ids_supp = station_ids_supp - station_ids_sw
+            self.N_s_used += len(new_ids_supp)
+            station_ids_sw.update(new_ids_supp)
+
+        # Combine unique stations from bw and sw sets
+        all_station_ids = station_ids_bw.union(station_ids_sw)
+        
         # Set total number of unique stations
-        self.N_total = len(station_ids)
+        self.N_total = len(all_station_ids)
 
 
 
@@ -167,7 +191,7 @@ class MomentTensorHeader(SourceHeader):
     """
     def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
         best_misfit_bw, best_misfit_sw, model, solver, mt, lune_dict, origin,
-        data_bw=None, data_sw=None, mt_grid=None, event_name=None):
+        data_bw=None, data_sw=None, mt_grid=None, event_name=None, **kwargs):
 
         if not event_name:
            # YYYY-MM-DDTHH:MM:SS.??????Z
@@ -196,6 +220,12 @@ class MomentTensorHeader(SourceHeader):
         self.data_bw = data_bw
         self.data_sw = data_sw
         self.mt_grid = mt_grid
+
+        # handle optional supplementary data
+        self.data_sw_supp = kwargs.get('data_sw_supp', None)
+        self.best_misfit_sw_supp = kwargs.get('best_misfit_sw_supp', None)
+        self.misfit_sw_supp = kwargs.get('misfit_sw_supp', None)
+        self.process_sw_supp = kwargs.get('process_sw_supp', None)
 
         # moment tensor-derived attributes
         self.magnitude = mt.magnitude()
@@ -277,7 +307,15 @@ class MomentTensorHeader(SourceHeader):
         px += 0.00
         py -= 0.30
 
-        if self.process_bw and self.process_bw:
+        if self.process_bw and self.process_sw and self.process_sw_supp:
+            line = ('body waves: %s (%.1f s), ' 
+                    'Rayleigh: %s (%.1f s), ' 
+                    'Love: %s (%.1f s)') %\
+                (self.passband_bw, self.process_bw.window_length,
+                    self.passband_sw, self.process_sw.window_length,
+                    self.passband_love, self.process_sw_supp.window_length)
+
+        elif self.process_bw and self.process_sw:
             line = ('body waves:  %s (%.1f s),  ' +\
                     'surface waves: %s (%.1f s)') %\
                     (self.passband_bw, self.process_bw.window_length,
@@ -312,7 +350,7 @@ class ForceHeader(SourceHeader):
 
     def __init__(self, process_bw, process_sw, misfit_bw, misfit_sw,
         best_misfit_bw, best_misfit_sw, model, solver, force, force_dict, origin,
-        data_bw=None, data_sw=None, force_grid=None, event_name=None):
+        data_bw=None, data_sw=None, force_grid=None, event_name=None, **kwargs):
 
         if not event_name:
            # YYYY-MM-DDTHH:MM:SS.??????Z
@@ -341,6 +379,11 @@ class ForceHeader(SourceHeader):
         self.data_bw = data_bw
         self.data_sw = data_sw
         self.force_grid = force_grid
+
+        # handle optional supplementary data
+        self.data_sw_supp = kwargs.get('data_sw_supp', None)
+        self.best_misfit_sw_supp = kwargs.get('best_misfit_sw_supp', None)
+        self.process_sw_supp = kwargs.get('process_sw_supp', None)
 
         self.parse_origin()
         self.parse_misfit()
@@ -381,9 +424,17 @@ class ForceHeader(SourceHeader):
         px += 0.00
         py -= 0.30
 
-        if self.process_bw and self.process_bw:
+        if self.process_bw and self.process_sw and self.process_sw_supp:
             line = ('body waves:  %s (%.1f s),  ' +\
-                    'surface waves: %s (%.1f s) ') %\
+                    'Rayleigh waves: %s (%.1f s),  ' +\
+                    'Love waves: %s (%.1f s)') %\
+                    (self.passband_bw, self.process_bw.window_length,
+                     self.passband_sw, self.process_sw.window_length,
+                     self.passband_love, self.process_sw_supp.window_length)
+
+        elif self.process_bw and self.process_sw:
+            line = ('body waves:  %s (%.1f s),  ' +\
+                    'surface waves: %s (%.1f s)') %\
                     (self.passband_bw, self.process_bw.window_length,
                      self.passband_sw, self.process_sw.window_length)
 

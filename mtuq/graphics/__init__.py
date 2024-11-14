@@ -33,7 +33,8 @@ from mtuq.graphics.uq.hypocenter import\
     plot_misfit_latlon, plot_likelihood_latlon, plot_marginal_latlon, _plot_latlon
 
 from mtuq.graphics.waveforms import\
-    plot_waveforms1, plot_waveforms2, plot_data_greens1, plot_data_greens2
+    plot_waveforms1, plot_waveforms2, plot_waveforms3,\
+    plot_data_greens1, plot_data_greens2, plot_data_greens3
 
 from mtuq.graphics.uq.omega import\
     plot_cdf, plot_pdf, plot_screening_curve

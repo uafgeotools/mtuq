@@ -253,6 +253,173 @@ def plot_waveforms2(filename,
     pyplot.close()
 
 
+def plot_waveforms3(filename, 
+        data_bw,
+        data_rayleigh,
+        data_love,
+        synthetics_bw,
+        synthetics_rayleigh,
+        synthetics_love,
+        stations,
+        origin,
+        header=None,
+        total_misfit_bw=1., 
+        total_misfit_rayleigh=1., 
+        total_misfit_love=1.,
+        normalize='maximum_amplitude',
+        trace_label_writer=trace_label_writer,
+        station_label_writer=station_label_writer,
+        ):
+
+    """ Creates data/synthetics comparison figure with 5 columns 
+    (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T), for three data groups
+    """
+
+    # how many stations have at least one trace?
+    nstations = _count([data_bw, data_rayleigh, data_love])
+
+    #
+    # initialize figure
+    #
+
+    fig, axes = _initialize(
+       nrows=nstations,
+       ncolumns=6,
+       column_width_ratios=[0.5,0.5,1.,1.,1.],
+       height=1.25*nstations,
+       width=10.,
+       header=header,
+       header_height=2.,
+       station_labels=bool(station_label_writer),
+       )
+
+    _add_component_labels2(axes)
+
+    # determine maximum trace amplitudes
+    max_amplitude_bw = _max(data_bw, synthetics_bw)
+    max_amplitude_rayleigh = _max(data_rayleigh, synthetics_rayleigh)
+    max_amplitude_love = _max(data_love, synthetics_love)
+
+    if normalize == 'median_amplitude':
+        # For body wave data and synthetics
+        bw_median = _median_amplitude(data_bw, synthetics_bw)
+        max_amplitudes_bw = np.array([bw_median if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+
+        # For Rayleigh wave data and synthetics
+        rayleigh_median = _median_amplitude(data_rayleigh, synthetics_rayleigh)
+        max_amplitudes_rayleigh = np.array([rayleigh_median if len(data_rayleigh[i]) > 0 and len(synthetics_rayleigh[i]) > 0 else 0.0 for i in range(len(data_rayleigh))])
+
+        # For Love wave data and synthetics
+        love_median = _median_amplitude(data_love, synthetics_love)
+        max_amplitudes_love = np.array([love_median if len(data_love[i]) > 0 and len(synthetics_love[i]) > 0 else 0.0 for i in range(len(data_love))])
+
+    elif normalize == 'maximum_amplitude':
+        max_amplitudes_bw = np.array([max_amplitude_bw if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+        max_amplitudes_rayleigh = np.array([max_amplitude_rayleigh if len(data_rayleigh[i]) > 0 and len(synthetics_rayleigh[i]) > 0 else 0.0 for i in range(len(data_rayleigh))])
+        max_amplitudes_love = np.array([max_amplitude_love if len(data_love[i]) > 0 and len(synthetics_love[i]) > 0 else 0.0 for i in range(len(data_love))])
+
+    elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
+        max_amplitudes_bw = np.array([_max(data_bw[i], synthetics_bw[i]) if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+        max_amplitudes_rayleigh = np.array([_max(data_rayleigh[i], synthetics_rayleigh[i]) if len(data_rayleigh[i]) > 0 and len(synthetics_rayleigh[i]) > 0 else 0.0 for i in range(len(data_rayleigh))])
+        max_amplitudes_love = np.array([_max(data_love[i], synthetics_love[i]) if len(data_love[i]) > 0 and len(synthetics_love[i]) > 0 else 0.0 for i in range(len(data_love))])
+    else:
+        raise ValueError("Invalid normalization method specified.")
+
+    #
+    # loop over stations
+    #
+
+    ir = 0
+
+    for _i in range(len(stations)):
+
+        # skip empty stations
+        if len(data_bw[_i]) == len(data_rayleigh[_i]) == len(data_love[_i]) == 0:
+            continue
+
+        # add station labels
+        if station_label_writer is not None:
+            station_label_writer(axes[ir][0], stations[_i], origin)
+
+        #
+        # plot body wave traces
+        #
+
+        stream_dat = data_bw[_i]
+        stream_syn = synthetics_bw[_i]
+
+        for dat in stream_dat:
+            component = dat.stats.channel[-1].upper()
+            weight = _getattr(dat, 'weight', 1.)
+
+            if not weight:
+                continue
+
+            # skip missing components
+            try:
+                syn = stream_syn.select(component=component)[0]
+            except:
+                warn('Missing component, skipping...')
+                continue
+
+            _plot_ZR(axes[ir], 1, dat, syn, component, 
+                normalize, trace_label_writer, max_amplitudes_bw[_i], total_misfit_bw)
+
+        #
+        # plot Rayleigh wave traces
+        #
+
+        stream_dat = data_rayleigh[_i]
+        stream_syn = synthetics_rayleigh[_i]
+
+        for dat in stream_dat:
+            component = dat.stats.channel[-1].upper()
+            weight = _getattr(dat, 'weight', 1.)
+
+            if not weight:
+                continue
+
+            # skip missing components
+            try:
+                syn = stream_syn.select(component=component)[0]
+            except:
+                warn('Missing component, skipping...')
+                continue
+
+            _plot_ZRT(axes[ir], 3, dat, syn, component,
+                normalize, trace_label_writer, max_amplitudes_rayleigh[_i], total_misfit_rayleigh)
+
+        #
+        # plot Love wave traces
+        #
+
+        stream_dat = data_love[_i]
+        stream_syn = synthetics_love[_i]
+
+        for dat in stream_dat:
+            component = dat.stats.channel[-1].upper()
+            weight = _getattr(dat, 'weight', 1.)
+
+            if not weight:
+                continue
+
+            # skip missing components
+            try:
+                syn = stream_syn.select(component=component)[0]
+            except:
+                warn('Missing component, skipping...')
+                continue
+
+            _plot_ZRT(axes[ir], 3, dat, syn, component,
+                normalize, trace_label_writer, max_amplitudes_love[_i], total_misfit_love)
+
+
+        ir += 1
+
+    _save(filename)
+    pyplot.close()
+
+
 def plot_data_greens1(filename,
         data,
         greens,
@@ -271,6 +438,9 @@ def plot_data_greens1(filename,
 
     # collect synthetic waveforms with misfit attributes attached
     synthetics = misfit.collect_synthetics(data, greens.select(origin), source)
+
+    # Prune synthetics to only include components that are present in the misfit time_shift_groups
+    _prune_synthetics(misfit, synthetics)
 
     # calculate total misfit for display in figure header
     total_misfit = misfit(data, greens.select(origin), source, optimization_level=0)
@@ -320,6 +490,9 @@ def plot_data_greens2(filename,
     synthetics_sw = misfit_sw.collect_synthetics(
         data_sw, greens_sw.select(origin), source)
 
+    # Prune synthetics to only include components that are present in the misfit time_shift_groups
+    _prune_synthetics(misfit_bw, synthetics_bw)
+    _prune_synthetics(misfit_sw, synthetics_sw)
 
     # calculate total misfit for display in figure header
     total_misfit_bw = misfit_bw(
@@ -348,6 +521,80 @@ def plot_data_greens2(filename,
         total_misfit_bw=total_misfit_bw, total_misfit_sw=total_misfit_sw,
         header=header, **kwargs)
 
+
+def plot_data_greens3(filename,
+        data_bw,
+        data_rayleigh,
+        data_love,
+        greens_bw,
+        greens_rayleigh,
+        greens_love,
+        process_data_bw,
+        process_data_rayleigh,
+        process_data_love,
+        misfit_bw,
+        misfit_rayleigh,
+        misfit_love,
+        stations,
+        origin,
+        source,
+        source_dict,
+        **kwargs):
+
+    """ Creates data/synthetics comparison figure with 5 columns 
+    (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
+
+    Different input arguments, same result as plot_waveforms3. Considers three data groups.
+    """
+
+    # collect synthetic waveforms with misfit attributes attached
+    synthetics_bw = misfit_bw.collect_synthetics(
+        data_bw, greens_bw.select(origin), source)
+
+    synthetics_rayleigh = misfit_rayleigh.collect_synthetics(
+        data_rayleigh, greens_rayleigh.select(origin), source)
+
+    synthetics_love = misfit_love.collect_synthetics(
+        data_love, greens_love.select(origin), source)
+    
+    # Prune synthetics to only include components that are present in the misfit time_shift_groups
+    _prune_synthetics(misfit_bw, synthetics_bw)
+    _prune_synthetics(misfit_rayleigh, synthetics_rayleigh)
+    _prune_synthetics(misfit_love, synthetics_love)
+                
+    # calculate total misfit for display in figure header
+    total_misfit_bw = misfit_bw(
+        data_bw, greens_bw.select(origin), source, optimization_level=0)
+
+    total_misfit_rayleigh = misfit_rayleigh(
+        data_rayleigh, greens_rayleigh.select(origin), source, optimization_level=0) 
+
+    total_misfit_love = misfit_love(
+        data_love, greens_love.select(origin), source, optimization_level=0) 
+
+    # Print the length of the data and synthetics for each group
+    # Hav
+
+    # prepare figure header
+    if 'header' in kwargs:
+        header = kwargs.pop('header')
+    else:
+        model = _get_tag(greens_bw[0].tags, 'model')
+        solver = _get_tag(greens_bw[0].tags, 'solver')
+
+        header = _prepare_header(
+            model, solver, source, source_dict, origin,
+            process_data_bw, process_data_rayleigh, misfit_bw, misfit_rayleigh,
+            total_misfit_bw, total_misfit_rayleigh, best_misfit_sw_supp=total_misfit_love,
+            misfit_sw_supp = misfit_love, data_bw=data_bw, data_sw=data_rayleigh,
+            data_sw_supp=data_love, process_sw_supp=process_data_love)
+
+    plot_waveforms3(filename,
+        data_bw, data_rayleigh, data_love,
+        synthetics_bw, synthetics_rayleigh, synthetics_love,
+        stations, origin,
+        total_misfit_bw=total_misfit_bw, total_misfit_rayleigh=total_misfit_rayleigh, total_misfit_love=total_misfit_love,
+        header=header, **kwargs)
 
 
 #
@@ -667,3 +914,18 @@ def _get_tag(tags, pattern):
     else:
         return None
 
+def _prune_synthetics(misfit, synthetics):
+    """ Prunes synthetics to only include components that are present in the misfit time_shift_groups
+
+    note: Ideally, this would be done internally when collecting synthetics in the misfit object
+    but it is done here to avoid modifying important moving parts of the codebase.
+    """
+    components = []
+    for group in misfit.time_shift_groups:
+        for component in group:
+            components.append(component)
+
+    for sta in synthetics:
+        for tr in sta:
+            if tr.stats.channel not in components:
+                sta.remove(tr)
