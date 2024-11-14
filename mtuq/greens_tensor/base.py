@@ -148,10 +148,10 @@ class GreensTensor(Stream):
         """
         nc, nr, nt = self._get_shape()
 
-        if not stats:
-            stats = []
+        if stats is None:
+            stats = list()
             for component in self.components:
-                stats += [self[0].stats.copy()]
+                stats.append(deepcopy(self.station))
                 stats[-1].update({'npts': nt, 'channel': component})
 
         stream = Stream()
@@ -291,7 +291,7 @@ class GreensTensorList(list):
         return selected
 
 
-    def get_synthetics(self, source, components=None, stats=None, mode='apply', **kwargs):
+    def get_synthetics(self, source, components=['Z','R','T'], stats=None, mode='apply', **kwargs):
         """ Generates synthetics through a linear combination of time series
 
         Returns an MTUQ `Dataset`
@@ -307,6 +307,7 @@ class GreensTensorList(list):
 
         ``stats`` (`obspy.Trace.Stats` object):
         ObsPy Stats object that will be attached to the synthetics
+        (Defaults to `GreensTesnor` `station` attributes.)
         
         """
         if mode=='map':
@@ -322,6 +323,12 @@ class GreensTensorList(list):
             return synthetics
 
         elif mode=='apply':
+            if stats is not None:
+                print("get_synthetics() stats keyword argument can only be "
+                      "used with mode='apply'")
+
+                warnings.warn("Ignoring stats keyword argument.")
+
             synthetics = Dataset()
             for tensor in self:
                 synthetics.append(tensor.get_synthetics(
