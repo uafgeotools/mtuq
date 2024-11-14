@@ -136,55 +136,6 @@ def _get_origin(stream, event_id):
         })
 
 
-def _get_station(stream, attach_sac_headers=False):
-    """ Extracts station metadata from SAC headers
-    """
-    #
-    # extract metadata from ObsPy structures
-    #
-    meta = deepcopy(stream[0].meta.__dict__)
-
-    sac_headers = meta.pop('sac')
-
-    # remove channel-specific attributes
-    for attr in ['channel', 'component']:
-        if attr in meta:
-            meta.pop(attr)
-
-    #
-    # populate station object
-    #
-    station = Station(meta)
-
-    station.update({
-        'id': '.'.join([
-            stream[0].stats.network,
-            stream[0].stats.station,
-            stream[0].stats.location])})
-
-    try:
-        station_latitude = sac_headers.stla
-        station_longitude = sac_headers.stlo
-        station.update({
-            'latitude': station_latitude,
-            'longitude': station_longitude})
-    except:
-        raise Exception(
-            "Could not determine station location from SAC headers.")
-
-    try:
-        station.update({
-            'station_elevation_in_m': sac_headers.stel,
-            'station_depth_in_m': sac_headers.stdp})
-    except:
-        pass
-
-    if attach_sac_headers:
-        station.sac = sac_headers
-
-    return station
-
-
 def _get_station(stream):
     """ Extracts station metadata from SAC headers
     """ 
