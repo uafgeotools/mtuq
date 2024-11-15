@@ -42,7 +42,8 @@ class Client(ClientBase):
     """
 
     def __init__(self, path_or_url=None, model=None,
-                 include_mt=True, include_force=False):
+                 include_mt=True, include_force=False,
+                 cache_path=None):
 
         if not path_or_url:
             path_or_url = 'http://service.iris.edu/irisws/syngine/1'
@@ -54,6 +55,8 @@ class Client(ClientBase):
 
         self.include_mt = include_mt
         self.include_force = include_force
+
+        self.cache_path = cache_path
 
 
     def get_greens_tensors(self, stations=[], origins=[], verbose=False):
@@ -82,7 +85,8 @@ class Client(ClientBase):
 
         if self.include_mt:
             dirname = download_unzip_mt_response(
-                self.url, self.model, station, origin)
+                self.url, self.model, station, origin, 
+                cache_path=self.cache_path)
 
             for filename in GREENS_TENSOR_FILENAMES:
                 stream += obspy.read(dirname+'/'+filename, format='sac')
