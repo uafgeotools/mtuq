@@ -24,7 +24,8 @@ class GreensTensor(Stream):
         `ObsPy documentation <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html>`_
         for more information. 
 
-    """
+"""
+
     def __init__(self, 
             traces=None, 
             station=None, 
@@ -102,13 +103,6 @@ class GreensTensor(Stream):
 
     def _preallocate(self):
         """ Preallocates structures used by `get_synthetics`
-
-        .. note:
-
-            Every time ``get_synthetics(inplace=True)`` is called, the numeric 
-            trace data get overwritten. Every time ``_set_components`` is 
-            called, the traces get overwritten.  The stream itself never gets
-            overwritten.
         """
         nc, nr, nt = self._get_shape()
 
@@ -307,8 +301,25 @@ class GreensTensorList(list):
 
         ``stats`` (`obspy.Trace.Stats` object):
         ObsPy Stats object that will be attached to the synthetics
-        (Defaults to `GreensTesnor` `station` attributes.)
-        
+        (Defaults to `GreensTensor` `station` attributes.)
+
+
+        .. note::
+
+          Different ways of generating synthetics are possible (including in-place
+          methods suitable for use in mtuq/grid_search.py):
+
+             - When ``get_synthetics(inplace=True)`` is called, the existing 
+               stream and trace objects are reused, and only the numeric trace
+               data gets overwritten
+
+             - When ``get_synthetics(inplace=False)`` is called, new stream and trace
+               objects are allocated
+
+             - When ``_set_components()`` is called prior to 
+              ``get_synthetics(inplace=True)``, the existing stream is reused but
+              new trace objects are allocated
+
         """
         if mode=='map':
             if components is None:
