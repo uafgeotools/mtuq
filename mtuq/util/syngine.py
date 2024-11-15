@@ -110,13 +110,13 @@ def download_unzip_mt_response(url, model, station, origin, verbose=True):
     return path
 
 
-def download_synthetics(url, model, station, origin, source):
+def download_synthetics(url, model, station, origin, source, cache_path=None):
     """ Downloads synthetics through syngine URL interface
     """
     if len(source)==6:
-        args='&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+        args='&sourcemomenttensor='+re.sub(r'\+','',",".join(map(str, source)))
     elif len(source)==3:
-        args='&sourceforce='+re.sub('\+','',",".join(map(str, source)))
+        args='&sourceforce='+re.sub(r'\+','',",".join(map(str, source)))
     else:
         raise TypeError
 
@@ -133,9 +133,9 @@ def download_synthetics(url, model, station, origin, source):
          +'&starttime='+str(origin.time)[:-1])
 
     if len(source)==6:
-        url+='&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+        url+='&sourcemomenttensor='+re.sub(r'\+','',",".join(map(str, source)))
     elif len(source)==3:
-        url+='&sourceforce='+re.sub('\+','',",".join(map(str, source)))
+        url+='&sourceforce='+re.sub(r'\+','',",".join(map(str, source)))
     else:
         raise TypeError
 
