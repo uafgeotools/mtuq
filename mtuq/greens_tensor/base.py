@@ -24,7 +24,8 @@ class GreensTensor(Stream):
         `ObsPy documentation <https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html>`_
         for more information. 
 
-    """
+"""
+
     def __init__(self, 
             traces=None, 
             station=None, 
@@ -102,13 +103,6 @@ class GreensTensor(Stream):
 
     def _preallocate(self):
         """ Preallocates structures used by `get_synthetics`
-
-        .. note:
-
-            Every time ``get_synthetics(inplace=True)`` is called, the numeric 
-            trace data get overwritten. Every time ``_set_components`` is 
-            called, the traces get overwritten.  The stream itself never gets
-            overwritten.
         """
         nc, nr, nt = self._get_shape()
 
@@ -148,10 +142,10 @@ class GreensTensor(Stream):
         """
         nc, nr, nt = self._get_shape()
 
-        if not stats:
-            stats = []
+        if stats is None:
+            stats = list()
             for component in self.components:
-                stats += [self[0].stats.copy()]
+                stats.append(deepcopy(self.station))
                 stats[-1].update({'npts': nt, 'channel': component})
 
         stream = Stream()
@@ -291,7 +285,7 @@ class GreensTensorList(list):
         return selected
 
 
-    def get_synthetics(self, source, components=None, stats=None, mode='apply', **kwargs):
+    def get_synthetics(self, source, components=['Z','R','T'], stats=None, mode='apply', **kwargs):
         """ Generates synthetics through a linear combination of time series
 
         Returns an MTUQ `Dataset`
@@ -307,7 +301,25 @@ class GreensTensorList(list):
 
         ``stats`` (`obspy.Trace.Stats` object):
         ObsPy Stats object that will be attached to the synthetics
-        
+        (Defaults to `GreensTensor` `station` attributes.)
+
+
+        .. note::
+
+          Different ways of generating synthetics are possible (including in-place
+          methods suitable for use in mtuq/grid_search.py):
+
+             - When ``get_synthetics(inplace=True)`` is called, the existing 
+               stream and trace objects are reused, and only the numeric trace
+               data gets overwritten
+
+             - When ``get_synthetics(inplace=False)`` is called, new stream and trace
+               objects are allocated
+
+             - When ``_set_components()`` is called prior to 
+              ``get_synthetics(inplace=True)``, the existing stream is reused but
+              new trace objects are allocated
+
         """
         if mode=='map':
             if components is None:
@@ -322,6 +334,12 @@ class GreensTensorList(list):
             return synthetics
 
         elif mode=='apply':
+            if stats is not None:
+                print("get_synthetics() stats keyword argument can only be "
+                      "used with mode='apply'")
+
+                warnings.warn("Ignoring stats keyword argument.")
+
             synthetics = Dataset()
             for tensor in self:
                 synthetics.append(tensor.get_synthetics(

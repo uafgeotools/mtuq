@@ -68,8 +68,11 @@ def read(filenames, station_id_list=None, event_id=None, tags=[]):
     for station_id in data_sorted:
          streams += [data_sorted[station_id]]
 
-    # check for duplicate components
     for stream in streams:
+        # check for duplicate components
+        check_components(stream)
+
+        # check for that all traces have same time sampling
         check_components(stream)
 
     # collect event metadata
@@ -81,7 +84,7 @@ def read(filenames, station_id_list=None, event_id=None, tags=[]):
 
     # collect station metadata
     for stream in streams:
-        stream.station = _get_station(stream, preliminary_origin)
+        stream.station = _get_station(stream)
 
     # create MTUQ Dataset
     return Dataset(streams, id=event_id, tags=tags)
@@ -133,26 +136,28 @@ def _get_origin(stream, event_id):
         })
 
 
-def _get_station(stream, origin, attach_sac_headers=True):
+def _get_station(stream):
     """ Extracts station metadata from SAC headers
-    """
-    #
-    # extract metadata from ObsPy structures
-    #
-    meta = deepcopy(stream[0].meta.__dict__)
+    """ 
+    stats = stream[0].stats
+    sac_headers = stream[0].stats.sac
 
-    sac_headers = meta.pop('sac')
-
-    # remove channel-specific attributes
-    for attr in ['channel', 'component']:
-        if attr in meta:
-            meta.pop(attr)
-
-    #
+    #       
     # populate station object
-    #
-    station = Station(meta)
-
+    #       
+    station = Station()
+        
+    station.update({
+        'network': stream[0].stats.network,
+        'station': stream[0].stats.station,
+        'location': stream[0].stats.location,
+        'sampling_rate': stream[0].stats.sampling_rate,
+        'npts': stream[0].stats.npts,
+        'delta': stream[0].stats.delta,
+        'starttime': stream[0].stats.starttime,
+        'endtime': stream[0].stats.endtime,
+        })
+    
     station.update({
         'id': '.'.join([
             stream[0].stats.network,
@@ -168,18 +173,16 @@ def _get_station(stream, origin, attach_sac_headers=True):
     except:
         raise Exception(
             "Could not determine station location from SAC headers.")
-
+    
     try:
         station.update({
             'station_elevation_in_m': sac_headers.stel,
             'station_depth_in_m': sac_headers.stdp})
-    except:
+    except: 
         pass
-
-    if attach_sac_headers:
-        station.sac = sac_headers
-
+    
     return station
+
 
 
 def _glob(filenames):

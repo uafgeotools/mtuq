@@ -32,7 +32,7 @@ Unpack seismic waveforms used by examples:
 .. code::
 
     bash ./data/examples/unpack.bash
-    bash ./data/tests/unpack.bash
+    bash ./data/tests/download.bash
 
 
 Finally, install PyGMT:
