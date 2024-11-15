@@ -65,7 +65,7 @@ def resolve_model(name):
         raise ValueError('Bad model')
 
 
-def download_unzip_mt_response(url, model, station, origin, verbose=True):
+def download_unzip_mt_response(url, model, station, origin, cache_path=None, verbose=True):
     """ Downloads Green's functions through syngine URL interface
     """
     url = (url+'/'+'query'
@@ -77,12 +77,8 @@ def download_unzip_mt_response(url, model, station, origin, verbose=True):
          +'&origintime='+str(origin.time)[:-1]
          +'&starttime='+str(origin.time)[:-1])
 
-    try:
-       dirname = os.environ['SYNGINE_CACHE']
-    except:
-       dirname = fullpath('data/greens_tensor/syngine/cache/')
-
-    path = abspath(join(dirname, str(url2uuid(url))))
+    # where the Green's functions will be cached locally
+    path = join(_check(cache_path), str(url2uuid(url)))
 
     if exists(path):
         # if unzipped directory already exists, return its absolute path
@@ -110,13 +106,13 @@ def download_unzip_mt_response(url, model, station, origin, verbose=True):
     return path
 
 
-def download_synthetics(url, model, station, origin, source):
+def download_synthetics(url, model, station, origin, source, cache_path=None):
     """ Downloads synthetics through syngine URL interface
     """
     if len(source)==6:
-        args='&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+        args='&sourcemomenttensor='+re.sub(r'\+','',",".join(map(str, source)))
     elif len(source)==3:
-        args='&sourceforce='+re.sub('\+','',",".join(map(str, source)))
+        args='&sourceforce='+re.sub(r'\+','',",".join(map(str, source)))
     else:
         raise TypeError
 
@@ -133,13 +129,15 @@ def download_synthetics(url, model, station, origin, source):
          +'&starttime='+str(origin.time)[:-1])
 
     if len(source)==6:
-        url+='&sourcemomenttensor='+re.sub('\+','',",".join(map(str, source)))
+        url+='&sourcemomenttensor='+re.sub(r'\+','',",".join(map(str, source)))
     elif len(source)==3:
-        url+='&sourceforce='+re.sub('\+','',",".join(map(str, source)))
+        url+='&sourceforce='+re.sub(r'\+','',",".join(map(str, source)))
     else:
         raise TypeError
 
-    filename = fullpath('data/greens_tensor/syngine/cache/', str(url2uuid(url)))
+    # where synthetics will be cached locally
+    filename = join(_check(cache_path), str(url2uuid(url)))
+
     if exists(filename):
         return filename
     elif exists(filename+'.zip'):
@@ -203,4 +201,17 @@ def get_synthetics_syngine(url, model, station, origin, mt):
     return synthetics
 
 
+
+def _check(path):
+    try:
+       assert path is not None
+       assert os.access(path, os.W_OK)
+    except:
+        try:
+            path = fullpath('data/greens_tensor/syngine/cache/')
+            assert os.access(path, os.W_OK)
+        except:
+            path = abspath('./syngine/cache')
+            os.makedirs(path, exists_ok=True)
+    return path
 
