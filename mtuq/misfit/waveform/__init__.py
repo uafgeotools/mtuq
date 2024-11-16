@@ -5,7 +5,7 @@ from copy import deepcopy
 from mtuq.misfit.waveform import level0, level1, level2
 from mtuq.misfit.waveform._stats import estimate_sigma, calculate_norm_data
 from mtuq.util import Null, iterable, warn
-from mtuq.util.math import isclose, list_intersect_with_indices
+from mtuq.util.math import isclose, list_intersect, list_intersect_with_indices
 from mtuq.util.signal import check_padding, get_components, isempty
 
 
@@ -247,9 +247,32 @@ class WaveformMisfit(object):
         return deepcopy(attrs)
 
 
-    def collect_synthetics(self, data, greens, source, normalize=False):
+    def collect_synthetics(self, data, greens, source, normalize=False, mode=2):
         """ Collects synthetics with misfit, time shifts and other attributes attached
         """
+
+        if mode==1: 
+            # returns synthetics from all stations and components
+            components = [['Z','R','T']]*len(data)
+ 
+        elif mode==2:
+            # returns synthetics only from stations and components which exist in
+            # observed data
+            components = data.get_components()
+ 
+        elif mode==3:
+            # returns synthetics only from stations and components which exist
+            # and are included in misfit function evaluation
+            _active = []
+            for group in self.time_shift_groups:
+                for component in group:
+                    _active.append(component)
+ 
+            components = []
+            for _exist in data.get_components():
+                components.append(list_intersect(_active, _exist))
+ 
+
         # checks that dataset is nonempty
         if isempty(data):
             warn("Empty data set. No attributes will be returned")
@@ -259,8 +282,9 @@ class WaveformMisfit(object):
         # shift bounds
         check_padding(greens, self.time_shift_min, self.time_shift_max)
 
+
         synthetics = greens.get_synthetics(
-            source, components=data.get_components(), stats=data.get_stats(),
+            source, components=components, stats=data.get_stats(),
             mode='map', inplace=True)
 
         # attaches attributes to synthetics
@@ -268,6 +292,7 @@ class WaveformMisfit(object):
             data, greens, iterable(source), self.norm, self.time_shift_groups,
             self.time_shift_min, self.time_shift_max, msg_handle=Null(),
             normalize=False, set_attributes=True)
+
 
         return deepcopy(synthetics)
 
