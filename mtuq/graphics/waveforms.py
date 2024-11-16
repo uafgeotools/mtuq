@@ -6,7 +6,6 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
 
-from collections import defaultdict
 from matplotlib.font_manager import FontProperties
 from mtuq.dataset import Dataset
 from mtuq.event import MomentTensor, Force
@@ -22,7 +21,8 @@ from obspy import Stream, Trace
 # high-level plotting functions
 #
 
-def plot_waveforms1(filename, 
+def plot_waveforms1(
+        filename, 
         data,
         synthetics,
         stations,
@@ -60,18 +60,14 @@ def plot_waveforms1(filename,
 
     _add_component_labels1(axes)
 
-    max_amplitude = _max(data, synthetics)
-
-    if normalize == 'median_amplitude':
-        # Using the updated _median_amplitude function to calculate the median of non-zero maximum amplitudes
-        max_amplitude_median = _median_amplitude(data, synthetics)
-        max_amplitudes = np.array([max_amplitude_median if len(data[i]) > 0 and len(synthetics[i]) > 0 else 0.0 for i in range(len(data))])
-    elif normalize == 'maximum_amplitude':
-        max_amplitudes = np.array([max_amplitude if len(data[i]) > 0 and len(synthetics[i]) > 0 else 0.0 for i in range(len(data))])
-    elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
-        pass
+    # scaling factor applied to all traces
+    if normalize=='maximum_amplitude':
+        factor = _max(data, synthetics)
+    elif normalize=='median_amplitude':
+        factor = 2.*_median(data, synthetics)
     else:
-        raise ValueError("Invalid normalization method specified.")
+        factor = None
+
 
     #
     # loop over stations
@@ -89,29 +85,10 @@ def plot_waveforms1(filename,
         if station_label_writer is not None:
             station_label_writer(axes[ir][0], stations[_i], origin)
 
-        #
         # plot traces
-        #
-
-        stream_dat = data[_i]
-        stream_syn = synthetics[_i]
-
-        for dat in stream_dat:
-            component = dat.stats.channel[-1].upper()
-            weight = _getattr(dat, 'weight', 1.)
-
-            if not weight:
-                continue
-
-            # skip missing components
-            try:
-                syn = stream_syn.select(component=component)[0]
-            except:
-                warn('Missing component, skipping...')
-                continue
-
-            _plot_ZRT(axes[ir], 1, dat, syn, component, 
-                normalize, trace_label_writer, max_amplitudes[_i], total_misfit)
+        _plot_stream(axes[ir], [1,2,3], ['Z','R','T'], 
+                  data[_i], synthetics[_i],
+                  normalize, factor, trace_label_writer, total_misfit)
 
         ir += 1
 
@@ -120,7 +97,8 @@ def plot_waveforms1(filename,
 
 
 
-def plot_waveforms2(filename, 
+def plot_waveforms2(
+        filename, 
         data_bw,
         data_sw,
         synthetics_bw,
@@ -159,28 +137,16 @@ def plot_waveforms2(filename,
 
     _add_component_labels2(axes)
 
-    # determine maximum trace amplitudes
-    max_amplitude_bw = _max(data_bw, synthetics_bw)
-    max_amplitude_sw = _max(data_sw, synthetics_sw)
-
-
-    if normalize == 'median_amplitude':
-        # For body wave data and synthetics
-        bw_median = _median_amplitude(data_bw, synthetics_bw)
-        max_amplitudes_bw = np.array([bw_median if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
-        
-        # For surface wave data and synthetics
-        sw_median = _median_amplitude(data_sw, synthetics_sw)
-        max_amplitudes_sw = np.array([sw_median if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
-    elif normalize == 'maximum_amplitude':
-        max_amplitudes_bw = np.array([max_amplitude_bw if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
-        max_amplitudes_sw = np.array([max_amplitude_sw if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
-    elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
-        max_amplitudes_bw = np.array([_max(data_bw[i], synthetics_bw[i]) if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
-        max_amplitudes_sw = np.array([_max(data_sw[i], synthetics_sw[i]) if len(data_sw[i]) > 0 and len(synthetics_sw[i]) > 0 else 0.0 for i in range(len(data_sw))])
+    if normalize=='maximum_amplitude':
+        factor_bw = _max(data_bw, synthetics_bw)
+        factor_sw = _max(data_sw, synthetics_sw)
+    elif normalize=='median_amplitude':
+        factor_bw = 2.*_median(data_bw, synthetics_bw)
+        factor_sw = 2.*_median(data_sw, synthetics_sw)
     else:
-        raise ValueError("Invalid normalization method specified.")
-    
+        factor_bw = None
+        factor_sw = None
+
     #
     # loop over stations
     #
@@ -194,58 +160,20 @@ def plot_waveforms2(filename,
             continue
 
         # add station labels
-        if station_label_writer is not None:
+        try:
             station_label_writer(axes[ir][0], stations[_i], origin)
+        except:
+            pass
 
-        #
         # plot body wave traces
-        #
+        _plot_stream(axes[ir], [1,2], ['Z','R'],
+                     data_bw[_i], synthetics_bw[_i],
+                     normalize, factor_bw, trace_label_writer, total_misfit_bw)
 
-        stream_dat = data_bw[_i]
-        stream_syn = synthetics_bw[_i]
-
-        for dat in stream_dat:
-            component = dat.stats.channel[-1].upper()
-            weight = _getattr(dat, 'weight', 1.)
-
-            if not weight:
-                continue
-
-            # skip missing components
-            try:
-                syn = stream_syn.select(component=component)[0]
-            except:
-                warn('Missing component, skipping...')
-                continue
-
-            _plot_ZR(axes[ir], 1, dat, syn, component, 
-                normalize, trace_label_writer, max_amplitudes_bw[_i], total_misfit_bw)
-
-
-        #
         # plot surface wave traces
-        #
-
-        stream_dat = data_sw[_i]
-        stream_syn = synthetics_sw[_i]
-
-        for dat in stream_dat:
-            component = dat.stats.channel[-1].upper()
-            weight = _getattr(dat, 'weight', 1.)
-
-            if not weight:
-                continue
-
-            # skip missing components
-            try:
-                syn = stream_syn.select(component=component)[0]
-            except:
-                warn('Missing component, skipping...')
-                continue
-
-            _plot_ZRT(axes[ir], 3, dat, syn, component,
-                normalize, trace_label_writer, max_amplitudes_sw[_i], total_misfit_sw)
-
+        _plot_stream(axes[ir], [3,4,5], ['Z','R','T'],
+                     data_sw[_i], synthetics_sw[_i],
+                     normalize, factor_sw, trace_label_writer, total_misfit_sw)
 
         ir += 1
 
@@ -253,7 +181,8 @@ def plot_waveforms2(filename,
     pyplot.close()
 
 
-def plot_waveforms3(filename, 
+def plot_waveforms3(
+        filename, 
         data_bw,
         data_rayleigh,
         data_love,
@@ -295,35 +224,21 @@ def plot_waveforms3(filename,
 
     _add_component_labels2(axes)
 
-    # determine maximum trace amplitudes
-    max_amplitude_bw = _max(data_bw, synthetics_bw)
-    max_amplitude_rayleigh = _max(data_rayleigh, synthetics_rayleigh)
-    max_amplitude_love = _max(data_love, synthetics_love)
+    if normalize=='maximum_amplitude':
+        factor_bw = _max(data_bw, synthetics_bw)
+        factor_rayleigh = _max(data_rayleigh, synthetics_rayleigh)
+        factor_love = _max(data_love, synthetics_love)
 
-    if normalize == 'median_amplitude':
-        # For body wave data and synthetics
-        bw_median = _median_amplitude(data_bw, synthetics_bw)
-        max_amplitudes_bw = np.array([bw_median if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
+    elif normalize=='median_amplitude':
+        factor_bw = 2.*_median(data_bw, synthetics_bw)
+        factor_rayleigh = 2.*_median(data_rayleigh, synthetics_rayleigh)
+        factor_love = 2.*_median(data_love, synthetics_love)
 
-        # For Rayleigh wave data and synthetics
-        rayleigh_median = _median_amplitude(data_rayleigh, synthetics_rayleigh)
-        max_amplitudes_rayleigh = np.array([rayleigh_median if len(data_rayleigh[i]) > 0 and len(synthetics_rayleigh[i]) > 0 else 0.0 for i in range(len(data_rayleigh))])
-
-        # For Love wave data and synthetics
-        love_median = _median_amplitude(data_love, synthetics_love)
-        max_amplitudes_love = np.array([love_median if len(data_love[i]) > 0 and len(synthetics_love[i]) > 0 else 0.0 for i in range(len(data_love))])
-
-    elif normalize == 'maximum_amplitude':
-        max_amplitudes_bw = np.array([max_amplitude_bw if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
-        max_amplitudes_rayleigh = np.array([max_amplitude_rayleigh if len(data_rayleigh[i]) > 0 and len(synthetics_rayleigh[i]) > 0 else 0.0 for i in range(len(data_rayleigh))])
-        max_amplitudes_love = np.array([max_amplitude_love if len(data_love[i]) > 0 and len(synthetics_love[i]) > 0 else 0.0 for i in range(len(data_love))])
-
-    elif normalize == 'station_amplitude' or normalize == 'trace_amplitude':
-        max_amplitudes_bw = np.array([_max(data_bw[i], synthetics_bw[i]) if len(data_bw[i]) > 0 and len(synthetics_bw[i]) > 0 else 0.0 for i in range(len(data_bw))])
-        max_amplitudes_rayleigh = np.array([_max(data_rayleigh[i], synthetics_rayleigh[i]) if len(data_rayleigh[i]) > 0 and len(synthetics_rayleigh[i]) > 0 else 0.0 for i in range(len(data_rayleigh))])
-        max_amplitudes_love = np.array([_max(data_love[i], synthetics_love[i]) if len(data_love[i]) > 0 and len(synthetics_love[i]) > 0 else 0.0 for i in range(len(data_love))])
     else:
-        raise ValueError("Invalid normalization method specified.")
+        factor_bw = None
+        factor_rayeligh = None
+        factor_love = None
+
 
     #
     # loop over stations
@@ -338,81 +253,25 @@ def plot_waveforms3(filename,
             continue
 
         # add station labels
-        if station_label_writer is not None:
+        try:
             station_label_writer(axes[ir][0], stations[_i], origin)
+        except:
+            pass
 
-        #
-        # plot body wave traces
-        #
+        # plot body waves
+        _plot_stream(axes[ir], [1,2], ['Z','R'], 
+                     data_bw[_i], synthetics_bw[_i],
+                     normalize, factor_bw, trace_label_writer, total_misfit_bw)
+        
+        # plot Rayleigh waves
+        _plot_stream(axes[ir], [3,4], ['Z','R'],
+                     data_rayleigh[_i], synthetics_rayeleigh[_i],
+                     normalize, factor_rayleigh, trace_label_writer, total_misfit_rayleigh)
 
-        stream_dat = data_bw[_i]
-        stream_syn = synthetics_bw[_i]
-
-        for dat in stream_dat:
-            component = dat.stats.channel[-1].upper()
-            weight = _getattr(dat, 'weight', 1.)
-
-            if not weight:
-                continue
-
-            # skip missing components
-            try:
-                syn = stream_syn.select(component=component)[0]
-            except:
-                warn('Missing component, skipping...')
-                continue
-
-            _plot_ZR(axes[ir], 1, dat, syn, component, 
-                normalize, trace_label_writer, max_amplitudes_bw[_i], total_misfit_bw)
-
-        #
-        # plot Rayleigh wave traces
-        #
-
-        stream_dat = data_rayleigh[_i]
-        stream_syn = synthetics_rayleigh[_i]
-
-        for dat in stream_dat:
-            component = dat.stats.channel[-1].upper()
-            weight = _getattr(dat, 'weight', 1.)
-
-            if not weight:
-                continue
-
-            # skip missing components
-            try:
-                syn = stream_syn.select(component=component)[0]
-            except:
-                warn('Missing component, skipping...')
-                continue
-
-            _plot_ZRT(axes[ir], 3, dat, syn, component,
-                normalize, trace_label_writer, max_amplitudes_rayleigh[_i], total_misfit_rayleigh)
-
-        #
-        # plot Love wave traces
-        #
-
-        stream_dat = data_love[_i]
-        stream_syn = synthetics_love[_i]
-
-        for dat in stream_dat:
-            component = dat.stats.channel[-1].upper()
-            weight = _getattr(dat, 'weight', 1.)
-
-            if not weight:
-                continue
-
-            # skip missing components
-            try:
-                syn = stream_syn.select(component=component)[0]
-            except:
-                warn('Missing component, skipping...')
-                continue
-
-            _plot_ZRT(axes[ir], 3, dat, syn, component,
-                normalize, trace_label_writer, max_amplitudes_love[_i], total_misfit_love)
-
+        # plot Love waves
+        _plot_stream(axes[ir], [5], ['T'],
+                     data_love[_i], synthetics_love[_i],
+                     normalize, factor_love, trace_label_writer, total_misfit_love)
 
         ir += 1
 
@@ -420,7 +279,8 @@ def plot_waveforms3(filename,
     pyplot.close()
 
 
-def plot_data_greens1(filename,
+def plot_data_greens1(
+        filename,
         data,
         greens,
         process_data,
@@ -438,9 +298,6 @@ def plot_data_greens1(filename,
 
     # collect synthetic waveforms with misfit attributes attached
     synthetics = misfit.collect_synthetics(data, greens.select(origin), source)
-
-    # Prune synthetics to only include components that are present in the misfit time_shift_groups
-    _prune_synthetics(misfit, synthetics)
 
     # calculate total misfit for display in figure header
     total_misfit = misfit(data, greens.select(origin), source, optimization_level=0)
@@ -490,9 +347,6 @@ def plot_data_greens2(filename,
     synthetics_sw = misfit_sw.collect_synthetics(
         data_sw, greens_sw.select(origin), source)
 
-    # Prune synthetics to only include components that are present in the misfit time_shift_groups
-    _prune_synthetics(misfit_bw, synthetics_bw)
-    _prune_synthetics(misfit_sw, synthetics_sw)
 
     # calculate total misfit for display in figure header
     total_misfit_bw = misfit_bw(
@@ -522,7 +376,8 @@ def plot_data_greens2(filename,
         header=header, **kwargs)
 
 
-def plot_data_greens3(filename,
+def plot_data_greens3(
+        filename,
         data_bw,
         data_rayleigh,
         data_love,
@@ -544,7 +399,7 @@ def plot_data_greens3(filename,
     """ Creates data/synthetics comparison figure with 5 columns 
     (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
 
-    Different input arguments, same result as plot_waveforms3. Considers three data groups.
+    Different input arguments, same result as plot_waveforms3
     """
 
     # collect synthetic waveforms with misfit attributes attached
@@ -557,11 +412,6 @@ def plot_data_greens3(filename,
     synthetics_love = misfit_love.collect_synthetics(
         data_love, greens_love.select(origin), source)
     
-    # Prune synthetics to only include components that are present in the misfit time_shift_groups
-    _prune_synthetics(misfit_bw, synthetics_bw)
-    _prune_synthetics(misfit_rayleigh, synthetics_rayleigh)
-    _prune_synthetics(misfit_love, synthetics_love)
-                
     # calculate total misfit for display in figure header
     total_misfit_bw = misfit_bw(
         data_bw, greens_bw.select(origin), source, optimization_level=0)
@@ -570,10 +420,7 @@ def plot_data_greens3(filename,
         data_rayleigh, greens_rayleigh.select(origin), source, optimization_level=0) 
 
     total_misfit_love = misfit_love(
-        data_love, greens_love.select(origin), source, optimization_level=0) 
-
-    # Print the length of the data and synthetics for each group
-    # Hav
+        data_love, greens_love.select(origin), source, optimization_level=0)
 
     # prepare figure header
     if 'header' in kwargs:
@@ -593,7 +440,9 @@ def plot_data_greens3(filename,
         data_bw, data_rayleigh, data_love,
         synthetics_bw, synthetics_rayleigh, synthetics_love,
         stations, origin,
-        total_misfit_bw=total_misfit_bw, total_misfit_rayleigh=total_misfit_rayleigh, total_misfit_love=total_misfit_love,
+        total_misfit_bw=total_misfit_bw, 
+        total_misfit_rayleigh=total_misfit_rayleigh,
+        total_misfit_love=total_misfit_love,
         header=header, **kwargs)
 
 
@@ -647,60 +496,50 @@ def _initialize(nrows=None, ncolumns=None, column_width_ratios=None,
     return fig, axes
 
 
-def _plot_ZRT(axes, ic, dat, syn, component, 
-    normalize='maximum_amplitude', trace_label_writer=None,
-    normalization_amplitude=1., total_misfit=1.):
+def _plot_stream(
+    axes,
+    column_indices,
+    components,
+    stream_dat,
+    stream_syn,
+    normalize='maximum_amplitude',
+    amplitude_factor=None,
+    trace_label_writer=None,
+    total_misfit=1.
+    ):
 
-    # plot traces
-    if component=='Z':
-        axis = axes[ic+0]
-    elif component=='R':
-        axis = axes[ic+1]
-    elif component=='T':
-        axis = axes[ic+2]
-    else:
-        return
+    for _i, component, in enumerate(components):
+        axis = axes[column_indices[_i]]
 
-    _plot(axis, dat, syn)
+        try:
+            dat = stream_dat.select(component=component)[0]
+            syn = stream_syn.select(component=component)[0]
+        except:
+            continue
 
-    # normalize amplitude -- logic for station_amplitude, median_amplitude, and maximum_amplitude is done at higher level
-    if normalize=='trace_amplitude':
-        max_trace = _max(dat, syn)
-        ylim = [-1.5*max_trace, +1.5*max_trace]
-        axis.set_ylim(*ylim)
-    elif normalize=='station_amplitude' or normalize=='median_amplitude' or normalize=='maximum_amplitude':
-        ylim = [-1.25*normalization_amplitude, +1.25*normalization_amplitude]
-        axis.set_ylim(*ylim)
+        weight = _getattr(dat, 'weight', 1.)
+        if not weight:
+            continue
 
-    if trace_label_writer is not None:
-        trace_label_writer(axis, dat, syn, total_misfit)
+        _plot(axis, dat, syn)
 
+        if normalize=='trace_amplitude':
+            max_trace = _max(dat, syn)
+            ylim = [-1.5*max_trace, +1.5*max_trace]
+            axis.set_ylim(*ylim)
 
-def _plot_ZR(axes, ic, dat, syn, component, 
-    normalize='maximum_amplitude', trace_label_writer=None,
-    normalization_amplitude=1., total_misfit=1.):
+        elif normalize=='station_amplitude':
+            max_station = _max(stream_dat, stream_syn)
+            ylim = [-1.25*max_station, +1.25*max_station]
 
-    # plot traces
-    if component=='Z':
-        axis = axes[ic+0]
-    elif component=='R':
-        axis = axes[ic+1]
-    else:
-        return
+        elif amplitude_factor:
+            ylim = [-amplitude_factor, +amplitude_factor]
+            axis.set_ylim(*ylim)
 
-    _plot(axis, dat, syn)
-
-    # normalize amplitude -- logic for station_amplitude, median_amplitude, and maximum_amplitude is done at higher level
-    if normalize=='trace_amplitude':
-        max_trace = _max(dat, syn)
-        ylim = [-1.5*max_trace, +1.5*max_trace]
-        axis.set_ylim(*ylim)
-    elif normalize=='station_amplitude' or normalize=='median_amplitude' or normalize=='maximum_amplitude':
-        ylim = [-1.25*normalization_amplitude, +1.25*normalization_amplitude]
-        axis.set_ylim(*ylim)
-
-    if trace_label_writer is not None:
-        trace_label_writer(axis, dat, syn, total_misfit)
+        try:
+            trace_label_writer(axis, dat, syn, total_misfit)
+        except:
+            pass
 
 
 def _plot(axis, dat, syn, label=None):
@@ -801,19 +640,8 @@ def _isempty(dataset):
 
 
 def _max(dat, syn):
-    """
-    Computes the maximum value from a set of two input data objects (observed and synthetics).
+    # returns maximum amplitude over traces, streams, or datasets
 
-    Parameters:
-    dat (Trace, Stream, or Dataset): observed data.
-    syn (Trace, Stream, or Dataset): synthetics.
-
-    Returns:
-    float: The maximum value for normalization purposes.
-
-    Raises:
-    TypeError: If the input objects are not of the same type (Trace, Stream, or Dataset).
-    """
     if type(dat)==type(syn)==Trace:
         return max(
             abs(dat.max()),
@@ -832,43 +660,18 @@ def _max(dat, syn):
     else:
         raise TypeError
 
-def _median_amplitude(data, synthetics):
-    """
-    Computes the median of the maximum non-zero amplitudes for pairs of data and synthetic traces.
+def _median(*datasets):
+    # returns median Linf amplitude over traces in dataset
 
-    Args:
-        data: A list of of observed data (can be Trace, Stream, or Dataset objects).
-        synthetics: A list of synthetic traces corresponding to the observed data.
-
-    Returns:
-        The median of the non-zero maximum amplitudes computed across all pairs.
-
-    Raises:
-        ValueError: If the lengths of data and synthetics lists differ.
-    """
-    # Validate input lengths
-    # If Trace directly input, make it a list
-    data = [data] if isinstance(data, Trace) else data
-    synthetics = [synthetics] if isinstance(synthetics, Trace) else synthetics
-    
-    # Validate lengths
-    if len(data) != len(synthetics):
-        raise ValueError("Data and synthetics lists must have the same length.")
-
-    max_amplitudes = []
-
-    # Iterate over pairs and handle empty traces - This gets a list of maximum amplitudes for each pair of data and synthetics
-    for dat, syn in zip(data, synthetics):
-        if not dat or not syn:
-            max_amplitudes.append(0)
-        else:
-            max_amplitudes.append(_max(dat, syn))
-
-    # Convert to NumPy array for efficient filtering
-    max_amplitudes = np.array(max_amplitudes)
-
-    # Compute median of non-zero values or return 0 if none exist 
-    return np.median(max_amplitudes[max_amplitudes > 0]) if np.any(max_amplitudes > 0) else 0.0
+    _list = []
+    for ds in datasets:
+        assert type(ds)==Dataset
+        for stream in ds:
+            for trace in stream:
+                trace_max = abs(trace.max())
+                if trace_max > 0.:
+                    _list.append(trace_max)
+    return np.median(np.array(_list))
 
 
 def _hide_axes(axes):
@@ -914,18 +717,3 @@ def _get_tag(tags, pattern):
     else:
         return None
 
-def _prune_synthetics(misfit, synthetics):
-    """ Prunes synthetics to only include components that are present in the misfit time_shift_groups
-
-    note: Ideally, this would be done internally when collecting synthetics in the misfit object
-    but it is done here to avoid modifying important moving parts of the codebase.
-    """
-    components = []
-    for group in misfit.time_shift_groups:
-        for component in group:
-            components.append(component)
-
-    for sta in synthetics:
-        for tr in sta:
-            if tr.stats.channel not in components:
-                sta.remove(tr)
