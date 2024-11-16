@@ -40,27 +40,14 @@ def plot_waveforms1(
         raise Exception
 
     # how many stations have at least one trace?
-    nstations = _count([data])
+    nrows = _count([data])
 
-    #
-    # initialize figure
-    #
-
-    fig, axes = _initialize(
-       nrows=nstations,
-       ncolumns=4,
-       column_width_ratios=[1.,1.,1.],
-       height=1.25*nstations,
-       width=8.5,
-       margin_right=0.5,
-       header=header,
-       header_height=1.5,
-       station_labels=bool(station_label_writer),
-       )
+    # intialize figure
+    fig, axes = _initialize1(nrows, header)
 
     _add_component_labels1(axes)
 
-    # scaling factor applied to all traces
+    # optional normalization
     if normalize=='maximum_amplitude':
         factor = _max(data, synthetics)
     elif normalize=='median_amplitude':
@@ -117,26 +104,16 @@ def plot_waveforms2(
     """ Creates data/synthetics comparison figure with 5 columns 
    (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
     """
+
     # how many stations have at least one trace?
-    nstations = _count([data_bw, data_sw])
+    nrows = _count([data_bw, data_sw])
 
-    #
-    # initialize figure
-    #
-
-    fig, axes = _initialize(
-       nrows=nstations,
-       ncolumns=6,
-       column_width_ratios=[0.5,0.5,1.,1.,1.],
-       height=1.25*nstations,
-       width=10.,
-       header=header,
-       header_height=2.,
-       station_labels=bool(station_label_writer),
-       )
+    # intialize figure
+    fig, axes = _initialize2(nrows, header)
 
     _add_component_labels2(axes)
 
+    # optional normalization
     if normalize=='maximum_amplitude':
         factor_bw = _max(data_bw, synthetics_bw)
         factor_sw = _max(data_sw, synthetics_sw)
@@ -201,29 +178,19 @@ def plot_waveforms3(
         ):
 
     """ Creates data/synthetics comparison figure with 5 columns 
-    (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T), for three data groups
+    (Pn Z, Pn R, Rayleigh Z, Rayleigh R, Love T)
     """
 
     # how many stations have at least one trace?
-    nstations = _count([data_bw, data_rayleigh, data_love])
+    nrows = _count([data_bw, data_rayleigh, data_love])
 
-    #
-    # initialize figure
-    #
-
-    fig, axes = _initialize(
-       nrows=nstations,
-       ncolumns=6,
-       column_width_ratios=[0.5,0.5,1.,1.,1.],
-       height=1.25*nstations,
-       width=10.,
-       header=header,
-       header_height=2.,
-       station_labels=bool(station_label_writer),
-       )
+    # intialize figure
+    fig, axes = _initialize2(nrows, header)
 
     _add_component_labels2(axes)
 
+
+    # optional normalization
     if normalize=='maximum_amplitude':
         factor_bw = _max(data_bw, synthetics_bw)
         factor_rayleigh = _max(data_rayleigh, synthetics_rayleigh)
@@ -450,8 +417,35 @@ def plot_data_greens3(
 # low-level plotting utilities
 #
 
+def _initialize1(nrows, header):
+    return _initialize(
+       nrows=nrows,
+       ncolumns=4,
+       column_width_ratios=[1.,1.,1.],
+       height=1.25*nrows,
+       width=8.5,
+       margin_right=0.5,
+       header=header,
+       header_height=1.5,
+       station_labels=True,
+       )
 
-def _initialize(nrows=None, ncolumns=None, column_width_ratios=None, 
+
+def _initialize2(nrows, header):
+    return _initialize(
+       nrows=nrows,
+       ncolumns=6,
+       column_width_ratios=[0.5,0.5,1.,1.,1.],
+       height=1.25*nrows,
+       width=10.,
+       header=header,
+       header_height=2.,
+       station_labels=True,
+       )
+
+
+def _initialize(
+    nrows=None, ncolumns=None, column_width_ratios=None, 
     header=None, height=None, width=None, margin_top=0.25, margin_bottom=0.25,
     margin_left=0.25, margin_right=0.25, header_height=1.5, 
     station_labels=True, station_label_width=0.5):
@@ -521,12 +515,9 @@ def _plot_stream(
         if not weight:
             continue
 
-        _plot(axis, dat, syn)
-
         if normalize=='trace_amplitude':
             max_trace = _max(dat, syn)
             ylim = [-1.5*max_trace, +1.5*max_trace]
-            axis.set_ylim(*ylim)
 
         elif normalize=='station_amplitude':
             max_station = _max(stream_dat, stream_syn)
@@ -534,7 +525,9 @@ def _plot_stream(
 
         elif amplitude_factor:
             ylim = [-amplitude_factor, +amplitude_factor]
-            axis.set_ylim(*ylim)
+
+        _plot_trace(axis, dat, syn)
+        axis.set_ylim(*ylim)
 
         try:
             trace_label_writer(axis, dat, syn, total_misfit)
@@ -542,7 +535,7 @@ def _plot_stream(
             pass
 
 
-def _plot(axis, dat, syn, label=None):
+def _plot_trace(axis, dat, syn, label=None):
     """ Plots data and synthetics time series on current axes
     """
     t1,t2,nt,dt = _time_stats(dat)
