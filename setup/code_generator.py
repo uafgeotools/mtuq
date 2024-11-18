@@ -197,7 +197,7 @@ if __name__=='__main__':
     #
 
     import matplotlib
-    matplotlib.use('Agg', warn=False, force=True)
+    matplotlib.use('Agg', force=True)
     import matplotlib
 """
 
@@ -909,7 +909,7 @@ Main_TestGraphics="""
     print('Reading data...\\n')
     data = read(path_data, format='sac',
         event_id=event_id,
-        station_id_list=station_id_list,
+        #station_id_list=station_id_list,
         tags=['units:m', 'type:velocity'])
 
 
@@ -1833,27 +1833,27 @@ if __name__=='__main__':
         file.write(
             replace(
             Main_GridSearch,
-            'origin',
-            'origins',
-            'Reading Greens functions...\\\\n',
+            r'origin',
+            r'origins',
+            r'Reading Greens functions...\\\\n',
             (
-            'Reading Greens functions...\\\\n\\\\n'+
-            '  Downloads can sometimes take as long as a few hours!\\\\n'
+            r'Reading Greens functions...\\\\n\\\\n'+
+            r'  Downloads can sometimes take as long as a few hours!\\\\n'
             ),
-            'download_greens_tensors\(stations, origin, model\)',
-            'download_greens_tensors(stations, origin, model, verbose=True)',
+            r'download_greens_tensors\(stations, origin, model\)',
+            r'download_greens_tensors(stations, origin, model, verbose=True)',
             ))
         file.write(
             replace(
             WrapUp_GridSearch_DoubleCoupleMagnitudeDepth,
-            'DC\+Z',
-            'DC+XY',
-            'misfit_depth',
-            'misfit_latlon',
-            "title=event_id",
-            "title=event_id, colorbar_label='L2 misfit'",
-            'show_magnitudes=True, ',
-            '',
+            r'DC\+Z',
+            r'DC+XY',
+            r'misfit_depth',
+            r'misfit_latlon',
+            r"title=event_id",
+            r"title=event_id, colorbar_label='L2 misfit'",
+            r'show_magnitudes=True, ',
+            r'',
             ))
 
 
@@ -2005,9 +2005,9 @@ if __name__=='__main__':
         file.write(
             replace(
             Main1_SerialGridSearch_DoubleCouple,
-            'greens = download_greens_tensors\(stations, origin, model\)',
-            'db = open_db(path_greens, format=\'FK\', model=model)\n    '
-           +'greens = db.get_greens_tensors(stations, origin)',
+            r'greens = download_greens_tensors\(stations, origin, model\)',
+            r'db = open_db(path_greens, format=\'FK\', model=model)\n    '
+           +r'greens = db.get_greens_tensors(stations, origin)',
             ))
         file.write(
             replace(
@@ -2071,9 +2071,9 @@ if __name__=='__main__':
         file.write(
             replace(
             Main1_SerialGridSearch_DoubleCouple,
-            'greens = download_greens_tensors\(stations, origin, model\)',
-            'db = open_db(path_greens, format=\'FK\', model=model)\n    '
-           +'greens = db.get_greens_tensors(stations, origin)',
+            r'greens = download_greens_tensors\(stations, origin, model\)',
+            r'db = open_db(path_greens, format=\'FK\', model=model)\n    '
+           +r'greens = db.get_greens_tensors(stations, origin)',
             ))
         file.write(Main_TestMisfit)
 
