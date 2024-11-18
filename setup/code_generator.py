@@ -977,10 +977,10 @@ Main_TestGraphics="""
 
     plot_waveforms2('graphics_test_4.png',
         data_bw, data_sw, synthetics_bw, synthetics_sw,
-        stations, origin, header=False)
+        stations, origin, header=None)
 
 
-    print('Plot data and synthetics without header (5 of 6)\\n')
+    print('Plot data and synthetics with header (5 of 6)\\n')
 
     plot_data_greens2('graphics_test_5.png',
         data_bw, data_sw, greens_bw, greens_sw,
@@ -1874,25 +1874,25 @@ if __name__=='__main__':
             Main_GridSearch,
             r'origin',
             r'origins',
-            r'Reading Greens functions...\\\\n',
+            'Reading Greens functions...\\\\n',
             (
-            r'Reading Greens functions...\\\\n\\\\n'+
-            r'  Downloads can sometimes take as long as a few hours!\\\\n'
+            'Reading Greens functions...\\\\n\\\\n'+
+            '  Downloads can sometimes take as long as a few hours!\\\\n'
             ),
-            r'download_greens_tensors\(stations, origin, model\)',
-            r'download_greens_tensors(stations, origin, model, verbose=True)',
+            'download_greens_tensors\(stations, origin, model\)',
+            'download_greens_tensors(stations, origin, model, verbose=True)',
             ))
         file.write(
             replace(
             WrapUp_GridSearch_DoubleCoupleMagnitudeDepth,
-            r'DC\+Z',
-            r'DC+XY',
-            r'misfit_depth',
-            r'misfit_latlon',
-            r"title=event_id",
-            r"title=event_id, colorbar_label='L2 misfit'",
-            r'show_magnitudes=True, ',
-            r'',
+            'DC\+Z',
+            'DC+XY',
+            'misfit_depth',
+            'misfit_latlon',
+            "title=event_id",
+            "title=event_id, colorbar_label='L2 misfit'",
+            'show_magnitudes=True, ',
+            '',
             ))
 
 
@@ -2044,9 +2044,9 @@ if __name__=='__main__':
         file.write(
             replace(
             Main1_SerialGridSearch_DoubleCouple,
-            r'greens = download_greens_tensors\(stations, origin, model\)',
-            r'db = open_db(path_greens, format=\'FK\', model=model)\n    '
-           +r'greens = db.get_greens_tensors(stations, origin)',
+            'greens = download_greens_tensors\(stations, origin, model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n    '
+           +'greens = db.get_greens_tensors(stations, origin)',
             ))
         file.write(
             replace(
@@ -2110,9 +2110,9 @@ if __name__=='__main__':
         file.write(
             replace(
             Main1_SerialGridSearch_DoubleCouple,
-            r'greens = download_greens_tensors\(stations, origin, model\)',
-            r'db = open_db(path_greens, format=\'FK\', model=model)\n    '
-           +r'greens = db.get_greens_tensors(stations, origin)',
+            'greens = download_greens_tensors\(stations, origin, model\)',
+            'db = open_db(path_greens, format=\'FK\', model=model)\n    '
+           +'greens = db.get_greens_tensors(stations, origin)',
             ))
         file.write(Main_TestMisfit)
 

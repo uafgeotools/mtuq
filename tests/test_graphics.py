@@ -158,10 +158,10 @@ if __name__=='__main__':
 
     plot_waveforms2('graphics_test_4.png',
         data_bw, data_sw, synthetics_bw, synthetics_sw,
-        stations, origin, header=False)
+        stations, origin, header=None)
 
 
-    print('Plot data and synthetics without header (5 of 6)\n')
+    print('Plot data and synthetics with header (5 of 6)\n')
 
     plot_data_greens2('graphics_test_5.png',
         data_bw, data_sw, greens_bw, greens_sw,
