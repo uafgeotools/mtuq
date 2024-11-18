@@ -191,9 +191,10 @@ if __name__=='__main__':
     #
     # Tests data, synthetics and beachball plotting utilities
     #
-    # Note that in the figures created by this script, the data and synthetics 
-    # are not expected to fit epsecially well; currently, the only requirement 
-    # is that the script runs without errors
+
+    #
+    # The idea is for a test that runs very quickly, suitable for CI testing;
+    # eventually we may more detailed tests to tests/graphics
     #
 
     import matplotlib
@@ -703,8 +704,13 @@ Grid_TestDoubleCoupleMagnitudeDepth="""
 
 
 Grid_TestGraphics="""
-    mt = np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.]) # explosion
-    mt *= 1.e16
+    from mtuq import MomentTensor
+
+    mt = MomentTensor(
+        1.e16 * np.sqrt(1./3.)*np.array([1., 1., 1., 0., 0., 0.])) # explosion
+
+    mt_dict = {
+       'rho':1.,'v':0.,'w':3/8*np.pi,'kappa':0.,'sigma':0.,'h':0.}
 
     wavelet = Trapezoid(
         magnitude=4.5)
@@ -935,23 +941,56 @@ Main_TestGraphics="""
     # Generate figures
     #
 
-    print('Figure 1 of 3\\n')
+    print('Plot data (1 of 6)\\n')
 
-    plot_data_greens2('graphics_test_1.png',
+    from mtuq.graphics import plot_waveforms2
+    from mtuq.util import Null
+
+    plot_waveforms2('graphics_test_1.png',
+        data_bw, data_sw, Null(), Null(),
+        stations, origin, header=False)
+
+
+    print('Plot synthetics (2 of 6)\\n')
+
+    synthetics_bw = greens_bw.get_synthetics(mt, components=['Z','R'])
+    synthetics_sw = greens_sw.get_synthetics(mt, components=['Z','R','T'])
+
+
+    plot_waveforms2('graphics_test_2.png',
+        synthetics_bw, synthetics_sw, Null(), Null(),
+        stations, origin, header=False)
+
+
+    print('Plot synthetics (3 of 6)\\n')
+
+    synthetics_bw = misfit_bw.collect_synthetics(data_bw, greens_bw, mt)
+    synthetics_sw = misfit_sw.collect_synthetics(data_sw, greens_sw, mt)
+
+
+    plot_waveforms2('graphics_test_3.png',
+        synthetics_bw, synthetics_sw, Null(), Null(),
+        stations, origin, header=False)
+
+
+    print('Plot data and synthetics without header (4 of 6)\\n')
+
+    plot_waveforms2('graphics_test_4.png',
+        data_bw, data_sw, synthetics_bw, synthetics_sw,
+        stations, origin, header=False)
+
+
+    print('Plot data and synthetics without header (5 of 6)\\n')
+
+    plot_data_greens2('graphics_test_5.png',
         data_bw, data_sw, greens_bw, greens_sw,
         process_bw, process_sw, misfit_bw, misfit_sw,
-        stations, origin, mt, header=False)
+        stations, origin, mt, mt_dict)
 
-    print('Figure 2 of 3\\n')
 
-    plot_data_greens2('graphics_test_2.png',
-        data_bw, data_sw, greens_bw, greens_sw,
-        process_bw, process_sw, misfit_bw, misfit_sw,
-        stations, origin, mt, header=False)
+    print('Plot explosion bechball (6 of 6)\\n')
 
-    print('Figure 3 of 3\\n')
-
-    plot_beachball('graphics_test_3.png', 
+    plot_beachball('graphics_test_6.png',
         mt, None, None)
 
     print('\\nFinished\\n')
@@ -2129,6 +2168,7 @@ if __name__=='__main__':
             'FK_database=path_greens,',
             ))
         file.write(MisfitDefinitions)
+        file.write(OriginDefinitions)
         file.write(Grid_TestGraphics)
         file.write(Main_TestGraphics)
 
