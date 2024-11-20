@@ -478,8 +478,6 @@ def _initialize(
         hspace=0.,
         )
 
-    _hide_axes(axes)
-
     if header:
         header.write(
             header_height, width,
@@ -488,6 +486,8 @@ def _initialize(
     # single station plotting workaround
     if nrows==1:
         axes = [axes]
+
+    _hide_axes(axes)
 
     return fig, axes
 
