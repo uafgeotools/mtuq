@@ -82,9 +82,7 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
         likelihoods = _likelihoods_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_likelihood_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        likelihoods = _likelihoods_dc_random(ds, var)
 
     _plot_dc(filename, likelihoods, **kwargs)
 
@@ -122,9 +120,7 @@ def plot_marginal_dc(filename, ds, var, **kwargs):
         marginals = _marginals_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_marginal_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        marginals = _marginals_dc_random(ds, var)
 
     _plot_dc(filename, marginals, **kwargs)
 
@@ -159,12 +155,10 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
     _check(ds)
 
     if issubclass(type(ds), DataArray):
-        variance_reduction = _variance_reduction_dc_regular(ds, var)
+        variance_reduction = _variance_reduction_dc_regular(ds, data_norm)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_variance_reduction_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        variance_reduction = _variance_reduction_dc_random(ds, data_norm)
 
     _plot_dc(filename, variance_reduction, **kwargs)
 
@@ -290,6 +284,31 @@ def _likelihoods_dc_regular(da, var):
         'maximum_likelihood_estimate': dataarray_idxmax(likelihoods).values(),
         })
 
+def _likelihoods_dc_random(df, var, **kwargs):
+    """
+    Calculate max likelihood from random dataset bins, ensuring global normalization.
+    """
+
+    likelihoods = df.copy().reset_index()
+
+    # Ensure 'misfit' column exists
+    if 'misfit' not in likelihoods.columns:
+        likelihoods.rename(columns={likelihoods.columns[-1]: 'misfit'}, inplace=True)
+
+    # Compute likelihoods globally and normalize BEFORE binning
+    likelihoods['likelihood'] = np.exp(-likelihoods['misfit'] / (2. * var))
+    likelihoods['likelihood'] /= likelihoods['likelihood'].sum()  # Global normalization
+
+    # Apply binning, operating on globally normalized likelihoods
+    binned_likelihoods = _bin_dc_regular(
+        likelihoods, lambda group: group['likelihood'].max(), **kwargs
+    )
+
+    return binned_likelihoods.assign_attrs({
+        'best_dc': _max_dc(binned_likelihoods),
+        'maximum_likelihood_estimate': dataarray_idxmax(binned_likelihoods).values(),
+    })
+
 
 def _marginals_dc_regular(da, var):
     """ For each moment tensor orientation, calculate marginal likelihood
@@ -304,6 +323,30 @@ def _marginals_dc_regular(da, var):
     return marginals.assign_attrs({
         'best_dc': _max_dc(marginals),
         })
+
+def _marginals_dc_random(df, var, **kwargs):
+    """
+    Calculate marginal likelihoods for random bins with global normalization.
+    """
+
+    likelihoods = df.copy().reset_index()
+
+    if 'misfit' not in likelihoods.columns:
+        likelihoods.rename(columns={likelihoods.columns[-1]: 'misfit'}, inplace=True)
+
+    # Compute likelihoods and normalize globally
+    likelihoods['likelihood'] = np.exp(-likelihoods['misfit'] / (2. * var))
+    likelihoods['likelihood'] /= likelihoods['likelihood'].sum()  # Global normalization
+
+    # Sum within bins after global normalization
+    marginals = _bin_dc_regular(
+        likelihoods, lambda group: group['likelihood'].sum(), **kwargs
+    )
+
+    # No need for further normalization, already globally adjusted
+    return marginals.assign_attrs({
+        'best_dc': _max_dc(marginals),
+    })
 
 
 def _variance_reduction_dc_regular(da, data_norm):
@@ -322,6 +365,20 @@ def _variance_reduction_dc_regular(da, data_norm):
         'best_dc': _min_dc(da),
         'lune_array': _lune_array(da),
         })
+
+def _variance_reduction_dc_random(df, data_norm, **kwargs):
+    df = df.copy()
+    df = df.reset_index()
+
+    # Ensure 'misfit' column exists
+    if 'misfit' not in df.columns:
+        df['misfit'] = df.iloc[:, -1]
+
+    da = _bin_dc_regular(df, lambda group: 1. - group['misfit'].min()/data_norm, **kwargs)
+
+    return da.assign_attrs({
+        'best_dc': _max_dc(da),
+    })
 
 
 #
