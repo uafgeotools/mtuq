@@ -44,9 +44,7 @@ def plot_misfit_dc(filename, ds, **kwargs):
         misfit = _misfit_dc_regular(ds)
         
     elif issubclass(type(ds), DataFrame):
-        warn('plot_misfit_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        misfit = _misfit_dc_random(ds)
 
     _plot_dc(filename, misfit, **kwargs)
 
@@ -172,8 +170,8 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
 
 
 
-def _plot_dc(filename, da, show_best=True, colormap='hot', 
-    backend=_plot_dc_matplotlib, squeeze='min', **kwargs):
+def _plot_dc(filename, da, show_best=True, backend=_plot_dc_matplotlib,
+    squeeze='min', **kwargs):
 
     """ Plots DataArray values over strike, dip, slip
 
@@ -259,6 +257,20 @@ def _misfit_dc_regular(da):
         'best_mt': _min_mt(da),
         'best_dc': _min_dc(da),
         })
+
+def _misfit_dc_random(df, **kwargs):
+    df = df.copy()
+    df = df.reset_index()
+
+    # Ensure 'misfit' column exists
+    if 'misfit' not in df.columns:
+        df['misfit'] = df.iloc[:, -1]
+
+    da = _bin_dc_regular(df, lambda group: group['misfit'].min(), **kwargs)
+
+    return da.assign_attrs({
+        'best_dc': _min_dc(da),
+    })
 
 
 def _likelihoods_dc_regular(da, var):
@@ -351,6 +363,62 @@ def _max_dc(da):
     return dc_vals
 
 
+def _bin_dc_regular(df, handle, npts=25, **kwargs):
+    """Bins irregularly-spaced moment tensor orientations into regular grids for plotting."""
+    # Orientation bins
+    kappa_min, kappa_max = 0, 360
+    sigma_min, sigma_max = -90, 90
+    h_min, h_max = 0, 1
+
+    kappa_edges = np.linspace(kappa_min, kappa_max, npts + 1)
+    sigma_edges = np.linspace(sigma_min, sigma_max, npts + 1)
+    h_edges = np.linspace(h_min, h_max, npts + 1)
+
+    kappa_centers = 0.5 * (kappa_edges[:-1] + kappa_edges[1:])
+    sigma_centers = 0.5 * (sigma_edges[:-1] + sigma_edges[1:])
+    h_centers = 0.5 * (h_edges[:-1] + h_edges[1:])
+
+    # Prepare the data arrays
+    kappa_vals = df['kappa'].values
+    sigma_vals = df['sigma'].values
+    h_vals = df['h'].values
+
+    # Compute bin indices for each data point
+    kappa_indices = np.digitize(kappa_vals, kappa_edges) - 1
+    sigma_indices = np.digitize(sigma_vals, sigma_edges) - 1
+    h_indices = np.digitize(h_vals, h_edges) - 1
+
+    # Ensure indices are within valid range
+    kappa_indices = np.clip(kappa_indices, 0, npts - 1)
+    sigma_indices = np.clip(sigma_indices, 0, npts - 1)
+    h_indices = np.clip(h_indices, 0, npts - 1)
+
+    # Add bin indices to DataFrame
+    df = df.copy()
+    df['kappa_idx'] = kappa_indices
+    df['sigma_idx'] = sigma_indices
+    df['h_idx'] = h_indices
+
+    # Group by bin indices
+    # grouped = df.groupby(['h_idx', 'sigma_idx', 'kappa_idx'])
+    grouped = df.groupby(['kappa_idx', 'sigma_idx', 'h_idx'])
+
+    # Initialize the output array with appropriate data type
+    binned = np.full((npts, npts, npts), np.nan)
+
+    # Process each group
+    for (k_idx, s_idx, h_idx), group in grouped:
+        # Apply the handle function to the group DataFrame
+        binned[k_idx, s_idx, h_idx] = handle(group)
+
+    # Create the DataArray
+    da = DataArray(
+        data=binned,
+        dims=('kappa', 'sigma', 'h'),
+        coords={'kappa': kappa_centers, 'sigma': sigma_centers, 'h': h_centers},
+    )
+
+    return da
 
 def _check(ds):
     """ Checks data structures
