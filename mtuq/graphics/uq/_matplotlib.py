@@ -304,10 +304,10 @@ def _plot_dc_matplotlib(filename, coords,
     vals = np.append(np.append(values_sigma_kappa.ravel(), values_sigma_kappa.ravel()),(values_sigma_h.ravel()))
     # Plot data
     # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
-    vmin, vmax = np.nanpercentile(vals, [0,75])
+    vmin, vmax = np.nanpercentile(vals, clip_interval)
 
     # plot surfaces
-    _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa, colormap, vmin=vmin, vmax=vmax)
+    im0 = _pcolor(axes[0][0], coords['h'], coords['kappa'], values_h_kappa, colormap, vmin=vmin, vmax=vmax)
 
     _pcolor(axes[0][1], coords['sigma'], coords['kappa'], values_sigma_kappa, colormap, vmin=vmin, vmax=vmax)
 
@@ -322,7 +322,23 @@ def _plot_dc_matplotlib(filename, coords,
 
     _set_dc_labels(axes, fontsize=fontsize)
 
-    pyplot.savefig(filename)
+    if plot_colorbar:
+        cbar_ax = fig.add_axes([0.91, 0.13, 0.0125, 0.27])  # [left, bottom, width, height]
+        cb = pyplot.colorbar(im0, cax=cbar_ax, orientation='vertical')
+        formatter = ticker.ScalarFormatter()
+        formatter.set_powerlimits((-2, 2))  # Avoid scientific notation between 10^-2 and 10^2
+        cb.ax.yaxis.set_major_formatter(formatter)
+        if 'colorbar_label' in kwargs:
+            cb.set_label(kwargs['colorbar_label'])
+        else:
+            cb.set_label('l2-misfit')
+
+
+    # Set the title if provided
+    if title:
+        fig.suptitle(title, fontsize=fontsize + 2)
+
+    pyplot.savefig(filename, dpi=300)
     pyplot.close()
 
 
@@ -626,6 +642,9 @@ def _pcolor(axis, x, y, values, colormap, **kwargs):
         axis.pcolor(x, y, values, cmap=colormap, shading='auto', **kwargs)
     except:
         axis.pcolor(x, y, values, cmap=colormap, **kwargs)
+
+    # Return a mappable object
+    return axis.collections[0]
 
 
 def _set_dc_labels(axes, **kwargs):
