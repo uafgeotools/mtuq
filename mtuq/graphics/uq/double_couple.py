@@ -44,7 +44,7 @@ def plot_misfit_dc(filename, ds, **kwargs):
         misfit = _misfit_dc_regular(ds)
         
     elif issubclass(type(ds), DataFrame):
-        misfit = _misfit_dc_random(ds)
+        misfit = _misfit_dc_random(ds , **kwargs)
 
     _plot_dc(filename, misfit, **kwargs)
 
@@ -82,7 +82,7 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
         likelihoods = _likelihoods_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        likelihoods = _likelihoods_dc_random(ds, var)
+        likelihoods = _likelihoods_dc_random(ds, var, **kwargs)
 
     _plot_dc(filename, likelihoods, **kwargs)
 
@@ -120,7 +120,7 @@ def plot_marginal_dc(filename, ds, var, **kwargs):
         marginals = _marginals_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        marginals = _marginals_dc_random(ds, var)
+        marginals = _marginals_dc_random(ds, var, **kwargs)
 
     _plot_dc(filename, marginals, **kwargs)
 
@@ -158,7 +158,7 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
         variance_reduction = _variance_reduction_dc_regular(ds, data_norm)
 
     elif issubclass(type(ds), DataFrame):
-        variance_reduction = _variance_reduction_dc_random(ds, data_norm)
+        variance_reduction = _variance_reduction_dc_random(ds, data_norm, **kwargs)
 
     _plot_dc(filename, variance_reduction, **kwargs)
 
@@ -419,16 +419,16 @@ def _max_dc(da):
     return dc_vals
 
 
-def _bin_dc_regular(df, handle, npts=25, **kwargs):
+def _bin_dc_regular(df, handle, nbins=25, **kwargs):
     """Bins irregularly-spaced moment tensor orientations into regular grids for plotting."""
     # Orientation bins
     kappa_min, kappa_max = 0, 360
     sigma_min, sigma_max = -90, 90
     h_min, h_max = 0, 1
 
-    kappa_edges = np.linspace(kappa_min, kappa_max, npts + 1)
-    sigma_edges = np.linspace(sigma_min, sigma_max, npts + 1)
-    h_edges = np.linspace(h_min, h_max, npts + 1)
+    kappa_edges = np.linspace(kappa_min, kappa_max, nbins + 1)
+    sigma_edges = np.linspace(sigma_min, sigma_max, nbins + 1)
+    h_edges = np.linspace(h_min, h_max, nbins + 1)
 
     kappa_centers = 0.5 * (kappa_edges[:-1] + kappa_edges[1:])
     sigma_centers = 0.5 * (sigma_edges[:-1] + sigma_edges[1:])
@@ -445,9 +445,9 @@ def _bin_dc_regular(df, handle, npts=25, **kwargs):
     h_indices = np.digitize(h_vals, h_edges) - 1
 
     # Ensure indices are within valid range
-    kappa_indices = np.clip(kappa_indices, 0, npts - 1)
-    sigma_indices = np.clip(sigma_indices, 0, npts - 1)
-    h_indices = np.clip(h_indices, 0, npts - 1)
+    kappa_indices = np.clip(kappa_indices, 0, nbins - 1)
+    sigma_indices = np.clip(sigma_indices, 0, nbins - 1)
+    h_indices = np.clip(h_indices, 0, nbins - 1)
 
     # Add bin indices to DataFrame
     df = df.copy()
@@ -460,7 +460,7 @@ def _bin_dc_regular(df, handle, npts=25, **kwargs):
     grouped = df.groupby(['kappa_idx', 'sigma_idx', 'h_idx'])
 
     # Initialize the output array with appropriate data type
-    binned = np.full((npts, npts, npts), np.nan)
+    binned = np.full((nbins, nbins, nbins), np.nan)
 
     # Process each group
     for (k_idx, s_idx, h_idx), group in grouped:
