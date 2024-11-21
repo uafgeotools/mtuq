@@ -24,7 +24,7 @@ def cbformat(st, pos):
 # It should behave as similarly as possible to the GMT backend 
 # and take the same input arguments
 def _plot_lune_matplotlib(filename, longitude, latitude, values, 
-    best_vw=None, lune_array=None, colormap='viridis', plot_type='contour', **kwargs):
+    best_vw=None, lune_array=None, colormap='viridis', plot_type='contour', clip_interval=[0,100],**kwargs):
 
     """ Plots DataArray values on the eigenvalue lune (requires matplotlib)
 
@@ -61,6 +61,9 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     if _nothing_to_plot(values):
         return
     
+    if not isinstance(clip_interval, list) or len(clip_interval) != 2:
+        raise Exception('clip_interval must be a list of two floats')
+
     _development_warning()
 
     # Check plot_type. Can be either contour or colormesh
@@ -75,9 +78,9 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     x, y = _hammer_projection(x, y)
 
     # Plot data
-    # Use the percentile method to filter out outliers (Will alway clip the 10% greater values)
+    # Use the percentile method to filter out outliers based on clip_interval (in percentage)
     if plot_type == 'colormesh':
-        vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
+        vmin, vmax = np.nanpercentile(np.asarray(values), clip_interval)
         im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='nearest', zorder=10)
     elif plot_type == 'contour':
         # Plot using contourf
@@ -143,7 +146,8 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
     pyplot.savefig(filename, dpi=300)
     pyplot.close()
 
-def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='viridis', title=None, plot_type='contour', **kwargs):
+def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='viridis', 
+                           title=None, plot_type='contour', clip_interval=[0,100], **kwargs):
     """ Plots DataArray values on the force sphere (requires matplotlib)
 
     .. rubric :: Keyword arguments
@@ -175,6 +179,9 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
 
     if _nothing_to_plot(values):
         return
+
+    if not isinstance(clip_interval, list) or len(clip_interval) != 2:
+        raise Exception('clip_interval must be a list of two floats')
 
     _development_warning()
 
@@ -210,7 +217,7 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
         x2, y2 = np.meshgrid(lon2, latitude)
         x1, y1 = _hammer_projection(x1, y1)
         x2, y2 = _hammer_projection(x2, y2)
-        vmin, vmax = np.nanpercentile(np.asarray(values), [0,75])
+        vmin, vmax = np.nanpercentile(np.asarray(values), clip_interval)
         im = ax.pcolormesh(x1, y1, values1, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
         im = ax.pcolormesh(x2, y2, values2, cmap=colormap, vmin=vmin, vmax=vmax, shading='auto', zorder=10)
 
@@ -266,24 +273,26 @@ def _plot_force_matplotlib(filename, phi, h, values, best_force=None, colormap='
 
 
 def _plot_dc_matplotlib(filename, coords, 
-    values_h_kappa, values_sigma_kappa, values_sigma_h,
-    title=None, best_dc=None,  figsize=(8., 8.), fontsize=14, **kwargs):
+    values_h_kappa, values_sigma_kappa, values_sigma_h, colormap='viridis',
+    title=None, best_dc=None, plot_colorbar=True, figsize=(8., 8.), fontsize=14, clip_interval=[0,100],**kwargs):
+
+    if not isinstance(clip_interval, list) or len(clip_interval) != 2:
+        raise Exception('clip_interval must be a list of two floats')
 
     _development_warning()
 
-    colormap = kwargs.get('colormap', 'viridis')
-
-    # prepare axes
+    # Prepare axes
     fig, axes = pyplot.subplots(2, 2,
         figsize=figsize,
-        )
+    )
 
     pyplot.subplots_adjust(
         wspace=0.4,
         hspace=0.4,
-        )
+        right=0.88
+    )
 
-    # parse colormap
+    # Parse colormap
     if exists(_cpt_path(colormap)):
        colormap = read_cpt(_cpt_path(colormap))
 

@@ -363,7 +363,6 @@ def _variance_reduction_dc_regular(da, data_norm):
     return variance_reduction.assign_attrs({
         'best_mt': _min_mt(da),
         'best_dc': _min_dc(da),
-        'lune_array': _lune_array(da),
         })
 
 def _variance_reduction_dc_random(df, data_norm, **kwargs):
