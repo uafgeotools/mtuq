@@ -83,9 +83,17 @@ def _plot_lune_matplotlib(filename, longitude, latitude, values,
         vmin, vmax = np.nanpercentile(np.asarray(values), clip_interval)
         im = ax.pcolormesh(x, y, values, cmap=colormap, vmin=vmin, vmax=vmax, shading='nearest', zorder=10)
     elif plot_type == 'contour':
-        # Plot using contourf
-        levels = 20
-        im = ax.contourf(x, y, values, cmap=colormap, levels=levels, zorder=10)
+        im = None
+        try:
+            im = ax.contourf(x, y, values, cmap=colormap, levels=20, zorder=10)
+        except Exception:
+            print('Not enough data to plot contour, switching to colormesh...')
+            im = ax.pcolormesh(
+                x, y, values, cmap=colormap, 
+                vmin=np.nanpercentile(values, clip_interval[0]), 
+                vmax=np.nanpercentile(values, clip_interval[1]), 
+                shading='nearest', zorder=10
+            )
     elif plot_type == 'scatter':
         # Prepare colormap
         boundaries = np.linspace(0, 5, 6)
