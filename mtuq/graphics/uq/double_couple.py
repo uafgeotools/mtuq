@@ -44,9 +44,7 @@ def plot_misfit_dc(filename, ds, **kwargs):
         misfit = _misfit_dc_regular(ds)
         
     elif issubclass(type(ds), DataFrame):
-        warn('plot_misfit_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        misfit = _misfit_dc_random(ds , **kwargs)
 
     _plot_dc(filename, misfit, **kwargs)
 
@@ -84,9 +82,7 @@ def plot_likelihood_dc(filename, ds, var, **kwargs):
         likelihoods = _likelihoods_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_likelihood_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        likelihoods = _likelihoods_dc_random(ds, var, **kwargs)
 
     _plot_dc(filename, likelihoods, **kwargs)
 
@@ -124,9 +120,7 @@ def plot_marginal_dc(filename, ds, var, **kwargs):
         marginals = _marginals_dc_regular(ds, var)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_marginal_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        marginals = _marginals_dc_random(ds, var, **kwargs)
 
     _plot_dc(filename, marginals, **kwargs)
 
@@ -161,19 +155,17 @@ def plot_variance_reduction_dc(filename, ds, data_norm, **kwargs):
     _check(ds)
 
     if issubclass(type(ds), DataArray):
-        variance_reduction = _variance_reduction_dc_regular(ds, var)
+        variance_reduction = _variance_reduction_dc_regular(ds, data_norm)
 
     elif issubclass(type(ds), DataFrame):
-        warn('plot_variance_reduction_dc() not implemented for irregularly-spaced grids.\n'
-             'No figure will be generated.')
-        return
+        variance_reduction = _variance_reduction_dc_random(ds, data_norm, **kwargs)
 
     _plot_dc(filename, variance_reduction, **kwargs)
 
 
 
-def _plot_dc(filename, da, show_best=True, colormap='hot', 
-    backend=_plot_dc_matplotlib, squeeze='min', **kwargs):
+def _plot_dc(filename, da, show_best=True, backend=_plot_dc_matplotlib,
+    squeeze='min', **kwargs):
 
     """ Plots DataArray values over strike, dip, slip
 
@@ -260,6 +252,20 @@ def _misfit_dc_regular(da):
         'best_dc': _min_dc(da),
         })
 
+def _misfit_dc_random(df, **kwargs):
+    df = df.copy()
+    df = df.reset_index()
+
+    # Ensure 'misfit' column exists
+    if 'misfit' not in df.columns:
+        df['misfit'] = df.iloc[:, -1]
+
+    da = _bin_dc_regular(df, lambda group: group['misfit'].min(), **kwargs)
+
+    return da.assign_attrs({
+        'best_dc': _min_dc(da),
+    })
+
 
 def _likelihoods_dc_regular(da, var):
     """ For each moment tensor orientation, calculate maximum likelihood
@@ -278,6 +284,31 @@ def _likelihoods_dc_regular(da, var):
         'maximum_likelihood_estimate': dataarray_idxmax(likelihoods).values(),
         })
 
+def _likelihoods_dc_random(df, var, **kwargs):
+    """
+    Calculate max likelihood from random dataset bins, ensuring global normalization.
+    """
+
+    likelihoods = df.copy().reset_index()
+
+    # Ensure 'misfit' column exists
+    if 'misfit' not in likelihoods.columns:
+        likelihoods.rename(columns={likelihoods.columns[-1]: 'misfit'}, inplace=True)
+
+    # Compute likelihoods globally and normalize BEFORE binning
+    likelihoods['likelihood'] = np.exp(-likelihoods['misfit'] / (2. * var))
+    likelihoods['likelihood'] /= likelihoods['likelihood'].sum()  # Global normalization
+
+    # Apply binning, operating on globally normalized likelihoods
+    binned_likelihoods = _bin_dc_regular(
+        likelihoods, lambda group: group['likelihood'].max(), **kwargs
+    )
+
+    return binned_likelihoods.assign_attrs({
+        'best_dc': _max_dc(binned_likelihoods),
+        'maximum_likelihood_estimate': dataarray_idxmax(binned_likelihoods).values(),
+    })
+
 
 def _marginals_dc_regular(da, var):
     """ For each moment tensor orientation, calculate marginal likelihood
@@ -292,6 +323,30 @@ def _marginals_dc_regular(da, var):
     return marginals.assign_attrs({
         'best_dc': _max_dc(marginals),
         })
+
+def _marginals_dc_random(df, var, **kwargs):
+    """
+    Calculate marginal likelihoods for random bins with global normalization.
+    """
+
+    likelihoods = df.copy().reset_index()
+
+    if 'misfit' not in likelihoods.columns:
+        likelihoods.rename(columns={likelihoods.columns[-1]: 'misfit'}, inplace=True)
+
+    # Compute likelihoods and normalize globally
+    likelihoods['likelihood'] = np.exp(-likelihoods['misfit'] / (2. * var))
+    likelihoods['likelihood'] /= likelihoods['likelihood'].sum()  # Global normalization
+
+    # Sum within bins after global normalization
+    marginals = _bin_dc_regular(
+        likelihoods, lambda group: group['likelihood'].sum(), **kwargs
+    )
+
+    # No need for further normalization, already globally adjusted
+    return marginals.assign_attrs({
+        'best_dc': _max_dc(marginals),
+    })
 
 
 def _variance_reduction_dc_regular(da, data_norm):
@@ -308,8 +363,21 @@ def _variance_reduction_dc_regular(da, data_norm):
     return variance_reduction.assign_attrs({
         'best_mt': _min_mt(da),
         'best_dc': _min_dc(da),
-        'lune_array': _lune_array(da),
         })
+
+def _variance_reduction_dc_random(df, data_norm, **kwargs):
+    df = df.copy()
+    df = df.reset_index()
+
+    # Ensure 'misfit' column exists
+    if 'misfit' not in df.columns:
+        df['misfit'] = df.iloc[:, -1]
+
+    da = _bin_dc_regular(df, lambda group: 1. - group['misfit'].min()/data_norm, **kwargs)
+
+    return da.assign_attrs({
+        'best_dc': _max_dc(da),
+    })
 
 
 #
@@ -351,6 +419,62 @@ def _max_dc(da):
     return dc_vals
 
 
+def _bin_dc_regular(df, handle, nbins=25, **kwargs):
+    """Bins irregularly-spaced moment tensor orientations into regular grids for plotting."""
+    # Orientation bins
+    kappa_min, kappa_max = 0, 360
+    sigma_min, sigma_max = -90, 90
+    h_min, h_max = 0, 1
+
+    kappa_edges = np.linspace(kappa_min, kappa_max, nbins + 1)
+    sigma_edges = np.linspace(sigma_min, sigma_max, nbins + 1)
+    h_edges = np.linspace(h_min, h_max, nbins + 1)
+
+    kappa_centers = 0.5 * (kappa_edges[:-1] + kappa_edges[1:])
+    sigma_centers = 0.5 * (sigma_edges[:-1] + sigma_edges[1:])
+    h_centers = 0.5 * (h_edges[:-1] + h_edges[1:])
+
+    # Prepare the data arrays
+    kappa_vals = df['kappa'].values
+    sigma_vals = df['sigma'].values
+    h_vals = df['h'].values
+
+    # Compute bin indices for each data point
+    kappa_indices = np.digitize(kappa_vals, kappa_edges) - 1
+    sigma_indices = np.digitize(sigma_vals, sigma_edges) - 1
+    h_indices = np.digitize(h_vals, h_edges) - 1
+
+    # Ensure indices are within valid range
+    kappa_indices = np.clip(kappa_indices, 0, nbins - 1)
+    sigma_indices = np.clip(sigma_indices, 0, nbins - 1)
+    h_indices = np.clip(h_indices, 0, nbins - 1)
+
+    # Add bin indices to DataFrame
+    df = df.copy()
+    df['kappa_idx'] = kappa_indices
+    df['sigma_idx'] = sigma_indices
+    df['h_idx'] = h_indices
+
+    # Group by bin indices
+    # grouped = df.groupby(['h_idx', 'sigma_idx', 'kappa_idx'])
+    grouped = df.groupby(['kappa_idx', 'sigma_idx', 'h_idx'])
+
+    # Initialize the output array with appropriate data type
+    binned = np.full((nbins, nbins, nbins), np.nan)
+
+    # Process each group
+    for (k_idx, s_idx, h_idx), group in grouped:
+        # Apply the handle function to the group DataFrame
+        binned[k_idx, s_idx, h_idx] = handle(group)
+
+    # Create the DataArray
+    da = DataArray(
+        data=binned,
+        dims=('kappa', 'sigma', 'h'),
+        coords={'kappa': kappa_centers, 'sigma': sigma_centers, 'h': h_centers},
+    )
+
+    return da
 
 def _check(ds):
     """ Checks data structures
