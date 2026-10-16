@@ -16,6 +16,7 @@
 #
 
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 import obspy
@@ -27,12 +28,22 @@ from mtuq.misfit.polarity import (
     _radiation_coef_P, _takeoff_angle_taup, _polarities_mt)
 from mtuq.misfit.polarity_amplitudes import (
     PolarityPampSPampRatioMisfit, polarities_pamp_spamp_ratio_from_dict,
-    _misfit_term, _radiation_coef_S, _use_to_ned, _hypocentral_distances,
+    _misfit_term, _radiation_coef_S, _hypocentral_distances,
     _medium_from_taup)
 from obspy.taup import TauPyModel
 
 
 EPSVAL = 1.e-12
+
+
+def _ned_matrices(mt):
+    """ Independent matrix representation used only by the reference tests
+    """
+    return np.array([[
+        [m[1], -m[5], m[3]],
+        [-m[5], m[2], -m[4]],
+        [m[3], -m[4], m[0]],
+        ] for m in mt])
 
 
 def _greens(n=4, depth_in_m=10000.):
@@ -82,10 +93,9 @@ class TestRadiationPatterns(unittest.TestCase):
         takeoff = np.linspace(1., 179., 37)
         azimuth = np.linspace(0., 350., 37)
 
-        rsv, rsh = _radiation_coef_S(explosion, takeoff, azimuth)
+        rs = _radiation_coef_S(explosion, takeoff, azimuth)
 
-        self.assertLess(np.abs(rsv).max(), EPSVAL)
-        self.assertLess(np.abs(rsh).max(), EPSVAL)
+        self.assertLess(rs.max(), EPSVAL)
 
 
     def test_orthonormal_basis_identity(self):
@@ -97,8 +107,8 @@ class TestRadiationPatterns(unittest.TestCase):
         azimuth = rng.uniform(0., 360., 9)
 
         rp = _radiation_coef_P(mt, takeoff, azimuth)
-        rsv, rsh = _radiation_coef_S(mt, takeoff, azimuth)
-        ned = _use_to_ned(mt)
+        rs = _radiation_coef_S(mt, takeoff, azimuth)
+        ned = _ned_matrices(mt)
 
         for _i, (theta, phi) in enumerate(
                 zip(np.deg2rad(takeoff), np.deg2rad(azimuth))):
@@ -108,7 +118,7 @@ class TestRadiationPatterns(unittest.TestCase):
                 np.sin(theta)*np.sin(phi),
                 np.cos(theta)])
 
-            total = rp[:, _i]**2 + rsv[:, _i]**2 + rsh[:, _i]**2
+            total = rp[:, _i]**2 + rs[:, _i]**2
             expected = np.sum(
                 np.einsum('nab,b->na', ned, gamma)**2, axis=1)
 
@@ -126,17 +136,17 @@ class TestRadiationPatterns(unittest.TestCase):
         azimuth = np.rad2deg(rng.uniform(0., 2.*np.pi, n))
 
         rp = _radiation_coef_P(double_couple, takeoff, azimuth)[0]
-        rsv, rsh = _radiation_coef_S(double_couple, takeoff, azimuth)
+        rs = _radiation_coef_S(double_couple, takeoff, azimuth)[0]
 
         self.assertAlmostEqual(
             np.sqrt(np.mean(rp**2)), np.sqrt(4./15.), places=2)
         self.assertAlmostEqual(
-            np.sqrt(np.mean(rsv[0]**2 + rsh[0]**2)), np.sqrt(2./5.), places=2)
+            np.sqrt(np.mean(rs**2)), np.sqrt(2./5.), places=2)
 
 
     def test_frame_agrees_with_polarity_module(self):
-        # the S radiation is written north-east-down while the existing P
-        # radiation is written up-south-east; the two must agree
+        # Check the USE coefficients against an independent NED matrix
+        # contraction, including the signs of off-diagonal components.
         rng = np.random.default_rng(7)
         mt = rng.normal(size=(6, 6))
         takeoff = rng.uniform(1., 179., 8)
@@ -144,7 +154,7 @@ class TestRadiationPatterns(unittest.TestCase):
 
         expected = _radiation_coef_P(mt, takeoff, azimuth)
 
-        ned = _use_to_ned(mt)
+        ned = _ned_matrices(mt)
         observed = np.zeros_like(expected)
         for _i, (theta, phi) in enumerate(
                 zip(np.deg2rad(takeoff), np.deg2rad(azimuth))):
@@ -375,6 +385,114 @@ class TestMisfitFunction(unittest.TestCase):
 
 
 
+class TestPredictionDependencies(unittest.TestCase):
+
+    def test_polarity_only_needs_no_s_geometry_or_medium(self):
+        greens, _ = _greens(n=3)
+        source = MomentTensor([1., -1., 0., 0., 0., 0.5])
+        data = (np.ones(3), np.zeros(3), np.zeros(3))
+        misfit = PolarityPampSPampRatioMisfit(
+            lambda_pamp=0., lambda_sprat=0.)
+        module = 'mtuq.misfit.polarity_amplitudes.'
+
+        with patch(module + '_takeoff_angles_taup',
+                return_value=np.full(3, 45.)) as angles, \
+                patch.object(misfit, '_medium') as medium, \
+                patch(module + '_radiation_coef_S') as shear, \
+                patch(module + '_hypocentral_distances') as distances:
+            self.assertTrue(np.isfinite(misfit(data, greens, source)).all())
+            attrs = misfit.collect_attributes(data, greens)
+
+        self.assertEqual(len(angles.call_args_list), 2)
+        for call in angles.call_args_list:
+            self.assertEqual(call.kwargs['phase_list'], ['p', 'P'])
+        medium.assert_not_called()
+        shear.assert_not_called()
+        distances.assert_not_called()
+        self.assertEqual(attrs[0].station, greens[0].station.station)
+        self.assertNotIn('takeoff_angle_S', attrs[0])
+
+
+    def test_p_amplitude_does_not_request_s_geometry(self):
+        greens, _ = _greens(n=3)
+        source = MomentTensor([1., -1., 0., 0., 0., 0.5])
+        misfit = PolarityPampSPampRatioMisfit(
+            lambda_pol=0., lambda_sprat=0.)
+        data = (np.zeros(3), np.ones(3), np.zeros(3))
+        module = 'mtuq.misfit.polarity_amplitudes.'
+        with patch(module + '_takeoff_angles_taup',
+                return_value=np.full(3, 45.)) as angles:
+            self.assertTrue(np.isfinite(misfit(data, greens, source)).all())
+        self.assertEqual(angles.call_count, 1)
+        self.assertEqual(angles.call_args.kwargs['phase_list'], ['p', 'P'])
+
+
+    def test_ratio_only_needs_no_spreading_distance(self):
+        greens, _ = _greens(n=3)
+        source = MomentTensor([1., -1., 0., 0., 0., 0.5])
+        misfit = PolarityPampSPampRatioMisfit(
+            lambda_pol=0., lambda_pamp=0.)
+        with patch('mtuq.misfit.polarity_amplitudes.'
+                '_hypocentral_distances') as distances:
+            values = misfit((np.zeros(3), np.zeros(3), np.full(3, 2.)),
+                greens, source)
+        self.assertTrue(np.isfinite(values).all())
+        distances.assert_not_called()
+
+
+    def test_public_predictions_include_disabled_terms(self):
+        greens, _ = _greens(n=3)
+        misfit = PolarityPampSPampRatioMisfit(
+            lambda_pamp=0., lambda_sprat=0.)
+        predicted = misfit.get_predicted(greens,
+            MomentTensor([1., -1., 0., 0., 0., 0.5]))
+        for array in predicted:
+            self.assertEqual(array.shape, (1, 3))
+            self.assertTrue(np.isfinite(array).all())
+
+
+    def test_floor_uses_frobenius_norm(self):
+        greens, _ = _greens(n=1)
+        misfit = PolarityPampSPampRatioMisfit(
+            rho=2300., vp=5400., vs=3300., radiation_floor=0.1)
+        # Pure off-diagonal tensor: ||M||_F = sqrt(2), ||m||_2 = 1.
+        # P is nodal along the vertical; |S| = 1/sqrt(2) at these S angles.
+        source = MomentTensor([0., 0., 0., 0., 0., 1.])
+        greens[0].azimuth = 0.
+        with patch('mtuq.misfit.polarity_amplitudes.'
+                '_takeoff_angles_taup', side_effect=[np.array([0.]),
+                    np.array([45.])]):
+            _, _, ratios = misfit.get_predicted(greens, source)
+        expected = np.log10(5.) + 3.*np.log10(5400./3300.)
+        np.testing.assert_allclose(ratios, [[expected]], atol=EPSVAL)
+
+
+    def test_source_scaling_and_zero_s_radiation(self):
+        greens, _ = _greens(n=3)
+        misfit = PolarityPampSPampRatioMisfit()
+        for mt in ([1., -2., 0.5, 0.3, -0.4, 0.7],
+                [1., 1., 1., 0., 0., 0.]):
+            source = np.array(mt)*1.e15
+            a = misfit.get_predicted(greens, MomentTensor(source))
+            b = misfit.get_predicted(greens, MomentTensor(10.*source))
+            np.testing.assert_array_equal(a[0], b[0])
+            np.testing.assert_allclose(10.*a[1], b[1], rtol=1.e-12, atol=0.)
+            np.testing.assert_allclose(a[2], b[2], rtol=0., atol=EPSVAL)
+            self.assertTrue(np.isfinite(a[2]).all())
+
+
+    def test_zero_source_has_no_defined_s_p_ratio(self):
+        greens, _ = _greens(n=1)
+        source = MomentTensor(np.zeros(6))
+        with self.assertRaisesRegex(ValueError, 'nonzero moment tensors'):
+            PolarityPampSPampRatioMisfit().get_predicted(greens, source)
+        # Its zero P prediction remains usable when the ratio is disabled.
+        misfit = PolarityPampSPampRatioMisfit(
+            lambda_pamp=0., lambda_sprat=0.)
+        self.assertTrue(np.isfinite(misfit(
+            (np.ones(1), np.zeros(1), np.zeros(1)), greens, source)).all())
+
+
 class TestInputHandling(unittest.TestCase):
 
     def test_dataset_is_rejected_clearly(self):
@@ -420,6 +538,58 @@ class TestInputHandling(unittest.TestCase):
 
             with self.assertRaises((TypeError, ValueError)):
                 PolarityPampSPampRatioMisfit(**parameters)
+
+
+    def test_invalid_term_weights_and_floor(self):
+        for name in ('lambda_pol', 'lambda_pamp', 'lambda_sprat'):
+            for value in (-1., np.nan, np.inf):
+                with self.subTest(name=name, value=value):
+                    with self.assertRaises(ValueError):
+                        PolarityPampSPampRatioMisfit(**{name: value})
+
+        for value in (0., -1., np.nan, np.inf):
+            with self.subTest(radiation_floor=value):
+                with self.assertRaises(ValueError):
+                    PolarityPampSPampRatioMisfit(radiation_floor=value)
+
+
+    def test_multidimensional_observations_and_weights_rejected(self):
+        misfit = PolarityPampSPampRatioMisfit()
+        for index in range(6):
+            observed = [np.ones(2) for _ in range(6)]
+            observed[index] = np.ones((2, 1))
+            with self.subTest(array=index):
+                with self.assertRaisesRegex(ValueError, 'one-dimensional'):
+                    misfit.get_observed(observed)
+
+
+    def test_log_zero_and_missing_ratios_remain_distinct(self):
+        greens, _ = _greens(n=3)
+        stations = [tensor.station for tensor in greens]
+        with self.assertWarns(UserWarning):
+            observed = polarities_pamp_spamp_ratio_from_dict(
+                None, None, {'S0': 0., 'S1': -1.}, stations,
+                spamp_ratio_is_log10=True)
+
+        np.testing.assert_allclose(observed[2], [1., 0.1, 0.])
+        missing = polarities_pamp_spamp_ratio_from_dict(
+            None, None, None, stations, spamp_ratio_is_log10=True)
+        np.testing.assert_array_equal(missing[2], np.zeros(3))
+
+
+    def test_linear_and_log_ratio_inputs_give_identical_misfits(self):
+        greens, _ = _greens(n=3)
+        stations = [tensor.station for tensor in greens]
+        source = MomentTensor([1., -2., 0.5, 0.3, -0.4, 0.7])
+        misfit = PolarityPampSPampRatioMisfit(
+            lambda_pol=0., lambda_pamp=0.)
+        linear = polarities_pamp_spamp_ratio_from_dict(
+            None, None, {'S0': 1., 'S1': 10., 'S2': 0.1}, stations)
+        logarithmic = polarities_pamp_spamp_ratio_from_dict(
+            None, None, {'S0': 0., 'S1': 1., 'S2': -1.}, stations,
+            spamp_ratio_is_log10=True)
+        np.testing.assert_allclose(
+            misfit(linear, greens, source), misfit(logarithmic, greens, source))
 
 
     def test_medium_defaults_to_velocity_model(self):

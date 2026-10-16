@@ -4,7 +4,7 @@ import numpy as np
 import mtuq
 from mtuq.util import AttribDict, Null, warn
 from mtuq.misfit.polarity import (
-    _check, _get_azimuths, _radiation_coef_P, _takeoff_angles_taup)
+    _get_azimuths, _radiation_coef_P, _takeoff_angles_taup)
 from mtuq.misfit.waveform.level2 import _to_array, _type
 from obspy.taup import TauPyModel
 
@@ -201,10 +201,10 @@ class PolarityPampSPampRatioMisfit(object):
         `'L1'` (default) and `'L2'` are accepted.
 
         ``radiation_floor`` (`float`):
-        Relative floor applied to `|R_P|` inside the logarithm only, so that
-        a trial source with a node at a station gives a large but finite
-        S/P residual instead of a numerical singularity.  Expressed as a
-        fraction of the Frobenius norm of the moment tensor.
+        Positive, finite floor applied to both P and S radiation magnitudes
+        inside the logarithms only. Expressed as a fraction of the Frobenius
+        norm of the moment tensor, so nodal sources give finite residuals
+        without coupling the ratio to moment magnitude.
 
         """
         if method != 'taup':
@@ -233,13 +233,22 @@ class PolarityPampSPampRatioMisfit(object):
         self.norm = norm
         self.radiation_floor = float(radiation_floor)
 
+        for name, value in (('lambda_pol', self.lambda_pol),
+                ('lambda_pamp', self.lambda_pamp),
+                ('lambda_sprat', self.lambda_sprat)):
+            if not np.isfinite(value) or value < 0.:
+                raise ValueError('Bad parameter: %s must be finite and '
+                    'nonnegative' % name)
+
+        if not np.isfinite(self.radiation_floor) or self.radiation_floor <= 0.:
+            raise ValueError('Bad parameter: radiation_floor must be finite '
+                'and positive')
+
         self._taup = TauPyModel(self.taup_model)
 
 
     def __call__(self, data, greens, sources, progress_handle=Null(),
             set_attributes=False):
-
-        _check(greens, self.method)
 
         pol_obs, amp_obs, rat_obs, tau_pol, tau_amp, tau_rat = \
             self.get_observed(data)
@@ -251,7 +260,9 @@ class PolarityPampSPampRatioMisfit(object):
                 'Green\'s tensors passed to the misfit function.'
                 % (len(pol_obs), len(greens)))
 
-        pol_theo, amp_theo, log_rat_theo = self.get_predicted(greens, sources)
+        pol_theo, amp_theo, log_rat_theo = self._get_predicted(
+            greens, sources, pamp=self.lambda_pamp != 0.,
+            sprat=self.lambda_sprat != 0.)
 
         n_sources = pol_theo.shape[0]
         values = np.zeros(n_sources)
@@ -299,6 +310,10 @@ class PolarityPampSPampRatioMisfit(object):
         arrays = [np.atleast_1d(np.asarray(item, dtype=np.float64))
             for item in data]
 
+        if any(array.ndim != 1 for array in arrays):
+            raise ValueError('Observation and weight arrays must be '
+                'one-dimensional')
+
         lengths = set(len(item) for item in arrays)
         if len(lengths) != 1:
             raise ValueError('Inconsistent dimensions: observation arrays '
@@ -334,7 +349,15 @@ class PolarityPampSPampRatioMisfit(object):
 
 
     def get_predicted(self, greens, sources):
-        """ Calculates predicted polarities, P amplitudes and S/P ratios
+        """ Returns polarities, P amplitudes and log10(S/P) predictions
+
+        All three predictions are returned, independently of the term weights.
+        """
+        return self._get_predicted(greens, sources)
+
+
+    def _get_predicted(self, greens, sources, pamp=True, sprat=True):
+        """ Evaluates only the amplitude predictions needed by the objective
         """
 
         if type(sources) == mtuq.MomentTensor:
@@ -352,38 +375,47 @@ class PolarityPampSPampRatioMisfit(object):
         else:
             raise TypeError
 
+        if not np.all(np.isfinite(mt_array)):
+            raise ValueError('Moment tensors must contain finite components')
+
         # geometry depends only on the origin and stations, so it is
         # evaluated once here rather than once per trial source
         azimuths = _get_azimuths(greens)
         takeoff_p = _takeoff_angles_taup(
             self._taup, greens, phase_list=['p', 'P'])
-        takeoff_s = _takeoff_angles_taup(
-            self._taup, greens, phase_list=['s', 'S'])
-        distances = _hypocentral_distances(greens)
-
-        rho, vp, vs = self._medium(greens)
-
         radiation_p = _radiation_coef_P(mt_array, takeoff_p, azimuths)
-        radiation_sv, radiation_sh = _radiation_coef_S(
-            mt_array, takeoff_s, azimuths)
-
         polarities = np.sign(radiation_p)
+        amplitudes = log_ratios = None
 
-        amplitudes = radiation_p/(
-            4.*np.pi*rho*vp**3*distances[None, :])
+        if pamp or sprat:
+            rho, vp, vs = self._medium(greens)
 
-        radiation_s = np.sqrt(radiation_sv**2 + radiation_sh**2)
+        if pamp:
+            distances = _hypocentral_distances(greens)
+            amplitudes = radiation_p/(
+                4.*np.pi*rho*vp**3*distances[None, :])
 
-        # a node in P would otherwise give an infinite ratio; the floor is
-        # applied only inside the logarithm and scales with the source, so
-        # it does not couple the ratio to the moment magnitude
-        floor = self.radiation_floor*np.linalg.norm(
-            mt_array, axis=1)[:, None]
+        if sprat:
+            takeoff_s = _takeoff_angles_taup(
+                self._taup, greens, phase_list=['s', 'S'])
+            radiation_s = _radiation_coef_S(mt_array, takeoff_s, azimuths)
 
-        log_ratios = (
-            np.log10(np.maximum(radiation_s, floor)) -
-            np.log10(np.maximum(np.abs(radiation_p), floor)) +
-            3.*np.log10(vp/vs))
+            # Six independent entries store the off-diagonal values once;
+            # the Frobenius norm of the symmetric matrix counts them twice.
+            source_norm = np.sqrt(
+                np.sum(mt_array[:, :3]**2, axis=1) +
+                2.*np.sum(mt_array[:, 3:]**2, axis=1))
+            if np.any(~np.isfinite(source_norm) | (source_norm == 0.)):
+                raise ValueError('S/P ratios require nonzero moment tensors '
+                    'with finite Frobenius norms')
+
+            # Floor both radiation magnitudes only inside the logarithms.
+            # Scaling the floor with the source preserves magnitude invariance.
+            floor = self.radiation_floor*source_norm[:, None]
+            log_ratios = (
+                np.log10(np.maximum(radiation_s, floor)) -
+                np.log10(np.maximum(np.abs(radiation_p), floor)) +
+                3.*np.log10(vp/vs))
 
         return polarities, amplitudes, log_ratios
 
@@ -394,42 +426,26 @@ class PolarityPampSPampRatioMisfit(object):
 
         pol_obs, amp_obs, rat_obs = self.get_observed(data)[:3]
 
-        azimuths = _get_azimuths(greens)
         takeoff_p = _takeoff_angles_taup(
             self._taup, greens, phase_list=['p', 'P'])
-        takeoff_s = _takeoff_angles_taup(
-            self._taup, greens, phase_list=['s', 'S'])
+        if self.lambda_sprat != 0.:
+            takeoff_s = _takeoff_angles_taup(
+                self._taup, greens, phase_list=['s', 'S'])
 
         attrs_list = []
         for _i, greens_tensor in enumerate(greens):
-            attrs = AttribDict()
-
-            try:
-                attrs.azimuth = greens_tensor.azimuth
-                attrs.distance_in_m = greens_tensor.distance_in_m
-            except:
-                pass
-            try:
-                attrs.network = greens_tensor.station.network
-                attrs.station = greens_tensor.station.station
-                attrs.location = greens_tensor.station.location
-                attrs.latitude = greens_tensor.station.latitude
-                attrs.longitude = greens_tensor.station.longitude
-            except:
-                pass
-            try:
-                attrs.takeoff_angle = takeoff_p[_i]
+            attrs = AttribDict(greens_tensor.station)
+            attrs.update({
+                'azimuth': greens_tensor.azimuth,
+                'distance_in_m': greens_tensor.distance_in_m,
+                'takeoff_angle': takeoff_p[_i],
+                'polarity': pol_obs[_i],
+                'p_amplitude': amp_obs[_i],
+                'sp_ratio': rat_obs[_i],
+                })
+            if self.lambda_sprat != 0.:
                 attrs.takeoff_angle_S = takeoff_s[_i]
-            except:
-                pass
-            try:
-                attrs.polarity = pol_obs[_i]
-                attrs.p_amplitude = amp_obs[_i]
-                attrs.sp_ratio = rat_obs[_i]
-            except:
-                pass
-
-            attrs_list += [attrs]
+            attrs_list.append(attrs)
 
         return attrs_list
 
@@ -489,68 +505,28 @@ def _misfit_term(observed, predicted, weights, norm, label, scale=1.,
 #
 
 def _radiation_coef_S(mt_array, takeoff, azimuth):
-    """ Calculates far-field SV and SH radiation coefficients
+    """ Calculates the magnitude of far-field S radiation in USE coordinates
 
-    Returns two arrays of shape `(len(mt_array), len(takeoff))`.  Angles are
+    Returns an array of shape `(len(mt_array), len(takeoff))`.  Angles are
     the direct-S takeoff angle measured from the downward vertical and the
     source-to-receiver azimuth, both in degrees.
+
+    For a unit ray n, |n x (M n)| = sqrt(R_SV**2 + R_SH**2).  This avoids
+    constructing a second coordinate convention or separate shear bases.
     """
 
-    n1, n2 = mt_array.shape
-    if n2 != 6:
-        raise Exception('Inconsistent dimensions')
+    radiation = np.empty((len(mt_array), len(takeoff)))
+    angles = zip(np.deg2rad(takeoff), np.deg2rad(azimuth))
+    for _i, (theta, phi) in enumerate(angles):
+        n = np.array([-np.cos(theta), -np.sin(theta)*np.cos(phi),
+            np.sin(theta)*np.sin(phi)])
+        mn = np.column_stack((
+            mt_array[:, 0]*n[0] + mt_array[:, 3]*n[1] + mt_array[:, 4]*n[2],
+            mt_array[:, 3]*n[0] + mt_array[:, 1]*n[1] + mt_array[:, 5]*n[2],
+            mt_array[:, 4]*n[0] + mt_array[:, 5]*n[1] + mt_array[:, 2]*n[2]))
+        radiation[:, _i] = np.linalg.norm(np.cross(n, mn), axis=1)
 
-    n3, n4 = len(takeoff), len(azimuth)
-    if n3 != n4:
-        raise Exception('Inconsistent dimensions')
-
-    # moment tensors are stored up-south-east; the radiation geometry below
-    # is written north-east-down
-    m_ned = _use_to_ned(mt_array)
-
-    takeoff = np.deg2rad(takeoff)
-    azimuth = np.deg2rad(azimuth)
-
-    rsv = np.zeros((n1, n3))
-    rsh = np.zeros((n1, n3))
-
-    for _i, (theta, phi) in enumerate(zip(takeoff, azimuth)):
-        sth, cth = np.sin(theta), np.cos(theta)
-        sphi, cphi = np.sin(phi), np.cos(phi)
-
-        # Aki & Richards 2ed, p. 108
-        gamma = np.array([sth*cphi, sth*sphi, cth])
-        p_hat = np.array([cth*cphi, cth*sphi, -sth])
-        phi_hat = np.array([-sphi, cphi, 0.])
-
-        m_gamma = np.einsum('nab,b->na', m_ned, gamma)
-
-        rsv[:, _i] = np.einsum('na,a->n', m_gamma, p_hat)
-        rsh[:, _i] = np.einsum('na,a->n', m_gamma, phi_hat)
-
-    return rsv, rsh
-
-
-def _use_to_ned(mt_array):
-    """ Converts up-south-east vectors to north-east-down matrices
-    """
-
-    mrr = mt_array[:, 0]
-    mtt = mt_array[:, 1]
-    mpp = mt_array[:, 2]
-    mrt = mt_array[:, 3]
-    mrp = mt_array[:, 4]
-    mtp = mt_array[:, 5]
-
-    m_ned = np.empty((len(mt_array), 3, 3))
-    m_ned[:, 0, 0] = mtt
-    m_ned[:, 1, 1] = mpp
-    m_ned[:, 2, 2] = mrr
-    m_ned[:, 0, 1] = m_ned[:, 1, 0] = -mtp
-    m_ned[:, 0, 2] = m_ned[:, 2, 0] = mrt
-    m_ned[:, 1, 2] = m_ned[:, 2, 1] = -mrp
-
-    return m_ned
+    return radiation
 
 
 def _origin_depth(greens):
@@ -606,16 +582,12 @@ def _hypocentral_distances(greens):
     not a ray-path length.  Receivers are assumed to lie at the surface.
     """
 
-    distances = np.zeros(len(greens))
+    distances = np.array([np.hypot(tensor.distance_in_m,
+        tensor.origin.depth_in_m) for tensor in greens])
 
-    for _i, greens_tensor in enumerate(greens):
-        surface = greens_tensor.distance_in_m
-        depth = greens_tensor.origin.depth_in_m
-        distances[_i] = np.sqrt(surface**2 + depth**2)
-
-    if np.any(distances <= 0.):
-        raise ValueError('Zero source-receiver distance: the far-field '
-            'approximation requires a receiver outside the source region')
+    if np.any(~np.isfinite(distances) | (distances <= 0.)):
+        raise ValueError('Source-receiver distances must be finite and '
+            'positive for the far-field approximation')
 
     return distances
 
@@ -655,7 +627,8 @@ def polarities_pamp_spamp_ratio_from_dict(dict_polarity, dict_pamp,
     for _i, station in enumerate(stations):
         pol[_i] = _lookup(dict_polarity, station, 'polarities')
         amp[_i] = _lookup(dict_pamp, station, 'P amplitudes')
-        rat[_i] = _lookup(dict_spamp_ratio, station, 'S/P ratios')
+        rat[_i] = _lookup(dict_spamp_ratio, station, 'S/P ratios',
+            default=np.nan)
 
         if dict_tau_polarity is not None:
             tau_pol[_i] = _lookup(
@@ -668,9 +641,9 @@ def polarities_pamp_spamp_ratio_from_dict(dict_polarity, dict_pamp,
                 dict_tau_spamp_ratio, station, 'S/P ratio weights')
 
     if spamp_ratio_is_log10:
-        # convert to the linear ratios the misfit function expects; zero
-        # marks a station as unused, so it is left alone
-        mask = np.isfinite(rat) & (rat != 0.)
+        # Missing entries are NaN until conversion: a measured log10 ratio
+        # of zero represents a valid linear ratio of one.
+        mask = np.isfinite(rat)
         rat[mask] = 10.**rat[mask]
 
     elif np.any(rat < 0.):
@@ -679,15 +652,16 @@ def polarities_pamp_spamp_ratio_from_dict(dict_polarity, dict_pamp,
             'the measurements are logarithms. Pass '
             'spamp_ratio_is_log10=True if so.')
 
+    rat[np.isnan(rat)] = 0.
     return pol, amp, rat, tau_pol, tau_amp, tau_rat
 
 
-def _lookup(dictionary, station, label):
+def _lookup(dictionary, station, label, default=0.):
     """ Retrieves a station value, trying 'NET.STA' before 'STA'
     """
 
     if dictionary is None:
-        return 0.
+        return default
 
     for key in ('%s.%s' % (station.network, station.station), station.station):
         if key in dictionary:
@@ -695,4 +669,4 @@ def _lookup(dictionary, station, label):
 
     warn('Station %s not found in dictionary of %s'
         % (station.station, label))
-    return 0.
+    return default
