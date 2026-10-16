@@ -120,8 +120,7 @@ if __name__=='__main__':
     # For each station, the amplitude envelope is computed, and its maximum
     # within a short window beginning at the theoretical direct-P arrival
     # is taken as the amplitude. The sign of the vertical component at that
-    # same sample gives the polarity above, so a single measurement
-    # supplies both observables.
+    # same sample determines the sign of the P amplitude.
     #
     # The window length is a measurement choice and should suit the
     # frequency band of the data being analyzed.

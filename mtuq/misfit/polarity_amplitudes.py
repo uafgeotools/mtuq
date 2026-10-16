@@ -97,13 +97,15 @@ class PolarityPampSPampRatioMisfit(object):
     implementation, ``R_SV`` and ``R_SH`` are evaluated using the direct-S
     takeoff angle.
 
-    The predicted P amplitude is evaluated using consistent units for scalar
-    moment, density, seismic velocity, and hypocentral distance.
+    With moments in N m, density in kg/m^3, velocities in m/s and distance
+    in m, ``amp_theo`` has units of m s. Observed amplitudes must be calibrated
+    to this coefficient; source-time and waveform-processing factors are not
+    applied by this class.
 
     .. rubric:: Objective function
 
-    Following NaNDC (Yang and Wang, 2025) equations 3-6, the total objective is the weighted sum of
-    three normalized L1 residual terms:
+    Following NaNDC (Yang and Wang, 2025) equations 3-6, the default objective
+    is the weighted sum of three normalized L1 residual terms:
 
     .. code::
 
@@ -128,11 +130,12 @@ class PolarityPampSPampRatioMisfit(object):
             / sum(tau * abs(log10(rat_obs)))
         )
 
-    where ``tau`` represents the observation-validity or station-selection
-    mask used for each term.
+    ``tau`` represents station weights. Only finite, positive weights
+    contribute; zero polarity and P amplitude mark unused observations.
 
     Each component is normalized by the corresponding observed-data scale,
-    making the three terms dimensionless before weighting.
+    making the three terms dimensionless before weighting. If all usable S/P
+    ratios equal one, normalization is undefined and ``ValueError`` is raised.
 
     When combining this objective with other MTUQ misfit functions whose
     numerical scales differ substantially, appropriate relative weighting or
@@ -609,8 +612,8 @@ def polarities_pamp_spamp_ratio_from_dict(dict_polarity, dict_pamp,
 
     ``spamp_ratio_is_log10`` (`bool`):
     Declares the units of `dict_spamp_ratio`.  `False` (the default) means
-    linear ratios; `True` means their base-10
-    logarithms. 
+    linear ratios; `True` means their base-10 logarithms. A logarithmic zero
+    is valid (S/P=1); omit the entry or use NaN for missing logarithmic data.
 
     Returns a six-element bundle suitable for passing to
     `PolarityPampSPampRatioMisfit` as its `data` argument.

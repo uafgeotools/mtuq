@@ -7,12 +7,13 @@
 # independent of the implementation (Aki and Richards, 2ed):
 #
 #   - an explosion radiates no S
-#   - R_P, R_SV and R_SH are projections onto an orthonormal basis, so
-#     R_P^2 + R_SV^2 + R_SH^2 = |M.gamma|^2
+#   - R_P and total S radiation obey R_P^2 + R_S^2 = |M.gamma|^2
 #   - averaged over the focal sphere, a double couple with M_0 = 1 gives
 #     rms radiation coefficients sqrt(4/15) for P and sqrt(2/5) for S
 #
-# Runs offline in a few seconds; no data files are required.
+# Recovery observations use NED matrix projections rather than the USE
+# radiation calculation under test.
+# Runs offline; no data files are required.
 #
 
 import unittest
@@ -23,9 +24,12 @@ import obspy
 
 from mtuq import Origin, Station, MomentTensor
 from mtuq.greens_tensor.base import GreensTensor, GreensTensorList
-from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.grid import DoubleCoupleGridRegular, FullMomentTensorGridSemiregular,\
+    UnstructuredGrid
+from mtuq.grid_search import grid_search
 from mtuq.misfit.polarity import (
-    _radiation_coef_P, _takeoff_angle_taup, _polarities_mt)
+    PolarityMisfit, _radiation_coef_P, _takeoff_angle_taup,
+    _takeoff_angles_taup, _polarities_mt)
 from mtuq.misfit.polarity_amplitudes import (
     PolarityPampSPampRatioMisfit, polarities_pamp_spamp_ratio_from_dict,
     _misfit_term, _radiation_coef_S, _hypocentral_distances,
@@ -182,8 +186,7 @@ class TestRadiationPatterns(unittest.TestCase):
 class TestRayGeometry(unittest.TestCase):
 
     def test_S_takeoff_angle_differs_from_P(self):
-        # the maintainer of PR #348 asked why the P ray was being used for
-        # the S wave; at local distances the two angles differ by degrees
+        # Direct P and S arrivals can have different takeoff angles.
         taup = TauPyModel('ak135')
 
         for depth_in_km, distance_in_deg in [(10., 1.5), (30., 2.0)]:
@@ -361,17 +364,25 @@ class TestMisfitFunction(unittest.TestCase):
 
 
     def test_ratios_are_linear_not_logarithmic(self):
-        # a ratio of 1 must contribute log10(1) = 0, so a source predicting
-        # log10 ratio 0 fits it exactly
+        # Input [1, 10] becomes [0, 1] in the residual, giving
+        # (|0.5-0| + |0.5-1|) / (|0| + |1|) = 1.
         greens, _ = _greens(n=2)
-
         misfit = PolarityPampSPampRatioMisfit(
             lambda_pol=0., lambda_pamp=0., lambda_sprat=1.)
+        predicted = (np.ones((1, 2)), None, np.full((1, 2), 0.5))
+        with patch.object(misfit, '_get_predicted', return_value=predicted):
+            values = misfit((np.zeros(2), np.zeros(2), np.array([1., 10.])),
+                greens, MomentTensor([1., -1., 0., 0., 0., 0.]))
+        np.testing.assert_allclose(values, [[1.]])
 
-        observed = misfit.get_observed(
-            (np.ones(2), np.ones(2), np.ones(2)))
 
-        self.assertTrue(np.allclose(observed[2], np.ones(2)))
+    def test_all_unit_ratios_have_degenerate_normalization(self):
+        greens, _ = _greens(n=2)
+        misfit = PolarityPampSPampRatioMisfit(
+            lambda_pol=0., lambda_pamp=0.)
+        with self.assertRaisesRegex(ValueError, 'normalizing sum is zero'):
+            misfit((np.zeros(2), np.zeros(2), np.ones(2)), greens,
+                MomentTensor([1., -1., 0., 0., 0., 0.5]))
 
 
     def test_negative_ratio_rejected(self):
@@ -383,6 +394,102 @@ class TestMisfitFunction(unittest.TestCase):
                 {'S0': 1., 'S1': -1.}, {'S0': 1.e-6, 'S1': 1.e-6},
                 {'S0': 1.0, 'S1': -0.5}, stations)
 
+
+
+class TestIndependentValidation(unittest.TestCase):
+
+    def test_l2_station_weights_enter_linearly(self):
+        # One unit residual at weight 1; normalization is 1 + 3.
+        values = _misfit_term(np.ones(2), np.array([[2., 1.]]),
+            np.array([1., 3.]), 'L2', 'P amplitude')
+        np.testing.assert_allclose(values, [0.25])
+
+
+    def test_polarity_only_agrees_with_existing_misfit(self):
+        greens, _ = _greens(n=5)
+        sources = DoubleCoupleGridRegular(npts_per_axis=4, magnitudes=[4.5])
+        polarities = np.array([1., -1., 0., 1., -1.])
+        data = (polarities, np.zeros(5), np.zeros(5))
+        misfit = PolarityPampSPampRatioMisfit(
+            lambda_pamp=0., lambda_sprat=0.)
+
+        expected = PolarityMisfit()(polarities, greens, sources)/4.
+        np.testing.assert_allclose(misfit(data, greens, sources), expected)
+
+
+    def test_grid_search_preserves_source_order_and_values(self):
+        greens, origin = _greens(n=4)
+        regular = DoubleCoupleGridRegular(
+            npts_per_axis=3, magnitudes=[4.4, 4.5])
+        coordinates = regular.to_array()
+        # Deliberately reorder sources so sorting errors cannot hide.
+        coordinates = coordinates[::-1]
+        unstructured = UnstructuredGrid(dims=regular.dims,
+            coords=tuple(coordinates[:, i] for i in range(6)),
+            callback=regular.callback)
+        observed = (np.array([1., -1., 1., -1.]),
+            np.array([2.e-6, -3.e-6, 1.e-6, -4.e-6]),
+            np.array([1.2, 0.8, 1.5, 0.9]))
+        misfit = PolarityPampSPampRatioMisfit()
+
+        for sources in (regular, unstructured):
+            with self.subTest(grid=type(sources).__name__):
+                direct = misfit(observed, greens, sources)
+                results = grid_search(observed, greens, misfit, origin,
+                    sources, timed=False, verbose=0, msg_interval=0)
+                np.testing.assert_allclose(
+                    results.values.ravel(), direct.ravel())
+                self.assertEqual(results.source_idxmin(), int(direct.argmin()))
+
+
+    def test_recovery_from_independent_matrix_predictions(self):
+        greens, origin = _greens(n=8, depth_in_m=33000.)
+        sources = FullMomentTensorGridSemiregular(
+            npts_per_axis=3, magnitudes=[4.2, 4.5, 4.8])
+        true_source = sources.get(len(sources)//2 + 17)
+        matrix = _ned_matrices(true_source.as_vector()[None, :])[0]
+        taup = TauPyModel('ak135')
+        angles_p = _takeoff_angles_taup(taup, greens, phase_list=['p', 'P'])
+        angles_s = _takeoff_angles_taup(taup, greens, phase_list=['s', 'S'])
+        azimuths = np.deg2rad([tensor.azimuth for tensor in greens])
+
+        def ray_directions(angles):
+            theta = np.deg2rad(angles)
+            return np.column_stack((np.sin(theta)*np.cos(azimuths),
+                np.sin(theta)*np.sin(azimuths), np.cos(theta)))
+
+        ray_p, ray_s = ray_directions(angles_p), ray_directions(angles_s)
+        theta_s = np.deg2rad(angles_s)
+        sv_basis = np.column_stack((np.cos(theta_s)*np.cos(azimuths),
+            np.cos(theta_s)*np.sin(azimuths), -np.sin(theta_s)))
+        sh_basis = np.column_stack((-np.sin(azimuths), np.cos(azimuths),
+            np.zeros(len(greens))))
+        rp = np.einsum('ni,ij,nj->n', ray_p, matrix, ray_p)
+        rsv = np.einsum('ni,ij,nj->n', sv_basis, matrix, ray_s)
+        rsh = np.einsum('ni,ij,nj->n', sh_basis, matrix, ray_s)
+
+        rho, vp, vs = 2300., 5400., 3300.
+        distance = np.sqrt(np.array([g.distance_in_m for g in greens])**2 +
+            origin.depth_in_m**2)
+        observed = (np.sign(rp), rp/(4.*np.pi*rho*vp**3*distance),
+            (vp/vs)**3*np.sqrt(rsv**2 + rsh**2)/np.abs(rp))
+        self.assertTrue(all(np.isfinite(array).all() for array in observed))
+        # Keep this recovery away from nodes: it tests the unfloored theory.
+        source_norm = np.linalg.norm(matrix)
+        self.assertGreater(np.min(np.abs(rp)), 1.e-6*source_norm)
+        self.assertGreater(np.min(np.hypot(rsv, rsh)), 1.e-6*source_norm)
+
+        misfit = PolarityPampSPampRatioMisfit(rho=rho, vp=vp, vs=vs)
+        np.testing.assert_allclose(misfit(observed, greens, true_source),
+            [[0.]], rtol=0., atol=EPSVAL)
+        results = grid_search(observed, greens, misfit, origin, sources,
+            timed=False, verbose=0, msg_interval=0)
+        self.assertLess(float(results.min()), EPSVAL)
+        recovered = sources.get(results.source_idxmin())
+        # Equivalent parameterizations can share a tensor; compare tensors,
+        # rather than requiring a particular index in the parameter grid.
+        np.testing.assert_allclose(recovered.as_vector()/source_norm,
+            true_source.as_vector()/source_norm, rtol=0., atol=EPSVAL)
 
 
 class TestPredictionDependencies(unittest.TestCase):
