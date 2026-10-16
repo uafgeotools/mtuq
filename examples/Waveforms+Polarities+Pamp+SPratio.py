@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import os
-import numpy as np
-
 from mtuq import read, download_greens
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens2, plot_beachball, plot_polarities,\
@@ -19,8 +16,10 @@ from mtuq.util.cap import parse_station_codes, Trapezoid
 
 if __name__=='__main__':
     #
-    # Joint waveform, polarity, P-amplitude and S/P-amplitude-ratio grid
-    # search over all moment tensor parameters
+    # Compare a waveform inversion with a joint polarity, P-amplitude and
+    # S/P-amplitude-ratio inversion over the same moment tensor grid.
+    # Each objective selects its own best-fitting tensor. Combining the
+    # waveform and polarity/amplitude objectives requires explicit weights.
     #
     # USAGE
     #   mpirun -n <NPROC> python Waveforms+Polarities+Pamp+SPratio.py
@@ -30,8 +29,8 @@ if __name__=='__main__':
     #
 
 
-    path_data=    fullpath('../pr348-minimal-rebuild_test/data/examples/20090407201255351/*.[zrt]')
-    path_weights= fullpath('../pr348-minimal-rebuild_test/data/examples/20090407201255351/weights.dat')
+    path_data=    fullpath('data/examples/20090407201255351/*.[zrt]')
+    path_weights= fullpath('data/examples/20090407201255351/weights.dat')
     event_id=     '20090407201255351'
     model=        'ak135'
 
@@ -311,6 +310,9 @@ if __name__=='__main__':
         best_mt = grid.get(idx)
         lune_dict = grid.get_dict(idx)
 
+        idx_pa = results_polarity_amplitude.source_idxmin()
+        best_mt_pa = grid.get(idx_pa)
+
 
         #
         # Generate figures and save results
@@ -335,9 +337,10 @@ if __name__=='__main__':
             results_polarity_amplitude,
             title='P-Pol + P-Amp + S/P Amp Misfit')
 
-        # predicted polarities
+        # Polarity agreement for the tensor minimizing the combined
+        # polarity/amplitude objective shown in the corresponding lune.
         predicted = polarity_amplitude_misfit.get_predicted(
-            greens_bw, best_mt)[0]
+            greens_bw, best_mt_pa)[0]
 
         # station attributes
         attrs = polarity_amplitude_misfit.collect_attributes(
@@ -345,6 +348,6 @@ if __name__=='__main__':
 
         plot_polarities(
             event_id+'FMT_beachball_polarity_amplitude.png',
-            observations[0], predicted, attrs, origin, best_mt)
+            observations[0], predicted, attrs, origin, best_mt_pa)
 
         print('\nFinished\n')
