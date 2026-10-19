@@ -10,6 +10,7 @@
 import obspy.imaging.beachball
 import os
 import matplotlib.pyplot as pyplot
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 import numpy as np
 import subprocess
 
@@ -68,10 +69,27 @@ def plot_beachball(filename, mt, stations, origin, backend=None, **kwargs):
     Name of built-in ObsPy TauP model or path to custom ObsPy TauP model,
     used for takeoff angle calculations
 
+    ``station_values`` (`array`, optional):
+    Scalar colors for stations in the supplied order. Nonfinite values are
+    omitted. Requires the Matplotlib backend. With polarity data, observed
+    polarities select circles for picked stations and crosses for unpicked
+    stations, while station values select colors.
+
+    ``station_cmap``, ``station_norm``:
+    Matplotlib colormap and normalization for station values. Defaults to a
+    blue-gray-orange scale with symmetric limits about zero.
+
+    ``colorbar_label`` (`str`, optional):
+    Label for the colorbar displayed with station values.
+
     """
 
     if type(mt)!=MomentTensor:
         raise TypeError
+
+    if kwargs.get('station_values') is not None and backend not in (
+            None, _plot_beachball_matplotlib):
+        raise NotImplementedError('Station colors require the Matplotlib backend')
 
     if backend is None or backend == _plot_beachball_matplotlib:
         backend = _plot_beachball_matplotlib
@@ -132,6 +150,62 @@ def plot_polarities(filename, observed, predicted, stations, origin, mt, backend
             stations, origin, mt, **kwargs)
     else:
         raise Exception('Requires PyGMT')
+
+
+def plot_sp_ratios(filename, observed, predicted, stations, origin, mt,
+    backend=None, **kwargs):
+    """ Plots log10(predicted S/P) - log10(observed S/P) at stations
+
+    ``observed`` is the bundle returned by ``get_observed`` or
+    ``polarities_pamp_spamp_ratio_from_dict``: polarities, P amplitudes,
+    linear S/P ratios, and optionally three station-weight arrays.
+    ``predicted`` is the output of ``get_predicted(greens, mt)`` for one
+    moment tensor: polarities, P amplitudes and log10(S/P).
+
+    Nonpositive or nonfinite observed ratios and nonfinite predicted log
+    ratios are omitted, as are stations with nonpositive or nonfinite S/P weights.
+    Station positions use direct-P takeoff angles; each ratio combines P
+    and S measurements. Blue indicates underprediction and orange indicates
+    overprediction, with agreement at the center of the color scale. A value
+    of +1 means ten times the observation and -1 means one tenth.
+
+    Circles mark stations with polarity picks; crosses mark unpicked
+    stations. Symbol sizes are fixed, and colors show the S/P residual.
+
+    Other arguments are passed to ``plot_beachball``. Requires Matplotlib.
+    """
+    if not isinstance(observed, (tuple, list)) or len(observed) not in (3, 6):
+        raise TypeError('Expected a three- or six-element observation bundle')
+    if not isinstance(predicted, (tuple, list)) or len(predicted) != 3:
+        raise TypeError('Expected the three-element get_predicted output')
+
+    nstations = len(stations)
+    pol_obs = np.asarray(observed[0], dtype=float)
+    ratios = np.asarray(observed[2], dtype=float)
+    weights = (np.asarray(observed[5], dtype=float) if len(observed) == 6
+        else np.ones(nstations))
+    if any(array.shape != (nstations,) for array in (pol_obs, ratios, weights)):
+        raise ValueError('Observations must contain one value per station')
+
+    pol_pred = np.asarray(predicted[0], dtype=float)
+    log_ratios = np.asarray(predicted[2], dtype=float)
+    if any(array.shape not in ((nstations,), (1, nstations))
+            for array in (pol_pred, log_ratios)):
+        raise ValueError('Predictions must contain one source and one value per station')
+    log_ratios = log_ratios.reshape(-1)
+
+    valid = (np.isfinite(ratios) & (ratios > 0.) & np.isfinite(log_ratios) &
+        np.isfinite(weights) & (weights > 0.))
+    if not np.any(valid):
+        raise ValueError('No usable S/P ratio pairs to plot')
+
+    residuals = np.full(nstations, np.nan)
+    residuals[valid] = log_ratios[valid] - np.log10(ratios[valid])
+    polarity_data = np.vstack((pol_obs, pol_pred.reshape(-1)))
+    kwargs.setdefault('colorbar_label',
+        r'$\log_{10}[(S/P)_{\mathrm{pred}}/(S/P)_{\mathrm{obs}}]$')
+    plot_beachball(filename, mt, stations, origin, backend=backend,
+        station_values=residuals, polarity_data=polarity_data, **kwargs)
 
 
 #
@@ -459,11 +533,17 @@ def _polar2(stations, **kwargs):
 
 def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, lon_lats=None, 
                                scale=None, fig=None, ax=None, taup_model='ak135', color='gray', 
-                               lune_rotation=False, polarity_data=None, **kwargs):
+                               lune_rotation=False, polarity_data=None, station_values=None,
+                               station_cmap=None, station_norm=None, colorbar_label=None,
+                               add_station_labels=True, **kwargs):
     
     from scipy.interpolate import griddata
 
     #_development_warning_beachball()
+
+    if station_values is not None:
+        if not stations or origin is None:
+            raise ValueError('Station values require stations and an origin')
 
     if lon_lats is not None:
         if len(lon_lats) != len(mt_arrays):
@@ -546,19 +626,27 @@ def _plot_beachball_matplotlib(filename, mt_arrays, stations=None, origin=None, 
         ax.set_xlim(-1.1*adjusted_scale, 1.1*adjusted_scale)
         ax.set_ylim(-1.1*adjusted_scale, 1.1*adjusted_scale)
 
-    if stations and origin and polarity_data is None:
-        _plot_stations(stations, origin, taup_model, ax, scale=adjusted_scale)
-    elif stations and origin and polarity_data is not None:
-        _plot_stations(stations, origin, taup_model, ax, polarity_data, scale=adjusted_scale) 
+    if stations and origin:
+        station_artist = _plot_stations(stations, origin, taup_model, ax,
+            polarity_data, scale=adjusted_scale, station_values=station_values,
+            station_cmap=station_cmap, station_norm=station_norm,
+            add_station_labels=add_station_labels)
+        if station_values is not None:
+            colorbar = fig.colorbar(station_artist, ax=ax,
+                orientation='horizontal', fraction=0.06, pad=0.02, shrink=0.8)
+            colorbar.set_label(colorbar_label or '', fontsize=9)
+            colorbar.ax.tick_params(labelsize=8)
 
     if filename:
-        pyplot.tight_layout(pad=-0.8)
+        fig.tight_layout(pad=0.8 if station_values is not None else -0.8)
         fig.savefig(filename, dpi=300, **kwargs)
         pyplot.close(fig)
     return
 
 
-def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1):
+def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1,
+    station_values=None, station_cmap=None, station_norm=None,
+    add_station_labels=True):
     """
     Plots seismic stations on a matplotlib axis with optional polarity data.
 
@@ -574,10 +662,27 @@ def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1
     ValueError: If polarity_data is provided but not in the correct format.
     """
 
-    try:
-        taup = TauPyModel(model=taup_model)
-    except:
-        taup = None
+    if station_values is not None:
+        station_values = np.asarray(station_values, dtype=float)
+        if station_values.shape != (len(stations),):
+            raise ValueError('Station values must contain one value per station')
+        finite = station_values[np.isfinite(station_values)]
+        if not finite.size:
+            raise ValueError('No finite station values to plot')
+        if station_cmap is None:
+            station_cmap = LinearSegmentedColormap.from_list(
+                'blue_gray_orange', ['#0072B2', '#333333', '#E69F00'])
+        if station_norm is None:
+            limit = np.max(np.abs(finite)) or 1.
+            station_norm = Normalize(vmin=-limit, vmax=limit)
+        points, values, markers = [], [], []
+
+    taup = None
+    if any(getattr(station, 'takeoff_angle', None) is None for station in stations):
+        try:
+            taup = TauPyModel(model=taup_model)
+        except:
+            pass
 
     # Polarity categories if polarity data is provided
     if polarity_data is not None and len(polarity_data) == 2:
@@ -602,18 +707,21 @@ def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1
     else:
         up_matched = down_matched = up_unmatched = down_unmatched = unpicked = []
 
-    for station in stations:
+    for _i, station in enumerate(stations):
+        if station_values is not None and not np.isfinite(station_values[_i]):
+            continue
         label = station.station
-        distance_in_m, azimuth, _ = gps2dist_azimuth(
-            origin.latitude,
-            origin.longitude,
-            station.latitude,
-            station.longitude)
-
-        takeoff_angle = _takeoff_angle_taup(
-            taup,
-            origin.depth_in_m / 1000.,
-            _to_deg(distance_in_m / 1000.))
+        azimuth = getattr(station, 'azimuth', None)
+        takeoff_angle = getattr(station, 'takeoff_angle', None)
+        if azimuth is None or takeoff_angle is None:
+            distance_in_m, calculated_azimuth, _ = gps2dist_azimuth(
+                origin.latitude, origin.longitude,
+                station.latitude, station.longitude)
+            if azimuth is None:
+                azimuth = calculated_azimuth
+            if takeoff_angle is None:
+                takeoff_angle = _takeoff_angle_taup(taup,
+                    origin.depth_in_m / 1000., _to_deg(distance_in_m / 1000.))
 
         x, y, z = _project_on_sphere(takeoff_angle, azimuth, scale=1)
         if takeoff_angle >= 90:
@@ -622,23 +730,43 @@ def _plot_stations(stations, origin, taup_model, ax, polarity_data=None, scale=1
             projected_points = lambert_azimuthal_equal_area_projection(np.array([[x, y, z]]), hemisphere='lower')[0] * scale
 
         # Render the station based on its category if polarity data is provided
-        if polarity_data is not None:
+        if station_values is not None:
+            points.append(projected_points)
+            values.append(station_values[_i])
+            if polarity_data is not None:
+                markers.append('o' if observed[_i] in (-1, 1) else 'x')
+            else:
+                markers.append('o')
+        elif polarity_data is not None:
             _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, unpicked, station, projected_points)
         else:
             ax.scatter(*projected_points, color='black', marker='o' if takeoff_angle <= 90 else 'x', s=25, zorder=101)
 
-        ax.text(projected_points[0], projected_points[1] + scale * 0.05, label, ha='center', va='center', fontsize=10, zorder=101)
+        if add_station_labels:
+            ax.text(projected_points[0], projected_points[1] + scale * 0.05, label, ha='center', va='center', fontsize=10, zorder=101)
+
+    if station_values is not None:
+        points, values, markers = np.asarray(points), np.asarray(values), np.asarray(markers)
+        for marker in ('o', 'x'):
+            selected = markers == marker
+            if not np.any(selected):
+                continue
+            style = {} if marker == 'x' else {'edgecolors': 'none'}
+            artist = ax.scatter(*points[selected].T, c=values[selected],
+                cmap=station_cmap, norm=station_norm, marker=marker,
+                s=25, zorder=101, **style)
+        return artist
 
 
 def _render_station(ax, up_matched, down_matched, up_unmatched, down_unmatched, unpicked, station, projected_points):
     if station in up_matched:
-        ax.scatter(*projected_points, color='chartreuse', marker='^', s=25, zorder=101)
+        ax.scatter(*projected_points, color='chartreuse', marker='^', s=25, edgecolors='none', zorder=101)
     elif station in down_matched:
-        ax.scatter(*projected_points, color='chartreuse', marker='v', s=25, zorder=101)
+        ax.scatter(*projected_points, color='chartreuse', marker='v', s=25, edgecolors='none', zorder=101)
     elif station in up_unmatched:
-        ax.scatter(*projected_points, color='red', marker='^', s=25, zorder=101)
+        ax.scatter(*projected_points, color='red', marker='^', s=25, edgecolors='none', zorder=101)
     elif station in down_unmatched:
-        ax.scatter(*projected_points, color='red', marker='v', s=25, zorder=101)
+        ax.scatter(*projected_points, color='red', marker='v', s=25, edgecolors='none', zorder=101)
     elif station in unpicked:
         ax.scatter(*projected_points, color='black', marker='x', s=25, facecolors='black', zorder=101)
 
