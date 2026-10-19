@@ -7,7 +7,7 @@ from mtuq.graphics.attrs import\
     plot_time_shifts, plot_amplitude_ratios, plot_cc_max, _plot_attrs
 
 from mtuq.graphics.beachball import\
-    plot_beachball, plot_polarities, _plot_beachball_matplotlib
+    plot_beachball, plot_polarities, plot_sp_ratios, _plot_beachball_matplotlib
 
 from mtuq.graphics.uq.lune import\
     plot_misfit_lune, plot_likelihood_lune, plot_marginal_lune,\

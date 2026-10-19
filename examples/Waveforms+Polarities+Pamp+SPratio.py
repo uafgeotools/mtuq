@@ -3,7 +3,7 @@
 from mtuq import read, download_greens
 from mtuq.event import Origin
 from mtuq.graphics import plot_data_greens2, plot_beachball, plot_polarities,\
-    plot_misfit_lune
+    plot_misfit_lune, plot_sp_ratios
 from mtuq.grid import FullMomentTensorGridSemiregular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import WaveformMisfit, PolarityPampSPampRatioMisfit,\
@@ -339,7 +339,7 @@ if __name__=='__main__':
         # Polarity agreement for the tensor minimizing the combined
         # polarity/amplitude objective shown in the corresponding lune.
         predicted = polarity_amplitude_misfit.get_predicted(
-            greens_bw, best_mt_pa)[0]
+            greens_bw, best_mt_pa)
 
         # station attributes
         attrs = polarity_amplitude_misfit.collect_attributes(
@@ -347,6 +347,11 @@ if __name__=='__main__':
 
         plot_polarities(
             event_id+'FMT_beachball_polarity_amplitude.png',
-            observations[0], predicted, attrs, origin, best_mt_pa)
+            observations[0], predicted[0], attrs, origin, best_mt_pa)
+
+        plot_sp_ratios(
+            event_id+'FMT_beachball_sp_ratio.png',
+            observations, predicted, attrs, origin, best_mt_pa,
+            add_station_labels=False)
 
         print('\nFinished\n')

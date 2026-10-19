@@ -252,6 +252,8 @@ class PolarityPampSPampRatioMisfit(object):
 
     def __call__(self, data, greens, sources, progress_handle=Null(),
             set_attributes=False):
+        """ Returns a NumPy array of total misfits with shape ``(n_sources, 1)``
+        """
 
         pol_obs, amp_obs, rat_obs, tau_pol, tau_amp, tau_rat = \
             self.get_observed(data)
@@ -298,6 +300,10 @@ class PolarityPampSPampRatioMisfit(object):
         `(pol, amp, rat, tau_pol, tau_amp, tau_rat)` as returned by
         `polarities_pamp_spamp_ratio_from_dict`, or a three-element bundle
         `(pol, amp, rat)`, in which case unit weights are assumed.
+
+        Returns ``(pol, amp, rat, tau_pol, tau_amp, tau_rat)`` as a tuple
+        of arrays with shape ``(n_stations,)``. ``rat`` contains linear S/P
+        amplitude ratios.
         """
 
         if isinstance(data, mtuq.Dataset):
@@ -352,7 +358,11 @@ class PolarityPampSPampRatioMisfit(object):
 
 
     def get_predicted(self, greens, sources):
-        """ Returns polarities, P amplitudes and log10(S/P) predictions
+        """ Gets polarities, P amplitudes and log10(S/P) predictions
+
+        Returns the tuple ``(polarities, p_amplitudes, log10_sp_ratios)``.
+        Each array has shape ``(n_sources, n_stations)``, including
+        ``(1, n_stations)`` for a single moment tensor.
 
         All three predictions are returned, independently of the term weights.
         """
